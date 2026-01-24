@@ -11,7 +11,7 @@ async function analyzeLeads(articles) {
   }
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.0-flash' });
 
   const newsList = articles.map((a, i) =>
     `${i + 1}. [${a.source}] ${a.title} (검색어: ${a.query})`
