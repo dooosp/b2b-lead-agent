@@ -56,7 +56,7 @@ async function fetchGoogleNews(query) {
 
 // 한국경제 산업 RSS
 async function fetchHankyung() {
-  const url = 'https://www.hankyung.com/feed/industry';
+  const url = 'https://www.hankyung.com/feed/economy';
   try {
     const feed = await parser.parseURL(url);
     return feed.items.slice(0, 5).map(item => ({
