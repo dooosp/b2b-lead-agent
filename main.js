@@ -36,6 +36,9 @@ async function run() {
     // 리포트 저장
     briefing.saveReport(report);
 
+    // 리드 JSON 저장 (Worker에서 활용)
+    briefing.saveLeadsJson(leads);
+
     // 콘솔에 리포트 출력
     console.log('--- 리포트 미리보기 ---\n');
     console.log(report.content);

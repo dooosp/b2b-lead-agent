@@ -69,4 +69,16 @@ function saveReport(report) {
   return filePath;
 }
 
-module.exports = { generateReport, saveReport };
+function saveLeadsJson(leads) {
+  const reportsDir = path.join(__dirname, 'reports');
+  if (!fs.existsSync(reportsDir)) {
+    fs.mkdirSync(reportsDir, { recursive: true });
+  }
+
+  const filePath = path.join(reportsDir, 'latest_leads.json');
+  fs.writeFileSync(filePath, JSON.stringify(leads, null, 2), 'utf-8');
+  console.log(`  리드 JSON 저장: ${filePath}\n`);
+  return filePath;
+}
+
+module.exports = { generateReport, saveReport, saveLeadsJson };

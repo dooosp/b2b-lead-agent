@@ -25,3 +25,11 @@ jobs:
           GMAIL_PASS: ${{ secrets.GMAIL_PASS }}
           GMAIL_RECIPIENT: ${{ secrets.GMAIL_RECIPIENT }}
         run: node main.js --email
+
+      - name: Commit leads data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/latest_leads.json
+          git diff --cached --quiet || git commit -m "Update latest leads data"
+          git push

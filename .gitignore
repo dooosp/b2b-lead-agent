@@ -1,3 +1,4 @@
 node_modules/
 .env
 reports/*.md
+!reports/latest_leads.json
