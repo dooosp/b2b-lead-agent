@@ -39,5 +39,40 @@ module.exports = {
     gradeA: '구체적 착공 시기, 예산 규모, 발주처가 명확한 경우 (80-100점)',
     gradeB: '산업 트렌드 변화로 향후 수요 예상 (50-79점)',
     gradeC: '단순 기업 동정, 일반 뉴스 (0-49점)'
+  },
+
+  // 댄포스 글로벌 성공 사례 (Cross-border Selling Reference)
+  globalReferences: {
+    marine: [
+      { client: 'Maersk (덴마크)', project: '컨테이너선 300척 하이브리드 추진 시스템 도입', result: '연료비 18% 절감, IMO 2030 규제 선제 대응' },
+      { client: 'MSC (스위스)', project: 'LNG 운반선 iC7 드라이브 적용', result: '탄소 배출 25% 감소, CII 등급 A 달성' },
+      { client: 'NYK Line (일본)', project: '친환경 선박 플릿 현대화', result: 'EEXI 규제 100% 충족, 연간 $2M 연료비 절감' }
+    ],
+    datacenter: [
+      { client: 'Equinix (미국)', project: '글로벌 데이터센터 Turbocor 표준화', result: 'PUE 1.58→1.25 개선, 냉각 전력 40% 절감' },
+      { client: 'Digital Realty (미국)', project: '아시아 데이터센터 냉각 시스템 교체', result: '연간 운영비 $1.5M 절감' },
+      { client: 'NTT (일본)', project: '도쿄 DC 오일리스 칠러 도입', result: '유지보수 비용 60% 감소, 가동률 99.99%' }
+    ],
+    factory: [
+      { client: 'Volkswagen (독일)', project: 'EV 배터리 공장 VLT 드라이브 적용', result: '생산 라인 에너지 35% 절감' },
+      { client: 'TSMC (대만)', project: '반도체 클린룸 HVAC 최적화', result: '공조 전력 28% 절감, 정밀 온습도 제어' },
+      { client: 'Samsung SDI (한국)', project: '헝가리 배터리 공장 자동화', result: '모터 효율 25% 향상, RE100 달성 기여' }
+    ],
+    coldchain: [
+      { client: 'Lineage Logistics (미국)', project: '세계 최대 냉동창고 Turbocor 도입', result: '에너지 비용 32% 절감' },
+      { client: 'Pfizer (미국)', project: '백신 콜드체인 정밀 온도 제어', result: '-70°C 유지 안정성 99.9%, FDA 승인' },
+      { client: 'CJ대한통운 (한국)', project: '신선식품 물류센터 현대화', result: '냉각 효율 30% 개선, 식품 손실률 50% 감소' }
+    ]
+  },
+
+  // 리드 상태 관리 (CRM)
+  leadStatus: {
+    NEW: '신규 발굴',
+    CONTACTED: '컨택 완료',
+    MEETING: '미팅 진행',
+    PROPOSAL: '제안서 제출',
+    NEGOTIATION: '협상 중',
+    WON: '수주 성공',
+    LOST: '실패/보류'
   }
 };

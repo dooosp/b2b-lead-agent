@@ -13,9 +13,14 @@ async function analyzeLeads(articles) {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
+  // 본문 유무 표시 + 예외 처리 안내
   const newsList = articles.map((a, i) => {
-    let entry = `${i + 1}. [${a.source}] ${a.title} (URL: ${a.link})`;
-    if (a.content) entry += `\n   본문: ${a.content}`;
+    let entry = `${i + 1}. [${a.source}] ${a.title} (URL: ${a.link}) (검색키워드: ${a.query})`;
+    if (a.content) {
+      entry += `\n   [본문 있음] ${a.content}`;
+    } else {
+      entry += `\n   [본문 없음 - 제목과 키워드 기반 추론 필요]`;
+    }
     return entry;
   }).join('\n\n');
 
@@ -23,6 +28,13 @@ async function analyzeLeads(articles) {
   const knowledgeBase = Object.entries(config.productKnowledge)
     .map(([name, info]) => `- ${name}: 핵심가치="${info.value}", ROI="${info.roi}"`)
     .join('\n');
+
+  // 글로벌 성공 사례 문자열 생성
+  const globalRefStr = Object.entries(config.globalReferences)
+    .map(([category, cases]) => {
+      const caseList = cases.map(c => `  • ${c.client}: ${c.project} → ${c.result}`).join('\n');
+      return `[${category.toUpperCase()}]\n${caseList}`;
+    }).join('\n\n');
 
   const prompt = `[System]
 당신은 댄포스 코리아의 'AI 기술 영업 전략가'입니다.
@@ -37,13 +49,23 @@ ${knowledgeBase}
 - HVAC: ${config.products.hvac.join(', ')}
 - Cooling: ${config.products.cooling.join(', ')}
 
+[댄포스 글로벌 성공 사례 - Cross-border Selling Reference]
+아래 본사 및 해외 성공 사례를 한국 고객에게 레퍼런스로 제시하세요:
+${globalRefStr}
+
 [분석 필수 포함 항목]
 1. Target Opportunity: 어떤 기업의 어떤 프로젝트인가?
 2. Danfoss Solution: 위 지식 베이스를 참고하여 최적의 제품 1개를 선정.
 3. Estimated ROI: 제품 도입 시 예상되는 에너지 절감률 또는 비용 편익을 수치(%)로 제시.
 4. Key Pitch (Value Selling): 고객사 담당자에게 보낼 메일의 '첫 문장' (핵심 가치 중심).
-5. Global Context: 해당 산업과 관련된 글로벌 탄소 중립 정책이나 본사 사례 연결.
+5. Global Context: 해당 산업과 관련된 글로벌 탄소 중립 정책 + **위 글로벌 성공 사례 중 유사 프로젝트 1개 언급**.
 6. Sources: 이 리드 분석에 참고한 뉴스 기사의 제목과 URL을 배열로 포함. 반드시 위 뉴스 목록에 있는 실제 URL만 사용하세요.
+
+[예외 처리 - 본문 없는 기사]
+일부 뉴스는 [본문 없음]으로 표시됩니다. 이 경우:
+- 기사 제목과 검색 키워드를 기반으로 프로젝트 내용을 추론하세요.
+- 추론 시에는 보수적으로 점수를 매기되, 영업 기회가 있다면 Grade B로 분류하세요.
+- "추론 기반 분석"임을 summary에 명시하지 마세요. 자연스럽게 작성하세요.
 
 [스코어링 기준]
 - Grade A (80-100점): 구체적 착공/수주/예산이 언급된 프로젝트

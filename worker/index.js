@@ -15,6 +15,9 @@ export default {
     if (url.pathname === '/api/roleplay' && request.method === 'POST') {
       return await handleRoleplay(request, env);
     }
+    if (url.pathname === '/api/history' && request.method === 'GET') {
+      return await fetchHistory(env);
+    }
 
     // 페이지 라우팅
     if (url.pathname === '/leads') {
@@ -25,6 +28,9 @@ export default {
     }
     if (url.pathname === '/roleplay') {
       return new Response(getRoleplayPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+    if (url.pathname === '/history') {
+      return new Response(getHistoryPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
 
     return new Response(getMainPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
@@ -69,6 +75,20 @@ async function fetchLeads(env) {
     return jsonResponse({ leads });
   } catch (e) {
     return jsonResponse({ leads: [], message: e.message }, 500);
+  }
+}
+
+async function fetchHistory(env) {
+  try {
+    const response = await fetch(
+      `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/lead_history.json?t=${Date.now()}`,
+      { headers: { 'User-Agent': 'B2B-Lead-Worker', 'Cache-Control': 'no-cache' } }
+    );
+    if (!response.ok) return jsonResponse({ history: [], message: '아직 히스토리가 없습니다.' });
+    const history = await response.json();
+    return jsonResponse({ history });
+  } catch (e) {
+    return jsonResponse({ history: [], message: e.message }, 500);
   }
 }
 
@@ -295,11 +315,21 @@ function getLeadsPage() {
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     .badge-a { background: #e94560; color: #fff; }
     .badge-b { background: #f39c12; color: #fff; }
+    .badge-status { background: #3498db; color: #fff; margin-left: 8px; }
+    .badge-status.contacted { background: #9b59b6; }
+    .badge-status.meeting { background: #e67e22; }
+    .badge-status.proposal { background: #1abc9c; }
+    .badge-status.won { background: #27ae60; }
+    .badge-status.lost { background: #7f8c8d; }
+    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   </style>
 </head>
 <body>
   <div class="container" style="max-width:700px;">
-    <a href="/" class="back-link">← 메인</a>
+    <div class="top-nav">
+      <a href="/" class="back-link">← 메인</a>
+      <a href="/history" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">📊 전체 히스토리</a>
+    </div>
     <h1 style="font-size:22px;">리드 상세 보기</h1>
     <p class="subtitle">최근 분석된 영업 기회 목록</p>
 
@@ -318,9 +348,14 @@ function getLeadsPage() {
           return;
         }
 
+        const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
         container.innerHTML = data.leads.map((lead, i) => \`
           <div class="lead-card \${lead.grade === 'B' ? 'grade-b' : ''}">
-            <h3><span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${lead.grade}</span> \${lead.company} (\${lead.score}점)</h3>
+            <h3>
+              <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${lead.grade}</span>
+              \${lead.status ? \`<span class="badge badge-status \${lead.status.toLowerCase()}">\${statusLabels[lead.status] || lead.status}</span>\` : ''}
+              \${lead.company} (\${lead.score}점)
+            </h3>
             <div class="lead-info">
               <p><strong>프로젝트:</strong> \${lead.summary}</p>
               <p><strong>추천 제품:</strong> \${lead.product}</p>
@@ -615,6 +650,125 @@ function getRoleplayPage() {
     }
 
     loadLeads();
+  </script>
+</body>
+</html>`;
+}
+
+function getHistoryPage() {
+  return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>리드 히스토리 - Danfoss CRM</title>
+  <style>${getCommonStyles()}
+    .history-card { background: #1e2a3a; border-radius: 12px; padding: 16px; margin: 12px 0; border-left: 4px solid #3498db; }
+    .history-card.won { border-left-color: #27ae60; }
+    .history-card.lost { border-left-color: #7f8c8d; }
+    .history-card h3 { color: #fff; margin: 0 0 8px 0; font-size: 16px; }
+    .history-card p { margin: 4px 0; font-size: 13px; color: #aaa; }
+    .history-card .meta { font-size: 11px; color: #666; margin-top: 8px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 6px; }
+    .badge-a { background: #e94560; color: #fff; }
+    .badge-b { background: #f39c12; color: #fff; }
+    .badge-status { background: #3498db; color: #fff; }
+    .badge-status.new { background: #3498db; }
+    .badge-status.contacted { background: #9b59b6; }
+    .badge-status.meeting { background: #e67e22; }
+    .badge-status.proposal { background: #1abc9c; }
+    .badge-status.won { background: #27ae60; }
+    .badge-status.lost { background: #7f8c8d; }
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; justify-content: center; }
+    .filter-btn { padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid #444; background: transparent; color: #aaa; cursor: pointer; }
+    .filter-btn.active { background: #3498db; border-color: #3498db; color: #fff; }
+    .stats { display: flex; gap: 16px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-item { text-align: center; }
+    .stat-item .num { font-size: 24px; font-weight: bold; color: #e94560; }
+    .stat-item .label { font-size: 11px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <div class="container" style="max-width:700px;">
+    <a href="/leads" class="back-link">← 최신 리드</a>
+    <h1 style="font-size:22px;">📊 리드 히스토리</h1>
+    <p class="subtitle">발굴된 모든 리드를 추적하고 관리하세요</p>
+
+    <div class="stats" id="stats"></div>
+    <div class="filter-bar" id="filterBar"></div>
+    <div id="historyList"><p style="color:#aaa;">로딩 중...</p></div>
+  </div>
+
+  <script>
+    let allHistory = [];
+    let currentFilter = 'ALL';
+    const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
+
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/history');
+        const data = await res.json();
+        allHistory = data.history || [];
+
+        if (allHistory.length === 0) {
+          document.getElementById('historyList').innerHTML = '<p style="color:#aaa;">아직 히스토리가 없습니다.</p>';
+          return;
+        }
+
+        renderStats();
+        renderFilters();
+        renderHistory();
+      } catch(e) {
+        document.getElementById('historyList').innerHTML = '<p style="color:#e74c3c;">로드 실패: ' + e.message + '</p>';
+      }
+    }
+
+    function renderStats() {
+      const total = allHistory.length;
+      const won = allHistory.filter(h => h.status === 'WON').length;
+      const active = allHistory.filter(h => !['WON', 'LOST'].includes(h.status)).length;
+      document.getElementById('stats').innerHTML = \`
+        <div class="stat-item"><div class="num">\${total}</div><div class="label">총 리드</div></div>
+        <div class="stat-item"><div class="num" style="color:#27ae60;">\${won}</div><div class="label">수주 성공</div></div>
+        <div class="stat-item"><div class="num" style="color:#3498db;">\${active}</div><div class="label">진행 중</div></div>
+      \`;
+    }
+
+    function renderFilters() {
+      const statuses = ['ALL', ...Object.keys(statusLabels)];
+      document.getElementById('filterBar').innerHTML = statuses.map(s =>
+        \`<button class="filter-btn \${currentFilter === s ? 'active' : ''}" onclick="setFilter('\${s}')">\${s === 'ALL' ? '전체' : statusLabels[s]}</button>\`
+      ).join('');
+    }
+
+    function setFilter(status) {
+      currentFilter = status;
+      renderFilters();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const filtered = currentFilter === 'ALL' ? allHistory : allHistory.filter(h => h.status === currentFilter);
+      const sorted = filtered.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+
+      document.getElementById('historyList').innerHTML = sorted.map(lead => \`
+        <div class="history-card \${lead.status ? lead.status.toLowerCase() : ''}">
+          <h3>
+            <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${lead.grade}</span>
+            <span class="badge badge-status \${(lead.status || 'new').toLowerCase()}">\${statusLabels[lead.status] || '신규'}</span>
+            \${lead.company}
+          </h3>
+          <p>\${lead.summary}</p>
+          <p><strong>제품:</strong> \${lead.product} | <strong>점수:</strong> \${lead.score}점</p>
+          <div class="meta">
+            생성: \${lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('ko-KR') : '-'}
+            \${lead.updatedAt && lead.updatedAt !== lead.createdAt ? ' | 업데이트: ' + new Date(lead.updatedAt).toLocaleDateString('ko-KR') : ''}
+          </div>
+        </div>
+      \`).join('');
+    }
+
+    loadHistory();
   </script>
 </body>
 </html>`;

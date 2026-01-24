@@ -69,16 +69,70 @@ function saveReport(report) {
   return filePath;
 }
 
+// 리드 ID 생성 (기업명 + 날짜 기반)
+function generateLeadId(company) {
+  const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+  const slug = company.replace(/[^a-zA-Z가-힣0-9]/g, '').substring(0, 10);
+  return `${slug}_${date}_${Math.random().toString(36).substring(2, 6)}`;
+}
+
 function saveLeadsJson(leads) {
   const reportsDir = path.join(__dirname, 'reports');
   if (!fs.existsSync(reportsDir)) {
     fs.mkdirSync(reportsDir, { recursive: true });
   }
 
-  const filePath = path.join(reportsDir, 'latest_leads.json');
-  fs.writeFileSync(filePath, JSON.stringify(leads, null, 2), 'utf-8');
-  console.log(`  리드 JSON 저장: ${filePath}\n`);
-  return filePath;
+  const now = new Date().toISOString();
+
+  // 각 리드에 ID, 상태, 생성일 추가
+  const enrichedLeads = leads.map(lead => ({
+    id: generateLeadId(lead.company),
+    status: 'NEW',  // 신규 발굴
+    createdAt: now,
+    updatedAt: now,
+    ...lead
+  }));
+
+  // 최신 리드 저장
+  const latestPath = path.join(reportsDir, 'latest_leads.json');
+  fs.writeFileSync(latestPath, JSON.stringify(enrichedLeads, null, 2), 'utf-8');
+  console.log(`  리드 JSON 저장: ${latestPath}`);
+
+  // 히스토리에 추가 (기존 데이터 유지)
+  const historyPath = path.join(reportsDir, 'lead_history.json');
+  let history = [];
+  if (fs.existsSync(historyPath)) {
+    try {
+      history = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
+    } catch (e) {
+      history = [];
+    }
+  }
+
+  // 중복 체크 (같은 기업+프로젝트는 업데이트)
+  for (const newLead of enrichedLeads) {
+    const existingIdx = history.findIndex(h =>
+      h.company === newLead.company && h.summary === newLead.summary
+    );
+    if (existingIdx >= 0) {
+      // 기존 리드의 상태는 유지하고 정보만 업데이트
+      history[existingIdx] = {
+        ...history[existingIdx],
+        ...newLead,
+        id: history[existingIdx].id,  // 기존 ID 유지
+        status: history[existingIdx].status,  // 기존 상태 유지
+        createdAt: history[existingIdx].createdAt,  // 기존 생성일 유지
+        updatedAt: now
+      };
+    } else {
+      history.push(newLead);
+    }
+  }
+
+  fs.writeFileSync(historyPath, JSON.stringify(history, null, 2), 'utf-8');
+  console.log(`  히스토리 저장: ${historyPath} (총 ${history.length}개 리드)\n`);
+
+  return latestPath;
 }
 
 module.exports = { generateReport, saveReport, saveLeadsJson };
