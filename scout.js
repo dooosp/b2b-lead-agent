@@ -90,6 +90,13 @@ async function fetchYonhapEconomy() {
   }
 }
 
+// Google News URL을 클릭 가능한 형태로 변환
+function cleanGoogleNewsUrl(url) {
+  if (!url) return url;
+  // /rss/articles/ → /articles/ 변환 시 브라우저에서 원본 기사로 리다이렉트됨
+  return url.replace('https://news.google.com/rss/articles/', 'https://news.google.com/articles/');
+}
+
 // 메인 수집 함수
 async function fetchIndustryNews() {
   console.log('\n[Step 1] 산업 뉴스 수집 시작...');
@@ -115,7 +122,13 @@ async function fetchIndustryNews() {
 
   // 중복 제거
   const uniqueArticles = removeDuplicates(allArticles);
-  console.log(`  수집 완료: 총 ${allArticles.length}개 → 중복 제거 후 ${uniqueArticles.length}개\n`);
+  console.log(`  수집 완료: 총 ${allArticles.length}개 → 중복 제거 후 ${uniqueArticles.length}개`);
+
+  // Google News URL 정리 (브라우저에서 클릭 시 원본 기사로 이동)
+  for (const article of uniqueArticles) {
+    article.link = cleanGoogleNewsUrl(article.link);
+  }
+  console.log('');
 
   return uniqueArticles;
 }
