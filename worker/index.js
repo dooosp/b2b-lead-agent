@@ -283,6 +283,13 @@ function getLeadsPage() {
     .lead-info { display: grid; gap: 8px; }
     .lead-info p { margin: 0; font-size: 14px; line-height: 1.6; color: #ccc; }
     .lead-info strong { color: #fff; }
+    .lead-sources { margin-top: 12px; padding-top: 12px; border-top: 1px solid #2a3a4a; }
+    .lead-sources summary { color: #aaa; font-size: 13px; cursor: pointer; }
+    .lead-sources summary:hover { color: #fff; }
+    .lead-sources ul { list-style: none; padding: 8px 0 0 0; margin: 0; }
+    .lead-sources li { margin: 4px 0; }
+    .lead-sources a { color: #3498db; text-decoration: none; font-size: 13px; }
+    .lead-sources a:hover { color: #5dade2; text-decoration: underline; }
     .lead-actions { margin-top: 12px; display: flex; gap: 8px; }
     .lead-actions a { font-size: 12px; padding: 6px 12px; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
@@ -321,6 +328,15 @@ function getLeadsPage() {
               <p><strong>영업 Pitch:</strong> \${lead.salesPitch}</p>
               <p><strong>글로벌 트렌드:</strong> \${lead.globalContext || '-'}</p>
             </div>
+            \${lead.sources && lead.sources.length > 0 ? \`
+            <div class="lead-sources">
+              <details>
+                <summary>📎 출처 보기 (\${lead.sources.length}건)</summary>
+                <ul>
+                  \${lead.sources.map(s => \`<li><a href="\${s.url}" target="_blank" rel="noopener">→ \${s.title}</a></li>\`).join('')}
+                </ul>
+              </details>
+            </div>\` : ''}
             <div class="lead-actions">
               <a href="/ppt?lead=\${i}" class="btn btn-secondary">PPT 생성</a>
               <a href="/roleplay?lead=\${i}" class="btn btn-secondary">영업 연습</a>

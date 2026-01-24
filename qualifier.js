@@ -14,7 +14,7 @@ async function analyzeLeads(articles) {
   const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
   const newsList = articles.map((a, i) =>
-    `${i + 1}. [${a.source}] ${a.title} (검색어: ${a.query})`
+    `${i + 1}. [${a.source}] ${a.title} (URL: ${a.link}) (검색어: ${a.query})`
   ).join('\n');
 
   // 제품 지식 베이스 문자열 생성
@@ -41,6 +41,7 @@ ${knowledgeBase}
 3. Estimated ROI: 제품 도입 시 예상되는 에너지 절감률 또는 비용 편익을 수치(%)로 제시.
 4. Key Pitch (Value Selling): 고객사 담당자에게 보낼 메일의 '첫 문장' (핵심 가치 중심).
 5. Global Context: 해당 산업과 관련된 글로벌 탄소 중립 정책이나 본사 사례 연결.
+6. Sources: 이 리드 분석에 참고한 뉴스 기사의 제목과 URL을 배열로 포함. 반드시 위 뉴스 목록에 있는 실제 URL만 사용하세요.
 
 [스코어링 기준]
 - Grade A (80-100점): 구체적 착공/수주/예산이 언급된 프로젝트
@@ -63,7 +64,8 @@ Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요
     "grade": "A",
     "roi": "예상 ROI (예: 에너지 30% 절감, 연간 유지보수비 40% 감소 등)",
     "salesPitch": "고객사 담당자에게 보낼 메일 첫 문장 (Value Selling)",
-    "globalContext": "관련 글로벌 정책/트렌드 (예: EU ETS, IMO 규제, RE100 등)"
+    "globalContext": "관련 글로벌 정책/트렌드 (예: EU ETS, IMO 규제, RE100 등)",
+    "sources": [{"title": "참고한 기사 제목", "url": "기사 원본 URL"}]
   }
 ]`;
 
@@ -119,7 +121,8 @@ function generateDemoLeads(articles) {
       grade: grade,
       roi: '에너지 비용 약 30% 절감 예상',
       salesPitch: `${article.title} 관련하여 댄포스 ${product} 솔루션으로 에너지 효율 극대화를 제안합니다.`,
-      globalContext: '글로벌 탄소중립 정책 강화에 따른 고효율 설비 수요 증가'
+      globalContext: '글로벌 탄소중립 정책 강화에 따른 고효율 설비 수요 증가',
+      sources: [{ title: article.title, url: article.link }]
     });
   }
 
