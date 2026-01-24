@@ -1,5 +1,6 @@
 const Parser = require('rss-parser');
 const axios = require('axios');
+const cheerio = require('cheerio');
 const config = require('./config');
 
 const parser = new Parser({
@@ -8,6 +9,8 @@ const parser = new Parser({
   },
   timeout: 10000
 });
+
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 // 텍스트 유사도 계산 (중복 제거용)
 function calculateSimilarity(str1, str2) {
@@ -32,6 +35,78 @@ function removeDuplicates(articles) {
     }
   }
   return unique;
+}
+
+// Google News 기사의 원본 URL 추출 (DuckDuckGo 검색)
+async function resolveOriginalUrl(title) {
+  try {
+    // 제목에서 " - 출처명" 제거
+    const cleanTitle = title.replace(/\s*-\s*[^-]+$/, '').trim();
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(cleanTitle)}`;
+    const res = await axios.get(searchUrl, {
+      headers: { 'User-Agent': UA },
+      timeout: 8000
+    });
+    const $ = cheerio.load(res.data);
+
+    // 첫 번째 검색 결과의 URL 추출
+    const firstResult = $('.result__a').first().attr('href') || '';
+    const match = firstResult.match(/uddg=([^&]+)/);
+    if (match) {
+      return decodeURIComponent(match[1]);
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// 기사 본문 크롤링
+async function fetchArticleContent(url) {
+  if (!url || url.includes('news.google.com')) return '';
+  try {
+    const res = await axios.get(url, {
+      headers: { 'User-Agent': UA },
+      timeout: 8000
+    });
+    const $ = cheerio.load(res.data);
+
+    // 1. 본문 셀렉터들 시도 (가장 긴 텍스트 선택)
+    let content = '';
+    const selectors = [
+      '.article_body', '#articleBody', '#newsEndContents', '.article-body',
+      '.article_content', '.view_cont', '.newsct_article', '#articeBody',
+      '.news_body', '#news_body_area', '.article_txt', '#article-view-content-div',
+      '.story_area', '.news_view', '.article_view'
+    ];
+    for (const sel of selectors) {
+      const text = $(sel).text().trim().replace(/\s+/g, ' ');
+      if (text.length > content.length) {
+        content = text;
+      }
+    }
+
+    // 2. og:description (본문이 짧으면 보완)
+    if (content.length < 100) {
+      const ogDesc = $('meta[property="og:description"]').attr('content') || '';
+      if (ogDesc.length > content.length) content = ogDesc;
+    }
+
+    // 3. p 태그 조합 (마지막 수단)
+    if (content.length < 100) {
+      const ps = [];
+      $('article p, .article p, .content p, .view_cont p').each((i, el) => {
+        const t = $(el).text().trim();
+        if (t.length > 20) ps.push(t);
+      });
+      const joined = ps.join(' ');
+      if (joined.length > content.length) content = joined;
+    }
+
+    return content.substring(0, 1500);
+  } catch (e) {
+    return '';
+  }
 }
 
 // Google News RSS 검색
@@ -90,13 +165,6 @@ async function fetchYonhapEconomy() {
   }
 }
 
-// Google News URL을 클릭 가능한 형태로 변환
-function cleanGoogleNewsUrl(url) {
-  if (!url) return url;
-  // /rss/articles/ → /articles/ 변환 시 브라우저에서 원본 기사로 리다이렉트됨
-  return url.replace('https://news.google.com/rss/articles/', 'https://news.google.com/articles/');
-}
-
 // 메인 수집 함수
 async function fetchIndustryNews() {
   console.log('\n[Step 1] 산업 뉴스 수집 시작...');
@@ -107,7 +175,6 @@ async function fetchIndustryNews() {
     console.log(`  검색: "${query}"`);
     const articles = await fetchGoogleNews(query);
     allArticles = allArticles.concat(articles);
-    // Rate limiting
     await new Promise(resolve => setTimeout(resolve, 500));
   }
 
@@ -124,12 +191,29 @@ async function fetchIndustryNews() {
   const uniqueArticles = removeDuplicates(allArticles);
   console.log(`  수집 완료: 총 ${allArticles.length}개 → 중복 제거 후 ${uniqueArticles.length}개`);
 
-  // Google News URL 정리 (브라우저에서 클릭 시 원본 기사로 이동)
+  // 원본 URL 추출 + 본문 크롤링
+  console.log('  기사 본문 수집 중...');
   for (const article of uniqueArticles) {
-    article.link = cleanGoogleNewsUrl(article.link);
-  }
-  console.log('');
+    // Google News URL인 경우 원본 URL 추출
+    if (article.link.includes('news.google.com')) {
+      const originalUrl = await resolveOriginalUrl(article.title);
+      if (originalUrl) {
+        article.link = originalUrl;
+      } else {
+        // 실패 시 /rss/ 제거하여 브라우저 클릭용 URL로 변환
+        article.link = article.link.replace('/rss/articles/', '/articles/');
+      }
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
 
+    // 본문 크롤링
+    article.content = await fetchArticleContent(article.link);
+    const status = article.content ? `✓ ${article.content.length}자` : '✗ 제목만';
+    console.log(`    ${article.title.substring(0, 40)}... ${status}`);
+    await new Promise(resolve => setTimeout(resolve, 300));
+  }
+
+  console.log('  본문 수집 완료\n');
   return uniqueArticles;
 }
 

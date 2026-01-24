@@ -13,9 +13,11 @@ async function analyzeLeads(articles) {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
-  const newsList = articles.map((a, i) =>
-    `${i + 1}. [${a.source}] ${a.title} (URL: ${a.link}) (검색어: ${a.query})`
-  ).join('\n');
+  const newsList = articles.map((a, i) => {
+    let entry = `${i + 1}. [${a.source}] ${a.title} (URL: ${a.link})`;
+    if (a.content) entry += `\n   본문: ${a.content}`;
+    return entry;
+  }).join('\n\n');
 
   // 제품 지식 베이스 문자열 생성
   const knowledgeBase = Object.entries(config.productKnowledge)
