@@ -1,72 +1,110 @@
 [
   {
-    "company": "HD한국조선해양 / 한화오션",
-    "summary": "LNG운반선 및 친환경 선박 대규모 수주 (약 1.2조 원 규모)",
+    "company": "HD현대중공업 / HD한국조선해양",
+    "summary": "4,816억 원 규모의 친환경 선박 4척 수주 및 새해 고부가가치 선박 수주 확대",
     "product": "iC7 Marine",
     "score": 95,
     "grade": "A",
-    "roi": "연료 소비 15% 절감 및 탄소 배출 규제 벌금 회피",
-    "salesPitch": "귀사의 신규 수주 선박이 IMO의 EEXI/CII 규제를 완벽히 충족하면서도 연료비를 15% 절감할 수 있는 선박용 하이브리드 솔루션을 제안드립니다.",
-    "globalContext": "국제해양기구(IMO)의 탄소 배출 규제(EEXI/CII) 강화에 따른 친환경 선박 전환 필수화"
+    "roi": "연료 소비 15% 절감 및 국제해사기구(IMO) 탄소 배출 규제 벌금 회피",
+    "salesPitch": "귀사의 이번 친환경 선박 수주를 축하드리며, IMO EEXI/CII 규제 대응을 넘어 연료비를 15% 이상 절감할 수 있는 댄포스의 하이브리드 추진 솔루션을 제안드립니다.",
+    "globalContext": "IMO(국제해사기구)의 탄소 집약도 지수(CII) 및 선박 에너지효율지수(EEXI) 등 강화되는 글로벌 해상 탄소 중립 규제 대응 필요성 증대",
+    "sources": [
+      {
+        "title": "HD한국조선해양, 4,816억 원 규모 선박 4척 수주 - 코리아포스트 한글판",
+        "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBMaExSRjl4Tm1fajdsVVhqd2g4WFZ6dVNZcXNITmFBNmFYbmlQb0VkMklLb1NTSTRnT2hkbllFd1VucWYwMFZuNndMMWR3Wk5DWUdNWmprSHRpUmJ3al85LWFTTUI1REpDQXd2SEpB?oc=5"
+      },
+      {
+        "title": "HD한국조선해양, 고부가가치 친환경 선박으로 새해 수주 포문 - 데일리비즈온",
+        "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE9rellUNG9IOTBvb05TRmQwVUd4RDgyN0lsR2N2alcyQzNJd2xLODJVNTVFTHYzdHJ0d0hOZ3YtdmI3X3ZLNU96ZkhFczZWZ0lFbWF1ZzR3TGVpRFpZV09FaUhydkVpb0hRZmppQQ?oc=5"
+      }
+    ]
   },
   {
-    "company": "DL이앤씨 / 인천 부평 데이터센터",
-    "summary": "인천 부평 청천동 데이터센터 2단계(1단계의 1.7배 규모) 착공",
+    "company": "DL이앤씨",
+    "summary": "부평 청천동 데이터센터 2단계 착공 (1단계 대비 1.7배 규모)",
     "product": "Turbocor 컴프레서",
     "score": 92,
     "grade": "A",
-    "roi": "데이터센터 전력비 35% 절감 및 유지보수비 급감",
-    "salesPitch": "부평 데이터센터 2단계의 PUE(전력효율지수) 극대화를 위해 오일리스 기술로 효율을 40% 향상시킨 Turbocor 솔루션을 도입하십시오.",
-    "globalContext": "글로벌 데이터센터 시장의 저탄소화 및 냉각 에너지 효율 최적화(PUE 개선) 트렌드"
+    "roi": "오일리스 기술을 통한 데이터센터 냉각 전력비 35% 절감 및 유지보수 비용 급감",
+    "salesPitch": "부평 데이터센터 2단계 대규모 착공에 맞춰, 냉각 효율을 40% 향상시키고 운영 비용(OPEX)을 획기적으로 낮출 수 있는 댄포스 Turbocor 오일리스 솔루션을 검토해 보십시오.",
+    "globalContext": "데이터센터의 에너지 효율 지표인 PUE(Power Usage Effectiveness) 최적화를 위한 고효율 냉각 설비 도입 필수 트렌드",
+    "sources": [
+      {
+        "title": "부평 청천동 데이터센터 2단계 착공··· 1단계 1.7배 높은 규모 - incheontoday.com",
+        "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE4tWWJLS01pV1hiNmZNamtaYmladnkybTJpSkFLLUlJRmx4aUkxQ3daOG1vV2RkS1pxdjNkM2dCQ1JoVVhsOEpvR0NDUHkzYWQ5YkJmUlN3LUxMaGxBdDByR25WYm5ZcmJYSVJuWmY2MlI?oc=5"
+      },
+      {
+        "title": "DL이앤씨, 데이터센터 영토 확장 가속 - 딜사이트",
+        "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE0xX2xrRHRZdnNNYjh0aUpNTENpTzlGRWN2dGF5RXBNdThQLVFlX1N2cnRkYi1HbnpZYkRZRWxvdklZbEhNTlgwdVJmVmUwWG8?oc=5"
+      }
+    ]
   },
   {
-    "company": "신성이엔지",
-    "summary": "반도체 클린룸 HPL 및 용인 스마트팩토리 증설 추진",
+    "company": "한화오션",
+    "summary": "LNG운반선 2척 7,383억 원 규모 수주",
+    "product": "iC7 Marine",
+    "score": 90,
+    "grade": "A",
+    "roi": "축발전기 시스템 적용을 통한 연료비 15% 절감 및 탄소 배출량 저감",
+    "salesPitch": "연초 대규모 LNG 운반선 수주 성과와 관련하여, 선박의 에너지 효율을 극대화하고 탄소 배출 규제를 완벽하게 해결할 수 있는 iC7 기반 추진 드라이브를 제안합니다.",
+    "globalContext": "EU 해운 탄소배출권 거래제(EU ETS) 시행에 따른 친환경 선박 기술 경쟁력 강화 필요성",
+    "sources": [
+      {
+        "title": "한화오션, LNG운반선 2척 7383억 수주…연초부터 '수주 질주' - 스페셜경제",
+        "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE5GX3VnOUVnNUNfcE5Ea3d0VnE4ZkpSNGw3azF2a3dVX0hwNUg1cVRCbnNSMURwLVpHX2JzYmlwQk5RNnRlUzgzeFQ1aFprMmdYaXVBbzQ1bDdhUEkxWUMzVllzeDJnX2ltMk00RQ?oc=5"
+      }
+    ]
+  },
+  {
+    "company": "한국에너지기술평가원 (KEIT)",
+    "summary": "10년 이상 된 노후 건물을 제로에너지빌딩(ZEB)으로 리모델링",
     "product": "VLT HVAC Drive",
     "score": 88,
     "grade": "A",
-    "roi": "클린룸 공조 모터 속도 제어로 에너지 20~50% 절감",
-    "salesPitch": "반도체 클린룸의 정밀한 환경 제어와 함께 공조 시스템의 에너지 소비를 최대 50%까지 줄일 수 있는 고성능 드라이브 솔루션을 제안합니다.",
-    "globalContext": "RE100 달성을 위한 반도체 공급망 전반의 에너지 효율화 요구 증대"
-  },
-  {
-    "company": "포스코DX / 현대자동차",
-    "summary": "이차전지 공장 자동화 수주 및 미국 조지아 스마트 공장 투자",
-    "product": "VLT AutomationDrive",
-    "score": 90,
-    "grade": "A",
-    "roi": "기존 정속 모터 대비 전력 소비 30% 감소",
-    "salesPitch": "이차전지 및 완성차 제조 라인의 생산성을 극대화함과 동시에 전력 소비를 30% 절감하는 최첨단 자동화 드라이브를 경험해 보십시오.",
-    "globalContext": "글로벌 제조 산업의 스마트 팩토리 전환 및 생산 공정 내 탄소 배출 저감 압박"
-  },
-  {
-    "company": "한국에너지기술평가원(KEIT)",
-    "summary": "10년 경과 노후 건물의 제로에너지건물(ZEB) 전환 리모델링",
-    "product": "VLT HVAC Drive",
-    "score": 85,
-    "grade": "A",
-    "roi": "공조 시스템 최적 제어로 건물 에너지 소비 30% 이상 절감",
-    "salesPitch": "노후 건물의 제로에너지 빌딩 전환을 위한 가장 확실한 방법은 댄포스의 HVAC 인버터를 통한 공조 시스템 최적화입니다.",
-    "globalContext": "건물 부문 탄소중립 실현을 위한 제로에너지건물(ZEB) 인증 의무화 확산"
+    "roi": "기존 노후 정속 모터 대비 건물 내 공조 전력 소비 30% 절감",
+    "salesPitch": "KEIT 건물의 제로에너지빌딩 전환 성공을 위해, 지능형 모터 제어로 에너지 소비를 최대 50%까지 줄일 수 있는 댄포스 HVAC 전용 드라이브 솔루션이 핵심이 될 것입니다.",
+    "globalContext": "정부의 2050 탄소중립 달성을 위한 '공공건물 제로에너지 건축물 의무화' 확대 정책",
+    "sources": [
+      {
+        "title": "10년 넘은 KEIT 건물 제로에너지건물로 변신 - 더팩트",
+        "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5tUjNOWTBlbU1ZZllPWWpHSDhQaUxVaG1MZHF1aUg2VXdfLXNtaUUtZ0ZOS1NsZEF1TWtqR09kbThWTm9lV3psbEw1RlR0al9kTkxhcmZjdV84d9IBVEFVX3lxTE9hWWZfMTVueWtDdWJmdldPQnA0cy1aLWpSM0MzeFNNMlcxdmJuSXZHUFpyOEY0d2ltT0Njb1ByM0dZZmlhRUVfeVFXaGJhbWxfcWJqRQ?oc=5"
+      }
+    ]
   },
   {
     "company": "SK플라즈마",
-    "summary": "안동시 120억 규모 혈장제제 저장시설(저온 저장고) 투자",
+    "summary": "안동시 120억 규모 혈장제제 저장시설(냉동창고) 신규 투자",
     "product": "Turbocor 컴프레서",
-    "score": 82,
+    "score": 85,
     "grade": "A",
-    "roi": "냉동창고 전력비 35% 절감 및 오일리스 기술을 통한 유지보수 편의성 확보",
-    "salesPitch": "혈장제제 저장의 생명인 정밀 온도 유지와 에너지 비용 절감을 동시에 실현하는 오일리스 터보 기술을 제안합니다.",
-    "globalContext": "바이오·헬스케어 콜드체인 시장의 에너지 효율화 및 ESG 경영 강화"
+    "roi": "혈장 저장용 초저온 냉동 설비 전력비 35% 절감 및 정밀 온도 제어로 제품 안정성 확보",
+    "salesPitch": "바이오 저장 시설의 생명인 정밀한 온도 유지와 운영 비용 절감을 위해, 전 세계 데이터센터와 콜드체인에서 검증된 Turbocor 오일리스 솔루션을 제안드립니다.",
+    "globalContext": "백신 및 혈장제제 등 바이오 의약품 증가에 따른 고효율·고신뢰성 콜드체인 설비 수요 급증",
+    "sources": [
+      {
+        "title": "SK플라즈마, 안동시와 120억 규모 혈장제제 저장시설 투자 협약 - 히트뉴스",
+        "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTFBVWDlRZ050dEtQQ2JDOVg3YmdNcnBDTk1qa0MwUzRyci1HRmxvM2lMUVdCUzVMUll3MXVRb09hMzlpcTZOQUZXTW9JamZBVF9XSm0yMzZ1a1BGWVFpVnE1RTAxbFZtY2VudzdV?oc=5"
+      }
+    ]
   },
   {
-    "company": "산업통상자원부 탄소중립 프로젝트 참여 기업",
-    "summary": "정부 주도 탄소중립 설비 투자 경매 사업(기업별 최대 50억 지원)",
-    "product": "iC7 / VLT Drives",
+    "company": "신성이엔지",
+    "summary": "반도체 클린룸 및 스마트팩토리 HPL 공조 설비 증설",
+    "product": "VLT AutomationDrive",
     "score": 75,
     "grade": "B",
-    "roi": "에너지 20~50% 절감으로 정부 탄소 감축 목표 조기 달성",
-    "salesPitch": "정부의 탄소중립 설비 지원 사업 신청을 위한 최적의 파트너로서, 검증된 에너지 절감 수치를 보장하는 댄포스 솔루션을 제안합니다.",
-    "globalContext": "국가 온실가스 감축 목표(NDC) 달성을 위한 민관 협력 탄소 감축 가속화"
+    "roi": "모터 속도 정밀 제어를 통한 클린룸 에너지 소비 20~50% 절감",
+    "salesPitch": "반도체 클린룸의 에너지 효율을 결정짓는 핵심은 정밀한 기류 제어입니다. 댄포스의 VLT 드라이브로 생산성은 높이고 탄소 배출은 낮추십시오.",
+    "globalContext": "RE100 및 ESG 경영 실천을 위한 제조 시설의 고효율 인버터 도입 의무화 추세",
+    "sources": [
+      {
+        "title": "신성이엔지, 반도체 '증설 속도전'서 'HPL' 앞세워 핵심 파트너 부상… 건설 현장의 '스마트 팩토리화' 견인! - 에이빙",
+        "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE10d1A4YXFLeUFOUUJNMkdGaVJsUFRERWk2SGpQU3Z2M00zZVl5VEl0T3hlUTVFX1A3S09hNm1tX2hvWUZZemczaDgyU05xbC1KOW5Mdjk5Vkc5dW1sS2h6cDNIamJydlHSAWtBVV95cUxPV29EeFhhYTdmdFN3R2lST3FGVS1zMnV5V09kc2NpTkFQSlRXcDYtWHRtejdDaWNmRXRNOHFnS2phX0s5WUotRVNpQnJ0VXZGNU8xTkxfME1sMHVReGY1UkhfV29MM3NFMUE4aw?oc=5"
+      },
+      {
+        "title": "[르포] 클린룸 경쟁력·생산성 2.1배↑...신성이엔지 용인 스마트팩토리 가보니 - 지디넷코리아",
+        "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE0yR3BzcmduWmktV3htM0pRamFLT2w1WDE3TkVyZnV0TjZyVUNpM28tWFpTU2JEb25QdXlIUFpnLWdueWpVeGEweGRBQXNQblFEdi1mSHBB?oc=5"
+      }
+    ]
   }
 ]
