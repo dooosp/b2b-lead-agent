@@ -3,6 +3,13 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === '/trigger' && request.method === 'POST') {
+      const body = await request.json().catch(() => ({}));
+      if (!body.password || body.password !== env.TRIGGER_PASSWORD) {
+        return new Response(JSON.stringify({ success: false, message: '비밀번호가 올바르지 않습니다.' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json; charset=utf-8' }
+        });
+      }
       return await triggerReport(env);
     }
 
@@ -148,6 +155,8 @@ function getHtml() {
     <h1>B2B 리드 에이전트</h1>
     <p class="subtitle">Danfoss 맞춤형 영업 기회 분석</p>
 
+    <input type="password" id="password" placeholder="비밀번호 입력"
+      style="padding:12px 16px; border-radius:8px; border:1px solid #444; background:#1a1a2e; color:#fff; font-size:14px; width:200px; text-align:center; margin-bottom:16px; display:block; margin-left:auto; margin-right:auto;">
     <button class="btn" id="generateBtn" onclick="generate()">보고서 생성</button>
 
     <div class="status" id="status"></div>
@@ -169,7 +178,19 @@ function getHtml() {
       status.textContent = '⏳ 보고서 생성을 요청하고 있습니다...';
 
       try {
-        const res = await fetch('/trigger', { method: 'POST' });
+        const password = document.getElementById('password').value;
+        if (!password) {
+          status.className = 'status error';
+          status.textContent = '❌ 비밀번호를 입력하세요.';
+          btn.disabled = false;
+          btn.textContent = '보고서 생성';
+          return;
+        }
+        const res = await fetch('/trigger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
         const data = await res.json();
 
         if (data.success) {
