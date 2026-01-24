@@ -1,49 +1,45 @@
 [
   {
     "company": "HD한국조선해양",
-    "summary": "총 4,816억 원 규모의 친환경 선박 4척 수주 프로젝트",
-    "product": "iC7 Marine",
+    "summary": "오세아니아 선주로부터 원유 운반선 2척 및 석유화학 제품 운반선(PC선) 2척 수주 (4,816억 규모)",
+    "product": "선박용 하이브리드 솔루션",
     "score": 95,
     "grade": "A",
-    "roi": "연료 소비 15% 절감 및 IMO 규제 벌금 회피",
-    "salesPitch": "귀사가 수주한 친환경 선박의 경쟁력을 극대화하기 위해, IMO의 EEXI/CII 규제 대응과 15%의 연료 절감을 동시에 실현하는 하이브리드 솔루션을 제안드립니다.",
-    "globalContext": "IMO(국제해사기구)의 탄소 배출 규제인 EEXI 및 CII 기준 강화에 따른 선박 전동화 필수 트렌드",
+    "roi": "연료 소비 15% 절감 및 EEXI/CII 규제 벌금 회피",
+    "salesPitch": "HD한국조선해양의 고부가가치 친환경 선박 수주를 축하드리며, IMO 탄소 배출 규제 완벽 대응과 연료비 15% 절감을 동시에 실현할 댄포스의 하이브리드 추진 시스템을 제안드립니다.",
+    "globalContext": "IMO(국제해사기구)의 탄소 집약도 지수(CII) 및 에너지효율지수(EEXI) 규제 강화에 따른 친환경 선박 전환 가속화",
     "sources": [
       {
         "title": "HD한국조선해양, 4,816억 원 규모 선박 4척 수주 - 코리아포스트 한글판",
-        "url": "https://news.google.com/articles/CBMibkFVX3lxTFBMaExSRjl4Tm1fajdsVVhqd2g4WFZ6dVNZcXNITmFBNmFYbmlQb0VkMklLb1NTSTRnT2hkbllFd1VucWYwMFZuNndMMWR3Wk5DWUdNWmprSHRpUmJ3al85LWFTTUI1REpDQXd2SEpB?oc=5"
-      },
-      {
-        "title": "HD한국조선해양, 고부가가치 친환경 선박으로 새해 수주 포문 - 데일리비즈온",
-        "url": "https://news.google.com/articles/CBMibEFVX3lxTE9rellUNG9IOTBvb05TRmQwVUd4RDgyN0lsR2N2alcyQzNJd2xLODJVNTVFTHYzdHJ0d0hOZ3YtdmI3X3ZLNU96ZkhFczZWZ0lFbWF1ZzR3TGVpRFpZV09FaUhydkVpb0hRZmppQQ?oc=5"
+        "url": "https://www.g-enews.com/article/Industry/2026/01/2026012012571615056ed0c62d49_1"
       }
     ]
   },
   {
     "company": "한화오션",
-    "summary": "7,383억 원 규모의 LNG운반선 2척 수주 프로젝트",
-    "product": "Marine용 드라이브",
-    "score": 92,
+    "summary": "오세아니아 지역 선주로부터 고부가가치 LNG운반선 2척 수주 (7,383억 규모)",
+    "product": "iC7 Marine",
+    "score": 98,
     "grade": "A",
-    "roi": "연료 소비 15% 절감 및 선박 가동 효율 최적화",
-    "salesPitch": "한화오션의 LNG운반선 수주를 축하드리며, 고부가가치 선박의 에너지 효율을 극대화할 수 있는 댄포스의 검증된 마린 전용 드라이브 솔루션을 검토해 보시기 바랍니다.",
-    "globalContext": "글로벌 LNG 수요 증가에 따른 운반선 확충과 선박 내 고효율 전력 변환 장치 도입 확대",
+    "roi": "에너지 효율 개선을 통한 연료 소비 15% 절감 및 운영 비용 최적화",
+    "salesPitch": "한화오션의 2026년 LNG운반선 수주 질주에 발맞춰, 고부가가치 선박의 경쟁력을 극대화할 수 있는 댄포스 iC7 기반의 지능형 드라이브 솔루션을 제안합니다.",
+    "globalContext": "미국 LNG 터미널 개발 계획에 따른 물동량 증가 및 고효율 친환경 선박 신조 수요 확대",
     "sources": [
       {
         "title": "한화오션, LNG운반선 2척 7383억 수주…연초부터 '수주 질주' - 스페셜경제",
-        "url": "https://news.google.com/articles/CBMibEFVX3lxTE5GX3VnOUVnNUNfcE5Ea3d0VnE4ZkpSNGw3azF2a3dVX0hwNUg1cVRCbnNSMURwLVpHX2JzYmlwQk5RNnRlUzgzeFQ1aFprMmdYaXVBbzQ1bDdhUEkxWUMzVllzeDJnX2ltMk00RQ?oc=5"
+        "url": "https://www.speconomy.com/news/articleView.html?idxno=410550"
       }
     ]
   },
   {
-    "company": "인천 부평구 데이터센터 프로젝트",
-    "summary": "부평 청천동 데이터센터 2단계(1단계의 1.7배 규모) 착공",
+    "company": "부평 청천동 데이터센터 (2단계)",
+    "summary": "1단계 대비 1.7배 규모의 대형 데이터센터 2단계 착공 및 쿨링 시스템 구축 수요",
     "product": "Turbocor 컴프레서",
-    "score": 98,
+    "score": 92,
     "grade": "A",
-    "roi": "데이터센터 전력비 35% 절감 및 오일리스 기술을 통한 유지보수비 급감",
-    "salesPitch": "역대급 규모로 착공되는 부평 데이터센터의 PUE(전력사용효율) 목표 달성을 위해, 효율이 40% 향상된 댄포스의 오일리스 Turbocor 솔루션을 제안합니다.",
-    "globalContext": "AI 산업 급성장에 따른 데이터센터 전력 소비 급증 및 고효율 쿨링 시스템(Liquid Cooling 등) 수요 확대",
+    "roi": "데이터센터 전력 소비 35% 절감 및 오일리스 기술로 유지보수비 급감",
+    "salesPitch": "부평 2단계 데이터센터의 압도적 규모에 걸맞은 에너지 효율(PUE) 달성을 위해, 효율을 40% 향상시킨 댄포스 Turbocor 오일리스 냉각 솔루션을 제안드립니다.",
+    "globalContext": "글로벌 데이터센터 시장의 탄소 중립 및 전력 효율(PUE) 최적화 트렌드",
     "sources": [
       {
         "title": "부평 청천동 데이터센터 2단계 착공··· 1단계 1.7배 높은 규모 - incheontoday.com",
@@ -52,30 +48,14 @@
     ]
   },
   {
-    "company": "SK플라즈마",
-    "summary": "안동시 120억 규모 혈장제제 저장시설(냉동창고) 투자",
-    "product": "Turbocor 컴프레서",
-    "score": 88,
-    "grade": "A",
-    "roi": "냉동창고 전력비 35% 절감 및 정밀 온도 제어",
-    "salesPitch": "바이오 의약품 저장의 핵심인 안정적인 온도 유지와 에너지 비용 절감을 위해, 댄포스의 오일리스 기술 기반 고효율 컴프레서 도입을 제안드립니다.",
-    "globalContext": "바이오/콜드체인 시장의 성장과 함께 엄격한 품질 관리 및 에너지 효율 기준 강화",
-    "sources": [
-      {
-        "title": "SK플라즈마, 안동시와 120억 규모 혈장제제 저장시설 투자 협약 - 히트뉴스",
-        "url": "https://news.google.com/articles/CBMia0FVX3lxTFBVWDlRZ050dEtQQ2JDOVg3YmdNcnBDTk1qa0MwUzRyci1HRmxvM2lMUVdCUzVMUll3MXVRb09hMzlpcTZOQUZXTW9JamZBVF9XSm0yMzZ1a1BGWVFpVnE1RTAxbFZtY2VudzdV?oc=5"
-      }
-    ]
-  },
-  {
-    "company": "한국에너지기술평가원 (KEIT)",
-    "summary": "10년 이상 노후 건물을 제로에너지빌딩으로 리모델링",
+    "company": "한국산업기술기획평가원(KEIT)",
+    "summary": "10년 경과 노후 건물을 제로에너지건물(ZEB)로 리모델링하는 프로젝트",
     "product": "VLT HVAC Drive",
     "score": 85,
     "grade": "A",
-    "roi": "기존 정속 모터 대비 공조 시스템 전력 소비 30% 감소",
-    "salesPitch": "KEIT 건물의 제로에너지빌딩 전환 성공을 위해, 공조 시스템의 에너지 효율을 30% 이상 향상시키는 댄포스 HVAC 전용 인버터 솔루션을 추천합니다.",
-    "globalContext": "탄소중립 시나리오에 따른 기존 노후 건물의 그린 리모델링 및 제로에너지빌딩(ZEB) 인증 의무화 확대",
+    "roi": "공조 시스템 모터 제어로 기존 정속 모터 대비 전력 소비 30% 감소",
+    "salesPitch": "KEIT 건물의 제로에너지빌딩 변신을 위해, 모터 속도 제어만으로 건물 에너지 소비를 최대 50%까지 절감할 수 있는 댄포스 HVAC 전용 인버터 도입을 제안합니다.",
+    "globalContext": "기존 노후 건물의 에너지 효율 향상을 위한 국가적 제로에너지빌딩(ZEB) 인증 확대 정책",
     "sources": [
       {
         "title": "10년 넘은 KEIT 건물 제로에너지건물로 변신 - 더팩트",
@@ -84,34 +64,34 @@
     ]
   },
   {
-    "company": "포스코DX",
-    "summary": "이차전지 투자 재개에 따른 공장 자동화 수주 급증(163% 증가)",
-    "product": "VLT AutomationDrive",
-    "score": 82,
-    "grade": "B",
-    "roi": "모터 속도 제어로 에너지 20~50% 절감",
-    "salesPitch": "이차전지 생산 라인의 정밀 제어와 극대화된 에너지 효율을 위해, 포스코DX의 자동화 솔루션에 댄포스의 iC7/VLT 드라이브를 결합해 보십시오.",
-    "globalContext": "글로벌 전기차 공급망 확대를 위한 배터리 공장(Gigafactory) 증설 및 스마트 팩토리 에너지 관리 중요성 증대",
+    "company": "SK플라즈마",
+    "summary": "안동시에 120억 규모의 혈장제제 저장을 위한 고도화된 냉동/냉장 시설 투자",
+    "product": "Turbocor 컴프레서",
+    "score": 88,
+    "grade": "A",
+    "roi": "저장시설 냉동기 전력비 35% 절감 및 오일리스 기술을 통한 정밀 온도 제어",
+    "salesPitch": "SK플라즈마 안동 시설의 핵심인 혈장제제 보관 안정성을 위해, 유지보수비는 줄이고 냉각 효율은 40% 높인 댄포스 Turbocor 솔루션이 최적의 파트너가 될 것입니다.",
+    "globalContext": "바이오/제약 분야 콜드체인(Cold Chain) 시장의 정밀 온도 관리 및 에너지 절감 요구 증가",
     "sources": [
       {
-        "title": "포스코DX, 공장자동화 수주 163% 급증...\"이차전지 투자 재개 영향\" - 디일렉",
-        "url": "https://news.google.com/articles/CBMiZkFVX3lxTE9DNTJ1dFZGd3gyUzJXZmx6SWNodDA4cnczOE9BVUVNdnd0NEI2QXlNa25iaHhReDFWRHJsX2pNeWxkSGc1dS1IdERqWHJKdXVHYkR5X1o4VGltc0VVYWtHRDZfLU9VQQ?oc=5"
+        "title": "SK플라즈마, 안동시와 120억 규모 혈장제제 저장시설 투자 협약 - 히트뉴스",
+        "url": "https://news.google.com/articles/CBMia0FVX3lxTFBVWDlRZ050dEtQQ2JDOVg3YmdNcnBDTk1qa0MwUzRyci1ExtmxvM2lMUVdCUzVMUll3MXVRb09hMzlpcTZOQUZXTW9JamZBVF9XSm0yMzZ1a1BGWVFpVnE1RTAxbFZtY2VudzdV?oc=5"
       }
     ]
   },
   {
-    "company": "산업통상자원부 주관 참여기업",
-    "summary": "탄소중립 설비투자 프로젝트 경매사업 (기업별 최대 50억 지원)",
-    "product": "VACON 100",
+    "company": "포스코DX",
+    "summary": "이차전지 투자 재개에 따른 공장 자동화 수주액 163% 급증",
+    "product": "VLT AutomationDrive",
     "score": 75,
     "grade": "B",
-    "roi": "산업용 모터 전력 소비 30% 절감 및 정부 보조금을 통한 ROI 단축",
-    "salesPitch": "정부의 탄소중립 지원금을 활용하여 최단 기간 내 ROI를 달성할 수 있는 댄포스의 고효율 드라이브 교체 솔루션을 제안드립니다.",
-    "globalContext": "국가 온실가스 감축목표(NDC) 달성을 위한 정부 주도의 탄소 배출 저감 설비 투자 지원 확대",
+    "roi": "생산 라인 모터 제어 효율화를 통한 전력 소비 20~50% 절감",
+    "salesPitch": "포스코DX의 급증하는 자동화 프로젝트에 대응하여, 이차전지 생산 공정의 생산성을 극대화하고 에너지 비용을 30% 이상 절감할 수 있는 댄포스 자동화 드라이브를 제안합니다.",
+    "globalContext": "이차전지 및 첨단 산업 제조 공장의 스마트 팩토리화 및 에너지 효율 중심의 설비 투자",
     "sources": [
       {
-        "title": "[정책브리핑] 탄소중립 프로젝트 경매제 실시…기업별 최대 50억 지원 - ESG경제",
-        "url": "https://news.google.com/articles/CBMibEFVX3lxTE5kbG5TdkpRbC11RXRaNks0R0w3WDY4RllhVGtpbU5uUzd0a3lDa3ZYdHpKaHVJV2cwRUg0RUdsRTRVMEl6YnNyMi1XUFlUZ1RyVjlHaGI1b2k1OFRIMzJlelc2WW11dkliUnZreA?oc=5"
+        "title": "포스코DX, 공장자동화 수주 163% 급증...\"이차전지 투자 재개 영향\" - 디일렉",
+        "url": "https://news.google.com/articles/CBMiZkFVX3lxTE9DNTJ1dFZGd3gyUzJXZmx6SWNodDA4cnczOE9BVUVNdnd0NEI2QXlNa25iaHhReDFWRHJsX2pNeWxkSGc1dS1IdERqWHJKdXVHYkR5X1o4VGltc0VVYWtHRDZfLU9VQQ?oc=5"
       }
     ]
   }
