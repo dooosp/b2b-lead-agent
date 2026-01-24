@@ -18,28 +18,32 @@ function generateReport(leads) {
   // Grade A
   report += `## Grade A - 즉시 영업 가능 (${gradeA.length}건)\n\n`;
   if (gradeA.length > 0) {
-    report += '| 기업명 | 프로젝트 | 추천 제품 | 점수 | 영업 멘트 |\n';
-    report += '|--------|----------|-----------|------|----------|\n';
     for (const lead of gradeA) {
-      report += `| ${lead.company} | ${lead.summary} | ${lead.product} | ${lead.score} | ${lead.salesPitch} |\n`;
+      report += `### ${lead.company} (${lead.score}점)\n`;
+      report += `- **프로젝트:** ${lead.summary}\n`;
+      report += `- **추천 제품:** ${lead.product}\n`;
+      report += `- **예상 ROI:** ${lead.roi || '-'}\n`;
+      report += `- **영업 Pitch:** ${lead.salesPitch}\n`;
+      report += `- **글로벌 트렌드:** ${lead.globalContext || '-'}\n\n`;
     }
   } else {
-    report += '_해당 없음_\n';
+    report += '_해당 없음_\n\n';
   }
-  report += '\n';
 
   // Grade B
   report += `## Grade B - 파이프라인 관리 (${gradeB.length}건)\n\n`;
   if (gradeB.length > 0) {
-    report += '| 기업명 | 프로젝트 | 추천 제품 | 점수 | 영업 멘트 |\n';
-    report += '|--------|----------|-----------|------|----------|\n';
     for (const lead of gradeB) {
-      report += `| ${lead.company} | ${lead.summary} | ${lead.product} | ${lead.score} | ${lead.salesPitch} |\n`;
+      report += `### ${lead.company} (${lead.score}점)\n`;
+      report += `- **프로젝트:** ${lead.summary}\n`;
+      report += `- **추천 제품:** ${lead.product}\n`;
+      report += `- **예상 ROI:** ${lead.roi || '-'}\n`;
+      report += `- **영업 Pitch:** ${lead.salesPitch}\n`;
+      report += `- **글로벌 트렌드:** ${lead.globalContext || '-'}\n\n`;
     }
   } else {
-    report += '_해당 없음_\n';
+    report += '_해당 없음_\n\n';
   }
-  report += '\n';
 
   // 요약
   report += '---\n\n';

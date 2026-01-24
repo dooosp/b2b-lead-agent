@@ -17,17 +17,32 @@ async function analyzeLeads(articles) {
     `${i + 1}. [${a.source}] ${a.title} (검색어: ${a.query})`
   ).join('\n');
 
-  const prompt = `당신은 댄포스(Danfoss)의 B2B 영업 분석가입니다.
-아래 뉴스 목록을 분석하여 댄포스의 제품(인버터, 드라이브, HVAC, 냉각 솔루션)이
-필요한 영업 기회를 찾아주세요.
+  // 제품 지식 베이스 문자열 생성
+  const knowledgeBase = Object.entries(config.productKnowledge)
+    .map(([name, info]) => `- ${name}: 핵심가치="${info.value}", ROI="${info.roi}"`)
+    .join('\n');
 
-[댄포스 제품군]
+  const prompt = `[System]
+당신은 댄포스 코리아의 'AI 기술 영업 전략가'입니다.
+아래 뉴스를 읽고 단순 요약이 아닌, **'영업 기회 분석 보고서'**를 작성하세요.
+
+[댄포스 제품 지식 베이스]
+${knowledgeBase}
+
+[제품 라인업]
 - Drives: ${config.products.drives.join(', ')}
 - Marine: ${config.products.marine.join(', ')}
 - HVAC: ${config.products.hvac.join(', ')}
 - Cooling: ${config.products.cooling.join(', ')}
 
-[분석 기준]
+[분석 필수 포함 항목]
+1. Target Opportunity: 어떤 기업의 어떤 프로젝트인가?
+2. Danfoss Solution: 위 지식 베이스를 참고하여 최적의 제품 1개를 선정.
+3. Estimated ROI: 제품 도입 시 예상되는 에너지 절감률 또는 비용 편익을 수치(%)로 제시.
+4. Key Pitch (Value Selling): 고객사 담당자에게 보낼 메일의 '첫 문장' (핵심 가치 중심).
+5. Global Context: 해당 산업과 관련된 글로벌 탄소 중립 정책이나 본사 사례 연결.
+
+[스코어링 기준]
 - Grade A (80-100점): 구체적 착공/수주/예산이 언급된 프로젝트
 - Grade B (50-79점): 산업 트렌드로 향후 수요 예상
 - Grade C (0-49점): 단순 동정 뉴스 (제외)
@@ -43,10 +58,12 @@ Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요
   {
     "company": "타겟 기업명",
     "summary": "프로젝트 내용 요약 (1줄)",
-    "product": "추천 댄포스 제품",
+    "product": "추천 댄포스 제품 1개",
     "score": 85,
     "grade": "A",
-    "salesPitch": "영업 멘트 초안 (2-3줄)"
+    "roi": "예상 ROI (예: 에너지 30% 절감, 연간 유지보수비 40% 감소 등)",
+    "salesPitch": "고객사 담당자에게 보낼 메일 첫 문장 (Value Selling)",
+    "globalContext": "관련 글로벌 정책/트렌드 (예: EU ETS, IMO 규제, RE100 등)"
   }
 ]`;
 
@@ -100,7 +117,9 @@ function generateDemoLeads(articles) {
       product: product,
       score: score,
       grade: grade,
-      salesPitch: `${article.title} 관련하여 댄포스 ${product} 솔루션 제안 가능합니다.`
+      roi: '에너지 비용 약 30% 절감 예상',
+      salesPitch: `${article.title} 관련하여 댄포스 ${product} 솔루션으로 에너지 효율 극대화를 제안합니다.`,
+      globalContext: '글로벌 탄소중립 정책 강화에 따른 고효율 설비 수요 증가'
     });
   }
 
