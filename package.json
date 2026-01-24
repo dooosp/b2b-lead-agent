@@ -1,0 +1,18 @@
+{
+  "name": "b2b-lead-agent",
+  "version": "1.0.0",
+  "description": "B2B 리드 발굴 에이전트 - Danfoss 맞춤형",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "email": "node main.js --email"
+  },
+  "dependencies": {
+    "@google/generative-ai": "latest",
+    "axios": "^1.13.2",
+    "cheerio": "^1.1.2",
+    "rss-parser": "^3.13.0",
+    "nodemailer": "^7.0.12",
+    "dotenv": "^17.2.3"
+  }
+}
