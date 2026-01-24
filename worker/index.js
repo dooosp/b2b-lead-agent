@@ -61,8 +61,8 @@ async function handleTrigger(request, env) {
 async function fetchLeads(env) {
   try {
     const response = await fetch(
-      `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/latest_leads.json`,
-      { headers: { 'User-Agent': 'B2B-Lead-Worker' } }
+      `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/latest_leads.json?t=${Date.now()}`,
+      { headers: { 'User-Agent': 'B2B-Lead-Worker', 'Cache-Control': 'no-cache' } }
     );
     if (!response.ok) return jsonResponse({ leads: [], message: '아직 생성된 리드가 없습니다.' });
     const leads = await response.json();
