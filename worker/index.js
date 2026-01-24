@@ -101,8 +101,12 @@ async function generatePPT(request, env) {
 각 슬라이드에 대해 [제목], [핵심 메시지 2~3줄], [추천 시각자료]를 포함해서 작성하세요.
 마크다운 형식으로 출력하세요.`;
 
-  const result = await callGemini(prompt, env);
-  return jsonResponse({ success: true, content: result });
+  try {
+    const result = await callGemini(prompt, env);
+    return jsonResponse({ success: true, content: result });
+  } catch (e) {
+    return jsonResponse({ success: false, message: 'Gemini API 오류: ' + e.message }, 500);
+  }
 }
 
 async function handleRoleplay(request, env) {
@@ -150,15 +154,19 @@ ${userMessage || '안녕하세요, 댄포스 코리아입니다. 귀사의 프�
 - 개선점: ...
 - 제안: ...`;
 
-  const result = await callGemini(prompt, env);
-  return jsonResponse({ success: true, content: result });
+  try {
+    const result = await callGemini(prompt, env);
+    return jsonResponse({ success: true, content: result });
+  } catch (e) {
+    return jsonResponse({ success: false, message: 'Gemini API 오류: ' + e.message }, 500);
+  }
 }
 
 // ===== Gemini API 호출 =====
 
 async function callGemini(prompt, env) {
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${env.GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -168,11 +176,16 @@ async function callGemini(prompt, env) {
     }
   );
 
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`API ${response.status}: ${errText.slice(0, 200)}`);
+  }
+
   const data = await response.json();
-  if (data.candidates && data.candidates[0]) {
+  if (data.candidates && data.candidates[0] && data.candidates[0].content) {
     return data.candidates[0].content.parts[0].text;
   }
-  throw new Error('Gemini API 응답 오류');
+  throw new Error('응답 형식 오류: ' + JSON.stringify(data).slice(0, 200));
 }
 
 function jsonResponse(data, status = 200) {

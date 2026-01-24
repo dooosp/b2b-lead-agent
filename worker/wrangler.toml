@@ -2,5 +2,8 @@ name = "b2b-lead-trigger"
 main = "index.js"
 compatibility_date = "2024-01-01"
 
+[placement]
+mode = "smart"
+
 [vars]
 GITHUB_REPO = "dooosp/b2b-lead-agent"
