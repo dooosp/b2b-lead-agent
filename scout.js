@@ -37,28 +37,54 @@ function removeDuplicates(articles) {
   return unique;
 }
 
-// Google News 기사의 원본 URL 추출 (DuckDuckGo 검색)
+// Google News 기사의 원본 URL 추출 (다중 검색 엔진)
 async function resolveOriginalUrl(title) {
+  // 제목에서 " - 출처명" 제거
+  const cleanTitle = title.replace(/\s*-\s*[^-]+$/, '').trim();
+
+  // 1차: DuckDuckGo 검색
   try {
-    // 제목에서 " - 출처명" 제거
-    const cleanTitle = title.replace(/\s*-\s*[^-]+$/, '').trim();
-    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(cleanTitle)}`;
-    const res = await axios.get(searchUrl, {
+    const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(cleanTitle)}`;
+    const res = await axios.get(ddgUrl, {
+      headers: { 'User-Agent': UA },
+      timeout: 8000
+    });
+    const $ = cheerio.load(res.data);
+    const firstResult = $('.result__a').first().attr('href') || '';
+    const match = firstResult.match(/uddg=([^&]+)/);
+    if (match) {
+      const url = decodeURIComponent(match[1]);
+      if (!url.includes('google.com')) return url;
+    }
+  } catch (e) {}
+
+  // 2차: 제목 앞부분만으로 재검색
+  try {
+    const shortTitle = cleanTitle.split(' ').slice(0, 8).join(' ');
+    const ddgUrl2 = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(shortTitle + ' 뉴스')}`;
+    const res = await axios.get(ddgUrl2, {
       headers: { 'User-Agent': UA },
       timeout: 8000
     });
     const $ = cheerio.load(res.data);
 
-    // 첫 번째 검색 결과의 URL 추출
-    const firstResult = $('.result__a').first().attr('href') || '';
-    const match = firstResult.match(/uddg=([^&]+)/);
-    if (match) {
-      return decodeURIComponent(match[1]);
-    }
-    return null;
-  } catch (e) {
-    return null;
-  }
+    // 상위 3개 결과 중 뉴스 사이트 URL 찾기
+    let foundUrl = null;
+    $('.result__a').slice(0, 3).each((i, el) => {
+      const href = $(el).attr('href') || '';
+      const match = href.match(/uddg=([^&]+)/);
+      if (match && !foundUrl) {
+        const url = decodeURIComponent(match[1]);
+        // 뉴스 사이트 도메인 확인
+        if (!url.includes('google.com') && !url.includes('youtube.com') && !url.includes('wikipedia')) {
+          foundUrl = url;
+        }
+      }
+    });
+    if (foundUrl) return foundUrl;
+  } catch (e) {}
+
+  return null;
 }
 
 // 기사 본문 크롤링
@@ -199,9 +225,13 @@ async function fetchIndustryNews() {
       const originalUrl = await resolveOriginalUrl(article.title);
       if (originalUrl) {
         article.link = originalUrl;
+        article.resolvedUrl = true;
       } else {
-        // 실패 시 /rss/ 제거하여 브라우저 클릭용 URL로 변환
-        article.link = article.link.replace('/rss/articles/', '/articles/');
+        // 실패 시: 네이버 뉴스 검색 링크로 대체 (사용자가 직접 검색 가능)
+        const searchQuery = article.title.replace(/\s*-\s*[^-]+$/, '').trim();
+        article.link = `https://search.naver.com/search.naver?where=news&query=${encodeURIComponent(searchQuery)}`;
+        article.resolvedUrl = false;
+        article.originalGoogleUrl = true;
       }
       await new Promise(resolve => setTimeout(resolve, 500));
     }
