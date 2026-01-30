@@ -1,22 +1,37 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const origin = request.headers.get('Origin');
 
-    // API 라우팅
+    // CORS Preflight
+    if (request.method === 'OPTIONS') {
+      return handleOptions(request, env);
+    }
+
+    // API 라우팅 — 인증 필요 경로
+    const apiPaths = ['/api/leads', '/api/ppt', '/api/roleplay', '/api/history'];
+    if (apiPaths.includes(url.pathname)) {
+      const authErr = await verifyAuth(request, env);
+      if (authErr) return addCorsHeaders(authErr, origin, env);
+    }
+
+    // /trigger는 Bearer token 또는 body password 허용 (하위 호환)
     if (url.pathname === '/trigger' && request.method === 'POST') {
+      const rlErr = await checkRateLimit(request, env);
+      if (rlErr) return rlErr;
       return await handleTrigger(request, env);
     }
     if (url.pathname === '/api/leads' && request.method === 'GET') {
-      return await fetchLeads(env);
+      return addCorsHeaders(await fetchLeads(env), origin, env);
     }
     if (url.pathname === '/api/ppt' && request.method === 'POST') {
-      return await generatePPT(request, env);
+      return addCorsHeaders(await generatePPT(request, env), origin, env);
     }
     if (url.pathname === '/api/roleplay' && request.method === 'POST') {
-      return await handleRoleplay(request, env);
+      return addCorsHeaders(await handleRoleplay(request, env), origin, env);
     }
     if (url.pathname === '/api/history' && request.method === 'GET') {
-      return await fetchHistory(env);
+      return addCorsHeaders(await fetchHistory(env), origin, env);
     }
 
     // 페이지 라우팅
@@ -37,11 +52,89 @@ export default {
   }
 };
 
+// ===== CORS =====
+
+function isAllowedOrigin(origin, env) {
+  if (!origin) return false;
+  const allowed = [env.WORKER_ORIGIN, 'http://localhost:8787'].filter(Boolean);
+  return allowed.includes(origin);
+}
+
+function addCorsHeaders(response, origin, env) {
+  if (!isAllowedOrigin(origin, env)) return response;
+  const h = new Response(response.body, response);
+  h.headers.set('Access-Control-Allow-Origin', origin);
+  h.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  h.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  h.headers.set('Access-Control-Max-Age', '86400');
+  h.headers.set('Vary', 'Origin');
+  return h;
+}
+
+function handleOptions(request, env) {
+  const origin = request.headers.get('Origin');
+  if (!isAllowedOrigin(origin, env)) return new Response(null, { status: 403 });
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400'
+    }
+  });
+}
+
+// ===== Rate Limiting =====
+
+async function checkRateLimit(request, env) {
+  if (!env.RATE_LIMIT) return null; // KV 미설정 시 스킵
+  const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() || 'unknown';
+  const key = `rl:${ip}`;
+  const now = Math.floor(Date.now() / 1000);
+  const windowSec = 60;
+  // IP 미식별 시 더 보수적 제한 (3회)
+  const maxReqs = ip === 'unknown' ? 3 : 10;
+  const stored = await env.RATE_LIMIT.get(key, 'json').catch(() => null);
+  const record = stored && stored.ts > (now - windowSec) ? stored : { ts: now, c: 0 };
+  record.c++;
+  await env.RATE_LIMIT.put(key, JSON.stringify(record), { expirationTtl: windowSec });
+  if (record.c > maxReqs) {
+    return new Response(JSON.stringify({ success: false, message: '요청 한도 초과. 잠시 후 다시 시도하세요.' }), {
+      status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': String(windowSec) }
+    });
+  }
+  return null;
+}
+
+// ===== 인증 =====
+
+async function verifyAuth(request, env) {
+  const token = env.API_TOKEN || env.TRIGGER_PASSWORD;
+  if (!token) {
+    // 시크릿 미설정 → 전면 차단 (실수로 열리는 것 방지)
+    return jsonResponse({ success: false, message: '서버 인증 설정이 필요합니다.' }, 503);
+  }
+  const auth = request.headers.get('Authorization') || '';
+  const bearer = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  if (!bearer) return jsonResponse({ success: false, message: '인증이 필요합니다.' }, 401);
+  const enc = new TextEncoder();
+  const a = enc.encode(bearer);
+  const b = enc.encode(token);
+  if (a.byteLength !== b.byteLength) return jsonResponse({ success: false, message: '인증 실패' }, 401);
+  const match = await crypto.subtle.timingSafeEqual(a, b);
+  if (!match) return jsonResponse({ success: false, message: '인증 실패' }, 401);
+  return null; // 인증 성공
+}
+
 // ===== API 핸들러 =====
 
 async function handleTrigger(request, env) {
   const body = await request.json().catch(() => ({}));
-  if (!body.password || body.password !== env.TRIGGER_PASSWORD) {
+  // Bearer token 또는 body password 허용
+  const bearerAuth = await verifyAuth(request, env);
+  const passwordOk = body.password && body.password === env.TRIGGER_PASSWORD;
+  if (bearerAuth && !passwordOk) {
     return jsonResponse({ success: false, message: '비밀번호가 올바르지 않습니다.' }, 401);
   }
 
@@ -94,10 +187,6 @@ async function fetchHistory(env) {
 
 async function generatePPT(request, env) {
   const body = await request.json().catch(() => ({}));
-  if (!body.password || body.password !== env.TRIGGER_PASSWORD) {
-    return jsonResponse({ success: false, message: '비밀번호가 올바르지 않습니다.' }, 401);
-  }
-
   const { lead } = body;
   if (!lead) return jsonResponse({ success: false, message: '리드 데이터가 없습니다.' }, 400);
 
@@ -131,10 +220,6 @@ async function generatePPT(request, env) {
 
 async function handleRoleplay(request, env) {
   const body = await request.json().catch(() => ({}));
-  if (!body.password || body.password !== env.TRIGGER_PASSWORD) {
-    return jsonResponse({ success: false, message: '비밀번호가 올바르지 않습니다.' }, 401);
-  }
-
   const { lead, history, userMessage } = body;
   if (!lead) return jsonResponse({ success: false, message: '리드 데이터가 없습니다.' }, 400);
 
@@ -219,6 +304,28 @@ function jsonResponse(data, status = 200) {
   });
 }
 
+// ===== XSS 방어 =====
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+function sanitizeUrl(url) {
+  if (!url) return '#';
+  // 제어문자, 공백, 탭, 개행, null byte 제거 후 검사
+  const u = String(url).replace(/[\x00-\x1f\x7f\s]+/g, '').toLowerCase();
+  if (/^(javascript|data|vbscript|blob):/i.test(u)) return '#';
+  // scheme-relative (//evil.com) 또는 backslash prefix 차단
+  if (/^[/\\]{2}/.test(u)) return '#';
+  return escapeHtml(url);
+}
+
 // ===== 페이지 HTML =====
 
 function getMainPage() {
@@ -254,10 +361,12 @@ function getMainPage() {
   </div>
 
   <script>
+    (function(){ const s=sessionStorage.getItem('b2b_token'); if(s) document.getElementById('password').value=s; })();
+    function getToken() { const p=document.getElementById('password').value; if(p) sessionStorage.setItem('b2b_token',p); return p; }
     async function generate() {
       const btn = document.getElementById('generateBtn');
       const status = document.getElementById('status');
-      const password = document.getElementById('password').value;
+      const password = getToken();
 
       if (!password) {
         status.className = 'status error';
@@ -273,7 +382,7 @@ function getMainPage() {
       try {
         const res = await fetch('/trigger', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + password },
           body: JSON.stringify({ password })
         });
         const data = await res.json();
@@ -341,9 +450,12 @@ function getLeadsPage() {
   </div>
 
   <script>
+    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+    function safeUrl(u) { if(!u) return '#'; const c=String(u).replace(/[\x00-\x1f\x7f\s]+/g,'').toLowerCase(); if(/^(javascript|data|vbscript|blob):/i.test(c)||/^[/\\]{2}/.test(c)) return '#'; return esc(u); }
+    function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
     async function loadLeads() {
       try {
-        const res = await fetch('/api/leads');
+        const res = await fetch('/api/leads', {headers:authHeaders()});
         const data = await res.json();
         const container = document.getElementById('leadsList');
 
@@ -356,23 +468,23 @@ function getLeadsPage() {
         container.innerHTML = data.leads.map((lead, i) => \`
           <div class="lead-card \${lead.grade === 'B' ? 'grade-b' : ''}">
             <h3>
-              <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${lead.grade}</span>
-              \${lead.status ? \`<span class="badge badge-status \${lead.status.toLowerCase()}">\${statusLabels[lead.status] || lead.status}</span>\` : ''}
-              \${lead.company} (\${lead.score}점)
+              <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${esc(lead.grade)}</span>
+              \${lead.status ? \`<span class="badge badge-status \${esc(lead.status).toLowerCase()}">\${esc(statusLabels[lead.status]) || esc(lead.status)}</span>\` : ''}
+              \${esc(lead.company)} (\${parseInt(lead.score) || 0}점)
             </h3>
             <div class="lead-info">
-              <p><strong>프로젝트:</strong> \${lead.summary}</p>
-              <p><strong>추천 제품:</strong> \${lead.product}</p>
-              <p><strong>예상 ROI:</strong> \${lead.roi || '-'}</p>
-              <p><strong>영업 Pitch:</strong> \${lead.salesPitch}</p>
-              <p><strong>글로벌 트렌드:</strong> \${lead.globalContext || '-'}</p>
+              <p><strong>프로젝트:</strong> \${esc(lead.summary)}</p>
+              <p><strong>추천 제품:</strong> \${esc(lead.product)}</p>
+              <p><strong>예상 ROI:</strong> \${esc(lead.roi) || '-'}</p>
+              <p><strong>영업 Pitch:</strong> \${esc(lead.salesPitch)}</p>
+              <p><strong>글로벌 트렌드:</strong> \${esc(lead.globalContext) || '-'}</p>
             </div>
             \${lead.sources && lead.sources.length > 0 ? \`
             <div class="lead-sources">
               <details>
                 <summary>📎 출처 보기 (\${lead.sources.length}건)</summary>
                 <ul>
-                  \${lead.sources.map(s => \`<li><a href="\${s.url}" target="_blank" rel="noopener">→ \${s.title}</a></li>\`).join('')}
+                  \${lead.sources.map(s => \`<li><a href="\${safeUrl(s.url)}" target="_blank" rel="noopener">→ \${esc(s.title)}</a></li>\`).join('')}
                 </ul>
               </details>
             </div>\` : ''}
@@ -383,7 +495,7 @@ function getLeadsPage() {
           </div>
         \`).join('');
       } catch(e) {
-        document.getElementById('leadsList').innerHTML = '<p style="color:#e74c3c;">데이터 로드 실패: ' + e.message + '</p>';
+        document.getElementById('leadsList').innerHTML = '<p style="color:#e74c3c;">데이터 로드 실패: ' + esc(e.message) + '</p>';
       }
     }
     loadLeads();
@@ -419,10 +531,14 @@ function getPPTPage() {
   </div>
 
   <script>
+    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+    function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
+    function getToken() { const p=document.getElementById('password').value; if(p) sessionStorage.setItem('b2b_token',p); return p; }
+    (function(){ const s=sessionStorage.getItem('b2b_token'); if(s) document.getElementById('password').value=s; })();
     let leads = [];
 
     async function loadLeads() {
-      const res = await fetch('/api/leads');
+      const res = await fetch('/api/leads', {headers:authHeaders()});
       const data = await res.json();
       leads = data.leads || [];
       const select = document.getElementById('leadSelect');
@@ -436,13 +552,13 @@ function getPPTPage() {
       const preselect = params.get('lead');
 
       select.innerHTML = leads.map((l, i) =>
-        \`<option value="\${i}" \${preselect == i ? 'selected' : ''}>\${l.grade} | \${l.company} - \${l.product} (\${l.score}점)</option>\`
+        \`<option value="\${i}" \${preselect == i ? 'selected' : ''}>\${esc(l.grade)} | \${esc(l.company)} - \${esc(l.product)} (\${parseInt(l.score)||0}점)</option>\`
       ).join('');
     }
 
     async function generatePPT() {
       const idx = document.getElementById('leadSelect').value;
-      const password = document.getElementById('password').value;
+      const password = getToken();
       const status = document.getElementById('status');
       const output = document.getElementById('output');
       const btn = document.getElementById('genBtn');
@@ -459,8 +575,8 @@ function getPPTPage() {
       try {
         const res = await fetch('/api/ppt', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password, lead: leads[idx] })
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ lead: leads[idx] })
         });
         const data = await res.json();
 
@@ -483,7 +599,7 @@ function getPPTPage() {
     }
 
     function formatMarkdown(text) {
-      return text
+      return esc(text)
         .replace(/### (.*)/g, '<h3>$1</h3>')
         .replace(/## (.*)/g, '<h2>$1</h2>')
         .replace(/# (.*)/g, '<h1>$1</h1>')
@@ -542,12 +658,16 @@ function getRoleplayPage() {
   </div>
 
   <script>
+    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+    function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
+    function getToken() { const p=document.getElementById('password').value; if(p) sessionStorage.setItem('b2b_token',p); return p; }
+    (function(){ const s=sessionStorage.getItem('b2b_token'); if(s) document.getElementById('password').value=s; })();
     let leads = [];
     let history = [];
     let currentLead = null;
 
     async function loadLeads() {
-      const res = await fetch('/api/leads');
+      const res = await fetch('/api/leads', {headers:authHeaders()});
       const data = await res.json();
       leads = data.leads || [];
       const select = document.getElementById('leadSelect');
@@ -561,13 +681,13 @@ function getRoleplayPage() {
       const preselect = params.get('lead');
 
       select.innerHTML = leads.map((l, i) =>
-        \`<option value="\${i}" \${preselect == i ? 'selected' : ''}>\${l.grade} | \${l.company} - \${l.product}</option>\`
+        \`<option value="\${i}" \${preselect == i ? 'selected' : ''}>\${esc(l.grade)} | \${esc(l.company)} - \${esc(l.product)}</option>\`
       ).join('');
     }
 
     async function startSession() {
       const idx = document.getElementById('leadSelect').value;
-      const password = document.getElementById('password').value;
+      const password = getToken();
       const status = document.getElementById('status');
 
       if (!password) { status.className = 'status error'; status.textContent = '비밀번호를 입력하세요.'; return; }
@@ -607,8 +727,8 @@ function getRoleplayPage() {
       try {
         const res = await fetch('/api/roleplay', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password, lead: currentLead, history, userMessage: message })
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ lead: currentLead, history, userMessage: message })
         });
         const data = await res.json();
 
@@ -642,7 +762,7 @@ function getRoleplayPage() {
       const div = document.createElement('div');
       div.id = id;
       div.className = 'chat-msg ' + type;
-      div.innerHTML = \`<span class="label">\${label}</span>\${content.replace(/\\n/g, '<br>')}\`;
+      div.innerHTML = \`<span class="label">\${esc(label)}</span>\${esc(content).replace(/\\n/g, '<br>')}\`;
       container.appendChild(div);
       container.scrollTop = 999999;
       return id;
@@ -704,13 +824,15 @@ function getHistoryPage() {
   </div>
 
   <script>
+    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+    function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
     let allHistory = [];
     let currentFilter = 'ALL';
     const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
 
     async function loadHistory() {
       try {
-        const res = await fetch('/api/history');
+        const res = await fetch('/api/history', {headers:authHeaders()});
         const data = await res.json();
         allHistory = data.history || [];
 
@@ -723,7 +845,7 @@ function getHistoryPage() {
         renderFilters();
         renderHistory();
       } catch(e) {
-        document.getElementById('historyList').innerHTML = '<p style="color:#e74c3c;">로드 실패: ' + e.message + '</p>';
+        document.getElementById('historyList').innerHTML = '<p style="color:#e74c3c;">로드 실패: ' + esc(e.message) + '</p>';
       }
     }
 
@@ -756,14 +878,14 @@ function getHistoryPage() {
       const sorted = filtered.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
 
       document.getElementById('historyList').innerHTML = sorted.map(lead => \`
-        <div class="history-card \${lead.status ? lead.status.toLowerCase() : ''}">
+        <div class="history-card \${lead.status ? esc(lead.status).toLowerCase() : ''}">
           <h3>
-            <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${lead.grade}</span>
-            <span class="badge badge-status \${(lead.status || 'new').toLowerCase()}">\${statusLabels[lead.status] || '신규'}</span>
-            \${lead.company}
+            <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${esc(lead.grade)}</span>
+            <span class="badge badge-status \${(lead.status || 'new').toLowerCase()}">\${esc(statusLabels[lead.status]) || '신규'}</span>
+            \${esc(lead.company)}
           </h3>
-          <p>\${lead.summary}</p>
-          <p><strong>제품:</strong> \${lead.product} | <strong>점수:</strong> \${lead.score}점</p>
+          <p>\${esc(lead.summary)}</p>
+          <p><strong>제품:</strong> \${esc(lead.product)} | <strong>점수:</strong> \${parseInt(lead.score)||0}점</p>
           <div class="meta">
             생성: \${lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('ko-KR') : '-'}
             \${lead.updatedAt && lead.updatedAt !== lead.createdAt ? ' | 업데이트: ' + new Date(lead.updatedAt).toLocaleDateString('ko-KR') : ''}

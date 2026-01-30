@@ -2,6 +2,7 @@ const Parser = require('rss-parser');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const config = require('./config');
+const { withRetry } = require('./lib/http');
 
 const parser = new Parser({
   headers: {
@@ -45,10 +46,10 @@ async function resolveOriginalUrl(title) {
   // 1차: DuckDuckGo 검색
   try {
     const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(cleanTitle)}`;
-    const res = await axios.get(ddgUrl, {
+    const res = await withRetry(() => axios.get(ddgUrl, {
       headers: { 'User-Agent': UA },
       timeout: 8000
-    });
+    }), { label: 'DDG-resolve' });
     const $ = cheerio.load(res.data);
     const firstResult = $('.result__a').first().attr('href') || '';
     const match = firstResult.match(/uddg=([^&]+)/);
@@ -91,10 +92,10 @@ async function resolveOriginalUrl(title) {
 async function fetchArticleContent(url) {
   if (!url || url.includes('news.google.com')) return '';
   try {
-    const res = await axios.get(url, {
+    const res = await withRetry(() => axios.get(url, {
       headers: { 'User-Agent': UA },
       timeout: 8000
-    });
+    }), { label: 'article-fetch' });
     const $ = cheerio.load(res.data);
 
     // 1. 본문 셀렉터들 시도 (가장 긴 텍스트 선택)
@@ -141,7 +142,7 @@ async function fetchGoogleNews(query) {
   const url = `https://news.google.com/rss/search?q=${encodedQuery}&hl=ko&gl=KR&ceid=KR:ko`;
 
   try {
-    const feed = await parser.parseURL(url);
+    const feed = await withRetry(() => parser.parseURL(url), { label: `GoogleNews:${query}` });
     return feed.items.slice(0, 3).map(item => ({
       title: item.title || '',
       link: item.link || '',
@@ -159,7 +160,7 @@ async function fetchGoogleNews(query) {
 async function fetchHankyung() {
   const url = 'https://www.hankyung.com/feed/economy';
   try {
-    const feed = await parser.parseURL(url);
+    const feed = await withRetry(() => parser.parseURL(url), { label: 'Hankyung' });
     return feed.items.slice(0, 5).map(item => ({
       title: item.title || '',
       link: item.link || '',
@@ -177,7 +178,7 @@ async function fetchHankyung() {
 async function fetchYonhapEconomy() {
   const url = 'https://www.yna.co.kr/rss/economy.xml';
   try {
-    const feed = await parser.parseURL(url);
+    const feed = await withRetry(() => parser.parseURL(url), { label: 'Yonhap' });
     return feed.items.slice(0, 5).map(item => ({
       title: item.title || '',
       link: item.link || '',

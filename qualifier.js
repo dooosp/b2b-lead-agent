@@ -1,5 +1,24 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const config = require('./config');
+const { withRetry } = require('./lib/http');
+
+// 키워드 기반 카테고리 분류 → 관련 레퍼런스만 선별
+function categorizeArticles(articles) {
+  const rules = {
+    marine: ['선박', '해운', '조선', '해양', 'LNG', 'IMO', 'EEXI', 'CII', '벙커'],
+    datacenter: ['데이터센터', 'DC', 'IDC', '클라우드', 'PUE', '냉각', '서버'],
+    factory: ['팩토리', '공장', '자동화', '증설', '생산', '배터리', '반도체', 'EV'],
+    coldchain: ['냉동', '냉장', '냉각', '콜드체인', '물류센터', '식품', '백신']
+  };
+  const matched = new Set();
+  for (const a of articles) {
+    const text = `${a.title} ${a.query} ${a.content || ''}`.toLowerCase();
+    for (const [cat, kws] of Object.entries(rules)) {
+      if (kws.some(kw => text.includes(kw))) matched.add(cat);
+    }
+  }
+  return matched.size > 0 ? [...matched] : Object.keys(rules); // 폴백: 전체
+}
 
 async function analyzeLeads(articles) {
   console.log('[Step 2] Gemini API로 리드 분석 시작...');
@@ -29,12 +48,15 @@ async function analyzeLeads(articles) {
     .map(([name, info]) => `- ${name}: 핵심가치="${info.value}", ROI="${info.roi}"`)
     .join('\n');
 
-  // 글로벌 성공 사례 문자열 생성
+  // 관련 카테고리만 선별하여 글로벌 성공 사례 생성
+  const relevantCategories = categorizeArticles(articles);
   const globalRefStr = Object.entries(config.globalReferences)
+    .filter(([category]) => relevantCategories.includes(category))
     .map(([category, cases]) => {
       const caseList = cases.map(c => `  • ${c.client}: ${c.project} → ${c.result}`).join('\n');
       return `[${category.toUpperCase()}]\n${caseList}`;
     }).join('\n\n');
+  console.log(`  카테고리 매칭: ${relevantCategories.join(', ')} (${relevantCategories.length * 3} 레퍼런스)`);
 
   const prompt = `[System]
 당신은 댄포스 코리아의 'AI 기술 영업 전략가'입니다.
@@ -94,7 +116,7 @@ Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요
 ]`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await withRetry(() => model.generateContent(prompt), { label: 'Gemini-qualify' });
     const response = result.response.text();
 
     // JSON 파싱 (코드 블록 제거)

@@ -7,3 +7,8 @@ mode = "smart"
 
 [vars]
 GITHUB_REPO = "dooosp/b2b-lead-agent"
+WORKER_ORIGIN = "https://b2b-lead-trigger.dooosp.workers.dev"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "a5a01a0961b34b888ef050ed03b1f4f7"
