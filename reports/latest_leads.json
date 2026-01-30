@@ -1,141 +1,101 @@
 [
   {
-    "id": "HD한국조선해양_20260125_3err",
+    "id": "영상_20260130_h44l",
     "status": "NEW",
-    "createdAt": "2026-01-25T06:22:16.756Z",
-    "updatedAt": "2026-01-25T06:22:16.756Z",
-    "company": "HD한국조선해양",
-    "summary": "오세아니아 선주로부터 4,816억 원 규모의 원유 및 석유화학 제품 운반선 4척 수주",
-    "product": "iC7 Marine / 선박용 하이브리드 솔루션",
-    "score": 95,
-    "grade": "A",
-    "roi": "연료 소비 15% 절감 및 IMO 탄소 배출 규제 벌금 회피",
-    "salesPitch": "귀사의 신규 수주 선박이 IMO 2030 규제를 완벽히 충족하고 연료비를 15% 절감할 수 있도록, 검증된 iC7 하이브리드 추진 시스템을 제안합니다.",
-    "globalContext": "국제해사기구(IMO)의 탄소 집약도 지수(CII) 및 EEXI 규제 강화에 대응하기 위한 친환경 선박 전환 가속화 (성공사례: MSC LNG 운반선 CII A등급 달성)",
-    "sources": [
-      {
-        "title": "HD한국조선해양, 4,816억 원 규모 선박 4척 수주 - 코리아포스트 한글판",
-        "url": "https://www.g-enews.com/article/Industry/2026/01/2026012012571615056ed0c62d49_1"
-      }
-    ]
-  },
-  {
-    "id": "한화오션_20260125_mukc",
-    "status": "NEW",
-    "createdAt": "2026-01-25T06:22:16.756Z",
-    "updatedAt": "2026-01-25T06:22:16.756Z",
-    "company": "한화오션",
-    "summary": "오세아니아 선주 대상 7,383억 원 규모의 고부가가치 LNG 운반선 2척 수주",
-    "product": "iC7 Marine",
-    "score": 98,
-    "grade": "A",
-    "roi": "탄소 배출 25% 감소 및 에너지 효율 최적화",
-    "salesPitch": "한화오션의 고부가가치 친환경 LNG선 경쟁력을 극대화하기 위해, 글로벌 선사 MSC가 선택한 탄소 25% 저감 드라이브 솔루션을 도입하십시오.",
-    "globalContext": "미국 중심의 LNG 터미널 개발 확대 및 고효율 선박 수요 증가에 따른 탄소 중립 대응 필수 (성공사례: NYK Line 연간 $2M 연료비 절감)",
-    "sources": [
-      {
-        "title": "한화오션, LNG운반선 2척 7383억 수주…연초부터 '수주 질주' - 스페셜경제",
-        "url": "https://www.speconomy.com/news/articleView.html?idxno=410550"
-      }
-    ]
-  },
-  {
-    "id": "부평청천동데이터센터_20260125_i0ai",
-    "status": "NEW",
-    "createdAt": "2026-01-25T06:22:16.756Z",
-    "updatedAt": "2026-01-25T06:22:16.756Z",
-    "company": "부평 청천동 데이터센터",
-    "summary": "1단계 대비 1.7배 규모의 대형 데이터센터 2단계 추가 착공",
-    "product": "Turbocor 컴프레서",
-    "score": 92,
-    "grade": "A",
-    "roi": "냉각 전력 40% 절감 및 PUE 1.25 수준 개선",
-    "salesPitch": "부평 데이터센터 2단계의 압도적 규모에 걸맞은 PUE 최적화를 위해, 오일리스 기술로 유지보수비를 60% 절감하는 Turbocor 솔루션을 제안합니다.",
-    "globalContext": "데이터센터 전력 사용 효율(PUE) 개선을 위한 글로벌 에너지 규제 강화 (성공사례: Equinix 글로벌 데이터센터 Turbocor 표준화)",
-    "sources": [
-      {
-        "title": "부평 청천동 데이터센터 2단계 착공··· 1단계 1.7배 높은 규모",
-        "url": "https://search.naver.com/search.naver?where=news&query=%EB%B6%80%ED%8F%89%20%EC%B2%AD%EC%B2%9C%EB%8F%99%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0%202%EB%8B%A8%EA%B3%84%20%EC%B0%A9%EA%B3%B5%C2%B7%C2%B7%C2%B7%201%EB%8B%A8%EA%B3%84%201.7%EB%B0%B0%20%EB%86%92%EC%9D%80%20%EA%B7%9C%EB%AA%A8"
-      }
-    ]
-  },
-  {
-    "id": "포스코DX_20260125_8k25",
-    "status": "NEW",
-    "createdAt": "2026-01-25T06:22:16.756Z",
-    "updatedAt": "2026-01-25T06:22:16.756Z",
-    "company": "포스코DX",
-    "summary": "이차전지 투자 재개에 따른 공장 자동화 수주 163% 급증",
-    "product": "VLT AutomationDrive",
-    "score": 88,
-    "grade": "A",
-    "roi": "모터 효율 25% 향상 및 공정 에너지 최대 50% 절감",
-    "salesPitch": "이차전지 공장의 폭발적인 자동화 수요 대응을 위해, 삼성 SDI 헝가리 공장에서 검증된 에너지 25% 절감 드라이브 솔루션을 제안합니다.",
-    "globalContext": "이차전지 산업의 RE100 달성 및 생산 공정 탄소 중립 가속화 (성공사례: 삼성 SDI 헝가리 공장 RE100 달성 기여)",
-    "sources": [
-      {
-        "title": "포스코DX, 공장자동화 수주 163% 급증...\"이차전지 투자 재개 영향\"",
-        "url": "https://search.naver.com/search.naver?where=news&query=%ED%8F%AC%EC%8A%A4%EC%BD%94DX%2C%20%EA%B3%B5%EC%9E%A5%EC%9E%90%EB%8F%99%ED%99%94%20%EC%88%98%EC%A3%BC%20163%25%20%EA%B8%89%EC%A6%9D...%22%EC%9D%B4%EC%B0%A8%EC%A0%84%EC%A7%80%20%ED%88%AC%EC%9E%90%20%EC%9E%AC%EA%B0%9C%20%EC%98%81%ED%96%A5%22"
-      }
-    ]
-  },
-  {
-    "id": "SK플라즈마_20260125_m4rn",
-    "status": "NEW",
-    "createdAt": "2026-01-25T06:22:16.756Z",
-    "updatedAt": "2026-01-25T06:22:16.756Z",
-    "company": "SK플라즈마",
-    "summary": "안동시에 120억 규모의 혈장제제 정밀 냉동 저장시설 투자",
-    "product": "Turbocor 컴프레서",
+    "createdAt": "2026-01-30T00:55:12.097Z",
+    "updatedAt": "2026-01-30T00:55:12.097Z",
+    "company": "[영상]",
+    "summary": "[영상] “친환경 선박, 방산 수주 증가… 국내 조선업 호황 몇십 년 이어질 듯” - 동아일보",
+    "product": "iC7 Marine 드라이브",
     "score": 85,
     "grade": "A",
-    "roi": "에너지 비용 35% 절감 및 -70°C 초저온 유지 안정성 99.9%",
-    "salesPitch": "바이오 의약품 저장의 생명인 정밀 온도 제어와 운영비 35% 절감을 위해, 화이자(Pfizer) 백신 콜드체인에 적용된 댄포스 솔루션을 제안합니다.",
-    "globalContext": "의약품 및 백신 보관을 위한 초저온 냉동고의 에너지 효율 및 신뢰성 표준 강화 (성공사례: Pfizer 백신 콜드체인 정밀 온도 제어)",
+    "roi": "에너지 비용 약 30% 절감 예상",
+    "salesPitch": "[영상] “친환경 선박, 방산 수주 증가… 국내 조선업 호황 몇십 년 이어질 듯” - 동아일보 관련하여 댄포스 iC7 Marine 드라이브 솔루션으로 에너지 효율 극대화를 제안합니다.",
+    "globalContext": "글로벌 탄소중립 정책 강화에 따른 고효율 설비 수요 증가",
     "sources": [
       {
-        "title": "SK플라즈마, 안동시와 120억 규모 혈장제제 저장시설 투자 협약",
-        "url": "https://search.naver.com/search.naver?where=news&query=SK%ED%94%8C%EB%9D%BC%EC%A6%88%EB%A7%88%2C%20%EC%95%88%EB%8F%99%EC%8B%9C%EC%99%80%20120%EC%96%B5%20%EA%B7%9C%EB%AA%A8%20%ED%98%88%EC%9E%A5%EC%A0%9C%EC%A0%9C%20%EC%A0%80%EC%9E%A5%EC%8B%9C%EC%84%A4%20%ED%88%AC%EC%9E%90%20%ED%98%91%EC%95%BD"
+        "title": "[영상] “친환경 선박, 방산 수주 증가… 국내 조선업 호황 몇십 년 이어질 듯” - 동아일보",
+        "url": "https://search.naver.com/search.naver?where=news&query=%5B%EC%98%81%EC%83%81%5D%20%E2%80%9C%EC%B9%9C%ED%99%98%EA%B2%BD%20%EC%84%A0%EB%B0%95%2C%20%EB%B0%A9%EC%82%B0%20%EC%88%98%EC%A3%BC%20%EC%A6%9D%EA%B0%80%E2%80%A6%20%EA%B5%AD%EB%82%B4%20%EC%A1%B0%EC%84%A0%EC%97%85%20%ED%98%B8%ED%99%A9%20%EB%AA%87%EC%8B%AD%20%EB%85%84%20%EC%9D%B4%EC%96%B4%EC%A7%88%20%EB%93%AF%E2%80%9D"
       }
     ]
   },
   {
-    "id": "한국산업기술기획평가_20260125_aj91",
+    "id": "HJ중공업_20260130_t382",
     "status": "NEW",
-    "createdAt": "2026-01-25T06:22:16.756Z",
-    "updatedAt": "2026-01-25T06:22:16.756Z",
-    "company": "한국산업기술기획평가원(KEIT)",
-    "summary": "10년 경과 노후 건물을 제로에너지빌딩(ZEB)으로 전환하는 현대화 프로젝트",
-    "product": "VLT HVAC Drive",
-    "score": 82,
+    "createdAt": "2026-01-30T00:55:12.097Z",
+    "updatedAt": "2026-01-30T00:55:12.097Z",
+    "company": "HJ중공업,",
+    "summary": "HJ중공업, 친환경 선박 수주 확대...영업이익 824.8% 증가 - geojejournal.co.kr",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
     "grade": "A",
-    "roi": "공조 전력 30% 절감 및 건물 에너지 효율 등급 향상",
-    "salesPitch": "KEIT 건물의 성공적인 제로에너지 전환을 위해, TSMC 클린룸에서 증명된 공조 전력 28% 절감 기술을 공공기관 현대화에 적용하십시오.",
-    "globalContext": "2025년 민간 건물 제로에너지 의무화에 따른 노후 건물 에너지 성능 개선 수요 증대 (성공사례: TSMC 클린룸 HVAC 최적화)",
+    "roi": "에너지 비용 약 30% 절감 예상",
+    "salesPitch": "HJ중공업, 친환경 선박 수주 확대...영업이익 824.8% 증가 - geojejournal.co.kr 관련하여 댄포스 iC7 Marine 드라이브 솔루션으로 에너지 효율 극대화를 제안합니다.",
+    "globalContext": "글로벌 탄소중립 정책 강화에 따른 고효율 설비 수요 증가",
     "sources": [
       {
-        "title": "10년 넘은 KEIT 건물 제로에너지건물로 변신",
-        "url": "https://search.naver.com/search.naver?where=news&query=10%EB%85%84%20%EB%84%98%EC%9D%80%20KEIT%20%EA%B1%B4%EB%AC%BC%20%EC%A0%9C%EB%A1%9C%EC%97%90%EB%84%88%EC%A7%80%EA%B1%B4%EB%AC%BC%EB%A1%9C%20%EB%B3%80%EC%8B%A0"
+        "title": "HJ중공업, 친환경 선박 수주 확대...영업이익 824.8% 증가 - geojejournal.co.kr",
+        "url": "https://search.naver.com/search.naver?where=news&query=HJ%EC%A4%91%EA%B3%B5%EC%97%85%2C%20%EC%B9%9C%ED%99%98%EA%B2%BD%20%EC%84%A0%EB%B0%95%20%EC%88%98%EC%A3%BC%20%ED%99%95%EB%8C%80...%EC%98%81%EC%97%85%EC%9D%B4%EC%9D%B5%20824.8%25%20%EC%A6%9D%EA%B0%80"
       }
     ]
   },
   {
-    "id": "삼성전자_20260125_juz6",
+    "id": "친환경수주_20260130_hihp",
     "status": "NEW",
-    "createdAt": "2026-01-25T06:22:16.756Z",
-    "updatedAt": "2026-01-25T06:22:16.756Z",
-    "company": "삼성전자",
-    "summary": "HBM 및 범용 D램 시장 주도권 탈환을 위한 반도체 설비 생산 능력 극대화",
-    "product": "VLT HVAC Drive",
-    "score": 75,
-    "grade": "B",
-    "roi": "클린룸 공조 전력 28% 절감 및 정밀 온습도 제어",
-    "salesPitch": "삼성전자의 반도체 슈퍼사이클 선점을 위해, TSMC가 도입한 정밀 온습도 제어 및 에너지 28% 절감 HVAC 솔루션을 제안합니다.",
-    "globalContext": "반도체 제조 공정의 고도화에 따른 초정밀 환경 제어 및 에너지 저감 요구 (성공사례: TSMC 반도체 클린룸 HVAC 최적화)",
+    "createdAt": "2026-01-30T00:55:12.097Z",
+    "updatedAt": "2026-01-30T00:55:12.097Z",
+    "company": "[친환경수주",
+    "summary": "[친환경수주 반등]HJ중공업, 영업이익 8배 ‘어닝 서프라이즈’…조선·방산 동반 반등 - 전국뉴스",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
+    "grade": "A",
+    "roi": "에너지 비용 약 30% 절감 예상",
+    "salesPitch": "[친환경수주 반등]HJ중공업, 영업이익 8배 ‘어닝 서프라이즈’…조선·방산 동반 반등 - 전국뉴스 관련하여 댄포스 iC7 Marine 드라이브 솔루션으로 에너지 효율 극대화를 제안합니다.",
+    "globalContext": "글로벌 탄소중립 정책 강화에 따른 고효율 설비 수요 증가",
     "sources": [
       {
-        "title": "'메모리의 힘' 올해 삼성전자 영업이익 170조…HBM과 범용 쌍끌이",
-        "url": "https://www.hankyung.com/article/202601250804i"
+        "title": "[친환경수주 반등]HJ중공업, 영업이익 8배 ‘어닝 서프라이즈’…조선·방산 동반 반등 - 전국뉴스",
+        "url": "https://search.naver.com/search.naver?where=news&query=%5B%EC%B9%9C%ED%99%98%EA%B2%BD%EC%88%98%EC%A3%BC%20%EB%B0%98%EB%93%B1%5DHJ%EC%A4%91%EA%B3%B5%EC%97%85%2C%20%EC%98%81%EC%97%85%EC%9D%B4%EC%9D%B5%208%EB%B0%B0%20%E2%80%98%EC%96%B4%EB%8B%9D%20%EC%84%9C%ED%94%84%EB%9D%BC%EC%9D%B4%EC%A6%88%E2%80%99%E2%80%A6%EC%A1%B0%EC%84%A0%C2%B7%EB%B0%A9%EC%82%B0%20%EB%8F%99%EB%B0%98%20%EB%B0%98%EB%93%B1"
+      }
+    ]
+  },
+  {
+    "id": "코람코_20260130_3ygt",
+    "status": "NEW",
+    "createdAt": "2026-01-30T00:55:12.097Z",
+    "updatedAt": "2026-01-30T00:55:12.097Z",
+    "company": "코람코,",
+    "summary": "코람코, 의정부 100㎿ 데이터센터 사업 착수…내년 상반기 착공 - 한국경제TV",
+    "product": "Turbocor 컴프레서",
+    "score": 80,
+    "grade": "A",
+    "roi": "에너지 비용 약 30% 절감 예상",
+    "salesPitch": "코람코, 의정부 100㎿ 데이터센터 사업 착수…내년 상반기 착공 - 한국경제TV 관련하여 댄포스 Turbocor 컴프레서 솔루션으로 에너지 효율 극대화를 제안합니다.",
+    "globalContext": "글로벌 탄소중립 정책 강화에 따른 고효율 설비 수요 증가",
+    "sources": [
+      {
+        "title": "코람코, 의정부 100㎿ 데이터센터 사업 착수…내년 상반기 착공 - 한국경제TV",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EC%BD%94%EB%9E%8C%EC%BD%94%2C%20%EC%9D%98%EC%A0%95%EB%B6%80%20100%E3%8E%BF%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0%20%EC%82%AC%EC%97%85%20%EC%B0%A9%EC%88%98%E2%80%A6%EB%82%B4%EB%85%84%20%EC%83%81%EB%B0%98%EA%B8%B0%20%EC%B0%A9%EA%B3%B5"
+      }
+    ]
+  },
+  {
+    "id": "DL이앤씨_20260130_cmse",
+    "status": "NEW",
+    "createdAt": "2026-01-30T00:55:12.097Z",
+    "updatedAt": "2026-01-30T00:55:12.097Z",
+    "company": "DL이앤씨,",
+    "summary": "DL이앤씨, 데이터센터 영토 확장 가속 - 딜사이트",
+    "product": "Turbocor 컴프레서",
+    "score": 80,
+    "grade": "A",
+    "roi": "에너지 비용 약 30% 절감 예상",
+    "salesPitch": "DL이앤씨, 데이터센터 영토 확장 가속 - 딜사이트 관련하여 댄포스 Turbocor 컴프레서 솔루션으로 에너지 효율 극대화를 제안합니다.",
+    "globalContext": "글로벌 탄소중립 정책 강화에 따른 고효율 설비 수요 증가",
+    "sources": [
+      {
+        "title": "DL이앤씨, 데이터센터 영토 확장 가속 - 딜사이트",
+        "url": "https://search.naver.com/search.naver?where=news&query=DL%EC%9D%B4%EC%95%A4%EC%94%A8%2C%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0%20%EC%98%81%ED%86%A0%20%ED%99%95%EC%9E%A5%20%EA%B0%80%EC%86%8D"
       }
     ]
   }
