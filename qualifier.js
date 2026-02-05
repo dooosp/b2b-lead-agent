@@ -132,42 +132,151 @@ Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요
   }
 }
 
+// 회사명 추출 (NER 개선)
+function extractCompanyName(title) {
+  // 전처리: 태그/따옴표/접두사 제거
+  let cleaned = title
+    .replace(/^\[.*?\]\s*/g, '')          // [영상], [속보] 제거
+    .replace(/["'""'']/g, '')             // 모든 따옴표 제거
+    .replace(/\s*-\s*[가-힣A-Za-z]+(?:뉴스|일보|투데이|경제|타임스|사이트|신문)?$/g, '') // 언론사명 제거
+    .trim();
+
+  // 패턴 1: 한글 기업명 + 기업형태 (삼성전자, HD한국조선해양, LG에너지솔루션)
+  const corpPatterns = [
+    /((?:HD|SK|LG|CJ|GS|LS|KT|KB|NH|DL|HY|DB|S&P)[가-힣A-Za-z]*)/,
+    /([가-힣A-Z]+(?:전자|중공업|조선|해양|건설|이앤씨|에너지솔루션|물산|상사|제철|화학|반도체|바이오|제약|통운|로지스틱스|하이텍|콜마|판토스|텍))/,
+    /([가-힣]+(?:그룹|홀딩스|지주|시|도|마사회)(?![가-힣]))/,
+    /([가-힣]{2,}(?:조선|해운|건설|전자|화학|시멘트|제분|제당))/,
+    /(포스코[A-Z가-힣]*)/
+  ];
+
+  for (const pattern of corpPatterns) {
+    const match = cleaned.match(pattern);
+    if (match) return match[1];
+  }
+
+  // 패턴 2: 쉼표 전 첫 토큰 (명확한 구분자)
+  const commaMatch = cleaned.match(/^([^,]+),/);
+  if (commaMatch) {
+    const candidate = commaMatch[1].trim();
+    // 무의미한 토큰 필터링
+    const stopwords = ['영상', '속보', '단독', '종합', '긴급', '특징주', '오늘의', '내일의', '친환경', '국내', '올해', '내년'];
+    if (candidate.length >= 2 && candidate.length <= 20 && !stopwords.some(sw => candidate.startsWith(sw))) {
+      return candidate;
+    }
+  }
+
+  // 패턴 3: 지역명 → 프로젝트명으로 변환 (부평 → 부평 데이터센터)
+  const locationMatch = cleaned.match(/^(부평|인천|서울|대구|부산|광주|세종|판교|송도|마곡)\s+(.+?)(?:착공|증설|신축|준공|오픈)/);
+  if (locationMatch) {
+    return `${locationMatch[1]} ${locationMatch[2].split(/\s+/)[0]}`;
+  }
+
+  // 패턴 4: 일반 분석 - 첫 번째 유의미 토큰
+  const tokens = cleaned.split(/[,·…\s]+/).filter(t => {
+    const stopwords = ['영상', '속보', '단독', '종합', '긴급', '특징주', '오늘의', '내일의', '친환경', '국내', '해외', '올해', '내년', '선박', '방산', '수주', '증가', '호황', '확대', '성장', '투자', '조선업', '이어질', '몇십', '듯'];
+    return t.length >= 2 && t.length <= 15 && !stopwords.includes(t) && !/^[0-9]+$/.test(t);
+  });
+
+  if (tokens[0]) return tokens[0];
+
+  // 패턴 5: 산업 트렌드 기사 → 업계 전체로 표기 (최후 폴백)
+  const industryKeywords = {
+    '조선': '국내 조선업계',
+    '선박': '국내 조선업계',
+    '해운': '국내 해운업계',
+    '데이터센터': 'DC 시장',
+    '반도체': '국내 반도체업계',
+    '배터리': '국내 배터리업계',
+    '냉동': '국내 냉동냉장업계',
+    '공장': '국내 제조업계',
+    '팩토리': '국내 제조업계'
+  };
+
+  for (const [keyword, industry] of Object.entries(industryKeywords)) {
+    if (cleaned.includes(keyword)) return industry;
+  }
+
+  return '미상';
+}
+
+// 카테고리 판별
+function detectCategory(article) {
+  const text = `${article.title} ${article.query} ${article.content || ''}`.toLowerCase();
+
+  if (['선박', '해운', '조선', 'lng', 'imo', 'eexi', 'cii'].some(k => text.includes(k))) return 'marine';
+  if (['데이터센터', 'dc ', 'idc', '클라우드', 'pue', '서버'].some(k => text.includes(k))) return 'datacenter';
+  if (['냉동', '냉장', '콜드체인', '물류센터', '식품'].some(k => text.includes(k))) return 'coldchain';
+  if (['공장', '팩토리', '자동화', '배터리', '반도체'].some(k => text.includes(k))) return 'factory';
+  return 'factory'; // 기본값
+}
+
+// 카테고리별 제품/ROI/레퍼런스 매핑
+const categoryConfig = {
+  marine: {
+    product: 'iC7 Marine 드라이브',
+    score: 85,
+    grade: 'A',
+    roi: '연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피',
+    policy: 'IMO 2030 탄소중립 규제 (EEXI/CII 등급제)',
+    pitch: (company, product) => `${company}의 친환경 선박 프로젝트에 Maersk 300척이 검증한 ${product}로 연료비 18% 절감을 제안합니다.`
+  },
+  datacenter: {
+    product: 'Turbocor 컴프레서',
+    score: 80,
+    grade: 'A',
+    roi: '냉각 전력 35~40% 절감, PUE 1.25 달성',
+    policy: 'EU 데이터센터 에너지효율 지침 (2027 시행)',
+    pitch: (company, product) => `${company} 데이터센터에 Equinix가 글로벌 표준으로 채택한 ${product}로 PUE 1.25를 달성하세요.`
+  },
+  coldchain: {
+    product: 'Turbocor 오일리스 칠러',
+    score: 75,
+    grade: 'B',
+    roi: '에너지 비용 30~32% 절감, 유지보수비 60% 감소',
+    policy: 'RE100 이행 + 글로벌 식품/의약 콜드체인 인증 강화',
+    pitch: (company, product) => `${company} 냉동/냉장 설비에 Lineage Logistics가 검증한 ${product}로 에너지 32% 절감을 실현하세요.`
+  },
+  factory: {
+    product: 'VLT AutomationDrive',
+    score: 70,
+    grade: 'B',
+    roi: '생산라인 에너지 25~35% 절감',
+    policy: 'EU CBAM 탄소국경세 (2026 본격 시행) + 산업용 모터 IE4 의무화',
+    pitch: (company, product) => `${company} 스마트 팩토리에 Volkswagen EV공장이 적용한 ${product}로 에너지 35% 절감을 제안합니다.`
+  }
+};
+
 // API 키 없을 때 데모 데이터
 function generateDemoLeads(articles) {
   const demoLeads = [];
+  const refs = config.globalReferences;
 
   for (const article of articles.slice(0, 5)) {
-    let product = 'VLT AutomationDrive';
-    let score = 60;
-    let grade = 'B';
+    const category = detectCategory(article);
+    const cfg = categoryConfig[category];
+    const company = extractCompanyName(article.title);
 
-    if (article.query.includes('선박')) {
-      product = 'iC7 Marine 드라이브';
-      score = 85;
-      grade = 'A';
-    } else if (article.query.includes('데이터센터')) {
-      product = 'Turbocor 컴프레서';
-      score = 80;
-      grade = 'A';
-    } else if (article.query.includes('HVAC')) {
-      product = 'VLT HVAC Drive';
-      score = 75;
-      grade = 'B';
-    } else if (article.query.includes('냉동') || article.query.includes('냉장')) {
-      product = '냉각 솔루션';
-      score = 70;
-      grade = 'B';
-    }
+    // 해당 카테고리 글로벌 레퍼런스 중 랜덤 선택
+    const catRefs = refs[category] || refs.factory;
+    const refCase = catRefs[Math.floor(Math.random() * catRefs.length)];
+
+    // 프로젝트 요약 (제목에서 태그/따옴표/언론사명 제거)
+    const summary = article.title
+      .replace(/\s*-\s*[가-힣A-Za-z]+(?:뉴스|일보|투데이|경제|타임스)?$/g, '')
+      .replace(/^\[.*?\]\s*/, '')
+      .replace(/["'""'']/g, '')
+      .trim();
 
     demoLeads.push({
-      company: article.title.split(' ')[0] || '미상',
-      summary: article.title,
-      product: product,
-      score: score,
-      grade: grade,
-      roi: '에너지 비용 약 30% 절감 예상',
-      salesPitch: `${article.title} 관련하여 댄포스 ${product} 솔루션으로 에너지 효율 극대화를 제안합니다.`,
-      globalContext: '글로벌 탄소중립 정책 강화에 따른 고효율 설비 수요 증가',
+      company,
+      summary,
+      product: cfg.product,
+      score: cfg.score,
+      grade: cfg.grade,
+      roi: cfg.roi,
+      salesPitch: cfg.pitch(company, cfg.product),
+      globalContext: `${cfg.policy}. 레퍼런스: ${refCase.client} - ${refCase.result}`,
       sources: [{ title: article.title, url: article.link }]
     });
   }
