@@ -58,8 +58,14 @@ async function analyzeLeads(articles) {
     }).join('\n\n');
   console.log(`  카테고리 매칭: ${relevantCategories.join(', ')} (${relevantCategories.length * 3} 레퍼런스)`);
 
-  const prompt = `[System]
+  const prompt = `[Context]
+- 분석 시점: ${new Date().toISOString().split('T')[0]}
+- 데이터 소스: 한국 산업 뉴스 (최근 24시간 크롤링)
+- 경쟁사: ABB, Siemens, Schneider Electric
+
+[Role]
 당신은 댄포스 코리아의 'AI 기술 영업 전략가'입니다.
+10년 이상 B2B 산업장비 영업 경험으로, 뉴스에서 영업 기회를 포착하고 Value Selling 전략을 수립합니다.
 아래 뉴스를 읽고 단순 요약이 아닌, **'영업 기회 분석 보고서'**를 작성하세요.
 
 [댄포스 제품 지식 베이스]
@@ -75,7 +81,7 @@ ${knowledgeBase}
 아래 본사 및 해외 성공 사례를 한국 고객에게 레퍼런스로 제시하세요:
 ${globalRefStr}
 
-[분석 필수 포함 항목]
+[Action]
 1. Target Opportunity: 어떤 기업의 어떤 프로젝트인가?
 2. Danfoss Solution: 위 지식 베이스를 참고하여 최적의 제품 1개를 선정.
 3. Estimated ROI: 제품 도입 시 예상되는 에너지 절감률 또는 비용 편익을 수치(%)로 제시.
@@ -94,10 +100,22 @@ ${globalRefStr}
 - Grade B (50-79점): 산업 트렌드로 향후 수요 예상
 - Grade C (0-49점): 단순 동정 뉴스 (제외)
 
+[Tone]
+- 객관적이고 데이터 중심적으로 분석. 과장 금지.
+- ROI는 보수적 추정 (업계 평균 기반), 구체적 수치로 제시.
+- salesPitch는 고객 관점(pain point 해결) 중심, 댄포스 자랑 X.
+
 [뉴스 목록]
 ${newsList}
 
-[출력 형식]
+[Verification - 출력 전 자체 점검]
+□ company가 실제 기업명인가? (산업 키워드가 아닌 법인명)
+□ product가 제품 라인업에 존재하는 실제 제품인가?
+□ ROI 수치가 비현실적이지 않은가? (절감률 50% 이상이면 재검토)
+□ sources의 URL이 위 뉴스 목록에 실제 존재하는가?
+□ Grade A와 B만 포함했는가?
+
+[Format]
 반드시 아래 JSON 배열 형식으로만 응답하세요. 다른 텍스트 없이 JSON만 출력하세요.
 Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요.
 
