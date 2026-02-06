@@ -143,8 +143,16 @@ Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요
     const jsonStr = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     const leads = JSON.parse(jsonStr);
 
-    console.log(`  분석 완료: ${leads.length}개 리드 발견\n`);
-    return leads;
+    // 스키마 검증: 배열 + 필수 필드 확인
+    const validLeads = (Array.isArray(leads) ? leads : []).filter(lead =>
+      lead && typeof lead.company === 'string' && typeof lead.score === 'number'
+    ).map(lead => ({
+      ...lead,
+      sources: Array.isArray(lead.sources) ? lead.sources.filter(s => s && s.title && s.url) : []
+    }));
+
+    console.log(`  분석 완료: ${validLeads.length}개 리드 발견\n`);
+    return validLeads;
   } catch (error) {
     console.error('  [오류] Gemini API 분석 실패:', error.message);
     console.log('  → 데모 모드로 실행합니다.\n');
