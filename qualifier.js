@@ -1,6 +1,5 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { createLLMClient } = require('llm-client');
 const config = require('./config');
-const { withRetry } = require('./lib/http');
 
 // 키워드 기반 카테고리 분류 → 관련 레퍼런스만 선별
 function categorizeArticles(articles) {
@@ -29,8 +28,13 @@ async function analyzeLeads(articles) {
     return generateDemoLeads(articles);
   }
 
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+  const llm = createLLMClient({
+    provider: 'gemini',
+    apiKey: process.env.GEMINI_API_KEY,
+    model: 'gemini-3-flash-preview',
+    timeout: 30000,
+    maxRetries: 1,
+  });
 
   // 본문 유무 표시 + 예외 처리 안내
   const newsList = articles.map((a, i) => {
@@ -136,12 +140,7 @@ Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요
 ]`;
 
   try {
-    const result = await withRetry(() => model.generateContent(prompt), { label: 'Gemini-qualify' });
-    const response = result.response.text();
-
-    // JSON 파싱 (코드 블록 제거)
-    const jsonStr = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const leads = JSON.parse(jsonStr);
+    const leads = await llm.chatJSON(prompt, { label: 'Gemini-qualify' });
 
     // 스키마 검증: 배열 + 필수 필드 확인
     const validLeads = (Array.isArray(leads) ? leads : []).filter(lead =>
