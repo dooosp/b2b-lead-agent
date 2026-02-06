@@ -192,57 +192,79 @@ async function fetchYonhapEconomy() {
   }
 }
 
+// Google News 배치 병렬 fetch (2개씩)
+async function fetchAllGoogleNews(queries) {
+  const results = [];
+  for (let i = 0; i < queries.length; i += 2) {
+    const batch = queries.slice(i, i + 2);
+    console.log(`  검색 배치 ${Math.floor(i / 2) + 1}: ${batch.map(q => `"${q}"`).join(', ')}`);
+    const settled = await Promise.allSettled(batch.map(q => fetchGoogleNews(q)));
+    for (const r of settled) {
+      if (r.status === 'fulfilled') results.push(...r.value);
+      else console.warn('  [경고] Google News fetch 실패:', r.reason?.message);
+    }
+    if (i + 2 < queries.length) await new Promise(r => setTimeout(r, 300));
+  }
+  return results;
+}
+
+// 기사 본문 배치 병렬 크롤링 (3개씩)
+async function fetchArticlesBatch(articles) {
+  for (let i = 0; i < articles.length; i += 3) {
+    const batch = articles.slice(i, i + 3);
+    await Promise.allSettled(batch.map(async (article) => {
+      // Google News URL인 경우 원본 URL 추출
+      if (article.link.includes('news.google.com')) {
+        const originalUrl = await resolveOriginalUrl(article.title);
+        if (originalUrl) {
+          article.link = originalUrl;
+          article.resolvedUrl = true;
+        } else {
+          const searchQuery = article.title.replace(/\s*-\s*[^-]+$/, '').trim();
+          article.link = `https://search.naver.com/search.naver?where=news&query=${encodeURIComponent(searchQuery)}`;
+          article.resolvedUrl = false;
+          article.originalGoogleUrl = true;
+        }
+      }
+      // 본문 크롤링
+      article.content = await fetchArticleContent(article.link);
+      const status = article.content ? `✓ ${article.content.length}자` : '✗ 제목만';
+      console.log(`    ${article.title.substring(0, 40)}... ${status}`);
+    }));
+    if (i + 3 < articles.length) await new Promise(r => setTimeout(r, 300));
+  }
+}
+
 // 메인 수집 함수
 async function fetchIndustryNews() {
   console.log('\n[Step 1] 산업 뉴스 수집 시작...');
+
+  // Phase 1: RSS 소스 3종 병렬
+  console.log('  RSS 소스 병렬 수집...');
+  const settled = await Promise.allSettled([
+    fetchAllGoogleNews(config.searchQueries),
+    fetchHankyung(),
+    fetchYonhapEconomy()
+  ]);
+
   let allArticles = [];
-
-  // Google News 키워드별 검색
-  for (const query of config.searchQueries) {
-    console.log(`  검색: "${query}"`);
-    const articles = await fetchGoogleNews(query);
-    allArticles = allArticles.concat(articles);
-    await new Promise(resolve => setTimeout(resolve, 500));
+  const labels = ['Google News', '한국경제', '연합뉴스'];
+  for (let i = 0; i < settled.length; i++) {
+    if (settled[i].status === 'fulfilled') {
+      allArticles = allArticles.concat(settled[i].value);
+      console.log(`  ${labels[i]}: ${settled[i].value.length}건`);
+    } else {
+      console.warn(`  [경고] ${labels[i]} 실패: ${settled[i].reason?.message}`);
+    }
   }
-
-  // 추가 소스
-  console.log('  한국경제 산업 RSS 수집...');
-  const hankyungArticles = await fetchHankyung();
-  allArticles = allArticles.concat(hankyungArticles);
-
-  console.log('  연합뉴스 경제 RSS 수집...');
-  const yonhapArticles = await fetchYonhapEconomy();
-  allArticles = allArticles.concat(yonhapArticles);
 
   // 중복 제거
   const uniqueArticles = removeDuplicates(allArticles);
   console.log(`  수집 완료: 총 ${allArticles.length}개 → 중복 제거 후 ${uniqueArticles.length}개`);
 
-  // 원본 URL 추출 + 본문 크롤링
+  // Phase 2: 본문 크롤링 (3개씩 배치 병렬)
   console.log('  기사 본문 수집 중...');
-  for (const article of uniqueArticles) {
-    // Google News URL인 경우 원본 URL 추출
-    if (article.link.includes('news.google.com')) {
-      const originalUrl = await resolveOriginalUrl(article.title);
-      if (originalUrl) {
-        article.link = originalUrl;
-        article.resolvedUrl = true;
-      } else {
-        // 실패 시: 네이버 뉴스 검색 링크로 대체 (사용자가 직접 검색 가능)
-        const searchQuery = article.title.replace(/\s*-\s*[^-]+$/, '').trim();
-        article.link = `https://search.naver.com/search.naver?where=news&query=${encodeURIComponent(searchQuery)}`;
-        article.resolvedUrl = false;
-        article.originalGoogleUrl = true;
-      }
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-
-    // 본문 크롤링
-    article.content = await fetchArticleContent(article.link);
-    const status = article.content ? `✓ ${article.content.length}자` : '✗ 제목만';
-    console.log(`    ${article.title.substring(0, 40)}... ${status}`);
-    await new Promise(resolve => setTimeout(resolve, 300));
-  }
+  await fetchArticlesBatch(uniqueArticles);
 
   console.log('  본문 수집 완료\n');
   return uniqueArticles;
