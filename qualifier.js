@@ -34,9 +34,11 @@ async function analyzeLeads(articles) {
 
   // 본문 유무 표시 + 예외 처리 안내
   const newsList = articles.map((a, i) => {
-    let entry = `${i + 1}. [${a.source}] ${a.title} (URL: ${a.link}) (검색키워드: ${a.query})`;
-    if (a.content) {
-      entry += `\n   [본문 있음] ${a.content}`;
+    const safeTitle = JSON.stringify(a.title || '');
+    const safeContent = a.content ? JSON.stringify(a.content.substring(0, 500)) : null;
+    let entry = `${i + 1}. [${a.source}] ${safeTitle} (URL: ${a.link}) (검색키워드: ${a.query})`;
+    if (safeContent) {
+      entry += `\n   [본문 있음] ${safeContent}`;
     } else {
       entry += `\n   [본문 없음 - 제목과 키워드 기반 추론 필요]`;
     }
@@ -53,7 +55,7 @@ async function analyzeLeads(articles) {
   const globalRefStr = Object.entries(config.globalReferences)
     .filter(([category]) => relevantCategories.includes(category))
     .map(([category, cases]) => {
-      const caseList = cases.map(c => `  • ${c.client}: ${c.project} → ${c.result}`).join('\n');
+      const caseList = cases.slice(0, 3).map(c => `  • ${c.client}: ${c.project} → ${c.result}`).join('\n');
       return `[${category.toUpperCase()}]\n${caseList}`;
     }).join('\n\n');
   console.log(`  카테고리 매칭: ${relevantCategories.join(', ')} (${relevantCategories.length * 3} 레퍼런스)`);
