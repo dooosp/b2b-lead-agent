@@ -10,6 +10,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "llm-client": "file:../shared-libs/llm-client",
+    "news-fetcher": "file:../shared-libs/news-fetcher",
     "axios": "^1.13.2",
     "cheerio": "^1.1.2",
     "rss-parser": "^3.13.0",
