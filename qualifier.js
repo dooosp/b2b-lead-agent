@@ -1,14 +1,8 @@
 const { createLLMClient } = require('llm-client');
-const config = require('./config');
 
 // 키워드 기반 카테고리 분류 → 관련 레퍼런스만 선별
-function categorizeArticles(articles) {
-  const rules = {
-    marine: ['선박', '해운', '조선', '해양', 'LNG', 'IMO', 'EEXI', 'CII', '벙커'],
-    datacenter: ['데이터센터', 'DC', 'IDC', '클라우드', 'PUE', '냉각', '서버'],
-    factory: ['팩토리', '공장', '자동화', '증설', '생산', '배터리', '반도체', 'EV'],
-    coldchain: ['냉동', '냉장', '냉각', '콜드체인', '물류센터', '식품', '백신']
-  };
+function categorizeArticles(articles, profile) {
+  const rules = profile.categoryRules;
   const matched = new Set();
   for (const a of articles) {
     const text = `${a.title} ${a.query} ${a.content || ''}`.toLowerCase();
@@ -19,13 +13,13 @@ function categorizeArticles(articles) {
   return matched.size > 0 ? [...matched] : Object.keys(rules); // 폴백: 전체
 }
 
-async function analyzeLeads(articles) {
+async function analyzeLeads(articles, profile) {
   console.log('[Step 2] Gemini API로 리드 분석 시작...');
 
   if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
     console.error('  [오류] GEMINI_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.');
     console.log('  → 데모 모드로 실행합니다.\n');
-    return generateDemoLeads(articles);
+    return generateDemoLeads(articles, profile);
   }
 
   const llm = createLLMClient({
@@ -50,13 +44,18 @@ async function analyzeLeads(articles) {
   }).join('\n\n');
 
   // 제품 지식 베이스 문자열 생성
-  const knowledgeBase = Object.entries(config.productKnowledge)
+  const knowledgeBase = Object.entries(profile.productKnowledge)
     .map(([name, info]) => `- ${name}: 핵심가치="${info.value}", ROI="${info.roi}"`)
     .join('\n');
 
+  // 제품 라인업 문자열 생성
+  const productLineup = Object.entries(profile.products)
+    .map(([cat, items]) => `- ${cat.charAt(0).toUpperCase() + cat.slice(1)}: ${items.join(', ')}`)
+    .join('\n');
+
   // 관련 카테고리만 선별하여 글로벌 성공 사례 생성
-  const relevantCategories = categorizeArticles(articles);
-  const globalRefStr = Object.entries(config.globalReferences)
+  const relevantCategories = categorizeArticles(articles, profile);
+  const globalRefStr = Object.entries(profile.globalReferences)
     .filter(([category]) => relevantCategories.includes(category))
     .map(([category, cases]) => {
       const caseList = cases.slice(0, 3).map(c => `  • ${c.client}: ${c.project} → ${c.result}`).join('\n');
@@ -67,29 +66,26 @@ async function analyzeLeads(articles) {
   const prompt = `[Context]
 - 분석 시점: ${new Date().toISOString().split('T')[0]}
 - 데이터 소스: 한국 산업 뉴스 (최근 24시간 크롤링)
-- 경쟁사: ABB, Siemens, Schneider Electric
+- 경쟁사: ${profile.competitors.join(', ')}
 
 [Role]
-당신은 댄포스 코리아의 'AI 기술 영업 전략가'입니다.
+당신은 ${profile.name}의 'AI 기술 영업 전략가'입니다.
 10년 이상 B2B 산업장비 영업 경험으로, 뉴스에서 영업 기회를 포착하고 Value Selling 전략을 수립합니다.
 아래 뉴스를 읽고 단순 요약이 아닌, **'영업 기회 분석 보고서'**를 작성하세요.
 
-[댄포스 제품 지식 베이스]
+[${profile.name} 제품 지식 베이스]
 ${knowledgeBase}
 
 [제품 라인업]
-- Drives: ${config.products.drives.join(', ')}
-- Marine: ${config.products.marine.join(', ')}
-- HVAC: ${config.products.hvac.join(', ')}
-- Cooling: ${config.products.cooling.join(', ')}
+${productLineup}
 
-[댄포스 글로벌 성공 사례 - Cross-border Selling Reference]
+[${profile.name} 글로벌 성공 사례 - Cross-border Selling Reference]
 아래 본사 및 해외 성공 사례를 한국 고객에게 레퍼런스로 제시하세요:
 ${globalRefStr}
 
 [Action]
 1. Target Opportunity: 어떤 기업의 어떤 프로젝트인가?
-2. Danfoss Solution: 위 지식 베이스를 참고하여 최적의 제품 1개를 선정.
+2. ${profile.name} Solution: 위 지식 베이스를 참고하여 최적의 제품 1개를 선정.
 3. Estimated ROI: 제품 도입 시 예상되는 에너지 절감률 또는 비용 편익을 수치(%)로 제시.
 4. Key Pitch (Value Selling): 고객사 담당자에게 보낼 메일의 '첫 문장' (핵심 가치 중심).
 5. Global Context: 해당 산업과 관련된 글로벌 탄소 중립 정책 + **위 글로벌 성공 사례 중 유사 프로젝트 1개 언급**.
@@ -109,7 +105,7 @@ ${globalRefStr}
 [Tone]
 - 객관적이고 데이터 중심적으로 분석. 과장 금지.
 - ROI는 보수적 추정 (업계 평균 기반), 구체적 수치로 제시.
-- salesPitch는 고객 관점(pain point 해결) 중심, 댄포스 자랑 X.
+- salesPitch는 고객 관점(pain point 해결) 중심, ${profile.name} 자랑 X.
 
 [뉴스 목록]
 ${newsList}
@@ -129,7 +125,7 @@ Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요
   {
     "company": "타겟 기업명",
     "summary": "프로젝트 내용 요약 (1줄)",
-    "product": "추천 댄포스 제품 1개",
+    "product": "추천 ${profile.name} 제품 1개",
     "score": 85,
     "grade": "A",
     "roi": "예상 ROI (예: 에너지 30% 절감, 연간 유지보수비 40% 감소 등)",
@@ -155,7 +151,7 @@ Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요
   } catch (error) {
     console.error('  [오류] Gemini API 분석 실패:', error.message);
     console.log('  → 데모 모드로 실행합니다.\n');
-    return generateDemoLeads(articles);
+    return generateDemoLeads(articles, profile);
   }
 }
 
@@ -228,64 +224,29 @@ function extractCompanyName(title) {
 }
 
 // 카테고리 판별
-function detectCategory(article) {
+function detectCategory(article, profile) {
   const text = `${article.title} ${article.query} ${article.content || ''}`.toLowerCase();
+  const categories = Object.keys(profile.categoryRules);
 
-  if (['선박', '해운', '조선', 'lng', 'imo', 'eexi', 'cii'].some(k => text.includes(k))) return 'marine';
-  if (['데이터센터', 'dc ', 'idc', '클라우드', 'pue', '서버'].some(k => text.includes(k))) return 'datacenter';
-  if (['냉동', '냉장', '콜드체인', '물류센터', '식품'].some(k => text.includes(k))) return 'coldchain';
-  if (['공장', '팩토리', '자동화', '배터리', '반도체'].some(k => text.includes(k))) return 'factory';
-  return 'factory'; // 기본값
+  for (const cat of categories) {
+    if (profile.categoryRules[cat].some(k => text.includes(k.toLowerCase()))) return cat;
+  }
+  return categories[categories.length - 1]; // 마지막 카테고리를 기본값으로
 }
 
-// 카테고리별 제품/ROI/레퍼런스 매핑
-const categoryConfig = {
-  marine: {
-    product: 'iC7 Marine 드라이브',
-    score: 85,
-    grade: 'A',
-    roi: '연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피',
-    policy: 'IMO 2030 탄소중립 규제 (EEXI/CII 등급제)',
-    pitch: (company, product) => `${company}의 친환경 선박 프로젝트에 Maersk 300척이 검증한 ${product}로 연료비 18% 절감을 제안합니다.`
-  },
-  datacenter: {
-    product: 'Turbocor 컴프레서',
-    score: 80,
-    grade: 'A',
-    roi: '냉각 전력 35~40% 절감, PUE 1.25 달성',
-    policy: 'EU 데이터센터 에너지효율 지침 (2027 시행)',
-    pitch: (company, product) => `${company} 데이터센터에 Equinix가 글로벌 표준으로 채택한 ${product}로 PUE 1.25를 달성하세요.`
-  },
-  coldchain: {
-    product: 'Turbocor 오일리스 칠러',
-    score: 75,
-    grade: 'B',
-    roi: '에너지 비용 30~32% 절감, 유지보수비 60% 감소',
-    policy: 'RE100 이행 + 글로벌 식품/의약 콜드체인 인증 강화',
-    pitch: (company, product) => `${company} 냉동/냉장 설비에 Lineage Logistics가 검증한 ${product}로 에너지 32% 절감을 실현하세요.`
-  },
-  factory: {
-    product: 'VLT AutomationDrive',
-    score: 70,
-    grade: 'B',
-    roi: '생산라인 에너지 25~35% 절감',
-    policy: 'EU CBAM 탄소국경세 (2026 본격 시행) + 산업용 모터 IE4 의무화',
-    pitch: (company, product) => `${company} 스마트 팩토리에 Volkswagen EV공장이 적용한 ${product}로 에너지 35% 절감을 제안합니다.`
-  }
-};
-
 // API 키 없을 때 데모 데이터
-function generateDemoLeads(articles) {
+function generateDemoLeads(articles, profile) {
   const demoLeads = [];
-  const refs = config.globalReferences;
+  const refs = profile.globalReferences;
 
   for (const article of articles.slice(0, 5)) {
-    const category = detectCategory(article);
-    const cfg = categoryConfig[category];
+    const category = detectCategory(article, profile);
+    const cfg = profile.categoryConfig[category];
+    if (!cfg) continue;
     const company = extractCompanyName(article.title);
 
     // 해당 카테고리 글로벌 레퍼런스 중 랜덤 선택
-    const catRefs = refs[category] || refs.factory;
+    const catRefs = refs[category] || Object.values(refs)[0] || [];
     const refCase = catRefs[Math.floor(Math.random() * catRefs.length)];
 
     // 프로젝트 요약 (제목에서 태그/따옴표/언론사명 제거)
@@ -303,7 +264,9 @@ function generateDemoLeads(articles) {
       grade: cfg.grade,
       roi: cfg.roi,
       salesPitch: cfg.pitch(company, cfg.product),
-      globalContext: `${cfg.policy}. 레퍼런스: ${refCase.client} - ${refCase.result}`,
+      globalContext: refCase
+        ? `${cfg.policy}. 레퍼런스: ${refCase.client} - ${refCase.result}`
+        : cfg.policy,
       sources: [{ title: article.title, url: article.link }]
     });
   }

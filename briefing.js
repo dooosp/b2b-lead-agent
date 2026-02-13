@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-function generateReport(leads) {
+function generateReport(leads, profile) {
   console.log('[Step 3] 영업용 리포트 생성...');
 
   const today = new Date();
@@ -11,7 +11,7 @@ function generateReport(leads) {
   const gradeA = leads.filter(l => l.grade === 'A').sort((a, b) => b.score - a.score);
   const gradeB = leads.filter(l => l.grade === 'B').sort((a, b) => b.score - a.score);
 
-  let report = `# B2B 리드 리포트 - ${dateKor}\n\n`;
+  let report = `# [${profile.name}] B2B 리드 리포트 - ${dateKor}\n\n`;
   report += `> 생성 시각: ${today.toLocaleString('ko-KR')}\n`;
   report += `> 분석 대상: ${leads.length}개 리드\n\n`;
 
@@ -57,12 +57,16 @@ function generateReport(leads) {
   return { content: report, dateStr };
 }
 
-function saveReport(report) {
-  const reportsDir = path.join(__dirname, 'reports');
-  if (!fs.existsSync(reportsDir)) {
-    fs.mkdirSync(reportsDir, { recursive: true });
+function getProfileReportsDir(profile) {
+  const dir = path.join(__dirname, 'reports', profile.id);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
+  return dir;
+}
 
+function saveReport(report, profile) {
+  const reportsDir = getProfileReportsDir(profile);
   const filePath = path.join(reportsDir, `lead_report_${report.dateStr}.md`);
   fs.writeFileSync(filePath, report.content, 'utf-8');
   console.log(`  리포트 저장: ${filePath}\n`);
@@ -76,12 +80,8 @@ function generateLeadId(company) {
   return `${slug}_${date}_${Math.random().toString(36).substring(2, 6)}`;
 }
 
-function saveLeadsJson(leads) {
-  const reportsDir = path.join(__dirname, 'reports');
-  if (!fs.existsSync(reportsDir)) {
-    fs.mkdirSync(reportsDir, { recursive: true });
-  }
-
+function saveLeadsJson(leads, profile) {
+  const reportsDir = getProfileReportsDir(profile);
   const now = new Date().toISOString();
 
   // 각 리드에 ID, 상태, 생성일 추가

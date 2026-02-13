@@ -22,7 +22,8 @@ export default {
       return await handleTrigger(request, env);
     }
     if (url.pathname === '/api/leads' && request.method === 'GET') {
-      return addCorsHeaders(await fetchLeads(env), origin, env);
+      const profile = url.searchParams.get('profile') || 'danfoss';
+      return addCorsHeaders(await fetchLeads(env, profile), origin, env);
     }
     if (url.pathname === '/api/ppt' && request.method === 'POST') {
       return addCorsHeaders(await generatePPT(request, env), origin, env);
@@ -31,7 +32,8 @@ export default {
       return addCorsHeaders(await handleRoleplay(request, env), origin, env);
     }
     if (url.pathname === '/api/history' && request.method === 'GET') {
-      return addCorsHeaders(await fetchHistory(env), origin, env);
+      const profile = url.searchParams.get('profile') || 'danfoss';
+      return addCorsHeaders(await fetchHistory(env, profile), origin, env);
     }
 
     // 페이지 라우팅
@@ -157,29 +159,29 @@ async function handleTrigger(request, env) {
   return jsonResponse({ success: false, message: `오류: ${response.status}` }, 500);
 }
 
-async function fetchLeads(env) {
+async function fetchLeads(env, profile) {
   try {
     const response = await fetch(
-      `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/latest_leads.json?t=${Date.now()}`,
+      `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/${profile}/latest_leads.json?t=${Date.now()}`,
       { headers: { 'User-Agent': 'B2B-Lead-Worker', 'Cache-Control': 'no-cache' } }
     );
     if (!response.ok) return jsonResponse({ leads: [], message: '아직 생성된 리드가 없습니다.' });
     const leads = await response.json();
-    return jsonResponse({ leads });
+    return jsonResponse({ leads, profile });
   } catch (e) {
     return jsonResponse({ leads: [], message: e.message }, 500);
   }
 }
 
-async function fetchHistory(env) {
+async function fetchHistory(env, profile) {
   try {
     const response = await fetch(
-      `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/lead_history.json?t=${Date.now()}`,
+      `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/${profile}/lead_history.json?t=${Date.now()}`,
       { headers: { 'User-Agent': 'B2B-Lead-Worker', 'Cache-Control': 'no-cache' } }
     );
     if (!response.ok) return jsonResponse({ history: [], message: '아직 히스토리가 없습니다.' });
     const history = await response.json();
-    return jsonResponse({ history });
+    return jsonResponse({ history, profile });
   } catch (e) {
     return jsonResponse({ history: [], message: e.message }, 500);
   }
@@ -190,7 +192,7 @@ async function generatePPT(request, env) {
   const { lead } = body;
   if (!lead) return jsonResponse({ success: false, message: '리드 데이터가 없습니다.' }, 400);
 
-  const prompt = `당신은 댄포스 코리아의 기술 영업 전문가입니다.
+  const prompt = `당신은 B2B 기술 영업 전문가입니다.
 아래 리드 정보를 바탕으로 고객사에 전달할 **5슬라이드 기술 영업 제안서** 구성안을 작성하세요.
 
 [리드 정보]
@@ -202,7 +204,7 @@ async function generatePPT(request, env) {
 
 [슬라이드 구성 지시]
 슬라이드 1 - 도입부: 고객사의 최근 성과(수주/착공 등)를 축하하며, 당면한 과제(에너지 효율, 규제 대응 등)를 언급
-슬라이드 2 - 댄포스 솔루션: ${lead.product}의 기술적 강점과 차별점을 구체적으로 설명
+슬라이드 2 - 솔루션: ${lead.product}의 기술적 강점과 차별점을 구체적으로 설명
 슬라이드 3 - 경제적 가치: ROI 수치를 시각화 제안 (Before/After 비교표, 절감액 그래프 등)
 슬라이드 4 - 규제 대응: 관련 글로벌 규제(${lead.globalContext}) 준수 로드맵 제시
 슬라이드 5 - Next Step: 파일럿 테스트 제안, 기술 미팅 일정 등 구체적 후속 조치
@@ -242,7 +244,7 @@ async function handleRoleplay(request, env) {
 
 ${conversationHistory ? `[이전 대화]\n${conversationHistory}\n` : ''}
 [영업사원의 최신 발언]
-${userMessage || '안녕하세요, 댄포스 코리아입니다. 귀사의 프로젝트에 대해 제안드리고 싶습니다.'}
+${userMessage || '안녕하세요. 귀사의 프로젝트에 대해 제안드리고 싶습니다.'}
 
 위 발언에 대해 까다로운 구매 담당자로서 응답하세요. 응답 후 줄바꿈하고 "---" 아래에 [코칭 피드백]을 작성하세요:
 - 영업사원의 답변에서 잘한 점
@@ -334,14 +336,19 @@ function getMainPage() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>B2B 리드 에이전트 - Danfoss</title>
-  <style>${getCommonStyles()}</style>
+  <title>B2B 리드 에이전트</title>
+  <style>${getCommonStyles()}
+    select.profile-select { width: 200px; margin: 0 auto 16px; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #1a1a2e; color: #fff; font-size: 14px; text-align: center; display: block; }
+  </style>
 </head>
 <body>
   <div class="container">
     <div class="logo">📊</div>
     <h1>B2B 리드 에이전트</h1>
-    <p class="subtitle">Danfoss 맞춤형 영업 기회 분석</p>
+    <p class="subtitle">고객사별 맞춤형 영업 기회 분석</p>
+    <select class="profile-select" id="profileSelect">
+      <option value="danfoss">댄포스 코리아</option>
+    </select>
 
     <input type="password" id="password" placeholder="비밀번호 입력" class="input-field">
     <button class="btn btn-primary" id="generateBtn" onclick="generate()">보고서 생성</button>
@@ -407,7 +414,7 @@ function getLeadsPage() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>리드 상세 보기 - Danfoss</title>
+  <title>리드 상세 보기</title>
   <style>${getCommonStyles()}
     .lead-card { background: #1e2a3a; border-radius: 12px; padding: 20px; margin: 16px 0; border-left: 4px solid #e94560; }
     .lead-card.grade-b { border-left-color: #f39c12; }
@@ -453,9 +460,10 @@ function getLeadsPage() {
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
     function safeUrl(u) { if(!u) return '#'; const c=String(u).replace(/[\x00-\x1f\x7f\s]+/g,'').toLowerCase(); if(/^(javascript|data|vbscript|blob):/i.test(c)||/^[/\\]{2}/.test(c)) return '#'; return esc(u); }
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
+    function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
     async function loadLeads() {
       try {
-        const res = await fetch('/api/leads', {headers:authHeaders()});
+        const res = await fetch('/api/leads?profile=' + getProfile(), {headers:authHeaders()});
         const data = await res.json();
         const container = document.getElementById('leadsList');
 
@@ -510,7 +518,7 @@ function getPPTPage() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PPT 제안서 생성 - Danfoss</title>
+  <title>PPT 제안서 생성</title>
   <style>${getCommonStyles()}
     .ppt-output { background: #1e2a3a; border-radius: 12px; padding: 24px; margin-top: 20px; text-align: left; white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #ddd; display: none; max-height: 70vh; overflow-y: auto; }
     .ppt-output h1, .ppt-output h2, .ppt-output h3 { color: #e94560; }
@@ -534,11 +542,12 @@ function getPPTPage() {
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
     function getToken() { const p=document.getElementById('password').value; if(p) sessionStorage.setItem('b2b_token',p); return p; }
+    function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
     (function(){ const s=sessionStorage.getItem('b2b_token'); if(s) document.getElementById('password').value=s; })();
     let leads = [];
 
     async function loadLeads() {
-      const res = await fetch('/api/leads', {headers:authHeaders()});
+      const res = await fetch('/api/leads?profile=' + getProfile(), {headers:authHeaders()});
       const data = await res.json();
       leads = data.leads || [];
       const select = document.getElementById('leadSelect');
@@ -621,7 +630,7 @@ function getRoleplayPage() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>영업 시뮬레이터 - Danfoss</title>
+  <title>영업 시뮬레이터</title>
   <style>${getCommonStyles()}
     .chat-container { background: #1e2a3a; border-radius: 12px; padding: 16px; margin-top: 16px; max-height: 50vh; overflow-y: auto; display: none; }
     .chat-msg { margin: 12px 0; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.6; }
@@ -661,13 +670,14 @@ function getRoleplayPage() {
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
     function getToken() { const p=document.getElementById('password').value; if(p) sessionStorage.setItem('b2b_token',p); return p; }
+    function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
     (function(){ const s=sessionStorage.getItem('b2b_token'); if(s) document.getElementById('password').value=s; })();
     let leads = [];
     let history = [];
     let currentLead = null;
 
     async function loadLeads() {
-      const res = await fetch('/api/leads', {headers:authHeaders()});
+      const res = await fetch('/api/leads?profile=' + getProfile(), {headers:authHeaders()});
       const data = await res.json();
       leads = data.leads || [];
       const select = document.getElementById('leadSelect');
@@ -704,7 +714,7 @@ function getRoleplayPage() {
       document.getElementById('chatInput').style.display = 'flex';
 
       // 첫 인사
-      await sendMessage('안녕하세요, 댄포스 코리아입니다. 귀사의 프로젝트에 대해 제안드리고 싶습니다.');
+      await sendMessage('안녕하세요. 귀사의 프로젝트에 대해 제안드리고 싶습니다.');
       status.className = 'status success';
       status.textContent = '시뮬레이션 진행 중 - 아래에 영업 멘트를 입력하세요.';
     }
@@ -785,7 +795,7 @@ function getHistoryPage() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>리드 히스토리 - Danfoss CRM</title>
+  <title>리드 히스토리 - CRM</title>
   <style>${getCommonStyles()}
     .history-card { background: #1e2a3a; border-radius: 12px; padding: 16px; margin: 12px 0; border-left: 4px solid #3498db; }
     .history-card.won { border-left-color: #27ae60; }
@@ -826,13 +836,14 @@ function getHistoryPage() {
   <script>
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
+    function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
     let allHistory = [];
     let currentFilter = 'ALL';
     const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
 
     async function loadHistory() {
       try {
-        const res = await fetch('/api/history', {headers:authHeaders()});
+        const res = await fetch('/api/history?profile=' + getProfile(), {headers:authHeaders()});
         const data = await res.json();
         allHistory = data.history || [];
 

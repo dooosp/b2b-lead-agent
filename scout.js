@@ -4,16 +4,15 @@ const {
   removeDuplicates,
   enrichArticles
 } = require('news-fetcher');
-const config = require('./config');
 
 // 메인 수집 함수
-async function fetchIndustryNews() {
+async function fetchIndustryNews(profile) {
   console.log('\n[Step 1] 산업 뉴스 수집 시작...');
 
   // Phase 1: RSS 소스 3종 병렬
   console.log('  RSS 소스 병렬 수집...');
   const settled = await Promise.allSettled([
-    fetchGoogleNewsBatch(config.searchQueries, { maxItems: 3 }),
+    fetchGoogleNewsBatch(profile.searchQueries, { maxItems: 3 }),
     fetchRSSFeed('hankyung', { maxItems: 5 }),
     fetchRSSFeed('yonhap', { maxItems: 5 })
   ]);

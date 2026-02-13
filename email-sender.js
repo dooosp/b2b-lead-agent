@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-async function send(report) {
+async function send(report, profile) {
   console.log('[이메일] 리포트 발송 시작...');
 
   const transporter = nodemailer.createTransport({
@@ -13,13 +13,14 @@ async function send(report) {
 
   const today = new Date();
   const dateKor = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+  const profileName = profile ? profile.name : 'B2B';
 
   const htmlContent = convertToHtml(report.content);
 
   const mailOptions = {
     from: `B2B Lead Agent <${process.env.GMAIL_USER}>`,
     to: process.env.GMAIL_RECIPIENT,
-    subject: `[B2B 리드] Danfoss 영업 기회 리포트 - ${dateKor}`,
+    subject: `[${profileName}] B2B 리드 리포트 - ${dateKor}`,
     html: htmlContent
   };
 
