@@ -1,4 +1,4 @@
-const { createLLMClient } = require('llm-client');
+const { createLLMClient } = require('./lib/llm-client');
 
 // 키워드 기반 카테고리 분류 → 관련 레퍼런스만 선별
 function categorizeArticles(articles, profile) {

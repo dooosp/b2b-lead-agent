@@ -3,7 +3,7 @@ const {
   fetchRSSFeed,
   removeDuplicates,
   enrichArticles
-} = require('news-fetcher');
+} = require('./lib/news-fetcher');
 
 // 메인 수집 함수
 async function fetchIndustryNews(profile) {
