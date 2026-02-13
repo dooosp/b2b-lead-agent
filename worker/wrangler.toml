@@ -7,7 +7,7 @@ mode = "smart"
 
 [vars]
 GITHUB_REPO = "dooosp/b2b-lead-agent"
-WORKER_ORIGIN = "https://b2b-lead-trigger.dooosp.workers.dev"
+WORKER_ORIGIN = "https://b2b-lead-trigger.jangho1383.workers.dev"
 PROFILES = '[{"id":"danfoss","name":"댄포스 코리아"},{"id":"ls-electric","name":"LS일렉트릭"}]'
 ENABLE_SELF_SERVICE_RATE_LIMIT = "false"
 SELF_SERVICE_RATE_LIMIT_MAX = "3"

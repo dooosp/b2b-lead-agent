@@ -29,7 +29,7 @@ export default {
       return await handleTrigger(request, env);
     }
     if (url.pathname === '/api/leads' && request.method === 'GET') {
-      const profile = url.searchParams.get('profile') || 'danfoss';
+      const profile = resolveProfileId(url.searchParams.get('profile'), env);
       return addCorsHeaders(await fetchLeads(env, profile), origin, env);
     }
     if (url.pathname === '/api/ppt' && request.method === 'POST') {
@@ -39,7 +39,7 @@ export default {
       return addCorsHeaders(await handleRoleplay(request, env), origin, env);
     }
     if (url.pathname === '/api/history' && request.method === 'GET') {
-      const profile = url.searchParams.get('profile') || 'danfoss';
+      const profile = resolveProfileId(url.searchParams.get('profile'), env);
       return addCorsHeaders(await fetchHistory(env, profile), origin, env);
     }
     // PATCH /api/leads/:id — 리드 상태/메모 업데이트
@@ -80,7 +80,7 @@ export default {
       return new Response(getHistoryPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
     if (url.pathname === '/dashboard') {
-      return new Response(getDashboardPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      return new Response(getDashboardPage(env), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
 
     return new Response(getMainPage(env), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
@@ -113,7 +113,7 @@ function handleOptions(request, env) {
     status: 204,
     headers: {
       'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400'
     }
@@ -176,7 +176,11 @@ async function handleTrigger(request, env) {
   if (bearerAuth && !passwordOk) {
     return jsonResponse({ success: false, message: '비밀번호가 올바르지 않습니다.' }, 401);
   }
-  const profile = body.profile || 'danfoss';
+  const requestedProfile = typeof body.profile === 'string' ? body.profile.trim() : '';
+  const profile = resolveProfileId(requestedProfile, env);
+  if (requestedProfile && requestedProfile !== profile) {
+    return jsonResponse({ success: false, message: `유효하지 않은 프로필입니다: ${requestedProfile}` }, 400);
+  }
 
   const response = await fetch(
     `https://api.github.com/repos/${env.GITHUB_REPO}/dispatches`,
@@ -375,6 +379,62 @@ function jsonResponse(data, status = 200) {
 
 // ===== D1 DB 헬퍼 =====
 
+let d1SchemaReadyPromise = null;
+
+async function ensureD1Schema(db) {
+  if (!db) return;
+  if (!d1SchemaReadyPromise) {
+    d1SchemaReadyPromise = db.batch([
+      db.prepare(`CREATE TABLE IF NOT EXISTS leads (
+        id TEXT PRIMARY KEY,
+        profile_id TEXT NOT NULL DEFAULT 'self-service',
+        source TEXT NOT NULL DEFAULT 'managed',
+        status TEXT NOT NULL DEFAULT 'NEW',
+        company TEXT NOT NULL,
+        summary TEXT,
+        product TEXT,
+        score INTEGER DEFAULT 0,
+        grade TEXT DEFAULT 'B',
+        roi TEXT,
+        sales_pitch TEXT,
+        global_context TEXT,
+        sources TEXT DEFAULT '[]',
+        notes TEXT DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_leads_profile ON leads(profile_id)'),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status)'),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at DESC)'),
+      db.prepare(`CREATE TABLE IF NOT EXISTS analytics (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        profile_id TEXT,
+        company TEXT,
+        industry TEXT,
+        leads_count INTEGER DEFAULT 0,
+        articles_count INTEGER DEFAULT 0,
+        elapsed_sec INTEGER DEFAULT 0,
+        ip_hash TEXT,
+        created_at TEXT NOT NULL
+      )`),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_analytics_created ON analytics(created_at DESC)'),
+      db.prepare(`CREATE TABLE IF NOT EXISTS status_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id TEXT NOT NULL,
+        from_status TEXT NOT NULL,
+        to_status TEXT NOT NULL,
+        changed_at TEXT NOT NULL
+      )`),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_status_log_lead ON status_log(lead_id)')
+    ]).catch((err) => {
+      d1SchemaReadyPromise = null;
+      throw err;
+    });
+  }
+  await d1SchemaReadyPromise;
+}
+
 function rowToLead(row) {
   if (!row) return null;
   return {
@@ -422,6 +482,7 @@ function leadToRow(lead, profileId, source) {
 
 async function saveLeadsBatch(db, leads, profileId, source) {
   if (!db || !leads || leads.length === 0) return;
+  await ensureD1Schema(db);
   const stmt = db.prepare(
     `INSERT INTO leads (id, profile_id, source, status, company, summary, product, score, grade, roi, sales_pitch, global_context, sources, notes, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -439,6 +500,7 @@ async function saveLeadsBatch(db, leads, profileId, source) {
 
 async function getLeadsByProfile(db, profileId, options = {}) {
   if (!db) return [];
+  await ensureD1Schema(db);
   const { status, limit = 100, offset = 0 } = options;
   let sql = 'SELECT * FROM leads WHERE profile_id = ?';
   const params = [profileId];
@@ -451,6 +513,7 @@ async function getLeadsByProfile(db, profileId, options = {}) {
 
 async function getAllLeads(db, options = {}) {
   if (!db) return [];
+  await ensureD1Schema(db);
   const { status, limit = 500, offset = 0 } = options;
   let sql = 'SELECT * FROM leads WHERE 1=1';
   const params = [];
@@ -463,6 +526,7 @@ async function getAllLeads(db, options = {}) {
 
 async function getLeadById(db, id) {
   if (!db) return null;
+  await ensureD1Schema(db);
   const row = await db.prepare('SELECT * FROM leads WHERE id = ?').bind(id).first();
   return rowToLead(row);
 }
@@ -479,6 +543,7 @@ const VALID_TRANSITIONS = {
 
 async function updateLeadStatus(db, id, newStatus, fromStatus) {
   if (!db) return false;
+  await ensureD1Schema(db);
   const now = new Date().toISOString();
   await db.batch([
     db.prepare('UPDATE leads SET status = ?, updated_at = ? WHERE id = ?').bind(newStatus, now, id),
@@ -489,6 +554,7 @@ async function updateLeadStatus(db, id, newStatus, fromStatus) {
 
 async function updateLeadNotes(db, id, notes) {
   if (!db) return false;
+  await ensureD1Schema(db);
   const now = new Date().toISOString();
   await db.prepare('UPDATE leads SET notes = ?, updated_at = ? WHERE id = ?').bind(notes, now, id).run();
   return true;
@@ -496,6 +562,7 @@ async function updateLeadNotes(db, id, notes) {
 
 async function logAnalyticsRun(db, data) {
   if (!db) return;
+  await ensureD1Schema(db);
   const now = new Date().toISOString();
   await db.prepare(
     'INSERT INTO analytics (type, profile_id, company, industry, leads_count, articles_count, elapsed_sec, ip_hash, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
@@ -504,6 +571,7 @@ async function logAnalyticsRun(db, data) {
 
 async function getDashboardMetrics(db, profileId) {
   if (!db) return null;
+  await ensureD1Schema(db);
   const isAll = !profileId || profileId === 'all';
   const where = isAll ? '' : ' WHERE profile_id = ?';
   const bind = isAll ? [] : [profileId];
@@ -570,7 +638,11 @@ async function handleUpdateLead(request, env, leadId) {
 async function handleDashboard(request, env) {
   if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
   const url = new URL(request.url);
-  const profileId = url.searchParams.get('profile') || 'all';
+  const requestedProfile = (url.searchParams.get('profile') || 'all').trim();
+  if (requestedProfile !== 'all' && requestedProfile !== resolveProfileId(requestedProfile, env)) {
+    return jsonResponse({ success: false, message: `유효하지 않은 프로필입니다: ${requestedProfile}` }, 400);
+  }
+  const profileId = requestedProfile;
   const metrics = await getDashboardMetrics(env.DB, profileId);
   return jsonResponse({ success: true, metrics, profile: profileId });
 }
@@ -578,7 +650,11 @@ async function handleDashboard(request, env) {
 async function handleExportCSV(request, env) {
   if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
   const url = new URL(request.url);
-  const profileId = url.searchParams.get('profile') || 'all';
+  const requestedProfile = (url.searchParams.get('profile') || 'all').trim();
+  if (requestedProfile !== 'all' && requestedProfile !== resolveProfileId(requestedProfile, env)) {
+    return jsonResponse({ success: false, message: `유효하지 않은 프로필입니다: ${requestedProfile}` }, 400);
+  }
+  const profileId = requestedProfile;
   const leads = profileId === 'all'
     ? await getAllLeads(env.DB, { limit: 1000 })
     : await getLeadsByProfile(env.DB, profileId, { limit: 1000 });
@@ -1017,6 +1093,23 @@ async function handleSelfServiceAnalyze(request, env) {
   let profile = null;
   let profileMode = 'ai';
   let articles = [];
+  const persistSelfServiceRun = (leads) => {
+    if (!env.DB || !Array.isArray(leads) || leads.length === 0) return;
+    const ssProfileId = `self-service:${company}`;
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    let ipHash = 'unknown';
+    if (ip !== 'unknown') {
+      try { ipHash = btoa(ip).slice(0, 12); } catch { ipHash = 'unknown'; }
+    }
+    Promise.all([
+      saveLeadsBatch(env.DB, leads, ssProfileId, 'self-service'),
+      logAnalyticsRun(env.DB, {
+        type: 'self-service', profileId: ssProfileId, company, industry,
+        leadsCount: leads.length, articlesCount: articles.length,
+        elapsedSec: Math.round((Date.now() - startTime) / 1000), ipHash
+      })
+    ]).catch(() => {});
+  };
 
   if (!company || !industry) {
     return jsonResponse({ success: false, message: '회사명과 산업 분야를 모두 입력하세요.' }, 400);
@@ -1061,20 +1154,7 @@ async function handleSelfServiceAnalyze(request, env) {
     }
 
     const buildSuccessResponse = (leads, mode = 'ai', message = '') => {
-      // fire-and-forget D1 저장
-      if (env.DB && leads.length > 0) {
-        const ssProfileId = `self-service:${company}`;
-        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-        const ipHash = ip === 'unknown' ? 'unknown' : btoa(ip).slice(0, 12);
-        Promise.all([
-          saveLeadsBatch(env.DB, leads, ssProfileId, 'self-service'),
-          logAnalyticsRun(env.DB, {
-            type: 'self-service', profileId: ssProfileId, company, industry,
-            leadsCount: leads.length, articlesCount: articles.length,
-            elapsedSec: Math.round((Date.now() - startTime) / 1000), ipHash
-          })
-        ]).catch(() => {});
-      }
+      persistSelfServiceRun(leads);
       return jsonResponse({
         success: true,
         leads,
@@ -1108,6 +1188,7 @@ async function handleSelfServiceAnalyze(request, env) {
   } catch (e) {
     if (e && e.message === 'SELF_SERVICE_ANALYZE_TIMEOUT') {
       const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry));
+      persistSelfServiceRun(fallbackLeads);
       return jsonResponse({
         success: true,
         leads: fallbackLeads,
@@ -1128,6 +1209,7 @@ async function handleSelfServiceAnalyze(request, env) {
 
     if (articles.length > 0) {
       const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry));
+      persistSelfServiceRun(fallbackLeads);
       return jsonResponse({
         success: true,
         leads: fallbackLeads,
@@ -1183,6 +1265,14 @@ function getProfilesFromEnv(env) {
   } catch {
     return fallback;
   }
+}
+
+function resolveProfileId(profileId, env) {
+  const profiles = getProfilesFromEnv(env);
+  const fallbackId = profiles[0]?.id || 'danfoss';
+  const candidate = typeof profileId === 'string' ? profileId.trim() : '';
+  if (!candidate) return fallbackId;
+  return profiles.some(p => p.id === candidate) ? candidate : fallbackId;
 }
 
 function renderProfileOptions(env) {
@@ -2051,7 +2141,8 @@ function getHistoryPage() {
 </html>`;
 }
 
-function getDashboardPage() {
+function getDashboardPage(env) {
+  const profileOptions = renderProfileOptions(env);
   return `<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -2081,8 +2172,8 @@ function getDashboardPage() {
     <div class="top-nav">
       <a href="/" class="back-link">← 메인</a>
       <div style="display:flex;gap:8px;">
-        <a href="/leads" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">리드 목록</a>
-        <a href="/history" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">히스토리</a>
+        <a id="dashboardLeadsLink" href="/leads" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">리드 목록</a>
+        <a id="dashboardHistoryLink" href="/history" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">히스토리</a>
       </div>
     </div>
     <h1 style="font-size:22px;">대시보드</h1>
@@ -2090,6 +2181,7 @@ function getDashboardPage() {
 
     <select class="profile-filter" id="profileFilter" onchange="loadDashboard()">
       <option value="all">전체 프로필</option>
+      ${profileOptions}
     </select>
 
     <div id="dashContent"><p style="color:#aaa;">로딩 중...</p></div>
@@ -2100,9 +2192,21 @@ function getDashboardPage() {
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
     const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
     const statusColors = { NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' };
+    const profileFilter = document.getElementById('profileFilter');
+    const initialProfile = new URLSearchParams(window.location.search).get('profile');
+    if (initialProfile && Array.from(profileFilter.options).some(o => o.value === initialProfile)) {
+      profileFilter.value = initialProfile;
+    }
+
+    function syncNavLinks(profile) {
+      const p = profile && profile !== 'all' ? '?profile=' + encodeURIComponent(profile) : '';
+      document.getElementById('dashboardLeadsLink').href = '/leads' + p;
+      document.getElementById('dashboardHistoryLink').href = '/history' + p;
+    }
 
     async function loadDashboard() {
       const profile = document.getElementById('profileFilter').value;
+      syncNavLinks(profile);
       const container = document.getElementById('dashContent');
       try {
         const res = await fetch('/api/dashboard?profile=' + encodeURIComponent(profile), {headers:authHeaders()});
