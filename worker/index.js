@@ -572,6 +572,7 @@ async function checkSelfServiceRateLimit(request, env) {
 // ===== 셀프서비스: 핸들러 =====
 
 async function handleSelfServiceAnalyze(request, env) {
+  const softDeadlineMs = 28500;
   const startTime = Date.now();
   const body = await request.json().catch(() => ({}));
   const company = (body.company || '').trim().slice(0, 50);
@@ -588,14 +589,14 @@ async function handleSelfServiceAnalyze(request, env) {
     // Step 1: Gemini 프로필 생성
     const profile = await generateProfileFromGemini(company, industry, env);
     const elapsed1 = Date.now() - startTime;
-    if (elapsed1 > 27000) {
+    if (elapsed1 > softDeadlineMs) {
       return jsonResponse({ success: false, message: '시간 초과: 프로필 생성에 시간이 오래 걸렸습니다. 다시 시도하세요.' }, 504);
     }
 
     // Step 2: 뉴스 수집
     const articles = await fetchAllNewsWorker(profile.searchQueries);
     const elapsed2 = Date.now() - startTime;
-    if (elapsed2 > 27000) {
+    if (elapsed2 > softDeadlineMs) {
       return jsonResponse({ success: false, message: '시간 초과: 뉴스 수집에 시간이 오래 걸렸습니다. 다시 시도하세요.' }, 504);
     }
 
@@ -610,11 +611,16 @@ async function handleSelfServiceAnalyze(request, env) {
     }
 
     // Step 3: 리드 분석
-    const leads = await analyzeLeadsWorker(articles, profile, env);
-    const elapsed3 = Date.now() - startTime;
-    if (elapsed3 > 27000) {
-      return jsonResponse({ success: false, message: '시간 초과: 리드 분석이 지연되었습니다. 다시 시도하세요.' }, 504);
+    const remainingMs = softDeadlineMs - elapsed2;
+    if (remainingMs < 1500) {
+      return jsonResponse({ success: false, message: '시간 초과: 리드 분석을 위한 시간이 부족합니다. 다시 시도하세요.' }, 504);
     }
+    const leads = await Promise.race([
+      analyzeLeadsWorker(articles, profile, env),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('SELF_SERVICE_ANALYZE_TIMEOUT')), remainingMs);
+      })
+    ]);
 
     return jsonResponse({
       success: true,
@@ -627,6 +633,9 @@ async function handleSelfServiceAnalyze(request, env) {
       }
     });
   } catch (e) {
+    if (e && e.message === 'SELF_SERVICE_ANALYZE_TIMEOUT') {
+      return jsonResponse({ success: false, message: '시간 초과: 리드 분석이 지연되었습니다. 다시 시도하세요.' }, 504);
+    }
     return jsonResponse({ success: false, message: '분석 실패: ' + e.message }, 500);
   }
 }
