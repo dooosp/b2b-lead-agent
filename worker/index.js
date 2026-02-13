@@ -658,12 +658,13 @@ Grade C 제외, A와 B만 JSON 배열로 응답. 다른 텍스트 없이 JSON만
 // ===== 셀프서비스: Rate Limit =====
 
 async function checkSelfServiceRateLimit(request, env) {
-  if (!env.RATE_LIMIT) return null;
+  const enabled = String(env.ENABLE_SELF_SERVICE_RATE_LIMIT || '').toLowerCase() === 'true';
+  if (!enabled || !env.RATE_LIMIT) return null;
   const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() || 'unknown';
   const key = `ss:${ip}`;
   const now = Math.floor(Date.now() / 1000);
-  const windowSec = 3600; // 1시간
-  const maxReqs = 3;
+  const windowSec = Number(env.SELF_SERVICE_RATE_LIMIT_WINDOW_SEC) || 3600; // 기본 1시간
+  const maxReqs = Number(env.SELF_SERVICE_RATE_LIMIT_MAX) || 3;
   const stored = await env.RATE_LIMIT.get(key, 'json').catch(() => null);
   const record = stored && stored.ts > (now - windowSec) ? stored : { ts: now, c: 0 };
   record.c++;
