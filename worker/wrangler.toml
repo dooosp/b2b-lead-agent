@@ -16,3 +16,8 @@ SELF_SERVICE_RATE_LIMIT_WINDOW_SEC = "3600"
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
 id = "a5a01a0961b34b888ef050ed03b1f4f7"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "b2b-leads-db"
+database_id = "8effbfab-bf05-4726-bb74-8d9b6c1cccfe"

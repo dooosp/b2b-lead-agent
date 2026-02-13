@@ -1,5 +1,7 @@
 node_modules/
 .env
+.dev.vars
+.wrangler/
 reports/**/*.md
 !reports/*/latest_leads.json
 !reports/*/lead_history.json

@@ -9,8 +9,8 @@ export default {
     }
 
     // API 라우팅 — 인증 필요 경로
-    const apiPaths = ['/api/leads', '/api/ppt', '/api/roleplay', '/api/history'];
-    if (apiPaths.includes(url.pathname)) {
+    const apiPaths = ['/api/leads', '/api/ppt', '/api/roleplay', '/api/history', '/api/dashboard', '/api/export/csv'];
+    if (apiPaths.includes(url.pathname) || url.pathname.startsWith('/api/leads/')) {
       const authErr = await verifyAuth(request, env);
       if (authErr) return addCorsHeaders(authErr, origin, env);
     }
@@ -42,6 +42,29 @@ export default {
       const profile = url.searchParams.get('profile') || 'danfoss';
       return addCorsHeaders(await fetchHistory(env, profile), origin, env);
     }
+    // PATCH /api/leads/:id — 리드 상태/메모 업데이트
+    const leadPatchMatch = url.pathname.match(/^\/api\/leads\/([^/]+)$/);
+    if (leadPatchMatch && request.method === 'PATCH') {
+      const leadId = decodeURIComponent(leadPatchMatch[1]);
+      return addCorsHeaders(await handleUpdateLead(request, env, leadId), origin, env);
+    }
+    if (url.pathname === '/api/dashboard' && request.method === 'GET') {
+      return addCorsHeaders(await handleDashboard(request, env), origin, env);
+    }
+    if (url.pathname === '/api/export/csv' && request.method === 'GET') {
+      return addCorsHeaders(await handleExportCSV(request, env), origin, env);
+    }
+    // PWA
+    if (url.pathname === '/manifest.json') {
+      return new Response(JSON.stringify(getPWAManifest(env)), {
+        headers: { 'Content-Type': 'application/json; charset=utf-8' }
+      });
+    }
+    if (url.pathname === '/sw.js') {
+      return new Response(getServiceWorkerJS(), {
+        headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache' }
+      });
+    }
 
     // 페이지 라우팅
     if (url.pathname === '/leads') {
@@ -55,6 +78,9 @@ export default {
     }
     if (url.pathname === '/history') {
       return new Response(getHistoryPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+    if (url.pathname === '/dashboard') {
+      return new Response(getDashboardPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
 
     return new Response(getMainPage(env), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
@@ -73,7 +99,7 @@ function addCorsHeaders(response, origin, env) {
   if (!isAllowedOrigin(origin, env)) return response;
   const h = new Response(response.body, response);
   h.headers.set('Access-Control-Allow-Origin', origin);
-  h.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  h.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
   h.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   h.headers.set('Access-Control-Max-Age', '86400');
   h.headers.set('Vary', 'Origin');
@@ -121,11 +147,15 @@ async function checkRateLimit(request, env) {
 async function verifyAuth(request, env) {
   const token = env.API_TOKEN || env.TRIGGER_PASSWORD;
   if (!token) {
-    // 시크릿 미설정 → 전면 차단 (실수로 열리는 것 방지)
     return jsonResponse({ success: false, message: '서버 인증 설정이 필요합니다.' }, 503);
   }
   const auth = request.headers.get('Authorization') || '';
-  const bearer = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  let bearer = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  // CSV 다운로드 등 window.open용 쿼리 파라미터 토큰 fallback
+  if (!bearer) {
+    const url = new URL(request.url);
+    bearer = url.searchParams.get('token') || '';
+  }
   if (!bearer) return jsonResponse({ success: false, message: '인증이 필요합니다.' }, 401);
   const enc = new TextEncoder();
   const a = enc.encode(bearer);
@@ -172,13 +202,26 @@ async function handleTrigger(request, env) {
 
 async function fetchLeads(env, profile) {
   try {
+    // D1 우선 조회
+    if (env.DB) {
+      const dbLeads = await getLeadsByProfile(env.DB, profile);
+      if (dbLeads.length > 0) return jsonResponse({ leads: dbLeads, profile, source: 'd1' });
+    }
+
+    // GitHub CDN fallback + lazy migration
     const response = await fetch(
       `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/${profile}/latest_leads.json?t=${Date.now()}`,
       { headers: { 'User-Agent': 'B2B-Lead-Worker', 'Cache-Control': 'no-cache' } }
     );
     if (!response.ok) return jsonResponse({ leads: [], message: '아직 생성된 리드가 없습니다.' });
     const leads = await response.json();
-    return jsonResponse({ leads, profile });
+
+    // Lazy migration: GitHub → D1
+    if (env.DB && leads.length > 0) {
+      try { await saveLeadsBatch(env.DB, leads, profile, 'managed'); } catch { /* ignore migration errors */ }
+    }
+
+    return jsonResponse({ leads, profile, source: 'github' });
   } catch (e) {
     return jsonResponse({ leads: [], message: e.message }, 500);
   }
@@ -186,13 +229,26 @@ async function fetchLeads(env, profile) {
 
 async function fetchHistory(env, profile) {
   try {
+    // D1 우선 조회
+    if (env.DB) {
+      const dbHistory = await getLeadsByProfile(env.DB, profile, { limit: 500 });
+      if (dbHistory.length > 0) return jsonResponse({ history: dbHistory, profile, source: 'd1' });
+    }
+
+    // GitHub CDN fallback + lazy migration
     const response = await fetch(
       `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/${profile}/lead_history.json?t=${Date.now()}`,
       { headers: { 'User-Agent': 'B2B-Lead-Worker', 'Cache-Control': 'no-cache' } }
     );
     if (!response.ok) return jsonResponse({ history: [], message: '아직 히스토리가 없습니다.' });
     const history = await response.json();
-    return jsonResponse({ history, profile });
+
+    // Lazy migration
+    if (env.DB && history.length > 0) {
+      try { await saveLeadsBatch(env.DB, history, profile, 'managed'); } catch { /* ignore */ }
+    }
+
+    return jsonResponse({ history, profile, source: 'github' });
   } catch (e) {
     return jsonResponse({ history: [], message: e.message }, 500);
   }
@@ -315,6 +371,277 @@ function jsonResponse(data, status = 200) {
       'Pragma': 'no-cache'
     }
   });
+}
+
+// ===== D1 DB 헬퍼 =====
+
+function rowToLead(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    profileId: row.profile_id,
+    source: row.source,
+    status: row.status,
+    company: row.company,
+    summary: row.summary,
+    product: row.product,
+    score: row.score,
+    grade: row.grade,
+    roi: row.roi,
+    salesPitch: row.sales_pitch,
+    globalContext: row.global_context,
+    sources: (() => { try { return JSON.parse(row.sources || '[]'); } catch { return []; } })(),
+    notes: row.notes || '',
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+function leadToRow(lead, profileId, source) {
+  const now = new Date().toISOString();
+  const id = lead.id || `${(lead.company || 'unknown').replace(/\s+/g, '_')}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+  return {
+    id,
+    profile_id: profileId,
+    source: source || 'managed',
+    status: lead.status || 'NEW',
+    company: lead.company || '',
+    summary: lead.summary || '',
+    product: lead.product || '',
+    score: Number(lead.score) || 0,
+    grade: lead.grade || 'B',
+    roi: lead.roi || '',
+    sales_pitch: lead.salesPitch || '',
+    global_context: lead.globalContext || '',
+    sources: JSON.stringify(Array.isArray(lead.sources) ? lead.sources : []),
+    notes: lead.notes || '',
+    created_at: lead.createdAt || now,
+    updated_at: lead.updatedAt || now
+  };
+}
+
+async function saveLeadsBatch(db, leads, profileId, source) {
+  if (!db || !leads || leads.length === 0) return;
+  const stmt = db.prepare(
+    `INSERT INTO leads (id, profile_id, source, status, company, summary, product, score, grade, roi, sales_pitch, global_context, sources, notes, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       summary=excluded.summary, product=excluded.product, score=excluded.score,
+       grade=excluded.grade, roi=excluded.roi, sales_pitch=excluded.sales_pitch,
+       global_context=excluded.global_context, sources=excluded.sources, updated_at=excluded.updated_at`
+  );
+  const batch = leads.map(lead => {
+    const r = leadToRow(lead, profileId, source);
+    return stmt.bind(r.id, r.profile_id, r.source, r.status, r.company, r.summary, r.product, r.score, r.grade, r.roi, r.sales_pitch, r.global_context, r.sources, r.notes, r.created_at, r.updated_at);
+  });
+  await db.batch(batch);
+}
+
+async function getLeadsByProfile(db, profileId, options = {}) {
+  if (!db) return [];
+  const { status, limit = 100, offset = 0 } = options;
+  let sql = 'SELECT * FROM leads WHERE profile_id = ?';
+  const params = [profileId];
+  if (status) { sql += ' AND status = ?'; params.push(status); }
+  sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+  params.push(limit, offset);
+  const { results } = await db.prepare(sql).bind(...params).all();
+  return (results || []).map(rowToLead);
+}
+
+async function getAllLeads(db, options = {}) {
+  if (!db) return [];
+  const { status, limit = 500, offset = 0 } = options;
+  let sql = 'SELECT * FROM leads WHERE 1=1';
+  const params = [];
+  if (status) { sql += ' AND status = ?'; params.push(status); }
+  sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+  params.push(limit, offset);
+  const { results } = await db.prepare(sql).bind(...params).all();
+  return (results || []).map(rowToLead);
+}
+
+async function getLeadById(db, id) {
+  if (!db) return null;
+  const row = await db.prepare('SELECT * FROM leads WHERE id = ?').bind(id).first();
+  return rowToLead(row);
+}
+
+const VALID_TRANSITIONS = {
+  NEW: ['CONTACTED'],
+  CONTACTED: ['MEETING'],
+  MEETING: ['PROPOSAL'],
+  PROPOSAL: ['NEGOTIATION'],
+  NEGOTIATION: ['WON', 'LOST'],
+  LOST: ['NEW'],
+  WON: []
+};
+
+async function updateLeadStatus(db, id, newStatus, fromStatus) {
+  if (!db) return false;
+  const now = new Date().toISOString();
+  await db.batch([
+    db.prepare('UPDATE leads SET status = ?, updated_at = ? WHERE id = ?').bind(newStatus, now, id),
+    db.prepare('INSERT INTO status_log (lead_id, from_status, to_status, changed_at) VALUES (?, ?, ?, ?)').bind(id, fromStatus, newStatus, now)
+  ]);
+  return true;
+}
+
+async function updateLeadNotes(db, id, notes) {
+  if (!db) return false;
+  const now = new Date().toISOString();
+  await db.prepare('UPDATE leads SET notes = ?, updated_at = ? WHERE id = ?').bind(notes, now, id).run();
+  return true;
+}
+
+async function logAnalyticsRun(db, data) {
+  if (!db) return;
+  const now = new Date().toISOString();
+  await db.prepare(
+    'INSERT INTO analytics (type, profile_id, company, industry, leads_count, articles_count, elapsed_sec, ip_hash, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  ).bind(data.type, data.profileId || null, data.company || null, data.industry || null, data.leadsCount || 0, data.articlesCount || 0, data.elapsedSec || 0, data.ipHash || null, now).run();
+}
+
+async function getDashboardMetrics(db, profileId) {
+  if (!db) return null;
+  const isAll = !profileId || profileId === 'all';
+  const where = isAll ? '' : ' WHERE profile_id = ?';
+  const bind = isAll ? [] : [profileId];
+
+  const [total, gradeA, statusCounts, wonCount, recentActivity, analyticsCounts] = await db.batch([
+    db.prepare(`SELECT COUNT(*) as cnt FROM leads${where}`).bind(...bind),
+    db.prepare(`SELECT COUNT(*) as cnt FROM leads${where ? where + ' AND' : ' WHERE'} grade = 'A'`).bind(...bind),
+    db.prepare(`SELECT status, COUNT(*) as cnt FROM leads${where} GROUP BY status`).bind(...bind),
+    db.prepare(`SELECT COUNT(*) as cnt FROM leads${where ? where + ' AND' : ' WHERE'} status = 'WON'`).bind(...bind),
+    db.prepare(`SELECT sl.from_status, sl.to_status, sl.changed_at, l.company FROM status_log sl JOIN leads l ON sl.lead_id = l.id${isAll ? '' : ' WHERE l.profile_id = ?'} ORDER BY sl.changed_at DESC LIMIT 10`).bind(...bind),
+    db.prepare(`SELECT type, COUNT(*) as cnt, SUM(leads_count) as total_leads FROM analytics${where ? ' WHERE profile_id = ?' : ''} GROUP BY type`).bind(...(isAll ? [] : [profileId]))
+  ]);
+
+  const totalCount = total.results?.[0]?.cnt || 0;
+  const gradeACount = gradeA.results?.[0]?.cnt || 0;
+  const wonCountVal = wonCount.results?.[0]?.cnt || 0;
+  const statusDist = {};
+  (statusCounts.results || []).forEach(r => { statusDist[r.status] = r.cnt; });
+  const active = totalCount - (statusDist.WON || 0) - (statusDist.LOST || 0);
+
+  return {
+    total: totalCount,
+    gradeA: gradeACount,
+    won: wonCountVal,
+    conversionRate: totalCount > 0 ? Math.round((wonCountVal / totalCount) * 100) : 0,
+    active,
+    statusDistribution: statusDist,
+    recentActivity: (recentActivity.results || []).map(r => ({
+      company: r.company, fromStatus: r.from_status, toStatus: r.to_status, changedAt: r.changed_at
+    })),
+    analyticsByType: (analyticsCounts.results || []).reduce((acc, r) => {
+      acc[r.type] = { runs: r.cnt, totalLeads: r.total_leads }; return acc;
+    }, {})
+  };
+}
+
+// ===== 새 API 핸들러 =====
+
+async function handleUpdateLead(request, env, leadId) {
+  if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
+  const body = await request.json().catch(() => ({}));
+  const lead = await getLeadById(env.DB, leadId);
+  if (!lead) return jsonResponse({ success: false, message: '리드를 찾을 수 없습니다.' }, 404);
+
+  if (body.status && body.status !== lead.status) {
+    const allowed = VALID_TRANSITIONS[lead.status] || [];
+    if (!allowed.includes(body.status)) {
+      return jsonResponse({
+        success: false,
+        message: `상태 전환 불가: ${lead.status} → ${body.status}. 허용: ${allowed.join(', ') || '없음'}`
+      }, 400);
+    }
+    await updateLeadStatus(env.DB, leadId, body.status, lead.status);
+  }
+
+  if (typeof body.notes === 'string') {
+    await updateLeadNotes(env.DB, leadId, body.notes.slice(0, 2000));
+  }
+
+  const updated = await getLeadById(env.DB, leadId);
+  return jsonResponse({ success: true, lead: updated });
+}
+
+async function handleDashboard(request, env) {
+  if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
+  const url = new URL(request.url);
+  const profileId = url.searchParams.get('profile') || 'all';
+  const metrics = await getDashboardMetrics(env.DB, profileId);
+  return jsonResponse({ success: true, metrics, profile: profileId });
+}
+
+async function handleExportCSV(request, env) {
+  if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
+  const url = new URL(request.url);
+  const profileId = url.searchParams.get('profile') || 'all';
+  const leads = profileId === 'all'
+    ? await getAllLeads(env.DB, { limit: 1000 })
+    : await getLeadsByProfile(env.DB, profileId, { limit: 1000 });
+
+  const BOM = '\uFEFF';
+  const header = '회사명,프로젝트,추천제품,점수,등급,ROI,상태,메모,생성일';
+  const rows = leads.map(l => {
+    const esc = (s) => `"${String(s || '').replace(/"/g, '""')}"`;
+    return [esc(l.company), esc(l.summary), esc(l.product), l.score, l.grade, esc(l.roi), l.status, esc(l.notes), l.createdAt?.split('T')[0] || ''].join(',');
+  });
+  const csv = BOM + header + '\n' + rows.join('\n');
+  const filename = `leads_${profileId}_${new Date().toISOString().split('T')[0]}.csv`;
+  return new Response(csv, {
+    headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${filename}"`
+    }
+  });
+}
+
+// ===== PWA =====
+
+function getPWAManifest(env) {
+  return {
+    name: 'B2B 리드 에이전트',
+    short_name: 'B2B Leads',
+    description: 'AI 기반 B2B 영업 기회 발굴',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#1a1a2e',
+    theme_color: '#e94560',
+    icons: [
+      { src: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">📊</text></svg>', sizes: '512x512', type: 'image/svg+xml' }
+    ]
+  };
+}
+
+function getServiceWorkerJS() {
+  return `const CACHE = 'b2b-leads-v1';
+const PRECACHE = ['/', '/leads', '/dashboard', '/history'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(
+    keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+  )).then(() => self.clients.claim()));
+});
+
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  if (url.pathname.startsWith('/api/')) return;
+  e.respondWith(
+    fetch(e.request).then(res => {
+      const clone = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, clone));
+      return res;
+    }).catch(() => caches.match(e.request))
+  );
+});`;
 }
 
 // ===== 셀프서비스: XML 파싱 유틸 =====
@@ -733,18 +1060,34 @@ async function handleSelfServiceAnalyze(request, env) {
       });
     }
 
-    const buildSuccessResponse = (leads, mode = 'ai', message = '') => jsonResponse({
-      success: true,
-      leads,
-      profile: { name: profile.name, industry: profile.industry, competitors: profile.competitors },
-      message,
-      stats: {
-        mode: profileMode === 'ai' ? mode : `${mode}+${profileMode}`,
-        articles: articles.length,
-        leads: leads.length,
-        elapsed: Math.round((Date.now() - startTime) / 1000)
+    const buildSuccessResponse = (leads, mode = 'ai', message = '') => {
+      // fire-and-forget D1 저장
+      if (env.DB && leads.length > 0) {
+        const ssProfileId = `self-service:${company}`;
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        const ipHash = ip === 'unknown' ? 'unknown' : btoa(ip).slice(0, 12);
+        Promise.all([
+          saveLeadsBatch(env.DB, leads, ssProfileId, 'self-service'),
+          logAnalyticsRun(env.DB, {
+            type: 'self-service', profileId: ssProfileId, company, industry,
+            leadsCount: leads.length, articlesCount: articles.length,
+            elapsedSec: Math.round((Date.now() - startTime) / 1000), ipHash
+          })
+        ]).catch(() => {});
       }
-    });
+      return jsonResponse({
+        success: true,
+        leads,
+        profile: { name: profile.name, industry: profile.industry, competitors: profile.competitors },
+        message,
+        stats: {
+          mode: profileMode === 'ai' ? mode : `${mode}+${profileMode}`,
+          articles: articles.length,
+          leads: leads.length,
+          elapsed: Math.round((Date.now() - startTime) / 1000)
+        }
+      });
+    };
 
     // Step 3: 리드 분석
     const remainingMs = softDeadlineMs - elapsed2;
@@ -858,6 +1201,8 @@ function getMainPage(env) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>B2B 리드 에이전트</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
     select.profile-select { width: 200px; margin: 0 auto 16px; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #1a1a2e; color: #fff; font-size: 14px; text-align: center; display: block; }
     .tabs { display: flex; justify-content: center; gap: 0; margin-bottom: 24px; }
@@ -920,6 +1265,7 @@ function getMainPage(env) {
       <div class="status" id="status"></div>
       <div class="nav-buttons">
         <a href="/leads" class="btn btn-secondary">리드 상세 보기</a>
+        <a href="/dashboard" class="btn btn-secondary">대시보드</a>
         <a href="/ppt" class="btn btn-secondary">PPT 제안서</a>
         <a href="/roleplay" class="btn btn-secondary">영업 시뮬레이터</a>
       </div>
@@ -1101,6 +1447,7 @@ function getMainPage(env) {
         window.location.href = this.getAttribute('href') + '?profile=' + encodeURIComponent(profile);
       });
     });
+    if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
   </script>
 </body>
 </html>`;
@@ -1113,6 +1460,8 @@ function getLeadsPage() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>리드 상세 보기</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
     .lead-card { background: #1e2a3a; border-radius: 12px; padding: 20px; margin: 16px 0; border-left: 4px solid #e94560; }
     .lead-card.grade-b { border-left-color: #f39c12; }
@@ -1128,7 +1477,7 @@ function getLeadsPage() {
     .lead-sources li { margin: 4px 0; }
     .lead-sources a { color: #3498db; text-decoration: none; font-size: 13px; }
     .lead-sources a:hover { color: #5dade2; text-decoration: underline; }
-    .lead-actions { margin-top: 12px; display: flex; gap: 8px; }
+    .lead-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .lead-actions a { font-size: 12px; padding: 6px 12px; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     .badge-a { background: #e94560; color: #fff; }
@@ -1137,19 +1486,33 @@ function getLeadsPage() {
     .badge-status.contacted { background: #9b59b6; }
     .badge-status.meeting { background: #e67e22; }
     .badge-status.proposal { background: #1abc9c; }
+    .badge-status.negotiation { background: #2980b9; }
     .badge-status.won { background: #27ae60; }
     .badge-status.lost { background: #7f8c8d; }
-    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+    .top-nav-links { display: flex; gap: 8px; }
+    .status-select { padding: 4px 8px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 12px; cursor: pointer; }
+    .notes-section { margin-top: 10px; }
+    .notes-section summary { color: #aaa; font-size: 13px; cursor: pointer; }
+    .notes-textarea { width: 100%; min-height: 60px; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #ccc; font-size: 13px; resize: vertical; margin-top: 6px; font-family: inherit; }
+    .notes-saved { color: #27ae60; font-size: 11px; margin-left: 8px; opacity: 0; transition: opacity 0.3s; }
+    .notes-saved.show { opacity: 1; }
+    .csv-btn { margin-left: auto; }
   </style>
 </head>
 <body>
   <div class="container" style="max-width:700px;">
     <div class="top-nav">
       <a href="/" class="back-link">← 메인</a>
-      <a id="historyLink" href="/history" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">📊 전체 히스토리</a>
+      <div class="top-nav-links">
+        <a href="/dashboard" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">대시보드</a>
+        <a id="historyLink" href="/history" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">전체 히스토리</a>
+        <button class="btn btn-secondary csv-btn" style="font-size:12px;padding:6px 12px;" onclick="downloadCSV()">CSV 내보내기</button>
+      </div>
     </div>
     <h1 style="font-size:22px;">리드 상세 보기</h1>
     <p class="subtitle">최근 분석된 영업 기회 목록</p>
+    <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;margin-bottom:12px;" onclick="window.print()">PDF 인쇄</button>
 
     <div id="leadsList"><p style="color:#aaa;">로딩 중...</p></div>
   </div>
@@ -1159,6 +1522,63 @@ function getLeadsPage() {
     function safeUrl(u) { if(!u) return '#'; const c=String(u).replace(/[\x00-\x1f\x7f\s]+/g,'').toLowerCase(); if(/^(javascript|data|vbscript|blob):/i.test(c)||/^[/\\]{2}/.test(c)) return '#'; return esc(u); }
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
     function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
+
+    const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
+    const statusColors = { NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' };
+    const transitions = { NEW: ['CONTACTED'], CONTACTED: ['MEETING'], MEETING: ['PROPOSAL'], PROPOSAL: ['NEGOTIATION'], NEGOTIATION: ['WON','LOST'], LOST: ['NEW'], WON: [] };
+
+    function renderStatusSelect(lead) {
+      if (!lead.id) return '';
+      const current = lead.status || 'NEW';
+      const allowed = transitions[current] || [];
+      if (allowed.length === 0) return \`<span class="badge badge-status \${current.toLowerCase()}">\${esc(statusLabels[current])}</span>\`;
+      const opts = [current, ...allowed].map(s =>
+        \`<option value="\${s}" \${s === current ? 'selected' : ''}>\${esc(statusLabels[s] || s)}</option>\`
+      ).join('');
+      return \`<select class="status-select" onchange="updateStatus('\${esc(lead.id)}', this.value, '\${current}')">\${opts}</select>\`;
+    }
+
+    async function updateStatus(leadId, newStatus, fromStatus) {
+      if (newStatus === fromStatus) return;
+      try {
+        const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ status: newStatus })
+        });
+        const data = await res.json();
+        if (!data.success) { alert(data.message); loadLeads(); return; }
+        loadLeads();
+      } catch(e) { alert('상태 변경 실패: ' + e.message); }
+    }
+
+    let saveTimers = {};
+    function scheduleNoteSave(leadId, textarea) {
+      clearTimeout(saveTimers[leadId]);
+      saveTimers[leadId] = setTimeout(() => saveNotes(leadId, textarea), 800);
+    }
+
+    async function saveNotes(leadId, textarea) {
+      const indicator = textarea.parentElement.querySelector('.notes-saved');
+      try {
+        const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ notes: textarea.value })
+        });
+        const data = await res.json();
+        if (data.success && indicator) {
+          indicator.classList.add('show');
+          setTimeout(() => indicator.classList.remove('show'), 2000);
+        }
+      } catch { /* silent */ }
+    }
+
+    function downloadCSV() {
+      const token = sessionStorage.getItem('b2b_token') || '';
+      window.open('/api/export/csv?profile=' + encodeURIComponent(getProfile()) + '&token=' + encodeURIComponent(token));
+    }
+
     async function loadLeads() {
       try {
         const res = await fetch('/api/leads?profile=' + getProfile(), {headers:authHeaders()});
@@ -1170,12 +1590,11 @@ function getLeadsPage() {
           return;
         }
 
-        const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
         container.innerHTML = data.leads.map((lead, i) => \`
           <div class="lead-card \${lead.grade === 'B' ? 'grade-b' : ''}">
             <h3>
               <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${esc(lead.grade)}</span>
-              \${lead.status ? \`<span class="badge badge-status \${esc(lead.status).toLowerCase()}">\${esc(statusLabels[lead.status]) || esc(lead.status)}</span>\` : ''}
+              \${renderStatusSelect(lead)}
               \${esc(lead.company)} (\${parseInt(lead.score) || 0}점)
             </h3>
             <div class="lead-info">
@@ -1188,10 +1607,19 @@ function getLeadsPage() {
             \${lead.sources && lead.sources.length > 0 ? \`
             <div class="lead-sources">
               <details>
-                <summary>📎 출처 보기 (\${lead.sources.length}건)</summary>
+                <summary>출처 보기 (\${lead.sources.length}건)</summary>
                 <ul>
-                  \${lead.sources.map(s => \`<li><a href="\${safeUrl(s.url)}" target="_blank" rel="noopener">→ \${esc(s.title)}</a></li>\`).join('')}
+                  \${lead.sources.map(s => \`<li><a href="\${safeUrl(s.url)}" target="_blank" rel="noopener">\${esc(s.title)}</a></li>\`).join('')}
                 </ul>
+              </details>
+            </div>\` : ''}
+            \${lead.id ? \`
+            <div class="notes-section">
+              <details>
+                <summary>메모 \${lead.notes ? '(작성됨)' : ''}<span class="notes-saved">저장됨</span></summary>
+                <textarea class="notes-textarea" placeholder="메모를 입력하세요..."
+                  oninput="scheduleNoteSave('\${esc(lead.id)}', this)"
+                  onblur="saveNotes('\${esc(lead.id)}', this)">\${esc(lead.notes || '')}</textarea>
               </details>
             </div>\` : ''}
             <div class="lead-actions">
@@ -1205,6 +1633,7 @@ function getLeadsPage() {
       }
     }
     document.getElementById('historyLink').href = '/history?profile=' + encodeURIComponent(getProfile());
+    if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
     loadLeads();
   </script>
 </body>
@@ -1218,6 +1647,8 @@ function getPPTPage() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PPT 제안서 생성</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
     .ppt-output { background: #1e2a3a; border-radius: 12px; padding: 24px; margin-top: 20px; text-align: left; white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #ddd; display: none; max-height: 70vh; overflow-y: auto; }
     .ppt-output h1, .ppt-output h2, .ppt-output h3 { color: #e94560; }
@@ -1331,6 +1762,8 @@ function getRoleplayPage() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>영업 시뮬레이터</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
     .chat-container { background: #1e2a3a; border-radius: 12px; padding: 16px; margin-top: 16px; max-height: 50vh; overflow-y: auto; display: none; }
     .chat-msg { margin: 12px 0; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.6; }
@@ -1497,6 +1930,8 @@ function getHistoryPage() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>리드 히스토리 - CRM</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
     .history-card { background: #1e2a3a; border-radius: 12px; padding: 16px; margin: 12px 0; border-left: 4px solid #3498db; }
     .history-card.won { border-left-color: #27ae60; }
@@ -1525,8 +1960,11 @@ function getHistoryPage() {
 </head>
 <body>
   <div class="container" style="max-width:700px;">
-    <a id="leadsBackLink" href="/leads" class="back-link">← 최신 리드</a>
-    <h1 style="font-size:22px;">📊 리드 히스토리</h1>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <a id="leadsBackLink" href="/leads" class="back-link" style="margin-bottom:0;">← 최신 리드</a>
+      <a href="/dashboard" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">대시보드</a>
+    </div>
+    <h1 style="font-size:22px;">리드 히스토리</h1>
     <p class="subtitle">발굴된 모든 리드를 추적하고 관리하세요</p>
 
     <div class="stats" id="stats"></div>
@@ -1613,6 +2051,128 @@ function getHistoryPage() {
 </html>`;
 }
 
+function getDashboardPage() {
+  return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대시보드 - B2B 리드</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e94560">
+  <style>${getCommonStyles()}
+    .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .dash-card { background: #1e2a3a; border-radius: 12px; padding: 16px; text-align: center; }
+    .dash-card .num { font-size: 28px; font-weight: bold; color: #e94560; }
+    .dash-card .label { font-size: 12px; color: #aaa; margin-top: 4px; }
+    .pipeline-bar { display: flex; height: 32px; border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+    .pipeline-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: #fff; min-width: 30px; transition: width 0.5s; }
+    .activity-feed { list-style: none; padding: 0; }
+    .activity-feed li { padding: 10px 0; border-bottom: 1px solid #2a3a4a; font-size: 13px; color: #ccc; }
+    .activity-feed .time { color: #666; font-size: 11px; }
+    .activity-feed .company { color: #e94560; font-weight: bold; }
+    .section-title { font-size: 16px; color: #fff; margin: 20px 0 12px; }
+    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+    .profile-filter { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="container" style="max-width:700px;">
+    <div class="top-nav">
+      <a href="/" class="back-link">← 메인</a>
+      <div style="display:flex;gap:8px;">
+        <a href="/leads" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">리드 목록</a>
+        <a href="/history" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">히스토리</a>
+      </div>
+    </div>
+    <h1 style="font-size:22px;">대시보드</h1>
+    <p class="subtitle">리드 파이프라인 현황</p>
+
+    <select class="profile-filter" id="profileFilter" onchange="loadDashboard()">
+      <option value="all">전체 프로필</option>
+    </select>
+
+    <div id="dashContent"><p style="color:#aaa;">로딩 중...</p></div>
+  </div>
+
+  <script>
+    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+    function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
+    const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
+    const statusColors = { NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' };
+
+    async function loadDashboard() {
+      const profile = document.getElementById('profileFilter').value;
+      const container = document.getElementById('dashContent');
+      try {
+        const res = await fetch('/api/dashboard?profile=' + encodeURIComponent(profile), {headers:authHeaders()});
+        const data = await res.json();
+        if (!data.success) { container.innerHTML = '<p style="color:#e74c3c;">' + esc(data.message) + '</p>'; return; }
+        const m = data.metrics;
+
+        // 요약 카드
+        let html = '<div class="dashboard-cards">';
+        html += \`<div class="dash-card"><div class="num">\${m.total}</div><div class="label">총 리드</div></div>\`;
+        html += \`<div class="dash-card"><div class="num" style="color:#e94560;">\${m.gradeA}</div><div class="label">Grade A</div></div>\`;
+        html += \`<div class="dash-card"><div class="num" style="color:#27ae60;">\${m.conversionRate}%</div><div class="label">전환율</div></div>\`;
+        html += \`<div class="dash-card"><div class="num" style="color:#3498db;">\${m.active}</div><div class="label">활성 리드</div></div>\`;
+        html += '</div>';
+
+        // 파이프라인 바
+        if (m.total > 0) {
+          html += '<h3 class="section-title">파이프라인</h3>';
+          html += '<div class="pipeline-bar">';
+          const order = ['NEW','CONTACTED','MEETING','PROPOSAL','NEGOTIATION','WON','LOST'];
+          order.forEach(s => {
+            const cnt = m.statusDistribution[s] || 0;
+            if (cnt === 0) return;
+            const pct = Math.max((cnt / m.total) * 100, 5);
+            html += \`<div class="pipeline-seg" style="width:\${pct}%;background:\${statusColors[s]}" title="\${statusLabels[s]}: \${cnt}건">\${cnt}</div>\`;
+          });
+          html += '</div>';
+
+          // 범례
+          html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">';
+          order.forEach(s => {
+            const cnt = m.statusDistribution[s] || 0;
+            if (cnt === 0) return;
+            html += \`<span style="font-size:11px;color:#aaa;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:\${statusColors[s]};margin-right:4px;"></span>\${statusLabels[s]} \${cnt}</span>\`;
+          });
+          html += '</div>';
+        }
+
+        // 최근 활동
+        if (m.recentActivity && m.recentActivity.length > 0) {
+          html += '<h3 class="section-title">최근 활동</h3>';
+          html += '<ul class="activity-feed">';
+          m.recentActivity.forEach(a => {
+            const time = a.changedAt ? new Date(a.changedAt).toLocaleString('ko-KR') : '';
+            html += \`<li><span class="time">\${esc(time)}</span> <span class="company">\${esc(a.company)}</span> \${esc(statusLabels[a.fromStatus] || a.fromStatus)} → \${esc(statusLabels[a.toStatus] || a.toStatus)}</li>\`;
+          });
+          html += '</ul>';
+        }
+
+        // 분석 실행 통계
+        if (m.analyticsByType && Object.keys(m.analyticsByType).length > 0) {
+          html += '<h3 class="section-title">분석 실행</h3>';
+          Object.entries(m.analyticsByType).forEach(([type, info]) => {
+            html += \`<p style="font-size:13px;color:#ccc;">\${esc(type)}: \${info.runs}회 실행, 총 \${info.totalLeads || 0}건 리드 발굴</p>\`;
+          });
+        }
+
+        container.innerHTML = html;
+      } catch(e) {
+        container.innerHTML = '<p style="color:#e74c3c;">대시보드 로드 실패: ' + esc(e.message) + '</p>';
+      }
+    }
+
+    if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+    loadDashboard();
+  </script>
+</body>
+</html>`;
+}
+
 function getCommonStyles() {
   return `
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1644,5 +2204,16 @@ function getCommonStyles() {
     .info { margin-top: 30px; font-size: 12px; color: #666; line-height: 1.8; }
     .back-link { color: #aaa; text-decoration: none; font-size: 13px; display: inline-block; margin-bottom: 16px; }
     .back-link:hover { color: #fff; }
+    @media print {
+      body { background: #fff !important; color: #000 !important; display: block; min-height: auto; }
+      .container { max-width: 100% !important; padding: 10px; }
+      .btn, .back-link, .top-nav, .tabs, .tab-btn, .nav-buttons, .chat-input, .input-field, .status-select, .notes-section, .profile-filter, select, button, .csv-btn { display: none !important; }
+      .lead-card, .history-card, .dash-card, .ss-lead-card { background: #f9f9f9 !important; border: 1px solid #ddd !important; color: #000 !important; page-break-inside: avoid; }
+      .lead-card h3, .history-card h3 { color: #333 !important; }
+      .lead-info p, .lead-info strong, .history-card p { color: #333 !important; }
+      .badge { border: 1px solid #999; }
+      .pipeline-bar { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      a { color: #333 !important; text-decoration: none !important; }
+    }
   `;
 }
