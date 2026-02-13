@@ -397,6 +397,74 @@ function removeDuplicatesWorker(articles) {
   });
 }
 
+function extractCompanyNameWorker(title = '') {
+  const cleaned = String(title)
+    .replace(/^\[.*?\]\s*/g, '')
+    .replace(/["'""'']/g, '')
+    .trim();
+  const m = cleaned.match(/^([A-Za-z0-9가-힣&(). -]{2,30}?)(?:,|\s|-|…)/);
+  return m ? m[1].trim() : '잠재 고객사';
+}
+
+function detectCategoryWorker(article, profile) {
+  const rules = profile.categoryRules && typeof profile.categoryRules === 'object' ? profile.categoryRules : {};
+  const categories = Object.keys(rules);
+  if (categories.length === 0) return '';
+
+  const text = `${article.title || ''} ${article.query || ''}`.toLowerCase();
+  for (const category of categories) {
+    const keywords = Array.isArray(rules[category]) ? rules[category] : [];
+    if (keywords.some(k => String(k).toLowerCase() && text.includes(String(k).toLowerCase()))) {
+      return category;
+    }
+  }
+  return categories[0];
+}
+
+function generateQuickLeadsWorker(articles, profile) {
+  const configs = profile.categoryConfig && typeof profile.categoryConfig === 'object' ? profile.categoryConfig : {};
+  const fallbackCategory = Object.keys(configs)[0];
+  const companySeen = new Set();
+  const leads = [];
+
+  for (const article of articles) {
+    const category = detectCategoryWorker(article, profile) || fallbackCategory;
+    const cfg = configs[category] || configs[fallbackCategory];
+    if (!cfg) continue;
+
+    const company = extractCompanyNameWorker(article.title);
+    if (companySeen.has(company)) continue;
+    companySeen.add(company);
+
+    const pitchTemplate = typeof cfg.pitch === 'string' && cfg.pitch.trim()
+      ? cfg.pitch
+      : '{company}에 {product}를 제안합니다.';
+    const summary = String(article.title || '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/^\[.*?\]\s*/g, '')
+      .trim()
+      .slice(0, 140);
+
+    leads.push({
+      company,
+      summary: summary || '프로젝트 관련 신규 동향 포착',
+      product: cfg.product || '맞춤 솔루션',
+      score: Number(cfg.score) || 70,
+      grade: cfg.grade || 'B',
+      roi: cfg.roi || '운영 효율 개선 예상',
+      salesPitch: pitchTemplate
+        .replace(/\{company\}/g, company)
+        .replace(/\{product\}/g, cfg.product || '맞춤 솔루션'),
+      globalContext: cfg.policy || '산업 규제 및 효율화 트렌드 대응',
+      sources: article.title && article.link ? [{ title: article.title, url: article.link }] : []
+    });
+
+    if (leads.length >= 5) break;
+  }
+
+  return leads;
+}
+
 // ===== 셀프서비스: 프로필 자동 생성 =====
 
 async function generateProfileFromGemini(company, industry, env) {
@@ -475,6 +543,46 @@ async function generateProfileFromGemini(company, industry, env) {
       : [],
     searchQueries,
     categoryConfig
+  };
+}
+
+function generateHeuristicProfile(company, industry) {
+  const coreProduct = `${industry} 최적화 솔루션`;
+  return {
+    name: company,
+    industry,
+    competitors: [],
+    products: {
+      core: [coreProduct]
+    },
+    productKnowledge: {
+      [coreProduct]: {
+        value: '운영 안정성 강화 및 에너지 효율 개선',
+        roi: '운영비 10~20% 절감 가능'
+      }
+    },
+    searchQueries: [
+      `${company} ${industry} 투자`,
+      `${company} ${industry} 증설`,
+      `${industry} 신사업 수주`,
+      `${industry} 설비 도입`,
+      `${industry} 공장 착공`,
+      `${industry} 자동화`,
+      `${industry} 탄소중립`
+    ],
+    categoryRules: {
+      core: [company, industry, '투자', '수주', '착공', '증설', '계약']
+    },
+    categoryConfig: {
+      core: {
+        product: coreProduct,
+        score: 72,
+        grade: 'B',
+        roi: '운영비 10~20% 절감 예상',
+        policy: '산업 전반의 에너지 효율화 및 탄소중립 정책 대응',
+        pitch: '{company}의 신규 프로젝트에 {product} 기반 효율 개선을 제안합니다.'
+      }
+    }
   };
 }
 
@@ -573,10 +681,14 @@ async function checkSelfServiceRateLimit(request, env) {
 
 async function handleSelfServiceAnalyze(request, env) {
   const softDeadlineMs = 28500;
+  const profileTimeoutMs = 9000;
   const startTime = Date.now();
   const body = await request.json().catch(() => ({}));
   const company = (body.company || '').trim().slice(0, 50);
   const industry = (body.industry || '').trim().slice(0, 50);
+  let profile = null;
+  let profileMode = 'ai';
+  let articles = [];
 
   if (!company || !industry) {
     return jsonResponse({ success: false, message: '회사명과 산업 분야를 모두 입력하세요.' }, 400);
@@ -587,14 +699,24 @@ async function handleSelfServiceAnalyze(request, env) {
 
   try {
     // Step 1: Gemini 프로필 생성
-    const profile = await generateProfileFromGemini(company, industry, env);
+    try {
+      profile = await Promise.race([
+        generateProfileFromGemini(company, industry, env),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('SELF_SERVICE_PROFILE_TIMEOUT')), profileTimeoutMs))
+      ]);
+    } catch (e) {
+      profile = generateHeuristicProfile(company, industry);
+      profileMode = 'heuristic-fallback';
+    }
+
     const elapsed1 = Date.now() - startTime;
     if (elapsed1 > softDeadlineMs) {
       return jsonResponse({ success: false, message: '시간 초과: 프로필 생성에 시간이 오래 걸렸습니다. 다시 시도하세요.' }, 504);
     }
 
     // Step 2: 뉴스 수집
-    const articles = await fetchAllNewsWorker(profile.searchQueries);
+    articles = await fetchAllNewsWorker(profile.searchQueries);
+    articles = articles.slice(0, 18);
     const elapsed2 = Date.now() - startTime;
     if (elapsed2 > softDeadlineMs) {
       return jsonResponse({ success: false, message: '시간 초과: 뉴스 수집에 시간이 오래 걸렸습니다. 다시 시도하세요.' }, 504);
@@ -610,31 +732,74 @@ async function handleSelfServiceAnalyze(request, env) {
       });
     }
 
-    // Step 3: 리드 분석
-    const remainingMs = softDeadlineMs - elapsed2;
-    if (remainingMs < 1500) {
-      return jsonResponse({ success: false, message: '시간 초과: 리드 분석을 위한 시간이 부족합니다. 다시 시도하세요.' }, 504);
-    }
-    const leads = await Promise.race([
-      analyzeLeadsWorker(articles, profile, env),
-      new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('SELF_SERVICE_ANALYZE_TIMEOUT')), remainingMs);
-      })
-    ]);
-
-    return jsonResponse({
+    const buildSuccessResponse = (leads, mode = 'ai', message = '') => jsonResponse({
       success: true,
       leads,
       profile: { name: profile.name, industry: profile.industry, competitors: profile.competitors },
+      message,
       stats: {
+        mode: profileMode === 'ai' ? mode : `${mode}+${profileMode}`,
         articles: articles.length,
         leads: leads.length,
         elapsed: Math.round((Date.now() - startTime) / 1000)
       }
     });
+
+    // Step 3: 리드 분석
+    const remainingMs = softDeadlineMs - elapsed2;
+    if (remainingMs < 1500) {
+      const quickLeads = generateQuickLeadsWorker(articles, profile);
+      return buildSuccessResponse(
+        quickLeads,
+        'quick-fallback',
+        'AI 분석이 지연되어 빠른 분석 결과를 먼저 표시합니다.'
+      );
+    }
+    const leads = await Promise.race([
+      analyzeLeadsWorker(articles, profile, env),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('SELF_SERVICE_ANALYZE_TIMEOUT')), remainingMs))
+    ]);
+
+    return buildSuccessResponse(leads, 'ai');
   } catch (e) {
     if (e && e.message === 'SELF_SERVICE_ANALYZE_TIMEOUT') {
-      return jsonResponse({ success: false, message: '시간 초과: 리드 분석이 지연되었습니다. 다시 시도하세요.' }, 504);
+      const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry));
+      return jsonResponse({
+        success: true,
+        leads: fallbackLeads,
+        profile: {
+          name: (profile && profile.name) || company,
+          industry: (profile && profile.industry) || industry,
+          competitors: (profile && profile.competitors) || []
+        },
+        message: 'AI 분석이 지연되어 빠른 분석 결과를 먼저 표시합니다.',
+        stats: {
+          mode: profileMode === 'ai' ? 'quick-fallback' : `quick-fallback+${profileMode}`,
+          articles: articles.length,
+          leads: fallbackLeads.length,
+          elapsed: Math.round((Date.now() - startTime) / 1000)
+        }
+      });
+    }
+
+    if (articles.length > 0) {
+      const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry));
+      return jsonResponse({
+        success: true,
+        leads: fallbackLeads,
+        profile: {
+          name: (profile && profile.name) || company,
+          industry: (profile && profile.industry) || industry,
+          competitors: (profile && profile.competitors) || []
+        },
+        message: 'AI 분석 응답이 불안정하여 빠른 분석 결과를 먼저 표시합니다.',
+        stats: {
+          mode: profileMode === 'ai' ? 'quick-fallback' : `quick-fallback+${profileMode}`,
+          articles: articles.length,
+          leads: fallbackLeads.length,
+          elapsed: Math.round((Date.now() - startTime) / 1000)
+        }
+      });
     }
     return jsonResponse({ success: false, message: '분석 실패: ' + e.message }, 500);
   }
@@ -825,6 +990,7 @@ function getMainPage(env) {
         } else {
           status.className = 'status success';
           status.textContent = data.leads.length + '개 리드 발견! (' + (data.stats ? data.stats.elapsed + '초, 뉴스 ' + data.stats.articles + '건 분석' : '') + ')';
+          if (data.message) status.textContent += ' ' + data.message;
           renderSelfServiceResults(data.leads, data.profile);
         }
       } catch (e) {
