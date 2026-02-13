@@ -2,6 +2,7 @@ module.exports = {
   id: 'danfoss',
   name: '댄포스 코리아',
   industry: '산업 자동화/에너지 효율',
+  emailRecipients: '',  // 기본 GMAIL_RECIPIENT 사용
   competitors: ['ABB', 'Siemens', 'Schneider Electric'],
 
   products: {

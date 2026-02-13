@@ -19,7 +19,7 @@ async function send(report, profile) {
 
   const mailOptions = {
     from: `B2B Lead Agent <${process.env.GMAIL_USER}>`,
-    to: process.env.GMAIL_RECIPIENT,
+    to: (profile && profile.emailRecipients) || process.env.GMAIL_RECIPIENT,
     subject: `[${profileName}] B2B 리드 리포트 - ${dateKor}`,
     html: htmlContent
   };

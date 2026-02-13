@@ -6,6 +6,7 @@ module.exports = {
   id: 'my-company',           // 파일명과 일치 (영문 소문자, 하이픈)
   name: '회사명 한글',         // 리포트/이메일에 표시
   industry: '산업 분야',       // 예: '반도체 제조', '물류/유통'
+  emailRecipients: '',        // 리포트 수신 이메일 (빈 값이면 GMAIL_RECIPIENT 사용)
   competitors: [],             // 경쟁사 목록
 
   // 사업부별 제품 라인업

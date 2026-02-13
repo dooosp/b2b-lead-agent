@@ -1,11 +1,11 @@
 {
   "name": "b2b-lead-agent",
   "version": "1.0.0",
-  "description": "B2B 리드 발굴 에이전트 - Danfoss 맞춤형",
+  "description": "B2B 리드 발굴 에이전트 - 프로필 기반 멀티 고객사",
   "main": "main.js",
   "scripts": {
-    "start": "node main.js",
-    "email": "node main.js --email"
+    "start": "node main.js --profile danfoss",
+    "email": "node main.js --profile danfoss --email"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

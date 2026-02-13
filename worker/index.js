@@ -50,7 +50,7 @@ export default {
       return new Response(getHistoryPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
 
-    return new Response(getMainPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    return new Response(getMainPage(env), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
   }
 };
 
@@ -139,6 +139,7 @@ async function handleTrigger(request, env) {
   if (bearerAuth && !passwordOk) {
     return jsonResponse({ success: false, message: '비밀번호가 올바르지 않습니다.' }, 401);
   }
+  const profile = body.profile || 'danfoss';
 
   const response = await fetch(
     `https://api.github.com/repos/${env.GITHUB_REPO}/dispatches`,
@@ -149,12 +150,15 @@ async function handleTrigger(request, env) {
         'Accept': 'application/vnd.github.v3+json',
         'User-Agent': 'B2B-Lead-Worker'
       },
-      body: JSON.stringify({ event_type: 'generate-report' })
+      body: JSON.stringify({
+        event_type: 'generate-report',
+        client_payload: { profile }
+      })
     }
   );
 
   if (response.status === 204) {
-    return jsonResponse({ success: true, message: '보고서 생성이 시작되었습니다. 1~2분 후 이메일을 확인하세요.' });
+    return jsonResponse({ success: true, message: `[${profile}] 보고서 생성이 시작되었습니다. 1~2분 후 이메일을 확인하세요.` });
   }
   return jsonResponse({ success: false, message: `오류: ${response.status}` }, 500);
 }
@@ -229,7 +233,7 @@ async function handleRoleplay(request, env) {
     `${h.role === 'user' ? '영업사원' : '고객'}: ${h.content}`
   ).join('\n');
 
-  const prompt = `당신은 ${lead.company}의 구매 담당 임원입니다. 까다롭고 가격에 민감하며, 경쟁사(ABB, Siemens, Schneider Electric)와 항상 비교합니다.
+  const prompt = `당신은 ${lead.company}의 구매 담당 임원입니다. 까다롭고 가격에 민감하며, 경쟁사 제품과 항상 비교합니다.
 
 [상황 설정]
 - 귀사 프로젝트: ${lead.summary}
@@ -328,9 +332,30 @@ function sanitizeUrl(url) {
   return escapeHtml(url);
 }
 
+function getProfilesFromEnv(env) {
+  const fallback = [{ id: 'danfoss', name: '댄포스 코리아' }];
+  try {
+    const parsed = JSON.parse(env.PROFILES || JSON.stringify(fallback));
+    if (!Array.isArray(parsed) || parsed.length === 0) return fallback;
+    const sanitized = parsed
+      .filter(p => p && typeof p.id === 'string' && p.id.trim())
+      .map(p => ({ id: p.id.trim(), name: String(p.name || p.id).trim() }));
+    return sanitized.length > 0 ? sanitized : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function renderProfileOptions(env) {
+  return getProfilesFromEnv(env)
+    .map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`)
+    .join('');
+}
+
 // ===== 페이지 HTML =====
 
-function getMainPage() {
+function getMainPage(env) {
+  const profileOptions = renderProfileOptions(env);
   return `<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -347,7 +372,7 @@ function getMainPage() {
     <h1>B2B 리드 에이전트</h1>
     <p class="subtitle">고객사별 맞춤형 영업 기회 분석</p>
     <select class="profile-select" id="profileSelect">
-      <option value="danfoss">댄포스 코리아</option>
+      ${profileOptions}
     </select>
 
     <input type="password" id="password" placeholder="비밀번호 입력" class="input-field">
@@ -374,6 +399,7 @@ function getMainPage() {
       const btn = document.getElementById('generateBtn');
       const status = document.getElementById('status');
       const password = getToken();
+      const profile = document.getElementById('profileSelect').value || 'danfoss';
 
       if (!password) {
         status.className = 'status error';
@@ -390,7 +416,7 @@ function getMainPage() {
         const res = await fetch('/trigger', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + password },
-          body: JSON.stringify({ password })
+          body: JSON.stringify({ password, profile })
         });
         const data = await res.json();
         status.className = data.success ? 'status success' : 'status error';
@@ -403,6 +429,14 @@ function getMainPage() {
       btn.disabled = false;
       btn.textContent = '보고서 생성';
     }
+
+    document.querySelectorAll('.nav-buttons a').forEach((a) => {
+      a.addEventListener('click', function (e) {
+        const profile = document.getElementById('profileSelect').value || 'danfoss';
+        e.preventDefault();
+        window.location.href = this.getAttribute('href') + '?profile=' + encodeURIComponent(profile);
+      });
+    });
   </script>
 </body>
 </html>`;
@@ -448,7 +482,7 @@ function getLeadsPage() {
   <div class="container" style="max-width:700px;">
     <div class="top-nav">
       <a href="/" class="back-link">← 메인</a>
-      <a href="/history" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">📊 전체 히스토리</a>
+      <a id="historyLink" href="/history" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">📊 전체 히스토리</a>
     </div>
     <h1 style="font-size:22px;">리드 상세 보기</h1>
     <p class="subtitle">최근 분석된 영업 기회 목록</p>
@@ -497,8 +531,8 @@ function getLeadsPage() {
               </details>
             </div>\` : ''}
             <div class="lead-actions">
-              <a href="/ppt?lead=\${i}" class="btn btn-secondary">PPT 생성</a>
-              <a href="/roleplay?lead=\${i}" class="btn btn-secondary">영업 연습</a>
+              <a href="/ppt?profile=\${encodeURIComponent(getProfile())}&lead=\${i}" class="btn btn-secondary">PPT 생성</a>
+              <a href="/roleplay?profile=\${encodeURIComponent(getProfile())}&lead=\${i}" class="btn btn-secondary">영업 연습</a>
             </div>
           </div>
         \`).join('');
@@ -506,6 +540,7 @@ function getLeadsPage() {
         document.getElementById('leadsList').innerHTML = '<p style="color:#e74c3c;">데이터 로드 실패: ' + esc(e.message) + '</p>';
       }
     }
+    document.getElementById('historyLink').href = '/history?profile=' + encodeURIComponent(getProfile());
     loadLeads();
   </script>
 </body>
@@ -527,7 +562,7 @@ function getPPTPage() {
 </head>
 <body>
   <div class="container" style="max-width:700px;">
-    <a href="/leads" class="back-link">← 리드 목록</a>
+    <a id="leadsBackLink" href="/leads" class="back-link">← 리드 목록</a>
     <h1 style="font-size:22px;">PPT 제안서 생성</h1>
     <p class="subtitle">리드를 선택하면 5슬라이드 제안서 초안을 생성합니다</p>
 
@@ -543,6 +578,7 @@ function getPPTPage() {
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
     function getToken() { const p=document.getElementById('password').value; if(p) sessionStorage.setItem('b2b_token',p); return p; }
     function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
+    document.getElementById('leadsBackLink').href = '/leads?profile=' + encodeURIComponent(getProfile());
     (function(){ const s=sessionStorage.getItem('b2b_token'); if(s) document.getElementById('password').value=s; })();
     let leads = [];
 
@@ -649,7 +685,7 @@ function getRoleplayPage() {
 </head>
 <body>
   <div class="container" style="max-width:700px;">
-    <a href="/leads" class="back-link">← 리드 목록</a>
+    <a id="leadsBackLink" href="/leads" class="back-link">← 리드 목록</a>
     <h1 style="font-size:22px;">영업 시뮬레이터</h1>
     <p class="subtitle">까다로운 고객과 영업 연습을 해보세요</p>
 
@@ -671,6 +707,7 @@ function getRoleplayPage() {
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
     function getToken() { const p=document.getElementById('password').value; if(p) sessionStorage.setItem('b2b_token',p); return p; }
     function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
+    document.getElementById('leadsBackLink').href = '/leads?profile=' + encodeURIComponent(getProfile());
     (function(){ const s=sessionStorage.getItem('b2b_token'); if(s) document.getElementById('password').value=s; })();
     let leads = [];
     let history = [];
@@ -824,7 +861,7 @@ function getHistoryPage() {
 </head>
 <body>
   <div class="container" style="max-width:700px;">
-    <a href="/leads" class="back-link">← 최신 리드</a>
+    <a id="leadsBackLink" href="/leads" class="back-link">← 최신 리드</a>
     <h1 style="font-size:22px;">📊 리드 히스토리</h1>
     <p class="subtitle">발굴된 모든 리드를 추적하고 관리하세요</p>
 
@@ -837,6 +874,7 @@ function getHistoryPage() {
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
     function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
+    document.getElementById('leadsBackLink').href = '/leads?profile=' + encodeURIComponent(getProfile());
     let allHistory = [];
     let currentFilter = 'ALL';
     const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
