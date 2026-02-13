@@ -1,0 +1,102 @@
+[
+  {
+    "id": "KB자산운용_20260213_hu2i",
+    "status": "NEW",
+    "createdAt": "2026-02-13T07:58:51.710Z",
+    "updatedAt": "2026-02-13T07:58:51.710Z",
+    "company": "KB자산운용",
+    "summary": "KB자산운용, ‘RISE AI전력인프라 ETF’ 1000억 넘어",
+    "product": "STATCOM 전력품질 솔루션",
+    "score": 70,
+    "grade": "B",
+    "roi": "전압 변동 90% 감소, 역률 0.99 달성",
+    "salesPitch": "KB자산운용 전력계통에 KEPCO가 적용한 STATCOM 전력품질 솔루션로 전압 안정성과 역률을 획기적으로 개선하세요.",
+    "globalContext": "신재생 확대에 따른 계통 안정성 문제, 전력품질 기준 강화. 레퍼런스: KEPCO (한국) - 전압 변동 90% 감소, 플리커 해소",
+    "sources": [
+      {
+        "title": "KB자산운용, ‘RISE AI전력인프라 ETF’ 1000억 넘어 - 팍스경제TV",
+        "url": "https://search.naver.com/search.naver?where=news&query=KB%EC%9E%90%EC%82%B0%EC%9A%B4%EC%9A%A9%2C%20%E2%80%98RISE%20AI%EC%A0%84%EB%A0%A5%EC%9D%B8%ED%94%84%EB%9D%BC%20ETF%E2%80%99%201000%EC%96%B5%20%EB%84%98%EC%96%B4"
+      }
+    ]
+  },
+  {
+    "id": "LS_20260213_c3ji",
+    "status": "NEW",
+    "createdAt": "2026-02-13T07:58:51.710Z",
+    "updatedAt": "2026-02-13T07:58:51.710Z",
+    "company": "LS",
+    "summary": "전력 인프라 투자 흐름에 수익성 개선…LS, 신고가 경신",
+    "product": "STATCOM 전력품질 솔루션",
+    "score": 70,
+    "grade": "B",
+    "roi": "전압 변동 90% 감소, 역률 0.99 달성",
+    "salesPitch": "LS 전력계통에 KEPCO가 적용한 STATCOM 전력품질 솔루션로 전압 안정성과 역률을 획기적으로 개선하세요.",
+    "globalContext": "신재생 확대에 따른 계통 안정성 문제, 전력품질 기준 강화. 레퍼런스: KEPCO (한국) - 전압 변동 90% 감소, 플리커 해소",
+    "sources": [
+      {
+        "title": "\"전력 인프라 투자 흐름에 수익성 개선\"…LS, 신고가 경신 - 머니투데이",
+        "url": "https://search.naver.com/search.naver?where=news&query=%22%EC%A0%84%EB%A0%A5%20%EC%9D%B8%ED%94%84%EB%9D%BC%20%ED%88%AC%EC%9E%90%20%ED%9D%90%EB%A6%84%EC%97%90%20%EC%88%98%EC%9D%B5%EC%84%B1%20%EA%B0%9C%EC%84%A0%22%E2%80%A6LS%2C%20%EC%8B%A0%EA%B3%A0%EA%B0%80%20%EA%B2%BD%EC%8B%A0"
+      }
+    ]
+  },
+  {
+    "id": "KB자산운용_20260213_5pbs",
+    "status": "NEW",
+    "createdAt": "2026-02-13T07:58:51.710Z",
+    "updatedAt": "2026-02-13T07:58:51.710Z",
+    "company": "KB자산운용",
+    "summary": "KB자산운용, RISE AI전력인프라 ETF 순자산 1000억 돌파",
+    "product": "STATCOM 전력품질 솔루션",
+    "score": 70,
+    "grade": "B",
+    "roi": "전압 변동 90% 감소, 역률 0.99 달성",
+    "salesPitch": "KB자산운용 전력계통에 KEPCO가 적용한 STATCOM 전력품질 솔루션로 전압 안정성과 역률을 획기적으로 개선하세요.",
+    "globalContext": "신재생 확대에 따른 계통 안정성 문제, 전력품질 기준 강화. 레퍼런스: EGAT (태국) - 역률 0.99 달성, 계통 안정성 확보",
+    "sources": [
+      {
+        "title": "KB자산운용, 'RISE AI전력인프라 ETF' 순자산 1000억 돌파 - 글로벌이코노믹",
+        "url": "https://search.naver.com/search.naver?where=news&query=KB%EC%9E%90%EC%82%B0%EC%9A%B4%EC%9A%A9%2C%20'RISE%20AI%EC%A0%84%EB%A0%A5%EC%9D%B8%ED%94%84%EB%9D%BC%20ETF'%20%EC%88%9C%EC%9E%90%EC%82%B0%201000%EC%96%B5%20%EB%8F%8C%ED%8C%8C"
+      }
+    ]
+  },
+  {
+    "id": "본궤도_20260213_2yzq",
+    "status": "NEW",
+    "createdAt": "2026-02-13T07:58:51.710Z",
+    "updatedAt": "2026-02-13T07:58:51.710Z",
+    "company": "본궤도",
+    "summary": "신송도변전소 공사 본궤도…바이오 클러스터 숨통 - v.daum.net",
+    "product": "GSIS 가스절연개폐장치",
+    "score": 85,
+    "grade": "A",
+    "roi": "설치면적 60% 축소, 유지보수비 40% 절감, 수명 30년+",
+    "salesPitch": "본궤도의 전력 인프라 프로젝트에 Saudi Aramco가 검증한 GSIS 가스절연개폐장치로 설치면적 60% 축소와 유지비 40% 절감을 제안합니다.",
+    "globalContext": "SF6 가스 규제 강화 (EU F-Gas 규정), 노후 변전소 교체 수요. 레퍼런스: PLN (인도네시아) - 정전율 35% 감소, 전력손실 8% 개선",
+    "sources": [
+      {
+        "title": "신송도변전소 공사 본궤도…바이오 클러스터 '숨통' - v.daum.net",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EC%8B%A0%EC%86%A1%EB%8F%84%EB%B3%80%EC%A0%84%EC%86%8C%20%EA%B3%B5%EC%82%AC%20%EB%B3%B8%EA%B6%A4%EB%8F%84%E2%80%A6%EB%B0%94%EC%9D%B4%EC%98%A4%20%ED%81%B4%EB%9F%AC%EC%8A%A4%ED%84%B0%20'%EC%88%A8%ED%86%B5'"
+      }
+    ]
+  },
+  {
+    "id": "동서울변전소_20260213_rrjt",
+    "status": "NEW",
+    "createdAt": "2026-02-13T07:58:51.710Z",
+    "updatedAt": "2026-02-13T07:58:51.710Z",
+    "company": "동서울변전소",
+    "summary": "동서울변전소 대체지 검토는 주민 협의 차원…이전 설치 사실상 불가",
+    "product": "GSIS 가스절연개폐장치",
+    "score": 85,
+    "grade": "A",
+    "roi": "설치면적 60% 축소, 유지보수비 40% 절감, 수명 30년+",
+    "salesPitch": "동서울변전소의 전력 인프라 프로젝트에 Saudi Aramco가 검증한 GSIS 가스절연개폐장치로 설치면적 60% 축소와 유지비 40% 절감을 제안합니다.",
+    "globalContext": "SF6 가스 규제 강화 (EU F-Gas 규정), 노후 변전소 교체 수요. 레퍼런스: Saudi Aramco (사우디) - 중동 최대 154kV GIS 납품, 3년 무장애 운영",
+    "sources": [
+      {
+        "title": "동서울변전소 대체지 검토는 주민 협의 차원…이전 설치 사실상 불가 - 뉴시스",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EB%8F%99%EC%84%9C%EC%9A%B8%EB%B3%80%EC%A0%84%EC%86%8C%20%EB%8C%80%EC%B2%B4%EC%A7%80%20%EA%B2%80%ED%86%A0%EB%8A%94%20%EC%A3%BC%EB%AF%BC%20%ED%98%91%EC%9D%98%20%EC%B0%A8%EC%9B%90%E2%80%A6%EC%9D%B4%EC%A0%84%20%EC%84%A4%EC%B9%98%20%EC%82%AC%EC%8B%A4%EC%83%81%20%EB%B6%88%EA%B0%80"
+      }
+    ]
+  }
+]
