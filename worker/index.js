@@ -18,8 +18,8 @@ export default {
     // 셀프서비스 API — 인증 불필요, rate limit만 적용
     if (url.pathname === '/api/analyze' && request.method === 'POST') {
       const rlErr = await checkSelfServiceRateLimit(request, env);
-      if (rlErr) return rlErr;
-      return await handleSelfServiceAnalyze(request, env);
+      if (rlErr) return addCorsHeaders(rlErr, origin, env);
+      return addCorsHeaders(await handleSelfServiceAnalyze(request, env), origin, env);
     }
 
     // /trigger는 Bearer token 또는 body password 허용 (하위 호환)
@@ -447,14 +447,35 @@ async function generateProfileFromGemini(company, industry, env) {
   // 코드블록 제거 후 JSON 파싱
   let cleaned = result.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
   const parsed = JSON.parse(cleaned);
+  const searchQueries = (Array.isArray(parsed.searchQueries) ? parsed.searchQueries : [])
+    .map(q => (typeof q === 'string' ? q.trim() : ''))
+    .filter(Boolean)
+    .slice(0, 7);
+  const categoryConfig = parsed.categoryConfig && typeof parsed.categoryConfig === 'object'
+    ? parsed.categoryConfig
+    : {};
+
   // 필수 필드 검증
-  if (!parsed.searchQueries || !Array.isArray(parsed.searchQueries) || parsed.searchQueries.length === 0) {
+  if (searchQueries.length === 0) {
     throw new Error('프로필 생성 실패: searchQueries 누락');
   }
-  if (!parsed.categoryConfig || Object.keys(parsed.categoryConfig).length === 0) {
+  if (Object.keys(categoryConfig).length === 0) {
     throw new Error('프로필 생성 실패: categoryConfig 누락');
   }
-  return parsed;
+
+  return {
+    ...parsed,
+    name: typeof parsed.name === 'string' && parsed.name.trim() ? parsed.name.trim() : company,
+    industry: typeof parsed.industry === 'string' && parsed.industry.trim() ? parsed.industry.trim() : industry,
+    competitors: Array.isArray(parsed.competitors)
+      ? parsed.competitors
+          .map(c => (typeof c === 'string' ? c.trim() : ''))
+          .filter(Boolean)
+          .slice(0, 5)
+      : [],
+    searchQueries,
+    categoryConfig
+  };
 }
 
 // ===== 셀프서비스: 리드 분석 =====
@@ -559,6 +580,9 @@ async function handleSelfServiceAnalyze(request, env) {
   if (!company || !industry) {
     return jsonResponse({ success: false, message: '회사명과 산업 분야를 모두 입력하세요.' }, 400);
   }
+  if (!env.GEMINI_API_KEY) {
+    return jsonResponse({ success: false, message: '서버 설정 오류: GEMINI_API_KEY가 설정되지 않았습니다.' }, 503);
+  }
 
   try {
     // Step 1: Gemini 프로필 생성
@@ -587,6 +611,10 @@ async function handleSelfServiceAnalyze(request, env) {
 
     // Step 3: 리드 분석
     const leads = await analyzeLeadsWorker(articles, profile, env);
+    const elapsed3 = Date.now() - startTime;
+    if (elapsed3 > 27000) {
+      return jsonResponse({ success: false, message: '시간 초과: 리드 분석이 지연되었습니다. 다시 시도하세요.' }, 504);
+    }
 
     return jsonResponse({
       success: true,

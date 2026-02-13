@@ -248,6 +248,14 @@ function generateDemoLeads(articles, profile) {
     // 해당 카테고리 글로벌 레퍼런스 중 랜덤 선택
     const catRefs = refs[category] || Object.values(refs)[0] || [];
     const refCase = catRefs[Math.floor(Math.random() * catRefs.length)];
+    const pitchTemplate = (typeof cfg.pitch === 'string' && cfg.pitch.trim())
+      ? cfg.pitch
+      : '{company}에 {product}를 제안합니다.';
+    const salesPitch = typeof cfg.pitch === 'function'
+      ? cfg.pitch(company, cfg.product)
+      : pitchTemplate
+          .replace(/\{company\}/g, company)
+          .replace(/\{product\}/g, cfg.product);
 
     // 프로젝트 요약 (제목에서 태그/따옴표/언론사명 제거)
     const summary = article.title
@@ -263,9 +271,7 @@ function generateDemoLeads(articles, profile) {
       score: cfg.score,
       grade: cfg.grade,
       roi: cfg.roi,
-      salesPitch: typeof cfg.pitch === 'function'
-        ? cfg.pitch(company, cfg.product)
-        : cfg.pitch.replace('{company}', company).replace('{product}', cfg.product),
+      salesPitch,
       globalContext: refCase
         ? `${cfg.policy}. 레퍼런스: ${refCase.client} - ${refCase.result}`
         : cfg.policy,
