@@ -1,101 +1,101 @@
 [
   {
-    "id": "HJ중공업_20260213_fy1l",
+    "id": "HJ중공업_20260213_8e5a",
     "status": "NEW",
-    "createdAt": "2026-02-13T01:08:46.157Z",
-    "updatedAt": "2026-02-13T01:08:46.157Z",
+    "createdAt": "2026-02-13T07:51:28.613Z",
+    "updatedAt": "2026-02-13T07:51:28.613Z",
     "company": "HJ중공업",
-    "summary": "1만TEU급 친환경 컨테이너선 2척(약 3,532억 원 규모) 수주 및 영도조선소 건조 착수",
-    "product": "iC7 Marine",
-    "score": 95,
+    "summary": "HJ중공업, 1만TEU급 친환경 컨테이너선 수주",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
     "grade": "A",
-    "roi": "연료 소비 15% 절감 및 국제해사기구(IMO) 탄소 배출 규제 벌금 회피",
-    "salesPitch": "HJ중공업의 첫 1만TEU급 친환경 선박 수주를 축하드리며, 글로벌 선사들이 검증한 댄포스의 하이브리드 추진 솔루션으로 EEXI/CII 규제 대응과 연료 효율 극대화를 동시에 달성하십시오.",
-    "globalContext": "국제해사기구(IMO)의 탄소 집약도 지수(CII) 등급제가 강화됨에 따라 친환경 선박 전환은 필수적이며, 일본 NYK Line은 댄포스 솔루션 도입을 통해 연간 200만 달러의 연료비를 절감하고 EEXI 규제를 100% 충족하고 있습니다.",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "HJ중공업의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: NYK Line (일본) - EEXI 규제 100% 충족, 연간 $2M 연료비 절감",
     "sources": [
       {
-        "title": "HJ중공업, 3532억 규모 친환경 컨테이너선 2척 수주..영도조선소서 1만TEU급 선박 첫 건조 - 파이낸스스코프",
-        "url": "https://search.naver.com/search.naver?where=news&query=HJ%EC%A4%91%EA%B3%B5%EC%97%85%2C%203532%EC%96%B5%20%EA%B7%9C%EB%AA%A8%20%EC%B9%9C%ED%99%98%EA%B2%BD%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%EC%84%A0%202%EC%B2%99%20%EC%88%98%EC%A3%BC..%EC%98%81%EB%8F%84%EC%A1%B0%EC%84%A0%EC%86%8C%EC%84%9C%201%EB%A7%8CTEU%EA%B8%89%20%EC%84%A0%EB%B0%95%20%EC%B2%AB%20%EA%B1%B4%EC%A1%B0"
+        "title": "HJ중공업, 1만TEU급 친환경 컨테이너선 수주 - 팍스경제TV",
+        "url": "https://search.naver.com/search.naver?where=news&query=HJ%EC%A4%91%EA%B3%B5%EC%97%85%2C%201%EB%A7%8CTEU%EA%B8%89%20%EC%B9%9C%ED%99%98%EA%B2%BD%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%EC%84%A0%20%EC%88%98%EC%A3%BC"
       }
     ]
   },
   {
-    "id": "DL이앤씨_20260213_mm2z",
+    "id": "고부가선박수주호조조_20260213_um13",
     "status": "NEW",
-    "createdAt": "2026-02-13T01:08:46.157Z",
-    "updatedAt": "2026-02-13T01:08:46.157Z",
-    "company": "DL이앤씨",
-    "summary": "부평 청천동 데이터센터 2단계 착공(1단계 대비 1.7배 규모 확장) 및 데이터센터 사업 가속화",
-    "product": "Turbocor 컴프레서",
-    "score": 92,
+    "createdAt": "2026-02-13T07:51:28.613Z",
+    "updatedAt": "2026-02-13T07:51:28.613Z",
+    "company": "고부가선박 수주 호조 韓조선",
+    "summary": "고부가선박 수주 호조 韓조선, 中·日 추격 속 체질개선 분주",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
     "grade": "A",
-    "roi": "냉각 전력 소비 35% 절감 및 데이터센터 전력효율지수(PUE) 1.25 이하 달성",
-    "salesPitch": "부평 데이터센터 2단계의 대규모 확장에 따른 냉각 부하 증가 문제를 댄포스의 오일리스 Turbocor 기술로 해결하여 유지보수비 절감과 글로벌 수준의 PUE를 확보하십시오.",
-    "globalContext": "글로벌 데이터센터 운영사들은 탄소 중립을 위해 고효율 냉각 시스템 도입을 표준화하고 있으며, 미국 Equinix는 Turbocor 도입을 통해 냉각 전력의 40%를 절감하며 PUE를 1.58에서 1.25로 개선한 바 있습니다.",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "고부가선박 수주 호조 韓조선의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: Maersk (덴마크) - 연료비 18% 절감, IMO 2030 규제 선제 대응",
+    "sources": [
+      {
+        "title": "고부가선박 수주 호조 韓조선, 中·日 추격 속 체질개선 분주 - 스트레이트뉴스",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EA%B3%A0%EB%B6%80%EA%B0%80%EC%84%A0%EB%B0%95%20%EC%88%98%EC%A3%BC%20%ED%98%B8%EC%A1%B0%20%E9%9F%93%EC%A1%B0%EC%84%A0%2C%20%E4%B8%AD%C2%B7%E6%97%A5%20%EC%B6%94%EA%B2%A9%20%EC%86%8D%20%EC%B2%B4%EC%A7%88%EA%B0%9C%EC%84%A0%20%EB%B6%84%EC%A3%BC"
+      }
+    ]
+  },
+  {
+    "id": "파도_20260213_tsw7",
+    "status": "NEW",
+    "createdAt": "2026-02-13T07:51:28.613Z",
+    "updatedAt": "2026-02-13T07:51:28.613Z",
+    "company": "파도",
+    "summary": "기름 배 대신 암모니아 선박... 현대힘스, 친환경 파도 타고 신대륙 진격",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
+    "grade": "A",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "파도의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: Maersk (덴마크) - 연료비 18% 절감, IMO 2030 규제 선제 대응",
+    "sources": [
+      {
+        "title": "기름 배 대신 암모니아 선박... 현대힘스, 친환경 파도 타고 신대륙 진격 - 핀포인트뉴스",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EA%B8%B0%EB%A6%84%20%EB%B0%B0%20%EB%8C%80%EC%8B%A0%20%EC%95%94%EB%AA%A8%EB%8B%88%EC%95%84%20%EC%84%A0%EB%B0%95...%20%ED%98%84%EB%8C%80%ED%9E%98%EC%8A%A4%2C%20%EC%B9%9C%ED%99%98%EA%B2%BD%20%ED%8C%8C%EB%8F%84%20%ED%83%80%EA%B3%A0%20%EC%8B%A0%EB%8C%80%EB%A5%99%20%EC%A7%84%EA%B2%A9"
+      }
+    ]
+  },
+  {
+    "id": "DL이앤씨_20260213_dnwp",
+    "status": "NEW",
+    "createdAt": "2026-02-13T07:51:28.613Z",
+    "updatedAt": "2026-02-13T07:51:28.613Z",
+    "company": "DL이앤씨",
+    "summary": "DL이앤씨, 데이터센터 영토 확장 가속",
+    "product": "Turbocor 컴프레서",
+    "score": 80,
+    "grade": "A",
+    "roi": "냉각 전력 35~40% 절감, PUE 1.25 달성",
+    "salesPitch": "DL이앤씨 데이터센터에 Equinix가 글로벌 표준으로 채택한 Turbocor 컴프레서로 PUE 1.25를 달성하세요.",
+    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: NTT (일본) - 유지보수 비용 60% 감소, 가동률 99.99%",
+    "sources": [
+      {
+        "title": "DL이앤씨, 데이터센터 영토 확장 가속 - 딜사이트",
+        "url": "https://search.naver.com/search.naver?where=news&query=DL%EC%9D%B4%EC%95%A4%EC%94%A8%2C%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0%20%EC%98%81%ED%86%A0%20%ED%99%95%EC%9E%A5%20%EA%B0%80%EC%86%8D"
+      }
+    ]
+  },
+  {
+    "id": "부평청천동_20260213_8032",
+    "status": "NEW",
+    "createdAt": "2026-02-13T07:51:28.613Z",
+    "updatedAt": "2026-02-13T07:51:28.613Z",
+    "company": "부평 청천동",
+    "summary": "부평 청천동 데이터센터 2단계 착공··· 1단계 1.7배 높은 규모",
+    "product": "Turbocor 컴프레서",
+    "score": 80,
+    "grade": "A",
+    "roi": "냉각 전력 35~40% 절감, PUE 1.25 달성",
+    "salesPitch": "부평 청천동 데이터센터에 Equinix가 글로벌 표준으로 채택한 Turbocor 컴프레서로 PUE 1.25를 달성하세요.",
+    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: NTT (일본) - 유지보수 비용 60% 감소, 가동률 99.99%",
     "sources": [
       {
         "title": "부평 청천동 데이터센터 2단계 착공··· 1단계 1.7배 높은 규모 - 인천투데이",
         "url": "https://search.naver.com/search.naver?where=news&query=%EB%B6%80%ED%8F%89%20%EC%B2%AD%EC%B2%9C%EB%8F%99%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0%202%EB%8B%A8%EA%B3%84%20%EC%B0%A9%EA%B3%B5%C2%B7%C2%B7%C2%B7%201%EB%8B%A8%EA%B3%84%201.7%EB%B0%B0%20%EB%86%92%EC%9D%80%20%EA%B7%9C%EB%AA%A8"
-      }
-    ]
-  },
-  {
-    "id": "한국콜마_20260213_guzb",
-    "status": "NEW",
-    "createdAt": "2026-02-13T01:08:46.157Z",
-    "updatedAt": "2026-02-13T01:08:46.157Z",
-    "company": "한국콜마",
-    "summary": "세종시 공장 증설 및 AI 기반 자동화 스마트 팩토리 구축 투자",
-    "product": "VLT AutomationDrive",
-    "score": 88,
-    "grade": "A",
-    "roi": "생산 라인 모터 전력 소비 30% 절감 및 정밀 제어를 통한 공정 불량률 감소",
-    "salesPitch": "세종 스마트 팩토리의 생산 효율 극대화를 위해 화장품 제조 공정의 정밀한 속도 제어와 에너지 절감을 동시에 실현하는 댄포스 VLT 드라이브 솔루션을 제안 드립니다.",
-    "globalContext": "RE100 달성과 제조 경쟁력 강화를 위한 공장 자동화가 가속화되고 있으며, 삼성 SDI 헝가리 공장은 댄포스 드라이브 적용으로 모터 효율을 25% 향상시켜 RE100 달성에 기여하고 있습니다.",
-    "sources": [
-      {
-        "title": "한국콜마, 中공장 철수 세종시 공장 증설...자동화 스마트 팩토리 구축한다 - 녹색경제신문",
-        "url": "https://search.naver.com/search.naver?where=news&query=%ED%95%9C%EA%B5%AD%EC%BD%9C%EB%A7%88%2C%20%E4%B8%AD%EA%B3%B5%EC%9E%A5%20%EC%B2%A0%EC%88%98%20%EC%84%B8%EC%A2%85%EC%8B%9C%20%EA%B3%B5%EC%9E%A5%20%EC%A6%9D%EC%84%A4...%EC%9E%90%EB%8F%99%ED%99%94%20%EC%8A%A4%EB%A7%88%ED%8A%B8%20%ED%8C%A9%ED%86%A0%EB%A6%AC%20%EA%B5%AC%EC%B6%95%ED%95%9C%EB%8B%A4"
-      }
-    ]
-  },
-  {
-    "id": "서울특별시_20260213_jfqm",
-    "status": "NEW",
-    "createdAt": "2026-02-13T01:08:46.157Z",
-    "updatedAt": "2026-02-13T01:08:46.157Z",
-    "company": "서울특별시",
-    "summary": "노후 건물 냉난방·공조 시설 개선 및 탄소 중립 설비 교체 120억 원 지원 사업 실시",
-    "product": "VLT HVAC Drive",
-    "score": 75,
-    "grade": "B",
-    "roi": "기존 정속 모터 대비 HVAC 시스템 전력 소비 30% 감소 및 건물 에너지 등급 향상",
-    "salesPitch": "서울시의 공조 개선 지원 사업을 활용하여 노후 건물의 운영비를 획기적으로 낮추십시오. 댄포스의 HVAC 전용 인버터는 업계 최고 수준의 ROI를 보장합니다.",
-    "globalContext": "건물 부문의 탄소 배출 저감 정책은 전 세계적인 추세이며, 대만의 TSMC는 클린룸 HVAC 시스템에 댄포스 솔루션을 적용하여 공조 전력을 28% 절감한 레퍼런스를 보유하고 있습니다.",
-    "sources": [
-      {
-        "title": "서울시, 냉난방·공조 개선 등 120억원 지원 - 기계설비신문",
-        "url": "https://search.naver.com/search.naver?where=news&query=%EC%84%9C%EC%9A%B8%EC%8B%9C%2C%20%EB%83%89%EB%82%9C%EB%B0%A9%C2%B7%EA%B3%B5%EC%A1%B0%20%EA%B0%9C%EC%84%A0%20%EB%93%B1%20120%EC%96%B5%EC%9B%90%20%EC%A7%80%EC%9B%90"
-      }
-    ]
-  },
-  {
-    "id": "군트너Gntner코_20260213_6d0n",
-    "status": "NEW",
-    "createdAt": "2026-02-13T01:08:46.157Z",
-    "updatedAt": "2026-02-13T01:08:46.157Z",
-    "company": "군트너(Güntner) 코리아",
-    "summary": "CO2 트랜스크리티컬 냉동 시스템 역량 강화 및 친환경 냉매 전환 시장 공략",
-    "product": "Cooling 솔루션(Turbocor)",
-    "score": 72,
-    "grade": "B",
-    "roi": "에너지 효율 40% 향상 및 오일리스 시스템 도입으로 유지보수 비용 60% 절감",
-    "salesPitch": "군트너의 CO2 트랜스크리티컬 시스템과 댄포스의 오일리스 기술을 결합하여, 강화되는 친환경 냉매 규제에 완벽히 대응하고 국내 콜드체인 시장의 에너지 표준을 선점하십시오.",
-    "globalContext": "F-Gas 규제 강화로 인한 친환경 냉매 전환이 시급한 상황이며, 미국 Lineage Logistics는 댄포스 솔루션 도입으로 세계 최대 규모 냉동창고의 에너지를 32% 절감하는 데 성공했습니다.",
-    "sources": [
-      {
-        "title": "신영수 군트너(Güntner) 한국지사 대표 “한국형 이코노미 유닛쿨러 가능성 검토 및 CO₂트랜스크리티컬 역량 강화에 집중” - 냉동공조저널",
-        "url": "https://search.naver.com/search.naver?where=news&query=%EC%8B%A0%EC%98%81%EC%88%98%20%EA%B5%B0%ED%8A%B8%EB%84%88(G%C3%BCntner)%20%ED%95%9C%EA%B5%AD%EC%A7%80%EC%82%AC%20%EB%8C%80%ED%91%9C%20%E2%80%9C%ED%95%9C%EA%B5%AD%ED%98%95%20%EC%9D%B4%EC%BD%94%EB%85%B8%EB%AF%B8%20%EC%9C%A0%EB%8B%9B%EC%BF%A8%EB%9F%AC%20%EA%B0%80%EB%8A%A5%EC%84%B1%20%EA%B2%80%ED%86%A0%20%EB%B0%8F%20CO%E2%82%82%ED%8A%B8%EB%9E%9C%EC%8A%A4%ED%81%AC%EB%A6%AC%ED%8B%B0%EC%BB%AC%20%EC%97%AD%EB%9F%89%20%EA%B0%95%ED%99%94%EC%97%90%20%EC%A7%91%EC%A4%91%E2%80%9D"
       }
     ]
   }
