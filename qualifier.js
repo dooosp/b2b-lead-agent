@@ -263,7 +263,9 @@ function generateDemoLeads(articles, profile) {
       score: cfg.score,
       grade: cfg.grade,
       roi: cfg.roi,
-      salesPitch: cfg.pitch(company, cfg.product),
+      salesPitch: typeof cfg.pitch === 'function'
+        ? cfg.pitch(company, cfg.product)
+        : cfg.pitch.replace('{company}', company).replace('{product}', cfg.product),
       globalContext: refCase
         ? `${cfg.policy}. 레퍼런스: ${refCase.client} - ${refCase.result}`
         : cfg.policy,

@@ -49,7 +49,7 @@ module.exports = {
     //   grade: 'B',
     //   roi: '예상 ROI 설명',
     //   policy: '관련 정책/규제',
-    //   pitch: (company, product) => `${company}에 ${product}를 제안합니다.`
+    //   pitch: '{company}에 {product}를 제안합니다.'
     // },
   }
 };

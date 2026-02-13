@@ -15,6 +15,13 @@ export default {
       if (authErr) return addCorsHeaders(authErr, origin, env);
     }
 
+    // 셀프서비스 API — 인증 불필요, rate limit만 적용
+    if (url.pathname === '/api/analyze' && request.method === 'POST') {
+      const rlErr = await checkSelfServiceRateLimit(request, env);
+      if (rlErr) return rlErr;
+      return await handleSelfServiceAnalyze(request, env);
+    }
+
     // /trigger는 Bearer token 또는 body password 허용 (하위 호환)
     if (url.pathname === '/trigger' && request.method === 'POST') {
       const rlErr = await checkRateLimit(request, env);
@@ -310,6 +317,292 @@ function jsonResponse(data, status = 200) {
   });
 }
 
+// ===== 셀프서비스: XML 파싱 유틸 =====
+
+function decodeXmlEntities(str) {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&apos;/g, "'");
+}
+
+function extractTag(xml, tag) {
+  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, 'i');
+  const m = xml.match(re);
+  return m ? decodeXmlEntities(m[1].trim()) : '';
+}
+
+function parseRSSItems(xml) {
+  const items = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+  let match;
+  while ((match = itemRegex.exec(xml)) !== null) {
+    const block = match[1];
+    const title = extractTag(block, 'title').replace(/<[^>]*>/g, '');
+    const link = extractTag(block, 'link');
+    const pubDate = extractTag(block, 'pubDate');
+    if (title && link) {
+      items.push({ title, link, pubDate, source: 'Google News' });
+    }
+  }
+  return items;
+}
+
+// ===== 셀프서비스: 뉴스 수집 =====
+
+async function fetchGoogleNewsWorker(query) {
+  const encoded = encodeURIComponent(query);
+  const url = `https://news.google.com/rss/search?q=${encoded}+when:3d&hl=ko&gl=KR&ceid=KR:ko`;
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; B2BLeadBot/1.0)' }
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    return parseRSSItems(xml).slice(0, 5).map(item => ({ ...item, query }));
+  } catch {
+    return [];
+  }
+}
+
+async function fetchAllNewsWorker(queries) {
+  const results = await Promise.allSettled(
+    queries.map(q => fetchGoogleNewsWorker(q))
+  );
+  const allArticles = results
+    .filter(r => r.status === 'fulfilled')
+    .flatMap(r => r.value);
+  return removeDuplicatesWorker(allArticles);
+}
+
+function removeDuplicatesWorker(articles) {
+  const seen = new Set();
+  return articles.filter(a => {
+    const key = a.title.replace(/\s+/g, '').toLowerCase().slice(0, 40);
+    if (seen.has(key)) return false;
+    // Jaccard-like check against existing keys
+    for (const existing of seen) {
+      const set1 = new Set(key);
+      const set2 = new Set(existing);
+      const intersection = [...set1].filter(c => set2.has(c)).length;
+      const union = new Set([...set1, ...set2]).size;
+      if (union > 0 && intersection / union > 0.8) return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+// ===== 셀프서비스: 프로필 자동 생성 =====
+
+async function generateProfileFromGemini(company, industry, env) {
+  const prompt = `당신은 B2B 영업 전략 전문가입니다.
+아래 회사 정보를 바탕으로 B2B 리드 발굴용 프로필 JSON을 생성하세요.
+
+회사명: ${company}
+산업: ${industry}
+
+반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트 없이 JSON만 출력하세요.
+
+{
+  "name": "회사 한글명",
+  "industry": "산업 분야",
+  "competitors": ["경쟁사1", "경쟁사2", "경쟁사3"],
+  "products": {
+    "category1": ["제품A", "제품B"],
+    "category2": ["제품C", "제품D"]
+  },
+  "productKnowledge": {
+    "대표 제품1": { "value": "핵심 가치", "roi": "ROI 근거" },
+    "대표 제품2": { "value": "핵심 가치", "roi": "ROI 근거" }
+  },
+  "searchQueries": ["뉴스 검색 키워드1", "키워드2", "키워드3", "키워드4", "키워드5", "키워드6", "키워드7"],
+  "categoryRules": {
+    "category1": ["분류키워드1", "분류키워드2"],
+    "category2": ["분류키워드3", "분류키워드4"]
+  },
+  "categoryConfig": {
+    "category1": {
+      "product": "기본 추천 제품",
+      "score": 75,
+      "grade": "B",
+      "roi": "예상 ROI 설명",
+      "policy": "관련 정책/규제",
+      "pitch": "{company}에 {product}를 통한 효율 개선을 제안합니다."
+    }
+  }
+}
+
+주의사항:
+- searchQueries는 한국어로 7개, 해당 산업의 실제 뉴스 키워드
+- categoryConfig의 pitch는 반드시 {company}와 {product} 플레이스홀더 사용
+- 실제 산업 지식 기반으로 현실적인 ROI 수치 제시
+- competitors는 실제 경쟁사 3개`;
+
+  const result = await callGemini(prompt, env);
+  // 코드블록 제거 후 JSON 파싱
+  let cleaned = result.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  const parsed = JSON.parse(cleaned);
+  // 필수 필드 검증
+  if (!parsed.searchQueries || !Array.isArray(parsed.searchQueries) || parsed.searchQueries.length === 0) {
+    throw new Error('프로필 생성 실패: searchQueries 누락');
+  }
+  if (!parsed.categoryConfig || Object.keys(parsed.categoryConfig).length === 0) {
+    throw new Error('프로필 생성 실패: categoryConfig 누락');
+  }
+  return parsed;
+}
+
+// ===== 셀프서비스: 리드 분석 =====
+
+async function analyzeLeadsWorker(articles, profile, env) {
+  if (articles.length === 0) return [];
+
+  const newsList = articles.map((a, i) => {
+    return `${i + 1}. [${a.source}] ${a.title} (URL: ${a.link}) (검색키워드: ${a.query})`;
+  }).join('\n');
+
+  const knowledgeBase = profile.productKnowledge
+    ? Object.entries(profile.productKnowledge)
+        .map(([name, info]) => `- ${name}: 핵심가치="${info.value}", ROI="${info.roi}"`)
+        .join('\n')
+    : '(자동 생성 프로필)';
+
+  const productLineup = profile.products
+    ? Object.entries(profile.products)
+        .map(([cat, items]) => `- ${cat}: ${Array.isArray(items) ? items.join(', ') : items}`)
+        .join('\n')
+    : '(자동 생성 프로필)';
+
+  const prompt = `[Role]
+당신은 ${profile.name}의 'AI 기술 영업 전략가'입니다.
+아래 뉴스에서 영업 기회를 포착하고 분석하세요.
+
+[제품 지식]
+${knowledgeBase}
+
+[제품 라인업]
+${productLineup}
+
+[경쟁사]
+${(profile.competitors || []).join(', ')}
+
+[스코어링]
+- Grade A (80-100점): 구체적 착공/수주/예산 언급
+- Grade B (50-79점): 산업 트렌드로 수요 예상
+- Grade C (0-49점): 제외
+
+[뉴스 목록]
+${newsList}
+
+[Format]
+Grade C 제외, A와 B만 JSON 배열로 응답. 다른 텍스트 없이 JSON만.
+[
+  {
+    "company": "타겟 기업명",
+    "summary": "프로젝트 내용 1줄 요약",
+    "product": "추천 ${profile.name} 제품 1개",
+    "score": 75,
+    "grade": "B",
+    "roi": "예상 ROI",
+    "salesPitch": "고객 담당자에게 보낼 메일 첫 문장",
+    "globalContext": "관련 글로벌 정책/트렌드",
+    "sources": [{"title": "기사 제목", "url": "기사 URL"}]
+  }
+]`;
+
+  const result = await callGemini(prompt, env);
+  let cleaned = result.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  const leads = JSON.parse(cleaned);
+  return (Array.isArray(leads) ? leads : []).filter(
+    lead => lead && typeof lead.company === 'string' && typeof lead.score === 'number'
+  ).map(lead => ({
+    ...lead,
+    sources: Array.isArray(lead.sources) ? lead.sources.filter(s => s && s.title && s.url) : []
+  }));
+}
+
+// ===== 셀프서비스: Rate Limit =====
+
+async function checkSelfServiceRateLimit(request, env) {
+  if (!env.RATE_LIMIT) return null;
+  const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() || 'unknown';
+  const key = `ss:${ip}`;
+  const now = Math.floor(Date.now() / 1000);
+  const windowSec = 3600; // 1시간
+  const maxReqs = 3;
+  const stored = await env.RATE_LIMIT.get(key, 'json').catch(() => null);
+  const record = stored && stored.ts > (now - windowSec) ? stored : { ts: now, c: 0 };
+  record.c++;
+  await env.RATE_LIMIT.put(key, JSON.stringify(record), { expirationTtl: windowSec });
+  if (record.c > maxReqs) {
+    return jsonResponse({
+      success: false,
+      message: `셀프서비스는 시간당 ${maxReqs}회까지 사용 가능합니다. 잠시 후 다시 시도하세요.`
+    }, 429);
+  }
+  return null;
+}
+
+// ===== 셀프서비스: 핸들러 =====
+
+async function handleSelfServiceAnalyze(request, env) {
+  const startTime = Date.now();
+  const body = await request.json().catch(() => ({}));
+  const company = (body.company || '').trim().slice(0, 50);
+  const industry = (body.industry || '').trim().slice(0, 50);
+
+  if (!company || !industry) {
+    return jsonResponse({ success: false, message: '회사명과 산업 분야를 모두 입력하세요.' }, 400);
+  }
+
+  try {
+    // Step 1: Gemini 프로필 생성
+    const profile = await generateProfileFromGemini(company, industry, env);
+    const elapsed1 = Date.now() - startTime;
+    if (elapsed1 > 27000) {
+      return jsonResponse({ success: false, message: '시간 초과: 프로필 생성에 시간이 오래 걸렸습니다. 다시 시도하세요.' }, 504);
+    }
+
+    // Step 2: 뉴스 수집
+    const articles = await fetchAllNewsWorker(profile.searchQueries);
+    const elapsed2 = Date.now() - startTime;
+    if (elapsed2 > 27000) {
+      return jsonResponse({ success: false, message: '시간 초과: 뉴스 수집에 시간이 오래 걸렸습니다. 다시 시도하세요.' }, 504);
+    }
+
+    if (articles.length === 0) {
+      return jsonResponse({
+        success: true,
+        leads: [],
+        profile: { name: profile.name, industry: profile.industry },
+        message: '최근 3일간 관련 뉴스를 찾지 못했습니다. 다른 키워드로 시도해보세요.',
+        stats: { articles: 0, elapsed: Math.round((Date.now() - startTime) / 1000) }
+      });
+    }
+
+    // Step 3: 리드 분석
+    const leads = await analyzeLeadsWorker(articles, profile, env);
+
+    return jsonResponse({
+      success: true,
+      leads,
+      profile: { name: profile.name, industry: profile.industry, competitors: profile.competitors },
+      stats: {
+        articles: articles.length,
+        leads: leads.length,
+        elapsed: Math.round((Date.now() - startTime) / 1000)
+      }
+    });
+  } catch (e) {
+    return jsonResponse({ success: false, message: '분석 실패: ' + e.message }, 500);
+  }
+}
+
 // ===== XSS 방어 =====
 
 function escapeHtml(str) {
@@ -364,35 +657,202 @@ function getMainPage(env) {
   <title>B2B 리드 에이전트</title>
   <style>${getCommonStyles()}
     select.profile-select { width: 200px; margin: 0 auto 16px; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #1a1a2e; color: #fff; font-size: 14px; text-align: center; display: block; }
+    .tabs { display: flex; justify-content: center; gap: 0; margin-bottom: 24px; }
+    .tab-btn { flex: 1; max-width: 200px; padding: 12px 16px; font-size: 14px; font-weight: bold; color: #aaa; background: transparent; border: 1px solid #444; cursor: pointer; transition: all 0.3s; }
+    .tab-btn:first-child { border-radius: 8px 0 0 8px; }
+    .tab-btn:last-child { border-radius: 0 8px 8px 0; }
+    .tab-btn.active { color: #fff; background: rgba(233,69,96,0.2); border-color: #e94560; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .ss-input { display: block; width: 280px; margin: 0 auto 12px; padding: 12px 16px; border-radius: 8px; border: 1px solid #444; background: #1a1a2e; color: #fff; font-size: 14px; text-align: center; }
+    .ss-input::placeholder { color: #666; }
+    .progress-bar { width: 100%; height: 4px; background: #333; border-radius: 2px; margin-top: 12px; overflow: hidden; display: none; }
+    .progress-bar.active { display: block; }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #e94560, #3498db); border-radius: 2px; transition: width 0.5s ease; }
+    .ss-results { margin-top: 20px; text-align: left; }
+    .ss-lead-card { background: #1e2a3a; border-radius: 12px; padding: 16px; margin: 12px 0; border-left: 4px solid #e94560; }
+    .ss-lead-card.grade-b { border-left-color: #f39c12; }
+    .ss-lead-card h3 { color: #e94560; margin: 0 0 10px 0; font-size: 16px; }
+    .ss-lead-card.grade-b h3 { color: #f39c12; }
+    .ss-lead-card p { margin: 4px 0; font-size: 13px; color: #ccc; line-height: 1.6; }
+    .ss-lead-card strong { color: #fff; }
+    .ss-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: center; }
+    .ss-stats { font-size: 12px; color: #888; margin-top: 8px; }
+    .ss-sources { margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a3a4a; }
+    .ss-sources summary { color: #aaa; font-size: 12px; cursor: pointer; }
+    .ss-sources a { color: #3498db; text-decoration: none; font-size: 12px; }
+    .ss-sources a:hover { text-decoration: underline; }
+    .ss-sources li { margin: 3px 0; list-style: none; }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container" style="max-width:600px;">
     <div class="logo">📊</div>
     <h1>B2B 리드 에이전트</h1>
-    <p class="subtitle">고객사별 맞춤형 영업 기회 분석</p>
-    <select class="profile-select" id="profileSelect">
-      ${profileOptions}
-    </select>
+    <p class="subtitle">AI 기반 B2B 영업 기회 발굴</p>
 
-    <input type="password" id="password" placeholder="비밀번호 입력" class="input-field">
-    <button class="btn btn-primary" id="generateBtn" onclick="generate()">보고서 생성</button>
-
-    <div class="status" id="status"></div>
-
-    <div class="nav-buttons">
-      <a href="/leads" class="btn btn-secondary">리드 상세 보기</a>
-      <a href="/ppt" class="btn btn-secondary">PPT 제안서</a>
-      <a href="/roleplay" class="btn btn-secondary">영업 시뮬레이터</a>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('self-service')">셀프서비스</button>
+      <button class="tab-btn" onclick="switchTab('managed')">관리 프로필</button>
     </div>
 
-    <div class="info">
-      산업 뉴스 수집 → Gemini AI 분석 → 리드 리포트 이메일 발송<br>
-      처리에 1~2분 정도 소요됩니다.
+    <!-- 셀프서비스 탭 -->
+    <div class="tab-content active" id="tab-self-service">
+      <p style="font-size:13px;color:#aaa;margin-bottom:16px;">회사명과 산업만 입력하면 AI가 즉시 리드를 분석합니다</p>
+      <input type="text" class="ss-input" id="ssCompany" placeholder="회사명 (예: 삼성전자)" maxlength="50">
+      <input type="text" class="ss-input" id="ssIndustry" placeholder="산업 분야 (예: 반도체 제조)" maxlength="50">
+      <button class="btn btn-primary" id="ssBtn" onclick="selfServiceAnalyze()">즉시 분석</button>
+      <div class="progress-bar" id="ssProgress"><div class="progress-fill" id="ssProgressFill"></div></div>
+      <div class="status" id="ssStatus"></div>
+      <div class="ss-results" id="ssResults"></div>
+    </div>
+
+    <!-- 관리 프로필 탭 -->
+    <div class="tab-content" id="tab-managed">
+      <select class="profile-select" id="profileSelect">
+        ${profileOptions}
+      </select>
+      <input type="password" id="password" placeholder="비밀번호 입력" class="input-field">
+      <button class="btn btn-primary" id="generateBtn" onclick="generate()">보고서 생성</button>
+      <div class="status" id="status"></div>
+      <div class="nav-buttons">
+        <a href="/leads" class="btn btn-secondary">리드 상세 보기</a>
+        <a href="/ppt" class="btn btn-secondary">PPT 제안서</a>
+        <a href="/roleplay" class="btn btn-secondary">영업 시뮬레이터</a>
+      </div>
+      <div class="info">
+        산업 뉴스 수집 → Gemini AI 분석 → 리드 리포트 이메일 발송<br>
+        처리에 1~2분 정도 소요됩니다.
+      </div>
     </div>
   </div>
 
   <script>
+    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+    function safeUrl(u) { if(!u) return '#'; const c=String(u).replace(/[\\x00-\\x1f\\x7f\\s]+/g,'').toLowerCase(); if(/^(javascript|data|vbscript|blob):/i.test(c)||/^[/\\\\]{2}/.test(c)) return '#'; return esc(u); }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', (tab === 'self-service' ? i === 0 : i === 1));
+      });
+      document.getElementById('tab-self-service').classList.toggle('active', tab === 'self-service');
+      document.getElementById('tab-managed').classList.toggle('active', tab === 'managed');
+    }
+
+    // ===== 셀프서비스 =====
+    async function selfServiceAnalyze() {
+      const company = document.getElementById('ssCompany').value.trim();
+      const industry = document.getElementById('ssIndustry').value.trim();
+      const btn = document.getElementById('ssBtn');
+      const status = document.getElementById('ssStatus');
+      const results = document.getElementById('ssResults');
+      const progress = document.getElementById('ssProgress');
+      const fill = document.getElementById('ssProgressFill');
+
+      if (!company || !industry) {
+        status.className = 'status error'; status.textContent = '회사명과 산업 분야를 모두 입력하세요.'; return;
+      }
+
+      btn.disabled = true; btn.textContent = '분석 중...';
+      status.className = 'status loading';
+      status.textContent = 'AI가 프로필을 생성하고 뉴스를 분석하고 있습니다... (15~25초)';
+      results.innerHTML = '';
+      progress.classList.add('active');
+      fill.style.width = '0%';
+
+      // 프로그레스 애니메이션
+      let pct = 0;
+      const progressInterval = setInterval(() => {
+        pct = Math.min(pct + 2, 90);
+        fill.style.width = pct + '%';
+      }, 500);
+
+      try {
+        const res = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ company, industry })
+        });
+        const data = await res.json();
+        clearInterval(progressInterval);
+        fill.style.width = '100%';
+
+        if (!data.success) {
+          status.className = 'status error'; status.textContent = data.message;
+          results.innerHTML = '';
+        } else if (!data.leads || data.leads.length === 0) {
+          status.className = 'status success';
+          status.textContent = data.message || '분석 완료했지만 유효한 리드를 찾지 못했습니다.';
+          if (data.stats) status.textContent += ' (' + data.stats.elapsed + '초)';
+          results.innerHTML = '';
+        } else {
+          status.className = 'status success';
+          status.textContent = data.leads.length + '개 리드 발견! (' + (data.stats ? data.stats.elapsed + '초, 뉴스 ' + data.stats.articles + '건 분석' : '') + ')';
+          renderSelfServiceResults(data.leads, data.profile);
+        }
+      } catch (e) {
+        clearInterval(progressInterval);
+        status.className = 'status error'; status.textContent = '오류: ' + e.message;
+      }
+
+      setTimeout(() => { progress.classList.remove('active'); }, 1000);
+      btn.disabled = false; btn.textContent = '즉시 분석';
+    }
+
+    function renderSelfServiceResults(leads, profile) {
+      const container = document.getElementById('ssResults');
+      container.innerHTML = leads.map(lead => \`
+        <div class="ss-lead-card \${lead.grade === 'B' ? 'grade-b' : ''}">
+          <h3>\${esc(lead.grade)} | \${esc(lead.company)} (\${parseInt(lead.score)||0}점)</h3>
+          <p><strong>프로젝트:</strong> \${esc(lead.summary)}</p>
+          <p><strong>추천 제품:</strong> \${esc(lead.product)}</p>
+          <p><strong>예상 ROI:</strong> \${esc(lead.roi)}</p>
+          <p><strong>영업 Pitch:</strong> \${esc(lead.salesPitch)}</p>
+          <p><strong>글로벌 트렌드:</strong> \${esc(lead.globalContext)}</p>
+          \${lead.sources && lead.sources.length > 0 ? \`
+          <div class="ss-sources">
+            <details>
+              <summary>출처 (\${lead.sources.length}건)</summary>
+              <ul>\${lead.sources.map(s => \`<li><a href="\${safeUrl(s.url)}" target="_blank" rel="noopener">\${esc(s.title)}</a></li>\`).join('')}</ul>
+            </details>
+          </div>\` : ''}
+        </div>
+      \`).join('');
+
+      // 복사/다운로드 버튼
+      container.innerHTML += \`
+        <div class="ss-actions">
+          <button class="btn btn-secondary" onclick="copySelfServiceResults()">클립보드 복사</button>
+          <button class="btn btn-secondary" onclick="downloadSelfServiceResults()">JSON 다운로드</button>
+        </div>
+      \`;
+
+      // 결과 데이터 저장
+      window._ssLeads = leads;
+      window._ssProfile = profile;
+    }
+
+    function copySelfServiceResults() {
+      if (!window._ssLeads) return;
+      const text = window._ssLeads.map(l =>
+        \`[\${l.grade}] \${l.company} (\${l.score}점)\\n프로젝트: \${l.summary}\\n제품: \${l.product}\\nROI: \${l.roi}\\nPitch: \${l.salesPitch}\\n트렌드: \${l.globalContext}\`
+      ).join('\\n\\n---\\n\\n');
+      navigator.clipboard.writeText(text).then(() => {
+        const status = document.getElementById('ssStatus');
+        status.className = 'status success'; status.textContent = '클립보드에 복사되었습니다!';
+      });
+    }
+
+    function downloadSelfServiceResults() {
+      if (!window._ssLeads) return;
+      const data = { profile: window._ssProfile, leads: window._ssLeads, generatedAt: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = (window._ssProfile?.name || 'leads') + '_' + new Date().toISOString().split('T')[0] + '.json';
+      a.click(); URL.revokeObjectURL(a.href);
+    }
+
+    // ===== 관리 프로필 =====
     (function(){ const s=sessionStorage.getItem('b2b_token'); if(s) document.getElementById('password').value=s; })();
     function getToken() { const p=document.getElementById('password').value; if(p) sessionStorage.setItem('b2b_token',p); return p; }
     async function generate() {

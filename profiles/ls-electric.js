@@ -80,7 +80,7 @@ module.exports = {
       grade: 'A',
       roi: '설치면적 60% 축소, 유지보수비 40% 절감, 수명 30년+',
       policy: 'SF6 가스 규제 강화 (EU F-Gas 규정), 노후 변전소 교체 수요',
-      pitch: (company, product) => `${company}의 전력 인프라 프로젝트에 Saudi Aramco가 검증한 ${product}로 설치면적 60% 축소와 유지비 40% 절감을 제안합니다.`
+      pitch: '{company}의 전력 인프라 프로젝트에 Saudi Aramco가 검증한 {product}로 설치면적 60% 축소와 유지비 40% 절감을 제안합니다.'
     },
     automation: {
       product: 'XGT PLC + XDL 서보',
@@ -88,7 +88,7 @@ module.exports = {
       grade: 'B',
       roi: '생산성 20% 향상, 불량률 30% 감소',
       policy: 'Industry 4.0 전환 가속, 스마트 제조 혁신법 시행',
-      pitch: (company, product) => `${company} 스마트 팩토리에 LG에너지솔루션이 표준으로 채택한 ${product}로 생산성 20% 향상을 제안합니다.`
+      pitch: '{company} 스마트 팩토리에 LG에너지솔루션이 표준으로 채택한 {product}로 생산성 20% 향상을 제안합니다.'
     },
     green: {
       product: 'ESS + 태양광 인버터',
@@ -96,7 +96,7 @@ module.exports = {
       grade: 'A',
       roi: '전력 피크 저감 25%, 전기요금 15~20% 절감',
       policy: 'RE100 의무화 확대, 2030 NDC 온실가스 40% 감축 목표',
-      pitch: (company, product) => `${company}의 RE100 이행에 한국전력 실증 프로젝트가 검증한 ${product}로 전기요금 20% 절감을 실현하세요.`
+      pitch: '{company}의 RE100 이행에 한국전력 실증 프로젝트가 검증한 {product}로 전기요금 20% 절감을 실현하세요.'
     },
     grid: {
       product: 'STATCOM 전력품질 솔루션',
@@ -104,7 +104,7 @@ module.exports = {
       grade: 'B',
       roi: '전압 변동 90% 감소, 역률 0.99 달성',
       policy: '신재생 확대에 따른 계통 안정성 문제, 전력품질 기준 강화',
-      pitch: (company, product) => `${company} 전력계통에 KEPCO가 적용한 ${product}로 전압 안정성과 역률을 획기적으로 개선하세요.`
+      pitch: '{company} 전력계통에 KEPCO가 적용한 {product}로 전압 안정성과 역률을 획기적으로 개선하세요.'
     }
   }
 };

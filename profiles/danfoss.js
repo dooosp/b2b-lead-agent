@@ -80,7 +80,7 @@ module.exports = {
       grade: 'A',
       roi: '연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피',
       policy: 'IMO 2030 탄소중립 규제 (EEXI/CII 등급제)',
-      pitch: (company, product) => `${company}의 친환경 선박 프로젝트에 Maersk 300척이 검증한 ${product}로 연료비 18% 절감을 제안합니다.`
+      pitch: '{company}의 친환경 선박 프로젝트에 Maersk 300척이 검증한 {product}로 연료비 18% 절감을 제안합니다.'
     },
     datacenter: {
       product: 'Turbocor 컴프레서',
@@ -88,7 +88,7 @@ module.exports = {
       grade: 'A',
       roi: '냉각 전력 35~40% 절감, PUE 1.25 달성',
       policy: 'EU 데이터센터 에너지효율 지침 (2027 시행)',
-      pitch: (company, product) => `${company} 데이터센터에 Equinix가 글로벌 표준으로 채택한 ${product}로 PUE 1.25를 달성하세요.`
+      pitch: '{company} 데이터센터에 Equinix가 글로벌 표준으로 채택한 {product}로 PUE 1.25를 달성하세요.'
     },
     coldchain: {
       product: 'Turbocor 오일리스 칠러',
@@ -96,7 +96,7 @@ module.exports = {
       grade: 'B',
       roi: '에너지 비용 30~32% 절감, 유지보수비 60% 감소',
       policy: 'RE100 이행 + 글로벌 식품/의약 콜드체인 인증 강화',
-      pitch: (company, product) => `${company} 냉동/냉장 설비에 Lineage Logistics가 검증한 ${product}로 에너지 32% 절감을 실현하세요.`
+      pitch: '{company} 냉동/냉장 설비에 Lineage Logistics가 검증한 {product}로 에너지 32% 절감을 실현하세요.'
     },
     factory: {
       product: 'VLT AutomationDrive',
@@ -104,7 +104,7 @@ module.exports = {
       grade: 'B',
       roi: '생산라인 에너지 25~35% 절감',
       policy: 'EU CBAM 탄소국경세 (2026 본격 시행) + 산업용 모터 IE4 의무화',
-      pitch: (company, product) => `${company} 스마트 팩토리에 Volkswagen EV공장이 적용한 ${product}로 에너지 35% 절감을 제안합니다.`
+      pitch: '{company} 스마트 팩토리에 Volkswagen EV공장이 적용한 {product}로 에너지 35% 절감을 제안합니다.'
     }
   }
 };
