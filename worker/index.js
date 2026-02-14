@@ -84,7 +84,7 @@ export default {
       const authErr = await verifyAuth(request, env);
       if (authErr) return addCorsHeaders(authErr, origin, env);
       if (!env.DB) {
-        return new Response('D1 데이터베이스가 설정되지 않았습니다.', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+        return new Response('시스템 설정이 필요합니다. 관리자에게 문의하세요.', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
       }
       const lead = await getLeadById(env.DB, leadId);
       if (!lead) return new Response('리드를 찾을 수 없습니다.', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
@@ -311,7 +311,7 @@ async function generatePPT(request, env) {
     const result = await callGemini(prompt, env);
     return jsonResponse({ success: true, content: result });
   } catch (e) {
-    return jsonResponse({ success: false, message: 'Gemini API 오류: ' + e.message }, 500);
+    return jsonResponse({ success: false, message: 'AI 분석 중 오류가 발생했습니다:' + e.message }, 500);
   }
 }
 
@@ -360,7 +360,7 @@ ${userMessage || '안녕하세요. 귀사의 프로젝트에 대해 제안드리
     const result = await callGemini(prompt, env);
     return jsonResponse({ success: true, content: result });
   } catch (e) {
-    return jsonResponse({ success: false, message: 'Gemini API 오류: ' + e.message }, 500);
+    return jsonResponse({ success: false, message: 'AI 분석 중 오류가 발생했습니다:' + e.message }, 500);
   }
 }
 
@@ -703,11 +703,11 @@ ${hasBody ? `## Article Body (source material)\n${articleBody}` : '## Note: No a
 {
   "summary": "개선된 1-2문장 요약 (구체적 수치 포함)",
   "roi": "구체적 ROI 분석 (숫자 기반, 예: '연간 15억원 에너지 비용 중 20% 절감 가능 → 3억원')",
-  "salesPitch": "개선된 영업 피치 (고객 페인포인트 직접 언급, 구체적 솔루션 제안)",
+  "salesPitch": "고객 과제를 먼저 언급하고, 정량적 해결 방안과 레퍼런스를 포함한 3문장 영업 제안",
   "globalContext": "글로벌 시장/기술 트렌드와의 연결 (구체적 사례나 수치)",
-  "actionItems": ["액션1: 구체적 다음 단계", "액션2: ...", "액션3: ..."],
+  "actionItems": ["1주 내 실행 가능한 후속 조치 (담당 부서/직급 포함)", "...", "..."],
   "keyFigures": ["수치1: 설명", "수치2: 설명"],
-  "painPoints": ["페인포인트1: 설명", "페인포인트2: 설명"]
+  "painPoints": ["비용/규제/경쟁/기술 관점의 구체적 과제 (정량 수치 포함)", "..."]
 }
 
 Return ONLY valid JSON, no markdown fences.`;
@@ -856,7 +856,7 @@ async function getDashboardMetrics(db, profileId) {
     avgDwellDays[s] = dwellCounts[s] > 0 ? Math.round(dwellTimes[s] / dwellCounts[s] * 10) / 10 : 0;
   });
 
-  // 파이프라인 가치
+  // 진행 중 거래 총액
   const pipelineValueByStatus = {};
   let totalPipelineValue = 0;
   (pipelineValue.results || []).forEach(r => {
@@ -865,7 +865,7 @@ async function getDashboardMetrics(db, profileId) {
     if (r.status !== 'LOST') totalPipelineValue += v;
   });
 
-  // 팔로업 알림
+  // 후속 조치 알림
   const followUpAlerts = (followUpLeads.results || []).map(r => ({
     id: r.id, company: r.company, followUpDate: r.follow_up_date, status: r.status,
     isOverdue: r.follow_up_date < today,
@@ -896,14 +896,14 @@ async function getDashboardMetrics(db, profileId) {
 // ===== Enrichment API 핸들러 =====
 
 async function handleEnrichLead(request, env, leadId) {
-  if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
+  if (!env.DB) return jsonResponse({ success: false, message: '시스템 설정이 필요합니다. 관리자에게 문의하세요.' }, 503);
   if (!env.GEMINI_API_KEY) return jsonResponse({ success: false, message: '서버 설정 오류: GEMINI_API_KEY가 설정되지 않았습니다.' }, 503);
   const lead = await getLeadById(env.DB, leadId);
   if (!lead) return jsonResponse({ success: false, message: '리드를 찾을 수 없습니다.' }, 404);
 
   const url = new URL(request.url);
   if (lead.enriched && !url.searchParams.get('force')) {
-    return jsonResponse({ success: false, message: '이미 분석된 리드입니다. ?force=true로 재실행하세요.', lead }, 409);
+    return jsonResponse({ success: false, message: '이미 분석된 리드입니다. 재분석 버튼을 이용하세요.', lead }, 409);
   }
 
   try {
@@ -920,7 +920,7 @@ async function handleEnrichLead(request, env, leadId) {
 }
 
 async function handleBatchEnrich(request, env) {
-  if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
+  if (!env.DB) return jsonResponse({ success: false, message: '시스템 설정이 필요합니다. 관리자에게 문의하세요.' }, 503);
   if (!env.GEMINI_API_KEY) return jsonResponse({ success: false, message: '서버 설정 오류: GEMINI_API_KEY가 설정되지 않았습니다.' }, 503);
   const body = await request.json().catch(() => ({}));
   const requestedProfile = typeof body.profile === 'string' ? body.profile.trim() : '';
@@ -972,7 +972,7 @@ async function handleBatchEnrich(request, env) {
 // ===== 새 API 핸들러 =====
 
 async function handleUpdateLead(request, env, leadId) {
-  if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
+  if (!env.DB) return jsonResponse({ success: false, message: '시스템 설정이 필요합니다. 관리자에게 문의하세요.' }, 503);
   const body = await request.json().catch(() => ({}));
   const lead = await getLeadById(env.DB, leadId);
   if (!lead) return jsonResponse({ success: false, message: '리드를 찾을 수 없습니다.' }, 404);
@@ -1021,7 +1021,7 @@ async function handleUpdateLead(request, env, leadId) {
 }
 
 async function handleDashboard(request, env) {
-  if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
+  if (!env.DB) return jsonResponse({ success: false, message: '시스템 설정이 필요합니다. 관리자에게 문의하세요.' }, 503);
   const url = new URL(request.url);
   const requestedProfile = (url.searchParams.get('profile') || 'all').trim();
   if (requestedProfile !== 'all' && requestedProfile !== resolveProfileId(requestedProfile, env)) {
@@ -1033,7 +1033,7 @@ async function handleDashboard(request, env) {
 }
 
 async function handleExportCSV(request, env) {
-  if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
+  if (!env.DB) return jsonResponse({ success: false, message: '시스템 설정이 필요합니다. 관리자에게 문의하세요.' }, 503);
   const url = new URL(request.url);
   const requestedProfile = (url.searchParams.get('profile') || 'all').trim();
   if (requestedProfile !== 'all' && requestedProfile !== resolveProfileId(requestedProfile, env)) {
@@ -1064,9 +1064,9 @@ async function handleExportCSV(request, env) {
 
 function getPWAManifest(env) {
   return {
-    name: 'B2B 리드 에이전트',
+    name: 'B2B Sales Intelligence',
     short_name: 'B2B Leads',
-    description: 'AI 기반 B2B 영업 기회 발굴',
+    description: 'AI 기반 영업 인텔리전스 플랫폼',
     start_url: '/',
     display: 'standalone',
     background_color: '#1a1a2e',
@@ -1675,7 +1675,7 @@ function getMainPage(env) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>B2B 리드 에이전트</title>
+  <title>B2B Sales Intelligence</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
@@ -1711,8 +1711,8 @@ function getMainPage(env) {
 <body>
   <div class="container" style="max-width:600px;">
     <div class="logo">📊</div>
-    <h1>B2B 리드 에이전트</h1>
-    <p class="subtitle">AI 기반 B2B 영업 기회 발굴</p>
+    <h1>B2B Sales Intelligence</h1>
+    <p class="subtitle">AI 기반 영업 인텔리전스 플랫폼</p>
 
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('self-service')">셀프서비스</button>
@@ -1742,10 +1742,10 @@ function getMainPage(env) {
         <a href="/leads" class="btn btn-secondary">리드 상세 보기</a>
         <a href="/dashboard" class="btn btn-secondary">대시보드</a>
         <a href="/ppt" class="btn btn-secondary">PPT 제안서</a>
-        <a href="/roleplay" class="btn btn-secondary">영업 시뮬레이터</a>
+        <a href="/roleplay" class="btn btn-secondary">영업 역량 시뮬레이션</a>
       </div>
       <div class="info">
-        산업 뉴스 수집 → Gemini AI 분석 → 리드 리포트 이메일 발송<br>
+        뉴스 기반 영업 기회 분석 후 리포트를 발송합니다<br>
         처리에 1~2분 정도 소요됩니다.
       </div>
     </div>
@@ -1779,7 +1779,7 @@ function getMainPage(env) {
 
       btn.disabled = true; btn.textContent = '분석 중...';
       status.className = 'status loading';
-      status.textContent = 'AI가 프로필을 생성하고 뉴스를 분석하고 있습니다... (15~25초)';
+      status.textContent = '프로필 생성 및 뉴스 분석 중입니다... (15~25초)';
       results.innerHTML = '';
       progress.classList.add('active');
       fill.style.width = '0%';
@@ -1832,7 +1832,7 @@ function getMainPage(env) {
           <p><strong>프로젝트:</strong> \${esc(lead.summary)}</p>
           <p><strong>추천 제품:</strong> \${esc(lead.product)}</p>
           <p><strong>예상 ROI:</strong> \${esc(lead.roi)}</p>
-          <p><strong>영업 Pitch:</strong> \${esc(lead.salesPitch)}</p>
+          <p><strong>영업 제안:</strong> \${esc(lead.salesPitch)}</p>
           <p><strong>글로벌 트렌드:</strong> \${esc(lead.globalContext)}</p>
           \${lead.sources && lead.sources.length > 0 ? \`
           <div class="ss-sources">
@@ -2015,7 +2015,7 @@ function getLeadsPage() {
     <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;margin-bottom:12px;" onclick="window.print()">PDF 인쇄</button>
 
     <div class="batch-enrich-bar">
-      <span>미분석 리드를 Gemini AI로 심층 분석합니다 (최대 3건/회)</span>
+      <span>미분석 리드를 AI로 심층 분석합니다 (최대 3건/회)</span>
       <button class="btn-enrich" onclick="batchEnrich(this)">일괄 상세 분석</button>
     </div>
     <div id="batchStatus" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div>
@@ -2035,7 +2035,7 @@ function getLeadsPage() {
     }
     function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
 
-    const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
+    const statusLabels = { NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
     const statusColors = { NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' };
     const transitions = { NEW: ['CONTACTED'], CONTACTED: ['MEETING'], MEETING: ['PROPOSAL'], PROPOSAL: ['NEGOTIATION'], NEGOTIATION: ['WON','LOST'], LOST: ['NEW'], WON: [] };
 
@@ -2111,7 +2111,7 @@ function getLeadsPage() {
       btn.disabled = true;
       btn.textContent = '일괄 분석 중...';
       const statusEl = document.getElementById('batchStatus');
-      statusEl.textContent = 'Gemini AI가 리드를 심층 분석하고 있습니다...';
+      statusEl.textContent = 'AI가 리드를 심층 분석하고 있습니다...';
       statusEl.style.color = '#3498db';
       try {
         const res = await fetch('/api/leads/batch-enrich', {
@@ -2164,7 +2164,7 @@ function getLeadsPage() {
               <p><strong>프로젝트:</strong> \${esc(lead.summary)}</p>
               <p><strong>추천 제품:</strong> \${esc(lead.product)}</p>
               <p><strong>예상 ROI:</strong> \${esc(lead.roi) || '-'}</p>
-              <p><strong>영업 Pitch:</strong> \${esc(lead.salesPitch)}</p>
+              <p><strong>영업 제안:</strong> \${esc(lead.salesPitch)}</p>
               <p><strong>글로벌 트렌드:</strong> \${esc(lead.globalContext) || '-'}</p>
             </div>
             \${lead.enriched ? \`
@@ -2173,8 +2173,8 @@ function getLeadsPage() {
                 <summary>심층 분석 상세 보기</summary>
                 <div class="enriched-content">
                   \${lead.keyFigures && lead.keyFigures.length > 0 ? \`<div class="enriched-block"><h4>핵심 수치</h4><ul>\${lead.keyFigures.map(f => \`<li>\${esc(f)}</li>\`).join('')}</ul></div>\` : ''}
-                  \${lead.painPoints && lead.painPoints.length > 0 ? \`<div class="enriched-block"><h4>페인포인트</h4><ul>\${lead.painPoints.map(p => \`<li>\${esc(p)}</li>\`).join('')}</ul></div>\` : ''}
-                  \${lead.actionItems && lead.actionItems.length > 0 ? \`<div class="enriched-block"><h4>액션 아이템</h4><ul>\${lead.actionItems.map(a => \`<li>\${esc(a)}</li>\`).join('')}</ul></div>\` : ''}
+                  \${lead.painPoints && lead.painPoints.length > 0 ? \`<div class="enriched-block"><h4>고객 과제</h4><ul>\${lead.painPoints.map(p => \`<li>\${esc(p)}</li>\`).join('')}</ul></div>\` : ''}
+                  \${lead.actionItems && lead.actionItems.length > 0 ? \`<div class="enriched-block"><h4>후속 실행 항목</h4><ul>\${lead.actionItems.map(a => \`<li>\${esc(a)}</li>\`).join('')}</ul></div>\` : ''}
                   \${lead.enrichedAt ? \`<p style="color:#666;font-size:11px;margin-top:8px;">분석일: \${esc(lead.enrichedAt.split('T')[0])}</p>\` : ''}
                 </div>
               </details>
@@ -2270,7 +2270,7 @@ function getLeadsPage() {
 }
 
 function getLeadDetailPage(lead, statusLogs) {
-  const statusLabelsJS = JSON.stringify({ NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' });
+  const statusLabelsJS = JSON.stringify({ NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' });
   const statusColorsJS = JSON.stringify({ NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' });
   const transitionsJS = JSON.stringify({ NEW: ['CONTACTED'], CONTACTED: ['MEETING'], MEETING: ['PROPOSAL'], PROPOSAL: ['NEGOTIATION'], NEGOTIATION: ['WON','LOST'], LOST: ['NEW'], WON: [] });
   const leadJSON = JSON.stringify(lead);
@@ -2370,18 +2370,18 @@ function getLeadDetailPage(lead, statusLogs) {
       html += '<div class="detail-row"><span class="label">등급</span><span class="value"><span class="badge ' + (lead.grade === 'A' ? 'badge-a' : 'badge-b') + '">' + esc(lead.grade) + '</span> (' + lead.score + '점)</span></div>';
       html += '<div class="detail-row"><span class="label">추천 제품</span><span class="value">' + esc(lead.product) + '</span></div>';
       html += '<div class="detail-row"><span class="label">예상 ROI</span><span class="value">' + esc(lead.roi || '-') + '</span></div>';
-      html += '<div class="detail-row"><span class="label">영업 Pitch</span><span class="value">' + esc(lead.salesPitch) + '</span></div>';
+      html += '<div class="detail-row"><span class="label">영업 제안</span><span class="value">' + esc(lead.salesPitch) + '</span></div>';
       html += '<div class="detail-row"><span class="label">글로벌 트렌드</span><span class="value">' + esc(lead.globalContext || '-') + '</span></div>';
       html += '<div class="detail-row"><span class="label">프로필</span><span class="value">' + esc(lead.profileId) + '</span></div>';
       html += '<div class="detail-row"><span class="label">생성일</span><span class="value">' + esc((lead.createdAt || '').split('T')[0]) + '</span></div>';
       html += '</div>';
 
-      // 팔로업 + 딜 금액 섹션
+      // 후속 조치 + 예상 계약액 섹션
       html += '<div class="detail-section">';
       html += '<h3>영업 관리</h3>';
       html += '<div class="field-group">';
-      html += '<div><label>다음 팔로업 날짜</label><input type="date" id="followUpDate" value="' + esc(lead.followUpDate || '') + '" onchange="updateField(\\'follow_up_date\\', this.value)"></div>';
-      html += '<div><label>예상 딜 금액 (만원)</label><input type="number" id="estimatedValue" value="' + (lead.estimatedValue || 0) + '" min="0" onchange="updateField(\\'estimated_value\\', parseInt(this.value)||0)"></div>';
+      html += '<div><label>다음 후속 조치일</label><input type="date" id="followUpDate" value="' + esc(lead.followUpDate || '') + '" onchange="updateField(\\'follow_up_date\\', this.value)"></div>';
+      html += '<div><label>예상 계약액 (만원)</label><input type="number" id="estimatedValue" value="' + (lead.estimatedValue || 0) + '" min="0" onchange="updateField(\\'estimated_value\\', parseInt(this.value)||0)"></div>';
       html += '</div>';
       html += '<span class="save-indicator" id="saveIndicator">저장됨</span>';
       html += '</div>';
@@ -2395,11 +2395,11 @@ function getLeadDetailPage(lead, statusLogs) {
           html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">' + lead.keyFigures.map(f => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(f) + '</li>').join('') + '</ul>';
         }
         if (lead.painPoints && lead.painPoints.length) {
-          html += '<p style="color:#ce93d8;font-size:13px;font-weight:bold;margin-bottom:6px;">페인포인트</p>';
+          html += '<p style="color:#ce93d8;font-size:13px;font-weight:bold;margin-bottom:6px;">고객 과제</p>';
           html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">' + lead.painPoints.map(p => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(p) + '</li>').join('') + '</ul>';
         }
         if (lead.actionItems && lead.actionItems.length) {
-          html += '<p style="color:#ce93d8;font-size:13px;font-weight:bold;margin-bottom:6px;">액션 아이템</p>';
+          html += '<p style="color:#ce93d8;font-size:13px;font-weight:bold;margin-bottom:6px;">후속 실행 항목</p>';
           html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">' + lead.actionItems.map(a => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(a) + '</li>').join('') + '</ul>';
         }
         if (lead.enrichedAt) html += '<p style="color:#666;font-size:11px;">분석일: ' + esc(lead.enrichedAt.split('T')[0]) + '</p>';
@@ -2551,7 +2551,7 @@ function getPPTPage() {
       btn.disabled = true;
       btn.textContent = 'AI 생성 중...';
       status.className = 'status loading';
-      status.textContent = 'Gemini AI가 제안서를 작성하고 있습니다...';
+      status.textContent = 'AI가 제안서를 작성하고 있습니다...';
       output.style.display = 'none';
 
       try {
@@ -2603,7 +2603,7 @@ function getRoleplayPage() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>영업 시뮬레이터</title>
+  <title>영업 역량 시뮬레이션</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
@@ -2625,7 +2625,7 @@ function getRoleplayPage() {
 <body>
   <div class="container" style="max-width:700px;">
     <a id="leadsBackLink" href="/leads" class="back-link">← 리드 목록</a>
-    <h1 style="font-size:22px;">영업 시뮬레이터</h1>
+    <h1 style="font-size:22px;">영업 역량 시뮬레이션</h1>
     <p class="subtitle">까다로운 고객과 영업 연습을 해보세요</p>
 
     <select id="leadSelect"><option value="">리드 로딩 중...</option></select>
@@ -2636,7 +2636,7 @@ function getRoleplayPage() {
     <div class="chat-container" id="chatContainer"></div>
 
     <div class="chat-input" id="chatInput" style="display:none;">
-      <input type="text" id="userMsg" placeholder="영업 멘트를 입력하세요..." onkeydown="if(event.key==='Enter')sendMessage()">
+      <input type="text" id="userMsg" placeholder="영업 메시지를 입력하세요..." onkeydown="if(event.key==='Enter')sendMessage()">
       <button class="btn btn-primary" onclick="sendMessage()" style="padding:12px 20px;">전송</button>
     </div>
   </div>
@@ -2692,7 +2692,7 @@ function getRoleplayPage() {
       // 첫 인사
       await sendMessage('안녕하세요. 귀사의 프로젝트에 대해 제안드리고 싶습니다.');
       status.className = 'status success';
-      status.textContent = '시뮬레이션 진행 중 - 아래에 영업 멘트를 입력하세요.';
+      status.textContent = '시뮬레이션 진행 중 - 아래에 영업 메시지를 입력하세요.';
     }
 
     async function sendMessage(preset) {
@@ -2821,7 +2821,7 @@ function getHistoryPage() {
     document.getElementById('leadsBackLink').href = '/leads?profile=' + encodeURIComponent(getProfile());
     let allHistory = [];
     let currentFilter = 'ALL';
-    const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
+    const statusLabels = { NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
 
     async function loadHistory() {
       try {
@@ -2955,7 +2955,7 @@ function getDashboardPage(env) {
       const token = getToken();
       return '/leads/' + encodeURIComponent(leadId) + (token ? ('?token=' + encodeURIComponent(token)) : '');
     }
-    const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
+    const statusLabels = { NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
     const statusColors = { NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' };
     const profileFilter = document.getElementById('profileFilter');
     const initialProfile = new URLSearchParams(window.location.search).get('profile');
@@ -2982,11 +2982,11 @@ function getDashboardPage(env) {
         // 요약 카드
         let html = '<div class="dashboard-cards">';
         html += \`<div class="dash-card"><div class="num">\${m.total}</div><div class="label">총 리드</div></div>\`;
-        html += \`<div class="dash-card"><div class="num" style="color:#e94560;">\${m.gradeA}</div><div class="label">Grade A</div></div>\`;
+        html += \`<div class="dash-card"><div class="num" style="color:#e94560;">\${m.gradeA}</div><div class="label">A등급</div></div>\`;
         html += \`<div class="dash-card"><div class="num" style="color:#27ae60;">\${m.conversionRate}%</div><div class="label">전환율</div></div>\`;
         html += \`<div class="dash-card"><div class="num" style="color:#3498db;">\${m.active}</div><div class="label">활성 리드</div></div>\`;
-        html += \`<div class="dash-card"><div class="num" style="color:#f39c12;">\${(m.totalPipelineValue || 0).toLocaleString()}</div><div class="label">파이프라인 가치(만원)</div></div>\`;
-        html += \`<div class="dash-card"><div class="num" style="color:#e74c3c;">\${(m.followUpAlerts || []).length}</div><div class="label">팔로업 알림</div></div>\`;
+        html += \`<div class="dash-card"><div class="num" style="color:#f39c12;">\${(m.totalPipelineValue || 0).toLocaleString()}</div><div class="label">진행 중 거래 총액(만원)</div></div>\`;
+        html += \`<div class="dash-card"><div class="num" style="color:#e74c3c;">\${(m.followUpAlerts || []).length}</div><div class="label">후속 조치 알림</div></div>\`;
         html += '</div>';
 
         // 파이프라인 바
@@ -3012,9 +3012,9 @@ function getDashboardPage(env) {
           html += '</div>';
         }
 
-        // 팔로업 알림
+        // 후속 조치 알림
         if (m.followUpAlerts && m.followUpAlerts.length > 0) {
-          html += '<h3 class="section-title" style="color:#e74c3c;">팔로업 알림</h3>';
+          html += '<h3 class="section-title" style="color:#e74c3c;">후속 조치 알림</h3>';
           html += '<ul class="activity-feed">';
           m.followUpAlerts.forEach(a => {
             const icon = a.isOverdue ? '🔴' : a.isToday ? '🟡' : '🔵';
@@ -3062,9 +3062,9 @@ function getDashboardPage(env) {
           html += '</div>';
         }
 
-        // 파이프라인 가치 (단계별)
+        // 진행 중 거래 총액 (단계별)
         if (m.pipelineValueByStatus && Object.values(m.pipelineValueByStatus).some(v => v > 0)) {
-          html += '<h3 class="section-title">파이프라인 가치 (만원)</h3>';
+          html += '<h3 class="section-title">진행 중 거래 총액 (만원)</h3>';
           html += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;">';
           ['NEW','CONTACTED','MEETING','PROPOSAL','NEGOTIATION','WON'].forEach(s => {
             const v = m.pipelineValueByStatus[s] || 0;
