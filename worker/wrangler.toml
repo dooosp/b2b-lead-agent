@@ -4,6 +4,7 @@ compatibility_date = "2024-01-01"
 
 [placement]
 mode = "smart"
+hint = "wnam"
 
 [vars]
 GITHUB_REPO = "dooosp/b2b-lead-agent"

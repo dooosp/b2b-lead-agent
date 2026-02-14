@@ -844,6 +844,8 @@ function pickBestSourceUrl(sources) {
 
 async function fetchArticleBodyWorker(url) {
   if (!url) return '';
+  // Google News URL은 JS 리다이렉트라 서버사이드에서 본문 추출 불가
+  if (url.includes('news.google.com/')) return '';
   let timer = null;
   try {
     const controller = new AbortController();
@@ -1369,8 +1371,12 @@ function parseRSSItems(xml) {
     const title = extractTag(block, 'title').replace(/<[^>]*>/g, '');
     const link = extractTag(block, 'link');
     const pubDate = extractTag(block, 'pubDate');
+    // <source url="https://actual-site.com">Source Name</source> 추출
+    const sourceMatch = block.match(/<source\s+url=["']([^"']+)["'][^>]*>([^<]*)<\/source>/i);
+    const sourceUrl = sourceMatch ? sourceMatch[1] : '';
+    const sourceName = sourceMatch ? sourceMatch[2].trim() : 'Google News';
     if (title && link) {
-      items.push({ title, link, pubDate, source: 'Google News' });
+      items.push({ title, link, pubDate, source: sourceName, sourceUrl });
     }
   }
   return items;
@@ -1656,11 +1662,17 @@ ${(profile.competitors || []).join(', ')}
 - Grade C (0-49점): 제외
 각 등급 판정 시 근거를 반드시 포함할 것.
 
-[본문 미확보 기사 처리 정책]
-- [본문 미확보]로 표시된 기사는 제목과 키워드만으로 분석하되, confidence를 "LOW"로 설정하세요.
-- 본문 미확보 기사는 score를 최대 65점으로 제한하세요 (Grade B 이하).
-- evidence 배열은 비워두세요 (근거 인용 불가).
-- confidenceReason에 "기사 본문 미확보, 제목 기반 분석"을 명시하세요.
+[Confidence 판정 정책]
+- [본문 확보] 기사 기반 리드: confidence="HIGH". evidence에 본문 원문을 직접 인용.
+- [본문 미확보] + 제목에 구체 숫자/규모/일정/금액 포함: confidence="MEDIUM". score는 최대 80점.
+- [본문 미확보] + 제목이 모호(트렌드/일반 뉴스): confidence="LOW". score는 최대 65점.
+- confidenceReason에 판정 근거를 명시하세요 (예: "기사 제목에 3,532억원 수주 금액 명시").
+
+[Evidence 규칙]
+- [본문 확보] 기사: evidence에 본문 원문 문장을 1개 이상 직접 복사 (요약/변형 금지).
+- [본문 미확보] 기사: evidence에 기사 제목에서 핵심 팩트를 인용 가능 (field에 "title" 명시).
+  예: {"field": "title", "quote": "SK하이닉스, LG디스플레이 공장 인수 3조원 규모 논의", "sourceUrl": "URL"}
+- 숫자(금액/면적/용량)가 포함된 문장은 우선 인용 대상입니다.
 
 [ROI 작성 정책]
 - 기사 본문에서 발견한 구체 숫자(금액/면적/용량 등)가 있으면: 산업 평균 절감률 + 발견 숫자로 ROI 범위를 산출하세요.
@@ -1687,7 +1699,10 @@ Grade C 제외, A와 B만 JSON 배열로 응답. 다른 텍스트 없이 JSON만
     "urgencyReason": "긴급도 근거",
     "buyerRole": "예상 키맨 직급/부서",
     "sources": [{"title": "기사 제목", "url": "기사 URL"}],
-    "evidence": [{"field": "summary 또는 roi 등 근거 대상 필드", "quote": "기사 본문에서 직접 인용한 문장", "sourceUrl": "해당 기사 URL"}],
+    "evidence": [
+      {"field": "summary", "quote": "기사 본문에서 복사한 원문 문장", "sourceUrl": "해당 기사 URL"},
+      {"field": "roi", "quote": "숫자가 포함된 원문 문장 (있는 경우)", "sourceUrl": "URL"}
+    ],
     "confidence": "HIGH 또는 MEDIUM 또는 LOW",
     "confidenceReason": "신뢰도 판정 근거 (본문 확보 여부, 수치 존재 여부 등)",
     "assumptions": ["ROI 산출 가정1", "가정2"],
@@ -1700,15 +1715,25 @@ Grade C 제외, A와 B만 JSON 배열로 응답. 다른 텍스트 없이 JSON만
   const leads = JSON.parse(cleaned);
   return (Array.isArray(leads) ? leads : []).filter(
     lead => lead && typeof lead.company === 'string' && typeof lead.score === 'number'
-  ).map(lead => ({
-    ...lead,
-    sources: Array.isArray(lead.sources) ? lead.sources.filter(s => s && s.title && s.url) : [],
-    evidence: Array.isArray(lead.evidence) ? lead.evidence.filter(e => e && e.field) : [],
-    confidence: ['HIGH', 'MEDIUM', 'LOW'].includes(lead.confidence) ? lead.confidence : 'MEDIUM',
-    confidenceReason: typeof lead.confidenceReason === 'string' ? lead.confidenceReason : '',
-    assumptions: Array.isArray(lead.assumptions) ? lead.assumptions.filter(a => typeof a === 'string') : [],
-    eventType: typeof lead.eventType === 'string' ? lead.eventType : ''
-  }));
+  ).map(lead => {
+    const confidence = ['HIGH', 'MEDIUM', 'LOW'].includes(lead.confidence) ? lead.confidence : 'MEDIUM';
+    // Score cap 강제 적용: LOW → 65, MEDIUM → 80
+    let score = Number(lead.score) || 0;
+    if (confidence === 'LOW' && score > 65) score = 65;
+    if (confidence === 'MEDIUM' && score > 80) score = 80;
+    const grade = score >= 80 ? 'A' : score >= 50 ? 'B' : 'C';
+    return {
+      ...lead,
+      score,
+      grade,
+      sources: Array.isArray(lead.sources) ? lead.sources.filter(s => s && s.title && s.url) : [],
+      evidence: Array.isArray(lead.evidence) ? lead.evidence.filter(e => e && e.field) : [],
+      confidence,
+      confidenceReason: typeof lead.confidenceReason === 'string' ? lead.confidenceReason : '',
+      assumptions: Array.isArray(lead.assumptions) ? lead.assumptions.filter(a => typeof a === 'string') : [],
+      eventType: typeof lead.eventType === 'string' ? lead.eventType : ''
+    };
+  });
 }
 
 // ===== 셀프서비스: Rate Limit =====
@@ -1746,6 +1771,7 @@ async function handleSelfServiceAnalyze(request, env, ctx) {
   let profile = null;
   let profileMode = 'ai';
   let articles = [];
+  let bodyHitRate = 0;
   const persistSelfServiceRun = (leads) => {
     if (!env.DB || !Array.isArray(leads) || leads.length === 0) return;
     const ssProfileId = `self-service:${company}`;
@@ -1760,7 +1786,7 @@ async function handleSelfServiceAnalyze(request, env, ctx) {
         type: 'self-service', profileId: ssProfileId, company, industry,
         leadsCount: leads.length, articlesCount: articles.length,
         elapsedSec: Math.round((Date.now() - startTime) / 1000), ipHash,
-        bodyHitRate: typeof bodyHitRate !== 'undefined' ? bodyHitRate : 0
+        bodyHitRate
       })
     ]).catch(() => {});
     if (ctx && ctx.waitUntil) ctx.waitUntil(savePromise);
@@ -1810,7 +1836,7 @@ async function handleSelfServiceAnalyze(request, env, ctx) {
       }
     });
     // 본문 확보율 기록용
-    const bodyHitRate = bodyTargets.length > 0 ? Math.round((bodyHitCount / bodyTargets.length) * 100) : 0;
+    bodyHitRate = bodyTargets.length > 0 ? Math.round((bodyHitCount / bodyTargets.length) * 100) : 0;
 
     const elapsed2 = Date.now() - startTime;
     if (elapsed2 > softDeadlineMs) {
@@ -1838,7 +1864,8 @@ async function handleSelfServiceAnalyze(request, env, ctx) {
           mode: profileMode === 'ai' ? mode : `${mode}+${profileMode}`,
           articles: articles.length,
           leads: leads.length,
-          elapsed: Math.round((Date.now() - startTime) / 1000)
+          elapsed: Math.round((Date.now() - startTime) / 1000),
+          bodyHitRate
         }
       });
     };
