@@ -16,6 +16,14 @@ CREATE TABLE IF NOT EXISTS leads (
   global_context TEXT,
   sources TEXT DEFAULT '[]',
   notes TEXT DEFAULT '',
+  enriched INTEGER DEFAULT 0,
+  article_body TEXT DEFAULT '',
+  action_items TEXT DEFAULT '[]',
+  key_figures TEXT DEFAULT '[]',
+  pain_points TEXT DEFAULT '[]',
+  enriched_at TEXT,
+  follow_up_date TEXT DEFAULT '',
+  estimated_value INTEGER DEFAULT 0,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -45,7 +53,3 @@ CREATE TABLE IF NOT EXISTS status_log (
   changed_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_status_log_lead ON status_log(lead_id);
-
--- Pipeline enhancement columns
-ALTER TABLE leads ADD COLUMN follow_up_date TEXT DEFAULT '';
-ALTER TABLE leads ADD COLUMN estimated_value INTEGER DEFAULT 0;

@@ -83,6 +83,9 @@ export default {
       const leadId = decodeURIComponent(leadDetailMatch[1]);
       const authErr = await verifyAuth(request, env);
       if (authErr) return addCorsHeaders(authErr, origin, env);
+      if (!env.DB) {
+        return new Response('D1 데이터베이스가 설정되지 않았습니다.', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      }
       const lead = await getLeadById(env.DB, leadId);
       if (!lead) return new Response('리드를 찾을 수 없습니다.', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
       const statusLogs = await getStatusLogByLead(env.DB, leadId);
@@ -421,6 +424,14 @@ async function ensureD1Schema(db) {
         global_context TEXT,
         sources TEXT DEFAULT '[]',
         notes TEXT DEFAULT '',
+        enriched INTEGER DEFAULT 0,
+        article_body TEXT DEFAULT '',
+        action_items TEXT DEFAULT '[]',
+        key_figures TEXT DEFAULT '[]',
+        pain_points TEXT DEFAULT '[]',
+        enriched_at TEXT,
+        follow_up_date TEXT DEFAULT '',
+        estimated_value INTEGER DEFAULT 0,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )`),
@@ -785,7 +796,7 @@ async function getDashboardMetrics(db, profileId) {
     db.prepare(`SELECT COUNT(*) as cnt FROM leads${where ? where + ' AND' : ' WHERE'} status = 'WON'`).bind(...bind),
     db.prepare(`SELECT sl.from_status, sl.to_status, sl.changed_at, l.company FROM status_log sl JOIN leads l ON sl.lead_id = l.id${isAll ? '' : ' WHERE l.profile_id = ?'} ORDER BY sl.changed_at DESC LIMIT 10`).bind(...bind),
     db.prepare(`SELECT type, COUNT(*) as cnt, SUM(leads_count) as total_leads FROM analytics${where ? ' WHERE profile_id = ?' : ''} GROUP BY type`).bind(...(isAll ? [] : [profileId])),
-    db.prepare(`SELECT sl.from_status, sl.to_status, sl.changed_at FROM status_log sl JOIN leads l ON sl.lead_id = l.id${isAll ? '' : ' WHERE l.profile_id = ?'} ORDER BY sl.changed_at ASC`).bind(...bind),
+    db.prepare(`SELECT sl.lead_id, sl.from_status, sl.to_status, sl.changed_at FROM status_log sl JOIN leads l ON sl.lead_id = l.id${isAll ? '' : ' WHERE l.profile_id = ?'} ORDER BY sl.changed_at ASC`).bind(...bind),
     db.prepare(`SELECT status, SUM(estimated_value) as total_value FROM leads${where} GROUP BY status`).bind(...bind),
     db.prepare(`SELECT id, company, follow_up_date, status FROM leads${where ? where + ' AND' : ' WHERE'} follow_up_date != '' AND follow_up_date <= ? AND status NOT IN ('WON','LOST') ORDER BY follow_up_date ASC LIMIT 20`).bind(...bind, tomorrow)
   ]);
@@ -829,7 +840,10 @@ async function getDashboardMetrics(db, profileId) {
     // 같은 리드의 이전 진입 시점 찾기
     let entryTime = null;
     for (let j = i - 1; j >= 0; j--) {
-      if (logList[j].to_status === from) { entryTime = logList[j].changed_at; break; }
+      if (logList[j].lead_id === log.lead_id && logList[j].to_status === from) {
+        entryTime = logList[j].changed_at;
+        break;
+      }
     }
     if (entryTime) {
       const days = Math.max(0, (new Date(log.changed_at) - new Date(entryTime)) / (1000 * 60 * 60 * 24));
@@ -984,13 +998,20 @@ async function handleUpdateLead(request, env, leadId) {
     if (dateVal && !/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
       return jsonResponse({ success: false, message: '날짜 형식이 올바르지 않습니다 (YYYY-MM-DD)' }, 400);
     }
+    if (dateVal) {
+      const parsed = new Date(`${dateVal}T00:00:00.000Z`);
+      if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== dateVal) {
+        return jsonResponse({ success: false, message: '유효하지 않은 날짜입니다.' }, 400);
+      }
+    }
     const now = new Date().toISOString();
     await env.DB.prepare('UPDATE leads SET follow_up_date = ?, updated_at = ? WHERE id = ?').bind(dateVal, now, leadId).run();
   }
 
   // estimated_value 업데이트
   if (body.estimated_value !== undefined) {
-    const val = Math.max(0, Math.floor(Number(body.estimated_value) || 0));
+    const parsed = Number(body.estimated_value);
+    const val = Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0;
     const now = new Date().toISOString();
     await env.DB.prepare('UPDATE leads SET estimated_value = ?, updated_at = ? WHERE id = ?').bind(val, now, leadId).run();
   }
@@ -1817,7 +1838,7 @@ function getMainPage(env) {
           <div class="ss-sources">
             <details>
               <summary>출처 (\${lead.sources.length}건)</summary>
-              <ul>\${lead.sources.map(s => \`<li><a href="\${safeUrl(s.url)}" target="_blank" rel="noopener">\${esc(s.title)}</a></li>\`).join('')}</ul>
+              <ul>\${lead.sources.map(s => \`<li><a href="\${safeUrl(s.url)}" target="_blank" rel="noopener noreferrer">\${esc(s.title)}</a></li>\`).join('')}</ul>
             </details>
           </div>\` : ''}
         </div>
@@ -2007,6 +2028,11 @@ function getLeadsPage() {
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
     function safeUrl(u) { if(!u) return '#'; const c=String(u).replace(/[\x00-\x1f\x7f\s]+/g,'').toLowerCase(); if(/^(javascript|data|vbscript|blob):/i.test(c)||/^[/\\]{2}/.test(c)) return '#'; return esc(u); }
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
+    function getToken() { return sessionStorage.getItem('b2b_token') || ''; }
+    function detailLink(leadId) {
+      const token = getToken();
+      return '/leads/' + encodeURIComponent(leadId) + (token ? ('?token=' + encodeURIComponent(token)) : '');
+    }
     function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
 
     const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
@@ -2132,7 +2158,7 @@ function getLeadsPage() {
               <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${esc(lead.grade)}</span>
               \${renderStatusSelect(lead)}
               \${lead.enriched ? '<span class="badge-enriched">심층 분석 완료</span>' : ''}
-              \${lead.id ? \`<a href="/leads/\${encodeURIComponent(lead.id)}" style="color:inherit;text-decoration:none;">\${esc(lead.company)}</a>\` : esc(lead.company)} (\${parseInt(lead.score) || 0}점)
+              \${lead.id ? \`<a href="\${detailLink(lead.id)}" style="color:inherit;text-decoration:none;">\${esc(lead.company)}</a>\` : esc(lead.company)} (\${parseInt(lead.score) || 0}점)
             </h3>
             <div class="lead-info">
               <p><strong>프로젝트:</strong> \${esc(lead.summary)}</p>
@@ -2158,7 +2184,7 @@ function getLeadsPage() {
               <details>
                 <summary>출처 보기 (\${lead.sources.length}건)</summary>
                 <ul>
-                  \${lead.sources.map(s => \`<li><a href="\${safeUrl(s.url)}" target="_blank" rel="noopener">\${esc(s.title)}</a></li>\`).join('')}
+                  \${lead.sources.map(s => \`<li><a href="\${safeUrl(s.url)}" target="_blank" rel="noopener noreferrer">\${esc(s.title)}</a></li>\`).join('')}
                 </ul>
               </details>
             </div>\` : ''}
@@ -2215,7 +2241,7 @@ function getLeadsPage() {
         cards.forEach(l => {
           const fu = l.followUpDate || '';
           const isWarn = fu && fu <= today;
-          html += '<div class="kanban-card' + (isWarn ? ' followup-warn' : '') + '" onclick="location.href=\\'/leads/' + encodeURIComponent(l.id) + '\\'">';
+          html += '<div class="kanban-card' + (isWarn ? ' followup-warn' : '') + '" onclick="location.href=\\'' + detailLink(l.id) + '\\'">';
           html += '<div class="k-company">' + esc(l.company) + '</div>';
           html += '<div class="k-product">' + esc(l.product || l.summary || '-') + '</div>';
           html += '<div class="k-meta">';
@@ -2305,6 +2331,14 @@ function getLeadDetailPage(lead, statusLogs) {
 
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
     function safeUrl(u) { if(!u) return '#'; const c=String(u).replace(/[\\x00-\\x1f\\x7f\\s]+/g,'').toLowerCase(); if(/^(javascript|data|vbscript|blob):/i.test(c)||/^[/\\\\]{2}/.test(c)) return '#'; return esc(u); }
+    const urlState = new URL(window.location.href);
+    const queryToken = urlState.searchParams.get('token') || '';
+    if (queryToken) {
+      sessionStorage.setItem('b2b_token', queryToken);
+      urlState.searchParams.delete('token');
+      const cleanQuery = urlState.searchParams.toString();
+      history.replaceState(null, '', urlState.pathname + (cleanQuery ? ('?' + cleanQuery) : ''));
+    }
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
     function getProfile() { return lead.profileId || 'danfoss'; }
 
@@ -2378,7 +2412,7 @@ function getLeadDetailPage(lead, statusLogs) {
         html += '<h3>출처 (' + lead.sources.length + '건)</h3>';
         html += '<ul style="list-style:none;padding:0;">';
         lead.sources.forEach(s => {
-          html += '<li style="margin:6px 0;"><a href="' + safeUrl(s.url) + '" target="_blank" rel="noopener" style="color:#3498db;text-decoration:none;font-size:13px;">' + esc(s.title) + '</a></li>';
+          html += '<li style="margin:6px 0;"><a href="' + safeUrl(s.url) + '" target="_blank" rel="noopener noreferrer" style="color:#3498db;text-decoration:none;font-size:13px;">' + esc(s.title) + '</a></li>';
         });
         html += '</ul></div>';
       }
@@ -2916,6 +2950,11 @@ function getDashboardPage(env) {
   <script>
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
+    function getToken() { return sessionStorage.getItem('b2b_token') || ''; }
+    function detailLink(leadId) {
+      const token = getToken();
+      return '/leads/' + encodeURIComponent(leadId) + (token ? ('?token=' + encodeURIComponent(token)) : '');
+    }
     const statusLabels = { NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
     const statusColors = { NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' };
     const profileFilter = document.getElementById('profileFilter');
@@ -2981,7 +3020,7 @@ function getDashboardPage(env) {
             const icon = a.isOverdue ? '🔴' : a.isToday ? '🟡' : '🔵';
             const label = a.isOverdue ? '기한 초과' : a.isToday ? '오늘' : '내일';
             html += \`<li style="border-left:3px solid \${a.isOverdue ? '#e74c3c' : '#f39c12'};padding-left:12px;">
-              \${icon} <a href="/leads/\${encodeURIComponent(a.id)}" style="color:#e94560;text-decoration:none;font-weight:bold;">\${esc(a.company)}</a>
+              \${icon} <a href="\${detailLink(a.id)}" style="color:#e94560;text-decoration:none;font-weight:bold;">\${esc(a.company)}</a>
               <span style="color:#888;font-size:11px;margin-left:8px;">\${esc(a.followUpDate)} (\${label})</span>
               <span class="badge badge-status \${(a.status||'').toLowerCase()}" style="font-size:10px;padding:1px 6px;margin-left:6px;">\${esc(statusLabels[a.status] || a.status)}</span>
             </li>\`;

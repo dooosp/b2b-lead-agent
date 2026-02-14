@@ -238,6 +238,33 @@ async function testEnrichRoutesAvailability() {
   );
 }
 
+// T10: 상세 페이지 인증/링크 검증
+async function testLeadDetailAuthFlow() {
+  const leadsResp = await apiRequest('/api/leads?profile=danfoss');
+  const leadsData = await leadsResp.json();
+  if (!leadsData.leads?.length || !leadsData.leads[0]?.id) {
+    log('T10 상세 페이지 테스트 준비', false, '리드 없음');
+    return;
+  }
+
+  const leadId = leadsData.leads[0].id;
+  const noTokenResp = await fetch(BASE + '/leads/' + encodeURIComponent(leadId));
+  log('T10 상세 페이지 인증 필요', noTokenResp.status === 401, `status=${noTokenResp.status}`);
+
+  const withTokenResp = await fetch(BASE + '/leads/' + encodeURIComponent(leadId) + '?token=' + encodeURIComponent(TOKEN));
+  const withTokenHtml = await withTokenResp.text();
+  log('T10 상세 페이지 토큰 접근', withTokenResp.status === 200 && withTokenHtml.includes('detailContent'), `status=${withTokenResp.status}`);
+
+  await page.goto(BASE + '/leads?profile=danfoss');
+  await page.waitForFunction(() => {
+    const el = document.querySelector('#leadsList');
+    return !!el && !String(el.textContent || '').includes('로딩 중');
+  }, { timeout: 15000 }).catch(() => {});
+  const pageHtml = await page.content();
+  const hasTokenizedLinkLogic = pageHtml.includes('function detailLink') && pageHtml.includes('?token=');
+  log('T10 상세 링크 토큰 로직 포함', hasTokenizedLinkLogic);
+}
+
 async function run() {
   console.log('=== B2B Lead Agent E2E Tests ===\n');
   await setup();
@@ -251,6 +278,7 @@ async function run() {
   await testInvalidTransition();
   await testProfileValidation();
   await testEnrichRoutesAvailability();
+  await testLeadDetailAuthFlow();
 
   await browser.close();
 
