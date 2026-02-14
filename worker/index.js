@@ -1,5 +1,5 @@
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const origin = request.headers.get('Origin');
 
@@ -19,7 +19,7 @@ export default {
     if (url.pathname === '/api/analyze' && request.method === 'POST') {
       const rlErr = await checkSelfServiceRateLimit(request, env);
       if (rlErr) return addCorsHeaders(rlErr, origin, env);
-      return addCorsHeaders(await handleSelfServiceAnalyze(request, env), origin, env);
+      return addCorsHeaders(await handleSelfServiceAnalyze(request, env, ctx), origin, env);
     }
 
     // /trigger는 Bearer token 또는 body password 허용 (하위 호환)
@@ -63,6 +63,32 @@ export default {
     }
     if (url.pathname === '/api/export/csv' && request.method === 'GET') {
       return addCorsHeaders(await handleExportCSV(request, env), origin, env);
+    }
+    // Reference Library API
+    if (url.pathname === '/api/references' && request.method === 'GET') {
+      const authErr = await verifyAuth(request, env);
+      if (authErr) return addCorsHeaders(authErr, origin, env);
+      const profile = url.searchParams.get('profile') || '';
+      const category = url.searchParams.get('category') || '';
+      const refs = await getReferencesByProfileCategory(env.DB, profile, category || null);
+      return addCorsHeaders(jsonResponse({ success: true, references: refs }), origin, env);
+    }
+    if (url.pathname === '/api/references' && request.method === 'POST') {
+      const authErr = await verifyAuth(request, env);
+      if (authErr) return addCorsHeaders(authErr, origin, env);
+      const body = await request.json().catch(() => ({}));
+      if (!body.profileId || !body.category || !body.client || !body.project || !body.result) {
+        return addCorsHeaders(jsonResponse({ success: false, message: 'profileId, category, client, project, result 필수' }, 400), origin, env);
+      }
+      await addReference(env.DB, body);
+      return addCorsHeaders(jsonResponse({ success: true, message: '레퍼런스 추가 완료' }), origin, env);
+    }
+    const refDeleteMatch = url.pathname.match(/^\/api\/references\/(\d+)$/);
+    if (refDeleteMatch && request.method === 'DELETE') {
+      const authErr = await verifyAuth(request, env);
+      if (authErr) return addCorsHeaders(authErr, origin, env);
+      await deleteReference(env.DB, Number(refDeleteMatch[1]));
+      return addCorsHeaders(jsonResponse({ success: true, message: '레퍼런스 삭제 완료' }), origin, env);
     }
     // PWA
     if (url.pathname === '/manifest.json') {
@@ -367,16 +393,24 @@ ${userMessage || '안녕하세요. 귀사의 프로젝트에 대해 제안드리
 // ===== Gemini API 호출 =====
 
 async function callGemini(prompt, env) {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
-    }
-  );
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 25000);
+  let response;
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      }
+    );
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!response.ok) {
     const errText = await response.text();
@@ -468,17 +502,166 @@ async function ensureD1Schema(db) {
         "ALTER TABLE leads ADD COLUMN pain_points TEXT DEFAULT '[]'",
         "ALTER TABLE leads ADD COLUMN enriched_at TEXT",
         "ALTER TABLE leads ADD COLUMN follow_up_date TEXT DEFAULT ''",
-        "ALTER TABLE leads ADD COLUMN estimated_value INTEGER DEFAULT 0"
+        "ALTER TABLE leads ADD COLUMN estimated_value INTEGER DEFAULT 0",
+        "ALTER TABLE leads ADD COLUMN meddic TEXT DEFAULT '{}'",
+        "ALTER TABLE leads ADD COLUMN competitive TEXT DEFAULT '{}'",
+        "ALTER TABLE leads ADD COLUMN buying_signals TEXT DEFAULT '[]'",
+        "ALTER TABLE leads ADD COLUMN score_reason TEXT DEFAULT ''",
+        "ALTER TABLE leads ADD COLUMN urgency TEXT DEFAULT ''",
+        "ALTER TABLE leads ADD COLUMN urgency_reason TEXT DEFAULT ''",
+        "ALTER TABLE leads ADD COLUMN buyer_role TEXT DEFAULT ''",
+        "ALTER TABLE leads ADD COLUMN evidence TEXT DEFAULT '[]'",
+        "ALTER TABLE leads ADD COLUMN confidence TEXT DEFAULT ''",
+        "ALTER TABLE leads ADD COLUMN confidence_reason TEXT DEFAULT ''",
+        "ALTER TABLE leads ADD COLUMN assumptions TEXT DEFAULT '[]'",
+        "ALTER TABLE leads ADD COLUMN event_type TEXT DEFAULT ''"
       ];
       for (const sql of alterCols) {
         try { await db.prepare(sql).run(); } catch { /* column already exists */ }
       }
+      // reference_library 테이블
+      await db.prepare(`CREATE TABLE IF NOT EXISTS reference_library (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        profile_id TEXT NOT NULL,
+        category TEXT NOT NULL,
+        client TEXT NOT NULL,
+        project TEXT NOT NULL,
+        result TEXT NOT NULL,
+        source_url TEXT DEFAULT '',
+        region TEXT DEFAULT '',
+        verified_at TEXT DEFAULT '',
+        created_at TEXT NOT NULL
+      )`).run();
+      try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_ref_profile_cat ON reference_library(profile_id, category)').run(); } catch { /* index exists */ }
     }).catch((err) => {
       d1SchemaReadyPromise = null;
       throw err;
     });
   }
   await d1SchemaReadyPromise;
+}
+
+// ===== Reference Library =====
+
+async function getReferencesByProfileCategory(db, profileId, category) {
+  if (!db) return [];
+  await ensureD1Schema(db);
+  let sql = 'SELECT * FROM reference_library WHERE profile_id = ?';
+  const params = [profileId];
+  if (category) { sql += ' AND category = ?'; params.push(category); }
+  sql += ' ORDER BY created_at DESC LIMIT 50';
+  const { results } = await db.prepare(sql).bind(...params).all();
+  return results || [];
+}
+
+async function addReference(db, ref) {
+  if (!db) return null;
+  await ensureD1Schema(db);
+  const now = new Date().toISOString();
+  await db.prepare(
+    `INSERT INTO reference_library (profile_id, category, client, project, result, source_url, region, verified_at, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(ref.profileId, ref.category, ref.client, ref.project, ref.result, ref.sourceUrl || '', ref.region || '', ref.verifiedAt || '', now).run();
+  return true;
+}
+
+async function deleteReference(db, id) {
+  if (!db) return false;
+  await ensureD1Schema(db);
+  await db.prepare('DELETE FROM reference_library WHERE id = ?').bind(id).run();
+  return true;
+}
+
+async function seedReferencesFromProfiles(db, profilesJson) {
+  if (!db) return;
+  await ensureD1Schema(db);
+  // 이미 시딩되었는지 확인
+  const { results } = await db.prepare('SELECT COUNT(*) as cnt FROM reference_library').all();
+  if (results && results[0] && results[0].cnt > 0) return;
+
+  const SEED_DATA = {
+    danfoss: {
+      marine: [
+        { client: 'Maersk (덴마크)', project: '컨테이너선 300척 하이브리드 추진 시스템 도입', result: '연료비 18% 절감, IMO 2030 규제 선제 대응', region: 'EU' },
+        { client: 'MSC (스위스)', project: 'LNG 운반선 iC7 드라이브 적용', result: '탄소 배출 25% 감소, CII 등급 A 달성', region: 'EU' },
+        { client: 'NYK Line (일본)', project: '친환경 선박 플릿 현대화', result: 'EEXI 규제 100% 충족, 연간 $2M 연료비 절감', region: 'APAC' }
+      ],
+      datacenter: [
+        { client: 'Equinix (미국)', project: '글로벌 데이터센터 Turbocor 표준화', result: 'PUE 1.58→1.25 개선, 냉각 전력 40% 절감', region: 'US' },
+        { client: 'Digital Realty (미국)', project: '아시아 데이터센터 냉각 시스템 교체', result: '연간 운영비 $1.5M 절감', region: 'US' },
+        { client: 'NTT (일본)', project: '도쿄 DC 오일리스 칠러 도입', result: '유지보수 비용 60% 감소, 가동률 99.99%', region: 'APAC' }
+      ],
+      factory: [
+        { client: 'Volkswagen (독일)', project: 'EV 배터리 공장 VLT 드라이브 적용', result: '생산 라인 에너지 35% 절감', region: 'EU' },
+        { client: 'TSMC (대만)', project: '반도체 클린룸 HVAC 최적화', result: '공조 전력 28% 절감, 정밀 온습도 제어', region: 'APAC' },
+        { client: 'Samsung SDI (한국)', project: '헝가리 배터리 공장 자동화', result: '모터 효율 25% 향상, RE100 달성 기여', region: 'KR' }
+      ],
+      coldchain: [
+        { client: 'Lineage Logistics (미국)', project: '세계 최대 냉동창고 Turbocor 도입', result: '에너지 비용 32% 절감', region: 'US' },
+        { client: 'Pfizer (미국)', project: '백신 콜드체인 정밀 온도 제어', result: '-70°C 유지 안정성 99.9%, FDA 승인', region: 'US' },
+        { client: 'CJ대한통운 (한국)', project: '신선식품 물류센터 현대화', result: '냉각 효율 30% 개선, 식품 손실률 50% 감소', region: 'KR' }
+      ]
+    },
+    'ls-electric': {
+      power: [
+        { client: 'Saudi Aramco (사우디)', project: '자나인 변전소 GIS 공급', result: '중동 최대 154kV GIS 납품, 3년 무장애 운영', region: 'ME' },
+        { client: 'KEPCO (한국)', project: '345kV 변전소 현대화', result: '설치면적 60% 축소, 연간 유지비 40% 절감', region: 'KR' },
+        { client: 'PLN (인도네시아)', project: '자카르타 배전망 현대화', result: '정전율 35% 감소, 전력손실 8% 개선', region: 'APAC' }
+      ],
+      automation: [
+        { client: 'LG에너지솔루션 (한국)', project: '배터리 공장 XGT PLC 표준화', result: '생산 사이클 15% 단축, 불량률 절반', region: 'KR' },
+        { client: '포스코 (한국)', project: '제철소 서보 드라이브 교체', result: '정밀도 향상, 에너지 22% 절감', region: 'KR' },
+        { client: 'Hyundai Motors (한국)', project: 'EV 조립 라인 자동화', result: 'UPH 20% 향상, 다품종 유연 생산', region: 'KR' }
+      ],
+      green: [
+        { client: 'Hanwha Q Cells (한국)', project: '100MW 태양광 발전소 인버터 공급', result: '변환효율 98.6%, 10년 무상 보증', region: 'KR' },
+        { client: '한국전력 (한국)', project: '제주 ESS 실증 프로젝트', result: '신재생 출력 변동 80% 안정화', region: 'KR' },
+        { client: 'SK E&S (한국)', project: 'EV 충전 인프라 350kW 급속충전', result: '충전 시간 18분, 가동률 99.5%', region: 'KR' }
+      ],
+      grid: [
+        { client: 'State Grid (중국)', project: 'HVDC 송전 프로젝트', result: '전력 손실 3% 미만, 500km 장거리 송전', region: 'APAC' },
+        { client: 'KEPCO (한국)', project: 'STATCOM 전력품질 개선', result: '전압 변동 90% 감소, 플리커 해소', region: 'KR' },
+        { client: 'EGAT (태국)', project: '방콕 전력망 SVC 설치', result: '역률 0.99 달성, 계통 안정성 확보', region: 'APAC' }
+      ]
+    }
+  };
+
+  const now = new Date().toISOString();
+  const stmts = [];
+  for (const [profileId, categories] of Object.entries(SEED_DATA)) {
+    for (const [category, refs] of Object.entries(categories)) {
+      for (const ref of refs) {
+        stmts.push(
+          db.prepare(
+            `INSERT INTO reference_library (profile_id, category, client, project, result, source_url, region, verified_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          ).bind(profileId, category, ref.client, ref.project, ref.result, '', ref.region || '', '', now)
+        );
+      }
+    }
+  }
+  if (stmts.length > 0) await db.batch(stmts);
+}
+
+async function getReferencesForPrompt(db, profileId, categories) {
+  if (!db || !profileId) return '';
+  try {
+    await seedReferencesFromProfiles(db);
+    const cats = Array.isArray(categories) ? categories : [];
+    let allRefs = [];
+    for (const cat of cats) {
+      const refs = await getReferencesByProfileCategory(db, profileId, cat);
+      if (refs.length > 0) {
+        const caseList = refs.slice(0, 3).map(r => {
+          const sourceNote = r.source_url ? `(출처: ${r.source_url})` : '(출처 미확인)';
+          return `  • ${r.client}: ${r.project} → ${r.result} ${sourceNote}`;
+        }).join('\n');
+        allRefs.push(`[${cat.toUpperCase()}]\n${caseList}`);
+      }
+    }
+    return allRefs.join('\n\n');
+  } catch {
+    return '';
+  }
 }
 
 function rowToLead(row) {
@@ -503,6 +686,18 @@ function rowToLead(row) {
     actionItems: (() => { try { return JSON.parse(row.action_items || '[]'); } catch { return []; } })(),
     keyFigures: (() => { try { return JSON.parse(row.key_figures || '[]'); } catch { return []; } })(),
     painPoints: (() => { try { return JSON.parse(row.pain_points || '[]'); } catch { return []; } })(),
+    meddic: (() => { try { return JSON.parse(row.meddic || '{}'); } catch { return {}; } })(),
+    competitive: (() => { try { return JSON.parse(row.competitive || '{}'); } catch { return {}; } })(),
+    buyingSignals: (() => { try { return JSON.parse(row.buying_signals || '[]'); } catch { return []; } })(),
+    scoreReason: row.score_reason || '',
+    urgency: row.urgency || '',
+    urgencyReason: row.urgency_reason || '',
+    buyerRole: row.buyer_role || '',
+    evidence: (() => { try { return JSON.parse(row.evidence || '[]'); } catch { return []; } })(),
+    confidence: row.confidence || '',
+    confidenceReason: row.confidence_reason || '',
+    assumptions: (() => { try { return JSON.parse(row.assumptions || '[]'); } catch { return []; } })(),
+    eventType: row.event_type || '',
     enrichedAt: row.enriched_at || null,
     followUpDate: row.follow_up_date || '',
     estimatedValue: Number(row.estimated_value) || 0,
@@ -529,6 +724,15 @@ function leadToRow(lead, profileId, source) {
     global_context: lead.globalContext || '',
     sources: JSON.stringify(Array.isArray(lead.sources) ? lead.sources : []),
     notes: lead.notes || '',
+    score_reason: lead.scoreReason || '',
+    urgency: lead.urgency || '',
+    urgency_reason: lead.urgencyReason || '',
+    buyer_role: lead.buyerRole || '',
+    evidence: JSON.stringify(Array.isArray(lead.evidence) ? lead.evidence : []),
+    confidence: lead.confidence || '',
+    confidence_reason: lead.confidenceReason || '',
+    assumptions: JSON.stringify(Array.isArray(lead.assumptions) ? lead.assumptions : []),
+    event_type: lead.eventType || '',
     created_at: lead.createdAt || now,
     updated_at: lead.updatedAt || now
   };
@@ -538,16 +742,21 @@ async function saveLeadsBatch(db, leads, profileId, source) {
   if (!db || !leads || leads.length === 0) return;
   await ensureD1Schema(db);
   const stmt = db.prepare(
-    `INSERT INTO leads (id, profile_id, source, status, company, summary, product, score, grade, roi, sales_pitch, global_context, sources, notes, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO leads (id, profile_id, source, status, company, summary, product, score, grade, roi, sales_pitch, global_context, sources, notes, score_reason, urgency, urgency_reason, buyer_role, evidence, confidence, confidence_reason, assumptions, event_type, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        summary=excluded.summary, product=excluded.product, score=excluded.score,
        grade=excluded.grade, roi=excluded.roi, sales_pitch=excluded.sales_pitch,
-       global_context=excluded.global_context, sources=excluded.sources, updated_at=excluded.updated_at`
+       global_context=excluded.global_context, sources=excluded.sources,
+       score_reason=excluded.score_reason, urgency=excluded.urgency,
+       urgency_reason=excluded.urgency_reason, buyer_role=excluded.buyer_role,
+       evidence=excluded.evidence, confidence=excluded.confidence,
+       confidence_reason=excluded.confidence_reason, assumptions=excluded.assumptions,
+       event_type=excluded.event_type, updated_at=excluded.updated_at`
   );
   const batch = leads.map(lead => {
     const r = leadToRow(lead, profileId, source);
-    return stmt.bind(r.id, r.profile_id, r.source, r.status, r.company, r.summary, r.product, r.score, r.grade, r.roi, r.sales_pitch, r.global_context, r.sources, r.notes, r.created_at, r.updated_at);
+    return stmt.bind(r.id, r.profile_id, r.source, r.status, r.company, r.summary, r.product, r.score, r.grade, r.roi, r.sales_pitch, r.global_context, r.sources, r.notes, r.score_reason, r.urgency, r.urgency_reason, r.buyer_role, r.evidence, r.confidence, r.confidence_reason, r.assumptions, r.event_type, r.created_at, r.updated_at);
   });
   await db.batch(batch);
 }
@@ -681,36 +890,31 @@ function extractBodyFromHTML(html) {
 
 async function callGeminiEnrich(lead, articleBody, env) {
   const hasBody = articleBody && articleBody.length > 50;
-  const prompt = `You are a B2B sales intelligence analyst. Analyze this lead and provide deep enrichment.
+  const prompt = `B2B 영업 인텔리전스 분석가로서 MEDDIC 기반 심층 분석을 수행하라.
 
-## Lead Info
-- Company: ${lead.company}
-- Summary: ${lead.summary || 'N/A'}
-- Product: ${lead.product || 'N/A'}
-- Current ROI: ${lead.roi || 'N/A'}
-- Current Sales Pitch: ${lead.salesPitch || 'N/A'}
+[리드]
+회사: ${lead.company} | 요약: ${lead.summary || 'N/A'} | 제품: ${lead.product || 'N/A'} | ROI: ${lead.roi || 'N/A'}
 
-${hasBody ? `## Article Body (source material)\n${articleBody}` : '## Note: No article body available. Analyze based on the lead title/summary only, but clearly indicate this limitation.'}
+${hasBody ? `[기사 본문]\n${articleBody}` : '[기사 본문 없음 — 리드 요약만으로 분석하되 dataGaps에 "기사 본문 미확보"를 명시]'}
 
-## Task (Chain-of-Thought)
-1. Extract key figures (numbers, percentages, financial data, capacity, timeline)
-2. Identify pain points (challenges, problems, needs mentioned or implied)
-3. Connect to recommended product — how specifically does it solve the pain points?
-4. Calculate realistic ROI with concrete numbers (not generic)
-5. Generate actionable next steps for the sales team
+[분석 지시]
+1. 수치 추출: 기사에서 발견한 숫자(금액·용량·면적·전력·일정·인원)를 keyFigures에 나열. 발견 못하면 빈 배열.
+2. 페인포인트: 가능하면 금액/시간으로 정량화. 정량 불가능하면 정성적으로 작성.
+3. ROI 분석:
+   a) keyFigures에서 발견한 숫자가 있으면: 산업 평균 절감률(%) + 발견 숫자로 ROI 범위를 계산.
+      형식: "투자 추정 X~Y억 → 절감 추정 A~B억/년 (Payback N~M년)"
+   b) 숫자가 없으면: "정량 데이터 부족 — 유사 사례 기준 절감률 N~M% 예상" 형태로만 작성.
+      절대로 구체 금액을 창작하지 말 것.
+   c) assumptions에 ROI 산출에 사용한 모든 가정을 나열.
+4. SPIN 영업제안(현황→문제→영향→가치)
+5. 1주/1개월/3개월 후속조치(부서·직급 명시)
+6. MEDDIC(예산·의사결정·니즈·타임라인·프로세스·챔피언)
+7. 경쟁환경(현재벤더·경쟁사·차별점·전환장벽)
+8. evidence: 분석의 주요 근거를 기사 원문에서 직접 인용. 각 항목에 대상 필드(summary/roi/meddic 등), 인용 문장, 출처 URL 포함.
+9. dataGaps: 분석에 필요하지만 확인 불가능한 정보 목록 (예: "예산 규모 미확인", "의사결정자 미파악")
 
-## Output JSON (strict format, Korean)
-{
-  "summary": "개선된 1-2문장 요약 (구체적 수치 포함)",
-  "roi": "구체적 ROI 분석 (숫자 기반, 예: '연간 15억원 에너지 비용 중 20% 절감 가능 → 3억원')",
-  "salesPitch": "고객 과제를 먼저 언급하고, 정량적 해결 방안과 레퍼런스를 포함한 3문장 영업 제안",
-  "globalContext": "글로벌 시장/기술 트렌드와의 연결 (구체적 사례나 수치)",
-  "actionItems": ["1주 내 실행 가능한 후속 조치 (담당 부서/직급 포함)", "...", "..."],
-  "keyFigures": ["수치1: 설명", "수치2: 설명"],
-  "painPoints": ["비용/규제/경쟁/기술 관점의 구체적 과제 (정량 수치 포함)", "..."]
-}
-
-Return ONLY valid JSON, no markdown fences.`;
+[출력] 아래 JSON만 반환. 한국어. 마크다운 펜스 없이.
+{"summary":"프로젝트명·규모·일정 포함 2문장","roi":"위 정책대로 작성","salesPitch":"[현황]→[문제]→[영향]→[가치] 3문장","globalContext":"글로벌 트렌드","actionItems":["[1주] 구체적 조치","[1개월] 조치","[3개월] 조치"],"keyFigures":["발견 숫자: 설명"],"painPoints":["과제: 가능하면 정량 수치 포함"],"meddic":{"budget":"예산규모+근거","authority":"의사결정 구조","need":"핵심니즈","timeline":"구매타임라인","decisionProcess":"구매프로세스","champion":"챔피언후보"},"competitive":{"currentVendor":"현재벤더","competitors":"경쟁사","ourAdvantage":"차별점","switchBarrier":"전환장벽+극복방안"},"buyingSignals":["구매신호1"],"evidence":[{"field":"근거 대상 필드","quote":"기사 원문 인용","sourceUrl":"URL"}],"assumptions":["ROI 가정1","가정2"],"dataGaps":["미확인 정보1"]}`;
 
   const raw = await callGemini(prompt, env);
   const jsonStr = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
@@ -738,17 +942,45 @@ function clampText(value, fallback = '', maxLen = 800) {
   return fb.slice(0, maxLen);
 }
 
+function normalizeObjectField(value) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value;
+  return {};
+}
+
+function normalizeEvidenceArray(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(e => e && typeof e === 'object' && typeof e.field === 'string')
+    .map(e => ({
+      field: (e.field || '').slice(0, 50),
+      quote: (typeof e.quote === 'string' ? e.quote : '').slice(0, 500),
+      sourceUrl: (typeof e.sourceUrl === 'string' ? e.sourceUrl : '').slice(0, 500)
+    }))
+    .slice(0, 10);
+}
+
 function normalizeEnrichData(enrichData, lead) {
   const data = enrichData && typeof enrichData === 'object' ? enrichData : {};
-  return {
+  const normalized = {
     summary: clampText(data.summary, lead.summary, 500),
-    roi: clampText(data.roi, lead.roi, 500),
-    salesPitch: clampText(data.salesPitch, lead.salesPitch, 700),
+    roi: clampText(data.roi, lead.roi, 800),
+    salesPitch: clampText(data.salesPitch, lead.salesPitch, 1000),
     globalContext: clampText(data.globalContext, lead.globalContext, 700),
     actionItems: normalizeStringArray(data.actionItems, 10),
     keyFigures: normalizeStringArray(data.keyFigures, 10),
-    painPoints: normalizeStringArray(data.painPoints, 10)
+    painPoints: normalizeStringArray(data.painPoints, 10),
+    meddic: normalizeObjectField(data.meddic),
+    competitive: normalizeObjectField(data.competitive),
+    buyingSignals: normalizeStringArray(data.buyingSignals, 10),
+    evidence: normalizeEvidenceArray(data.evidence),
+    assumptions: normalizeStringArray(data.assumptions, 10),
+    dataGaps: normalizeStringArray(data.dataGaps, 10)
   };
+  // ROI에 숫자가 있는데 assumptions가 비어있으면 경고 플래그
+  if (normalized.roi && /\d/.test(normalized.roi) && normalized.assumptions.length === 0) {
+    normalized.assumptions.push('(시스템 경고: ROI에 숫자가 포함되었으나 가정이 명시되지 않음)');
+  }
+  return normalized;
 }
 
 async function updateLeadEnrichment(db, id, enrichData, articleBody) {
@@ -760,11 +992,15 @@ async function updateLeadEnrichment(db, id, enrichData, articleBody) {
       enriched = 1,
       summary = ?, roi = ?, sales_pitch = ?, global_context = ?,
       article_body = ?, action_items = ?, key_figures = ?, pain_points = ?,
+      meddic = ?, competitive = ?, buying_signals = ?,
+      evidence = ?, assumptions = ?,
       enriched_at = ?, updated_at = ?
     WHERE id = ?`
   ).bind(
     enrichData.summary || '', enrichData.roi || '', enrichData.salesPitch || '', enrichData.globalContext || '',
     articleBody || '', JSON.stringify(enrichData.actionItems || []), JSON.stringify(enrichData.keyFigures || []), JSON.stringify(enrichData.painPoints || []),
+    JSON.stringify(enrichData.meddic || {}), JSON.stringify(enrichData.competitive || {}), JSON.stringify(enrichData.buyingSignals || []),
+    JSON.stringify(enrichData.evidence || []), JSON.stringify(enrichData.assumptions || []),
     now, now, id
   ).run();
   return true;
@@ -1380,8 +1616,14 @@ async function analyzeLeadsWorker(articles, profile, env) {
   if (articles.length === 0) return [];
 
   const newsList = articles.map((a, i) => {
-    return `${i + 1}. [${a.source}] ${a.title} (URL: ${a.link}) (검색키워드: ${a.query})`;
-  }).join('\n');
+    let entry = `${i + 1}. [${a.source}] ${a.title} (URL: ${a.link}) (검색키워드: ${a.query})`;
+    if (a._hasBody && a._body) {
+      entry += `\n   [본문 확보] ${a._body.slice(0, 800)}`;
+    } else {
+      entry += `\n   [본문 미확보 — 제목 기반만 분석 가능]`;
+    }
+    return entry;
+  }).join('\n\n');
 
   const knowledgeBase = profile.productKnowledge
     ? Object.entries(profile.productKnowledge)
@@ -1408,10 +1650,22 @@ ${productLineup}
 [경쟁사]
 ${(profile.competitors || []).join(', ')}
 
-[스코어링]
-- Grade A (80-100점): 구체적 착공/수주/예산 언급
-- Grade B (50-79점): 산업 트렌드로 수요 예상
+[스코어링 기준 — BANT 기반]
+- Grade A (80-100점): 구체적 착공/수주/예산 확정, 발주 타임라인 명시, 의사결정자 언급
+- Grade B (50-79점): 산업 트렌드/계획 단계, 예산 미확정이나 수요 예상
 - Grade C (0-49점): 제외
+각 등급 판정 시 근거를 반드시 포함할 것.
+
+[본문 미확보 기사 처리 정책]
+- [본문 미확보]로 표시된 기사는 제목과 키워드만으로 분석하되, confidence를 "LOW"로 설정하세요.
+- 본문 미확보 기사는 score를 최대 65점으로 제한하세요 (Grade B 이하).
+- evidence 배열은 비워두세요 (근거 인용 불가).
+- confidenceReason에 "기사 본문 미확보, 제목 기반 분석"을 명시하세요.
+
+[ROI 작성 정책]
+- 기사 본문에서 발견한 구체 숫자(금액/면적/용량 등)가 있으면: 산업 평균 절감률 + 발견 숫자로 ROI 범위를 산출하세요.
+- 숫자가 없으면: "정량 데이터 부족 — 유사 사례 기준 절감률 N~M% 예상" 형태로만 작성하세요. 구체 금액을 창작하지 마세요.
+- assumptions에 ROI 산출에 사용한 모든 가정을 반드시 나열하세요.
 
 [뉴스 목록]
 ${newsList}
@@ -1421,14 +1675,23 @@ Grade C 제외, A와 B만 JSON 배열로 응답. 다른 텍스트 없이 JSON만
 [
   {
     "company": "타겟 기업명",
-    "summary": "프로젝트 내용 1줄 요약",
+    "summary": "프로젝트명·규모·일정을 포함한 1~2문장",
     "product": "추천 ${profile.name} 제품 1개",
     "score": 75,
     "grade": "B",
-    "roi": "예상 ROI",
-    "salesPitch": "고객 담당자에게 보낼 메일 첫 문장",
+    "scoreReason": "등급 판정 근거 1문장",
+    "roi": "ROI 요약 (숫자 있으면 범위 계산, 없으면 절감률%만)",
+    "salesPitch": "SPIN 구조: 현황→과제→리스크→가치. 2~3문장.",
     "globalContext": "관련 글로벌 정책/트렌드",
-    "sources": [{"title": "기사 제목", "url": "기사 URL"}]
+    "urgency": "HIGH or MEDIUM",
+    "urgencyReason": "긴급도 근거",
+    "buyerRole": "예상 키맨 직급/부서",
+    "sources": [{"title": "기사 제목", "url": "기사 URL"}],
+    "evidence": [{"field": "summary 또는 roi 등 근거 대상 필드", "quote": "기사 본문에서 직접 인용한 문장", "sourceUrl": "해당 기사 URL"}],
+    "confidence": "HIGH 또는 MEDIUM 또는 LOW",
+    "confidenceReason": "신뢰도 판정 근거 (본문 확보 여부, 수치 존재 여부 등)",
+    "assumptions": ["ROI 산출 가정1", "가정2"],
+    "eventType": "착공|증설|수주|규제|입찰|투자|채용|기타"
   }
 ]`;
 
@@ -1439,7 +1702,12 @@ Grade C 제외, A와 B만 JSON 배열로 응답. 다른 텍스트 없이 JSON만
     lead => lead && typeof lead.company === 'string' && typeof lead.score === 'number'
   ).map(lead => ({
     ...lead,
-    sources: Array.isArray(lead.sources) ? lead.sources.filter(s => s && s.title && s.url) : []
+    sources: Array.isArray(lead.sources) ? lead.sources.filter(s => s && s.title && s.url) : [],
+    evidence: Array.isArray(lead.evidence) ? lead.evidence.filter(e => e && e.field) : [],
+    confidence: ['HIGH', 'MEDIUM', 'LOW'].includes(lead.confidence) ? lead.confidence : 'MEDIUM',
+    confidenceReason: typeof lead.confidenceReason === 'string' ? lead.confidenceReason : '',
+    assumptions: Array.isArray(lead.assumptions) ? lead.assumptions.filter(a => typeof a === 'string') : [],
+    eventType: typeof lead.eventType === 'string' ? lead.eventType : ''
   }));
 }
 
@@ -1468,7 +1736,7 @@ async function checkSelfServiceRateLimit(request, env) {
 
 // ===== 셀프서비스: 핸들러 =====
 
-async function handleSelfServiceAnalyze(request, env) {
+async function handleSelfServiceAnalyze(request, env, ctx) {
   const softDeadlineMs = 28500;
   const profileTimeoutMs = 9000;
   const startTime = Date.now();
@@ -1486,14 +1754,16 @@ async function handleSelfServiceAnalyze(request, env) {
     if (ip !== 'unknown') {
       try { ipHash = btoa(ip).slice(0, 12); } catch { ipHash = 'unknown'; }
     }
-    Promise.all([
+    const savePromise = Promise.all([
       saveLeadsBatch(env.DB, leads, ssProfileId, 'self-service'),
       logAnalyticsRun(env.DB, {
         type: 'self-service', profileId: ssProfileId, company, industry,
         leadsCount: leads.length, articlesCount: articles.length,
-        elapsedSec: Math.round((Date.now() - startTime) / 1000), ipHash
+        elapsedSec: Math.round((Date.now() - startTime) / 1000), ipHash,
+        bodyHitRate: typeof bodyHitRate !== 'undefined' ? bodyHitRate : 0
       })
     ]).catch(() => {});
+    if (ctx && ctx.waitUntil) ctx.waitUntil(savePromise);
   };
 
   if (!company || !industry) {
@@ -1523,6 +1793,25 @@ async function handleSelfServiceAnalyze(request, env) {
     // Step 2: 뉴스 수집
     articles = await fetchAllNewsWorker(profile.searchQueries);
     articles = articles.slice(0, 18);
+
+    // Step 2.5: 상위 기사 본문 확보 (병렬, 최대 10개)
+    const bodyTargets = articles.slice(0, 10);
+    const bodyResults = await Promise.allSettled(
+      bodyTargets.map(a => fetchArticleBodyWorker(a.link))
+    );
+    let bodyHitCount = 0;
+    bodyResults.forEach((r, i) => {
+      if (r.status === 'fulfilled' && r.value && r.value.length > 50) {
+        bodyTargets[i]._body = r.value;
+        bodyTargets[i]._hasBody = true;
+        bodyHitCount++;
+      } else {
+        bodyTargets[i]._hasBody = false;
+      }
+    });
+    // 본문 확보율 기록용
+    const bodyHitRate = bodyTargets.length > 0 ? Math.round((bodyHitCount / bodyTargets.length) * 100) : 0;
+
     const elapsed2 = Date.now() - startTime;
     if (elapsed2 > softDeadlineMs) {
       return jsonResponse({ success: false, message: '시간 초과: 뉴스 수집에 시간이 오래 걸렸습니다. 다시 시도하세요.' }, 504);
@@ -2160,9 +2449,18 @@ function getLeadsPage() {
               \${lead.enriched ? '<span class="badge-enriched">심층 분석 완료</span>' : ''}
               \${lead.id ? \`<a href="\${detailLink(lead.id)}" style="color:inherit;text-decoration:none;">\${esc(lead.company)}</a>\` : esc(lead.company)} (\${parseInt(lead.score) || 0}점)
             </h3>
+            <div style="margin:6px 0;display:flex;gap:6px;flex-wrap:wrap;">
+              \${lead.urgency ? \`<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;color:#fff;background:\${lead.urgency === 'HIGH' ? '#e74c3c' : '#f39c12'};">\${lead.urgency === 'HIGH' ? '긴급' : '보통'}</span>\` : ''}
+              \${lead.confidence ? \`<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;color:#fff;background:\${lead.confidence === 'HIGH' ? '#27ae60' : lead.confidence === 'MEDIUM' ? '#f39c12' : '#e74c3c'};">신뢰도 \${lead.confidence}</span>\` : ''}
+              \${lead.eventType ? \`<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;color:#666;border:1px solid #ddd;">\${esc(lead.eventType)}</span>\` : ''}
+            </div>
+            \${lead.urgencyReason ? \`<div style="color:#aaa;font-size:11px;margin-bottom:4px;">\${esc(lead.urgencyReason)}</div>\` : ''}
+            \${lead.confidenceReason ? \`<div style="color:#aaa;font-size:11px;margin-bottom:4px;">신뢰도 근거: \${esc(lead.confidenceReason)}</div>\` : ''}
             <div class="lead-info">
               <p><strong>프로젝트:</strong> \${esc(lead.summary)}</p>
               <p><strong>추천 제품:</strong> \${esc(lead.product)}</p>
+              \${lead.buyerRole ? \`<p><strong>예상 키맨:</strong> \${esc(lead.buyerRole)}</p>\` : ''}
+              \${lead.scoreReason ? \`<p><strong>등급 근거:</strong> \${esc(lead.scoreReason)}</p>\` : ''}
               <p><strong>예상 ROI:</strong> \${esc(lead.roi) || '-'}</p>
               <p><strong>영업 제안:</strong> \${esc(lead.salesPitch)}</p>
               <p><strong>글로벌 트렌드:</strong> \${esc(lead.globalContext) || '-'}</p>
@@ -2173,8 +2471,25 @@ function getLeadsPage() {
                 <summary>심층 분석 상세 보기</summary>
                 <div class="enriched-content">
                   \${lead.keyFigures && lead.keyFigures.length > 0 ? \`<div class="enriched-block"><h4>핵심 수치</h4><ul>\${lead.keyFigures.map(f => \`<li>\${esc(f)}</li>\`).join('')}</ul></div>\` : ''}
-                  \${lead.painPoints && lead.painPoints.length > 0 ? \`<div class="enriched-block"><h4>고객 과제</h4><ul>\${lead.painPoints.map(p => \`<li>\${esc(p)}</li>\`).join('')}</ul></div>\` : ''}
+                  \${lead.painPoints && lead.painPoints.length > 0 ? \`<div class="enriched-block"><h4>고객 과제 (정량)</h4><ul>\${lead.painPoints.map(p => \`<li>\${esc(p)}</li>\`).join('')}</ul></div>\` : ''}
                   \${lead.actionItems && lead.actionItems.length > 0 ? \`<div class="enriched-block"><h4>후속 실행 항목</h4><ul>\${lead.actionItems.map(a => \`<li>\${esc(a)}</li>\`).join('')}</ul></div>\` : ''}
+                  \${lead.meddic && Object.keys(lead.meddic).length > 0 ? \`<div class="enriched-block"><h4>MEDDIC 분석</h4><ul>
+                    \${lead.meddic.budget ? \`<li><strong>예산:</strong> \${esc(lead.meddic.budget)}</li>\` : ''}
+                    \${lead.meddic.authority ? \`<li><strong>의사결정:</strong> \${esc(lead.meddic.authority)}</li>\` : ''}
+                    \${lead.meddic.need ? \`<li><strong>핵심 니즈:</strong> \${esc(lead.meddic.need)}</li>\` : ''}
+                    \${lead.meddic.timeline ? \`<li><strong>타임라인:</strong> \${esc(lead.meddic.timeline)}</li>\` : ''}
+                    \${lead.meddic.decisionProcess ? \`<li><strong>구매 프로세스:</strong> \${esc(lead.meddic.decisionProcess)}</li>\` : ''}
+                    \${lead.meddic.champion ? \`<li><strong>챔피언:</strong> \${esc(lead.meddic.champion)}</li>\` : ''}
+                  </ul></div>\` : ''}
+                  \${lead.competitive && Object.keys(lead.competitive).length > 0 ? \`<div class="enriched-block"><h4>경쟁 인텔리전스</h4><ul>
+                    \${lead.competitive.currentVendor ? \`<li><strong>현재 벤더:</strong> \${esc(lead.competitive.currentVendor)}</li>\` : ''}
+                    \${lead.competitive.competitors ? \`<li><strong>경쟁사:</strong> \${esc(lead.competitive.competitors)}</li>\` : ''}
+                    \${lead.competitive.ourAdvantage ? \`<li><strong>우리 차별점:</strong> \${esc(lead.competitive.ourAdvantage)}</li>\` : ''}
+                    \${lead.competitive.switchBarrier ? \`<li><strong>전환 장벽:</strong> \${esc(lead.competitive.switchBarrier)}</li>\` : ''}
+                  </ul></div>\` : ''}
+                  \${lead.buyingSignals && lead.buyingSignals.length > 0 ? \`<div class="enriched-block"><h4>구매 신호</h4><ul>\${lead.buyingSignals.map(s => \`<li>\${esc(s)}</li>\`).join('')}</ul></div>\` : ''}
+                  \${lead.evidence && lead.evidence.length > 0 ? \`<div class="enriched-block"><h4>근거 (Evidence)</h4><ul>\${lead.evidence.map(e => \`<li><strong>[\${esc(e.field)}]</strong> "\${esc(e.quote)}" \${e.sourceUrl ? \`<a href="\${esc(e.sourceUrl)}" target="_blank" style="color:#3498db;font-size:11px;">출처</a>\` : ''}</li>\`).join('')}</ul></div>\` : ''}
+                  \${lead.assumptions && lead.assumptions.length > 0 ? \`<div class="enriched-block" style="background:#fff3cd;border-left:3px solid #f39c12;padding:8px 12px;"><h4 style="color:#856404;">가정 (Assumptions)</h4><ul>\${lead.assumptions.map(a => \`<li style="color:#856404;">\${esc(a)}</li>\`).join('')}</ul></div>\` : ''}
                   \${lead.enrichedAt ? \`<p style="color:#666;font-size:11px;margin-top:8px;">분석일: \${esc(lead.enrichedAt.split('T')[0])}</p>\` : ''}
                 </div>
               </details>
@@ -2367,7 +2682,12 @@ function getLeadDetailPage(lead, statusLogs) {
         html += '<span style="color:' + (statusColors[currentStatus] || '#fff') + ';font-weight:bold;">' + esc(statusLabels[currentStatus]) + '</span>';
       }
       html += '</span></div>';
-      html += '<div class="detail-row"><span class="label">등급</span><span class="value"><span class="badge ' + (lead.grade === 'A' ? 'badge-a' : 'badge-b') + '">' + esc(lead.grade) + '</span> (' + lead.score + '점)</span></div>';
+      html += '<div class="detail-row"><span class="label">등급</span><span class="value"><span class="badge ' + (lead.grade === 'A' ? 'badge-a' : 'badge-b') + '">' + esc(lead.grade) + '</span> (' + lead.score + '점)' + (lead.urgency ? ' <span style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:bold;color:#fff;background:' + (lead.urgency === 'HIGH' ? '#e74c3c' : '#f39c12') + ';">' + (lead.urgency === 'HIGH' ? '긴급' : '보통') + '</span>' : '') + '</span></div>';
+      if (lead.scoreReason) html += '<div class="detail-row"><span class="label">등급 근거</span><span class="value">' + esc(lead.scoreReason) + '</span></div>';
+      if (lead.urgencyReason) html += '<div class="detail-row"><span class="label">긴급도 근거</span><span class="value">' + esc(lead.urgencyReason) + '</span></div>';
+      if (lead.buyerRole) html += '<div class="detail-row"><span class="label">예상 키맨</span><span class="value">' + esc(lead.buyerRole) + '</span></div>';
+      if (lead.confidence) html += '<div class="detail-row"><span class="label">신뢰도</span><span class="value"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;color:#fff;background:' + (lead.confidence === 'HIGH' ? '#27ae60' : lead.confidence === 'MEDIUM' ? '#f39c12' : '#e74c3c') + ';">' + esc(lead.confidence) + '</span>' + (lead.confidenceReason ? ' <span style="color:#aaa;font-size:11px;">' + esc(lead.confidenceReason) + '</span>' : '') + '</span></div>';
+      if (lead.eventType) html += '<div class="detail-row"><span class="label">이벤트 유형</span><span class="value">' + esc(lead.eventType) + '</span></div>';
       html += '<div class="detail-row"><span class="label">추천 제품</span><span class="value">' + esc(lead.product) + '</span></div>';
       html += '<div class="detail-row"><span class="label">예상 ROI</span><span class="value">' + esc(lead.roi || '-') + '</span></div>';
       html += '<div class="detail-row"><span class="label">영업 제안</span><span class="value">' + esc(lead.salesPitch) + '</span></div>';
@@ -2388,20 +2708,79 @@ function getLeadDetailPage(lead, statusLogs) {
 
       // Enrichment 섹션
       if (lead.enriched) {
+        const listItem = (text) => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(text) + '</li>';
+        const sectionLabel = (text) => '<p style="color:#ce93d8;font-size:13px;font-weight:bold;margin-bottom:6px;">' + text + '</p>';
+        const ulWrap = (items) => '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">' + items + '</ul>';
+        const meddicItem = (label, val) => val ? '<li style="color:#ccc;font-size:13px;padding:3px 0;"><strong style="color:#ce93d8;">' + label + ':</strong> ' + esc(val) + '</li>' : '';
+
         html += '<div class="detail-section">';
         html += '<h3>심층 분석 결과</h3>';
         if (lead.keyFigures && lead.keyFigures.length) {
-          html += '<p style="color:#ce93d8;font-size:13px;font-weight:bold;margin-bottom:6px;">핵심 수치</p>';
-          html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">' + lead.keyFigures.map(f => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(f) + '</li>').join('') + '</ul>';
+          html += sectionLabel('핵심 수치');
+          html += ulWrap(lead.keyFigures.map(f => listItem(f)).join(''));
         }
         if (lead.painPoints && lead.painPoints.length) {
-          html += '<p style="color:#ce93d8;font-size:13px;font-weight:bold;margin-bottom:6px;">고객 과제</p>';
-          html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">' + lead.painPoints.map(p => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(p) + '</li>').join('') + '</ul>';
+          html += sectionLabel('고객 과제 (정량)');
+          html += ulWrap(lead.painPoints.map(p => listItem(p)).join(''));
         }
         if (lead.actionItems && lead.actionItems.length) {
-          html += '<p style="color:#ce93d8;font-size:13px;font-weight:bold;margin-bottom:6px;">후속 실행 항목</p>';
-          html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">' + lead.actionItems.map(a => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(a) + '</li>').join('') + '</ul>';
+          html += sectionLabel('후속 실행 항목');
+          html += ulWrap(lead.actionItems.map(a => listItem(a)).join(''));
         }
+
+        // MEDDIC 분석
+        if (lead.meddic && Object.values(lead.meddic).some(v => v)) {
+          html += sectionLabel('MEDDIC 분석');
+          html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">';
+          html += meddicItem('예산 규모', lead.meddic.budget);
+          html += meddicItem('의사결정 구조', lead.meddic.authority);
+          html += meddicItem('핵심 니즈', lead.meddic.need);
+          html += meddicItem('구매 타임라인', lead.meddic.timeline);
+          html += meddicItem('구매 프로세스', lead.meddic.decisionProcess);
+          html += meddicItem('내부 챔피언', lead.meddic.champion);
+          html += '</ul>';
+        }
+
+        // 경쟁 인텔리전스
+        if (lead.competitive && Object.values(lead.competitive).some(v => v)) {
+          html += sectionLabel('경쟁 인텔리전스');
+          html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">';
+          html += meddicItem('현재 벤더', lead.competitive.currentVendor);
+          html += meddicItem('경쟁사', lead.competitive.competitors);
+          html += meddicItem('우리 차별점', lead.competitive.ourAdvantage);
+          html += meddicItem('전환 장벽/극복', lead.competitive.switchBarrier);
+          html += '</ul>';
+        }
+
+        // 구매 신호
+        if (lead.buyingSignals && lead.buyingSignals.length) {
+          html += sectionLabel('구매 신호');
+          html += ulWrap(lead.buyingSignals.map(s => listItem(s)).join(''));
+        }
+
+        // 근거 (Evidence)
+        if (lead.evidence && lead.evidence.length) {
+          html += sectionLabel('근거 (Evidence)');
+          html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">';
+          lead.evidence.forEach(e => {
+            html += '<li style="color:#ccc;font-size:13px;padding:3px 0;border-left:2px solid #27ae60;padding-left:10px;margin:4px 0;"><strong style="color:#27ae60;">[' + esc(e.field || '') + ']</strong> "' + esc(e.quote || '') + '"';
+            if (e.sourceUrl) html += ' <a href="' + safeUrl(e.sourceUrl) + '" target="_blank" style="color:#3498db;font-size:11px;">출처</a>';
+            html += '</li>';
+          });
+          html += '</ul>';
+        }
+
+        // 가정 (Assumptions)
+        if (lead.assumptions && lead.assumptions.length) {
+          html += '<div style="background:#332b00;border-left:3px solid #f39c12;padding:8px 12px;border-radius:4px;margin-bottom:12px;">';
+          html += '<p style="color:#f39c12;font-size:13px;font-weight:bold;margin-bottom:6px;">가정 (Assumptions)</p>';
+          html += '<ul style="list-style:none;padding:0;margin:0;">';
+          lead.assumptions.forEach(a => {
+            html += '<li style="color:#e6c200;font-size:12px;padding:2px 0;">⚠ ' + esc(a) + '</li>';
+          });
+          html += '</ul></div>';
+        }
+
         if (lead.enrichedAt) html += '<p style="color:#666;font-size:11px;">분석일: ' + esc(lead.enrichedAt.split('T')[0]) + '</p>';
         html += '</div>';
       }
