@@ -9,7 +9,7 @@ export default {
     }
 
     // API 라우팅 — 인증 필요 경로
-    const apiPaths = ['/api/leads', '/api/ppt', '/api/roleplay', '/api/history', '/api/dashboard', '/api/export/csv'];
+    const apiPaths = ['/api/leads', '/api/leads/batch-enrich', '/api/ppt', '/api/roleplay', '/api/history', '/api/dashboard', '/api/export/csv'];
     if (apiPaths.includes(url.pathname) || url.pathname.startsWith('/api/leads/')) {
       const authErr = await verifyAuth(request, env);
       if (authErr) return addCorsHeaders(authErr, origin, env);
@@ -41,6 +41,16 @@ export default {
     if (url.pathname === '/api/history' && request.method === 'GET') {
       const profile = resolveProfileId(url.searchParams.get('profile'), env);
       return addCorsHeaders(await fetchHistory(env, profile), origin, env);
+    }
+    // POST /api/leads/batch-enrich — 일괄 심층 분석
+    if (url.pathname === '/api/leads/batch-enrich' && request.method === 'POST') {
+      return addCorsHeaders(await handleBatchEnrich(request, env), origin, env);
+    }
+    // POST /api/leads/:id/enrich — 단일 리드 심층 분석
+    const enrichMatch = url.pathname.match(/^\/api\/leads\/([^/]+)\/enrich$/);
+    if (enrichMatch && request.method === 'POST') {
+      const leadId = decodeURIComponent(enrichMatch[1]);
+      return addCorsHeaders(await handleEnrichLead(request, env, leadId), origin, env);
     }
     // PATCH /api/leads/:id — 리드 상태/메모 업데이트
     const leadPatchMatch = url.pathname.match(/^\/api\/leads\/([^/]+)$/);
@@ -427,7 +437,19 @@ async function ensureD1Schema(db) {
         changed_at TEXT NOT NULL
       )`),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_status_log_lead ON status_log(lead_id)')
-    ]).catch((err) => {
+    ]).then(async () => {
+      const alterCols = [
+        "ALTER TABLE leads ADD COLUMN enriched INTEGER DEFAULT 0",
+        "ALTER TABLE leads ADD COLUMN article_body TEXT DEFAULT ''",
+        "ALTER TABLE leads ADD COLUMN action_items TEXT DEFAULT '[]'",
+        "ALTER TABLE leads ADD COLUMN key_figures TEXT DEFAULT '[]'",
+        "ALTER TABLE leads ADD COLUMN pain_points TEXT DEFAULT '[]'",
+        "ALTER TABLE leads ADD COLUMN enriched_at TEXT"
+      ];
+      for (const sql of alterCols) {
+        try { await db.prepare(sql).run(); } catch { /* column already exists */ }
+      }
+    }).catch((err) => {
       d1SchemaReadyPromise = null;
       throw err;
     });
@@ -452,6 +474,12 @@ function rowToLead(row) {
     globalContext: row.global_context,
     sources: (() => { try { return JSON.parse(row.sources || '[]'); } catch { return []; } })(),
     notes: row.notes || '',
+    enriched: row.enriched || 0,
+    articleBody: row.article_body || '',
+    actionItems: (() => { try { return JSON.parse(row.action_items || '[]'); } catch { return []; } })(),
+    keyFigures: (() => { try { return JSON.parse(row.key_figures || '[]'); } catch { return []; } })(),
+    painPoints: (() => { try { return JSON.parse(row.pain_points || '[]'); } catch { return []; } })(),
+    enrichedAt: row.enriched_at || null,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -560,6 +588,121 @@ async function updateLeadNotes(db, id, notes) {
   return true;
 }
 
+// ===== 리드 심층 분석 (Enrichment) =====
+
+function pickBestSourceUrl(sources) {
+  if (!Array.isArray(sources) || sources.length === 0) return null;
+  const direct = sources.find(s => s.url && !/news\.google\.com/i.test(s.url));
+  return (direct || sources[0])?.url || null;
+}
+
+async function fetchArticleBodyWorker(url) {
+  if (!url) return '';
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      redirect: 'follow',
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; B2BLeadBot/1.0)' }
+    });
+    clearTimeout(timer);
+    if (!res.ok) return '';
+    const html = await res.text();
+    return extractBodyFromHTML(html);
+  } catch {
+    return '';
+  }
+}
+
+function extractBodyFromHTML(html) {
+  if (!html) return '';
+  let text = html.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<nav[\s\S]*?<\/nav>/gi, '').replace(/<footer[\s\S]*?<\/footer>/gi, '').replace(/<header[\s\S]*?<\/header>/gi, '');
+
+  // og:description 추출
+  const ogMatch = text.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i)
+    || text.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:description["']/i);
+  const ogDesc = ogMatch ? ogMatch[1] : '';
+
+  // article 태그 내 p 태그 수집
+  const articleMatch = text.match(/<article[\s\S]*?<\/article>/i);
+  const zone = articleMatch ? articleMatch[0] : text;
+  const paragraphs = [];
+  const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+  let m;
+  while ((m = pRegex.exec(zone)) !== null) {
+    const clean = m[1].replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+    if (clean.length > 30) paragraphs.push(clean);
+  }
+
+  const body = paragraphs.join('\n');
+  const combined = ogDesc ? ogDesc + '\n\n' + body : body;
+  return combined.slice(0, 3000);
+}
+
+async function callGeminiEnrich(lead, articleBody, env) {
+  const hasBody = articleBody && articleBody.length > 50;
+  const prompt = `You are a B2B sales intelligence analyst. Analyze this lead and provide deep enrichment.
+
+## Lead Info
+- Company: ${lead.company}
+- Summary: ${lead.summary || 'N/A'}
+- Product: ${lead.product || 'N/A'}
+- Current ROI: ${lead.roi || 'N/A'}
+- Current Sales Pitch: ${lead.salesPitch || 'N/A'}
+
+${hasBody ? `## Article Body (source material)\n${articleBody}` : '## Note: No article body available. Analyze based on the lead title/summary only, but clearly indicate this limitation.'}
+
+## Task (Chain-of-Thought)
+1. Extract key figures (numbers, percentages, financial data, capacity, timeline)
+2. Identify pain points (challenges, problems, needs mentioned or implied)
+3. Connect to recommended product — how specifically does it solve the pain points?
+4. Calculate realistic ROI with concrete numbers (not generic)
+5. Generate actionable next steps for the sales team
+
+## Output JSON (strict format, Korean)
+{
+  "summary": "개선된 1-2문장 요약 (구체적 수치 포함)",
+  "roi": "구체적 ROI 분석 (숫자 기반, 예: '연간 15억원 에너지 비용 중 20% 절감 가능 → 3억원')",
+  "salesPitch": "개선된 영업 피치 (고객 페인포인트 직접 언급, 구체적 솔루션 제안)",
+  "globalContext": "글로벌 시장/기술 트렌드와의 연결 (구체적 사례나 수치)",
+  "actionItems": ["액션1: 구체적 다음 단계", "액션2: ...", "액션3: ..."],
+  "keyFigures": ["수치1: 설명", "수치2: 설명"],
+  "painPoints": ["페인포인트1: 설명", "페인포인트2: 설명"]
+}
+
+Return ONLY valid JSON, no markdown fences.`;
+
+  const raw = await callGemini(prompt, env);
+  const jsonStr = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  try {
+    return JSON.parse(jsonStr);
+  } catch {
+    const match = jsonStr.match(/\{[\s\S]*\}/);
+    if (match) return JSON.parse(match[0]);
+    throw new Error('Enrichment JSON 파싱 실패');
+  }
+}
+
+async function updateLeadEnrichment(db, id, enrichData, articleBody) {
+  if (!db) return false;
+  await ensureD1Schema(db);
+  const now = new Date().toISOString();
+  await db.prepare(
+    `UPDATE leads SET
+      enriched = 1,
+      summary = ?, roi = ?, sales_pitch = ?, global_context = ?,
+      article_body = ?, action_items = ?, key_figures = ?, pain_points = ?,
+      enriched_at = ?, updated_at = ?
+    WHERE id = ?`
+  ).bind(
+    enrichData.summary || '', enrichData.roi || '', enrichData.salesPitch || '', enrichData.globalContext || '',
+    articleBody || '', JSON.stringify(enrichData.actionItems || []), JSON.stringify(enrichData.keyFigures || []), JSON.stringify(enrichData.painPoints || []),
+    now, now, id
+  ).run();
+  return true;
+}
+
 async function logAnalyticsRun(db, data) {
   if (!db) return;
   await ensureD1Schema(db);
@@ -606,6 +749,72 @@ async function getDashboardMetrics(db, profileId) {
       acc[r.type] = { runs: r.cnt, totalLeads: r.total_leads }; return acc;
     }, {})
   };
+}
+
+// ===== Enrichment API 핸들러 =====
+
+async function handleEnrichLead(request, env, leadId) {
+  if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
+  const lead = await getLeadById(env.DB, leadId);
+  if (!lead) return jsonResponse({ success: false, message: '리드를 찾을 수 없습니다.' }, 404);
+
+  const url = new URL(request.url);
+  if (lead.enriched && !url.searchParams.get('force')) {
+    return jsonResponse({ success: false, message: '이미 분석된 리드입니다. ?force=true로 재실행하세요.', lead }, 409);
+  }
+
+  const sourceUrl = pickBestSourceUrl(lead.sources);
+  const articleBody = await fetchArticleBodyWorker(sourceUrl);
+  const enrichData = await callGeminiEnrich(lead, articleBody, env);
+  await updateLeadEnrichment(env.DB, leadId, enrichData, articleBody);
+
+  const updated = await getLeadById(env.DB, leadId);
+  return jsonResponse({ success: true, lead: updated, hadArticle: articleBody.length > 50 });
+}
+
+async function handleBatchEnrich(request, env) {
+  if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
+  const body = await request.json().catch(() => ({}));
+  const profileId = resolveProfileId(body.profile, env);
+
+  await ensureD1Schema(env.DB);
+  const { results } = await env.DB.prepare(
+    'SELECT * FROM leads WHERE profile_id = ? AND (enriched IS NULL OR enriched = 0) ORDER BY score DESC LIMIT 3'
+  ).bind(profileId).all();
+
+  if (!results || results.length === 0) {
+    const { results: remaining } = await env.DB.prepare(
+      'SELECT COUNT(*) as cnt FROM leads WHERE profile_id = ? AND (enriched IS NULL OR enriched = 0)'
+    ).bind(profileId).all();
+    return jsonResponse({ success: true, enriched: 0, remaining: 0, message: '분석할 리드가 없습니다.' });
+  }
+
+  const enrichedResults = [];
+  for (const row of results) {
+    const lead = rowToLead(row);
+    try {
+      const sourceUrl = pickBestSourceUrl(lead.sources);
+      const articleBody = await fetchArticleBodyWorker(sourceUrl);
+      const enrichData = await callGeminiEnrich(lead, articleBody, env);
+      await updateLeadEnrichment(env.DB, lead.id, enrichData, articleBody);
+      enrichedResults.push({ id: lead.id, company: lead.company, success: true });
+    } catch (err) {
+      enrichedResults.push({ id: lead.id, company: lead.company, success: false, error: err.message });
+    }
+  }
+
+  const { results: remainingRows } = await env.DB.prepare(
+    'SELECT COUNT(*) as cnt FROM leads WHERE profile_id = ? AND (enriched IS NULL OR enriched = 0)'
+  ).bind(profileId).all();
+  const remaining = remainingRows?.[0]?.cnt || 0;
+
+  return jsonResponse({
+    success: true,
+    enriched: enrichedResults.filter(r => r.success).length,
+    failed: enrichedResults.filter(r => !r.success).length,
+    remaining,
+    results: enrichedResults
+  });
 }
 
 // ===== 새 API 핸들러 =====
@@ -1604,6 +1813,12 @@ function getLeadsPage() {
     <p class="subtitle">최근 분석된 영업 기회 목록</p>
     <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;margin-bottom:12px;" onclick="window.print()">PDF 인쇄</button>
 
+    <div class="batch-enrich-bar">
+      <span>미분석 리드를 Gemini AI로 심층 분석합니다 (최대 3건/회)</span>
+      <button class="btn-enrich" onclick="batchEnrich(this)">일괄 상세 분석</button>
+    </div>
+    <div id="batchStatus" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div>
+
     <div id="leadsList"><p style="color:#aaa;">로딩 중...</p></div>
   </div>
 
@@ -1669,6 +1884,51 @@ function getLeadsPage() {
       window.open('/api/export/csv?profile=' + encodeURIComponent(getProfile()) + '&token=' + encodeURIComponent(token));
     }
 
+    async function enrichLead(leadId, btn, force) {
+      if (!leadId) return;
+      btn.disabled = true;
+      btn.textContent = '분석 중...';
+      try {
+        const forceParam = force ? '?force=true' : '';
+        const res = await fetch('/api/leads/' + encodeURIComponent(leadId) + '/enrich' + forceParam, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() }
+        });
+        const data = await res.json();
+        if (!data.success) { alert(data.message || '분석 실패'); btn.disabled = false; btn.textContent = '상세 분석'; return; }
+        loadLeads();
+      } catch(e) { alert('분석 실패: ' + e.message); btn.disabled = false; btn.textContent = '상세 분석'; }
+    }
+
+    async function batchEnrich(btn) {
+      btn.disabled = true;
+      btn.textContent = '일괄 분석 중...';
+      const statusEl = document.getElementById('batchStatus');
+      statusEl.textContent = 'Gemini AI가 리드를 심층 분석하고 있습니다...';
+      statusEl.style.color = '#3498db';
+      try {
+        const res = await fetch('/api/leads/batch-enrich', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ profile: getProfile() })
+        });
+        const data = await res.json();
+        if (data.success) {
+          statusEl.textContent = '완료: ' + data.enriched + '건 분석, ' + (data.failed || 0) + '건 실패, 잔여 ' + data.remaining + '건';
+          statusEl.style.color = '#27ae60';
+        } else {
+          statusEl.textContent = data.message || '분석 실패';
+          statusEl.style.color = '#e74c3c';
+        }
+        loadLeads();
+      } catch(e) {
+        statusEl.textContent = '오류: ' + e.message;
+        statusEl.style.color = '#e74c3c';
+      }
+      btn.disabled = false;
+      btn.textContent = '일괄 상세 분석';
+    }
+
     async function loadLeads() {
       try {
         const res = await fetch('/api/leads?profile=' + getProfile(), {headers:authHeaders()});
@@ -1685,6 +1945,7 @@ function getLeadsPage() {
             <h3>
               <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${esc(lead.grade)}</span>
               \${renderStatusSelect(lead)}
+              \${lead.enriched ? '<span class="badge-enriched">심층 분석 완료</span>' : ''}
               \${esc(lead.company)} (\${parseInt(lead.score) || 0}점)
             </h3>
             <div class="lead-info">
@@ -1694,6 +1955,18 @@ function getLeadsPage() {
               <p><strong>영업 Pitch:</strong> \${esc(lead.salesPitch)}</p>
               <p><strong>글로벌 트렌드:</strong> \${esc(lead.globalContext) || '-'}</p>
             </div>
+            \${lead.enriched ? \`
+            <div class="enriched-details">
+              <details>
+                <summary>심층 분석 상세 보기</summary>
+                <div class="enriched-content">
+                  \${lead.keyFigures && lead.keyFigures.length > 0 ? \`<div class="enriched-block"><h4>핵심 수치</h4><ul>\${lead.keyFigures.map(f => \`<li>\${esc(f)}</li>\`).join('')}</ul></div>\` : ''}
+                  \${lead.painPoints && lead.painPoints.length > 0 ? \`<div class="enriched-block"><h4>페인포인트</h4><ul>\${lead.painPoints.map(p => \`<li>\${esc(p)}</li>\`).join('')}</ul></div>\` : ''}
+                  \${lead.actionItems && lead.actionItems.length > 0 ? \`<div class="enriched-block"><h4>액션 아이템</h4><ul>\${lead.actionItems.map(a => \`<li>\${esc(a)}</li>\`).join('')}</ul></div>\` : ''}
+                  \${lead.enrichedAt ? \`<p style="color:#666;font-size:11px;margin-top:8px;">분석일: \${esc(lead.enrichedAt.split('T')[0])}</p>\` : ''}
+                </div>
+              </details>
+            </div>\` : ''}
             \${lead.sources && lead.sources.length > 0 ? \`
             <div class="lead-sources">
               <details>
@@ -1715,6 +1988,8 @@ function getLeadsPage() {
             <div class="lead-actions">
               <a href="/ppt?profile=\${encodeURIComponent(getProfile())}&lead=\${i}" class="btn btn-secondary">PPT 생성</a>
               <a href="/roleplay?profile=\${encodeURIComponent(getProfile())}&lead=\${i}" class="btn btn-secondary">영업 연습</a>
+              \${lead.id && !lead.enriched ? \`<button class="btn-enrich" onclick="enrichLead('\${esc(lead.id)}', this)">상세 분석</button>\` : ''}
+              \${lead.id && lead.enriched ? \`<button class="btn-enrich" style="opacity:0.6" onclick="enrichLead('\${esc(lead.id)}', this, true)" title="재분석">재분석</button>\` : ''}
             </div>
           </div>
         \`).join('');
@@ -2308,6 +2583,22 @@ function getCommonStyles() {
     .info { margin-top: 30px; font-size: 12px; color: #666; line-height: 1.8; }
     .back-link { color: #aaa; text-decoration: none; font-size: 13px; display: inline-block; margin-bottom: 16px; }
     .back-link:hover { color: #fff; }
+    .btn-enrich { background: linear-gradient(135deg, #8e44ad, #9b59b6); font-size: 12px; padding: 6px 14px; border: none; border-radius: 6px; color: #fff; cursor: pointer; transition: all 0.3s; }
+    .btn-enrich:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(142,68,173,0.4); }
+    .btn-enrich:disabled { background: #555; cursor: not-allowed; transform: none; box-shadow: none; }
+    .badge-enriched { background: #8e44ad; color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-left: 6px; }
+    .enriched-details { margin-top: 12px; padding-top: 12px; border-top: 1px solid #2a3a4a; }
+    .enriched-details summary { color: #b39ddb; font-size: 13px; cursor: pointer; font-weight: bold; }
+    .enriched-details summary:hover { color: #ce93d8; }
+    .enriched-content { padding: 12px 0 0 0; }
+    .enriched-block { margin-bottom: 10px; }
+    .enriched-block h4 { color: #ce93d8; font-size: 13px; margin: 0 0 4px 0; }
+    .enriched-block ul { list-style: none; padding: 0; margin: 0; }
+    .enriched-block li { color: #ccc; font-size: 13px; padding: 2px 0; padding-left: 12px; position: relative; }
+    .enriched-block li::before { content: '→'; position: absolute; left: 0; color: #8e44ad; }
+    .batch-enrich-bar { background: #1e2a3a; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .batch-enrich-bar span { color: #aaa; font-size: 13px; }
+    .batch-enrich-bar .btn-enrich { font-size: 13px; padding: 8px 18px; }
     @media print {
       body { background: #fff !important; color: #000 !important; display: block; min-height: auto; }
       .container { max-width: 100% !important; padding: 10px; }
