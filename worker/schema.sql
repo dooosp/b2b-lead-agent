@@ -45,3 +45,7 @@ CREATE TABLE IF NOT EXISTS status_log (
   changed_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_status_log_lead ON status_log(lead_id);
+
+-- Pipeline enhancement columns
+ALTER TABLE leads ADD COLUMN follow_up_date TEXT DEFAULT '';
+ALTER TABLE leads ADD COLUMN estimated_value INTEGER DEFAULT 0;

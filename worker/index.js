@@ -77,6 +77,17 @@ export default {
     }
 
     // 페이지 라우팅
+    // /leads/:id 상세 페이지 (API가 아닌 HTML 페이지)
+    const leadDetailMatch = url.pathname.match(/^\/leads\/([^/]+)$/);
+    if (leadDetailMatch && !url.pathname.startsWith('/api/')) {
+      const leadId = decodeURIComponent(leadDetailMatch[1]);
+      const authErr = await verifyAuth(request, env);
+      if (authErr) return addCorsHeaders(authErr, origin, env);
+      const lead = await getLeadById(env.DB, leadId);
+      if (!lead) return new Response('리드를 찾을 수 없습니다.', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      const statusLogs = await getStatusLogByLead(env.DB, leadId);
+      return new Response(getLeadDetailPage(lead, statusLogs), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
     if (url.pathname === '/leads') {
       return new Response(getLeadsPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
@@ -444,7 +455,9 @@ async function ensureD1Schema(db) {
         "ALTER TABLE leads ADD COLUMN action_items TEXT DEFAULT '[]'",
         "ALTER TABLE leads ADD COLUMN key_figures TEXT DEFAULT '[]'",
         "ALTER TABLE leads ADD COLUMN pain_points TEXT DEFAULT '[]'",
-        "ALTER TABLE leads ADD COLUMN enriched_at TEXT"
+        "ALTER TABLE leads ADD COLUMN enriched_at TEXT",
+        "ALTER TABLE leads ADD COLUMN follow_up_date TEXT DEFAULT ''",
+        "ALTER TABLE leads ADD COLUMN estimated_value INTEGER DEFAULT 0"
       ];
       for (const sql of alterCols) {
         try { await db.prepare(sql).run(); } catch { /* column already exists */ }
@@ -480,6 +493,8 @@ function rowToLead(row) {
     keyFigures: (() => { try { return JSON.parse(row.key_figures || '[]'); } catch { return []; } })(),
     painPoints: (() => { try { return JSON.parse(row.pain_points || '[]'); } catch { return []; } })(),
     enrichedAt: row.enriched_at || null,
+    followUpDate: row.follow_up_date || '',
+    estimatedValue: Number(row.estimated_value) || 0,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -586,6 +601,17 @@ async function updateLeadNotes(db, id, notes) {
   const now = new Date().toISOString();
   await db.prepare('UPDATE leads SET notes = ?, updated_at = ? WHERE id = ?').bind(notes, now, id).run();
   return true;
+}
+
+async function getStatusLogByLead(db, leadId) {
+  if (!db) return [];
+  await ensureD1Schema(db);
+  const { results } = await db.prepare(
+    'SELECT * FROM status_log WHERE lead_id = ? ORDER BY changed_at ASC'
+  ).bind(leadId).all();
+  return (results || []).map(r => ({
+    fromStatus: r.from_status, toStatus: r.to_status, changedAt: r.changed_at
+  }));
 }
 
 // ===== 리드 심층 분석 (Enrichment) =====
@@ -749,13 +775,19 @@ async function getDashboardMetrics(db, profileId) {
   const where = isAll ? '' : ' WHERE profile_id = ?';
   const bind = isAll ? [] : [profileId];
 
-  const [total, gradeA, statusCounts, wonCount, recentActivity, analyticsCounts] = await db.batch([
+  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+  const [total, gradeA, statusCounts, wonCount, recentActivity, analyticsCounts, allLogs, pipelineValue, followUpLeads] = await db.batch([
     db.prepare(`SELECT COUNT(*) as cnt FROM leads${where}`).bind(...bind),
     db.prepare(`SELECT COUNT(*) as cnt FROM leads${where ? where + ' AND' : ' WHERE'} grade = 'A'`).bind(...bind),
     db.prepare(`SELECT status, COUNT(*) as cnt FROM leads${where} GROUP BY status`).bind(...bind),
     db.prepare(`SELECT COUNT(*) as cnt FROM leads${where ? where + ' AND' : ' WHERE'} status = 'WON'`).bind(...bind),
     db.prepare(`SELECT sl.from_status, sl.to_status, sl.changed_at, l.company FROM status_log sl JOIN leads l ON sl.lead_id = l.id${isAll ? '' : ' WHERE l.profile_id = ?'} ORDER BY sl.changed_at DESC LIMIT 10`).bind(...bind),
-    db.prepare(`SELECT type, COUNT(*) as cnt, SUM(leads_count) as total_leads FROM analytics${where ? ' WHERE profile_id = ?' : ''} GROUP BY type`).bind(...(isAll ? [] : [profileId]))
+    db.prepare(`SELECT type, COUNT(*) as cnt, SUM(leads_count) as total_leads FROM analytics${where ? ' WHERE profile_id = ?' : ''} GROUP BY type`).bind(...(isAll ? [] : [profileId])),
+    db.prepare(`SELECT sl.from_status, sl.to_status, sl.changed_at FROM status_log sl JOIN leads l ON sl.lead_id = l.id${isAll ? '' : ' WHERE l.profile_id = ?'} ORDER BY sl.changed_at ASC`).bind(...bind),
+    db.prepare(`SELECT status, SUM(estimated_value) as total_value FROM leads${where} GROUP BY status`).bind(...bind),
+    db.prepare(`SELECT id, company, follow_up_date, status FROM leads${where ? where + ' AND' : ' WHERE'} follow_up_date != '' AND follow_up_date <= ? AND status NOT IN ('WON','LOST') ORDER BY follow_up_date ASC LIMIT 20`).bind(...bind, tomorrow)
   ]);
 
   const totalCount = total.results?.[0]?.cnt || 0;
@@ -765,6 +797,67 @@ async function getDashboardMetrics(db, profileId) {
   (statusCounts.results || []).forEach(r => { statusDist[r.status] = r.cnt; });
   const active = totalCount - (statusDist.WON || 0) - (statusDist.LOST || 0);
 
+  // 단계별 전환율 계산
+  const stageOrder = ['NEW', 'CONTACTED', 'MEETING', 'PROPOSAL', 'NEGOTIATION', 'WON'];
+  const transitionCounts = {};
+  (allLogs.results || []).forEach(r => {
+    const key = `${r.from_status}→${r.to_status}`;
+    transitionCounts[key] = (transitionCounts[key] || 0) + 1;
+  });
+  const stageConversions = [];
+  for (let i = 0; i < stageOrder.length - 1; i++) {
+    const from = stageOrder[i];
+    const to = stageOrder[i + 1];
+    const key = `${from}→${to}`;
+    const fromCount = statusDist[from] || 0;
+    const transitioned = transitionCounts[key] || 0;
+    const denominator = fromCount + transitioned;
+    stageConversions.push({
+      from, to,
+      rate: denominator > 0 ? Math.round((transitioned / denominator) * 100) : 0,
+      count: transitioned
+    });
+  }
+
+  // 평균 체류 시간 계산
+  const logList = allLogs.results || [];
+  const dwellTimes = {};
+  const dwellCounts = {};
+  for (let i = 0; i < logList.length; i++) {
+    const log = logList[i];
+    const from = log.from_status;
+    // 같은 리드의 이전 진입 시점 찾기
+    let entryTime = null;
+    for (let j = i - 1; j >= 0; j--) {
+      if (logList[j].to_status === from) { entryTime = logList[j].changed_at; break; }
+    }
+    if (entryTime) {
+      const days = Math.max(0, (new Date(log.changed_at) - new Date(entryTime)) / (1000 * 60 * 60 * 24));
+      dwellTimes[from] = (dwellTimes[from] || 0) + days;
+      dwellCounts[from] = (dwellCounts[from] || 0) + 1;
+    }
+  }
+  const avgDwellDays = {};
+  Object.keys(dwellTimes).forEach(s => {
+    avgDwellDays[s] = dwellCounts[s] > 0 ? Math.round(dwellTimes[s] / dwellCounts[s] * 10) / 10 : 0;
+  });
+
+  // 파이프라인 가치
+  const pipelineValueByStatus = {};
+  let totalPipelineValue = 0;
+  (pipelineValue.results || []).forEach(r => {
+    const v = Number(r.total_value) || 0;
+    pipelineValueByStatus[r.status] = v;
+    if (r.status !== 'LOST') totalPipelineValue += v;
+  });
+
+  // 팔로업 알림
+  const followUpAlerts = (followUpLeads.results || []).map(r => ({
+    id: r.id, company: r.company, followUpDate: r.follow_up_date, status: r.status,
+    isOverdue: r.follow_up_date < today,
+    isToday: r.follow_up_date === today
+  }));
+
   return {
     total: totalCount,
     gradeA: gradeACount,
@@ -772,6 +865,11 @@ async function getDashboardMetrics(db, profileId) {
     conversionRate: totalCount > 0 ? Math.round((wonCountVal / totalCount) * 100) : 0,
     active,
     statusDistribution: statusDist,
+    stageConversions,
+    avgDwellDays,
+    totalPipelineValue,
+    pipelineValueByStatus,
+    followUpAlerts,
     recentActivity: (recentActivity.results || []).map(r => ({
       company: r.company, fromStatus: r.from_status, toStatus: r.to_status, changedAt: r.changed_at
     })),
@@ -878,6 +976,23 @@ async function handleUpdateLead(request, env, leadId) {
 
   if (typeof body.notes === 'string') {
     await updateLeadNotes(env.DB, leadId, body.notes.slice(0, 2000));
+  }
+
+  // follow_up_date 업데이트
+  if (typeof body.follow_up_date === 'string') {
+    const dateVal = body.follow_up_date.trim();
+    if (dateVal && !/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+      return jsonResponse({ success: false, message: '날짜 형식이 올바르지 않습니다 (YYYY-MM-DD)' }, 400);
+    }
+    const now = new Date().toISOString();
+    await env.DB.prepare('UPDATE leads SET follow_up_date = ?, updated_at = ? WHERE id = ?').bind(dateVal, now, leadId).run();
+  }
+
+  // estimated_value 업데이트
+  if (body.estimated_value !== undefined) {
+    const val = Math.max(0, Math.floor(Number(body.estimated_value) || 0));
+    const now = new Date().toISOString();
+    await env.DB.prepare('UPDATE leads SET estimated_value = ?, updated_at = ? WHERE id = ?').bind(val, now, leadId).run();
   }
 
   const updated = await getLeadById(env.DB, leadId);
@@ -1837,6 +1952,25 @@ function getLeadsPage() {
     .notes-saved { color: #27ae60; font-size: 11px; margin-left: 8px; opacity: 0; transition: opacity 0.3s; }
     .notes-saved.show { opacity: 1; }
     .csv-btn { margin-left: auto; }
+    .view-tabs { display: flex; gap: 0; margin-bottom: 16px; }
+    .view-tab { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: bold; color: #aaa; background: #1e2a3a; border: 1px solid #2a3a4a; cursor: pointer; transition: all 0.2s; }
+    .view-tab:first-child { border-radius: 8px 0 0 8px; }
+    .view-tab:last-child { border-radius: 0 8px 8px 0; }
+    .view-tab.active { color: #fff; background: #e94560; border-color: #e94560; }
+    .kanban-board { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 12px; min-height: 300px; }
+    .kanban-col { min-width: 180px; flex: 1; background: #1a2332; border-radius: 10px; padding: 10px; }
+    .kanban-col-header { font-size: 12px; font-weight: bold; color: #fff; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; text-align: center; }
+    .kanban-col-count { font-size: 10px; color: rgba(255,255,255,0.7); margin-left: 4px; }
+    .kanban-card { background: #1e2a3a; border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+    .kanban-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .kanban-card .k-company { font-size: 13px; font-weight: bold; color: #fff; margin-bottom: 4px; }
+    .kanban-card .k-product { font-size: 11px; color: #aaa; margin-bottom: 6px; }
+    .kanban-card .k-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+    .kanban-card .k-score { color: #e94560; font-weight: bold; }
+    .kanban-card .k-followup { color: #aaa; font-size: 10px; }
+    .kanban-card.followup-warn { border-left-color: #e74c3c; }
+    .kanban-card.followup-warn .k-followup { color: #e74c3c; font-weight: bold; }
+    .kanban-card .k-value { color: #27ae60; font-size: 11px; }
   </style>
 </head>
 <body>
@@ -1851,6 +1985,12 @@ function getLeadsPage() {
     </div>
     <h1 style="font-size:22px;">리드 상세 보기</h1>
     <p class="subtitle">최근 분석된 영업 기회 목록</p>
+
+    <div class="view-tabs">
+      <div class="view-tab active" onclick="switchView('list')">리스트</div>
+      <div class="view-tab" onclick="switchView('kanban')">칸반 보드</div>
+    </div>
+
     <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;margin-bottom:12px;" onclick="window.print()">PDF 인쇄</button>
 
     <div class="batch-enrich-bar">
@@ -1860,6 +2000,7 @@ function getLeadsPage() {
     <div id="batchStatus" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div>
 
     <div id="leadsList"><p style="color:#aaa;">로딩 중...</p></div>
+    <div id="kanbanView" style="display:none;"></div>
   </div>
 
   <script>
@@ -1977,8 +2118,13 @@ function getLeadsPage() {
 
         if (!data.leads || data.leads.length === 0) {
           container.innerHTML = '<p style="color:#aaa;">아직 생성된 리드가 없습니다. 메인 페이지에서 보고서를 먼저 생성하세요.</p>';
+          cachedLeads = [];
+          if (currentView === 'kanban') renderKanban([]);
           return;
         }
+
+        cachedLeads = data.leads;
+        if (currentView === 'kanban') renderKanban(cachedLeads);
 
         container.innerHTML = data.leads.map((lead, i) => \`
           <div class="lead-card \${lead.grade === 'B' ? 'grade-b' : ''}">
@@ -1986,7 +2132,7 @@ function getLeadsPage() {
               <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${esc(lead.grade)}</span>
               \${renderStatusSelect(lead)}
               \${lead.enriched ? '<span class="badge-enriched">심층 분석 완료</span>' : ''}
-              \${esc(lead.company)} (\${parseInt(lead.score) || 0}점)
+              \${lead.id ? \`<a href="/leads/\${encodeURIComponent(lead.id)}" style="color:inherit;text-decoration:none;">\${esc(lead.company)}</a>\` : esc(lead.company)} (\${parseInt(lead.score) || 0}점)
             </h3>
             <div class="lead-info">
               <p><strong>프로젝트:</strong> \${esc(lead.summary)}</p>
@@ -2037,9 +2183,266 @@ function getLeadsPage() {
         document.getElementById('leadsList').innerHTML = '<p style="color:#e74c3c;">데이터 로드 실패: ' + esc(e.message) + '</p>';
       }
     }
+    let currentView = 'list';
+    let cachedLeads = [];
+
+    function switchView(view) {
+      currentView = view;
+      document.querySelectorAll('.view-tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0 && view === 'list') || (i === 1 && view === 'kanban'));
+      });
+      document.getElementById('leadsList').style.display = view === 'list' ? '' : 'none';
+      document.getElementById('kanbanView').style.display = view === 'kanban' ? '' : 'none';
+      const container = document.querySelector('.container');
+      container.style.maxWidth = view === 'kanban' ? '1400px' : '700px';
+      if (view === 'kanban') renderKanban(cachedLeads);
+    }
+
+    function renderKanban(leads) {
+      const order = ['NEW','CONTACTED','MEETING','PROPOSAL','NEGOTIATION','WON','LOST'];
+      const groups = {};
+      order.forEach(s => groups[s] = []);
+      leads.forEach(l => { const s = l.status || 'NEW'; if (groups[s]) groups[s].push(l); });
+
+      const today = new Date().toISOString().split('T')[0];
+      const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+      let html = '<div class="kanban-board" style="max-width:100%;overflow-x:auto;">';
+      order.forEach(s => {
+        const cards = groups[s];
+        html += '<div class="kanban-col">';
+        html += '<div class="kanban-col-header" style="background:' + statusColors[s] + '">' + esc(statusLabels[s]) + '<span class="kanban-col-count">(' + cards.length + ')</span></div>';
+        cards.forEach(l => {
+          const fu = l.followUpDate || '';
+          const isWarn = fu && fu <= today;
+          html += '<div class="kanban-card' + (isWarn ? ' followup-warn' : '') + '" onclick="location.href=\\'/leads/' + encodeURIComponent(l.id) + '\\'">';
+          html += '<div class="k-company">' + esc(l.company) + '</div>';
+          html += '<div class="k-product">' + esc(l.product || l.summary || '-') + '</div>';
+          html += '<div class="k-meta">';
+          html += '<span class="k-score">' + esc(l.grade) + ' ' + l.score + '점</span>';
+          if (l.estimatedValue) html += '<span class="k-value">' + l.estimatedValue.toLocaleString() + '만</span>';
+          html += '</div>';
+          if (fu) {
+            html += '<div class="k-followup">' + (isWarn ? '⚠ ' : '') + esc(fu) + '</div>';
+          }
+          html += '</div>';
+        });
+        if (cards.length === 0) html += '<p style="color:#555;font-size:11px;text-align:center;padding:20px 0;">없음</p>';
+        html += '</div>';
+      });
+      html += '</div>';
+      document.getElementById('kanbanView').innerHTML = html;
+    }
+
     document.getElementById('historyLink').href = '/history?profile=' + encodeURIComponent(getProfile());
     if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+
     loadLeads();
+  </script>
+</body>
+</html>`;
+}
+
+function getLeadDetailPage(lead, statusLogs) {
+  const statusLabelsJS = JSON.stringify({ NEW: '신규', CONTACTED: '컨택완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' });
+  const statusColorsJS = JSON.stringify({ NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' });
+  const transitionsJS = JSON.stringify({ NEW: ['CONTACTED'], CONTACTED: ['MEETING'], MEETING: ['PROPOSAL'], PROPOSAL: ['NEGOTIATION'], NEGOTIATION: ['WON','LOST'], LOST: ['NEW'], WON: [] });
+  const leadJSON = JSON.stringify(lead);
+  const logsJSON = JSON.stringify(statusLogs || []);
+  return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${(lead.company || '리드').replace(/[<>"'&]/g, '')} - 리드 상세</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e94560">
+  <style>${getCommonStyles()}
+    .detail-section { background: #1e2a3a; border-radius: 12px; padding: 20px; margin: 16px 0; text-align: left; }
+    .detail-section h3 { color: #e94560; font-size: 16px; margin: 0 0 14px 0; }
+    .detail-row { display: flex; gap: 8px; margin: 8px 0; font-size: 14px; line-height: 1.6; }
+    .detail-row .label { color: #888; min-width: 100px; flex-shrink: 0; }
+    .detail-row .value { color: #ddd; word-break: break-word; }
+    .timeline { list-style: none; padding: 0; margin: 0; position: relative; }
+    .timeline::before { content: ''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: #2a3a4a; }
+    .timeline li { position: relative; padding: 8px 0 8px 30px; font-size: 13px; color: #ccc; }
+    .timeline li::before { content: ''; position: absolute; left: 4px; top: 14px; width: 10px; height: 10px; border-radius: 50%; background: #3498db; border: 2px solid #1e2a3a; }
+    .timeline li:last-child::before { background: #e94560; }
+    .timeline .time { color: #666; font-size: 11px; display: block; }
+    .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .field-group label { color: #aaa; font-size: 12px; display: block; margin-bottom: 4px; }
+    .field-group input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 14px; }
+    .notes-area { width: 100%; min-height: 80px; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #ccc; font-size: 13px; resize: vertical; font-family: inherit; margin-top: 8px; }
+    .save-indicator { color: #27ae60; font-size: 11px; opacity: 0; transition: opacity 0.3s; margin-left: 8px; }
+    .save-indicator.show { opacity: 1; }
+    .status-select-lg { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 14px; cursor: pointer; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+    .badge-a { background: #e94560; color: #fff; }
+    .badge-b { background: #f39c12; color: #fff; }
+    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container" style="max-width:700px;">
+    <div class="top-nav">
+      <a href="/leads" class="back-link" id="backLink">← 리드 목록</a>
+      <div style="display:flex;gap:8px;">
+        <a href="/dashboard" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">대시보드</a>
+      </div>
+    </div>
+    <h1 style="font-size:22px;" id="leadCompany"></h1>
+    <p class="subtitle" id="leadSummary"></p>
+
+    <div id="detailContent"><p style="color:#aaa;">로딩 중...</p></div>
+  </div>
+
+  <script>
+    const lead = ${leadJSON};
+    const statusLogs = ${logsJSON};
+    const statusLabels = ${statusLabelsJS};
+    const statusColors = ${statusColorsJS};
+    const transitions = ${transitionsJS};
+
+    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+    function safeUrl(u) { if(!u) return '#'; const c=String(u).replace(/[\\x00-\\x1f\\x7f\\s]+/g,'').toLowerCase(); if(/^(javascript|data|vbscript|blob):/i.test(c)||/^[/\\\\]{2}/.test(c)) return '#'; return esc(u); }
+    function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
+    function getProfile() { return lead.profileId || 'danfoss'; }
+
+    // Back link에 프로필 쿼리 추가
+    document.getElementById('backLink').href = '/leads?profile=' + encodeURIComponent(getProfile());
+    document.getElementById('leadCompany').textContent = lead.company || '리드 상세';
+    document.getElementById('leadSummary').textContent = lead.summary || '';
+
+    function renderDetail() {
+      const c = document.getElementById('detailContent');
+      let html = '';
+
+      // 기본 정보 + 상태 섹션
+      const currentStatus = lead.status || 'NEW';
+      const allowed = transitions[currentStatus] || [];
+      const statusOpts = [currentStatus, ...allowed].map(s =>
+        '<option value="' + s + '"' + (s === currentStatus ? ' selected' : '') + '>' + esc(statusLabels[s] || s) + '</option>'
+      ).join('');
+
+      html += '<div class="detail-section">';
+      html += '<h3>기본 정보</h3>';
+      html += '<div class="detail-row"><span class="label">상태</span><span class="value">';
+      if (allowed.length > 0) {
+        html += '<select class="status-select-lg" onchange="updateField(\\'status\\', this.value)">' + statusOpts + '</select>';
+      } else {
+        html += '<span style="color:' + (statusColors[currentStatus] || '#fff') + ';font-weight:bold;">' + esc(statusLabels[currentStatus]) + '</span>';
+      }
+      html += '</span></div>';
+      html += '<div class="detail-row"><span class="label">등급</span><span class="value"><span class="badge ' + (lead.grade === 'A' ? 'badge-a' : 'badge-b') + '">' + esc(lead.grade) + '</span> (' + lead.score + '점)</span></div>';
+      html += '<div class="detail-row"><span class="label">추천 제품</span><span class="value">' + esc(lead.product) + '</span></div>';
+      html += '<div class="detail-row"><span class="label">예상 ROI</span><span class="value">' + esc(lead.roi || '-') + '</span></div>';
+      html += '<div class="detail-row"><span class="label">영업 Pitch</span><span class="value">' + esc(lead.salesPitch) + '</span></div>';
+      html += '<div class="detail-row"><span class="label">글로벌 트렌드</span><span class="value">' + esc(lead.globalContext || '-') + '</span></div>';
+      html += '<div class="detail-row"><span class="label">프로필</span><span class="value">' + esc(lead.profileId) + '</span></div>';
+      html += '<div class="detail-row"><span class="label">생성일</span><span class="value">' + esc((lead.createdAt || '').split('T')[0]) + '</span></div>';
+      html += '</div>';
+
+      // 팔로업 + 딜 금액 섹션
+      html += '<div class="detail-section">';
+      html += '<h3>영업 관리</h3>';
+      html += '<div class="field-group">';
+      html += '<div><label>다음 팔로업 날짜</label><input type="date" id="followUpDate" value="' + esc(lead.followUpDate || '') + '" onchange="updateField(\\'follow_up_date\\', this.value)"></div>';
+      html += '<div><label>예상 딜 금액 (만원)</label><input type="number" id="estimatedValue" value="' + (lead.estimatedValue || 0) + '" min="0" onchange="updateField(\\'estimated_value\\', parseInt(this.value)||0)"></div>';
+      html += '</div>';
+      html += '<span class="save-indicator" id="saveIndicator">저장됨</span>';
+      html += '</div>';
+
+      // Enrichment 섹션
+      if (lead.enriched) {
+        html += '<div class="detail-section">';
+        html += '<h3>심층 분석 결과</h3>';
+        if (lead.keyFigures && lead.keyFigures.length) {
+          html += '<p style="color:#ce93d8;font-size:13px;font-weight:bold;margin-bottom:6px;">핵심 수치</p>';
+          html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">' + lead.keyFigures.map(f => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(f) + '</li>').join('') + '</ul>';
+        }
+        if (lead.painPoints && lead.painPoints.length) {
+          html += '<p style="color:#ce93d8;font-size:13px;font-weight:bold;margin-bottom:6px;">페인포인트</p>';
+          html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">' + lead.painPoints.map(p => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(p) + '</li>').join('') + '</ul>';
+        }
+        if (lead.actionItems && lead.actionItems.length) {
+          html += '<p style="color:#ce93d8;font-size:13px;font-weight:bold;margin-bottom:6px;">액션 아이템</p>';
+          html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">' + lead.actionItems.map(a => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(a) + '</li>').join('') + '</ul>';
+        }
+        if (lead.enrichedAt) html += '<p style="color:#666;font-size:11px;">분석일: ' + esc(lead.enrichedAt.split('T')[0]) + '</p>';
+        html += '</div>';
+      }
+
+      // 출처 섹션
+      if (lead.sources && lead.sources.length > 0) {
+        html += '<div class="detail-section">';
+        html += '<h3>출처 (' + lead.sources.length + '건)</h3>';
+        html += '<ul style="list-style:none;padding:0;">';
+        lead.sources.forEach(s => {
+          html += '<li style="margin:6px 0;"><a href="' + safeUrl(s.url) + '" target="_blank" rel="noopener" style="color:#3498db;text-decoration:none;font-size:13px;">' + esc(s.title) + '</a></li>';
+        });
+        html += '</ul></div>';
+      }
+
+      // 메모 섹션
+      html += '<div class="detail-section">';
+      html += '<h3>메모</h3>';
+      html += '<textarea class="notes-area" id="notesArea" placeholder="메모를 입력하세요..." oninput="scheduleNoteSave()">' + esc(lead.notes || '') + '</textarea>';
+      html += '</div>';
+
+      // 타임라인 섹션
+      html += '<div class="detail-section">';
+      html += '<h3>상태 변경 타임라인</h3>';
+      if (statusLogs.length === 0) {
+        html += '<p style="color:#666;font-size:13px;">아직 상태 변경 이력이 없습니다.</p>';
+      } else {
+        html += '<ul class="timeline">';
+        statusLogs.forEach(log => {
+          const time = log.changedAt ? new Date(log.changedAt).toLocaleString('ko-KR') : '';
+          html += '<li><span class="time">' + esc(time) + '</span>' +
+            '<span style="color:' + (statusColors[log.fromStatus] || '#aaa') + '">' + esc(statusLabels[log.fromStatus] || log.fromStatus) + '</span>' +
+            ' → <span style="color:' + (statusColors[log.toStatus] || '#aaa') + '">' + esc(statusLabels[log.toStatus] || log.toStatus) + '</span></li>';
+        });
+        html += '</ul>';
+      }
+      html += '</div>';
+
+      c.innerHTML = html;
+    }
+
+    async function updateField(field, value) {
+      try {
+        const body = {};
+        body[field] = value;
+        if (field === 'status') body.status = value;
+        const res = await fetch('/api/leads/' + encodeURIComponent(lead.id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!data.success) { alert(data.message); if (field === 'status') renderDetail(); return; }
+        // 로컬 lead 객체 업데이트
+        if (data.lead) Object.assign(lead, data.lead);
+        showSaved();
+        if (field === 'status') location.reload();
+      } catch(e) { alert('업데이트 실패: ' + e.message); }
+    }
+
+    let noteTimer;
+    function scheduleNoteSave() {
+      clearTimeout(noteTimer);
+      noteTimer = setTimeout(async () => {
+        const val = document.getElementById('notesArea').value;
+        await updateField('notes', val);
+      }, 800);
+    }
+
+    function showSaved() {
+      const el = document.getElementById('saveIndicator');
+      if (el) { el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2000); }
+    }
+
+    renderDetail();
   </script>
 </body>
 </html>`;
@@ -2480,6 +2883,14 @@ function getDashboardPage(env) {
     .section-title { font-size: 16px; color: #fff; margin: 20px 0 12px; }
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
     .profile-filter { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 13px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+    .badge-status { background: #3498db; color: #fff; }
+    .badge-status.contacted { background: #9b59b6; }
+    .badge-status.meeting { background: #e67e22; }
+    .badge-status.proposal { background: #1abc9c; }
+    .badge-status.negotiation { background: #2980b9; }
+    .badge-status.won { background: #27ae60; }
+    .badge-status.lost { background: #7f8c8d; }
   </style>
 </head>
 <body>
@@ -2535,6 +2946,8 @@ function getDashboardPage(env) {
         html += \`<div class="dash-card"><div class="num" style="color:#e94560;">\${m.gradeA}</div><div class="label">Grade A</div></div>\`;
         html += \`<div class="dash-card"><div class="num" style="color:#27ae60;">\${m.conversionRate}%</div><div class="label">전환율</div></div>\`;
         html += \`<div class="dash-card"><div class="num" style="color:#3498db;">\${m.active}</div><div class="label">활성 리드</div></div>\`;
+        html += \`<div class="dash-card"><div class="num" style="color:#f39c12;">\${(m.totalPipelineValue || 0).toLocaleString()}</div><div class="label">파이프라인 가치(만원)</div></div>\`;
+        html += \`<div class="dash-card"><div class="num" style="color:#e74c3c;">\${(m.followUpAlerts || []).length}</div><div class="label">팔로업 알림</div></div>\`;
         html += '</div>';
 
         // 파이프라인 바
@@ -2556,6 +2969,72 @@ function getDashboardPage(env) {
             const cnt = m.statusDistribution[s] || 0;
             if (cnt === 0) return;
             html += \`<span style="font-size:11px;color:#aaa;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:\${statusColors[s]};margin-right:4px;"></span>\${statusLabels[s]} \${cnt}</span>\`;
+          });
+          html += '</div>';
+        }
+
+        // 팔로업 알림
+        if (m.followUpAlerts && m.followUpAlerts.length > 0) {
+          html += '<h3 class="section-title" style="color:#e74c3c;">팔로업 알림</h3>';
+          html += '<ul class="activity-feed">';
+          m.followUpAlerts.forEach(a => {
+            const icon = a.isOverdue ? '🔴' : a.isToday ? '🟡' : '🔵';
+            const label = a.isOverdue ? '기한 초과' : a.isToday ? '오늘' : '내일';
+            html += \`<li style="border-left:3px solid \${a.isOverdue ? '#e74c3c' : '#f39c12'};padding-left:12px;">
+              \${icon} <a href="/leads/\${encodeURIComponent(a.id)}" style="color:#e94560;text-decoration:none;font-weight:bold;">\${esc(a.company)}</a>
+              <span style="color:#888;font-size:11px;margin-left:8px;">\${esc(a.followUpDate)} (\${label})</span>
+              <span class="badge badge-status \${(a.status||'').toLowerCase()}" style="font-size:10px;padding:1px 6px;margin-left:6px;">\${esc(statusLabels[a.status] || a.status)}</span>
+            </li>\`;
+          });
+          html += '</ul>';
+        }
+
+        // 단계별 전환율
+        if (m.stageConversions && m.stageConversions.length > 0) {
+          html += '<h3 class="section-title">단계별 전환율</h3>';
+          html += '<div style="display:grid;gap:8px;margin-bottom:16px;">';
+          m.stageConversions.forEach(sc => {
+            const barWidth = Math.max(sc.rate, 2);
+            html += \`<div style="font-size:12px;color:#ccc;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                <span>\${esc(statusLabels[sc.from])} → \${esc(statusLabels[sc.to])}</span>
+                <span style="color:\${sc.rate >= 50 ? '#27ae60' : sc.rate >= 25 ? '#f39c12' : '#e74c3c'};font-weight:bold;">\${sc.rate}% (\${sc.count}건)</span>
+              </div>
+              <div style="background:#2a3a4a;border-radius:4px;height:6px;overflow:hidden;">
+                <div style="width:\${barWidth}%;background:\${sc.rate >= 50 ? '#27ae60' : sc.rate >= 25 ? '#f39c12' : '#e74c3c'};height:100%;border-radius:4px;transition:width 0.5s;"></div>
+              </div>
+            </div>\`;
+          });
+          html += '</div>';
+        }
+
+        // 평균 체류 시간
+        if (m.avgDwellDays && Object.keys(m.avgDwellDays).length > 0) {
+          html += '<h3 class="section-title">평균 체류 시간 (일)</h3>';
+          html += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;">';
+          ['NEW','CONTACTED','MEETING','PROPOSAL','NEGOTIATION'].forEach(s => {
+            if (m.avgDwellDays[s] !== undefined) {
+              html += \`<div style="background:#1e2a3a;border-radius:8px;padding:10px 14px;text-align:center;min-width:80px;">
+                <div style="font-size:18px;font-weight:bold;color:\${statusColors[s]}">\${m.avgDwellDays[s]}</div>
+                <div style="font-size:11px;color:#aaa;">\${esc(statusLabels[s])}</div>
+              </div>\`;
+            }
+          });
+          html += '</div>';
+        }
+
+        // 파이프라인 가치 (단계별)
+        if (m.pipelineValueByStatus && Object.values(m.pipelineValueByStatus).some(v => v > 0)) {
+          html += '<h3 class="section-title">파이프라인 가치 (만원)</h3>';
+          html += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;">';
+          ['NEW','CONTACTED','MEETING','PROPOSAL','NEGOTIATION','WON'].forEach(s => {
+            const v = m.pipelineValueByStatus[s] || 0;
+            if (v > 0) {
+              html += \`<div style="background:#1e2a3a;border-radius:8px;padding:10px 14px;text-align:center;min-width:90px;">
+                <div style="font-size:16px;font-weight:bold;color:#27ae60;">\${v.toLocaleString()}</div>
+                <div style="font-size:11px;color:#aaa;">\${esc(statusLabels[s])}</div>
+              </div>\`;
+            }
           });
           html += '</div>';
         }
