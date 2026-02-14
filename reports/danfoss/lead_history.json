@@ -431,7 +431,7 @@
     "id": "HJ중공업_20260213_8e5a",
     "status": "NEW",
     "createdAt": "2026-02-13T07:51:28.613Z",
-    "updatedAt": "2026-02-13T07:51:28.613Z",
+    "updatedAt": "2026-02-14T02:59:23.663Z",
     "company": "HJ중공업",
     "summary": "HJ중공업, 1만TEU급 친환경 컨테이너선 수주",
     "product": "iC7 Marine 드라이브",
@@ -439,7 +439,7 @@
     "grade": "A",
     "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
     "salesPitch": "HJ중공업의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
-    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: NYK Line (일본) - EEXI 규제 100% 충족, 연간 $2M 연료비 절감",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: Maersk (덴마크) - 연료비 18% 절감, IMO 2030 규제 선제 대응",
     "sources": [
       {
         "title": "HJ중공업, 1만TEU급 친환경 컨테이너선 수주 - 팍스경제TV",
@@ -491,7 +491,7 @@
     "id": "DL이앤씨_20260213_dnwp",
     "status": "NEW",
     "createdAt": "2026-02-13T07:51:28.613Z",
-    "updatedAt": "2026-02-13T07:51:28.613Z",
+    "updatedAt": "2026-02-14T02:59:23.663Z",
     "company": "DL이앤씨",
     "summary": "DL이앤씨, 데이터센터 영토 확장 가속",
     "product": "Turbocor 컴프레서",
@@ -499,7 +499,7 @@
     "grade": "A",
     "roi": "냉각 전력 35~40% 절감, PUE 1.25 달성",
     "salesPitch": "DL이앤씨 데이터센터에 Equinix가 글로벌 표준으로 채택한 Turbocor 컴프레서로 PUE 1.25를 달성하세요.",
-    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: NTT (일본) - 유지보수 비용 60% 감소, 가동률 99.99%",
+    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: Digital Realty (미국) - 연간 운영비 $1.5M 절감",
     "sources": [
       {
         "title": "DL이앤씨, 데이터센터 영토 확장 가속 - 딜사이트",
@@ -511,7 +511,7 @@
     "id": "부평청천동_20260213_8032",
     "status": "NEW",
     "createdAt": "2026-02-13T07:51:28.613Z",
-    "updatedAt": "2026-02-13T07:51:28.613Z",
+    "updatedAt": "2026-02-14T02:59:23.663Z",
     "company": "부평 청천동",
     "summary": "부평 청천동 데이터센터 2단계 착공··· 1단계 1.7배 높은 규모",
     "product": "Turbocor 컴프레서",
@@ -524,6 +524,46 @@
       {
         "title": "부평 청천동 데이터센터 2단계 착공··· 1단계 1.7배 높은 규모 - 인천투데이",
         "url": "https://search.naver.com/search.naver?where=news&query=%EB%B6%80%ED%8F%89%20%EC%B2%AD%EC%B2%9C%EB%8F%99%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0%202%EB%8B%A8%EA%B3%84%20%EC%B0%A9%EA%B3%B5%C2%B7%C2%B7%C2%B7%201%EB%8B%A8%EA%B3%84%201.7%EB%B0%B0%20%EB%86%92%EC%9D%80%20%EA%B7%9C%EB%AA%A8"
+      }
+    ]
+  },
+  {
+    "id": "체질개선도_20260214_8iyx",
+    "status": "NEW",
+    "createdAt": "2026-02-14T02:59:23.663Z",
+    "updatedAt": "2026-02-14T02:59:23.663Z",
+    "company": "체질개선도",
+    "summary": "고부가선박 수주 호조 韓조선, 中·日 추격 속 체질개선도 분주",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
+    "grade": "A",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "체질개선도의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: MSC (스위스) - 탄소 배출 25% 감소, CII 등급 A 달성",
+    "sources": [
+      {
+        "title": "고부가선박 수주 호조 韓조선, 中·日 추격 속 체질개선도 분주 - 스트레이트뉴스",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EA%B3%A0%EB%B6%80%EA%B0%80%EC%84%A0%EB%B0%95%20%EC%88%98%EC%A3%BC%20%ED%98%B8%EC%A1%B0%20%E9%9F%93%EC%A1%B0%EC%84%A0%2C%20%E4%B8%AD%C2%B7%E6%97%A5%20%EC%B6%94%EA%B2%A9%20%EC%86%8D%20%EC%B2%B4%EC%A7%88%EA%B0%9C%EC%84%A0%EB%8F%84%20%EB%B6%84%EC%A3%BC"
+      }
+    ]
+  },
+  {
+    "id": "HJ중공업_20260214_vyh4",
+    "status": "NEW",
+    "createdAt": "2026-02-14T02:59:23.663Z",
+    "updatedAt": "2026-02-14T02:59:23.663Z",
+    "company": "HJ중공업",
+    "summary": "HJ중공업, 3532억 규모 친환경 컨테이너선 2척 수주..영도조선소서 1만TEU급 선박 첫 건조",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
+    "grade": "A",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "HJ중공업의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: NYK Line (일본) - EEXI 규제 100% 충족, 연간 $2M 연료비 절감",
+    "sources": [
+      {
+        "title": "HJ중공업, 3532억 규모 친환경 컨테이너선 2척 수주..영도조선소서 1만TEU급 선박 첫 건조 - 파이낸스스코프",
+        "url": "https://search.naver.com/search.naver?where=news&query=HJ%EC%A4%91%EA%B3%B5%EC%97%85%2C%203532%EC%96%B5%20%EA%B7%9C%EB%AA%A8%20%EC%B9%9C%ED%99%98%EA%B2%BD%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%EC%84%A0%202%EC%B2%99%20%EC%88%98%EC%A3%BC..%EC%98%81%EB%8F%84%EC%A1%B0%EC%84%A0%EC%86%8C%EC%84%9C%201%EB%A7%8CTEU%EA%B8%89%20%EC%84%A0%EB%B0%95%20%EC%B2%AB%20%EA%B1%B4%EC%A1%B0"
       }
     ]
   }
