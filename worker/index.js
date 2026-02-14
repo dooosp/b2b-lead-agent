@@ -467,14 +467,14 @@ function rowToLead(row) {
     company: row.company,
     summary: row.summary,
     product: row.product,
-    score: row.score,
+    score: Number(row.score) || 0,
     grade: row.grade,
     roi: row.roi,
     salesPitch: row.sales_pitch,
     globalContext: row.global_context,
     sources: (() => { try { return JSON.parse(row.sources || '[]'); } catch { return []; } })(),
     notes: row.notes || '',
-    enriched: row.enriched || 0,
+    enriched: Number(row.enriched) || 0,
     articleBody: row.article_body || '',
     actionItems: (() => { try { return JSON.parse(row.action_items || '[]'); } catch { return []; } })(),
     keyFigures: (() => { try { return JSON.parse(row.key_figures || '[]'); } catch { return []; } })(),
@@ -598,20 +598,22 @@ function pickBestSourceUrl(sources) {
 
 async function fetchArticleBodyWorker(url) {
   if (!url) return '';
+  let timer = null;
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
+    timer = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(url, {
       signal: controller.signal,
       redirect: 'follow',
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; B2BLeadBot/1.0)' }
     });
-    clearTimeout(timer);
     if (!res.ok) return '';
     const html = await res.text();
     return extractBodyFromHTML(html);
   } catch {
     return '';
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
@@ -682,6 +684,34 @@ Return ONLY valid JSON, no markdown fences.`;
     if (match) return JSON.parse(match[0]);
     throw new Error('Enrichment JSON 파싱 실패');
   }
+}
+
+function normalizeStringArray(value, maxLen = 10) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map(v => (typeof v === 'string' ? v.trim() : ''))
+    .filter(Boolean)
+    .slice(0, maxLen);
+}
+
+function clampText(value, fallback = '', maxLen = 800) {
+  const raw = typeof value === 'string' ? value.trim() : '';
+  if (raw) return raw.slice(0, maxLen);
+  const fb = typeof fallback === 'string' ? fallback.trim() : '';
+  return fb.slice(0, maxLen);
+}
+
+function normalizeEnrichData(enrichData, lead) {
+  const data = enrichData && typeof enrichData === 'object' ? enrichData : {};
+  return {
+    summary: clampText(data.summary, lead.summary, 500),
+    roi: clampText(data.roi, lead.roi, 500),
+    salesPitch: clampText(data.salesPitch, lead.salesPitch, 700),
+    globalContext: clampText(data.globalContext, lead.globalContext, 700),
+    actionItems: normalizeStringArray(data.actionItems, 10),
+    keyFigures: normalizeStringArray(data.keyFigures, 10),
+    painPoints: normalizeStringArray(data.painPoints, 10)
+  };
 }
 
 async function updateLeadEnrichment(db, id, enrichData, articleBody) {
@@ -755,6 +785,7 @@ async function getDashboardMetrics(db, profileId) {
 
 async function handleEnrichLead(request, env, leadId) {
   if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
+  if (!env.GEMINI_API_KEY) return jsonResponse({ success: false, message: '서버 설정 오류: GEMINI_API_KEY가 설정되지 않았습니다.' }, 503);
   const lead = await getLeadById(env.DB, leadId);
   if (!lead) return jsonResponse({ success: false, message: '리드를 찾을 수 없습니다.' }, 404);
 
@@ -763,19 +794,28 @@ async function handleEnrichLead(request, env, leadId) {
     return jsonResponse({ success: false, message: '이미 분석된 리드입니다. ?force=true로 재실행하세요.', lead }, 409);
   }
 
-  const sourceUrl = pickBestSourceUrl(lead.sources);
-  const articleBody = await fetchArticleBodyWorker(sourceUrl);
-  const enrichData = await callGeminiEnrich(lead, articleBody, env);
-  await updateLeadEnrichment(env.DB, leadId, enrichData, articleBody);
+  try {
+    const sourceUrl = pickBestSourceUrl(lead.sources);
+    const articleBody = await fetchArticleBodyWorker(sourceUrl);
+    const enrichData = normalizeEnrichData(await callGeminiEnrich(lead, articleBody, env), lead);
+    await updateLeadEnrichment(env.DB, leadId, enrichData, articleBody);
 
-  const updated = await getLeadById(env.DB, leadId);
-  return jsonResponse({ success: true, lead: updated, hadArticle: articleBody.length > 50 });
+    const updated = await getLeadById(env.DB, leadId);
+    return jsonResponse({ success: true, lead: updated, hadArticle: articleBody.length > 50 });
+  } catch (e) {
+    return jsonResponse({ success: false, message: '심층 분석 실패: ' + (e?.message || 'unknown error') }, 502);
+  }
 }
 
 async function handleBatchEnrich(request, env) {
   if (!env.DB) return jsonResponse({ success: false, message: 'D1 데이터베이스가 설정되지 않았습니다.' }, 503);
+  if (!env.GEMINI_API_KEY) return jsonResponse({ success: false, message: '서버 설정 오류: GEMINI_API_KEY가 설정되지 않았습니다.' }, 503);
   const body = await request.json().catch(() => ({}));
-  const profileId = resolveProfileId(body.profile, env);
+  const requestedProfile = typeof body.profile === 'string' ? body.profile.trim() : '';
+  const profileId = resolveProfileId(requestedProfile, env);
+  if (requestedProfile && requestedProfile !== profileId) {
+    return jsonResponse({ success: false, message: `유효하지 않은 프로필입니다: ${requestedProfile}` }, 400);
+  }
 
   await ensureD1Schema(env.DB);
   const { results } = await env.DB.prepare(
@@ -786,7 +826,7 @@ async function handleBatchEnrich(request, env) {
     const { results: remaining } = await env.DB.prepare(
       'SELECT COUNT(*) as cnt FROM leads WHERE profile_id = ? AND (enriched IS NULL OR enriched = 0)'
     ).bind(profileId).all();
-    return jsonResponse({ success: true, enriched: 0, remaining: 0, message: '분석할 리드가 없습니다.' });
+    return jsonResponse({ success: true, enriched: 0, remaining: remaining?.[0]?.cnt || 0, message: '분석할 리드가 없습니다.' });
   }
 
   const enrichedResults = [];
@@ -795,7 +835,7 @@ async function handleBatchEnrich(request, env) {
     try {
       const sourceUrl = pickBestSourceUrl(lead.sources);
       const articleBody = await fetchArticleBodyWorker(sourceUrl);
-      const enrichData = await callGeminiEnrich(lead, articleBody, env);
+      const enrichData = normalizeEnrichData(await callGeminiEnrich(lead, articleBody, env), lead);
       await updateLeadEnrichment(env.DB, lead.id, enrichData, articleBody);
       enrichedResults.push({ id: lead.id, company: lead.company, success: true });
     } catch (err) {
