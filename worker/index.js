@@ -29,8 +29,11 @@ export default {
       return await handleTrigger(request, env);
     }
     if (url.pathname === '/api/leads' && request.method === 'GET') {
-      const profile = resolveProfileId(url.searchParams.get('profile'), env);
-      return addCorsHeaders(await fetchLeads(env, profile), origin, env);
+      const profileRes = resolveLeadProfileForQuery(url.searchParams.get('profile'), env);
+      if (!profileRes.ok) {
+        return addCorsHeaders(jsonResponse({ success: false, message: profileRes.message }, 400), origin, env);
+      }
+      return addCorsHeaders(await fetchLeads(env, profileRes.profileId), origin, env);
     }
     if (url.pathname === '/api/ppt' && request.method === 'POST') {
       return addCorsHeaders(await generatePPT(request, env), origin, env);
@@ -39,8 +42,11 @@ export default {
       return addCorsHeaders(await handleRoleplay(request, env), origin, env);
     }
     if (url.pathname === '/api/history' && request.method === 'GET') {
-      const profile = resolveProfileId(url.searchParams.get('profile'), env);
-      return addCorsHeaders(await fetchHistory(env, profile), origin, env);
+      const profileRes = resolveLeadProfileForQuery(url.searchParams.get('profile'), env);
+      if (!profileRes.ok) {
+        return addCorsHeaders(jsonResponse({ success: false, message: profileRes.message }, 400), origin, env);
+      }
+      return addCorsHeaders(await fetchHistory(env, profileRes.profileId), origin, env);
     }
     // POST /api/leads/batch-enrich — 일괄 심층 분석
     if (url.pathname === '/api/leads/batch-enrich' && request.method === 'POST') {
@@ -149,7 +155,7 @@ function addCorsHeaders(response, origin, env) {
   if (!isAllowedOrigin(origin, env)) return response;
   const h = new Response(response.body, response);
   h.headers.set('Access-Control-Allow-Origin', origin);
-  h.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+  h.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   h.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   h.headers.set('Access-Control-Max-Age', '86400');
   h.headers.set('Vary', 'Origin');
@@ -163,7 +169,7 @@ function handleOptions(request, env) {
     status: 204,
     headers: {
       'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400'
     }
@@ -256,10 +262,16 @@ async function handleTrigger(request, env) {
 
 async function fetchLeads(env, profile) {
   try {
+    const isSelfServiceProfile = profile.startsWith('self-service:');
     // D1 우선 조회
     if (env.DB) {
       const dbLeads = await getLeadsByProfile(env.DB, profile);
       if (dbLeads.length > 0) return jsonResponse({ leads: dbLeads, profile, source: 'd1' });
+    }
+
+    // self-service 프로필은 D1 저장 데이터만 조회
+    if (isSelfServiceProfile) {
+      return jsonResponse({ leads: [], profile, source: 'd1', message: '해당 셀프서비스 리드가 없습니다.' });
     }
 
     // GitHub CDN fallback + lazy migration
@@ -283,10 +295,16 @@ async function fetchLeads(env, profile) {
 
 async function fetchHistory(env, profile) {
   try {
+    const isSelfServiceProfile = profile.startsWith('self-service:');
     // D1 우선 조회
     if (env.DB) {
       const dbHistory = await getLeadsByProfile(env.DB, profile, { limit: 500 });
       if (dbHistory.length > 0) return jsonResponse({ history: dbHistory, profile, source: 'd1' });
+    }
+
+    // self-service 프로필은 D1 저장 데이터만 조회
+    if (isSelfServiceProfile) {
+      return jsonResponse({ history: [], profile, source: 'd1', message: '해당 셀프서비스 히스토리가 없습니다.' });
     }
 
     // GitHub CDN fallback + lazy migration
@@ -1903,7 +1921,8 @@ async function handleSelfServiceAnalyze(request, env, ctx) {
           mode: profileMode === 'ai' ? 'quick-fallback' : `quick-fallback+${profileMode}`,
           articles: articles.length,
           leads: fallbackLeads.length,
-          elapsed: Math.round((Date.now() - startTime) / 1000)
+          elapsed: Math.round((Date.now() - startTime) / 1000),
+          bodyHitRate
         }
       });
     }
@@ -1924,7 +1943,8 @@ async function handleSelfServiceAnalyze(request, env, ctx) {
           mode: profileMode === 'ai' ? 'quick-fallback' : `quick-fallback+${profileMode}`,
           articles: articles.length,
           leads: fallbackLeads.length,
-          elapsed: Math.round((Date.now() - startTime) / 1000)
+          elapsed: Math.round((Date.now() - startTime) / 1000),
+          bodyHitRate
         }
       });
     }
@@ -1974,6 +1994,26 @@ function resolveProfileId(profileId, env) {
   const candidate = typeof profileId === 'string' ? profileId.trim() : '';
   if (!candidate) return fallbackId;
   return profiles.some(p => p.id === candidate) ? candidate : fallbackId;
+}
+
+function resolveLeadProfileForQuery(profileId, env) {
+  const candidate = typeof profileId === 'string' ? profileId.trim() : '';
+  if (!candidate) return { ok: true, profileId: resolveProfileId('', env) };
+
+  // 셀프서비스 저장 키: self-service:{company}
+  if (candidate.startsWith('self-service:')) {
+    const suffix = candidate.slice('self-service:'.length).trim();
+    if (!suffix || suffix.length > 80) {
+      return { ok: false, message: '유효하지 않은 self-service 프로필 형식입니다.' };
+    }
+    return { ok: true, profileId: `self-service:${suffix}` };
+  }
+
+  const resolved = resolveProfileId(candidate, env);
+  if (resolved !== candidate) {
+    return { ok: false, message: `유효하지 않은 프로필입니다: ${candidate}` };
+  }
+  return { ok: true, profileId: resolved };
 }
 
 function renderProfileOptions(env) {
