@@ -1,0 +1,23 @@
+diff --git a/.github/workflows/generate-report.yml b/.github/workflows/generate-report.yml
+index 9d80925..c353d03 100644
+--- a/.github/workflows/generate-report.yml
++++ b/.github/workflows/generate-report.yml
+@@ -27,12 +27,15 @@ jobs:
+           GMAIL_USER: ${{ secrets.GMAIL_USER }}
+           GMAIL_PASS: ${{ secrets.GMAIL_PASS }}
+           GMAIL_RECIPIENT: ${{ secrets.GMAIL_RECIPIENT }}
+-        run: node main.js --email
++          PROFILE: ${{ github.event.client_payload.profile || 'danfoss' }}
++        run: node main.js --profile $PROFILE --email
+ 
+       - name: Commit leads data
++        env:
++          PROFILE: ${{ github.event.client_payload.profile || 'danfoss' }}
+         run: |
+           git config user.name "github-actions[bot]"
+           git config user.email "github-actions[bot]@users.noreply.github.com"
+-          git add reports/latest_leads.json reports/lead_history.json
+-          git diff --cached --quiet || git commit -m "Update leads data and history"
++          git add reports/$PROFILE/latest_leads.json reports/$PROFILE/lead_history.json
++          git diff --cached --quiet || git commit -m "Update $PROFILE leads data"
+           git push
