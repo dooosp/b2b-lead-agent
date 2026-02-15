@@ -16,17 +16,17 @@ export function getPPTPage() {
   </style>
 </head>
 <body>
-  <div class="container" style="max-width:700px;">
+  <main class="container" style="max-width:700px;">
     <a id="leadsBackLink" href="/leads" class="back-link">← 리드 목록</a>
     <h1 style="font-size:22px;">PPT 제안서 생성</h1>
     <p class="subtitle">리드를 선택하면 5슬라이드 제안서 초안을 생성합니다</p>
 
-    <select id="leadSelect"><option value="">리드 로딩 중...</option></select>
-    <input type="password" id="password" placeholder="비밀번호 입력" class="input-field">
+    <select id="leadSelect" aria-label="리드 선택"><option value="">리드 로딩 중...</option></select>
+    <input type="password" id="password" placeholder="비밀번호 입력" aria-label="비밀번호 입력" class="input-field">
     <button class="btn btn-primary" id="genBtn" onclick="generatePPT()">제안서 생성</button>
     <div class="status" id="status"></div>
     <div class="ppt-output" id="output"></div>
-  </div>
+  </main>
 
   <script>
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }

@@ -36,24 +36,24 @@ export function getDashboardPage(env) {
   </style>
 </head>
 <body>
-  <div class="container" style="max-width:700px;">
-    <div class="top-nav">
+  <main class="container" style="max-width:700px;">
+    <nav class="top-nav" aria-label="상단 이동">
       <a href="/" class="back-link">← 메인</a>
       <div style="display:flex;gap:8px;">
         <a id="dashboardLeadsLink" href="/leads" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">리드 목록</a>
         <a id="dashboardHistoryLink" href="/history" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">히스토리</a>
       </div>
-    </div>
+    </nav>
     <h1 style="font-size:22px;">대시보드</h1>
     <p class="subtitle">리드 파이프라인 현황</p>
 
-    <select class="profile-filter" id="profileFilter" onchange="loadDashboard()">
+    <select class="profile-filter" id="profileFilter" aria-label="프로필 필터" onchange="loadDashboard()">
       <option value="all">전체 프로필</option>
       ${profileOptions}
     </select>
 
     <div id="dashContent"><p style="color:#aaa;">로딩 중...</p></div>
-  </div>
+  </main>
 
   <script>
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }

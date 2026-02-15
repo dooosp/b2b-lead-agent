@@ -33,21 +33,22 @@ export function getHistoryPage() {
     .stat-item { text-align: center; }
     .stat-item .num { font-size: 24px; font-weight: bold; color: #e94560; }
     .stat-item .label { font-size: 11px; color: #aaa; }
+    .top-nav { display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px; }
   </style>
 </head>
 <body>
-  <div class="container" style="max-width:700px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+  <main class="container" style="max-width:700px;">
+    <nav class="top-nav" aria-label="상단 이동">
       <a id="leadsBackLink" href="/leads" class="back-link" style="margin-bottom:0;">← 최신 리드</a>
       <a href="/dashboard" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">대시보드</a>
-    </div>
+    </nav>
     <h1 style="font-size:22px;">리드 히스토리</h1>
     <p class="subtitle">발굴된 모든 리드를 추적하고 관리하세요</p>
 
     <div class="stats" id="stats"></div>
     <div class="filter-bar" id="filterBar"></div>
     <div id="historyList"><p style="color:#aaa;">로딩 중...</p></div>
-  </div>
+  </main>
 
   <script>
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }

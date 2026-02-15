@@ -42,21 +42,21 @@ export function getMainPage(env) {
   </style>
 </head>
 <body>
-  <div class="container" style="max-width:600px;">
+  <main class="container" style="max-width:600px;">
     <div class="logo">📊</div>
     <h1>B2B Sales Intelligence</h1>
     <p class="subtitle">AI 기반 영업 인텔리전스 플랫폼</p>
 
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('self-service')">셀프서비스</button>
-      <button class="tab-btn" onclick="switchTab('managed')">관리 프로필</button>
+    <div class="tabs" role="tablist" aria-label="기능 탭">
+      <button id="tab-btn-self-service" class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-self-service" onclick="switchTab('self-service')">셀프서비스</button>
+      <button id="tab-btn-managed" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-managed" onclick="switchTab('managed')">관리 프로필</button>
     </div>
 
     <!-- 셀프서비스 탭 -->
-    <div class="tab-content active" id="tab-self-service">
+    <div class="tab-content active" id="tab-self-service" role="tabpanel" aria-labelledby="tab-btn-self-service">
       <p style="font-size:13px;color:#aaa;margin-bottom:16px;">회사명과 산업만 입력하면 AI가 즉시 리드를 분석합니다</p>
-      <input type="text" class="ss-input" id="ssCompany" placeholder="회사명 (예: 삼성전자)" maxlength="50">
-      <input type="text" class="ss-input" id="ssIndustry" placeholder="산업 분야 (예: 반도체 제조)" maxlength="50">
+      <input type="text" class="ss-input" id="ssCompany" placeholder="회사명 (예: 삼성전자)" aria-label="회사명 (예: 삼성전자)" maxlength="50">
+      <input type="text" class="ss-input" id="ssIndustry" placeholder="산업 분야 (예: 반도체 제조)" aria-label="산업 분야 (예: 반도체 제조)" maxlength="50">
       <button class="btn btn-primary" id="ssBtn" onclick="selfServiceAnalyze()">즉시 분석</button>
       <div class="progress-bar" id="ssProgress"><div class="progress-fill" id="ssProgressFill"></div></div>
       <div class="status" id="ssStatus"></div>
@@ -64,25 +64,25 @@ export function getMainPage(env) {
     </div>
 
     <!-- 관리 프로필 탭 -->
-    <div class="tab-content" id="tab-managed">
-      <select class="profile-select" id="profileSelect">
+    <div class="tab-content" id="tab-managed" role="tabpanel" aria-labelledby="tab-btn-managed">
+      <select class="profile-select" id="profileSelect" aria-label="프로필 선택">
         ${profileOptions}
       </select>
-      <input type="password" id="password" placeholder="비밀번호 입력" class="input-field">
+      <input type="password" id="password" placeholder="비밀번호 입력" aria-label="비밀번호 입력" class="input-field">
       <button class="btn btn-primary" id="generateBtn" onclick="generate()">보고서 생성</button>
       <div class="status" id="status"></div>
-      <div class="nav-buttons">
+      <nav class="nav-buttons top-nav" aria-label="주요 페이지 이동">
         <a href="/leads" class="btn btn-secondary">리드 상세 보기</a>
         <a href="/dashboard" class="btn btn-secondary">대시보드</a>
         <a href="/ppt" class="btn btn-secondary">PPT 제안서</a>
         <a href="/roleplay" class="btn btn-secondary">영업 역량 시뮬레이션</a>
-      </div>
+      </nav>
       <div class="info">
         뉴스 기반 영업 기회 분석 후 리포트를 발송합니다<br>
         처리에 1~2분 정도 소요됩니다.
       </div>
     </div>
-  </div>
+  </main>
 
   <script>
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
@@ -90,7 +90,9 @@ export function getMainPage(env) {
 
     function switchTab(tab) {
       document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        b.classList.toggle('active', (tab === 'self-service' ? i === 0 : i === 1));
+        const active = (tab === 'self-service' ? i === 0 : i === 1);
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-selected', active ? 'true' : 'false');
       });
       document.getElementById('tab-self-service').classList.toggle('active', tab === 'self-service');
       document.getElementById('tab-managed').classList.toggle('active', tab === 'managed');

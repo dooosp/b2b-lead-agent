@@ -67,15 +67,15 @@ export function getLeadsPage() {
   </style>
 </head>
 <body>
-  <div class="container" style="max-width:700px;">
-    <div class="top-nav">
+  <main class="container" style="max-width:700px;">
+    <nav class="top-nav" aria-label="상단 이동">
       <a href="/" class="back-link">← 메인</a>
       <div class="top-nav-links">
         <a href="/dashboard" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">대시보드</a>
         <a id="historyLink" href="/history" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">전체 히스토리</a>
         <button class="btn btn-secondary csv-btn" style="font-size:12px;padding:6px 12px;" onclick="downloadCSV()">CSV 내보내기</button>
       </div>
-    </div>
+    </nav>
     <h1 style="font-size:22px;">리드 상세 보기</h1>
     <p class="subtitle">최근 분석된 영업 기회 목록</p>
 
@@ -94,7 +94,7 @@ export function getLeadsPage() {
 
     <div id="leadsList"><p style="color:#aaa;">로딩 중...</p></div>
     <div id="kanbanView" style="display:none;"></div>
-  </div>
+  </main>
 
   <script>
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }

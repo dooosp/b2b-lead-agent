@@ -26,23 +26,23 @@ export function getRoleplayPage() {
   </style>
 </head>
 <body>
-  <div class="container" style="max-width:700px;">
+  <main class="container" style="max-width:700px;">
     <a id="leadsBackLink" href="/leads" class="back-link">← 리드 목록</a>
     <h1 style="font-size:22px;">영업 역량 시뮬레이션</h1>
     <p class="subtitle">까다로운 고객과 영업 연습을 해보세요</p>
 
-    <select id="leadSelect"><option value="">리드 로딩 중...</option></select>
-    <input type="password" id="password" placeholder="비밀번호 입력" class="input-field">
+    <select id="leadSelect" aria-label="리드 선택"><option value="">리드 로딩 중...</option></select>
+    <input type="password" id="password" placeholder="비밀번호 입력" aria-label="비밀번호 입력" class="input-field">
     <button class="btn btn-primary" onclick="startSession()">시뮬레이션 시작</button>
     <div class="status" id="status"></div>
 
     <div class="chat-container" id="chatContainer"></div>
 
     <div class="chat-input" id="chatInput" style="display:none;">
-      <input type="text" id="userMsg" placeholder="영업 메시지를 입력하세요..." onkeydown="if(event.key==='Enter')sendMessage()">
+      <input type="text" id="userMsg" placeholder="영업 메시지를 입력하세요..." aria-label="영업 메시지를 입력하세요" onkeydown="if(event.key==='Enter')sendMessage()">
       <button class="btn btn-primary" onclick="sendMessage()" style="padding:12px 20px;">전송</button>
     </div>
-  </div>
+  </main>
 
   <script>
     function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }

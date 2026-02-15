@@ -24,6 +24,7 @@ import { getPPTPage } from './pages/ppt.js';
 import { getRoleplayPage } from './pages/roleplay.js';
 import { getHistoryPage } from './pages/history.js';
 import { getDashboardPage } from './pages/dashboard.js';
+import { getAuthRequiredPage } from './pages/auth-required.js';
 
 // ===== Router =====
 export default {
@@ -133,7 +134,13 @@ export default {
     if (leadDetailMatch && !url.pathname.startsWith('/api/')) {
       const leadId = decodeURIComponent(leadDetailMatch[1]);
       const authErr = await verifyAuth(request, env);
-      if (authErr) return addCorsHeaders(authErr, origin, env);
+      if (authErr) {
+        const code = authErr.status || 401;
+        return new Response(getAuthRequiredPage(code), {
+          status: code,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        });
+      }
       if (!env.DB) {
         return new Response('시스템 설정이 필요합니다. 관리자에게 문의하세요.', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
       }

@@ -249,7 +249,12 @@ async function testLeadDetailAuthFlow() {
 
   const leadId = leadsData.leads[0].id;
   const noTokenResp = await fetch(BASE + '/leads/' + encodeURIComponent(leadId));
-  log('T10 상세 페이지 인증 필요', noTokenResp.status === 401, `status=${noTokenResp.status}`);
+  const noTokenCt = noTokenResp.headers.get('content-type') || '';
+  const noTokenHtml = await noTokenResp.text();
+  const noTokenOk = noTokenResp.status === 401
+    && /text\/html/i.test(noTokenCt)
+    && (noTokenHtml.includes('인증이 필요합니다') || noTokenHtml.includes('메인으로 이동'));
+  log('T10 상세 페이지 인증 필요', noTokenOk, `status=${noTokenResp.status}`);
 
   const withTokenResp = await fetch(BASE + '/leads/' + encodeURIComponent(leadId) + '?token=' + encodeURIComponent(TOKEN));
   const withTokenHtml = await withTokenResp.text();
@@ -263,6 +268,77 @@ async function testLeadDetailAuthFlow() {
   const pageHtml = await page.content();
   const hasTokenizedLinkLogic = pageHtml.includes('function detailLink') && pageHtml.includes('?token=');
   log('T10 상세 링크 토큰 로직 포함', hasTokenizedLinkLogic);
+}
+
+// T11: A11y/시맨틱 랜드마크 점검
+async function testA11ySemantics() {
+  // / 페이지
+  await page.goto(BASE);
+  let hasMain = await page.locator('main.container').count();
+  let hasMainNav = await page.locator('nav.top-nav').count();
+  let hasProfileSelectLabel = await page.locator('#profileSelect[aria-label]').count();
+  log('T11 메인 main 랜드마크', hasMain > 0);
+  log('T11 메인 nav 랜드마크', hasMainNav > 0);
+  log('T11 메인 프로필 select 라벨', hasProfileSelectLabel > 0);
+
+  // 탭 aria-selected 동기화
+  const tabs = page.locator('.tab-btn[role="tab"]');
+  const tabCount = await tabs.count();
+  let tabSyncOk = false;
+  if (tabCount >= 2) {
+    const beforeFirst = await tabs.nth(0).getAttribute('aria-selected');
+    const beforeSecond = await tabs.nth(1).getAttribute('aria-selected');
+    await tabs.nth(1).click();
+    await page.waitForTimeout(200);
+    const afterFirst = await tabs.nth(0).getAttribute('aria-selected');
+    const afterSecond = await tabs.nth(1).getAttribute('aria-selected');
+    tabSyncOk = beforeFirst === 'true' && beforeSecond === 'false' && afterFirst === 'false' && afterSecond === 'true';
+  }
+  log('T11 탭 aria-selected 동기화', tabSyncOk);
+
+  // /leads
+  await page.goto(BASE + '/leads?profile=danfoss');
+  await page.evaluate((t) => sessionStorage.setItem('b2b_token', t), TOKEN);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  hasMain = await page.locator('main.container').count();
+  let hasNav = await page.locator('nav.top-nav').count();
+  log('T11 leads 랜드마크', hasMain > 0 && hasNav > 0);
+
+  // /dashboard
+  await page.goto(BASE + '/dashboard');
+  await page.evaluate((t) => sessionStorage.setItem('b2b_token', t), TOKEN);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  hasMain = await page.locator('main.container').count();
+  hasNav = await page.locator('nav.top-nav').count();
+  const hasProfileFilterLabel = await page.locator('#profileFilter[aria-label]').count();
+  log('T11 dashboard 랜드마크', hasMain > 0 && hasNav > 0);
+  log('T11 dashboard 필터 select 라벨', hasProfileFilterLabel > 0);
+
+  // /history
+  await page.goto(BASE + '/history?profile=danfoss');
+  await page.evaluate((t) => sessionStorage.setItem('b2b_token', t), TOKEN);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  hasMain = await page.locator('main.container').count();
+  hasNav = await page.locator('nav.top-nav').count();
+  log('T11 history 랜드마크', hasMain > 0 && hasNav > 0);
+
+  // /roleplay
+  await page.goto(BASE + '/roleplay?profile=danfoss');
+  await page.evaluate((t) => sessionStorage.setItem('b2b_token', t), TOKEN);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  hasMain = await page.locator('main.container').count();
+  const hasRoleplaySelectLabel = await page.locator('#leadSelect[aria-label]').count();
+  log('T11 roleplay main 랜드마크', hasMain > 0);
+  log('T11 roleplay 리드 select 라벨', hasRoleplaySelectLabel > 0);
+
+  // /ppt
+  await page.goto(BASE + '/ppt?profile=danfoss');
+  await page.evaluate((t) => sessionStorage.setItem('b2b_token', t), TOKEN);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  hasMain = await page.locator('main.container').count();
+  const hasPptSelectLabel = await page.locator('#leadSelect[aria-label]').count();
+  log('T11 ppt main 랜드마크', hasMain > 0);
+  log('T11 ppt 리드 select 라벨', hasPptSelectLabel > 0);
 }
 
 async function run() {
@@ -279,6 +355,7 @@ async function run() {
   await testProfileValidation();
   await testEnrichRoutesAvailability();
   await testLeadDetailAuthFlow();
+  await testA11ySemantics();
 
   await browser.close();
 

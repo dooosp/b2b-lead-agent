@@ -40,18 +40,18 @@ export function getLeadDetailPage(lead, statusLogs) {
   </style>
 </head>
 <body>
-  <div class="container" style="max-width:700px;">
-    <div class="top-nav">
+  <main class="container" style="max-width:700px;">
+    <nav class="top-nav" aria-label="상단 이동">
       <a href="/leads" class="back-link" id="backLink">← 리드 목록</a>
       <div style="display:flex;gap:8px;">
         <a href="/dashboard" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">대시보드</a>
       </div>
-    </div>
+    </nav>
     <h1 style="font-size:22px;" id="leadCompany"></h1>
     <p class="subtitle" id="leadSummary"></p>
 
     <div id="detailContent"><p style="color:#aaa;">로딩 중...</p></div>
-  </div>
+  </main>
 
   <script>
     const lead = ${leadJSON};
@@ -215,7 +215,7 @@ export function getLeadDetailPage(lead, statusLogs) {
       // 메모 섹션
       html += '<div class="detail-section">';
       html += '<h3>메모</h3>';
-      html += '<textarea class="notes-area" id="notesArea" placeholder="메모를 입력하세요..." oninput="scheduleNoteSave()">' + esc(lead.notes || '') + '</textarea>';
+      html += '<textarea class="notes-area" id="notesArea" aria-label="메모를 입력하세요" placeholder="메모를 입력하세요..." oninput="scheduleNoteSave()">' + esc(lead.notes || '') + '</textarea>';
       html += '</div>';
 
       // 타임라인 섹션
