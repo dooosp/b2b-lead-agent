@@ -431,7 +431,7 @@
     "id": "HJ중공업_20260213_8e5a",
     "status": "NEW",
     "createdAt": "2026-02-13T07:51:28.613Z",
-    "updatedAt": "2026-02-14T04:16:30.292Z",
+    "updatedAt": "2026-02-15T00:16:09.253Z",
     "company": "HJ중공업",
     "summary": "HJ중공업, 1만TEU급 친환경 컨테이너선 수주",
     "product": "iC7 Marine 드라이브",
@@ -439,7 +439,7 @@
     "grade": "A",
     "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
     "salesPitch": "HJ중공업의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
-    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: NYK Line (일본) - EEXI 규제 100% 충족, 연간 $2M 연료비 절감",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: Maersk (덴마크) - 연료비 18% 절감, IMO 2030 규제 선제 대응",
     "sources": [
       {
         "title": "HJ중공업, 1만TEU급 친환경 컨테이너선 수주 - 팍스경제TV",
@@ -471,7 +471,7 @@
     "id": "파도_20260213_tsw7",
     "status": "NEW",
     "createdAt": "2026-02-13T07:51:28.613Z",
-    "updatedAt": "2026-02-14T04:16:30.292Z",
+    "updatedAt": "2026-02-15T00:16:09.253Z",
     "company": "파도",
     "summary": "기름 배 대신 암모니아 선박... 현대힘스, 친환경 파도 타고 신대륙 진격",
     "product": "iC7 Marine 드라이브",
@@ -479,7 +479,7 @@
     "grade": "A",
     "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
     "salesPitch": "파도의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
-    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: NYK Line (일본) - EEXI 규제 100% 충족, 연간 $2M 연료비 절감",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: Maersk (덴마크) - 연료비 18% 절감, IMO 2030 규제 선제 대응",
     "sources": [
       {
         "title": "기름 배 대신 암모니아 선박... 현대힘스, 친환경 파도 타고 신대륙 진격 - 핀포인트뉴스",
@@ -491,7 +491,7 @@
     "id": "DL이앤씨_20260213_dnwp",
     "status": "NEW",
     "createdAt": "2026-02-13T07:51:28.613Z",
-    "updatedAt": "2026-02-14T04:16:30.292Z",
+    "updatedAt": "2026-02-15T00:16:09.253Z",
     "company": "DL이앤씨",
     "summary": "DL이앤씨, 데이터센터 영토 확장 가속",
     "product": "Turbocor 컴프레서",
@@ -499,7 +499,7 @@
     "grade": "A",
     "roi": "냉각 전력 35~40% 절감, PUE 1.25 달성",
     "salesPitch": "DL이앤씨 데이터센터에 Equinix가 글로벌 표준으로 채택한 Turbocor 컴프레서로 PUE 1.25를 달성하세요.",
-    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: Equinix (미국) - PUE 1.58→1.25 개선, 냉각 전력 40% 절감",
+    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: Digital Realty (미국) - 연간 운영비 $1.5M 절감",
     "sources": [
       {
         "title": "DL이앤씨, 데이터센터 영토 확장 가속 - 딜사이트",
@@ -531,7 +531,7 @@
     "id": "체질개선도_20260214_8iyx",
     "status": "NEW",
     "createdAt": "2026-02-14T02:59:23.663Z",
-    "updatedAt": "2026-02-14T04:16:30.292Z",
+    "updatedAt": "2026-02-15T00:16:09.253Z",
     "company": "체질개선도",
     "summary": "고부가선박 수주 호조 韓조선, 中·日 추격 속 체질개선도 분주",
     "product": "iC7 Marine 드라이브",
@@ -539,7 +539,7 @@
     "grade": "A",
     "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
     "salesPitch": "체질개선도의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
-    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: NYK Line (일본) - EEXI 규제 100% 충족, 연간 $2M 연료비 절감",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: MSC (스위스) - 탄소 배출 25% 감소, CII 등급 A 달성",
     "sources": [
       {
         "title": "고부가선박 수주 호조 韓조선, 中·日 추격 속 체질개선도 분주 - 스트레이트뉴스",
@@ -571,7 +571,7 @@
     "id": "장성_20260214_mfab",
     "status": "NEW",
     "createdAt": "2026-02-14T04:16:30.292Z",
-    "updatedAt": "2026-02-14T04:16:30.292Z",
+    "updatedAt": "2026-02-15T00:16:09.253Z",
     "company": "장성",
     "summary": "장성 파인데이터센터 착공으로 지역 경기 활성화 기대 상승",
     "product": "Turbocor 컴프레서",
@@ -579,7 +579,7 @@
     "grade": "A",
     "roi": "냉각 전력 35~40% 절감, PUE 1.25 달성",
     "salesPitch": "장성 데이터센터에 Equinix가 글로벌 표준으로 채택한 Turbocor 컴프레서로 PUE 1.25를 달성하세요.",
-    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: NTT (일본) - 유지보수 비용 60% 감소, 가동률 99.99%",
+    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: Equinix (미국) - PUE 1.58→1.25 개선, 냉각 전력 40% 절감",
     "sources": [
       {
         "title": "장성 파인데이터센터 착공으로 지역 경기 활성화 기대 상승 - 장성투데이",
