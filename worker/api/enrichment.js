@@ -196,19 +196,21 @@ export async function handleBatchEnrich(request, env) {
     return jsonResponse({ success: true, enriched: 0, remaining: remaining?.[0]?.cnt || 0, message: '분석할 리드가 없습니다.' });
   }
 
-  const enrichedResults = [];
-  for (const row of results) {
-    const lead = rowToLead(row);
-    try {
+  const settled = await Promise.allSettled(
+    results.map(async (row) => {
+      const lead = rowToLead(row);
       const sourceUrl = pickBestSourceUrl(lead.sources);
       const articleBody = await fetchArticleBodyWorker(sourceUrl);
       const enrichData = normalizeEnrichData(await callGeminiEnrich(lead, articleBody, env), lead);
       await updateLeadEnrichment(env.DB, lead.id, enrichData, articleBody);
-      enrichedResults.push({ id: lead.id, company: lead.company, success: true });
-    } catch (err) {
-      enrichedResults.push({ id: lead.id, company: lead.company, success: false, error: err.message });
-    }
-  }
+      return { id: lead.id, company: lead.company, success: true };
+    })
+  );
+  const enrichedResults = settled.map((result, i) => {
+    if (result.status === 'fulfilled') return result.value;
+    const lead = rowToLead(results[i]);
+    return { id: lead.id, company: lead.company, success: false, error: result.reason?.message || 'unknown' };
+  });
 
   const { results: remainingRows } = await env.DB.prepare(
     'SELECT COUNT(*) as cnt FROM leads WHERE profile_id = ? AND (enriched IS NULL OR enriched = 0)'

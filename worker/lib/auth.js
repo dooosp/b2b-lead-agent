@@ -21,6 +21,14 @@ export async function verifyAuth(request, env) {
   return null;
 }
 
+export async function timingSafeCompare(a, b) {
+  const enc = new TextEncoder();
+  const bufA = enc.encode(String(a));
+  const bufB = enc.encode(String(b));
+  if (bufA.byteLength !== bufB.byteLength) return false;
+  return crypto.subtle.timingSafeEqual(bufA, bufB);
+}
+
 export async function checkRateLimit(request, env) {
   if (!env.RATE_LIMIT) return null;
   const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() || 'unknown';

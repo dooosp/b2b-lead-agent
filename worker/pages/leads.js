@@ -102,8 +102,7 @@ export function getLeadsPage() {
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
     function getToken() { return sessionStorage.getItem('b2b_token') || ''; }
     function detailLink(leadId) {
-      const token = getToken();
-      return '/leads/' + encodeURIComponent(leadId) + (token ? ('?token=' + encodeURIComponent(token)) : '');
+      return '/leads/' + encodeURIComponent(leadId);
     }
     function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
 
@@ -158,9 +157,20 @@ export function getLeadsPage() {
       } catch { /* silent */ }
     }
 
-    function downloadCSV() {
-      const token = sessionStorage.getItem('b2b_token') || '';
-      window.open('/api/export/csv?profile=' + encodeURIComponent(getProfile()) + '&token=' + encodeURIComponent(token));
+    async function downloadCSV() {
+      try {
+        const res = await fetch('/api/export/csv?profile=' + encodeURIComponent(getProfile()), { headers: authHeaders() });
+        if (!res.ok) { alert('CSV 다운로드 실패'); return; }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'leads_' + getProfile() + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch(e) { alert('CSV 다운로드 실패: ' + e.message); }
     }
 
     async function enrichLead(leadId, btn, force) {

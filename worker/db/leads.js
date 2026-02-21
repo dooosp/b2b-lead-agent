@@ -172,21 +172,16 @@ export async function getDashboardMetrics(db, profileId) {
   const logList = allLogs.results || [];
   const dwellTimes = {};
   const dwellCounts = {};
-  for (let i = 0; i < logList.length; i++) {
-    const log = logList[i];
-    const from = log.from_status;
-    let entryTime = null;
-    for (let j = i - 1; j >= 0; j--) {
-      if (logList[j].lead_id === log.lead_id && logList[j].to_status === from) {
-        entryTime = logList[j].changed_at;
-        break;
-      }
-    }
+  const lastEntryByLead = new Map();
+  for (const log of logList) {
+    const key = `${log.lead_id}:${log.from_status}`;
+    const entryTime = lastEntryByLead.get(key);
     if (entryTime) {
-      const days = Math.max(0, (new Date(log.changed_at) - new Date(entryTime)) / (1000 * 60 * 60 * 24));
-      dwellTimes[from] = (dwellTimes[from] || 0) + days;
-      dwellCounts[from] = (dwellCounts[from] || 0) + 1;
+      const days = Math.max(0, (new Date(log.changed_at) - new Date(entryTime)) / 86400000);
+      dwellTimes[log.from_status] = (dwellTimes[log.from_status] || 0) + days;
+      dwellCounts[log.from_status] = (dwellCounts[log.from_status] || 0) + 1;
     }
+    lastEntryByLead.set(`${log.lead_id}:${log.to_status}`, log.changed_at);
   }
   const avgDwellDays = {};
   Object.keys(dwellTimes).forEach(s => {

@@ -1,11 +1,11 @@
 import { jsonResponse } from '../lib/utils.js';
-import { verifyAuth } from '../lib/auth.js';
+import { verifyAuth, timingSafeCompare } from '../lib/auth.js';
 import { resolveProfileId } from '../lib/profile.js';
 
 export async function handleTrigger(request, env) {
   const body = await request.json().catch(() => ({}));
   const bearerAuth = await verifyAuth(request, env);
-  const passwordOk = body.password && body.password === env.TRIGGER_PASSWORD;
+  const passwordOk = body.password && env.TRIGGER_PASSWORD && await timingSafeCompare(body.password, env.TRIGGER_PASSWORD);
   if (bearerAuth && !passwordOk) {
     return jsonResponse({ success: false, message: '비밀번호가 올바르지 않습니다.' }, 401);
   }
