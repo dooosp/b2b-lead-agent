@@ -32,8 +32,6 @@ export async function deleteReference(db, id) {
 export async function seedReferencesFromProfiles(db, profilesJson) {
   if (!db) return;
   await ensureD1Schema(db);
-  const { results } = await db.prepare('SELECT COUNT(*) as cnt FROM reference_library').all();
-  if (results && results[0] && results[0].cnt > 0) return;
 
   const SEED_DATA = {
     danfoss: {
@@ -79,12 +77,40 @@ export async function seedReferencesFromProfiles(db, profilesJson) {
         { client: 'KEPCO (한국)', project: 'STATCOM 전력품질 개선', result: '전압 변동 90% 감소, 플리커 해소', region: 'KR' },
         { client: 'EGAT (태국)', project: '방콕 전력망 SVC 설치', result: '역률 0.99 달성, 계통 안정성 확보', region: 'APAC' }
       ]
+    },
+    siemens: {
+      bms: [
+        { client: 'Changi Airport (싱가포르)', project: '터미널 4 Desigo CC 통합 BMS 구축', result: '에너지 35% 절감, 500개 포인트 통합 관제', region: 'APAC' },
+        { client: 'Mercedes-Benz Arena (독일)', project: 'Building X 디지털 트윈 적용', result: '운영비 28% 절감, 탄소중립 달성', region: 'EU' },
+        { client: 'Deutsche Bank HQ (독일)', project: '본사 빌딩 BMS 현대화', result: '에너지 효율 40% 개선, LEED Platinum 인증', region: 'EU' }
+      ],
+      esco: [
+        { client: '서울특별시 (한국)', project: '공공건물 200동 ESCO 에너지 절감', result: '연간 ₩150억 에너지비 절감, 10년 계약', region: 'KR' },
+        { client: 'Siemens HQ (독일)', project: '뮌헨 본사 넷제로 리노베이션', result: '탄소배출 90% 감축, 에너지 자립률 75%', region: 'EU' },
+        { client: 'Dubai Mall (UAE)', project: '세계 최대 쇼핑몰 에너지 최적화', result: '냉방 에너지 32% 절감, ROI 4.2년', region: 'ME' }
+      ],
+      fire: [
+        { client: 'Lotte World Tower (한국)', project: 'Cerberus PRO 초고층 화재감지', result: '555m 123층 완벽 커버, 오보율 95% 감소', region: 'KR' },
+        { client: 'Heathrow Airport (영국)', project: '터미널 전체 Sinteso 화재시스템', result: 'EN54 인증, 대피 시간 40% 단축', region: 'EU' },
+        { client: 'Samsung 평택 반도체 (한국)', project: '클린룸 특수 화재감지', result: '초미세 연기 감지, 생산라인 보호', region: 'KR' }
+      ],
+      security: [
+        { client: 'Incheon Airport (한국)', project: 'Siveillance 통합 보안 시스템', result: '출입 통제 + 영상감시 + BMS 통합, 보안 인력 25% 절감', region: 'KR' },
+        { client: 'FIFA World Cup Qatar (카타르)', project: '스타디움 8개 통합 보안', result: '40만명 동시 출입통제, 무사고 운영', region: 'ME' },
+        { client: 'Hyundai Motor 울산공장 (한국)', project: '스마트 팩토리 보안 시스템', result: '300개 구역 차등 출입통제, 안전사고 60% 감소', region: 'KR' }
+      ]
     }
   };
 
+  // 프로필별 존재 확인 — 새 프로필만 시드
   const now = new Date().toISOString();
   const stmts = [];
   for (const [profileId, categories] of Object.entries(SEED_DATA)) {
+    const { results: existing } = await db.prepare(
+      'SELECT COUNT(*) as cnt FROM reference_library WHERE profile_id = ?'
+    ).bind(profileId).all();
+    if (existing && existing[0] && existing[0].cnt > 0) continue;
+
     for (const [category, refs] of Object.entries(categories)) {
       for (const ref of refs) {
         stmts.push(

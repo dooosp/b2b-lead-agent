@@ -9,6 +9,8 @@ import { handleTrigger } from './api/trigger.js';
 import { fetchLeads, fetchHistory, handleUpdateLead, handleExportCSV } from './api/leads-api.js';
 import { handleGetReferences, handleAddReference, handleDeleteReference } from './api/references-api.js';
 import { generatePPT } from './api/ppt.js';
+import { generateProposal } from './api/proposal.js';
+import { calculateCPA } from './api/cpa.js';
 import { handleRoleplay } from './api/roleplay.js';
 import { handleEnrichLead, handleBatchEnrich } from './api/enrichment.js';
 import { handleDashboard } from './api/dashboard.js';
@@ -24,6 +26,8 @@ import { getPPTPage } from './pages/ppt.js';
 import { getRoleplayPage } from './pages/roleplay.js';
 import { getHistoryPage } from './pages/history.js';
 import { getDashboardPage } from './pages/dashboard.js';
+import { getProposalPage } from './pages/proposal.js';
+import { getCPAPage } from './pages/cpa.js';
 import { getAuthRequiredPage } from './pages/auth-required.js';
 
 // ===== Router =====
@@ -38,7 +42,7 @@ export default {
     }
 
     // API 라우팅 — 인증 필요 경로
-    const apiPaths = ['/api/leads', '/api/leads/batch-enrich', '/api/ppt', '/api/roleplay', '/api/history', '/api/dashboard', '/api/export/csv'];
+    const apiPaths = ['/api/leads', '/api/leads/batch-enrich', '/api/ppt', '/api/proposal', '/api/cpa', '/api/roleplay', '/api/history', '/api/dashboard', '/api/export/csv'];
     if (apiPaths.includes(url.pathname) || url.pathname.startsWith('/api/leads/')) {
       const authErr = await verifyAuth(request, env);
       if (authErr) return addCorsHeaders(authErr, origin, env);
@@ -66,6 +70,12 @@ export default {
     }
     if (url.pathname === '/api/ppt' && request.method === 'POST') {
       return addCorsHeaders(await generatePPT(request, env), origin, env);
+    }
+    if (url.pathname === '/api/proposal' && request.method === 'POST') {
+      return addCorsHeaders(await generateProposal(request, env), origin, env);
+    }
+    if (url.pathname === '/api/cpa' && request.method === 'POST') {
+      return addCorsHeaders(await calculateCPA(request), origin, env);
     }
     if (url.pathname === '/api/roleplay' && request.method === 'POST') {
       return addCorsHeaders(await handleRoleplay(request, env), origin, env);
@@ -163,6 +173,12 @@ export default {
     }
     if (url.pathname === '/dashboard') {
       return new Response(getDashboardPage(env), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+    if (url.pathname === '/proposal') {
+      return new Response(getProposalPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+    if (url.pathname === '/cpa') {
+      return new Response(getCPAPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
 
     return new Response(getMainPage(env), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });

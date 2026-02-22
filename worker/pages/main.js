@@ -75,6 +75,8 @@ export function getMainPage(env) {
         <a href="/leads" class="btn btn-secondary">리드 상세 보기</a>
         <a href="/dashboard" class="btn btn-secondary">대시보드</a>
         <a href="/ppt" class="btn btn-secondary">PPT 제안서</a>
+        <a href="/proposal" class="btn btn-secondary">기술제안서</a>
+        <a href="/cpa" class="btn btn-secondary">CPA 견적서</a>
         <a href="/roleplay" class="btn btn-secondary">영업 역량 시뮬레이션</a>
       </nav>
       <div class="info">
