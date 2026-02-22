@@ -27,6 +27,17 @@ function getFloorFactor(floors) {
   return 1.30;
 }
 
+// 규모 할인 계수 (economies of scale)
+function getScaleDiscount(area) {
+  if (area <= 10000) return 1.0;
+  if (area <= 30000) return 0.92;
+  if (area <= 50000) return 0.85;
+  if (area <= 80000) return 0.78;
+  if (area <= 100000) return 0.73;
+  if (area <= 150000) return 0.68;
+  return 0.65;
+}
+
 // 에너지 절감률 (범위 × 등급)
 const SAVINGS_RATE = {
   bms:  { basic: 0.15, standard: 0.22, premium: 0.30 },
@@ -34,8 +45,17 @@ const SAVINGS_RATE = {
   full: { basic: 0.25, standard: 0.33, premium: 0.40 }
 };
 
-// 연간 유지보수비율
-const MAINTENANCE_RATE = { basic: 0.03, standard: 0.04, premium: 0.05 };
+// 연간 유지보수비율 (업계 기준 1.5~2.0%)
+const MAINTENANCE_RATE = { basic: 0.015, standard: 0.018, premium: 0.02 };
+
+// 연간 에너지 비용 계산 (면적 기반)
+function calcAnnualEnergy(monthlyCost, area, baseArea) {
+  if (monthlyCost > 0) {
+    // 사용자 입력값을 면적 비례로 스케일링
+    return monthlyCost * 12 * 10000 * (area / baseArea);
+  }
+  return area * 18000; // 미입력 시 ㎡당 18,000원/년 가정
+}
 
 export async function calculateCPA(request) {
   const body = await request.json().catch(() => ({}));
@@ -54,6 +74,7 @@ export async function calculateCPA(request) {
   const buildingFactor = BUILDING_FACTORS[bType];
   const regionFactor = REGION_FACTORS[reg];
   const floorFactor = getFloorFactor(floorsNum);
+  const scaleFactor = getScaleDiscount(areaNum);
 
   // 3가지 옵션 계산
   const scopes = ['bms', 'bems', 'full'];
@@ -61,14 +82,14 @@ export async function calculateCPA(request) {
   const options = scopes.map((scope, i) => {
     const tier = tiers[i];
     const basePrice = BASE_PRICES[scope][tier];
-    const unitCost = Math.round(basePrice * buildingFactor * regionFactor * floorFactor);
+    const unitCost = Math.round(basePrice * buildingFactor * regionFactor * floorFactor * scaleFactor);
     const totalCost = unitCost * areaNum;
     const savingsRate = SAVINGS_RATE[scope][tier];
-    const annualEnergy = monthlyCost > 0 ? monthlyCost * 12 * 10000 : areaNum * 18000; // 미입력 시 ㎡당 18,000원/년 가정
+    const annualEnergy = calcAnnualEnergy(monthlyCost, areaNum, areaNum);
     const annualSavings = Math.round(annualEnergy * savingsRate);
     const maintenanceCost = Math.round(totalCost * MAINTENANCE_RATE[tier]);
     const netAnnualSavings = annualSavings - maintenanceCost;
-    const paybackYears = netAnnualSavings > 0 ? +(totalCost / netAnnualSavings).toFixed(1) : 0;
+    const paybackYears = netAnnualSavings > 0 ? +(totalCost / netAnnualSavings).toFixed(1) : -1;
 
     // 5년 TCO/ROI
     const tco5y = totalCost + (maintenanceCost * 5);
@@ -92,17 +113,20 @@ export async function calculateCPA(request) {
     };
   });
 
-  // 민감도 분석 — 면적 ±20%
+  // 민감도 분석 — 면적 ±20%, 에너지비도 면적 비례로 재계산
+  const bemsRate = SAVINGS_RATE.bems.standard;
+  const bemsMaint = MAINTENANCE_RATE.standard;
   const sensitivity = [-20, -10, 0, 10, 20].map(pct => {
     const adjArea = Math.round(areaNum * (1 + pct / 100));
-    const rec = options[1]; // BEMS standard 기준
-    const adjTotal = rec.unitCost * adjArea;
-    const adjAnnualEnergy = monthlyCost > 0 ? monthlyCost * 12 * 10000 : adjArea * 18000;
-    const adjSavings = Math.round(adjAnnualEnergy * SAVINGS_RATE.bems.standard);
-    const adjMaint = Math.round(adjTotal * MAINTENANCE_RATE.standard);
+    const adjScale = getScaleDiscount(adjArea);
+    const adjUnitCost = Math.round(BASE_PRICES.bems.standard * buildingFactor * regionFactor * floorFactor * adjScale);
+    const adjTotal = adjUnitCost * adjArea;
+    const adjAnnualEnergy = calcAnnualEnergy(monthlyCost, adjArea, areaNum);
+    const adjSavings = Math.round(adjAnnualEnergy * bemsRate);
+    const adjMaint = Math.round(adjTotal * bemsMaint);
     const adjNet = adjSavings - adjMaint;
-    const adjPayback = adjNet > 0 ? +(adjTotal / adjNet).toFixed(1) : 0;
-    return { pct, area: adjArea, totalCost: adjTotal, annualSavings: adjSavings, paybackYears: adjPayback };
+    const adjPayback = adjNet > 0 ? +(adjTotal / adjNet).toFixed(1) : -1;
+    return { pct, area: adjArea, totalCost: adjTotal, annualSavings: adjSavings, netAnnualSavings: adjNet, paybackYears: adjPayback };
   });
 
   return jsonResponse({

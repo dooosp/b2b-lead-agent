@@ -32,6 +32,9 @@ export function getCPAPage() {
     .sensitivity-table td { color: #ccc; padding: 8px 6px; border-bottom: 1px solid #222; }
     .sensitivity-table tr.current { background: rgba(233,69,96,0.1); }
     .sensitivity-table tr.current td { color: #fff; font-weight: bold; }
+    .negative { color: #e74c3c !important; }
+    .warning-badge { display: inline-block; background: rgba(231,76,60,0.2); border: 1px solid #e74c3c; color: #e74c3c; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-left: 6px; }
+    .esco-inline { background: rgba(52,152,219,0.08); border: 1px dashed #3498db; border-radius: 8px; padding: 10px 14px; margin-top: 10px; font-size: 12px; color: #3498db; text-align: left; line-height: 1.6; }
     .esco-note { background: rgba(52,152,219,0.1); border: 1px solid #3498db; border-radius: 8px; padding: 14px; margin-top: 16px; font-size: 13px; color: #3498db; display: none; text-align: left; }
     .range-container { text-align: left; margin-bottom: 12px; }
     .range-value { float: right; color: #e94560; font-weight: bold; font-size: 14px; }
@@ -86,7 +89,7 @@ export function getCPAPage() {
     <div class="sensitivity-section" id="sensitivitySection">
       <h3>민감도 분석 (BEMS 기준, 면적 변동)</h3>
       <table class="sensitivity-table">
-        <thead><tr><th>면적 변동</th><th>면적</th><th>총 투자비</th><th>연간 절감</th><th>회수 기간</th></tr></thead>
+        <thead><tr><th>면적 변동</th><th>면적</th><th>총 투자비</th><th>연간 절감</th><th>순 절감</th><th>회수 기간</th></tr></thead>
         <tbody id="sensitivityBody"></tbody>
       </table>
     </div>
@@ -157,9 +160,19 @@ export function getCPAPage() {
       }
     }
 
+    function fmtPayback(years) {
+      if (years < 0) return '회수불가';
+      return years + '년';
+    }
     function renderOptions(options) {
       const grid = document.getElementById('optionsGrid');
-      grid.innerHTML = options.map((o, i) => \`
+      grid.innerHTML = options.map((o, i) => {
+        const isNeg = o.netAnnualSavings < 0;
+        const netClass = isNeg ? ' negative' : '';
+        const paybackStr = fmtPayback(o.paybackYears);
+        const warningHtml = isNeg ? '<span class="warning-badge">유지비 초과</span>' : '';
+        const escoHtml = isNeg ? \`<div class="esco-inline">ESCO 모델 적용 시: 초기 투자 0원, 절감 보장 25%, 10년 계약으로 리스크 해소 가능</div>\` : '';
+        return \`
         <div class="option-card \${i === 1 ? 'recommended' : ''}">
           <h3>\${esc(o.label)}</h3>
           <div class="option-label">총 투자비</div>
@@ -169,26 +182,31 @@ export function getCPAPage() {
           <div class="divider"></div>
           <div class="option-detail"><span>연간 절감액</span><span>\${fmtWon(o.annualSavings)}</span></div>
           <div class="option-detail"><span>연간 유지비</span><span>\${fmtWon(o.maintenanceCost)}</span></div>
-          <div class="option-detail"><span>순 절감액</span><span>\${fmtWon(o.netAnnualSavings)}</span></div>
+          <div class="option-detail"><span>순 절감액</span><span class="\${netClass}">\${fmtWon(Math.abs(o.netAnnualSavings))}\${isNeg ? ' (적자)' : ''}\${warningHtml}</span></div>
           <div class="divider"></div>
-          <div class="option-detail"><span>투자 회수</span><span>\${o.paybackYears}년</span></div>
-          <div class="option-detail"><span>5년 ROI</span><span>\${o.roi5y}%</span></div>
-        </div>
-      \`).join('');
+          <div class="option-detail"><span>투자 회수</span><span class="\${o.paybackYears < 0 ? 'negative' : ''}">\${paybackStr}</span></div>
+          <div class="option-detail"><span>5년 ROI</span><span class="\${o.roi5y < 0 ? 'negative' : ''}">\${o.roi5y}%</span></div>
+          \${escoHtml}
+        </div>\`;
+      }).join('');
     }
 
     function renderSensitivity(sensitivity) {
       const section = document.getElementById('sensitivitySection');
       const body = document.getElementById('sensitivityBody');
-      body.innerHTML = sensitivity.map(s => \`
+      body.innerHTML = sensitivity.map(s => {
+        const netVal = s.netAnnualSavings != null ? s.netAnnualSavings : (s.annualSavings - s.totalCost * 0.018);
+        const isNeg = netVal < 0;
+        return \`
         <tr class="\${s.pct === 0 ? 'current' : ''}">
           <td>\${s.pct > 0 ? '+' : ''}\${s.pct}%</td>
           <td>\${fmt(s.area)}㎡</td>
           <td>\${fmtWon(s.totalCost)}</td>
           <td>\${fmtWon(s.annualSavings)}</td>
-          <td>\${s.paybackYears}년</td>
-        </tr>
-      \`).join('');
+          <td class="\${isNeg ? 'negative' : ''}">\${fmtWon(Math.abs(netVal))}\${isNeg ? ' (적자)' : ''}</td>
+          <td class="\${s.paybackYears < 0 ? 'negative' : ''}">\${fmtPayback(s.paybackYears)}</td>
+        </tr>\`;
+      }).join('');
       section.style.display = 'block';
     }
   </script>
