@@ -1,0 +1,102 @@
+[
+  {
+    "id": "인터뷰_20260222_lb4a",
+    "status": "NEW",
+    "createdAt": "2026-02-22T05:57:18.960Z",
+    "updatedAt": "2026-02-22T05:57:18.960Z",
+    "company": "[인터뷰]",
+    "summary": "[인터뷰] 김태수 동양BMS 대표 - kharn.kr",
+    "product": "Desigo CC 통합 빌딩관리",
+    "score": 85,
+    "grade": "A",
+    "roi": "에너지 25~40% 절감, 운영인력 30% 절감, LEED/G-SEED 인증 지원",
+    "salesPitch": "[인터뷰]의 빌딩 프로젝트에 Changi Airport가 검증한 Desigo CC 통합 빌딩관리로 에너지 35% 절감과 통합 관제를 제안합니다.",
+    "globalContext": "제로에너지건축물 인증 의무화 (2025~ 공공 1,000㎡↑), EU EPBD 개정. 레퍼런스: Mercedes-Benz Arena (독일) - 운영비 28% 절감, 탄소중립 달성",
+    "sources": [
+      {
+        "title": "[KHARN칸] [인터뷰] 김태수 동양BMS 대표 - kharn.kr",
+        "url": "https://search.naver.com/search.naver?where=news&query=%5BKHARN%EC%B9%B8%5D%20%5B%EC%9D%B8%ED%84%B0%EB%B7%B0%5D%20%EA%B9%80%ED%83%9C%EC%88%98%20%EB%8F%99%EC%96%91BMS%20%EB%8C%80%ED%91%9C"
+      }
+    ]
+  },
+  {
+    "id": "빌딩관리시스템시장규_20260222_ie70",
+    "status": "NEW",
+    "createdAt": "2026-02-22T05:57:18.960Z",
+    "updatedAt": "2026-02-22T05:57:18.960Z",
+    "company": "빌딩 관리 시스템 시장 규모",
+    "summary": "빌딩 관리 시스템 시장 규모, 점유율 및 2035년까지의 성장 예측 - Research Nester",
+    "product": "Desigo CC 통합 빌딩관리",
+    "score": 85,
+    "grade": "A",
+    "roi": "에너지 25~40% 절감, 운영인력 30% 절감, LEED/G-SEED 인증 지원",
+    "salesPitch": "빌딩 관리 시스템 시장 규모의 빌딩 프로젝트에 Changi Airport가 검증한 Desigo CC 통합 빌딩관리로 에너지 35% 절감과 통합 관제를 제안합니다.",
+    "globalContext": "제로에너지건축물 인증 의무화 (2025~ 공공 1,000㎡↑), EU EPBD 개정. 레퍼런스: Changi Airport (싱가포르) - 에너지 35% 절감, 500개 포인트 통합 관제",
+    "sources": [
+      {
+        "title": "빌딩 관리 시스템 시장 규모, 점유율 및 2035년까지의 성장 예측 - Research Nester",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EB%B9%8C%EB%94%A9%20%EA%B4%80%EB%A6%AC%20%EC%8B%9C%EC%8A%A4%ED%85%9C%20%EC%8B%9C%EC%9E%A5%20%EA%B7%9C%EB%AA%A8%2C%20%EC%A0%90%EC%9C%A0%EC%9C%A8%20%EB%B0%8F%202035%EB%85%84%EA%B9%8C%EC%A7%80%EC%9D%98%20%EC%84%B1%EC%9E%A5%20%EC%98%88%EC%B8%A1"
+      }
+    ]
+  },
+  {
+    "id": "스마트_20260222_j538",
+    "status": "NEW",
+    "createdAt": "2026-02-22T05:57:18.960Z",
+    "updatedAt": "2026-02-22T05:57:18.960Z",
+    "company": "스마트",
+    "summary": "스마트 빌딩이란 무엇인가요?",
+    "product": "Desigo CC 통합 빌딩관리",
+    "score": 85,
+    "grade": "A",
+    "roi": "에너지 25~40% 절감, 운영인력 30% 절감, LEED/G-SEED 인증 지원",
+    "salesPitch": "스마트의 빌딩 프로젝트에 Changi Airport가 검증한 Desigo CC 통합 빌딩관리로 에너지 35% 절감과 통합 관제를 제안합니다.",
+    "globalContext": "제로에너지건축물 인증 의무화 (2025~ 공공 1,000㎡↑), EU EPBD 개정. 레퍼런스: Mercedes-Benz Arena (독일) - 운영비 28% 절감, 탄소중립 달성",
+    "sources": [
+      {
+        "title": "스마트 빌딩이란 무엇인가요? - IBM",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EC%8A%A4%EB%A7%88%ED%8A%B8%20%EB%B9%8C%EB%94%A9%EC%9D%B4%EB%9E%80%20%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80%EC%9A%94%3F"
+      }
+    ]
+  },
+  {
+    "id": "정한상사_20260222_v5yv",
+    "status": "NEW",
+    "createdAt": "2026-02-22T05:57:18.960Z",
+    "updatedAt": "2026-02-22T05:57:18.960Z",
+    "company": "정한상사",
+    "summary": "디온에너지, 정한상사와 전략적 SI 투자 협약 체결… 스마트빌딩 전원 시장 진입 가속화",
+    "product": "Desigo CC 통합 빌딩관리",
+    "score": 85,
+    "grade": "A",
+    "roi": "에너지 25~40% 절감, 운영인력 30% 절감, LEED/G-SEED 인증 지원",
+    "salesPitch": "정한상사의 빌딩 프로젝트에 Changi Airport가 검증한 Desigo CC 통합 빌딩관리로 에너지 35% 절감과 통합 관제를 제안합니다.",
+    "globalContext": "제로에너지건축물 인증 의무화 (2025~ 공공 1,000㎡↑), EU EPBD 개정. 레퍼런스: Mercedes-Benz Arena (독일) - 운영비 28% 절감, 탄소중립 달성",
+    "sources": [
+      {
+        "title": "디온에너지, 정한상사와 전략적 SI 투자 협약 체결… 스마트빌딩 전원 시장 진입 가속화 - 전자신문",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EB%94%94%EC%98%A8%EC%97%90%EB%84%88%EC%A7%80%2C%20%EC%A0%95%ED%95%9C%EC%83%81%EC%82%AC%EC%99%80%20%EC%A0%84%EB%9E%B5%EC%A0%81%20SI%20%ED%88%AC%EC%9E%90%20%ED%98%91%EC%95%BD%20%EC%B2%B4%EA%B2%B0%E2%80%A6%20%EC%8A%A4%EB%A7%88%ED%8A%B8%EB%B9%8C%EB%94%A9%20%EC%A0%84%EC%9B%90%20%EC%8B%9C%EC%9E%A5%20%EC%A7%84%EC%9E%85%20%EA%B0%80%EC%86%8D%ED%99%94"
+      }
+    ]
+  },
+  {
+    "id": "역대급_20260222_ui4d",
+    "status": "NEW",
+    "createdAt": "2026-02-22T05:57:18.960Z",
+    "updatedAt": "2026-02-22T05:57:18.960Z",
+    "company": "역대급",
+    "summary": "역대급 한파에 노후빌딩 울상...에스원 스마트빌딩 솔루션 주목",
+    "product": "Desigo CC 통합 빌딩관리",
+    "score": 85,
+    "grade": "A",
+    "roi": "에너지 25~40% 절감, 운영인력 30% 절감, LEED/G-SEED 인증 지원",
+    "salesPitch": "역대급의 빌딩 프로젝트에 Changi Airport가 검증한 Desigo CC 통합 빌딩관리로 에너지 35% 절감과 통합 관제를 제안합니다.",
+    "globalContext": "제로에너지건축물 인증 의무화 (2025~ 공공 1,000㎡↑), EU EPBD 개정. 레퍼런스: Deutsche Bank HQ (독일) - 에너지 효율 40% 개선, LEED Platinum 인증",
+    "sources": [
+      {
+        "title": "역대급 한파에 노후빌딩 울상...에스원 스마트빌딩 솔루션 주목 - 파이낸셜투데이",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EC%97%AD%EB%8C%80%EA%B8%89%20%ED%95%9C%ED%8C%8C%EC%97%90%20%EB%85%B8%ED%9B%84%EB%B9%8C%EB%94%A9%20%EC%9A%B8%EC%83%81...%EC%97%90%EC%8A%A4%EC%9B%90%20%EC%8A%A4%EB%A7%88%ED%8A%B8%EB%B9%8C%EB%94%A9%20%EC%86%94%EB%A3%A8%EC%85%98%20%EC%A3%BC%EB%AA%A9"
+      }
+    ]
+  }
+]
