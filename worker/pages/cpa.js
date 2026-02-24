@@ -47,6 +47,7 @@ export function getCPAPage() {
     <a href="/" class="back-link">← 메인으로</a>
     <h1 style="font-size:22px;">CPA 견적서</h1>
     <p class="subtitle">변수를 조정하면 3가지 옵션의 견적이 즉시 재계산됩니다</p>
+    <p style="font-size:11px; color:#f39c12; background:rgba(243,156,18,0.1); border:1px solid rgba(243,156,18,0.3); border-radius:6px; padding:8px 12px; margin-bottom:12px;">⚠ 업계 평균 기준 추정 단가입니다. 실제 견적은 별도 확인이 필요합니다.</p>
 
     <div class="form-row">
       <div class="form-group"><label>빌딩 유형</label>

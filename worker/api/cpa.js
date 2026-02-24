@@ -1,5 +1,6 @@
 import { jsonResponse } from '../lib/utils.js';
 
+// 업계 평균 기준 추정 단가. 지멘스 실제 판매 단가가 아님. 실가 적용 시 교체 필요.
 // 기본 단가 DB (원/㎡) — BMS 범위 × 등급
 const BASE_PRICES = {
   bms:  { basic: 45000,  standard: 72000,  premium: 110000 },

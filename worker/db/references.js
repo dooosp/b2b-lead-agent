@@ -81,7 +81,7 @@ export async function seedReferencesFromProfiles(db, profilesJson) {
     siemens: {
       bms: [
         { client: 'Changi Airport (싱가포르)', project: '터미널 4 Desigo CC 통합 BMS 구축', result: '에너지 35% 절감, 500개 포인트 통합 관제', region: 'APAC' },
-        { client: 'Mercedes-Benz Arena (독일)', project: 'Building X 디지털 트윈 적용', result: '운영비 28% 절감, 탄소중립 달성', region: 'EU' },
+        { client: 'Mercedes-Benz Factory 56 (독일)', project: 'Digital Energy Twin 적용', result: '운영비 28% 절감, 탄소중립 달성', region: 'EU' },
         { client: 'Deutsche Bank HQ (독일)', project: '본사 빌딩 BMS 현대화', result: '에너지 효율 40% 개선, LEED Platinum 인증', region: 'EU' }
       ],
       esco: [
