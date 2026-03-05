@@ -3,7 +3,17 @@ const COMPANY_NAME_RE = /^[\p{L}0-9 .,&()\-]+$/u;
 const PLACEHOLDER_RE = /\{[^}]{1,40}\}/g;
 const NUMBER_SIGNAL_RE = /(\d|억원|조원|만|%|MW|GW|kW|㎡|m²)/i;
 const EVENT_TYPES = new Set(['착공', '증설', '수주', '규제', '입찰', '투자', '채용', '기타']);
-const SELF_SERVICE_SCHEMA_KEYS = Object.freeze([
+const SELF_SERVICE_MODEL_SCHEMA_KEYS = Object.freeze([
+  'company',
+  'project_title',
+  'recommended_product',
+  'expected_roi',
+  'sales_pitch',
+  'trend',
+  'sources'
+]);
+
+const SELF_SERVICE_RESPONSE_SCHEMA_KEYS = Object.freeze([
   'company',
   'score',
   'project_title',
@@ -23,6 +33,15 @@ export function sanitizeLeadText(value, fallback = '') {
     .trim();
   if (cleaned) return cleaned;
   return typeof fallback === 'string' ? fallback.trim() : '';
+}
+
+export function normalizeExpectedRoiText(value, fallback = '') {
+  const cleaned = sanitizeLeadText(value, fallback);
+  if (!cleaned) return '';
+  if (/근거\s*없음/.test(cleaned)) return cleaned;
+  if (/\d+(?:\.\d+)?\s*[~-]\s*\d+(?:\.\d+)?\s*년/.test(cleaned)) return cleaned;
+  if (/\d+(?:\.\d+)?\s*년/.test(cleaned)) return cleaned;
+  return `근거 없음 - ${cleaned}`;
 }
 
 export function replaceKnownPlaceholders(value, company, product = '') {
@@ -253,9 +272,25 @@ function isValidSchemaSource(source) {
   return Boolean(title) && /^https?:\/\//i.test(url);
 }
 
-function isValidLeadSchemaShape(lead) {
+function isValidModelSchemaShape(lead) {
   if (!lead || typeof lead !== 'object') return false;
-  for (const key of SELF_SERVICE_SCHEMA_KEYS) {
+  for (const key of SELF_SERVICE_MODEL_SCHEMA_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(lead, key)) return false;
+  }
+  if (!isValidCompanyNameWorker(lead.company)) return false;
+  if (!sanitizeLeadText(lead.project_title, '')) return false;
+  if (!sanitizeLeadText(lead.recommended_product, '')) return false;
+  if (!sanitizeLeadText(lead.expected_roi, '')) return false;
+  if (!sanitizeLeadText(lead.sales_pitch, '')) return false;
+  if (!sanitizeLeadText(lead.trend, '')) return false;
+  if (hasPlaceholders(lead.project_title) || hasPlaceholders(lead.expected_roi) || hasPlaceholders(lead.sales_pitch)) return false;
+  if (!Array.isArray(lead.sources)) return false;
+  return lead.sources.every(isValidSchemaSource);
+}
+
+function isValidResponseLeadShape(lead) {
+  if (!lead || typeof lead !== 'object') return false;
+  for (const key of SELF_SERVICE_RESPONSE_SCHEMA_KEYS) {
     if (!Object.prototype.hasOwnProperty.call(lead, key)) return false;
   }
   if (!isValidCompanyNameWorker(lead.company)) return false;
@@ -265,8 +300,7 @@ function isValidLeadSchemaShape(lead) {
   if (!sanitizeLeadText(lead.expected_roi, '')) return false;
   if (!sanitizeLeadText(lead.sales_pitch, '')) return false;
   if (!sanitizeLeadText(lead.trend, '')) return false;
-  if (hasPlaceholders(lead.project_title) || hasPlaceholders(lead.expected_roi) || hasPlaceholders(lead.sales_pitch)) return false;
-  if (!Array.isArray(lead.sources) || lead.sources.length === 0) return false;
+  if (!Array.isArray(lead.sources)) return false;
   return lead.sources.every(isValidSchemaSource);
 }
 
@@ -275,7 +309,15 @@ export function isValidLeadPayloadSchema(payload) {
   if (!Array.isArray(payload.leads)) return false;
   if (typeof payload.summary !== 'string') return false;
   if (payload.leads.length === 0) return true;
-  return payload.leads.every(isValidLeadSchemaShape);
+  return payload.leads.every(isValidModelSchemaShape);
+}
+
+export function isValidSelfServiceResponseSchema(payload) {
+  if (!payload || typeof payload !== 'object') return false;
+  if (!Array.isArray(payload.leads)) return false;
+  if (typeof payload.summary !== 'string') return false;
+  if (payload.leads.length === 0) return true;
+  return payload.leads.every(isValidResponseLeadShape);
 }
 
 export function getLeadField(lead, keys) {
@@ -294,7 +336,7 @@ export function toSchemaLeadWorker(lead) {
   const score = Math.max(0, Math.min(100, Math.round(Number(getLeadField(lead, ['score'])) || 0)));
   const projectTitle = sanitizeLeadText(getLeadField(lead, ['project_title', 'summary']) || '', '');
   const recommendedProduct = sanitizeLeadText(getLeadField(lead, ['recommended_product', 'product']) || '', '');
-  const expectedRoi = sanitizeLeadText(getLeadField(lead, ['expected_roi', 'roi']) || '', '');
+  const expectedRoi = normalizeExpectedRoiText(getLeadField(lead, ['expected_roi', 'roi']) || '', '');
   const salesPitch = sanitizeLeadText(getLeadField(lead, ['sales_pitch', 'salesPitch']) || '', '');
   const trend = sanitizeLeadText(getLeadField(lead, ['trend', 'globalContext']) || '', '');
   const sources = normalizeSourceList(getLeadField(lead, ['sources']) || [], null);
@@ -308,7 +350,7 @@ export function toSchemaLeadWorker(lead) {
     trend,
     sources
   };
-  return isValidLeadSchemaShape(schemaLead) ? schemaLead : null;
+  return isValidResponseLeadShape(schemaLead) ? schemaLead : null;
 }
 
 export function createSelfServiceSchemaPayloadWorker(leads, summary = '') {

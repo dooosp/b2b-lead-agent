@@ -15,6 +15,7 @@ import {
   normalizeCompanyNameWorker,
   normalizeConfidence,
   normalizeEvidenceList,
+  normalizeExpectedRoiText,
   normalizeEventType,
   normalizeSourceList,
   replaceKnownPlaceholders,
@@ -57,9 +58,9 @@ export function generateQuickLeadsWorker(articles, profile) {
       String(article.title || '').replace(/^\[.*?\]\s*/g, '').slice(0, 140),
       '프로젝트 관련 신규 동향 포착'
     );
-    const expectedRoi = sanitizeLeadText(
+    const expectedRoi = normalizeExpectedRoiText(
       replaceKnownPlaceholders(cfg.roi || '', company, product),
-      '운영 효율 개선 예상'
+      '근거 없음 - 공개 기사 기준 정량 데이터가 부족해 투자회수 기간을 산정할 수 없습니다.'
     );
     const salesPitch = sanitizeLeadText(
       replaceKnownPlaceholders(pitchTemplate, company, product),
@@ -135,9 +136,9 @@ export async function analyzeLeadsWorker(articles, profile, env) {
       replaceKnownPlaceholders(getLeadField(lead, ['project_title', 'summary']) || '', company, product),
       sanitizeLeadText((article && article.title) || '', '프로젝트 관련 신규 동향 포착')
     );
-    const roi = sanitizeLeadText(
+    const roi = normalizeExpectedRoiText(
       replaceKnownPlaceholders(getLeadField(lead, ['expected_roi', 'roi']) || '', company, product),
-      '정량 데이터 부족 — 유사 사례 기준 절감률 8~15% 예상'
+      '근거 없음 - 공개 기사 기준 정량 데이터가 부족해 투자회수 기간을 산정할 수 없습니다.'
     );
     const salesPitch = sanitizeLeadText(
       replaceKnownPlaceholders(getLeadField(lead, ['sales_pitch', 'salesPitch']) || '', company, product),

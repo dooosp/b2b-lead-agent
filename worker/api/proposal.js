@@ -1,46 +1,114 @@
 import { jsonResponse } from '../lib/utils.js';
 import { callGemini } from '../lib/gemini.js';
+import { callOpenAI } from '../lib/openai.js';
 import { getReferencesForPrompt } from '../db/references.js';
 import { estimateDesigoPointAndController, normalizeSystemFlags } from '../lib/proposal-estimator.js';
+import { calculateCpaEstimate, validateCpaOutput } from '../lib/cpa-estimator.js';
+import {
+  composeProposalContent,
+  isValidProposalSectionPayload,
+  parseProposalSectionPayload,
+  PROPOSAL_SECTION_HEADINGS
+} from '../lib/proposal-composer.js';
 
-function buildSizingSection(estimation, floors) {
-  const avgPerFloor = Math.round((Number(estimation.totalPoints) || 0) / Math.max(1, Number(floors) || 1));
-  return [
-    '## 2. Desigo CC 아키텍처',
-    '- 시스템 구성도 설명 (HVAC, 조명, 전력, 방재 통합)',
-    '- 포인트 산정(고정):',
-    `  - HVAC: ${estimation.pointsBySystem.hvac.toLocaleString()} 포인트`,
-    `  - 조명: ${estimation.pointsBySystem.lighting.toLocaleString()} 포인트`,
-    `  - 전력: ${estimation.pointsBySystem.power.toLocaleString()} 포인트`,
-    `  - 방재: ${estimation.pointsBySystem.fire.toLocaleString()} 포인트`,
-    `  - 기타: ${estimation.pointsBySystem.extra.toLocaleString()} 포인트`,
-    `  - 총 포인트: ${estimation.totalPoints.toLocaleString()} (범위 ${estimation.pointRange.min.toLocaleString()}~${estimation.pointRange.max.toLocaleString()})`,
-    `  - 층당 평균: ${avgPerFloor.toLocaleString()} 포인트`,
-    `- 컨트롤러 산정(고정): 최소 ${estimation.controllers.min}대 / 권장 ${estimation.controllers.recommended}대 / 최대 ${estimation.controllers.max}대`
-  ].join('\n');
-}
+async function callProposalModel(prompt, env) {
+  const options = { temperature: 0, topP: 0.1, maxOutputTokens: 6144 };
+  let lastError = null;
 
-function hasSection(content, sectionNo) {
-  return new RegExp(`(^|\\n)#{1,6}\\s*${sectionNo}\\s*\\.`, 'i').test(String(content || ''));
-}
-
-function hasAllSections(content) {
-  for (let i = 1; i <= 7; i++) {
-    if (!hasSection(content, i)) return false;
+  if (env && env.OPENAI_API_KEY) {
+    try {
+      return await callOpenAI(prompt, env, {
+        temperature: options.temperature,
+        topP: options.topP,
+        model: env.OPENAI_MODEL || 'gpt-5.3-codex',
+        reasoningEffort: 'medium'
+      });
+    } catch (error) {
+      lastError = error;
+    }
   }
-  return true;
+
+  if (env && env.GEMINI_API_KEY) {
+    try {
+      return await callGemini(prompt, env, options);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (lastError) throw lastError;
+  throw new Error('OPENAI_API_KEY 또는 GEMINI_API_KEY가 설정되지 않았습니다.');
 }
 
-function enforceDeterministicSizing(content, estimation, floors) {
-  const section = buildSizingSection(estimation, floors);
-  if (!content || typeof content !== 'string') return section;
-  if (/(^|\n)#{1,6}\s*2\s*\./i.test(content)) {
-    return content.replace(
-      /(^|\n)#{1,6}\s*2\s*\.[\s\S]*?(?=\n#{1,6}\s*[3-9]\s*\.|$)/i,
-      `\n${section}\n`
-    ).trim();
+function summarizeSystems(flags) {
+  const labels = {
+    hvac: 'HVAC',
+    lighting: '조명',
+    power: '전력',
+    fire: '방재',
+    extra: '기타 설비'
+  };
+  return Object.entries(flags)
+    .filter(([, enabled]) => enabled)
+    .map(([key]) => labels[key])
+    .join(', ') || '미선택';
+}
+
+function buildProposalPrompt({ proposalInput, estimation, cpaEstimate, referencesText }) {
+  const recommended = cpaEstimate.options.find((option) => option.scope === 'BEMS') || cpaEstimate.options[1] || cpaEstimate.options[0];
+  const sectionTitles = Object.entries(PROPOSAL_SECTION_HEADINGS)
+    .map(([index, heading]) => `${index}. ${heading}`)
+    .join('\n');
+
+  return `당신은 지멘스 Smart Infrastructure 기술영업 전문가입니다.
+아래 프로젝트 정보를 바탕으로 기술제안서용 설명 bullet을 작성하세요.
+
+[프로젝트 입력]
+- 빌딩 유형: ${proposalInput.buildingType}
+- 연면적: ${proposalInput.area.toLocaleString()}㎡
+- 층수: ${proposalInput.floors}층
+- 현재 BMS: ${proposalInput.currentBMS || '없음/미상'}
+- 월 에너지 비용: ${proposalInput.monthlyEnergyCost > 0 ? `${proposalInput.monthlyEnergyCost.toLocaleString()}만원` : '미입력'}
+- 시스템 범위: ${summarizeSystems(proposalInput.systemFlags)}
+
+[코드 계산 컨텍스트 - 숫자 변경 금지]
+- 총 포인트: ${estimation.totalPoints}
+- 포인트 범위: ${estimation.pointRange.min}~${estimation.pointRange.max}
+- 컨트롤러: 최소 ${estimation.controllers.min} / 권장 ${estimation.controllers.recommended} / 최대 ${estimation.controllers.max}
+- 권장 ESCO 옵션: ${recommended.label}
+- 권장 ESCO 총 투자비: ${recommended.totalCost}
+- 권장 ESCO 절감률: ${recommended.savingsRate}%
+- 권장 ESCO 연간 절감액: ${recommended.annualSavings}
+- 권장 ESCO 순연간 절감액: ${recommended.netAnnualSavings}
+- 권장 ESCO 5년 ROI: ${recommended.roi5y}%
+
+[레퍼런스]
+${referencesText || '(레퍼런스 데이터 없음)'}
+
+[출력 스키마]
+{
+  "sections": {
+    "1": ["bullet string", "bullet string"],
+    "2": ["bullet string", "bullet string"],
+    "3": ["bullet string", "bullet string"],
+    "4": ["bullet string", "bullet string"],
+    "5": ["bullet string", "bullet string"],
+    "6": ["bullet string", "bullet string"],
+    "7": ["bullet string", "bullet string"]
   }
-  return `${section}\n\n${content}`;
+}
+
+[절대 규칙]
+1) JSON 객체 1개만 출력하세요. 설명, 마크다운, 코드펜스 금지.
+2) sections 키 아래에 1~7만 사용하세요. 새 키 추가 금지.
+3) 각 배열은 2~4개 bullet string으로 작성하세요.
+4) bullet string 안에 heading, 숫자 번호, 마크다운 heading(##)을 쓰지 마세요.
+5) 숫자는 코드 계산 컨텍스트에 있는 값 외에는 추측하지 마세요.
+6) 섹션 2, 3, 4, 6은 숫자/퍼센트/금액/기간을 쓰지 말고 설명 문장만 작성하세요.
+7) 표 형식 금지. 문장 길이는 bullet당 1~2문장으로 제한하세요.
+
+[섹션 제목]
+${sectionTitles}`;
 }
 
 export async function generateProposal(request, env) {
@@ -60,102 +128,68 @@ export async function generateProposal(request, env) {
     return jsonResponse({ success: false, message: '면적과 층수는 양수여야 합니다.' }, 400);
   }
 
+  const proposalInput = {
+    buildingType,
+    area: areaNum,
+    floors: floorsNum,
+    currentBMS: String(currentBMS || '').trim(),
+    monthlyEnergyCost: costNum,
+    systemFlags: normalizedFlags
+  };
+
   const estimation = estimateDesigoPointAndController({
     totalArea: areaNum,
     floors: floorsNum,
     systemFlags: normalizedFlags
   });
+  const cpaEstimate = calculateCpaEstimate({
+    area: areaNum,
+    floors: floorsNum,
+    buildingType,
+    region: 'seoul',
+    monthlyEnergyCost: costNum
+  });
+  if (!validateCpaOutput(cpaEstimate)) {
+    return jsonResponse({ success: false, message: 'CPA 기준값 검증에 실패했습니다.' }, 500);
+  }
 
-  // 유사 사례 가져오기
   let referencesText = '';
   try {
     referencesText = await getReferencesForPrompt(env.DB, 'siemens', ['bms', 'esco']);
-  } catch { /* ignore */ }
+  } catch {
+    referencesText = '';
+  }
 
-  const prompt = `당신은 지멘스 Smart Infrastructure 기술영업 전문가입니다.
-아래 빌딩 정보를 바탕으로 **Desigo CC 기반 기술제안서 초안**을 7개 섹션으로 작성하세요.
-
-[빌딩 정보]
-- 유형: ${buildingType}
-- 연면적: ${areaNum.toLocaleString()}㎡
-- 층수: ${floorsNum}층
-- 현재 BMS: ${currentBMS || '없음/미상'}
-- 월 에너지 비용: ${costNum > 0 ? costNum.toLocaleString() + '만원' : '미입력'}
-
-[고정 산정값 - 숫자 변경 금지]
-- HVAC 포인트: ${estimation.pointsBySystem.hvac}
-- 조명 포인트: ${estimation.pointsBySystem.lighting}
-- 전력 포인트: ${estimation.pointsBySystem.power}
-- 방재 포인트: ${estimation.pointsBySystem.fire}
-- 기타 포인트: ${estimation.pointsBySystem.extra}
-- 총 포인트: ${estimation.totalPoints} (범위 ${estimation.pointRange.min}~${estimation.pointRange.max})
-- 컨트롤러 용량 가정: 1대당 ${estimation.controllers.capacityPerController} 포인트
-- 권장 컨트롤러: 최소 ${estimation.controllers.min}대 / 권장 ${estimation.controllers.recommended}대 / 최대 ${estimation.controllers.max}대
-
-[중요 규칙]
-- 위 숫자는 시스템 계산 결과이므로 그대로 사용하세요.
-- 숫자 재계산 또는 임의 변경 금지.
-- 당신은 설명 문장과 제안 논리만 작성하세요.
-
-[유사 사례 DB]
-${referencesText || '(레퍼런스 데이터 없음)'}
-
-[제안서 7섹션 구성]
-## 1. 프로젝트 개요
-- 빌딩 현황 분석, 핵심 과제 3가지 도출
-
-## 2. Desigo CC 아키텍처
-- 시스템 구성도 설명 (HVAC, 조명, 전력, 방재 통합)
-- ${floorsNum}층 규모에 맞는 컨트롤러/포인트 수 산정(위 고정 산정값 그대로 인용)
-
-## 3. 에너지 절감 시뮬레이션
-- Before/After 비교 (현재 vs Desigo CC 적용 후)
-- 월 에너지 비용 절감 예상액 (${costNum > 0 ? '현재 ' + costNum.toLocaleString() + '만원 기준' : '유사 규모 기준'})
-- 연간 절감률 25~40% 범위 내 구체적 수치
-
-## 4. ESCO 모델 제안
-- 초기 투자 없는 성과 보장형 계약 구조
-- 5년/7년/10년 시나리오별 절감 보장액과 상환 계획
-- 리스크 분담 구조
-
-## 5. 유사 사례
-- 위 레퍼런스에서 가장 유사한 2~3건 상세 분석
-- 규모/유형 유사성 비교
-
-## 6. 구축 타임라인
-- Phase별 일정 (설계 → 시공 → 시운전 → 안정화)
-- ${areaNum.toLocaleString()}㎡ 규모 기준 예상 기간
-
-## 7. Why Siemens
-- 글로벌 No.1 빌딩 자동화 실적
-- 국내 A/S 네트워크
-- Building X 클라우드 연계 로드맵
-
-마크다운 형식으로 출력하세요. 숫자와 데이터를 구체적으로 제시하세요.`;
+  const prompt = buildProposalPrompt({ proposalInput, estimation, cpaEstimate, referencesText });
 
   try {
-    const opts = { temperature: 0, topP: 0.1, maxOutputTokens: 6144 };
-    const result = await callGemini(prompt, env, opts);
-    let stabilized = enforceDeterministicSizing(result, estimation, floorsNum);
+    const raw = await callProposalModel(prompt, env);
+    let payload = parseProposalSectionPayload(raw);
 
-    if (!hasAllSections(stabilized)) {
-      const retryPrompt = `${prompt}
-
-[재요청]
-- 이전 응답에서 섹션 누락이 발생했습니다.
-- 반드시 "## 1."부터 "## 7."까지 7개 섹션을 모두 포함하세요.
-- 각 섹션은 최소 2개 불릿으로 작성하세요.`;
-      const retried = await callGemini(retryPrompt, env, opts);
-      stabilized = enforceDeterministicSizing(retried, estimation, floorsNum);
+    if (!isValidProposalSectionPayload(payload)) {
+      const retryPrompt = `${prompt}\n\n[재요청]\n- 직전 응답은 JSON 스키마 검증에 실패했습니다.\n- JSON 객체 1개만 출력하고 sections 1~7 배열을 모두 채우세요.\n- sections 2, 3, 4, 6에는 숫자를 넣지 마세요.`;
+      const repaired = await callProposalModel(retryPrompt, env);
+      payload = parseProposalSectionPayload(repaired);
     }
+
+    if (!isValidProposalSectionPayload(payload)) {
+      throw new Error('PROPOSAL_SECTION_SCHEMA_VALIDATION_FAILED');
+    }
+
+    const content = composeProposalContent({
+      proposalInput,
+      estimation,
+      cpaEstimate,
+      sections: payload.sections
+    });
 
     return jsonResponse({
       success: true,
-      content: stabilized,
+      content,
       estimation,
-      completeness: { allSections: hasAllSections(stabilized) }
+      completeness: { allSections: true }
     });
-  } catch (e) {
-    return jsonResponse({ success: false, message: 'AI 분석 중 오류: ' + e.message }, 500);
+  } catch (error) {
+    return jsonResponse({ success: false, message: 'AI 분석 중 오류: ' + error.message }, 500);
   }
 }

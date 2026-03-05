@@ -42,10 +42,9 @@ ${(profile.competitors || []).join(', ')}
   "leads": [
     {
       "company": "회사명(한글/영문, 40자 이하, 회사명만)",
-      "score": "number 0~100",
       "project_title": "프로젝트명/규모/일정을 담은 1~2문장",
       "recommended_product": "추천 제품 1개",
-      "expected_roi": "ROI 요약",
+      "expected_roi": "투자회수 기간 범위(예: 2.0~3.0년) 또는 '근거 없음 - 공개 기사 기준 정량 데이터 부족'",
       "sales_pitch": "고객 과제→정량 해결→레퍼런스 포함 2~3문장",
       "trend": "시장/규제 트렌드",
       "sources": [{"title":"기사 제목","url":"기사 URL"}],
@@ -57,10 +56,12 @@ ${(profile.competitors || []).join(', ')}
     }
   ]
 }
-3) {company}, {product} 같은 플레이스홀더 절대 금지.
-4) 회사명이 "A | ..." 같이 접두 라벨을 포함하지 않도록 하세요.
-5) sources는 반드시 배열로 포함하세요.
-6) Grade C는 출력하지 마세요.
+3) score와 grade는 백엔드가 계산하므로 출력하지 마세요.
+4) {company}, {product} 같은 플레이스홀더 절대 금지.
+5) 회사명이 "A | ..." 같이 접두 라벨을 포함하지 않도록 하세요.
+6) sources는 반드시 배열로 포함하세요. 없으면 []를 사용하세요.
+7) expected_roi에는 근거 없는 숫자를 쓰지 마세요. 투자회수 기간 범위를 제시할 수 없으면 반드시 "근거 없음"으로 시작하세요.
+8) Grade C는 출력하지 마세요.
 
 [신뢰도 정책]
 - 본문 확보 기사: confidence=HIGH

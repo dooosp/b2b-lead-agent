@@ -45,7 +45,6 @@ export async function requestLeadPayload(prompt, env) {
   "leads": [
     {
       "company": "string",
-      "score": 0,
       "project_title": "string",
       "recommended_product": "string",
       "expected_roi": "string",
@@ -59,7 +58,8 @@ export async function requestLeadPayload(prompt, env) {
 규칙:
 - {company}, {product} 같은 placeholder 금지
 - company는 40자 이하의 회사명만
-- sources는 반드시 배열
+- score/grade는 제거
+- sources는 반드시 배열([] 허용)
 
 원문:
 ${String(raw || '').slice(0, 12000)}`;
