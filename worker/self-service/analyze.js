@@ -6,6 +6,16 @@ const COMPANY_NAME_RE = /^[\p{L}0-9 .,&()\-]+$/u;
 const PLACEHOLDER_RE = /\{[^}]{1,40}\}/g;
 const NUMBER_SIGNAL_RE = /(\d|억원|조원|만|%|MW|GW|kW|㎡|m²)/i;
 const EVENT_TYPES = new Set(['착공', '증설', '수주', '규제', '입찰', '투자', '채용', '기타']);
+const SELF_SERVICE_SCHEMA_KEYS = Object.freeze([
+  'company',
+  'score',
+  'project_title',
+  'recommended_product',
+  'expected_roi',
+  'sales_pitch',
+  'trend',
+  'sources'
+]);
 
 function sanitizeLeadText(value, fallback = '') {
   const input = typeof value === 'string' ? value : '';
@@ -235,6 +245,42 @@ function parseLeadPayload(rawText) {
   return normalizeLeadPayload(parsed);
 }
 
+function hasPlaceholders(value) {
+  return /\{[^}]{1,40}\}/.test(String(value || ''));
+}
+
+function isValidSchemaSource(source) {
+  if (!source || typeof source !== 'object') return false;
+  const title = sanitizeLeadText(source.title, '');
+  const url = sanitizeLeadText(source.url, '');
+  return Boolean(title) && /^https?:\/\//i.test(url);
+}
+
+function isValidLeadSchemaShape(lead) {
+  if (!lead || typeof lead !== 'object') return false;
+  for (const key of SELF_SERVICE_SCHEMA_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(lead, key)) return false;
+  }
+  if (!isValidCompanyNameWorker(lead.company)) return false;
+  if (typeof lead.score !== 'number' || Number.isNaN(lead.score) || lead.score < 0 || lead.score > 100) return false;
+  if (!sanitizeLeadText(lead.project_title, '')) return false;
+  if (!sanitizeLeadText(lead.recommended_product, '')) return false;
+  if (!sanitizeLeadText(lead.expected_roi, '')) return false;
+  if (!sanitizeLeadText(lead.sales_pitch, '')) return false;
+  if (!sanitizeLeadText(lead.trend, '')) return false;
+  if (hasPlaceholders(lead.project_title) || hasPlaceholders(lead.expected_roi) || hasPlaceholders(lead.sales_pitch)) return false;
+  if (!Array.isArray(lead.sources) || lead.sources.length === 0) return false;
+  return lead.sources.every(isValidSchemaSource);
+}
+
+function isValidLeadPayloadSchema(payload) {
+  if (!payload || typeof payload !== 'object') return false;
+  if (!Array.isArray(payload.leads)) return false;
+  if (typeof payload.summary !== 'string') return false;
+  if (payload.leads.length === 0) return true;
+  return payload.leads.every(isValidLeadSchemaShape);
+}
+
 function getLeadField(lead, keys) {
   if (!lead || typeof lead !== 'object') return undefined;
   for (const k of keys) {
@@ -243,6 +289,43 @@ function getLeadField(lead, keys) {
     }
   }
   return undefined;
+}
+
+export function toSchemaLeadWorker(lead) {
+  if (!lead || typeof lead !== 'object') return null;
+  const company = normalizeCompanyNameWorker(getLeadField(lead, ['company']) || '', '');
+  const score = Math.max(0, Math.min(100, Math.round(Number(getLeadField(lead, ['score'])) || 0)));
+  const projectTitle = sanitizeLeadText(getLeadField(lead, ['project_title', 'summary']) || '', '');
+  const recommendedProduct = sanitizeLeadText(getLeadField(lead, ['recommended_product', 'product']) || '', '');
+  const expectedRoi = sanitizeLeadText(getLeadField(lead, ['expected_roi', 'roi']) || '', '');
+  const salesPitch = sanitizeLeadText(getLeadField(lead, ['sales_pitch', 'salesPitch']) || '', '');
+  const trend = sanitizeLeadText(getLeadField(lead, ['trend', 'globalContext']) || '', '');
+  const sources = normalizeSourceList(getLeadField(lead, ['sources']) || [], null);
+  const schemaLead = {
+    company,
+    score,
+    project_title: projectTitle,
+    recommended_product: recommendedProduct,
+    expected_roi: expectedRoi,
+    sales_pitch: salesPitch,
+    trend,
+    sources
+  };
+  return isValidLeadSchemaShape(schemaLead) ? schemaLead : null;
+}
+
+export function createSelfServiceSchemaPayloadWorker(leads, summary = '') {
+  const schemaLeads = (Array.isArray(leads) ? leads : [])
+    .map(toSchemaLeadWorker)
+    .filter(Boolean);
+  const normalizedSummary = sanitizeLeadText(summary, '');
+  const fallbackSummary = schemaLeads.length > 0
+    ? `${schemaLeads.length}개 영업 기회를 즉시 분석했습니다.`
+    : '유효한 리드를 찾지 못했습니다.';
+  return {
+    leads: schemaLeads,
+    summary: normalizedSummary || fallbackSummary
+  };
 }
 
 function findArticleForLead(lead, normalizedSources, articles, articleByUrl, fallbackIndex, company) {
@@ -302,10 +385,11 @@ async function callSalesModel(prompt, env) {
 async function requestLeadPayload(prompt, env) {
   const raw = await callSalesModel(prompt, env);
   let payload = parseLeadPayload(raw);
-  if (payload.leads.length > 0) return payload;
+  if (isValidLeadPayloadSchema(payload)) return payload;
 
-  const repairPrompt = `아래 응답 텍스트를 지정 스키마의 JSON 객체로 정리하세요.
-다른 텍스트 없이 JSON 객체만 출력하세요.
+  const repairPrompt = `Return JSON only. Validate schema.
+
+아래 원문을 지정 스키마의 JSON 객체로 변환하세요. 설명/마크다운 금지.
 
 스키마:
 {
@@ -313,18 +397,21 @@ async function requestLeadPayload(prompt, env) {
   "leads": [
     {
       "company": "string",
-      "summary": "string",
-      "product": "string",
-      "score": "number",
-      "grade": "A|B",
-      "scoreReason": "string",
-      "roi": "string",
-      "salesPitch": "string",
-      "globalContext": "string",
+      "score": 0,
+      "project_title": "string",
+      "recommended_product": "string",
+      "expected_roi": "string",
+      "sales_pitch": "string",
+      "trend": "string",
       "sources": [{"title":"string","url":"string"}]
     }
   ]
 }
+
+규칙:
+- {company}, {product} 같은 placeholder 금지
+- company는 40자 이하의 회사명만
+- sources는 반드시 배열
 
 원문:
 ${String(raw || '').slice(0, 12000)}`;
@@ -379,21 +466,30 @@ export function generateQuickLeadsWorker(articles, profile) {
       String(article.title || '').replace(/^\[.*?\]\s*/g, '').slice(0, 140),
       '프로젝트 관련 신규 동향 포착'
     );
+    const roi = sanitizeLeadText(replaceKnownPlaceholders(cfg.roi || '', company, product), '운영 효율 개선 예상');
+    const salesPitch = sanitizeLeadText(
+      replaceKnownPlaceholders(pitchTemplate, company, product),
+      `${company}의 고객 과제를 중심으로 ${product} 도입을 제안합니다.`
+    );
+    const trend = sanitizeLeadText(cfg.policy || '', '산업 규제 및 효율화 트렌드 대응');
+    const sources = article.title && article.link ? [{ title: article.title, url: article.link }] : [];
 
     leads.push({
       company,
-      summary,
-      product,
       score,
       grade,
       scoreReason: `기사 최신성/키워드 적합도 기반 ${confidence} 신뢰도 점수`,
-      roi: sanitizeLeadText(replaceKnownPlaceholders(cfg.roi || '', company, product), '운영 효율 개선 예상'),
-      salesPitch: sanitizeLeadText(
-        replaceKnownPlaceholders(pitchTemplate, company, product),
-        `${company}의 고객 과제를 중심으로 ${product} 도입을 제안합니다.`
-      ),
-      globalContext: sanitizeLeadText(cfg.policy || '', '산업 규제 및 효율화 트렌드 대응'),
-      sources: article.title && article.link ? [{ title: article.title, url: article.link }] : [],
+      project_title: summary,
+      recommended_product: product,
+      expected_roi: roi,
+      sales_pitch: salesPitch,
+      trend,
+      sources,
+      summary,
+      product,
+      roi,
+      salesPitch,
+      globalContext: trend,
       confidence,
       confidenceReason: confidence === 'MEDIUM'
         ? '본문 미확보이나 기사 제목에 정량 신호가 포함되어 신뢰도 보통으로 판정'
@@ -433,7 +529,7 @@ export async function analyzeLeadsWorker(articles, profile, env) {
         .join('\n')
     : '(자동 생성 프로필)';
 
-  const prompt = `[Role]
+ const prompt = `[Role]
 당신은 ${profile.name}의 B2B 영업 인텔리전스 분석가입니다.
 아래 뉴스에서 실질 영업 기회를 추출하세요.
 
@@ -454,21 +550,16 @@ ${(profile.competitors || []).join(', ')}
   "leads": [
     {
       "company": "회사명(한글/영문, 40자 이하, 회사명만)",
-      "summary": "프로젝트명/규모/일정을 담은 1~2문장",
-      "product": "추천 제품 1개",
-      "score": 0,
-      "grade": "A 또는 B",
-      "scoreReason": "점수 근거 1문장",
-      "roi": "ROI 요약",
-      "salesPitch": "고객 과제→정량 해결→레퍼런스 포함 2~3문장",
-      "globalContext": "시장/규제 트렌드",
-      "urgency": "HIGH 또는 MEDIUM",
-      "urgencyReason": "긴급도 근거",
-      "buyerRole": "담당 부서/직급",
+      "score": "number 0~100",
+      "project_title": "프로젝트명/규모/일정을 담은 1~2문장",
+      "recommended_product": "추천 제품 1개",
+      "expected_roi": "ROI 요약",
+      "sales_pitch": "고객 과제→정량 해결→레퍼런스 포함 2~3문장",
+      "trend": "시장/규제 트렌드",
       "sources": [{"title":"기사 제목","url":"기사 URL"}],
-      "evidence": [{"field":"title|summary|roi","quote":"원문 문장","sourceUrl":"URL"}],
-      "confidence": "HIGH 또는 MEDIUM 또는 LOW",
+      "confidence": "HIGH|MEDIUM|LOW",
       "confidenceReason": "신뢰도 근거",
+      "evidence": [{"field":"title|summary|roi","quote":"원문 문장","sourceUrl":"URL"}],
       "assumptions": ["ROI 가정1", "ROI 가정2"],
       "eventType": "착공|증설|수주|규제|입찰|투자|채용|기타"
     }
@@ -488,6 +579,9 @@ ${(profile.competitors || []).join(', ')}
 ${newsList}`;
 
   const payload = await requestLeadPayload(prompt, env);
+  if (!isValidLeadPayloadSchema(payload)) {
+    throw new Error('SELF_SERVICE_SCHEMA_VALIDATION_FAILED');
+  }
   const rawLeads = Array.isArray(payload.leads) ? payload.leads : [];
   const articleByUrl = new Map(articles.filter(a => a && a.link).map(a => [a.link, a]));
   const companySeen = new Set();
@@ -499,7 +593,7 @@ ${newsList}`;
 
     const preSources = normalizeSourceList(lead.sources, articles[index]);
     const fallbackTitle = sanitizeLeadText(
-      getLeadField(lead, ['summary', 'project_title', 'company']) || '',
+      getLeadField(lead, ['project_title', 'summary', 'company']) || '',
       (articles[index] && articles[index].title) || ''
     );
     const company = normalizeCompanyNameWorker(getLeadField(lead, ['company']) || '', fallbackTitle);
@@ -511,23 +605,23 @@ ${newsList}`;
     const confidence = normalizeConfidence(getLeadField(lead, ['confidence']), article);
 
     const product = sanitizeLeadText(
-      replaceKnownPlaceholders(getLeadField(lead, ['product', 'recommended_product']) || '', company, fallbackProduct),
+      replaceKnownPlaceholders(getLeadField(lead, ['recommended_product', 'product']) || '', company, fallbackProduct),
       fallbackProduct
     );
     const summary = sanitizeLeadText(
-      replaceKnownPlaceholders(getLeadField(lead, ['summary', 'project_title']) || '', company, product),
+      replaceKnownPlaceholders(getLeadField(lead, ['project_title', 'summary']) || '', company, product),
       sanitizeLeadText((article && article.title) || '', '프로젝트 관련 신규 동향 포착')
     );
     const roi = sanitizeLeadText(
-      replaceKnownPlaceholders(getLeadField(lead, ['roi', 'expected_roi']) || '', company, product),
+      replaceKnownPlaceholders(getLeadField(lead, ['expected_roi', 'roi']) || '', company, product),
       '정량 데이터 부족 — 유사 사례 기준 절감률 8~15% 예상'
     );
     const salesPitch = sanitizeLeadText(
-      replaceKnownPlaceholders(getLeadField(lead, ['salesPitch', 'sales_pitch']) || '', company, product),
+      replaceKnownPlaceholders(getLeadField(lead, ['sales_pitch', 'salesPitch']) || '', company, product),
       `${company}의 고객 과제를 중심으로 ${product}의 정량적 효과를 제안합니다.`
     );
     const globalContext = sanitizeLeadText(
-      getLeadField(lead, ['globalContext', 'global_context', 'trend']) || '',
+      getLeadField(lead, ['trend', 'globalContext', 'global_context']) || '',
       '산업 규제 및 효율화 트렌드 대응'
     );
 
@@ -563,10 +657,15 @@ ${newsList}`;
     normalizedLeads.push({
       ...lead,
       company,
-      summary,
-      product,
       score,
       grade,
+      project_title: summary,
+      recommended_product: product,
+      expected_roi: roi,
+      sales_pitch: salesPitch,
+      trend: globalContext,
+      summary,
+      product,
       scoreReason,
       roi,
       salesPitch,

@@ -11,12 +11,16 @@ export function getProposalPage() {
   <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
     .proposal-output { background: #1e2a3a; border-radius: 12px; padding: 24px; margin-top: 20px; text-align: left; white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #ddd; display: none; max-height: 70vh; overflow-y: auto; }
+    .estimate-box { display:none; margin-top:12px; background:#121a24; border:1px solid #2a3a4a; border-radius:10px; padding:12px; text-align:left; font-size:12px; color:#c8d5e2; line-height:1.7; }
     .proposal-output h1, .proposal-output h2, .proposal-output h3 { color: #e94560; }
     select, .form-input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #1a1a2e; color: #fff; font-size: 14px; margin-bottom: 12px; }
     .form-row { display: flex; gap: 12px; }
     .form-row > * { flex: 1; }
     label { display: block; font-size: 12px; color: #aaa; margin-bottom: 4px; text-align: left; }
     .form-group { margin-bottom: 4px; text-align: left; }
+    .system-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px; margin:8px 0 12px; }
+    .system-grid label { display:flex; align-items:center; gap:8px; margin:0; font-size:12px; color:#ccc; }
+    .system-grid input { margin:0; }
   </style>
 </head>
 <body>
@@ -50,9 +54,21 @@ export function getProposalPage() {
     <div class="form-group"><label>월 에너지 비용 (만원, 선택)</label>
     <input type="number" class="form-input" id="monthlyEnergyCost" placeholder="예: 5000" min="0"></div>
 
+    <div class="form-group">
+      <label>시스템 범위</label>
+      <div class="system-grid">
+        <label><input type="checkbox" id="sys-hvac" checked> HVAC</label>
+        <label><input type="checkbox" id="sys-lighting" checked> 조명</label>
+        <label><input type="checkbox" id="sys-power" checked> 전력</label>
+        <label><input type="checkbox" id="sys-fire" checked> 방재</label>
+        <label><input type="checkbox" id="sys-extra" checked> 기타 설비</label>
+      </div>
+    </div>
+
     <input type="password" id="password" placeholder="비밀번호 입력" class="input-field">
     <button class="btn btn-primary" id="genBtn" onclick="generateProposal()">제안서 생성</button>
     <div class="status" id="status"></div>
+    <div class="estimate-box" id="estimateBox"></div>
     <div class="proposal-output" id="output"></div>
   </main>
 
@@ -66,6 +82,7 @@ export function getProposalPage() {
       const password = getToken();
       const status = document.getElementById('status');
       const output = document.getElementById('output');
+      const estimateBox = document.getElementById('estimateBox');
       const btn = document.getElementById('genBtn');
 
       if (!password) { status.className='status error'; status.textContent='비밀번호를 입력하세요.'; return; }
@@ -79,6 +96,8 @@ export function getProposalPage() {
       status.className = 'status loading';
       status.textContent = 'AI가 기술제안서를 작성하고 있습니다... (15~25초)';
       output.style.display = 'none';
+      estimateBox.style.display = 'none';
+      estimateBox.innerHTML = '';
 
       try {
         const res = await fetch('/api/proposal', {
@@ -88,7 +107,14 @@ export function getProposalPage() {
             buildingType: document.getElementById('buildingType').value,
             area, floors,
             currentBMS: document.getElementById('currentBMS').value,
-            monthlyEnergyCost: document.getElementById('monthlyEnergyCost').value
+            monthlyEnergyCost: document.getElementById('monthlyEnergyCost').value,
+            systemFlags: {
+              hvac: document.getElementById('sys-hvac').checked,
+              lighting: document.getElementById('sys-lighting').checked,
+              power: document.getElementById('sys-power').checked,
+              fire: document.getElementById('sys-fire').checked,
+              extra: document.getElementById('sys-extra').checked
+            }
           })
         });
         const data = await res.json();
@@ -96,6 +122,10 @@ export function getProposalPage() {
         if (data.success) {
           status.className = 'status success';
           status.textContent = '제안서 생성 완료!';
+          if (data.estimation) {
+            estimateBox.innerHTML = renderEstimation(data.estimation);
+            estimateBox.style.display = 'block';
+          }
           output.style.display = 'block';
           output.innerHTML = formatMarkdown(data.content);
         } else {
@@ -109,6 +139,18 @@ export function getProposalPage() {
 
       btn.disabled = false;
       btn.textContent = '제안서 생성';
+    }
+
+    function renderEstimation(est) {
+      const ps = est.pointsBySystem || {};
+      const ctr = est.controllers || {};
+      const range = est.pointRange || {};
+      return [
+        '<strong>산정 엔진 결과(고정)</strong>',
+        'HVAC ' + (ps.hvac || 0) + ' | 조명 ' + (ps.lighting || 0) + ' | 전력 ' + (ps.power || 0) + ' | 방재 ' + (ps.fire || 0) + ' | 기타 ' + (ps.extra || 0),
+        '총 포인트: ' + (est.totalPoints || 0) + ' (범위 ' + (range.min || 0) + '~' + (range.max || 0) + ')',
+        '컨트롤러: 최소 ' + (ctr.min || 0) + '대 / 권장 ' + (ctr.recommended || 0) + '대 / 최대 ' + (ctr.max || 0) + '대'
+      ].join('<br>');
     }
 
     function formatMarkdown(text) {

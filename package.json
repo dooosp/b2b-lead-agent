@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node main.js --profile danfoss",
     "email": "node main.js --profile danfoss --email",
-    "e2e": "node e2e-test.mjs"
+    "e2e": "node e2e-test.mjs",
+    "test:worker": "node --test worker/tests/*.test.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

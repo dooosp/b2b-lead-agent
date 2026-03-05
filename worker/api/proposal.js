@@ -1,10 +1,11 @@
 import { jsonResponse } from '../lib/utils.js';
 import { callGemini } from '../lib/gemini.js';
 import { getReferencesForPrompt } from '../db/references.js';
+import { estimateDesigoPointAndController, normalizeSystemFlags } from '../lib/proposal-estimator.js';
 
 export async function generateProposal(request, env) {
   const body = await request.json().catch(() => ({}));
-  const { buildingType, area, floors, currentBMS, monthlyEnergyCost } = body;
+  const { buildingType, area, floors, currentBMS, monthlyEnergyCost, systemFlags } = body;
 
   if (!buildingType || !area || !floors) {
     return jsonResponse({ success: false, message: '빌딩유형, 면적, 층수는 필수입니다.' }, 400);
@@ -13,10 +14,17 @@ export async function generateProposal(request, env) {
   const areaNum = Number(area);
   const floorsNum = Number(floors);
   const costNum = Number(monthlyEnergyCost) || 0;
+  const normalizedFlags = normalizeSystemFlags(systemFlags || {});
 
   if (areaNum <= 0 || floorsNum <= 0) {
     return jsonResponse({ success: false, message: '면적과 층수는 양수여야 합니다.' }, 400);
   }
+
+  const estimation = estimateDesigoPointAndController({
+    totalArea: areaNum,
+    floors: floorsNum,
+    systemFlags: normalizedFlags
+  });
 
   // 유사 사례 가져오기
   let referencesText = '';
@@ -34,6 +42,21 @@ export async function generateProposal(request, env) {
 - 현재 BMS: ${currentBMS || '없음/미상'}
 - 월 에너지 비용: ${costNum > 0 ? costNum.toLocaleString() + '만원' : '미입력'}
 
+[고정 산정값 - 숫자 변경 금지]
+- HVAC 포인트: ${estimation.pointsBySystem.hvac}
+- 조명 포인트: ${estimation.pointsBySystem.lighting}
+- 전력 포인트: ${estimation.pointsBySystem.power}
+- 방재 포인트: ${estimation.pointsBySystem.fire}
+- 기타 포인트: ${estimation.pointsBySystem.extra}
+- 총 포인트: ${estimation.totalPoints} (범위 ${estimation.pointRange.min}~${estimation.pointRange.max})
+- 컨트롤러 용량 가정: 1대당 ${estimation.controllers.capacityPerController} 포인트
+- 권장 컨트롤러: 최소 ${estimation.controllers.min}대 / 권장 ${estimation.controllers.recommended}대 / 최대 ${estimation.controllers.max}대
+
+[중요 규칙]
+- 위 숫자는 시스템 계산 결과이므로 그대로 사용하세요.
+- 숫자 재계산 또는 임의 변경 금지.
+- 당신은 설명 문장과 제안 논리만 작성하세요.
+
 [유사 사례 DB]
 ${referencesText || '(레퍼런스 데이터 없음)'}
 
@@ -43,7 +66,7 @@ ${referencesText || '(레퍼런스 데이터 없음)'}
 
 ## 2. Desigo CC 아키텍처
 - 시스템 구성도 설명 (HVAC, 조명, 전력, 방재 통합)
-- ${floorsNum}층 규모에 맞는 컨트롤러/포인트 수 산정
+- ${floorsNum}층 규모에 맞는 컨트롤러/포인트 수 산정(위 고정 산정값 그대로 인용)
 
 ## 3. 에너지 절감 시뮬레이션
 - Before/After 비교 (현재 vs Desigo CC 적용 후)
@@ -71,8 +94,8 @@ ${referencesText || '(레퍼런스 데이터 없음)'}
 마크다운 형식으로 출력하세요. 숫자와 데이터를 구체적으로 제시하세요.`;
 
   try {
-    const result = await callGemini(prompt, env);
-    return jsonResponse({ success: true, content: result });
+    const result = await callGemini(prompt, env, { temperature: 0, topP: 0.1, maxOutputTokens: 4096 });
+    return jsonResponse({ success: true, content: result, estimation });
   } catch (e) {
     return jsonResponse({ success: false, message: 'AI 분석 중 오류: ' + e.message }, 500);
   }

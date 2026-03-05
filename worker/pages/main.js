@@ -150,7 +150,7 @@ export function getMainPage(env) {
           status.className = 'status success';
           status.textContent = data.leads.length + '개 리드 발견! (' + (data.stats ? data.stats.elapsed + '초, 뉴스 ' + data.stats.articles + '건 분석' : '') + ')';
           if (data.message) status.textContent += ' ' + data.message;
-          renderSelfServiceResults(data.leads, data.profile);
+          renderSelfServiceResults(data.leads, data.profile, data.summary);
         }
       } catch (e) {
         clearInterval(progressInterval);
@@ -161,16 +161,37 @@ export function getMainPage(env) {
       btn.disabled = false; btn.textContent = '즉시 분석';
     }
 
-    function renderSelfServiceResults(leads, profile) {
+    function normalizeSelfServiceLead(lead) {
+      const score = Math.max(0, Math.min(100, parseInt(lead?.score, 10) || 0));
+      const projectTitle = String(lead?.project_title || lead?.summary || '').trim();
+      const product = String(lead?.recommended_product || lead?.product || '').trim();
+      const roi = String(lead?.expected_roi || lead?.roi || '').trim();
+      const salesPitch = String(lead?.sales_pitch || lead?.salesPitch || '').trim();
+      const trend = String(lead?.trend || lead?.globalContext || '').trim();
+      return {
+        company: String(lead?.company || '').trim(),
+        score,
+        grade: score >= 80 ? 'A' : score >= 50 ? 'B' : 'C',
+        project_title: projectTitle,
+        recommended_product: product,
+        expected_roi: roi,
+        sales_pitch: salesPitch,
+        trend,
+        sources: Array.isArray(lead?.sources) ? lead.sources.filter(s => s && s.title && s.url) : []
+      };
+    }
+
+    function renderSelfServiceResults(leads, profile, summary) {
+      const normalizedLeads = (Array.isArray(leads) ? leads : []).map(normalizeSelfServiceLead);
       const container = document.getElementById('ssResults');
-      container.innerHTML = leads.map(lead => \`
+      container.innerHTML = normalizedLeads.map(lead => \`
         <div class="ss-lead-card \${lead.grade === 'B' ? 'grade-b' : ''}">
           <h3>\${esc(lead.grade)} | \${esc(lead.company)} (\${parseInt(lead.score)||0}점)</h3>
-          <p><strong>프로젝트:</strong> \${esc(lead.summary)}</p>
-          <p><strong>추천 제품:</strong> \${esc(lead.product)}</p>
-          <p><strong>예상 ROI:</strong> \${esc(lead.roi)}</p>
-          <p><strong>영업 제안:</strong> \${esc(lead.salesPitch)}</p>
-          <p><strong>글로벌 트렌드:</strong> \${esc(lead.globalContext)}</p>
+          <p><strong>프로젝트:</strong> \${esc(lead.project_title)}</p>
+          <p><strong>추천 제품:</strong> \${esc(lead.recommended_product)}</p>
+          <p><strong>예상 ROI:</strong> \${esc(lead.expected_roi)}</p>
+          <p><strong>영업 제안:</strong> \${esc(lead.sales_pitch)}</p>
+          <p><strong>글로벌 트렌드:</strong> \${esc(lead.trend)}</p>
           \${lead.sources && lead.sources.length > 0 ? \`
           <div class="ss-sources">
             <details>
@@ -190,14 +211,15 @@ export function getMainPage(env) {
       \`;
 
       // 결과 데이터 저장
-      window._ssLeads = leads;
+      window._ssLeads = normalizedLeads;
+      window._ssSummary = typeof summary === 'string' ? summary : '';
       window._ssProfile = profile;
     }
 
     function copySelfServiceResults() {
       if (!window._ssLeads) return;
       const text = window._ssLeads.map(l =>
-        \`[\${l.grade}] \${l.company} (\${l.score}점)\\n프로젝트: \${l.summary}\\n제품: \${l.product}\\nROI: \${l.roi}\\nPitch: \${l.salesPitch}\\n트렌드: \${l.globalContext}\`
+        \`[\${l.grade}] \${l.company} (\${l.score}점)\\n프로젝트: \${l.project_title}\\n제품: \${l.recommended_product}\\nROI: \${l.expected_roi}\\nPitch: \${l.sales_pitch}\\n트렌드: \${l.trend}\`
       ).join('\\n\\n---\\n\\n');
       navigator.clipboard.writeText(text).then(() => {
         const status = document.getElementById('ssStatus');
@@ -207,8 +229,11 @@ export function getMainPage(env) {
 
     function downloadSelfServiceResults() {
       if (!window._ssLeads) return;
-      const data = { profile: window._ssProfile, leads: window._ssLeads, generatedAt: new Date().toISOString() };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const payload = {
+        leads: window._ssLeads.map(normalizeSelfServiceLead),
+        summary: String(window._ssSummary || '').trim() || (window._ssLeads.length + '개 영업 기회를 즉시 분석했습니다.')
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
       a.download = (window._ssProfile?.name || 'leads') + '_' + new Date().toISOString().split('T')[0] + '.json';
       a.click(); URL.revokeObjectURL(a.href);

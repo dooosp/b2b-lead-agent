@@ -341,6 +341,41 @@ async function testA11ySemantics() {
   log('T11 ppt 리드 select 라벨', hasPptSelectLabel > 0);
 }
 
+// T12: 셀프서비스 JSON 스키마 계약 점검
+async function testSelfServiceSchemaContract() {
+  const res = await fetch(BASE + '/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ company: '현대건설', industry: '건설' })
+  });
+  const data = await res.json().catch(() => ({}));
+  const baseShapeOk = res.status === 200
+    && data
+    && data.success === true
+    && Array.isArray(data.leads)
+    && typeof data.summary === 'string';
+  log('T12 analyze 응답 기본 스키마', baseShapeOk, `status=${res.status}`);
+
+  if (!Array.isArray(data.leads) || data.leads.length === 0) {
+    log('T12 analyze 리드 스키마', true, '리드 0건(스키마 점검 스킵)');
+    return;
+  }
+
+  const requiredKeys = ['company', 'score', 'project_title', 'recommended_product', 'expected_roi', 'sales_pitch', 'trend', 'sources'];
+  const schemaOk = data.leads.every((lead) => {
+    if (!lead || typeof lead !== 'object') return false;
+    if (!requiredKeys.every(k => Object.prototype.hasOwnProperty.call(lead, k))) return false;
+    if (typeof lead.company !== 'string' || lead.company.length === 0 || lead.company.length > 40) return false;
+    if (typeof lead.score !== 'number' || lead.score < 0 || lead.score > 100) return false;
+    if (typeof lead.project_title !== 'string' || typeof lead.recommended_product !== 'string') return false;
+    if (typeof lead.expected_roi !== 'string' || typeof lead.sales_pitch !== 'string' || typeof lead.trend !== 'string') return false;
+    if (/\{company\}|\{product\}/i.test(lead.project_title + ' ' + lead.expected_roi + ' ' + lead.sales_pitch)) return false;
+    if (!Array.isArray(lead.sources) || lead.sources.length === 0) return false;
+    return lead.sources.every(s => s && typeof s.title === 'string' && s.title && typeof s.url === 'string' && /^https?:\/\//i.test(s.url));
+  });
+  log('T12 analyze 리드 스키마', schemaOk, `count=${data.leads.length}`);
+}
+
 async function run() {
   console.log('=== B2B Lead Agent E2E Tests ===\n');
   await setup();
@@ -356,6 +391,7 @@ async function run() {
   await testEnrichRoutesAvailability();
   await testLeadDetailAuthFlow();
   await testA11ySemantics();
+  await testSelfServiceSchemaContract();
 
   await browser.close();
 

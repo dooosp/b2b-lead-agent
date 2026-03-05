@@ -1,7 +1,7 @@
 import { jsonResponse } from '../lib/utils.js';
 import { fetchAllNewsWorker } from './news.js';
 import { generateProfileFromGemini, generateHeuristicProfile } from './profile-gen.js';
-import { analyzeLeadsWorker, generateQuickLeadsWorker } from './analyze.js';
+import { analyzeLeadsWorker, createSelfServiceSchemaPayloadWorker, generateQuickLeadsWorker } from './analyze.js';
 import { fetchArticleBodyWorker } from '../api/enrichment.js';
 import { saveLeadsBatch, logAnalyticsRun } from '../db/leads.js';
 
@@ -87,23 +87,26 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       return jsonResponse({
         success: true,
         leads: [],
+        summary: '관련 뉴스가 부족하여 리드를 생성하지 못했습니다.',
         profile: { name: profile.name, industry: profile.industry },
         message: '최근 3일간 관련 뉴스를 찾지 못했습니다. 다른 키워드로 시도해보세요.',
         stats: { articles: 0, elapsed: Math.round((Date.now() - startTime) / 1000) }
       });
     }
 
-    const buildSuccessResponse = (leads, mode = 'ai', message = '') => {
-      persistSelfServiceRun(leads);
+    const buildSuccessResponse = (rawLeads, mode = 'ai', message = '', summaryHint = '') => {
+      const schemaPayload = createSelfServiceSchemaPayloadWorker(rawLeads, summaryHint);
+      persistSelfServiceRun(rawLeads);
       return jsonResponse({
         success: true,
-        leads,
+        leads: schemaPayload.leads,
+        summary: schemaPayload.summary,
         profile: { name: profile.name, industry: profile.industry, competitors: profile.competitors },
         message,
         stats: {
           mode: profileMode === 'ai' ? mode : `${mode}+${profileMode}`,
           articles: articles.length,
-          leads: leads.length,
+          leads: schemaPayload.leads.length,
           elapsed: Math.round((Date.now() - startTime) / 1000),
           bodyHitRate
         }
@@ -116,7 +119,8 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       return buildSuccessResponse(
         quickLeads,
         'quick-fallback',
-        'AI 분석이 지연되어 빠른 분석 결과를 먼저 표시합니다.'
+        'AI 분석이 지연되어 빠른 분석 결과를 먼저 표시합니다.',
+        'AI 분석 지연으로 규칙 기반 결과를 우선 제공합니다.'
       );
     }
     const leads = await Promise.race([
@@ -124,14 +128,16 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       new Promise((_, reject) => setTimeout(() => reject(new Error('SELF_SERVICE_ANALYZE_TIMEOUT')), remainingMs))
     ]);
 
-    return buildSuccessResponse(leads, 'ai');
+    return buildSuccessResponse(leads, 'ai', '', `${company} 관련 최신 뉴스 기반 즉시 분석 결과입니다.`);
   } catch (e) {
     if (e && e.message === 'SELF_SERVICE_ANALYZE_TIMEOUT') {
       const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry));
+      const schemaPayload = createSelfServiceSchemaPayloadWorker(fallbackLeads, 'AI 분석 지연으로 규칙 기반 결과를 우선 제공합니다.');
       persistSelfServiceRun(fallbackLeads);
       return jsonResponse({
         success: true,
-        leads: fallbackLeads,
+        leads: schemaPayload.leads,
+        summary: schemaPayload.summary,
         profile: {
           name: (profile && profile.name) || company,
           industry: (profile && profile.industry) || industry,
@@ -141,7 +147,7 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
         stats: {
           mode: profileMode === 'ai' ? 'quick-fallback' : `quick-fallback+${profileMode}`,
           articles: articles.length,
-          leads: fallbackLeads.length,
+          leads: schemaPayload.leads.length,
           elapsed: Math.round((Date.now() - startTime) / 1000),
           bodyHitRate
         }
@@ -150,10 +156,12 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
 
     if (articles.length > 0) {
       const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry));
+      const schemaPayload = createSelfServiceSchemaPayloadWorker(fallbackLeads, 'AI 응답 불안정으로 규칙 기반 결과를 제공합니다.');
       persistSelfServiceRun(fallbackLeads);
       return jsonResponse({
         success: true,
-        leads: fallbackLeads,
+        leads: schemaPayload.leads,
+        summary: schemaPayload.summary,
         profile: {
           name: (profile && profile.name) || company,
           industry: (profile && profile.industry) || industry,
@@ -163,7 +171,7 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
         stats: {
           mode: profileMode === 'ai' ? 'quick-fallback' : `quick-fallback+${profileMode}`,
           articles: articles.length,
-          leads: fallbackLeads.length,
+          leads: schemaPayload.leads.length,
           elapsed: Math.round((Date.now() - startTime) / 1000),
           bodyHitRate
         }
