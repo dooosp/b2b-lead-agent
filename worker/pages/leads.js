@@ -102,7 +102,9 @@ export function getLeadsPage() {
     function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
     function getToken() { return sessionStorage.getItem('b2b_token') || ''; }
     function detailLink(leadId) {
-      return '/leads/' + encodeURIComponent(leadId);
+      const base = '/leads/' + encodeURIComponent(leadId);
+      const token = getToken();
+      return token ? (base + '?token=' + encodeURIComponent(token)) : base;
     }
     function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
 
