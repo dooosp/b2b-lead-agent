@@ -72,7 +72,12 @@ export function getCPAPage() {
 
     <div class="range-container">
       <label>연면적 (㎡) <span class="range-value" id="areaValue">30,000</span></label>
-      <input type="range" id="area" min="500" max="200000" step="500" value="30000" oninput="updateAreaLabel(); debouncedRecalculate()">
+      <input type="range" id="area" min="500" max="200000" step="500" value="30000" oninput="syncAreaFromSlider()">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group"><label>연면적 직접 입력 (㎡)</label>
+      <input type="number" class="form-input" id="areaInput" value="30000" min="500" max="200000" step="100" oninput="syncAreaFromInput()"></div>
     </div>
 
     <div class="form-row">
@@ -110,8 +115,32 @@ export function getCPAPage() {
       return fmt(n) + '원';
     }
 
+    function clampAreaValue(v) {
+      const n = Math.round(Number(v) || 0);
+      if (n < 500) return 500;
+      if (n > 200000) return 200000;
+      return n;
+    }
+
+    function setAreaValue(v) {
+      const area = clampAreaValue(v);
+      document.getElementById('area').value = area;
+      document.getElementById('areaInput').value = area;
+      document.getElementById('areaValue').textContent = fmt(area);
+    }
+
     function updateAreaLabel() {
-      document.getElementById('areaValue').textContent = fmt(Number(document.getElementById('area').value));
+      setAreaValue(document.getElementById('area').value);
+    }
+
+    function syncAreaFromSlider() {
+      setAreaValue(document.getElementById('area').value);
+      debouncedRecalculate();
+    }
+
+    function syncAreaFromInput() {
+      setAreaValue(document.getElementById('areaInput').value);
+      debouncedRecalculate();
     }
 
     let debounceTimer;
@@ -134,7 +163,7 @@ export function getCPAPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({
-            area: document.getElementById('area').value,
+            area: document.getElementById('areaInput').value || document.getElementById('area').value,
             floors: document.getElementById('floors').value,
             buildingType: document.getElementById('buildingType').value,
             region: document.getElementById('region').value,
@@ -210,6 +239,9 @@ export function getCPAPage() {
       }).join('');
       section.style.display = 'block';
     }
+
+    // 초기 상태 동기화
+    setAreaValue(document.getElementById('area').value);
   </script>
 </body>
 </html>`;

@@ -20,11 +20,25 @@ function buildSizingSection(estimation, floors) {
   ].join('\n');
 }
 
+function hasSection(content, sectionNo) {
+  return new RegExp(`(^|\\n)#{1,6}\\s*${sectionNo}\\s*\\.`, 'i').test(String(content || ''));
+}
+
+function hasAllSections(content) {
+  for (let i = 1; i <= 7; i++) {
+    if (!hasSection(content, i)) return false;
+  }
+  return true;
+}
+
 function enforceDeterministicSizing(content, estimation, floors) {
   const section = buildSizingSection(estimation, floors);
   if (!content || typeof content !== 'string') return section;
-  if (/##\s*2\.\s*Desigo CC 아키텍처/i.test(content)) {
-    return content.replace(/##\s*2\.\s*Desigo CC 아키텍처[\s\S]*?(?=\n##\s*3\.|\n#\s*3\.|$)/i, section);
+  if (/(^|\n)#{1,6}\s*2\s*\./i.test(content)) {
+    return content.replace(
+      /(^|\n)#{1,6}\s*2\s*\.[\s\S]*?(?=\n#{1,6}\s*[3-9]\s*\.|$)/i,
+      `\n${section}\n`
+    ).trim();
   }
   return `${section}\n\n${content}`;
 }
@@ -120,9 +134,27 @@ ${referencesText || '(레퍼런스 데이터 없음)'}
 마크다운 형식으로 출력하세요. 숫자와 데이터를 구체적으로 제시하세요.`;
 
   try {
-    const result = await callGemini(prompt, env, { temperature: 0, topP: 0.1, maxOutputTokens: 4096 });
-    const stabilized = enforceDeterministicSizing(result, estimation, floorsNum);
-    return jsonResponse({ success: true, content: stabilized, estimation });
+    const opts = { temperature: 0, topP: 0.1, maxOutputTokens: 6144 };
+    const result = await callGemini(prompt, env, opts);
+    let stabilized = enforceDeterministicSizing(result, estimation, floorsNum);
+
+    if (!hasAllSections(stabilized)) {
+      const retryPrompt = `${prompt}
+
+[재요청]
+- 이전 응답에서 섹션 누락이 발생했습니다.
+- 반드시 "## 1."부터 "## 7."까지 7개 섹션을 모두 포함하세요.
+- 각 섹션은 최소 2개 불릿으로 작성하세요.`;
+      const retried = await callGemini(retryPrompt, env, opts);
+      stabilized = enforceDeterministicSizing(retried, estimation, floorsNum);
+    }
+
+    return jsonResponse({
+      success: true,
+      content: stabilized,
+      estimation,
+      completeness: { allSections: hasAllSections(stabilized) }
+    });
   } catch (e) {
     return jsonResponse({ success: false, message: 'AI 분석 중 오류: ' + e.message }, 500);
   }
