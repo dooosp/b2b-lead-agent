@@ -3,6 +3,32 @@ import { callGemini } from '../lib/gemini.js';
 import { getReferencesForPrompt } from '../db/references.js';
 import { estimateDesigoPointAndController, normalizeSystemFlags } from '../lib/proposal-estimator.js';
 
+function buildSizingSection(estimation, floors) {
+  const avgPerFloor = Math.round((Number(estimation.totalPoints) || 0) / Math.max(1, Number(floors) || 1));
+  return [
+    '## 2. Desigo CC 아키텍처',
+    '- 시스템 구성도 설명 (HVAC, 조명, 전력, 방재 통합)',
+    '- 포인트 산정(고정):',
+    `  - HVAC: ${estimation.pointsBySystem.hvac.toLocaleString()} 포인트`,
+    `  - 조명: ${estimation.pointsBySystem.lighting.toLocaleString()} 포인트`,
+    `  - 전력: ${estimation.pointsBySystem.power.toLocaleString()} 포인트`,
+    `  - 방재: ${estimation.pointsBySystem.fire.toLocaleString()} 포인트`,
+    `  - 기타: ${estimation.pointsBySystem.extra.toLocaleString()} 포인트`,
+    `  - 총 포인트: ${estimation.totalPoints.toLocaleString()} (범위 ${estimation.pointRange.min.toLocaleString()}~${estimation.pointRange.max.toLocaleString()})`,
+    `  - 층당 평균: ${avgPerFloor.toLocaleString()} 포인트`,
+    `- 컨트롤러 산정(고정): 최소 ${estimation.controllers.min}대 / 권장 ${estimation.controllers.recommended}대 / 최대 ${estimation.controllers.max}대`
+  ].join('\n');
+}
+
+function enforceDeterministicSizing(content, estimation, floors) {
+  const section = buildSizingSection(estimation, floors);
+  if (!content || typeof content !== 'string') return section;
+  if (/##\s*2\.\s*Desigo CC 아키텍처/i.test(content)) {
+    return content.replace(/##\s*2\.\s*Desigo CC 아키텍처[\s\S]*?(?=\n##\s*3\.|\n#\s*3\.|$)/i, section);
+  }
+  return `${section}\n\n${content}`;
+}
+
 export async function generateProposal(request, env) {
   const body = await request.json().catch(() => ({}));
   const { buildingType, area, floors, currentBMS, monthlyEnergyCost, systemFlags } = body;
@@ -95,7 +121,8 @@ ${referencesText || '(레퍼런스 데이터 없음)'}
 
   try {
     const result = await callGemini(prompt, env, { temperature: 0, topP: 0.1, maxOutputTokens: 4096 });
-    return jsonResponse({ success: true, content: result, estimation });
+    const stabilized = enforceDeterministicSizing(result, estimation, floorsNum);
+    return jsonResponse({ success: true, content: stabilized, estimation });
   } catch (e) {
     return jsonResponse({ success: false, message: 'AI 분석 중 오류: ' + e.message }, 500);
   }

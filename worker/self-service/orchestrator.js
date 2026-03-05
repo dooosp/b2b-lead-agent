@@ -16,6 +16,15 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
   let profileMode = 'ai';
   let articles = [];
   let bodyHitRate = 0;
+  const withLegacyLeadAliases = (lead) => ({
+    ...lead,
+    summary: lead.project_title || '',
+    product: lead.recommended_product || '',
+    roi: lead.expected_roi || '',
+    salesPitch: lead.sales_pitch || '',
+    globalContext: lead.trend || '',
+    grade: Number(lead.score) >= 80 ? 'A' : Number(lead.score) >= 50 ? 'B' : 'C'
+  });
   const persistSelfServiceRun = (leads) => {
     if (!env.DB || !Array.isArray(leads) || leads.length === 0) return;
     const ssProfileId = `self-service:${company}`;
@@ -96,10 +105,11 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
 
     const buildSuccessResponse = (rawLeads, mode = 'ai', message = '', summaryHint = '') => {
       const schemaPayload = createSelfServiceSchemaPayloadWorker(rawLeads, summaryHint);
+      const responseLeads = schemaPayload.leads.map(withLegacyLeadAliases);
       persistSelfServiceRun(rawLeads);
       return jsonResponse({
         success: true,
-        leads: schemaPayload.leads,
+        leads: responseLeads,
         summary: schemaPayload.summary,
         profile: { name: profile.name, industry: profile.industry, competitors: profile.competitors },
         message,
@@ -133,10 +143,11 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
     if (e && e.message === 'SELF_SERVICE_ANALYZE_TIMEOUT') {
       const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry));
       const schemaPayload = createSelfServiceSchemaPayloadWorker(fallbackLeads, 'AI 분석 지연으로 규칙 기반 결과를 우선 제공합니다.');
+      const responseLeads = schemaPayload.leads.map(withLegacyLeadAliases);
       persistSelfServiceRun(fallbackLeads);
       return jsonResponse({
         success: true,
-        leads: schemaPayload.leads,
+        leads: responseLeads,
         summary: schemaPayload.summary,
         profile: {
           name: (profile && profile.name) || company,
@@ -157,10 +168,11 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
     if (articles.length > 0) {
       const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry));
       const schemaPayload = createSelfServiceSchemaPayloadWorker(fallbackLeads, 'AI 응답 불안정으로 규칙 기반 결과를 제공합니다.');
+      const responseLeads = schemaPayload.leads.map(withLegacyLeadAliases);
       persistSelfServiceRun(fallbackLeads);
       return jsonResponse({
         success: true,
-        leads: schemaPayload.leads,
+        leads: responseLeads,
         summary: schemaPayload.summary,
         profile: {
           name: (profile && profile.name) || company,

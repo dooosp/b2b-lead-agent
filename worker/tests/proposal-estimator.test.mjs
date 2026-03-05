@@ -48,3 +48,20 @@ test('disabling systems reduces points and controllers', () => {
   assert.equal(reduced.pointsBySystem.fire, 0);
   assert.equal(reduced.pointsBySystem.extra, 0);
 });
+
+test('estimator regression case: 45,000㎡ / 25층', () => {
+  const result = estimateDesigoPointAndController({
+    totalArea: 45000,
+    floors: 25,
+    systemFlags: { hvac: true, lighting: true, power: true, fire: true, extra: true }
+  });
+
+  assert.equal(result.assumptions.areaDensityFactor, 1.3);
+  assert.equal(result.pointsBySystem.hvac, 2925);
+  assert.equal(result.pointsBySystem.lighting, 1463);
+  assert.equal(result.pointsBySystem.power, 650);
+  assert.equal(result.pointsBySystem.fire, 975);
+  assert.equal(result.pointsBySystem.extra, 488);
+  assert.equal(result.totalPoints, 6501);
+  assert.equal(result.controllers.recommended, 6);
+});

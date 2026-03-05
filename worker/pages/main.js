@@ -163,11 +163,11 @@ export function getMainPage(env) {
 
     function normalizeSelfServiceLead(lead) {
       const score = Math.max(0, Math.min(100, parseInt(lead?.score, 10) || 0));
-      const projectTitle = String(lead?.project_title || lead?.summary || '').trim();
+      const projectTitle = String(lead?.project_title || lead?.project || lead?.summary || '').trim();
       const product = String(lead?.recommended_product || lead?.product || '').trim();
       const roi = String(lead?.expected_roi || lead?.roi || '').trim();
-      const salesPitch = String(lead?.sales_pitch || lead?.salesPitch || '').trim();
-      const trend = String(lead?.trend || lead?.globalContext || '').trim();
+      const salesPitch = String(lead?.sales_pitch || lead?.salesPitch || lead?.pitch || '').trim();
+      const trend = String(lead?.trend || lead?.trends || lead?.globalContext || '').trim();
       return {
         company: String(lead?.company || '').trim(),
         score,
@@ -183,8 +183,18 @@ export function getMainPage(env) {
 
     function renderSelfServiceResults(leads, profile, summary) {
       const normalizedLeads = (Array.isArray(leads) ? leads : []).map(normalizeSelfServiceLead);
+      const validLeads = normalizedLeads.filter(l =>
+        l.company && (l.project_title || l.recommended_product || l.expected_roi || l.sales_pitch || l.trend)
+      );
       const container = document.getElementById('ssResults');
-      container.innerHTML = normalizedLeads.map(lead => \`
+      if (validLeads.length === 0) {
+        const status = document.getElementById('ssStatus');
+        status.className = 'status error';
+        status.textContent = '분석 결과 파싱에 실패했습니다. 잠시 후 다시 시도해주세요.';
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = validLeads.map(lead => \`
         <div class="ss-lead-card \${lead.grade === 'B' ? 'grade-b' : ''}">
           <h3>\${esc(lead.grade)} | \${esc(lead.company)} (\${parseInt(lead.score)||0}점)</h3>
           <p><strong>프로젝트:</strong> \${esc(lead.project_title)}</p>
@@ -211,7 +221,7 @@ export function getMainPage(env) {
       \`;
 
       // 결과 데이터 저장
-      window._ssLeads = normalizedLeads;
+      window._ssLeads = validLeads;
       window._ssSummary = typeof summary === 'string' ? summary : '';
       window._ssProfile = profile;
     }
