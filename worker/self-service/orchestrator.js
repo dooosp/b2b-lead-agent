@@ -39,8 +39,8 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
   if (!company || !industry) {
     return jsonResponse({ success: false, message: '회사명과 산업 분야를 모두 입력하세요.' }, 400);
   }
-  if (!env.GEMINI_API_KEY) {
-    return jsonResponse({ success: false, message: '서버 설정 오류: GEMINI_API_KEY가 설정되지 않았습니다.' }, 503);
+  if (!env.GEMINI_API_KEY && !env.OPENAI_API_KEY) {
+    return jsonResponse({ success: false, message: '서버 설정 오류: GEMINI_API_KEY 또는 OPENAI_API_KEY가 설정되지 않았습니다.' }, 503);
   }
 
   try {

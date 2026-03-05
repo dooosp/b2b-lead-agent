@@ -1,4 +1,20 @@
-export async function callGemini(prompt, env) {
+export async function callGemini(prompt, env, options = {}) {
+  if (!env || !env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY가 설정되지 않았습니다.');
+  }
+
+  const generationConfig = {};
+  if (typeof options.temperature === 'number') generationConfig.temperature = options.temperature;
+  if (typeof options.topP === 'number') generationConfig.topP = options.topP;
+  if (typeof options.maxOutputTokens === 'number') generationConfig.maxOutputTokens = options.maxOutputTokens;
+
+  const requestBody = {
+    contents: [{ parts: [{ text: String(prompt || '') }] }]
+  };
+  if (Object.keys(generationConfig).length > 0) {
+    requestBody.generationConfig = generationConfig;
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 25000);
   let response;
@@ -9,9 +25,7 @@ export async function callGemini(prompt, env) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
+        body: JSON.stringify(requestBody)
       }
     );
   } finally {
