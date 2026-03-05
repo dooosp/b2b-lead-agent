@@ -1,5 +1,6 @@
 import { getCommonStyles } from './common-styles.js';
 import { renderProfileOptions } from '../lib/profile.js';
+import { getEscScript, getPasswordTokenScript, getSafeUrlScript } from './script-snippets.js';
 
 export function getMainPage(env) {
   const profileOptions = renderProfileOptions(env);
@@ -87,8 +88,8 @@ export function getMainPage(env) {
   </main>
 
   <script>
-    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-    function safeUrl(u) { if(!u) return '#'; const c=String(u).replace(/[\\x00-\\x1f\\x7f\\s]+/g,'').toLowerCase(); if(/^(javascript|data|vbscript|blob):/i.test(c)||/^[/\\\\]{2}/.test(c)) return '#'; return esc(u); }
+    ${getEscScript()}
+    ${getSafeUrlScript()}
 
     function switchTab(tab) {
       document.querySelectorAll('.tab-btn').forEach((b, i) => {
@@ -250,8 +251,7 @@ export function getMainPage(env) {
     }
 
     // ===== 관리 프로필 =====
-    (function(){ const s=sessionStorage.getItem('b2b_token'); if(s) document.getElementById('password').value=s; })();
-    function getToken() { const p=document.getElementById('password').value; if(p) sessionStorage.setItem('b2b_token',p); return p; }
+    ${getPasswordTokenScript('password')}
     async function generate() {
       const btn = document.getElementById('generateBtn');
       const status = document.getElementById('status');

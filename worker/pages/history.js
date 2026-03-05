@@ -1,4 +1,5 @@
 import { getCommonStyles } from './common-styles.js';
+import { getEscScript, getProfileScript, getStoredTokenScript } from './script-snippets.js';
 
 export function getHistoryPage() {
   return `<!DOCTYPE html>
@@ -51,9 +52,9 @@ export function getHistoryPage() {
   </main>
 
   <script>
-    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-    function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
-    function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
+    ${getEscScript()}
+    ${getStoredTokenScript()}
+    ${getProfileScript('danfoss')}
     document.getElementById('leadsBackLink').href = '/leads?profile=' + encodeURIComponent(getProfile());
     let allHistory = [];
     let currentFilter = 'ALL';

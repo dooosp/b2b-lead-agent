@@ -1,5 +1,6 @@
 import { getCommonStyles } from './common-styles.js';
 import { renderProfileOptions } from '../lib/profile.js';
+import { getEscScript, getStoredTokenScript } from './script-snippets.js';
 
 export function getDashboardPage(env) {
   const profileOptions = renderProfileOptions(env);
@@ -56,9 +57,8 @@ export function getDashboardPage(env) {
   </main>
 
   <script>
-    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-    function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
-    function getToken() { return sessionStorage.getItem('b2b_token') || ''; }
+    ${getEscScript()}
+    ${getStoredTokenScript()}
     function detailLink(leadId) {
       const base = '/leads/' + encodeURIComponent(leadId);
       const token = getToken();

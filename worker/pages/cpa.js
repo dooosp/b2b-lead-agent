@@ -1,4 +1,5 @@
 import { getCommonStyles } from './common-styles.js';
+import { getEscScript, getPasswordTokenScript } from './script-snippets.js';
 
 export function getCPAPage() {
   return `<!DOCTYPE html>
@@ -103,10 +104,8 @@ export function getCPAPage() {
   </main>
 
   <script>
-    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-    function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
-    function getToken() { const p=document.getElementById('password').value; if(p) sessionStorage.setItem('b2b_token',p); return p; }
-    (function(){ const s=sessionStorage.getItem('b2b_token'); if(s) document.getElementById('password').value=s; })();
+    ${getEscScript()}
+    ${getPasswordTokenScript('password')}
 
     function fmt(n) { return n.toLocaleString('ko-KR'); }
     function fmtWon(n) {

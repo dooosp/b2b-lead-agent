@@ -1,4 +1,5 @@
 import { getCommonStyles } from './common-styles.js';
+import { getEscScript, getProfileScript, getSafeUrlScript, getStoredTokenScript } from './script-snippets.js';
 
 export function getLeadsPage() {
   return `<!DOCTYPE html>
@@ -97,16 +98,15 @@ export function getLeadsPage() {
   </main>
 
   <script>
-    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-    function safeUrl(u) { if(!u) return '#'; const c=String(u).replace(/[\x00-\x1f\x7f\s]+/g,'').toLowerCase(); if(/^(javascript|data|vbscript|blob):/i.test(c)||/^[/\\]{2}/.test(c)) return '#'; return esc(u); }
-    function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
-    function getToken() { return sessionStorage.getItem('b2b_token') || ''; }
+    ${getEscScript()}
+    ${getSafeUrlScript()}
+    ${getStoredTokenScript()}
     function detailLink(leadId) {
       const base = '/leads/' + encodeURIComponent(leadId);
       const token = getToken();
       return token ? (base + '?token=' + encodeURIComponent(token)) : base;
     }
-    function getProfile() { return new URLSearchParams(window.location.search).get('profile') || 'danfoss'; }
+    ${getProfileScript('danfoss')}
 
     const statusLabels = { NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
     const statusColors = { NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' };

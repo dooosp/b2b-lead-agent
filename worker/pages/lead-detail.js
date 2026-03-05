@@ -1,4 +1,5 @@
 import { getCommonStyles } from './common-styles.js';
+import { getEscScript, getQueryTokenBridgeScript, getSafeUrlScript, getStoredTokenScript } from './script-snippets.js';
 
 export function getLeadDetailPage(lead, statusLogs) {
   const statusLabelsJS = JSON.stringify({ NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' });
@@ -60,17 +61,10 @@ export function getLeadDetailPage(lead, statusLogs) {
     const statusColors = ${statusColorsJS};
     const transitions = ${transitionsJS};
 
-    function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-    function safeUrl(u) { if(!u) return '#'; const c=String(u).replace(/[\\x00-\\x1f\\x7f\\s]+/g,'').toLowerCase(); if(/^(javascript|data|vbscript|blob):/i.test(c)||/^[/\\\\]{2}/.test(c)) return '#'; return esc(u); }
-    const urlState = new URL(window.location.href);
-    const queryToken = urlState.searchParams.get('token') || '';
-    if (queryToken) {
-      sessionStorage.setItem('b2b_token', queryToken);
-      urlState.searchParams.delete('token');
-      const cleanQuery = urlState.searchParams.toString();
-      history.replaceState(null, '', urlState.pathname + (cleanQuery ? ('?' + cleanQuery) : ''));
-    }
-    function authHeaders() { const t=sessionStorage.getItem('b2b_token'); return t ? {'Authorization':'Bearer '+t} : {}; }
+    ${getEscScript()}
+    ${getSafeUrlScript()}
+    ${getQueryTokenBridgeScript()}
+    ${getStoredTokenScript()}
     function getProfile() { return lead.profileId || 'danfoss'; }
 
     // Back link에 프로필 쿼리 추가
