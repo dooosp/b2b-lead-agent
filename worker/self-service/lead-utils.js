@@ -5,6 +5,28 @@ const NUMBER_SIGNAL_RE = /(\d|억원|조원|만|%|MW|GW|kW|㎡|m²)/i;
 const ROI_RANGE_RE = /\d+(?:\.\d+)?\s*[~-]\s*\d+(?:\.\d+)?\s*년/;
 const ROI_UNKNOWN_RE = /^근거 없음\(추정 불가\)/;
 const EVENT_TYPES = new Set(['착공', '증설', '수주', '규제', '입찰', '투자', '채용', '기타']);
+const STOCK_SALES_PITCH_PATTERNS = Object.freeze([
+  /최고의 .* 경험/i,
+  /압도적인 .* 제공/i,
+  /브랜드 가치를 더욱 높/i,
+  /고객의 신뢰를 더욱 높/i,
+  /시장 입지를 강화/i,
+  /경쟁사 대비/i,
+  /프리미엄 .* 시장/i,
+  /고객 만족도를 극대화/i,
+  /매출 증대에 기여/i,
+  /랜드마크 단지/i,
+  /최고의 품질/i
+]);
+const STOCK_TREND_PATTERNS = Object.freeze([
+  /^프리미엄 .* 수요 증가/i,
+  /^프리미엄 .* 시장 성장/i,
+  /^시장 성장[, ]/i,
+  /^디지털 전환 가속/i,
+  /^에너지 효율 투자 확대$/i,
+  /선호도 증가/i,
+  /시장 경쟁 심화/i
+]);
 const SELF_SERVICE_MODEL_SCHEMA_KEYS = Object.freeze([
   'company',
   'project_title',
@@ -47,6 +69,47 @@ export function normalizeExpectedRoiText(value, fallback = '') {
   if (ROI_RANGE_RE.test(cleaned)) return cleaned;
   if (/\d+(?:\.\d+)?\s*년/.test(cleaned)) return cleaned;
   return `근거 없음(추정 불가) - ${cleaned}`;
+}
+
+function normalizeSentenceEnding(value) {
+  return sanitizeLeadText(value, '')
+    .replace(/\.\s*/g, '. ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\.$/, '');
+}
+
+function articleContextText(article = {}) {
+  return sanitizeLeadText([article.title, article.query, article._body].filter(Boolean).join(' '), '');
+}
+
+export function normalizeSalesPitchText(value, { company = '', product = '', projectTitle = '', industry = '', article = null, eventType = '' } = {}) {
+  const cleaned = normalizeSentenceEnding(value);
+  const context = articleContextText(article);
+  const shouldFallback = !cleaned || STOCK_SALES_PITCH_PATTERNS.some((pattern) => pattern.test(cleaned));
+  if (!shouldFallback && cleaned.includes(company) && cleaned.includes(product)) return cleaned;
+
+  const challenge = projectTitle || context || `${industry || '해당 산업'} 운영 과제`;
+  const eventLabel = eventType && eventType !== '기타' ? `${eventType} 이슈` : '운영 개선 과제';
+  return `${company}의 ${challenge}와 직접 연결되는 ${eventLabel}를 우선 확인해야 합니다. ${product} 기준으로 운영 데이터 연계, 투자 우선순위, 정량 효과 검증 항목을 묶어 제안하는 접근이 적합합니다.`;
+}
+
+export function normalizeTrendText(value, { industry = '', eventType = '', article = null } = {}) {
+  const cleaned = normalizeSentenceEnding(value);
+  const context = articleContextText(article);
+  if (cleaned && !STOCK_TREND_PATTERNS.some((pattern) => pattern.test(cleaned))) return cleaned;
+
+  const industryLabel = industry || '해당 산업';
+  if (eventType === '규제') {
+    return `${industryLabel}에서는 규제 대응과 운영 데이터 가시화 요구가 함께 커지고 있습니다.`;
+  }
+  if (eventType === '투자' || eventType === '증설' || eventType === '착공') {
+    return `${industryLabel}에서는 신규 투자와 설비 확장 국면에서 운영 표준화와 에너지 검증 요구가 동시에 커지고 있습니다.`;
+  }
+  if (context.includes('채용')) {
+    return `${industryLabel}에서는 운영 인력 확보 부담 때문에 자동화와 중앙 관제 수요가 함께 커지고 있습니다.`;
+  }
+  return `${industryLabel}에서는 운영 효율, 에너지 검증, 설비 데이터 통합을 동시에 요구하는 프로젝트가 늘고 있습니다.`;
 }
 
 function isValidExpectedRoiText(value) {

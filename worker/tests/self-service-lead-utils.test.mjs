@@ -6,6 +6,8 @@ import {
   createSelfServiceSchemaPayloadWorker,
   isValidLeadPayloadSchema,
   isKnownProfileProduct,
+  normalizeSalesPitchText,
+  normalizeTrendText,
   normalizeCompanyNameWorker,
   toSchemaLeadWorker
 } from '../self-service/lead-utils.js';
@@ -170,4 +172,34 @@ test('chooseProductForArticle prefers category-matched product', () => {
 
   assert.equal(product, '공장 자동화 플랫폼');
   assert.equal(isKnownProfileProduct(profile, product), true);
+});
+
+test('normalizeSalesPitchText replaces marketing copy with project-facing pitch', () => {
+  const normalized = normalizeSalesPitchText(
+    '경쟁사 대비 압도적인 화질과 몰입감을 제공하는 OLED TV로 고객에게 최고의 시청 경험을 선사합니다.',
+    {
+      company: 'LG전자',
+      product: '에너지 관리 시스템',
+      projectTitle: '스마트팩토리 에너지 효율 개선 투자',
+      industry: '제조',
+      article: { title: 'LG전자, 스마트팩토리 에너지 효율 개선 투자' },
+      eventType: '투자'
+    }
+  );
+
+  assert.match(normalized, /스마트팩토리 에너지 효율 개선 투자/);
+  assert.match(normalized, /에너지 관리 시스템/);
+  assert.doesNotMatch(normalized, /최고의 시청 경험|압도적인 화질/);
+});
+
+test('normalizeTrendText replaces generic trend with industry-specific context', () => {
+  const normalized = normalizeTrendText('프리미엄 TV 시장 성장, OLED TV 수요 증가', {
+    industry: '제조',
+    eventType: '투자',
+    article: { title: 'LG전자, 스마트팩토리 투자 확대' }
+  });
+
+  assert.match(normalized, /제조/);
+  assert.match(normalized, /신규 투자와 설비 확장/);
+  assert.doesNotMatch(normalized, /프리미엄 TV 시장 성장/);
 });

@@ -18,6 +18,8 @@ import {
   normalizeConfidence,
   normalizeEvidenceList,
   normalizeExpectedRoiText,
+  normalizeSalesPitchText,
+  normalizeTrendText,
   normalizeEventType,
   normalizeSourceList,
   replaceKnownPlaceholders,
@@ -84,15 +86,16 @@ export function generateQuickLeadsWorker(articles, profile, targetCompany = '') 
       String(article.title || '').replace(/^\[.*?\]\s*/g, '').slice(0, 140),
       '프로젝트 관련 신규 동향 포착'
     );
+    const eventType = normalizeEventType('', projectTitle);
     const expectedRoi = normalizeExpectedRoiText(
       replaceKnownPlaceholders(cfg.roi || '', company, product),
       '근거 없음 - 공개 기사 기준 정량 데이터가 부족해 투자회수 기간을 산정할 수 없습니다.'
     );
-    const salesPitch = sanitizeLeadText(
+    const salesPitch = normalizeSalesPitchText(
       replaceKnownPlaceholders(pitchTemplate, company, product),
-      `${company}의 고객 과제를 중심으로 ${product} 도입을 제안합니다.`
+      { company, product, projectTitle, industry: profile.industry, article, eventType }
     );
-    const trend = sanitizeLeadText(cfg.policy || '', '산업 규제 및 효율화 트렌드 대응');
+    const trend = normalizeTrendText(cfg.policy || '', { industry: profile.industry, eventType, article });
     const sources = article.title && article.link ? [{ title: article.title, url: article.link }] : [];
 
     leads.push({
@@ -116,7 +119,7 @@ export function generateQuickLeadsWorker(articles, profile, targetCompany = '') 
         ? '본문 미확보이나 기사 제목에 정량 신호가 포함되어 신뢰도 보통으로 판정'
         : '본문 미확보 및 제목 정보가 제한적이어서 신뢰도 낮음으로 판정',
       assumptions: [],
-      eventType: normalizeEventType('', projectTitle)
+      eventType
     });
 
     if (leads.length >= 5) break;
@@ -173,13 +176,14 @@ export async function analyzeLeadsWorker(articles, profile, env, targetCompany =
       replaceKnownPlaceholders(getLeadField(lead, ['expected_roi', 'roi']) || '', company, product),
       '근거 없음 - 공개 기사 기준 정량 데이터가 부족해 투자회수 기간을 산정할 수 없습니다.'
     );
-    const salesPitch = sanitizeLeadText(
+    const eventType = normalizeEventType(getLeadField(lead, ['eventType', 'event_type']), `${summary} ${(article && article.title) || ''}`);
+    const salesPitch = normalizeSalesPitchText(
       replaceKnownPlaceholders(getLeadField(lead, ['sales_pitch', 'salesPitch']) || '', company, product),
-      `${company}의 고객 과제를 중심으로 ${product}의 정량적 효과를 제안합니다.`
+      { company, product, projectTitle: summary, industry: profile.industry, article, eventType }
     );
-    const globalContext = sanitizeLeadText(
+    const globalContext = normalizeTrendText(
       getLeadField(lead, ['trend', 'globalContext', 'global_context']) || '',
-      '산업 규제 및 효율화 트렌드 대응'
+      { industry: profile.industry, eventType, article }
     );
 
     const score = computeScoreWorker(article, profile, confidence, Number(getLeadField(lead, ['score'])) || 70);
@@ -234,7 +238,7 @@ export async function analyzeLeadsWorker(articles, profile, env, targetCompany =
             : '본문 미확보 및 제목 정보 제한으로 신뢰도 낮음으로 판정'
       ),
       assumptions: normalizeAssumptionsList(lead.assumptions, roi),
-      eventType: normalizeEventType(getLeadField(lead, ['eventType', 'event_type']), `${summary} ${(article && article.title) || ''}`)
+      eventType
     });
   });
 
