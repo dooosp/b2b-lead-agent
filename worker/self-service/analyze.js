@@ -1,6 +1,7 @@
 import { requestLeadPayload } from './lead-model.js';
 import { buildLeadAnalysisPrompt } from './lead-prompt.js';
 import {
+  chooseProductForArticle,
   chooseFallbackProduct,
   computeScoreWorker,
   createSelfServiceSchemaPayloadWorker,
@@ -9,6 +10,7 @@ import {
   findArticleForLead,
   getLeadField,
   gradeFromScore,
+  isKnownProfileProduct,
   isValidCompanyNameWorker,
   isValidLeadPayloadSchema,
   normalizeAssumptionsList,
@@ -69,7 +71,7 @@ export function generateQuickLeadsWorker(articles, profile, targetCompany = '') 
     if (companySeen.has(companyKey)) continue;
     companySeen.add(companyKey);
 
-    const product = sanitizeLeadText(cfg.product, chooseFallbackProduct(profile));
+    const product = chooseProductForArticle(profile, article, category) || sanitizeLeadText(cfg.product, chooseFallbackProduct(profile));
     const confidence = normalizeConfidence('', article);
     const score = computeScoreWorker(article, profile, confidence, Number(cfg.score) || 70);
     const grade = gradeFromScore(score);
@@ -135,7 +137,6 @@ export async function analyzeLeadsWorker(articles, profile, env, targetCompany =
   const articleByUrl = new Map(articles.filter(article => article && article.link).map(article => [article.link, article]));
   const companySeen = new Set();
   const normalizedLeads = [];
-  const fallbackProduct = chooseFallbackProduct(profile);
   const normalizedTargetCompany = normalizeCompanyNameWorker(targetCompany || profile.name || '', profile.name || '');
 
   rawLeads.forEach((lead, index) => {
@@ -157,10 +158,13 @@ export async function analyzeLeadsWorker(articles, profile, env, targetCompany =
       return;
     }
     const confidence = normalizeConfidence(getLeadField(lead, ['confidence']), article);
-    const product = sanitizeLeadText(
+    const detectedCategory = detectCategoryWorker(article || articles[index] || {}, profile);
+    const fallbackProduct = chooseProductForArticle(profile, article || articles[index] || {}, detectedCategory);
+    const modelProduct = sanitizeLeadText(
       replaceKnownPlaceholders(getLeadField(lead, ['recommended_product', 'product']) || '', company, fallbackProduct),
       fallbackProduct
     );
+    const product = isKnownProfileProduct(profile, modelProduct) ? modelProduct : fallbackProduct;
     const summary = sanitizeLeadText(
       replaceKnownPlaceholders(getLeadField(lead, ['project_title', 'summary']) || '', company, product),
       sanitizeLeadText((article && article.title) || '', '프로젝트 관련 신규 동향 포착')

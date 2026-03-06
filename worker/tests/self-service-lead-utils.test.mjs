@@ -2,8 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { articleMentionsTargetCompany, filterArticlesForTargetCompany, generateQuickLeadsWorker } from '../self-service/analyze.js';
 import {
+  chooseProductForArticle,
   createSelfServiceSchemaPayloadWorker,
   isValidLeadPayloadSchema,
+  isKnownProfileProduct,
   normalizeCompanyNameWorker,
   toSchemaLeadWorker
 } from '../self-service/lead-utils.js';
@@ -139,4 +141,33 @@ test('quick leads use target company when article matches target', () => {
 
   assert.equal(leads.length, 1);
   assert.equal(leads[0].company, 'LG전자');
+});
+
+test('chooseProductForArticle prefers category-matched product', () => {
+  const profile = {
+    products: {
+      automation: ['공장 자동화 플랫폼'],
+      energy: ['에너지 관리 시스템']
+    },
+    productKnowledge: {
+      '공장 자동화 플랫폼': { value: '라인 제어와 품질 안정화', roi: '생산성 개선' },
+      '에너지 관리 시스템': { value: '에너지 비용 최적화와 피크 저감', roi: '전력비 절감' }
+    },
+    categoryRules: {
+      automation: ['스마트팩토리', '생산라인'],
+      energy: ['전력', '에너지', '효율']
+    },
+    categoryConfig: {
+      automation: { product: '공장 자동화 플랫폼' },
+      energy: { product: '에너지 관리 시스템' }
+    }
+  };
+
+  const product = chooseProductForArticle(profile, {
+    title: 'LG전자, 스마트팩토리 생산라인 고도화 투자',
+    query: 'LG전자 스마트팩토리 생산라인'
+  }, 'automation');
+
+  assert.equal(product, '공장 자동화 플랫폼');
+  assert.equal(isKnownProfileProduct(profile, product), true);
 });

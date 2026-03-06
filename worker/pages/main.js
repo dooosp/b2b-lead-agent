@@ -27,12 +27,30 @@ export function getMainPage(env) {
     .progress-bar.active { display: block; }
     .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #e94560, #3498db); border-radius: 2px; transition: width 0.5s ease; }
     .ss-results { margin-top: 20px; text-align: left; }
-    .ss-lead-card { background: #1e2a3a; border-radius: 12px; padding: 16px; margin: 12px 0; border-left: 4px solid #e94560; }
-    .ss-lead-card.grade-b { border-left-color: #f39c12; }
-    .ss-lead-card h3 { color: #e94560; margin: 0 0 10px 0; font-size: 16px; }
-    .ss-lead-card.grade-b h3 { color: #f39c12; }
-    .ss-lead-card p { margin: 4px 0; font-size: 13px; color: #ccc; line-height: 1.6; }
-    .ss-lead-card strong { color: #fff; }
+    .ss-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin:16px 0 18px; }
+    .ss-summary-card { background:#121a24; border:1px solid #2a3a4a; border-radius:12px; padding:12px 14px; }
+    .ss-summary-label { display:block; color:#8fa4b8; font-size:11px; margin-bottom:6px; }
+    .ss-summary-value { display:block; color:#f4f7fb; font-size:18px; font-weight:700; }
+    .ss-summary-meta { color:#9fb0c0; font-size:12px; margin-top:6px; line-height:1.5; }
+    .ss-summary-note { background:#121a24; border:1px solid #2a3a4a; border-radius:12px; padding:14px; color:#d2dbe5; font-size:13px; line-height:1.7; margin-bottom:14px; }
+    .ss-lead-card { background: linear-gradient(180deg, #182433 0%, #121b27 100%); border-radius: 14px; padding: 16px; margin: 12px 0; border: 1px solid #26384c; }
+    .ss-lead-card.grade-a { box-shadow: 0 12px 28px rgba(233,69,96,0.14); border-color:#e94560; }
+    .ss-lead-card.grade-b { border-color: #f39c12; box-shadow: 0 10px 24px rgba(243,156,18,0.12); }
+    .ss-lead-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:12px; }
+    .ss-lead-title { min-width:0; }
+    .ss-lead-title h3 { color: #f4f7fb; margin: 0 0 6px 0; font-size: 17px; }
+    .ss-lead-project { color:#aebdcb; font-size:13px; line-height:1.6; }
+    .ss-badges { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .ss-badge { display:inline-flex; align-items:center; border-radius:999px; padding:4px 10px; font-size:11px; font-weight:700; }
+    .ss-badge.grade-a { background:rgba(233,69,96,0.16); color:#ffb5c1; border:1px solid rgba(233,69,96,0.28); }
+    .ss-badge.grade-b { background:rgba(243,156,18,0.16); color:#ffd399; border:1px solid rgba(243,156,18,0.28); }
+    .ss-badge.score { background:rgba(52,152,219,0.14); color:#9edcff; border:1px solid rgba(52,152,219,0.28); }
+    .ss-metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:12px 0; }
+    .ss-metric { background:#121a24; border:1px solid #223447; border-radius:10px; padding:10px 12px; }
+    .ss-metric-label { display:block; color:#8fa4b8; font-size:11px; margin-bottom:4px; }
+    .ss-metric-value { display:block; color:#f4f7fb; font-size:14px; font-weight:700; }
+    .ss-copy { margin-top:12px; color:#d2dbe5; font-size:13px; line-height:1.7; }
+    .ss-section-label { color:#8fa4b8; font-size:11px; margin-bottom:4px; display:block; text-transform:uppercase; letter-spacing:0.04em; }
     .ss-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: center; }
     .ss-stats { font-size: 12px; color: #888; margin-top: 8px; }
     .ss-sources { margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a3a4a; }
@@ -40,6 +58,11 @@ export function getMainPage(env) {
     .ss-sources a { color: #3498db; text-decoration: none; font-size: 12px; }
     .ss-sources a:hover { text-decoration: underline; }
     .ss-sources li { margin: 3px 0; list-style: none; }
+    @media (max-width: 720px) {
+      .ss-metrics, .ss-summary { grid-template-columns:1fr; }
+      .ss-lead-head { flex-direction:column; }
+      .ss-badges { justify-content:flex-start; }
+    }
   </style>
 </head>
 <body>
@@ -194,23 +217,13 @@ export function getMainPage(env) {
         container.innerHTML = '';
         return;
       }
-      container.innerHTML = validLeads.map(lead => \`
-        <div class="ss-lead-card \${lead.grade === 'B' ? 'grade-b' : ''}">
-          <h3>\${esc(lead.grade)} | \${esc(lead.company)} (\${parseInt(lead.score)||0}점)</h3>
-          <p><strong>프로젝트:</strong> \${esc(lead.project_title)}</p>
-          <p><strong>추천 제품:</strong> \${esc(lead.recommended_product)}</p>
-          <p><strong>예상 ROI:</strong> \${esc(lead.expected_roi)}</p>
-          <p><strong>영업 제안:</strong> \${esc(lead.sales_pitch)}</p>
-          <p><strong>글로벌 트렌드:</strong> \${esc(lead.trend)}</p>
-          \${lead.sources && lead.sources.length > 0 ? \`
-          <div class="ss-sources">
-            <details>
-              <summary>출처 (\${lead.sources.length}건)</summary>
-              <ul>\${lead.sources.map(s => \`<li><a href="\${safeUrl(s.url)}" target="_blank" rel="noopener noreferrer">\${esc(s.title)}</a></li>\`).join('')}</ul>
-            </details>
-          </div>\` : ''}
-        </div>
-      \`).join('');
+      const avgScore = Math.round(validLeads.reduce((sum, lead) => sum + lead.score, 0) / validLeads.length);
+      const topLead = validLeads[0];
+      const gradeACount = validLeads.filter((lead) => lead.grade === 'A').length;
+      container.innerHTML = [
+        renderSelfServiceSummary(validLeads.length, avgScore, gradeACount, topLead, summary),
+        validLeads.map(renderSelfServiceLeadCard).join('')
+      ].join('');
 
       // 복사/다운로드 버튼
       container.innerHTML += \`
@@ -224,6 +237,77 @@ export function getMainPage(env) {
       window._ssLeads = validLeads;
       window._ssSummary = typeof summary === 'string' ? summary : '';
       window._ssProfile = profile;
+    }
+
+    function renderSelfServiceSummary(count, avgScore, gradeACount, topLead, summary) {
+      return \`
+        <div class="ss-summary">
+          <div class="ss-summary-card">
+            <span class="ss-summary-label">분석 리드 수</span>
+            <span class="ss-summary-value">\${count}건</span>
+            <div class="ss-summary-meta">즉시 검토 가능한 후보만 남겼습니다.</div>
+          </div>
+          <div class="ss-summary-card">
+            <span class="ss-summary-label">평균 점수</span>
+            <span class="ss-summary-value">\${avgScore}점</span>
+            <div class="ss-summary-meta">기사 최신성과 키워드 적합도 기준</div>
+          </div>
+          <div class="ss-summary-card">
+            <span class="ss-summary-label">A등급 비중</span>
+            <span class="ss-summary-value">\${gradeACount}건</span>
+            <div class="ss-summary-meta">우선 제안 후보 수</div>
+          </div>
+          <div class="ss-summary-card">
+            <span class="ss-summary-label">대표 제안 제품</span>
+            <span class="ss-summary-value">\${esc((topLead && topLead.recommended_product) || '-')}</span>
+            <div class="ss-summary-meta">\${topLead ? esc(topLead.company + ' 기준') : '추천 제품 없음'}</div>
+          </div>
+        </div>
+        <div class="ss-summary-note">\${esc(String(summary || '').trim() || (count + '개 영업 기회를 즉시 분석했습니다.'))}</div>
+      \`;
+    }
+
+    function renderSelfServiceLeadCard(lead) {
+      const gradeClass = lead.grade === 'A' ? 'grade-a' : (lead.grade === 'B' ? 'grade-b' : '');
+      return \`
+        <article class="ss-lead-card \${gradeClass}">
+          <div class="ss-lead-head">
+            <div class="ss-lead-title">
+              <h3>\${esc(lead.company)}</h3>
+              <div class="ss-lead-project">\${esc(lead.project_title)}</div>
+            </div>
+            <div class="ss-badges">
+              <span class="ss-badge \${lead.grade === 'A' ? 'grade-a' : 'grade-b'}">\${esc(lead.grade)}등급</span>
+              <span class="ss-badge score">\${parseInt(lead.score, 10) || 0}점</span>
+            </div>
+          </div>
+          <div class="ss-metrics">
+            <div class="ss-metric">
+              <span class="ss-metric-label">추천 제품</span>
+              <span class="ss-metric-value">\${esc(lead.recommended_product)}</span>
+            </div>
+            <div class="ss-metric">
+              <span class="ss-metric-label">예상 ROI</span>
+              <span class="ss-metric-value">\${esc(lead.expected_roi)}</span>
+            </div>
+          </div>
+          <div class="ss-copy">
+            <span class="ss-section-label">영업 제안</span>
+            \${esc(lead.sales_pitch)}
+          </div>
+          <div class="ss-copy">
+            <span class="ss-section-label">시장 트렌드</span>
+            \${esc(lead.trend)}
+          </div>
+          \${lead.sources && lead.sources.length > 0 ? \`
+          <div class="ss-sources">
+            <details>
+              <summary>출처 (\${lead.sources.length}건)</summary>
+              <ul>\${lead.sources.map(s => \`<li><a href="\${safeUrl(s.url)}" target="_blank" rel="noopener noreferrer">\${esc(s.title)}</a></li>\`).join('')}</ul>
+            </details>
+          </div>\` : ''}
+        </article>
+      \`;
     }
 
     function copySelfServiceResults() {

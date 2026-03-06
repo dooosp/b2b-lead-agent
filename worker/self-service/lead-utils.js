@@ -222,6 +222,85 @@ export function chooseFallbackProduct(profile) {
   return '맞춤 솔루션';
 }
 
+function normalizeMatchToken(value) {
+  return sanitizeLeadText(value, '').toLowerCase();
+}
+
+function getKnownProfileProducts(profile) {
+  if (!profile || !profile.products || typeof profile.products !== 'object') return [];
+  const seen = new Set();
+  const items = [];
+  for (const [category, value] of Object.entries(profile.products)) {
+    const names = Array.isArray(value) ? value : [value];
+    for (const rawName of names) {
+      const name = sanitizeLeadText(rawName, '');
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      items.push({ category, name });
+    }
+  }
+  return items;
+}
+
+function getHintTerms(value) {
+  return sanitizeLeadText(value, '')
+    .toLowerCase()
+    .split(/[\s,/]+/g)
+    .map((term) => term.trim())
+    .filter((term) => term.length >= 2)
+    .slice(0, 12);
+}
+
+export function isKnownProfileProduct(profile, product) {
+  const normalized = normalizeMatchToken(product);
+  if (!normalized) return false;
+  return getKnownProfileProducts(profile).some((item) => item.name.toLowerCase() === normalized);
+}
+
+export function chooseProductForArticle(profile, article, category = '') {
+  const candidates = getKnownProfileProducts(profile);
+  if (candidates.length === 0) return chooseFallbackProduct(profile);
+
+  const text = normalizeMatchToken([
+    article && article.title,
+    article && article.query,
+    article && article._body
+  ].filter(Boolean).join(' '));
+  const categoryConfigProduct = sanitizeLeadText(profile && profile.categoryConfig && profile.categoryConfig[category] && profile.categoryConfig[category].product, '');
+  let best = { score: -1, name: categoryConfigProduct || chooseFallbackProduct(profile) };
+
+  for (const candidate of candidates) {
+    let score = 0;
+    const candidateName = normalizeMatchToken(candidate.name);
+    if (!candidateName) continue;
+    if (text.includes(candidateName)) score += 8;
+    if (category && candidate.category === category) score += 4;
+    if (categoryConfigProduct && candidate.name === categoryConfigProduct) score += 3;
+
+    const categoryRules = Array.isArray(profile && profile.categoryRules && profile.categoryRules[candidate.category])
+      ? profile.categoryRules[candidate.category]
+      : [];
+    for (const keyword of categoryRules) {
+      const normalizedKeyword = normalizeMatchToken(keyword);
+      if (normalizedKeyword && text.includes(normalizedKeyword)) score += 1;
+    }
+
+    const knowledge = profile && profile.productKnowledge && profile.productKnowledge[candidate.name];
+    if (knowledge && typeof knowledge === 'object') {
+      for (const term of [...getHintTerms(knowledge.value), ...getHintTerms(knowledge.roi)]) {
+        if (term && text.includes(term)) score += 1;
+      }
+    }
+
+    if (score > best.score) best = { score, name: candidate.name };
+  }
+
+  if (best.score <= 0 && categoryConfigProduct) return categoryConfigProduct;
+  return best.name || chooseFallbackProduct(profile);
+}
+
 function parseJsonLenient(rawText) {
   const text = String(rawText || '')
     .replace(/```json\s*/gi, '')
