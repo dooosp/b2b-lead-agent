@@ -16,27 +16,44 @@ export function getCPAPage() {
     .form-row > * { flex: 1; }
     label { display: block; font-size: 12px; color: #aaa; margin-bottom: 4px; text-align: left; }
     .form-group { margin-bottom: 4px; text-align: left; }
-    .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 20px; }
-    .option-card { background: #1e2a3a; border-radius: 12px; padding: 20px; border: 2px solid #333; transition: all 0.3s; }
-    .option-card.recommended { border-color: #e94560; box-shadow: 0 0 20px rgba(233,69,96,0.2); }
-    .option-card h3 { color: #e94560; font-size: 16px; margin: 0 0 12px 0; }
-    .option-card.recommended h3::after { content: ' ★ 추천'; font-size: 12px; color: #f39c12; }
-    .option-label { font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 2px; }
-    .option-value { font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 12px; }
-    .option-detail { font-size: 13px; color: #ccc; margin: 6px 0; display: flex; justify-content: space-between; }
-    .option-detail span:last-child { color: #3498db; font-weight: bold; }
-    .divider { border-top: 1px solid #2a3a4a; margin: 12px 0; }
-    .sensitivity-section { background: #1e2a3a; border-radius: 12px; padding: 20px; margin-top: 20px; display: none; }
-    .sensitivity-section h3 { color: #e94560; font-size: 16px; margin: 0 0 16px 0; }
-    .sensitivity-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .sensitivity-table th { color: #aaa; text-align: left; padding: 8px 6px; border-bottom: 1px solid #333; }
-    .sensitivity-table td { color: #ccc; padding: 8px 6px; border-bottom: 1px solid #222; }
-    .sensitivity-table tr.current { background: rgba(233,69,96,0.1); }
-    .sensitivity-table tr.current td { color: #fff; font-weight: bold; }
+    .summary-strip { display:none; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-top:18px; }
+    .summary-card { background:#121a24; border:1px solid #2a3a4a; border-radius:12px; padding:14px; text-align:left; }
+    .summary-label { color:#8fa4b8; font-size:11px; margin-bottom:6px; display:block; }
+    .summary-value { color:#f4f7fb; font-size:17px; font-weight:700; display:block; }
+    .summary-meta { color:#9fb0c0; font-size:12px; margin-top:6px; line-height:1.5; }
+    .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 20px; }
+    .option-card { background: linear-gradient(180deg, #182433 0%, #121b27 100%); border-radius: 14px; padding: 18px; border: 1px solid #26384c; transition: all 0.3s; text-align:left; }
+    .option-card.recommended { border-color: #e94560; box-shadow: 0 12px 30px rgba(233,69,96,0.16); transform: translateY(-2px); }
+    .option-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .option-card h3 { color: #f4f7fb; font-size: 17px; margin: 0; }
+    .option-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; font-size:11px; color:#ffd399; background:rgba(243,156,18,0.12); border:1px solid rgba(243,156,18,0.28); }
+    .option-label { font-size: 11px; color: #8fa4b8; text-transform: uppercase; margin-bottom: 4px; }
+    .option-value { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 14px; letter-spacing:-0.02em; }
+    .option-metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:12px 0; }
+    .option-stat { background:#121a24; border:1px solid #223447; border-radius:10px; padding:10px; }
+    .option-stat-label { display:block; color:#8fa4b8; font-size:11px; margin-bottom:4px; }
+    .option-stat-value { display:block; color:#f4f7fb; font-size:14px; font-weight:700; }
+    .option-detail { font-size: 13px; color: #ccd6e0; margin: 6px 0; display: flex; justify-content: space-between; gap:12px; }
+    .option-detail span:last-child { color: #8fd6ff; font-weight: 700; text-align:right; }
+    .divider { border-top: 1px solid #253445; margin: 12px 0; }
+    .option-footnote { margin-top:10px; color:#9fb0c0; font-size:12px; line-height:1.6; }
+    .sensitivity-section { background: #121a24; border-radius: 14px; padding: 18px; margin-top: 20px; display: none; border:1px solid #26384c; text-align:left; }
+    .sensitivity-section h3 { color: #f4f7fb; font-size: 16px; margin: 0 0 6px 0; }
+    .sensitivity-subtitle { color:#8fa4b8; font-size:12px; margin-bottom:14px; }
+    .sensitivity-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+    .sensitivity-card { background:#182433; border:1px solid #223447; border-radius:12px; padding:12px; }
+    .sensitivity-card.current { border-color:#e94560; box-shadow:0 8px 24px rgba(233,69,96,0.14); }
+    .sensitivity-pct { color:#f4f7fb; font-size:16px; font-weight:700; margin-bottom:8px; }
+    .sensitivity-line { display:flex; justify-content:space-between; gap:12px; color:#cdd8e4; font-size:12px; margin:6px 0; }
+    .sensitivity-line span:last-child { text-align:right; color:#8fd6ff; font-weight:700; }
     .negative { color: #e74c3c !important; }
     .warning-badge { display: inline-block; background: rgba(231,76,60,0.2); border: 1px solid #e74c3c; color: #e74c3c; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-left: 6px; }
     .esco-inline { background: rgba(52,152,219,0.08); border: 1px dashed #3498db; border-radius: 8px; padding: 10px 14px; margin-top: 10px; font-size: 12px; color: #3498db; text-align: left; line-height: 1.6; }
-    .esco-note { background: rgba(52,152,219,0.1); border: 1px solid #3498db; border-radius: 8px; padding: 14px; margin-top: 16px; font-size: 13px; color: #3498db; display: none; text-align: left; }
+    .esco-note { background: rgba(52,152,219,0.1); border: 1px solid #3498db; border-radius: 12px; padding: 14px; margin-top: 16px; font-size: 13px; color: #3498db; display: none; text-align: left; }
+    .esco-note h3 { margin:0 0 10px 0; color:#8fd6ff; font-size:15px; }
+    .esco-note ul { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; }
+    .esco-note li { position:relative; padding-left:14px; line-height:1.6; }
+    .esco-note li::before { content:'•'; position:absolute; left:0; color:#8fd6ff; }
     .assumption-card { background: #121a24; border: 1px solid #2a3a4a; border-radius: 10px; padding: 14px; margin-top: 16px; display: none; text-align: left; }
     .assumption-card h3 { color: #e94560; font-size: 15px; margin: 0 0 10px 0; }
     .assumption-card p { margin: 6px 0; font-size: 13px; color: #c8d5e2; line-height: 1.6; }
@@ -44,6 +61,10 @@ export function getCPAPage() {
     .range-value { float: right; color: #e94560; font-weight: bold; font-size: 14px; }
     input[type=range] { width: 100%; -webkit-appearance: none; height: 6px; border-radius: 3px; background: #333; outline: none; margin-top: 6px; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #e94560; cursor: pointer; }
+    @media (max-width: 720px) {
+      .option-metrics { grid-template-columns:1fr; }
+      .summary-strip, .sensitivity-grid { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
@@ -96,13 +117,12 @@ export function getCPAPage() {
     <div class="status" id="status"></div>
 
     <div class="assumption-card" id="assumptionCard"></div>
+    <div class="summary-strip" id="summaryStrip"></div>
     <div class="options-grid" id="optionsGrid"></div>
     <div class="sensitivity-section" id="sensitivitySection">
       <h3>민감도 분석 (BEMS 기준, 면적 변동)</h3>
-      <table class="sensitivity-table">
-        <thead><tr><th>면적 변동</th><th>면적</th><th>총 투자비</th><th>연간 절감</th><th>순 절감</th><th>회수 기간</th></tr></thead>
-        <tbody id="sensitivityBody"></tbody>
-      </table>
+      <div class="sensitivity-subtitle">기준안 대비 면적이 변할 때 투자비와 회수기간이 어떻게 움직이는지 바로 비교합니다.</div>
+      <div class="sensitivity-grid" id="sensitivityBody"></div>
     </div>
     <div class="esco-note" id="escoNote"></div>
   </main>
@@ -133,6 +153,9 @@ export function getCPAPage() {
     function labelForRegion(value) {
       const labels = { seoul: '서울/수도권', metropolitan: '광역시', local: '지방', jeju: '제주' };
       return labels[value] || value;
+    }
+    function getRecommendedOption(options) {
+      return (options || []).find((o) => o.scope === 'BEMS') || (options || [])[1] || (options || [])[0] || null;
     }
 
     function clampAreaValue(v) {
@@ -197,10 +220,11 @@ export function getCPAPage() {
           status.className = 'status success';
           status.textContent = '견적 계산 완료!';
           renderAssumptions(data.input);
+          renderSummary(data);
           renderOptions(data.options);
           renderSensitivity(data.sensitivity);
           const esco = document.getElementById('escoNote');
-          esco.textContent = data.escoNote;
+          esco.innerHTML = renderEscoNote(data.escoNote);
           esco.style.display = 'block';
         } else {
           status.className = 'status error';
@@ -229,6 +253,25 @@ export function getCPAPage() {
       ].join('');
       card.style.display = 'block';
     }
+    function renderSummary(data) {
+      const strip = document.getElementById('summaryStrip');
+      const recommended = getRecommendedOption(data.options);
+      if (!recommended) {
+        strip.style.display = 'none';
+        strip.innerHTML = '';
+        return;
+      }
+      strip.innerHTML = [
+        renderSummaryCard('권장안', esc(recommended.label), '표준 비교안 기준'),
+        renderSummaryCard('총 투자비', fmtWon(recommended.totalCost), '권장안 기준 총 CAPEX'),
+        renderSummaryCard('순연간 절감', fmtWon(recommended.netAnnualSavings), '유지비 반영 후'),
+        renderSummaryCard('투자 회수', fmtPayback(recommended.paybackYears), '기준선 입력값 반영')
+      ].join('');
+      strip.style.display = 'grid';
+    }
+    function renderSummaryCard(label, value, meta) {
+      return '<div class="summary-card"><span class="summary-label">' + label + '</span><span class="summary-value">' + value + '</span><div class="summary-meta">' + meta + '</div></div>';
+    }
     function renderOptions(options) {
       const grid = document.getElementById('optionsGrid');
       grid.innerHTML = options.map((o, i) => {
@@ -239,18 +282,25 @@ export function getCPAPage() {
         const escoHtml = isNeg ? '<div class="esco-inline">샘플 계약 구조: 초기 투자 0원 가정을 전제로 검토할 수 있으나, 상세 성과보장 조건은 기준선 검증 후 확정해야 합니다.</div>' : '';
         return \`
         <div class="option-card \${i === 1 ? 'recommended' : ''}">
-          <h3>\${esc(o.label)}</h3>
+          <div class="option-head">
+            <div><h3>\${esc(o.label)}</h3><div class="option-label">\${esc(o.scope)} / \${esc(o.tier)}</div></div>
+            \${i === 1 ? '<span class="option-badge">권장안</span>' : ''}
+          </div>
           <div class="option-label">총 투자비</div>
           <div class="option-value">\${fmtWon(o.totalCost)}</div>
-          <div class="option-detail"><span>단가</span><span>\${fmt(o.unitCost)}원/㎡</span></div>
-          <div class="option-detail"><span>에너지 절감률</span><span>\${o.savingsRate}%</span></div>
+          <div class="option-metrics">
+            <div class="option-stat"><span class="option-stat-label">단가</span><span class="option-stat-value">\${fmt(o.unitCost)}원/㎡</span></div>
+            <div class="option-stat"><span class="option-stat-label">에너지 절감률</span><span class="option-stat-value">\${o.savingsRate}%</span></div>
+            <div class="option-stat"><span class="option-stat-label">연간 절감액</span><span class="option-stat-value">\${fmtWon(o.annualSavings)}</span></div>
+            <div class="option-stat"><span class="option-stat-label">순 절감액</span><span class="option-stat-value \${netClass}">\${fmtWon(Math.abs(o.netAnnualSavings))}\${isNeg ? ' (적자)' : ''}</span></div>
+          </div>
           <div class="divider"></div>
-          <div class="option-detail"><span>연간 절감액</span><span>\${fmtWon(o.annualSavings)}</span></div>
           <div class="option-detail"><span>연간 유지비</span><span>\${fmtWon(o.maintenanceCost)}</span></div>
-          <div class="option-detail"><span>순 절감액</span><span class="\${netClass}">\${fmtWon(Math.abs(o.netAnnualSavings))}\${isNeg ? ' (적자)' : ''}\${warningHtml}</span></div>
-          <div class="divider"></div>
+          <div class="option-detail"><span>5년 총소유비용</span><span>\${fmtWon(o.tco5y)}</span></div>
+          <div class="option-detail"><span>5년 누적 절감액</span><span>\${fmtWon(o.savings5y)}</span></div>
           <div class="option-detail"><span>투자 회수</span><span class="\${o.paybackYears < 0 ? 'negative' : ''}">\${paybackStr}</span></div>
           <div class="option-detail"><span>5년 ROI</span><span class="\${o.roi5y < 0 ? 'negative' : ''}">\${o.roi5y}%</span></div>
+          \${warningHtml ? '<div class="option-footnote">' + warningHtml + ' 현재 입력 조건에서는 유지비 반영 후 순절감이 음수입니다.</div>' : ''}
           \${escoHtml}
         </div>\`;
       }).join('');
@@ -263,16 +313,23 @@ export function getCPAPage() {
         const netVal = s.netAnnualSavings != null ? s.netAnnualSavings : (s.annualSavings - s.totalCost * 0.018);
         const isNeg = netVal < 0;
         return \`
-        <tr class="\${s.pct === 0 ? 'current' : ''}">
-          <td>\${s.pct > 0 ? '+' : ''}\${s.pct}%</td>
-          <td>\${fmt(s.area)}㎡</td>
-          <td>\${fmtWon(s.totalCost)}</td>
-          <td>\${fmtWon(s.annualSavings)}</td>
-          <td class="\${isNeg ? 'negative' : ''}">\${fmtWon(Math.abs(netVal))}\${isNeg ? ' (적자)' : ''}</td>
-          <td class="\${s.paybackYears < 0 ? 'negative' : ''}">\${fmtPayback(s.paybackYears)}</td>
-        </tr>\`;
+        <div class="sensitivity-card \${s.pct === 0 ? 'current' : ''}">
+          <div class="sensitivity-pct">\${s.pct > 0 ? '+' : ''}\${s.pct}%</div>
+          <div class="sensitivity-line"><span>면적</span><span>\${fmt(s.area)}㎡</span></div>
+          <div class="sensitivity-line"><span>총 투자비</span><span>\${fmtWon(s.totalCost)}</span></div>
+          <div class="sensitivity-line"><span>연간 절감</span><span>\${fmtWon(s.annualSavings)}</span></div>
+          <div class="sensitivity-line"><span>순 절감</span><span class="\${isNeg ? 'negative' : ''}">\${fmtWon(Math.abs(netVal))}\${isNeg ? ' (적자)' : ''}</span></div>
+          <div class="sensitivity-line"><span>회수 기간</span><span class="\${s.paybackYears < 0 ? 'negative' : ''}">\${fmtPayback(s.paybackYears)}</span></div>
+        </div>\`;
       }).join('');
       section.style.display = 'block';
+    }
+    function renderEscoNote(note) {
+      const bullets = String(note || '')
+        .split(/\\.\\s+/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      return '<h3>ESCO 검토 메모</h3><ul>' + bullets.map((line) => '<li>' + esc(line.replace(/\\.$/, '')) + '</li>').join('') + '</ul>';
     }
 
     // 초기 상태 동기화
