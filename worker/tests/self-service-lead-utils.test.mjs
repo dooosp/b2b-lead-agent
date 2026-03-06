@@ -204,3 +204,13 @@ test('normalizeTrendText replaces generic trend with industry-specific context',
   assert.match(normalized, /신규 투자와 설비 확장/);
   assert.doesNotMatch(normalized, /프리미엄 TV 시장 성장/);
 });
+
+test('normalizeTrendText uses context keywords for non-investment events', () => {
+  const normalized = normalizeTrendText('최근 건설사들은 재건축 수주 경쟁 심화', {
+    industry: '건설',
+    eventType: '수주',
+    article: { title: '현대건설, 재건축 수주전 참여' }
+  });
+
+  assert.equal(normalized, '건설에서는 프로젝트 수주 이후 운영 전환 기준과 데이터 인수인계 요구가 커지고 있습니다.');
+});

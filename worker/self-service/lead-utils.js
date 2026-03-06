@@ -27,6 +27,13 @@ const STOCK_TREND_PATTERNS = Object.freeze([
   /선호도 증가/i,
   /시장 경쟁 심화/i
 ]);
+const TREND_FOCUS_RULES = Object.freeze([
+  { pattern: /(ai|인공지능|피지컬ai|자동화|스마트팩토리)/i, text: 'AI 기반 자동화와 운영 표준화 요구가 커지고 있습니다.' },
+  { pattern: /(에너지|탄소|전력|피크|효율)/i, text: '에너지 검증과 원단위 관리 요구가 커지고 있습니다.' },
+  { pattern: /(수주|입찰|재건축|개발|착공|준공)/i, text: '프로젝트 수주 이후 운영 전환 기준과 데이터 인수인계 요구가 커지고 있습니다.' },
+  { pattern: /(물류|배송|센터|창고|풀필먼트)/i, text: '운영 가시화와 센터별 성과 관리 요구가 커지고 있습니다.' },
+  { pattern: /(설비|예지보전|유지보수|정지시간)/i, text: '설비 상태 모니터링과 예방 정비 요구가 커지고 있습니다.' }
+]);
 const SELF_SERVICE_MODEL_SCHEMA_KEYS = Object.freeze([
   'company',
   'project_title',
@@ -108,11 +115,9 @@ export function normalizeSalesPitchText(value, { company = '', product = '', pro
 }
 
 export function normalizeTrendText(value, { industry = '', eventType = '', article = null } = {}) {
-  const cleaned = normalizeSentenceEnding(value);
   const context = articleContextText(article);
-  if (cleaned && !STOCK_TREND_PATTERNS.some((pattern) => pattern.test(cleaned))) return cleaned;
-
   const industryLabel = industry || '해당 산업';
+  const focus = TREND_FOCUS_RULES.find((rule) => rule.pattern.test(`${context} ${value}`));
   if (eventType === '규제') {
     return `${industryLabel}에서는 규제 대응과 운영 데이터 가시화 요구가 함께 커지고 있습니다.`;
   }
@@ -121,6 +126,9 @@ export function normalizeTrendText(value, { industry = '', eventType = '', artic
   }
   if (context.includes('채용')) {
     return `${industryLabel}에서는 운영 인력 확보 부담 때문에 자동화와 중앙 관제 수요가 함께 커지고 있습니다.`;
+  }
+  if (focus) {
+    return `${industryLabel}에서는 ${focus.text}`;
   }
   return `${industryLabel}에서는 운영 효율, 에너지 검증, 설비 데이터 통합을 동시에 요구하는 프로젝트가 늘고 있습니다.`;
 }
