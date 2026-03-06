@@ -13,17 +13,19 @@ export function getDashboardPage(env) {
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
-    .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 24px; }
-    .dash-card { background: #1e2a3a; border-radius: 12px; padding: 16px; text-align: center; }
-    .dash-card .num { font-size: 28px; font-weight: bold; color: #e94560; }
-    .dash-card .label { font-size: 12px; color: #aaa; margin-top: 4px; }
+    .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .dash-card { background: linear-gradient(180deg, #182433 0%, #121b27 100%); border-radius: 14px; padding: 16px; text-align: left; border:1px solid #26384c; }
+    .dash-card .num { font-size: 28px; font-weight: bold; color: #e94560; display:block; }
+    .dash-card .label { font-size: 12px; color: #8fa4b8; margin-top: 4px; display:block; }
+    .dash-card .meta { font-size:11px; color:#9fb0c0; margin-top:8px; line-height:1.5; }
     .pipeline-bar { display: flex; height: 32px; border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
     .pipeline-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: #fff; min-width: 30px; transition: width 0.5s; }
     .activity-feed { list-style: none; padding: 0; }
     .activity-feed li { padding: 10px 0; border-bottom: 1px solid #2a3a4a; font-size: 13px; color: #ccc; }
     .activity-feed .time { color: #666; font-size: 11px; }
     .activity-feed .company { color: #e94560; font-weight: bold; }
-    .section-title { font-size: 16px; color: #fff; margin: 20px 0 12px; }
+    .section-shell { background:#121a24; border:1px solid #26384c; border-radius:14px; padding:16px; margin:18px 0; text-align:left; }
+    .section-title { font-size: 16px; color: #fff; margin: 0 0 12px; }
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
     .profile-filter { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 13px; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
@@ -34,6 +36,9 @@ export function getDashboardPage(env) {
     .badge-status.negotiation { background: #2980b9; }
     .badge-status.won { background: #27ae60; }
     .badge-status.lost { background: #7f8c8d; }
+    @media (max-width: 720px) {
+      .dashboard-cards { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
@@ -91,7 +96,7 @@ export function getDashboardPage(env) {
         // 경영진 요약
         let html = '';
         if (m.executiveSummary && m.executiveSummary.text) {
-          html += '<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-left:4px solid #e94560;border-radius:12px;padding:16px 20px;margin-bottom:20px;">';
+          html += '<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-left:4px solid #e94560;border-radius:12px;padding:16px 20px;margin-bottom:20px;text-align:left;">';
           html += '<h3 style="font-size:14px;color:#e94560;margin:0 0 8px;">경영진 요약</h3>';
           html += '<p style="font-size:13px;color:#ddd;line-height:1.6;margin:0;">' + esc(m.executiveSummary.text) + '</p>';
           html += '</div>';
@@ -99,17 +104,17 @@ export function getDashboardPage(env) {
 
         // 요약 카드
         html += '<div class="dashboard-cards">';
-        html += \`<div class="dash-card"><div class="num">\${m.total}</div><div class="label">총 리드</div></div>\`;
-        html += \`<div class="dash-card"><div class="num" style="color:#e94560;">\${m.gradeA}</div><div class="label">A등급</div></div>\`;
-        html += \`<div class="dash-card"><div class="num" style="color:#27ae60;">\${m.conversionRate}%</div><div class="label">전환율</div></div>\`;
-        html += \`<div class="dash-card"><div class="num" style="color:#3498db;">\${m.active}</div><div class="label">활성 리드</div></div>\`;
-        html += \`<div class="dash-card"><div class="num" style="color:#f39c12;">\${(m.totalPipelineValue || 0).toLocaleString()}</div><div class="label">진행 중 거래 총액(만원)</div></div>\`;
-        html += \`<div class="dash-card"><div class="num" style="color:#e74c3c;">\${(m.followUpAlerts || []).length}</div><div class="label">후속 조치 알림</div></div>\`;
+        html += renderDashCard(m.total, '총 리드', '현재 프로필 기준 전체 건수');
+        html += renderDashCard(m.gradeA, 'A등급', '우선 공략할 상위 리드', '#e94560');
+        html += renderDashCard(m.conversionRate + '%', '전환율', '수주 기준 전체 전환 성과', '#27ae60');
+        html += renderDashCard(m.active, '활성 리드', '진행 중인 파이프라인 수', '#3498db');
+        html += renderDashCard((m.totalPipelineValue || 0).toLocaleString(), '진행 중 거래 총액(만원)', '활성 단계 누적 거래액', '#f39c12');
+        html += renderDashCard((m.followUpAlerts || []).length, '후속 조치 알림', '오늘 또는 기한 초과 일정', '#e74c3c');
         html += '</div>';
 
         // 파이프라인 바
         if (m.total > 0) {
-          html += '<h3 class="section-title">파이프라인</h3>';
+          html += '<div class="section-shell"><h3 class="section-title">파이프라인</h3>';
           html += '<div class="pipeline-bar">';
           const order = ['NEW','CONTACTED','MEETING','PROPOSAL','NEGOTIATION','WON','LOST'];
           order.forEach(s => {
@@ -127,12 +132,12 @@ export function getDashboardPage(env) {
             if (cnt === 0) return;
             html += \`<span style="font-size:11px;color:#aaa;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:\${statusColors[s]};margin-right:4px;"></span>\${statusLabels[s]} \${cnt}</span>\`;
           });
-          html += '</div>';
+          html += '</div></div>';
         }
 
         // 후속 조치 알림
         if (m.followUpAlerts && m.followUpAlerts.length > 0) {
-          html += '<h3 class="section-title" style="color:#e74c3c;">후속 조치 알림</h3>';
+          html += '<div class="section-shell"><h3 class="section-title" style="color:#e74c3c;">후속 조치 알림</h3>';
           html += '<ul class="activity-feed">';
           m.followUpAlerts.forEach(a => {
             const icon = a.isOverdue ? '🔴' : a.isToday ? '🟡' : '🔵';
@@ -143,13 +148,13 @@ export function getDashboardPage(env) {
               <span class="badge badge-status \${(a.status||'').toLowerCase()}" style="font-size:10px;padding:1px 6px;margin-left:6px;">\${esc(statusLabels[a.status] || a.status)}</span>
             </li>\`;
           });
-          html += '</ul>';
+          html += '</ul></div>';
         }
 
         // 파이프라인 속도
         if (m.pipelineVelocity && (m.pipelineVelocity.closedCount > 0 || m.pipelineVelocity.lostCycleCount > 0)) {
           const pv = m.pipelineVelocity;
-          html += '<h3 class="section-title">파이프라인 속도</h3>';
+          html += '<div class="section-shell"><h3 class="section-title">파이프라인 속도</h3>';
           html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;">';
           if (pv.closedCount > 0) {
             html += \`<div style="background:#1e2a3a;border-radius:10px;padding:14px;text-align:center;">
@@ -172,12 +177,12 @@ export function getDashboardPage(env) {
               <div style="font-size:10px;color:#e67e22;margin-top:4px;">\${esc(statusLabels[pv.bottleneckStage] || pv.bottleneckStage)}</div>
             </div>\`;
           }
-          html += '</div>';
+          html += '</div></div>';
         }
 
         // 단계별 전환율
         if (m.stageConversions && m.stageConversions.length > 0) {
-          html += '<h3 class="section-title">단계별 전환율</h3>';
+          html += '<div class="section-shell"><h3 class="section-title">단계별 전환율</h3>';
           html += '<div style="display:grid;gap:8px;margin-bottom:16px;">';
           m.stageConversions.forEach(sc => {
             const barWidth = Math.max(sc.rate, 2);
@@ -191,13 +196,13 @@ export function getDashboardPage(env) {
               </div>
             </div>\`;
           });
-          html += '</div>';
+          html += '</div></div>';
         }
 
         // 수주/실주 분석
         if (m.winLossAnalysis && (m.winLossAnalysis.wonCount > 0 || m.winLossAnalysis.lostCount > 0)) {
           const wl = m.winLossAnalysis;
-          html += '<h3 class="section-title">수주/실주 분석</h3>';
+          html += '<div class="section-shell"><h3 class="section-title">수주/실주 분석</h3>';
           html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:12px;">';
           html += \`<div style="background:#1e2a3a;border-radius:10px;padding:14px;text-align:center;">
             <div style="font-size:24px;font-weight:bold;color:#27ae60;">\${wl.winRate}%</div>
@@ -238,11 +243,12 @@ export function getDashboardPage(env) {
             });
             html += '</div>';
           }
+          html += '</div>';
         }
 
         // 평균 체류 시간
         if (m.avgDwellDays && Object.keys(m.avgDwellDays).length > 0) {
-          html += '<h3 class="section-title">평균 체류 시간 (일)</h3>';
+          html += '<div class="section-shell"><h3 class="section-title">평균 체류 시간 (일)</h3>';
           html += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;">';
           ['NEW','CONTACTED','MEETING','PROPOSAL','NEGOTIATION'].forEach(s => {
             if (m.avgDwellDays[s] !== undefined) {
@@ -252,12 +258,12 @@ export function getDashboardPage(env) {
               </div>\`;
             }
           });
-          html += '</div>';
+          html += '</div></div>';
         }
 
         // 진행 중 거래 총액 (단계별)
         if (m.pipelineValueByStatus && Object.values(m.pipelineValueByStatus).some(v => v > 0)) {
-          html += '<h3 class="section-title">진행 중 거래 총액 (만원)</h3>';
+          html += '<div class="section-shell"><h3 class="section-title">진행 중 거래 총액 (만원)</h3>';
           html += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;">';
           ['NEW','CONTACTED','MEETING','PROPOSAL','NEGOTIATION','WON'].forEach(s => {
             const v = m.pipelineValueByStatus[s] || 0;
@@ -268,13 +274,13 @@ export function getDashboardPage(env) {
               </div>\`;
             }
           });
-          html += '</div>';
+          html += '</div></div>';
         }
 
         // 비즈니스 케이스 인사이트
         if (m.businessCaseInsights && m.businessCaseInsights.totalEnriched > 0) {
           const bi = m.businessCaseInsights;
-          html += '<h3 class="section-title">비즈니스 케이스 인사이트</h3>';
+          html += '<div class="section-shell"><h3 class="section-title">비즈니스 케이스 인사이트</h3>';
           // 커버리지 카드
           html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:12px;">';
           html += \`<div style="background:#1e2a3a;border-radius:10px;padding:14px;text-align:center;">
@@ -329,31 +335,37 @@ export function getDashboardPage(env) {
             }
             html += '</div>';
           }
+          html += '</div>';
         }
 
         // 최근 활동
         if (m.recentActivity && m.recentActivity.length > 0) {
-          html += '<h3 class="section-title">최근 활동</h3>';
+          html += '<div class="section-shell"><h3 class="section-title">최근 활동</h3>';
           html += '<ul class="activity-feed">';
           m.recentActivity.forEach(a => {
             const time = a.changedAt ? new Date(a.changedAt).toLocaleString('ko-KR') : '';
             html += \`<li><span class="time">\${esc(time)}</span> <span class="company">\${esc(a.company)}</span> \${esc(statusLabels[a.fromStatus] || a.fromStatus)} → \${esc(statusLabels[a.toStatus] || a.toStatus)}</li>\`;
           });
-          html += '</ul>';
+          html += '</ul></div>';
         }
 
         // 분석 실행 통계
         if (m.analyticsByType && Object.keys(m.analyticsByType).length > 0) {
-          html += '<h3 class="section-title">분석 실행</h3>';
+          html += '<div class="section-shell"><h3 class="section-title">분석 실행</h3>';
           Object.entries(m.analyticsByType).forEach(([type, info]) => {
             html += \`<p style="font-size:13px;color:#ccc;">\${esc(type)}: \${info.runs}회 실행, 총 \${info.totalLeads || 0}건 리드 발굴</p>\`;
           });
+          html += '</div>';
         }
 
         container.innerHTML = html;
       } catch(e) {
         container.innerHTML = '<p style="color:#e74c3c;">대시보드 로드 실패: ' + esc(e.message) + '</p>';
       }
+    }
+
+    function renderDashCard(value, label, meta, color) {
+      return \`<div class="dash-card"><span class="num" style="color:\${color || '#e94560'}">\${value}</span><span class="label">\${label}</span><div class="meta">\${meta}</div></div>\`;
     }
 
     if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});

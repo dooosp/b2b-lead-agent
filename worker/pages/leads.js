@@ -11,13 +11,27 @@ export function getLeadsPage() {
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
-    .lead-card { background: #1e2a3a; border-radius: 12px; padding: 20px; margin: 16px 0; border-left: 4px solid #e94560; }
-    .lead-card.grade-b { border-left-color: #f39c12; }
-    .lead-card h3 { color: #e94560; margin: 0 0 12px 0; font-size: 18px; }
-    .lead-card.grade-b h3 { color: #f39c12; }
-    .lead-info { display: grid; gap: 8px; }
-    .lead-info p { margin: 0; font-size: 14px; line-height: 1.6; color: #ccc; }
-    .lead-info strong { color: #fff; }
+    .leads-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin:12px 0 18px; }
+    .summary-card { background:#121a24; border:1px solid #2a3a4a; border-radius:12px; padding:14px; text-align:left; }
+    .summary-card .label { color:#8fa4b8; font-size:11px; display:block; margin-bottom:6px; }
+    .summary-card .value { color:#f4f7fb; font-size:22px; font-weight:700; display:block; }
+    .summary-card .meta { color:#9fb0c0; font-size:12px; margin-top:6px; }
+    .lead-card { background: linear-gradient(180deg, #182433 0%, #121b27 100%); border-radius: 14px; padding: 18px; margin: 16px 0; border: 1px solid #26384c; }
+    .lead-card.grade-a { box-shadow: 0 12px 28px rgba(233,69,96,0.14); border-color:#e94560; }
+    .lead-card.grade-b { border-color: #f39c12; box-shadow: 0 10px 24px rgba(243,156,18,0.12); }
+    .lead-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:12px; }
+    .lead-title h3 { color: #f4f7fb; margin: 0 0 8px 0; font-size: 19px; line-height:1.4; }
+    .lead-subtitle { color:#a9b9c8; font-size:13px; line-height:1.6; }
+    .lead-badges { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .lead-status-row { margin:8px 0 0; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .lead-metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:14px 0; }
+    .lead-metric { background:#121a24; border:1px solid #223447; border-radius:10px; padding:10px 12px; }
+    .lead-metric .metric-label { display:block; color:#8fa4b8; font-size:11px; margin-bottom:4px; }
+    .lead-metric .metric-value { display:block; color:#f4f7fb; font-size:14px; font-weight:700; line-height:1.5; }
+    .lead-sections { display:grid; gap:10px; }
+    .lead-block { background:#121a24; border:1px solid #223447; border-radius:10px; padding:12px; }
+    .lead-block .block-label { display:block; color:#8fa4b8; font-size:11px; margin-bottom:5px; text-transform:uppercase; letter-spacing:0.04em; }
+    .lead-block .block-value { color:#d4deea; font-size:13px; line-height:1.7; }
     .lead-sources { margin-top: 12px; padding-top: 12px; border-top: 1px solid #2a3a4a; }
     .lead-sources summary { color: #aaa; font-size: 13px; cursor: pointer; }
     .lead-sources summary:hover { color: #fff; }
@@ -65,6 +79,11 @@ export function getLeadsPage() {
     .kanban-card.followup-warn { border-left-color: #e74c3c; }
     .kanban-card.followup-warn .k-followup { color: #e74c3c; font-weight: bold; }
     .kanban-card .k-value { color: #27ae60; font-size: 11px; }
+    @media (max-width: 720px) {
+      .lead-head { flex-direction:column; }
+      .lead-badges { justify-content:flex-start; }
+      .lead-metrics, .leads-summary { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
@@ -93,6 +112,7 @@ export function getLeadsPage() {
     </div>
     <div id="batchStatus" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div>
 
+    <div id="leadsSummary"></div>
     <div id="leadsList"><p style="color:#aaa;">로딩 중...</p></div>
     <div id="kanbanView" style="display:none;"></div>
   </main>
@@ -225,8 +245,10 @@ export function getLeadsPage() {
         const res = await fetch('/api/leads?profile=' + getProfile(), {headers:authHeaders()});
         const data = await res.json();
         const container = document.getElementById('leadsList');
+        const summaryContainer = document.getElementById('leadsSummary');
 
         if (!data.leads || data.leads.length === 0) {
+          summaryContainer.innerHTML = '';
           container.innerHTML = '<p style="color:#aaa;">아직 생성된 리드가 없습니다. 메인 페이지에서 보고서를 먼저 생성하세요.</p>';
           cachedLeads = [];
           if (currentView === 'kanban') renderKanban([]);
@@ -234,31 +256,40 @@ export function getLeadsPage() {
         }
 
         cachedLeads = data.leads;
+        summaryContainer.innerHTML = renderLeadsSummary(cachedLeads);
         if (currentView === 'kanban') renderKanban(cachedLeads);
 
         container.innerHTML = data.leads.map((lead, i) => \`
-          <div class="lead-card \${lead.grade === 'B' ? 'grade-b' : ''}">
-            <h3>
-              <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${esc(lead.grade)}</span>
-              \${renderStatusSelect(lead)}
-              \${lead.enriched ? '<span class="badge-enriched">심층 분석 완료</span>' : ''}
-              \${lead.id ? \`<a href="\${detailLink(lead.id)}" style="color:inherit;text-decoration:none;">\${esc(lead.company)}</a>\` : esc(lead.company)} (\${parseInt(lead.score) || 0}점)
-            </h3>
-            <div style="margin:6px 0;display:flex;gap:6px;flex-wrap:wrap;">
-              \${lead.urgency ? \`<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;color:#fff;background:\${lead.urgency === 'HIGH' ? '#e74c3c' : '#f39c12'};">\${lead.urgency === 'HIGH' ? '긴급' : '보통'}</span>\` : ''}
-              \${lead.confidence ? \`<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;color:#fff;background:\${lead.confidence === 'HIGH' ? '#27ae60' : lead.confidence === 'MEDIUM' ? '#f39c12' : '#e74c3c'};">신뢰도 \${lead.confidence}</span>\` : ''}
-              \${lead.eventType ? \`<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;color:#666;border:1px solid #ddd;">\${esc(lead.eventType)}</span>\` : ''}
+          <div class="lead-card \${lead.grade === 'A' ? 'grade-a' : lead.grade === 'B' ? 'grade-b' : ''}">
+            <div class="lead-head">
+              <div class="lead-title">
+                <h3>\${lead.id ? \`<a href="\${detailLink(lead.id)}" style="color:inherit;text-decoration:none;">\${esc(lead.company)}</a>\` : esc(lead.company)}</h3>
+                <div class="lead-subtitle">\${esc(lead.summary || '-')}</div>
+                <div class="lead-status-row">
+                  <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${esc(lead.grade)}등급</span>
+                  \${renderStatusSelect(lead)}
+                  \${lead.enriched ? '<span class="badge-enriched">심층 분석 완료</span>' : ''}
+                </div>
+              </div>
+              <div class="lead-badges">
+                <span class="badge badge-a" style="background:#3498db;">\${parseInt(lead.score) || 0}점</span>
+                \${lead.urgency ? \`<span class="badge" style="background:\${lead.urgency === 'HIGH' ? '#e74c3c' : '#f39c12'};color:#fff;">\${lead.urgency === 'HIGH' ? '긴급' : '보통'}</span>\` : ''}
+                \${lead.confidence ? \`<span class="badge" style="background:\${lead.confidence === 'HIGH' ? '#27ae60' : lead.confidence === 'MEDIUM' ? '#f39c12' : '#e74c3c'};color:#fff;">신뢰도 \${lead.confidence}</span>\` : ''}
+                \${lead.eventType ? \`<span class="badge" style="background:#243547;color:#c5d5e6;">\${esc(lead.eventType)}</span>\` : ''}
+              </div>
             </div>
-            \${lead.urgencyReason ? \`<div style="color:#aaa;font-size:11px;margin-bottom:4px;">\${esc(lead.urgencyReason)}</div>\` : ''}
-            \${lead.confidenceReason ? \`<div style="color:#aaa;font-size:11px;margin-bottom:4px;">신뢰도 근거: \${esc(lead.confidenceReason)}</div>\` : ''}
-            <div class="lead-info">
-              <p><strong>프로젝트:</strong> \${esc(lead.summary)}</p>
-              <p><strong>추천 제품:</strong> \${esc(lead.product)}</p>
-              \${lead.buyerRole ? \`<p><strong>예상 키맨:</strong> \${esc(lead.buyerRole)}</p>\` : ''}
-              \${lead.scoreReason ? \`<p><strong>등급 근거:</strong> \${esc(lead.scoreReason)}</p>\` : ''}
-              <p><strong>예상 ROI:</strong> \${esc(lead.roi) || '-'}</p>
-              <p><strong>영업 제안:</strong> \${esc(lead.salesPitch)}</p>
-              <p><strong>글로벌 트렌드:</strong> \${esc(lead.globalContext) || '-'}</p>
+            <div class="lead-metrics">
+              <div class="lead-metric"><span class="metric-label">추천 제품</span><span class="metric-value">\${esc(lead.product || '-')}</span></div>
+              <div class="lead-metric"><span class="metric-label">예상 ROI</span><span class="metric-value">\${esc(lead.roi) || '-'}</span></div>
+              \${lead.buyerRole ? \`<div class="lead-metric"><span class="metric-label">예상 키맨</span><span class="metric-value">\${esc(lead.buyerRole)}</span></div>\` : ''}
+              \${lead.followUpDate ? \`<div class="lead-metric"><span class="metric-label">후속 일정</span><span class="metric-value">\${esc(lead.followUpDate)}</span></div>\` : ''}
+            </div>
+            <div class="lead-sections">
+              \${lead.urgencyReason ? \`<div class="lead-block"><span class="block-label">우선순위 근거</span><div class="block-value">\${esc(lead.urgencyReason)}</div></div>\` : ''}
+              \${lead.confidenceReason ? \`<div class="lead-block"><span class="block-label">신뢰도 근거</span><div class="block-value">\${esc(lead.confidenceReason)}</div></div>\` : ''}
+              \${lead.scoreReason ? \`<div class="lead-block"><span class="block-label">점수 해설</span><div class="block-value">\${esc(lead.scoreReason)}</div></div>\` : ''}
+              <div class="lead-block"><span class="block-label">영업 제안</span><div class="block-value">\${esc(lead.salesPitch)}</div></div>
+              <div class="lead-block"><span class="block-label">시장 트렌드</span><div class="block-value">\${esc(lead.globalContext) || '-'}</div></div>
             </div>
             \${lead.enriched ? \`
             <div class="enriched-details">
@@ -368,6 +399,21 @@ export function getLeadsPage() {
       });
       html += '</div>';
       document.getElementById('kanbanView').innerHTML = html;
+    }
+
+    function renderLeadsSummary(leads) {
+      const total = leads.length;
+      const gradeA = leads.filter(l => l.grade === 'A').length;
+      const enriched = leads.filter(l => l.enriched).length;
+      const avgScore = Math.round(leads.reduce((sum, lead) => sum + (parseInt(lead.score, 10) || 0), 0) / Math.max(1, total));
+      return \`
+        <div class="leads-summary">
+          <div class="summary-card"><span class="label">총 리드</span><span class="value">\${total}</span><div class="meta">현재 프로필 기준 전체 건수</div></div>
+          <div class="summary-card"><span class="label">A등급</span><span class="value">\${gradeA}</span><div class="meta">우선 제안 후보</div></div>
+          <div class="summary-card"><span class="label">평균 점수</span><span class="value">\${avgScore}</span><div class="meta">기사 신호 기준 평균</div></div>
+          <div class="summary-card"><span class="label">심층 분석 완료</span><span class="value">\${enriched}</span><div class="meta">추가 근거가 확보된 리드</div></div>
+        </div>
+      \`;
     }
 
     document.getElementById('historyLink').href = '/history?profile=' + encodeURIComponent(getProfile());
