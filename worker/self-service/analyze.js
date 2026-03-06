@@ -28,19 +28,43 @@ export {
   extractCompanyNameWorker
 } from './lead-utils.js';
 
-export function generateQuickLeadsWorker(articles, profile) {
+function normalizeCompanyToken(value = '') {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[\s"'`·.,()[\]{}\-_/]/g, '');
+}
+
+export function articleMentionsTargetCompany(article, targetCompany) {
+  const token = normalizeCompanyToken(targetCompany);
+  if (!token) return false;
+  const haystack = normalizeCompanyToken([
+    article && article.title,
+    article && article.query,
+    article && article._body
+  ].filter(Boolean).join(' '));
+  return haystack.includes(token);
+}
+
+export function filterArticlesForTargetCompany(articles, targetCompany) {
+  const filtered = (Array.isArray(articles) ? articles : []).filter((article) => articleMentionsTargetCompany(article, targetCompany));
+  return filtered.length > 0 ? filtered : (Array.isArray(articles) ? articles : []);
+}
+
+export function generateQuickLeadsWorker(articles, profile, targetCompany = '') {
   const configs = profile.categoryConfig && typeof profile.categoryConfig === 'object' ? profile.categoryConfig : {};
   const fallbackCategory = Object.keys(configs)[0];
   const companySeen = new Set();
   const leads = [];
+  const normalizedTargetCompany = normalizeCompanyNameWorker(targetCompany || profile.name || '', profile.name || '');
 
   for (const article of articles) {
+    if (normalizedTargetCompany && !articleMentionsTargetCompany(article, normalizedTargetCompany)) continue;
     const category = detectCategoryWorker(article, profile) || fallbackCategory;
     const cfg = configs[category] || configs[fallbackCategory];
     if (!cfg) continue;
 
     const rawCompany = extractCompanyNameWorker(article.title);
-    const company = normalizeCompanyNameWorker(rawCompany, article.title);
+    const company = normalizedTargetCompany || normalizeCompanyNameWorker(rawCompany, article.title);
     const companyKey = company.toLowerCase();
     if (companySeen.has(companyKey)) continue;
     companySeen.add(companyKey);
@@ -99,7 +123,7 @@ export function generateQuickLeadsWorker(articles, profile) {
   return leads;
 }
 
-export async function analyzeLeadsWorker(articles, profile, env) {
+export async function analyzeLeadsWorker(articles, profile, env, targetCompany = '') {
   if (articles.length === 0) return [];
 
   const payload = await requestLeadPayload(buildLeadAnalysisPrompt(profile, articles), env);
@@ -112,6 +136,7 @@ export async function analyzeLeadsWorker(articles, profile, env) {
   const companySeen = new Set();
   const normalizedLeads = [];
   const fallbackProduct = chooseFallbackProduct(profile);
+  const normalizedTargetCompany = normalizeCompanyNameWorker(targetCompany || profile.name || '', profile.name || '');
 
   rawLeads.forEach((lead, index) => {
     if (!lead || typeof lead !== 'object') return;
@@ -121,12 +146,16 @@ export async function analyzeLeadsWorker(articles, profile, env) {
       getLeadField(lead, ['project_title', 'summary', 'company']) || '',
       (articles[index] && articles[index].title) || ''
     );
-    const company = normalizeCompanyNameWorker(getLeadField(lead, ['company']) || '', fallbackTitle);
+    const inferredCompany = normalizeCompanyNameWorker(getLeadField(lead, ['company']) || '', fallbackTitle);
+    const company = normalizedTargetCompany || inferredCompany;
     if (!isValidCompanyNameWorker(company)) return;
     const companyKey = company.toLowerCase();
     if (companySeen.has(companyKey)) return;
 
     const article = findArticleForLead(lead, preSources, articles, articleByUrl, index, company);
+    if (normalizedTargetCompany && !articleMentionsTargetCompany(article, normalizedTargetCompany) && inferredCompany !== normalizedTargetCompany) {
+      return;
+    }
     const confidence = normalizeConfidence(getLeadField(lead, ['confidence']), article);
     const product = sanitizeLeadText(
       replaceKnownPlaceholders(getLeadField(lead, ['recommended_product', 'product']) || '', company, fallbackProduct),

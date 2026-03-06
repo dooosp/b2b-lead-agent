@@ -102,13 +102,25 @@ function fallbackNarrative(sectionNo) {
   }
 }
 
-function sanitizeNarrativeBullets(bullets, sectionNo, allowNumbers = true) {
-  const cleaned = (Array.isArray(bullets) ? bullets : [])
+function extractNarrativeBullets(bullets, allowNumbers = true) {
+  return (Array.isArray(bullets) ? bullets : [])
     .map(normalizeBullet)
     .filter(Boolean)
     .filter((text) => allowNumbers || !NUMERIC_SIGNAL_RE.test(text))
     .slice(0, 4);
-  return cleaned.length > 0 ? cleaned : fallbackNarrative(sectionNo);
+}
+
+function sanitizeNarrativeBullets(bullets, sectionNo, allowNumbers = true, minCount = 1) {
+  const cleaned = extractNarrativeBullets(bullets, allowNumbers);
+  if (cleaned.length >= minCount) return cleaned;
+
+  const fallbacks = fallbackNarrative(sectionNo);
+  const merged = [...cleaned];
+  for (const fallback of fallbacks) {
+    if (merged.length >= minCount) break;
+    if (!merged.includes(fallback)) merged.push(fallback);
+  }
+  return merged.length > 0 ? merged : fallbacks.slice(0, Math.max(1, minCount));
 }
 
 function normalizeReferenceItem(item) {
@@ -200,7 +212,7 @@ function buildProjectOverviewSection(proposalInput, estimation, cpaEstimate, nar
       'proposal input'
     ),
     'B(기술과제)',
-    ...sanitizeNarrativeBullets(narrativeBullets, 1, false),
+    ...sanitizeNarrativeBullets(narrativeBullets, 1, false, 2),
     'C(산정결과 요약)',
     mkDeterministicLine(
       '산정 요약',
@@ -230,7 +242,7 @@ export function buildSizingSection(estimation, floors, narrativeBullets = []) {
     mkDeterministicLine('총 포인트', `${formatNumber(estimation.totalPoints)} (범위 ${formatRange(estimation.pointRange.min, estimation.pointRange.max)})`, 'estimation.totalPoints + estimation.pointRange'),
     mkDeterministicLine('층당 평균', `${formatNumber(avgPerFloor)} 포인트`, 'estimation.totalPoints / floors'),
     mkDeterministicLine('컨트롤러', `최소 ${estimation.controllers.min}대 / 권장 ${estimation.controllers.recommended}대 / 최대 ${estimation.controllers.max}대`, 'estimation.controllers'),
-    ...sanitizeNarrativeBullets(narrativeBullets, 2, false)
+    ...sanitizeNarrativeBullets(narrativeBullets, 2, false, 1)
   ];
   return buildBulletSection(2, PROPOSAL_SECTION_HEADINGS[2], deterministicBullets);
 }
@@ -251,7 +263,7 @@ export function buildEnergySection(proposalInput, cpaEstimate, narrativeBullets 
     deterministicBullets.push('금액 산정이 필요하면 최근 12개월 에너지 비용 데이터를 추가해야 합니다.');
   }
 
-  deterministicBullets.push(...sanitizeNarrativeBullets(narrativeBullets, 3, false));
+  deterministicBullets.push(...sanitizeNarrativeBullets(narrativeBullets, 3, false, 2));
   deterministicBullets.push('M&V/검증');
   deterministicBullets.push('구축 전 기준선 로그와 구축 후 운영 로그를 동일 관점으로 비교 검증해야 합니다.');
   deterministicBullets.push('전력계 데이터, BMS trend, alarm 이력, 운영 스케줄 변경 기록을 함께 검토해야 합니다.');
@@ -265,7 +277,7 @@ export function buildEscoSection(cpaEstimate, narrativeBullets = []) {
     mkDeterministicLine('추천 계약안', recommended.label, 'CPA 권장안'),
     mkDeterministicLine('총 투자비 / 5년 ROI', `${formatCurrencyKr(recommended.totalCost)} / ${formatPercent(recommended.roi5y)}`, 'CPA 권장안'),
     ...terms.map((term) => mkDeterministicLine(`${term.years}년 누적 순절감액`, `${formatCurrencyKr(term.netSavings)} / 투자비 커버리지 ${formatPercent(term.costCoverageRate)}`, 'CPA term scenario')),
-    ...sanitizeNarrativeBullets(narrativeBullets, 4, false)
+    ...sanitizeNarrativeBullets(narrativeBullets, 4, false, 2)
   ];
   return buildBulletSection(4, PROPOSAL_SECTION_HEADINGS[4], deterministicBullets);
 }
@@ -282,13 +294,13 @@ function buildReferenceSection(references, narrativeBullets = []) {
   });
   return buildBulletSection(5, PROPOSAL_SECTION_HEADINGS[5], [
     ...deterministicBullets,
-    ...sanitizeNarrativeBullets(narrativeBullets, 5, false)
+    ...extractNarrativeBullets(narrativeBullets, false)
   ]);
 }
 
 function buildTimelineSection(narrativeBullets = []) {
   const deterministicBullets = [
-    ...sanitizeNarrativeBullets(narrativeBullets, 6, false),
+    ...sanitizeNarrativeBullets(narrativeBullets, 6, false, 2),
     'M&V/검증 placeholder',
     '설계 인수 기준, 시운전 완료 기준, 운영 인수인계 기준을 문서로 분리해 관리해야 합니다.',
     '절감 검증 기준선과 운영 안정화 판단 기준은 발주처와 사전 합의가 필요합니다.'

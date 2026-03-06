@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { articleMentionsTargetCompany, filterArticlesForTargetCompany, generateQuickLeadsWorker } from '../self-service/analyze.js';
 import {
   createSelfServiceSchemaPayloadWorker,
   isValidLeadPayloadSchema,
@@ -102,4 +103,40 @@ test('response schema normalizes ROI into allowed formats', () => {
   ], '요약');
 
   assert.match(payload.leads[0].expected_roi, /^근거 없음\(추정 불가\)/);
+});
+
+test('target company filter removes unrelated articles', () => {
+  const articles = [
+    { title: 'LG전자, 공장 에너지 효율 투자 확대', query: 'LG전자 제조 투자', link: 'https://example.com/1' },
+    { title: '현대차, 신사업 투자 발표', query: '자동차 투자', link: 'https://example.com/2' }
+  ];
+  const filtered = filterArticlesForTargetCompany(articles, 'LG전자');
+
+  assert.equal(filtered.length, 1);
+  assert.equal(articleMentionsTargetCompany(filtered[0], 'LG전자'), true);
+});
+
+test('quick leads use target company when article matches target', () => {
+  const leads = generateQuickLeadsWorker([
+    {
+      title: 'LG전자, 스마트팩토리 에너지 효율 개선 투자',
+      query: 'LG전자 제조 투자',
+      link: 'https://example.com/1'
+    }
+  ], {
+    name: 'LG전자',
+    categoryConfig: {
+      core: {
+        product: 'Desigo CC',
+        score: 72,
+        roi: '정량 데이터 부족',
+        policy: '제조업 에너지 효율 투자 확대',
+        pitch: '{company}에 {product} 도입을 제안합니다.'
+      }
+    },
+    categoryRules: { core: ['LG전자', '투자'] }
+  }, 'LG전자');
+
+  assert.equal(leads.length, 1);
+  assert.equal(leads[0].company, 'LG전자');
 });

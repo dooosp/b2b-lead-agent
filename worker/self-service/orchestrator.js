@@ -1,7 +1,7 @@
 import { jsonResponse } from '../lib/utils.js';
 import { fetchAllNewsWorker } from './news.js';
 import { generateProfileFromGemini, generateHeuristicProfile } from './profile-gen.js';
-import { analyzeLeadsWorker, createSelfServiceSchemaPayloadWorker, generateQuickLeadsWorker } from './analyze.js';
+import { analyzeLeadsWorker, createSelfServiceSchemaPayloadWorker, filterArticlesForTargetCompany, generateQuickLeadsWorker } from './analyze.js';
 import { fetchArticleBodyWorker } from '../api/enrichment.js';
 import { saveLeadsBatch, logAnalyticsRun } from '../db/leads.js';
 import { isValidSelfServiceResponseSchema } from './lead-utils.js';
@@ -59,6 +59,7 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
     }
 
     articles = await fetchAllNewsWorker(profile.searchQueries);
+    articles = filterArticlesForTargetCompany(articles, company);
     articles = articles.slice(0, 18);
 
     const bodyTargets = articles.slice(0, 10);
@@ -110,20 +111,21 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
     const remainingMs = softDeadlineMs - elapsed2;
     if (remainingMs < 1500) {
       const quickLeads = generateQuickLeadsWorker(articles, profile);
+      const quickTargetedLeads = generateQuickLeadsWorker(articles, profile, company);
       return buildSuccessResponse(
-        quickLeads,
+        quickTargetedLeads.length > 0 ? quickTargetedLeads : quickLeads,
         'AI 분석 지연으로 규칙 기반 결과를 우선 제공합니다.'
       );
     }
     const leads = await Promise.race([
-      analyzeLeadsWorker(articles, profile, env),
+      analyzeLeadsWorker(articles, profile, env, company),
       new Promise((_, reject) => setTimeout(() => reject(new Error('SELF_SERVICE_ANALYZE_TIMEOUT')), remainingMs))
     ]);
 
     return buildSuccessResponse(leads, `${company} 관련 최신 뉴스 기반 즉시 분석 결과입니다.`);
   } catch (e) {
     if (e && e.message === 'SELF_SERVICE_ANALYZE_TIMEOUT') {
-      const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry));
+      const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry), company);
       const schemaPayload = createSelfServiceSchemaPayloadWorker(fallbackLeads, 'AI 분석 지연으로 규칙 기반 결과를 우선 제공합니다.');
       const responsePayload = { leads: schemaPayload.leads, summary: schemaPayload.summary };
       if (!isValidSelfServiceResponseSchema(responsePayload)) {
@@ -138,7 +140,7 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
     }
 
     if (articles.length > 0) {
-      const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry));
+      const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry), company);
       const schemaPayload = createSelfServiceSchemaPayloadWorker(fallbackLeads, 'AI 응답 불안정으로 규칙 기반 결과를 제공합니다.');
       const responsePayload = { leads: schemaPayload.leads, summary: schemaPayload.summary };
       if (!isValidSelfServiceResponseSchema(responsePayload)) {
