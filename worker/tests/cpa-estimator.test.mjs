@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {
   buildEscoTermScenarios,
   calculateCpaEstimate,
-  validateCpaOutput
+  validateCpaOutput,
+  validateCpaSuccessPayload
 } from '../lib/cpa-estimator.js';
 
 test('calculateCpaEstimate returns stable contract for valid input', () => {
@@ -19,6 +20,8 @@ test('calculateCpaEstimate returns stable contract for valid input', () => {
   assert.equal(result.options.length, 3);
   assert.equal(result.options[1].label, 'BEMS 통합');
   assert.equal(result.input.area, 30000);
+  assert.match(result.escoNote, /샘플 계약 구조/);
+  assert.equal(validateCpaSuccessPayload({ success: true, ...result }), true);
 });
 
 test('buildEscoTermScenarios is deterministic for the same option', () => {

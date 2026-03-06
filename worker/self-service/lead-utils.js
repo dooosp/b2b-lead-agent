@@ -16,6 +16,7 @@ const SELF_SERVICE_MODEL_SCHEMA_KEYS = Object.freeze([
 const SELF_SERVICE_RESPONSE_SCHEMA_KEYS = Object.freeze([
   'company',
   'score',
+  'grade',
   'project_title',
   'recommended_product',
   'expected_roi',
@@ -38,10 +39,12 @@ export function sanitizeLeadText(value, fallback = '') {
 export function normalizeExpectedRoiText(value, fallback = '') {
   const cleaned = sanitizeLeadText(value, fallback);
   if (!cleaned) return '';
-  if (/근거\s*없음/.test(cleaned)) return cleaned;
+  if (/근거\s*없음(?:\s*\(추정\s*불가\))?/u.test(cleaned)) {
+    return cleaned.replace(/근거\s*없음(?!\s*\(추정\s*불가\))/u, '근거 없음(추정 불가)');
+  }
   if (/\d+(?:\.\d+)?\s*[~-]\s*\d+(?:\.\d+)?\s*년/.test(cleaned)) return cleaned;
   if (/\d+(?:\.\d+)?\s*년/.test(cleaned)) return cleaned;
-  return `근거 없음 - ${cleaned}`;
+  return `근거 없음(추정 불가) - ${cleaned}`;
 }
 
 export function replaceKnownPlaceholders(value, company, product = '') {
@@ -290,11 +293,14 @@ function isValidModelSchemaShape(lead) {
 
 function isValidResponseLeadShape(lead) {
   if (!lead || typeof lead !== 'object') return false;
+  const keys = Object.keys(lead).sort();
+  if (keys.length !== SELF_SERVICE_RESPONSE_SCHEMA_KEYS.length) return false;
   for (const key of SELF_SERVICE_RESPONSE_SCHEMA_KEYS) {
     if (!Object.prototype.hasOwnProperty.call(lead, key)) return false;
   }
   if (!isValidCompanyNameWorker(lead.company)) return false;
   if (typeof lead.score !== 'number' || Number.isNaN(lead.score) || lead.score < 0 || lead.score > 100) return false;
+  if (!['A', 'B', 'C', 'D'].includes(String(lead.grade || ''))) return false;
   if (!sanitizeLeadText(lead.project_title, '')) return false;
   if (!sanitizeLeadText(lead.recommended_product, '')) return false;
   if (!sanitizeLeadText(lead.expected_roi, '')) return false;
@@ -314,6 +320,8 @@ export function isValidLeadPayloadSchema(payload) {
 
 export function isValidSelfServiceResponseSchema(payload) {
   if (!payload || typeof payload !== 'object') return false;
+  const keys = Object.keys(payload).sort();
+  if (keys.length !== 2 || keys[0] !== 'leads' || keys[1] !== 'summary') return false;
   if (!Array.isArray(payload.leads)) return false;
   if (typeof payload.summary !== 'string') return false;
   if (payload.leads.length === 0) return true;
@@ -343,6 +351,7 @@ export function toSchemaLeadWorker(lead) {
   const schemaLead = {
     company,
     score,
+    grade: gradeFromScore(score),
     project_title: projectTitle,
     recommended_product: recommendedProduct,
     expected_roi: expectedRoi,

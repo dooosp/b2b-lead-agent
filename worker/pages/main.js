@@ -140,18 +140,16 @@ export function getMainPage(env) {
         fill.style.width = '100%';
 
         if (!data.success) {
-          status.className = 'status error'; status.textContent = data.message;
+          status.className = 'status error'; status.textContent = data.error || data.message || '분석에 실패했습니다.';
           results.innerHTML = '';
         } else if (!data.leads || data.leads.length === 0) {
           status.className = 'status success';
-          status.textContent = data.message || '분석 완료했지만 유효한 리드를 찾지 못했습니다.';
-          if (data.stats) status.textContent += ' (' + data.stats.elapsed + '초)';
+          status.textContent = '분석 완료했지만 유효한 리드를 찾지 못했습니다.';
           results.innerHTML = '';
         } else {
           status.className = 'status success';
-          status.textContent = data.leads.length + '개 리드 발견! (' + (data.stats ? data.stats.elapsed + '초, 뉴스 ' + data.stats.articles + '건 분석' : '') + ')';
-          if (data.message) status.textContent += ' ' + data.message;
-          renderSelfServiceResults(data.leads, data.profile, data.summary);
+          status.textContent = data.leads.length + '개 리드 발견!';
+          renderSelfServiceResults(data.leads, { name: company }, data.summary);
         }
       } catch (e) {
         clearInterval(progressInterval);
@@ -164,6 +162,7 @@ export function getMainPage(env) {
 
     function normalizeSelfServiceLead(lead) {
       const score = Math.max(0, Math.min(100, parseInt(lead?.score, 10) || 0));
+      const grade = ['A', 'B', 'C', 'D'].includes(String(lead?.grade || '')) ? String(lead.grade) : (score >= 80 ? 'A' : score >= 50 ? 'B' : 'C');
       const projectTitle = String(lead?.project_title || lead?.project || lead?.summary || '').trim();
       const product = String(lead?.recommended_product || lead?.product || '').trim();
       const roi = String(lead?.expected_roi || lead?.roi || '').trim();
@@ -172,7 +171,7 @@ export function getMainPage(env) {
       return {
         company: String(lead?.company || '').trim(),
         score,
-        grade: score >= 80 ? 'A' : score >= 50 ? 'B' : 'C',
+        grade,
         project_title: projectTitle,
         recommended_product: product,
         expected_roi: roi,

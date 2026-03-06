@@ -4,6 +4,7 @@ import { generateProfileFromGemini, generateHeuristicProfile } from './profile-g
 import { analyzeLeadsWorker, createSelfServiceSchemaPayloadWorker, generateQuickLeadsWorker } from './analyze.js';
 import { fetchArticleBodyWorker } from '../api/enrichment.js';
 import { saveLeadsBatch, logAnalyticsRun } from '../db/leads.js';
+import { isValidSelfServiceResponseSchema } from './lead-utils.js';
 
 export async function handleSelfServiceAnalyze(request, env, ctx) {
   const softDeadlineMs = 28500;
@@ -13,18 +14,8 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
   const company = (body.company || '').trim().slice(0, 50);
   const industry = (body.industry || '').trim().slice(0, 50);
   let profile = null;
-  let profileMode = 'ai';
   let articles = [];
   let bodyHitRate = 0;
-  const withLegacyLeadAliases = (lead) => ({
-    ...lead,
-    summary: lead.project_title || '',
-    product: lead.recommended_product || '',
-    roi: lead.expected_roi || '',
-    salesPitch: lead.sales_pitch || '',
-    globalContext: lead.trend || '',
-    grade: Number(lead.score) >= 80 ? 'A' : Number(lead.score) >= 50 ? 'B' : 'C'
-  });
   const persistSelfServiceRun = (leads) => {
     if (!env.DB || !Array.isArray(leads) || leads.length === 0) return;
     const ssProfileId = `self-service:${company}`;
@@ -60,7 +51,6 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       ]);
     } catch (e) {
       profile = generateHeuristicProfile(company, industry);
-      profileMode = 'heuristic-fallback';
     }
 
     const elapsed1 = Date.now() - startTime;
@@ -96,30 +86,24 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       return jsonResponse({
         success: true,
         leads: [],
-        summary: '관련 뉴스가 부족하여 리드를 생성하지 못했습니다.',
-        profile: { name: profile.name, industry: profile.industry },
-        message: '최근 3일간 관련 뉴스를 찾지 못했습니다. 다른 키워드로 시도해보세요.',
-        stats: { articles: 0, elapsed: Math.round((Date.now() - startTime) / 1000) }
+        summary: '관련 뉴스가 부족하여 리드를 생성하지 못했습니다.'
       });
     }
 
-    const buildSuccessResponse = (rawLeads, mode = 'ai', message = '', summaryHint = '') => {
+    const buildSuccessResponse = (rawLeads, summaryHint = '') => {
       const schemaPayload = createSelfServiceSchemaPayloadWorker(rawLeads, summaryHint);
-      const responseLeads = schemaPayload.leads.map(withLegacyLeadAliases);
+      const responsePayload = {
+        leads: schemaPayload.leads,
+        summary: schemaPayload.summary
+      };
+      if (!isValidSelfServiceResponseSchema(responsePayload)) {
+        throw new Error('SELF_SERVICE_RESPONSE_SCHEMA_VALIDATION_FAILED');
+      }
       persistSelfServiceRun(rawLeads);
       return jsonResponse({
         success: true,
-        leads: responseLeads,
-        summary: schemaPayload.summary,
-        profile: { name: profile.name, industry: profile.industry, competitors: profile.competitors },
-        message,
-        stats: {
-          mode: profileMode === 'ai' ? mode : `${mode}+${profileMode}`,
-          articles: articles.length,
-          leads: schemaPayload.leads.length,
-          elapsed: Math.round((Date.now() - startTime) / 1000),
-          bodyHitRate
-        }
+        leads: responsePayload.leads,
+        summary: responsePayload.summary
       });
     };
 
@@ -128,8 +112,6 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       const quickLeads = generateQuickLeadsWorker(articles, profile);
       return buildSuccessResponse(
         quickLeads,
-        'quick-fallback',
-        'AI 분석이 지연되어 빠른 분석 결과를 먼저 표시합니다.',
         'AI 분석 지연으로 규칙 기반 결과를 우선 제공합니다.'
       );
     }
@@ -138,55 +120,35 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       new Promise((_, reject) => setTimeout(() => reject(new Error('SELF_SERVICE_ANALYZE_TIMEOUT')), remainingMs))
     ]);
 
-    return buildSuccessResponse(leads, 'ai', '', `${company} 관련 최신 뉴스 기반 즉시 분석 결과입니다.`);
+    return buildSuccessResponse(leads, `${company} 관련 최신 뉴스 기반 즉시 분석 결과입니다.`);
   } catch (e) {
     if (e && e.message === 'SELF_SERVICE_ANALYZE_TIMEOUT') {
       const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry));
       const schemaPayload = createSelfServiceSchemaPayloadWorker(fallbackLeads, 'AI 분석 지연으로 규칙 기반 결과를 우선 제공합니다.');
-      const responseLeads = schemaPayload.leads.map(withLegacyLeadAliases);
+      const responsePayload = { leads: schemaPayload.leads, summary: schemaPayload.summary };
+      if (!isValidSelfServiceResponseSchema(responsePayload)) {
+        return jsonResponse({ success: false, error: 'SELF_SERVICE_RESPONSE_SCHEMA_VALIDATION_FAILED', message: '분석 결과 검증에 실패했습니다.' }, 500);
+      }
       persistSelfServiceRun(fallbackLeads);
       return jsonResponse({
         success: true,
-        leads: responseLeads,
-        summary: schemaPayload.summary,
-        profile: {
-          name: (profile && profile.name) || company,
-          industry: (profile && profile.industry) || industry,
-          competitors: (profile && profile.competitors) || []
-        },
-        message: 'AI 분석이 지연되어 빠른 분석 결과를 먼저 표시합니다.',
-        stats: {
-          mode: profileMode === 'ai' ? 'quick-fallback' : `quick-fallback+${profileMode}`,
-          articles: articles.length,
-          leads: schemaPayload.leads.length,
-          elapsed: Math.round((Date.now() - startTime) / 1000),
-          bodyHitRate
-        }
+        leads: responsePayload.leads,
+        summary: responsePayload.summary
       });
     }
 
     if (articles.length > 0) {
       const fallbackLeads = generateQuickLeadsWorker(articles, profile || generateHeuristicProfile(company, industry));
       const schemaPayload = createSelfServiceSchemaPayloadWorker(fallbackLeads, 'AI 응답 불안정으로 규칙 기반 결과를 제공합니다.');
-      const responseLeads = schemaPayload.leads.map(withLegacyLeadAliases);
+      const responsePayload = { leads: schemaPayload.leads, summary: schemaPayload.summary };
+      if (!isValidSelfServiceResponseSchema(responsePayload)) {
+        return jsonResponse({ success: false, error: 'SELF_SERVICE_RESPONSE_SCHEMA_VALIDATION_FAILED', message: '분석 결과 검증에 실패했습니다.' }, 500);
+      }
       persistSelfServiceRun(fallbackLeads);
       return jsonResponse({
         success: true,
-        leads: responseLeads,
-        summary: schemaPayload.summary,
-        profile: {
-          name: (profile && profile.name) || company,
-          industry: (profile && profile.industry) || industry,
-          competitors: (profile && profile.competitors) || []
-        },
-        message: 'AI 분석 응답이 불안정하여 빠른 분석 결과를 먼저 표시합니다.',
-        stats: {
-          mode: profileMode === 'ai' ? 'quick-fallback' : `quick-fallback+${profileMode}`,
-          articles: articles.length,
-          leads: schemaPayload.leads.length,
-          elapsed: Math.round((Date.now() - startTime) / 1000),
-          bodyHitRate
-        }
+        leads: responsePayload.leads,
+        summary: responsePayload.summary
       });
     }
     return jsonResponse({ success: false, message: '분석 실패: ' + e.message }, 500);

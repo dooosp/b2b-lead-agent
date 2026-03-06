@@ -137,12 +137,14 @@ export function calculateCpaEstimate(body = {}) {
     };
   });
 
-  return {
+  const estimate = {
     input,
     options,
     sensitivity,
-    escoNote: '* ESCO 모델 적용 시 초기 투자 0원, 절감 보장 20~35%. 별도 상담 필요.'
+    escoNote: ''
   };
+  estimate.escoNote = buildDeterministicEscoNote(estimate);
+  return estimate;
 }
 
 export function buildEscoTermScenarios(option, yearsList = [5, 7, 10]) {
@@ -206,4 +208,40 @@ export function validateCpaOutput(output) {
   }
 
   return true;
+}
+
+export function validateCpaSuccessPayload(payload) {
+  if (!payload || payload.success !== true) return false;
+  const keys = Object.keys(payload).sort();
+  const expected = ['success', 'input', 'options', 'sensitivity', 'escoNote'].sort();
+  if (keys.length !== expected.length) return false;
+  if (!expected.every((key, index) => key === keys[index])) return false;
+  return validateCpaOutput(payload);
+}
+
+export function buildDeterministicEscoNote(estimate) {
+  const recommended = (estimate && Array.isArray(estimate.options))
+    ? (estimate.options.find((option) => option.scope === 'BEMS') || estimate.options[1] || estimate.options[0])
+    : null;
+  const baseCase = Array.isArray(estimate && estimate.sensitivity)
+    ? estimate.sensitivity.find((item) => item.pct === 0)
+    : null;
+
+  if (!recommended) {
+    return '샘플 계약 구조: ESCO 모델 적용 시 초기 투자 0원을 전제로 검토할 수 있으나, 기준선 데이터가 부족해 현재는 권장안을 확정할 수 없습니다.';
+  }
+
+  const paybackText = recommended.paybackYears >= 0
+    ? `${recommended.paybackYears}년 수준의 투자회수 가정`
+    : '현재 입력값 기준으로는 투자회수 기간이 N/A';
+  const sensitivityText = baseCase
+    ? `기준 면적 ${baseCase.area.toLocaleString('ko-KR')}㎡에서 연간 순절감 효과를 우선 검토했습니다.`
+    : '민감도 기준선 데이터가 없어 면적 변동 영향은 별도 검토가 필요합니다.';
+
+  return [
+    '샘플 계약 구조: ESCO 모델 적용 시 초기 투자 0원 가정을 전제로 합니다.',
+    `${recommended.label} 기준 총 투자비 ${recommended.totalCost.toLocaleString('ko-KR')}원, 절감률 ${recommended.savingsRate}%, 순절감 ${recommended.netAnnualSavings.toLocaleString('ko-KR')}원/년을 기준으로 성과보장형 계약을 검토합니다.`,
+    `${paybackText}. ${sensitivityText}`,
+    '실제 계약 조건은 기준선 에너지 사용량, 검증 방식, 정산식을 확정한 뒤 조정해야 합니다.'
+  ].join(' ');
 }

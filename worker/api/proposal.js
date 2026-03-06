@@ -1,14 +1,15 @@
 import { jsonResponse } from '../lib/utils.js';
 import { callGemini } from '../lib/gemini.js';
 import { callOpenAI } from '../lib/openai.js';
-import { getReferencesForPrompt } from '../db/references.js';
+import { getReferencesForProposal } from '../db/references.js';
 import { estimateDesigoPointAndController, normalizeSystemFlags } from '../lib/proposal-estimator.js';
 import { calculateCpaEstimate, validateCpaOutput } from '../lib/cpa-estimator.js';
 import {
   composeProposalContent,
   isValidProposalSectionPayload,
   parseProposalSectionPayload,
-  PROPOSAL_SECTION_HEADINGS
+  PROPOSAL_SECTION_HEADINGS,
+  validateProposalSuccessPayload
 } from '../lib/proposal-composer.js';
 
 async function callProposalModel(prompt, env) {
@@ -54,14 +55,28 @@ function summarizeSystems(flags) {
     .join(', ') || '미선택';
 }
 
-function buildProposalPrompt({ proposalInput, estimation, cpaEstimate, referencesText }) {
+function buildProposalErrorResponse(error, status = 500, estimation = null) {
+  return jsonResponse({
+    success: false,
+    error,
+    content: '',
+    estimation,
+    completeness: { allSections: false }
+  }, status);
+}
+
+function buildProposalPrompt({ proposalInput, estimation, cpaEstimate, references }) {
   const recommended = cpaEstimate.options.find((option) => option.scope === 'BEMS') || cpaEstimate.options[1] || cpaEstimate.options[0];
   const sectionTitles = Object.entries(PROPOSAL_SECTION_HEADINGS)
     .map(([index, heading]) => `${index}. ${heading}`)
     .join('\n');
+  const referenceText = Array.isArray(references) && references.length > 0
+    ? references.map((ref, index) => `${index + 1}. ${ref.client} / ${ref.project} / ${ref.result}${ref.region ? ` / ${ref.region}` : ''}${ref.sourceUrl ? ` / ${ref.sourceUrl}` : ''}`).join('\n')
+    : '유사 사례: (참고용) - 자료 부족';
 
   return `당신은 지멘스 Smart Infrastructure 기술영업 전문가입니다.
-아래 프로젝트 정보를 바탕으로 기술제안서용 설명 bullet을 작성하세요.
+아래 프로젝트 정보를 바탕으로 실제 프로젝트 제안서에 들어갈 설명 bullet을 작성하세요.
+예시 문장처럼 쓰지 말고, 현재 입력 조건과 기술 과제를 중심으로 작성하세요.
 
 [프로젝트 입력]
 - 빌딩 유형: ${proposalInput.buildingType}
@@ -82,8 +97,8 @@ function buildProposalPrompt({ proposalInput, estimation, cpaEstimate, reference
 - 권장 ESCO 순연간 절감액: ${recommended.netAnnualSavings}
 - 권장 ESCO 5년 ROI: ${recommended.roi5y}%
 
-[레퍼런스]
-${referencesText || '(레퍼런스 데이터 없음)'}
+[검증된 유사 사례 목록]
+${referenceText}
 
 [출력 스키마]
 {
@@ -104,8 +119,10 @@ ${referencesText || '(레퍼런스 데이터 없음)'}
 3) 각 배열은 2~4개 bullet string으로 작성하세요.
 4) bullet string 안에 heading, 숫자 번호, 마크다운 heading(##)을 쓰지 마세요.
 5) 숫자는 코드 계산 컨텍스트에 있는 값 외에는 추측하지 마세요.
-6) 섹션 2, 3, 4, 6은 숫자/퍼센트/금액/기간을 쓰지 말고 설명 문장만 작성하세요.
-7) 표 형식 금지. 문장 길이는 bullet당 1~2문장으로 제한하세요.
+6) 섹션 1은 기술 과제만, 섹션 2~4는 설명 문장만, 섹션 5는 제공된 유사 사례 해석만, 섹션 6은 수행/검증 관점만, 섹션 7은 차별점만 작성하세요.
+7) 섹션 2, 3, 4, 6은 숫자/퍼센트/금액/기간을 쓰지 마세요.
+8) 표 형식 금지. 문장 길이는 bullet당 1~2문장으로 제한하세요.
+9) 자료가 부족한 항목은 "N/A"라고 쓰고 이유를 한 문장으로 덧붙이세요.
 
 [섹션 제목]
 ${sectionTitles}`;
@@ -116,7 +133,7 @@ export async function generateProposal(request, env) {
   const { buildingType, area, floors, currentBMS, monthlyEnergyCost, systemFlags } = body;
 
   if (!buildingType || !area || !floors) {
-    return jsonResponse({ success: false, message: '빌딩유형, 면적, 층수는 필수입니다.' }, 400);
+    return buildProposalErrorResponse('빌딩유형, 면적, 층수는 필수입니다.', 400);
   }
 
   const areaNum = Number(area);
@@ -125,7 +142,7 @@ export async function generateProposal(request, env) {
   const normalizedFlags = normalizeSystemFlags(systemFlags || {});
 
   if (areaNum <= 0 || floorsNum <= 0) {
-    return jsonResponse({ success: false, message: '면적과 층수는 양수여야 합니다.' }, 400);
+    return buildProposalErrorResponse('면적과 층수는 양수여야 합니다.', 400);
   }
 
   const proposalInput = {
@@ -150,17 +167,17 @@ export async function generateProposal(request, env) {
     monthlyEnergyCost: costNum
   });
   if (!validateCpaOutput(cpaEstimate)) {
-    return jsonResponse({ success: false, message: 'CPA 기준값 검증에 실패했습니다.' }, 500);
+    return buildProposalErrorResponse('CPA 기준값 검증에 실패했습니다.', 500, estimation);
   }
 
-  let referencesText = '';
+  let references = [];
   try {
-    referencesText = await getReferencesForPrompt(env.DB, 'siemens', ['bms', 'esco']);
+    references = await getReferencesForProposal(env.DB, 'siemens', ['bms', 'esco']);
   } catch {
-    referencesText = '';
+    references = [];
   }
 
-  const prompt = buildProposalPrompt({ proposalInput, estimation, cpaEstimate, referencesText });
+  const prompt = buildProposalPrompt({ proposalInput, estimation, cpaEstimate, references });
 
   try {
     const raw = await callProposalModel(prompt, env);
@@ -173,23 +190,29 @@ export async function generateProposal(request, env) {
     }
 
     if (!isValidProposalSectionPayload(payload)) {
-      throw new Error('PROPOSAL_SECTION_SCHEMA_VALIDATION_FAILED');
+      return buildProposalErrorResponse('PROPOSAL_SECTION_SCHEMA_VALIDATION_FAILED', 500, estimation);
     }
 
     const content = composeProposalContent({
       proposalInput,
       estimation,
       cpaEstimate,
-      sections: payload.sections
+      sections: payload.sections,
+      references
     });
 
-    return jsonResponse({
+    const responsePayload = {
       success: true,
       content,
       estimation,
       completeness: { allSections: true }
-    });
+    };
+    if (!validateProposalSuccessPayload(responsePayload)) {
+      return buildProposalErrorResponse('PROPOSAL_RESPONSE_SCHEMA_VALIDATION_FAILED', 500, estimation);
+    }
+
+    return jsonResponse(responsePayload);
   } catch (error) {
-    return jsonResponse({ success: false, message: 'AI 분석 중 오류: ' + error.message }, 500);
+    return buildProposalErrorResponse('AI 분석 중 오류: ' + error.message, 500, estimation);
   }
 }

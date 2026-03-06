@@ -181,7 +181,7 @@ export function getCPAPage() {
           esco.style.display = 'block';
         } else {
           status.className = 'status error';
-          status.textContent = data.message;
+          status.textContent = data.error || data.message || '견적 계산에 실패했습니다.';
         }
       } catch(e) {
         status.className = 'status error';
@@ -200,7 +200,7 @@ export function getCPAPage() {
         const netClass = isNeg ? ' negative' : '';
         const paybackStr = fmtPayback(o.paybackYears);
         const warningHtml = isNeg ? '<span class="warning-badge">유지비 초과</span>' : '';
-        const escoHtml = isNeg ? \`<div class="esco-inline">ESCO 모델 적용 시: 초기 투자 0원, 절감 보장 25%, 10년 계약으로 리스크 해소 가능</div>\` : '';
+        const escoHtml = isNeg ? '<div class="esco-inline">샘플 계약 구조: 초기 투자 0원 가정을 전제로 검토할 수 있으나, 상세 성과보장 조건은 기준선 검증 후 확정해야 합니다.</div>' : '';
         return \`
         <div class="option-card \${i === 1 ? 'recommended' : ''}">
           <h3>\${esc(o.label)}</h3>

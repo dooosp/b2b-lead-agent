@@ -28,6 +28,7 @@ test('toSchemaLeadWorker keeps only contract fields', () => {
   assert.deepEqual(Object.keys(lead), [
     'company',
     'score',
+    'grade',
     'project_title',
     'recommended_product',
     'expected_roi',
@@ -64,6 +65,7 @@ test('createSelfServiceSchemaPayloadWorker filters invalid leads and preserves s
   assert.equal(payload.summary, '요약');
   assert.equal(payload.leads.length, 1);
   assert.equal(payload.leads[0].company, '한국동서발전');
+  assert.equal(payload.leads[0].grade, 'B');
 });
 
 test('model payload validation allows empty sources and omits score', () => {

@@ -145,3 +145,24 @@ export async function getReferencesForPrompt(db, profileId, categories) {
     return '';
   }
 }
+
+export async function getReferencesForProposal(db, profileId, categories) {
+  if (!db || !profileId) return [];
+  try {
+    await seedReferencesFromProfiles(db);
+    const refs = [];
+    for (const category of Array.isArray(categories) ? categories : []) {
+      const items = await getReferencesByProfileCategory(db, profileId, category);
+      refs.push(...items.slice(0, 2).map((item) => ({
+        client: item.client,
+        project: item.project,
+        result: item.result,
+        region: item.region,
+        sourceUrl: item.source_url || ''
+      })));
+    }
+    return refs.slice(0, 3);
+  } catch {
+    return [];
+  }
+}

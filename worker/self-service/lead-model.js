@@ -60,6 +60,7 @@ export async function requestLeadPayload(prompt, env) {
 - company는 40자 이하의 회사명만
 - score/grade는 제거
 - sources는 반드시 배열([] 허용)
+- expected_roi는 "2.0~3.0년" 같은 기간 범위 또는 "근거 없음(추정 불가)"로 시작하는 문장만 허용
 
 원문:
 ${String(raw || '').slice(0, 12000)}`;

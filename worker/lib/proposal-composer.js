@@ -10,15 +10,42 @@ export const PROPOSAL_SECTION_HEADINGS = Object.freeze({
   7: 'Why Siemens'
 });
 
-const NUMERIC_SIGNAL_RE = /(?:\d|%|원|만원|억원|조원|㎡|m²|층|개월|point|포인트|controller|컨트롤러|대)/i;
+const NUMERIC_SIGNAL_RE = /(?:\d|%|원|만원|억원|조원|㎡|m²|층|개월|년|point|포인트|controller|컨트롤러|대)/i;
+const BUILDING_TYPE_LABELS = Object.freeze({
+  office: '오피스 빌딩',
+  datacenter: '데이터센터',
+  hospital: '병원/의료시설',
+  hotel: '호텔/리조트',
+  factory: '공장/생산시설',
+  school: '학교/교육시설',
+  apartment: '아파트/주거',
+  commercial: '상업시설/몰'
+});
+const SYSTEM_LABELS = Object.freeze({
+  hvac: 'HVAC',
+  lighting: '조명',
+  power: '전력',
+  fire: '방재',
+  extra: '기타 설비'
+});
 
 function formatNumber(value) {
   return Number(value || 0).toLocaleString('ko-KR');
 }
 
 function formatCurrencyKr(value) {
-  const amount = Number(value || 0);
-  return `${amount.toLocaleString('ko-KR')}원`;
+  return `${Number(value || 0).toLocaleString('ko-KR')}원`;
+}
+
+function formatBuildingType(buildingType) {
+  return BUILDING_TYPE_LABELS[buildingType] || buildingType || '미확인';
+}
+
+function summarizeSystems(systemFlags = {}) {
+  return Object.entries(SYSTEM_LABELS)
+    .filter(([key]) => systemFlags[key] !== false)
+    .map(([, label]) => label)
+    .join(', ') || '미선택';
 }
 
 function parseJsonLenient(rawText) {
@@ -45,19 +72,19 @@ function normalizeBullet(text) {
 function fallbackNarrative(sectionNo) {
   switch (sectionNo) {
     case 1:
-      return ['현장 운영 데이터와 기존 설비 구성을 함께 진단해 우선 과제를 정리해야 합니다.', '의사결정자는 운영 안정성과 에너지 비용 절감을 동시에 검토해야 합니다.'];
+      return ['기존 설비와 운영 데이터의 연결 범위를 먼저 정의해야 합니다.', '의사결정자는 운영 안정성과 절감 검증 방식을 동시에 검토해야 합니다.'];
     case 2:
       return ['통합 관제 구조는 기존 설비 연계를 우선 검토하고 단계적으로 확장하는 접근이 적합합니다.'];
     case 3:
-      return ['절감 효과는 실제 운전 데이터와 제어 포인트 목록으로 검증해야 합니다.'];
+      return ['절감 효과는 기준선 데이터와 적용 후 운영 로그를 함께 검증해야 합니다.'];
     case 4:
-      return ['성과보장형 계약은 기준선 데이터와 검증 절차를 먼저 합의해야 합니다.'];
+      return ['성과보장형 계약은 기준선 정의와 정산식 합의가 선행되어야 합니다.'];
     case 5:
-      return ['유사 사례는 업종, 규모, 기존 설비 구성이 비슷한 순서로 비교해야 합니다.', '레퍼런스 검토 시 구축 범위와 운영 지표를 함께 확인해야 합니다.'];
+      return ['유사 사례: (참고용) - 자료 부족'];
     case 6:
-      return ['설계, 시공, 시운전, 안정화 단계로 나누어 승인 절차를 병행해야 합니다.', '운영 중단 리스크를 줄이기 위해 단계별 전환 계획이 필요합니다.'];
+      return ['설계, 시공, 시운전, 안정화 단계를 분리해 승인 절차를 병행해야 합니다.', '운영 전환 시에는 검증 기준과 인수인계 책임을 명확히 해야 합니다.'];
     case 7:
-      return ['Siemens는 빌딩 자동화와 에너지 운영 데이터를 하나의 운영 체계로 묶는 데 강점이 있습니다.', '국내 유지보수 체계와 글로벌 제품 로드맵을 함께 제시할 수 있습니다.'];
+      return ['Siemens는 빌딩 자동화와 운영 데이터를 하나의 운영 체계로 묶는 데 강점이 있습니다.', '국내 유지보수 체계와 글로벌 제품 로드맵을 함께 제시할 수 있습니다.'];
     default:
       return ['추가 검토가 필요합니다.'];
   }
@@ -72,24 +99,95 @@ function sanitizeNarrativeBullets(bullets, sectionNo, allowNumbers = true) {
   return cleaned.length > 0 ? cleaned : fallbackNarrative(sectionNo);
 }
 
+function normalizeReferenceItem(item) {
+  if (!item || typeof item !== 'object') return null;
+  const client = normalizeBullet(item.client);
+  const project = normalizeBullet(item.project);
+  const result = normalizeBullet(item.result);
+  const region = normalizeBullet(item.region);
+  const sourceUrl = normalizeBullet(item.sourceUrl || item.source_url || '');
+  if (!client || !project || !result) return null;
+  return { client, project, result, region, sourceUrl };
+}
+
+function normalizeReferences(references) {
+  return (Array.isArray(references) ? references : []).map(normalizeReferenceItem).filter(Boolean).slice(0, 3);
+}
+
+function buildBulletSection(sectionNo, heading, bullets) {
+  return [`## ${sectionNo}. ${heading}`, ...bullets.map((bullet) => `- ${bullet}`)].join('\n');
+}
+
+function hasAllProposalHeadings(content) {
+  for (let index = 1; index <= 7; index += 1) {
+    if (!new RegExp(`(^|\\n)##\\s+${index}\\.`, 'm').test(String(content || ''))) return false;
+  }
+  return true;
+}
+
+function hasMarkdownTable(content) {
+  return /^\|.+\|$/m.test(String(content || ''));
+}
+
 export function parseProposalSectionPayload(rawText) {
   return parseJsonLenient(rawText);
 }
 
 export function isValidProposalSectionPayload(payload) {
   if (!payload || typeof payload !== 'object') return false;
+  const keys = Object.keys(payload).sort();
+  if (keys.length !== 1 || keys[0] !== 'sections') return false;
   const sections = payload.sections;
   if (!sections || typeof sections !== 'object') return false;
-  for (let index = 1; index <= 7; index += 1) {
-    const key = String(index);
+  const sectionKeys = Object.keys(sections).sort();
+  const expectedKeys = ['1', '2', '3', '4', '5', '6', '7'];
+  if (sectionKeys.length !== expectedKeys.length) return false;
+  if (!expectedKeys.every((key, index) => key === sectionKeys[index])) return false;
+  for (const key of expectedKeys) {
     if (!Array.isArray(sections[key]) || sections[key].length === 0) return false;
     if (!sections[key].every((item) => typeof item === 'string' && normalizeBullet(item))) return false;
   }
   return true;
 }
 
-function buildBulletSection(sectionNo, heading, bullets) {
-  return [`## ${sectionNo}. ${heading}`, ...bullets.map((bullet) => `- ${bullet}`)].join('\n');
+export function validateProposalSuccessPayload(payload) {
+  if (!payload || payload.success !== true) return false;
+  const keys = Object.keys(payload).sort();
+  const expected = ['completeness', 'content', 'estimation', 'success'].sort();
+  if (keys.length !== expected.length) return false;
+  if (!expected.every((key, index) => key === keys[index])) return false;
+  if (typeof payload.content !== 'string' || !payload.content.trim()) return false;
+  if (!payload.completeness || typeof payload.completeness.allSections !== 'boolean') return false;
+  if (!payload.estimation || typeof payload.estimation !== 'object') return false;
+  if (hasMarkdownTable(payload.content)) return false;
+  return hasAllProposalHeadings(payload.content) && payload.completeness.allSections === true;
+}
+
+function buildAssumptionBullets(proposalInput) {
+  const bullets = [];
+  bullets.push(proposalInput.monthlyEnergyCost > 0
+    ? '월 에너지 비용 입력값을 기준선으로 사용했으며 전력요금 체계 세부 단가는 별도 검증이 필요합니다.'
+    : '월 에너지 비용 미입력 상태이므로 면적 기준 기본 에너지 원단위를 적용했습니다.');
+  bullets.push('운영 스케줄, 점유율, 계절 부하 프로파일은 제공되지 않아 표준 상업용 운영 패턴을 기준으로 검토했습니다.');
+  bullets.push('기존 BMS 연계 범위, field bus 구성, 포인트 리스트는 미확정 상태로 가정했습니다.');
+  return bullets;
+}
+
+function buildProjectOverviewSection(proposalInput, estimation, cpaEstimate, narrativeBullets = []) {
+  const recommended = cpaEstimate.options.find((option) => option.scope === 'BEMS') || cpaEstimate.options[1] || cpaEstimate.options[0];
+  const deterministicBullets = [
+    'A(입력 요약)',
+    `빌딩 유형 ${formatBuildingType(proposalInput.buildingType)} / 연면적 ${formatNumber(proposalInput.area)}㎡ / 층수 ${formatNumber(proposalInput.floors)}층 / 현재 BMS ${proposalInput.currentBMS || '없음/미상'}`,
+    `시스템 범위 ${summarizeSystems(proposalInput.systemFlags)} / 월 에너지 비용 ${proposalInput.monthlyEnergyCost > 0 ? `${formatNumber(proposalInput.monthlyEnergyCost)}만원` : '미입력'}`,
+    'B(기술과제)',
+    ...sanitizeNarrativeBullets(narrativeBullets, 1, false),
+    'C(산정결과 요약)',
+    `총 포인트 ${formatNumber(estimation.totalPoints)} / 권장 컨트롤러 ${formatNumber(estimation.controllers.recommended)}대 / 권장 ESCO 옵션 ${recommended.label}`,
+    `권장 ESCO 절감률 ${recommended.savingsRate}% / 순연간 절감 ${formatCurrencyKr(recommended.netAnnualSavings)} / 투자회수 ${recommended.paybackYears >= 0 ? `${recommended.paybackYears}년` : 'N/A'}`,
+    'D(가정/리스크)',
+    ...buildAssumptionBullets(proposalInput)
+  ];
+  return buildBulletSection(1, PROPOSAL_SECTION_HEADINGS[1], deterministicBullets);
 }
 
 export function buildSizingSection(estimation, floors, narrativeBullets = []) {
@@ -103,10 +201,10 @@ export function buildSizingSection(estimation, floors, narrativeBullets = []) {
     `기타: ${formatNumber(estimation.pointsBySystem.extra)} 포인트`,
     `총 포인트: ${formatNumber(estimation.totalPoints)} (범위 ${formatNumber(estimation.pointRange.min)}~${formatNumber(estimation.pointRange.max)})`,
     `층당 평균: ${formatNumber(avgPerFloor)} 포인트`,
-    `컨트롤러: 최소 ${estimation.controllers.min}대 / 권장 ${estimation.controllers.recommended}대 / 최대 ${estimation.controllers.max}대`
+    `컨트롤러: 최소 ${estimation.controllers.min}대 / 권장 ${estimation.controllers.recommended}대 / 최대 ${estimation.controllers.max}대`,
+    ...sanitizeNarrativeBullets(narrativeBullets, 2, false)
   ];
-  const narrative = sanitizeNarrativeBullets(narrativeBullets, 2, false);
-  return buildBulletSection(2, PROPOSAL_SECTION_HEADINGS[2], [...deterministicBullets, ...narrative]);
+  return buildBulletSection(2, PROPOSAL_SECTION_HEADINGS[2], deterministicBullets);
 }
 
 export function buildEnergySection(proposalInput, cpaEstimate, narrativeBullets = []) {
@@ -118,19 +216,18 @@ export function buildEnergySection(proposalInput, cpaEstimate, narrativeBullets 
     deterministicBullets.push(`현재 연간 에너지 비용(코드 산정): ${formatCurrencyKr(annualEnergyCost)}`);
     deterministicBullets.push(`권장안(${recommended.label}) 적용 시 예상 절감률: ${recommended.savingsRate}%`);
     deterministicBullets.push(`예상 연간 절감액: ${formatCurrencyKr(recommended.annualSavings)} / 순절감액: ${formatCurrencyKr(recommended.netAnnualSavings)}`);
-    deterministicBullets.push(
-      recommended.paybackYears >= 0
-        ? `예상 투자회수 기간: ${recommended.paybackYears}년`
-        : '예상 투자회수 기간: N/A (현재 입력값 기준 5년 내 회수 어려움)'
-    );
+    deterministicBullets.push(recommended.paybackYears >= 0 ? `예상 투자회수 기간: ${recommended.paybackYears}년` : '예상 투자회수 기간: N/A (현재 입력값 기준 투자회수 기간 산정 불가)');
   } else {
     deterministicBullets.push('월 에너지 비용이 입력되지 않아 금액 절감액은 계산하지 않았습니다.');
     deterministicBullets.push(`권장안(${recommended.label}) 기준 절감률 가정: ${recommended.savingsRate}%`);
     deterministicBullets.push('금액 산정이 필요하면 최근 12개월 에너지 비용 데이터를 추가해야 합니다.');
   }
 
-  const narrative = sanitizeNarrativeBullets(narrativeBullets, 3, false);
-  return buildBulletSection(3, PROPOSAL_SECTION_HEADINGS[3], [...deterministicBullets, ...narrative]);
+  deterministicBullets.push(...sanitizeNarrativeBullets(narrativeBullets, 3, false));
+  deterministicBullets.push('M&V/검증');
+  deterministicBullets.push('구축 전 기준선 로그와 구축 후 운영 로그를 동일 관점으로 비교 검증해야 합니다.');
+  deterministicBullets.push('전력계 데이터, BMS trend, alarm 이력, 운영 스케줄 변경 기록을 함께 검토해야 합니다.');
+  return buildBulletSection(3, PROPOSAL_SECTION_HEADINGS[3], deterministicBullets);
 }
 
 export function buildEscoSection(cpaEstimate, narrativeBullets = []) {
@@ -139,21 +236,46 @@ export function buildEscoSection(cpaEstimate, narrativeBullets = []) {
   const deterministicBullets = [
     `추천 계약안(코드 산정): ${recommended.label}`,
     `총 투자비: ${formatCurrencyKr(recommended.totalCost)} / 5년 ROI: ${recommended.roi5y}%`,
-    ...terms.map((term) => `${term.years}년 누적 순절감액: ${formatCurrencyKr(term.netSavings)} / 투자비 커버리지 ${term.costCoverageRate}%`)
+    ...terms.map((term) => `${term.years}년 누적 순절감액: ${formatCurrencyKr(term.netSavings)} / 투자비 커버리지 ${term.costCoverageRate}%`),
+    ...sanitizeNarrativeBullets(narrativeBullets, 4, false)
   ];
-  const narrative = sanitizeNarrativeBullets(narrativeBullets, 4, false);
-  return buildBulletSection(4, PROPOSAL_SECTION_HEADINGS[4], [...deterministicBullets, ...narrative]);
+  return buildBulletSection(4, PROPOSAL_SECTION_HEADINGS[4], deterministicBullets);
 }
 
-export function composeProposalContent({ proposalInput, estimation, cpaEstimate, sections }) {
-  const orderedSections = [
-    buildBulletSection(1, PROPOSAL_SECTION_HEADINGS[1], sanitizeNarrativeBullets(sections['1'], 1, true)),
+function buildReferenceSection(references, narrativeBullets = []) {
+  const normalizedRefs = normalizeReferences(references);
+  if (normalizedRefs.length === 0) {
+    return buildBulletSection(5, PROPOSAL_SECTION_HEADINGS[5], ['유사 사례: (참고용) - 자료 부족']);
+  }
+  const deterministicBullets = normalizedRefs.map((ref) => {
+    const sourceNote = ref.sourceUrl ? ` / 출처 ${ref.sourceUrl}` : '';
+    const regionNote = ref.region ? ` / 지역 ${ref.region}` : '';
+    return `${ref.client} - ${ref.project} / 결과 ${ref.result}${regionNote}${sourceNote}`;
+  });
+  return buildBulletSection(5, PROPOSAL_SECTION_HEADINGS[5], [
+    ...deterministicBullets,
+    ...sanitizeNarrativeBullets(narrativeBullets, 5, false)
+  ]);
+}
+
+function buildTimelineSection(narrativeBullets = []) {
+  const deterministicBullets = [
+    ...sanitizeNarrativeBullets(narrativeBullets, 6, false),
+    'M&V/검증 placeholder',
+    '설계 인수 기준, 시운전 완료 기준, 운영 인수인계 기준을 문서로 분리해 관리해야 합니다.',
+    '절감 검증 기준선과 운영 안정화 판단 기준은 발주처와 사전 합의가 필요합니다.'
+  ];
+  return buildBulletSection(6, PROPOSAL_SECTION_HEADINGS[6], deterministicBullets);
+}
+
+export function composeProposalContent({ proposalInput, estimation, cpaEstimate, sections, references = [] }) {
+  return [
+    buildProjectOverviewSection(proposalInput, estimation, cpaEstimate, sections['1']),
     buildSizingSection(estimation, proposalInput.floors, sections['2']),
     buildEnergySection(proposalInput, cpaEstimate, sections['3']),
     buildEscoSection(cpaEstimate, sections['4']),
-    buildBulletSection(5, PROPOSAL_SECTION_HEADINGS[5], sanitizeNarrativeBullets(sections['5'], 5, true)),
-    buildBulletSection(6, PROPOSAL_SECTION_HEADINGS[6], sanitizeNarrativeBullets(sections['6'], 6, false)),
-    buildBulletSection(7, PROPOSAL_SECTION_HEADINGS[7], sanitizeNarrativeBullets(sections['7'], 7, true))
-  ];
-  return orderedSections.join('\n\n');
+    buildReferenceSection(references, sections['5']),
+    buildTimelineSection(sections['6']),
+    buildBulletSection(7, PROPOSAL_SECTION_HEADINGS[7], sanitizeNarrativeBullets(sections['7'], 7, false))
+  ].join('\n\n');
 }

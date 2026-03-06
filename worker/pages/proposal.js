@@ -129,7 +129,7 @@ export function getProposalPage() {
           output.innerHTML = formatMarkdown(data.content);
         } else {
           status.className = 'status error';
-          status.textContent = data.message;
+          status.textContent = data.error || data.message || '제안서 생성에 실패했습니다.';
         }
       } catch(e) {
         status.className = 'status error';

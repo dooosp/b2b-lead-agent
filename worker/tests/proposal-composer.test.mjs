@@ -5,7 +5,8 @@ import { estimateDesigoPointAndController } from '../lib/proposal-estimator.js';
 import {
   composeProposalContent,
   isValidProposalSectionPayload,
-  parseProposalSectionPayload
+  parseProposalSectionPayload,
+  validateProposalSuccessPayload
 } from '../lib/proposal-composer.js';
 
 test('proposal section payload parser accepts strict JSON object', () => {
@@ -54,14 +55,26 @@ test('composeProposalContent injects deterministic sections and fixed headings',
     6: ['설계와 시공 승인 절차를 병행합니다.', '시운전과 안정화 전환 계획을 분리합니다.'],
     7: ['운영 데이터 통합 역량을 강조합니다.', '국내 지원 체계와 제품 로드맵을 함께 설명합니다.']
   };
+  const references = [
+    { client: 'Changi Airport', project: 'Desigo CC 통합 BMS 구축', result: '에너지 35% 절감', region: 'APAC', sourceUrl: '' }
+  ];
 
-  const content = composeProposalContent({ proposalInput, estimation, cpaEstimate, sections });
+  const content = composeProposalContent({ proposalInput, estimation, cpaEstimate, sections, references });
 
   assert.match(content, /## 1\. 프로젝트 개요/);
+  assert.match(content, /A\(입력 요약\)/);
   assert.match(content, /## 2\. Desigo CC 아키텍처/);
   assert.match(content, /총 포인트: 6,501/);
   assert.match(content, /권장 6대/);
   assert.match(content, /## 4\. ESCO 모델 제안/);
   assert.match(content, /5년 누적 순절감액/);
+  assert.match(content, /유사 사례/);
+  assert.match(content, /M&V\/검증/);
   assert.match(content, /## 7\. Why Siemens/);
+  assert.equal(validateProposalSuccessPayload({
+    success: true,
+    content,
+    estimation,
+    completeness: { allSections: true }
+  }), true);
 });
