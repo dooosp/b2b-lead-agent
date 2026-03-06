@@ -28,6 +28,17 @@ const SYSTEM_LABELS = Object.freeze({
   fire: '방재',
   extra: '기타 설비'
 });
+const STOCK_NARRATIVE_PATTERNS = Object.freeze([
+  /웹 기반 인터페이스.*실시간 모니터링 및 제어/i,
+  /언제 어디서든 시스템에 접속/i,
+  /에너지 절감 시뮬레이션은/i,
+  /에너지 관리 효율성을 향상/i,
+  /지속적인 에너지 절감을 실현/i,
+  /ESCO 모델은 에너지 성능 보장 계약/i,
+  /에너지 절감 효과를 보장/i,
+  /초기 투자 부담을 줄이고/i,
+  /장기적으로 수익을 창출/i
+]);
 
 function formatNumber(value) {
   return Number(value || 0).toLocaleString('ko-KR');
@@ -86,11 +97,11 @@ function fallbackNarrative(sectionNo) {
     case 1:
       return ['기존 설비와 운영 데이터의 연결 범위를 먼저 정의해야 합니다.', '의사결정자는 운영 안정성과 절감 검증 방식을 동시에 검토해야 합니다.'];
     case 2:
-      return ['통합 관제 구조는 기존 설비 연계를 우선 검토하고 단계적으로 확장하는 접근이 적합합니다.'];
+      return ['통합 관제 구조는 기존 BMS 연계 범위와 현장 포인트 우선순위를 먼저 확정하는 접근이 적합합니다.', 'HVAC, 조명, 전력 순으로 단계 적용 범위를 나누면 시운전 리스크를 낮출 수 있습니다.'];
     case 3:
-      return ['절감 효과는 기준선 데이터와 적용 후 운영 로그를 함께 검증해야 합니다.'];
+      return ['절감 효과는 기준선 데이터와 적용 후 운영 로그를 같은 조건으로 비교해야 설명력이 생깁니다.', '운영 시간표와 피크 부하 원인을 함께 정리해야 절감 과제를 실행 수준으로 내릴 수 있습니다.'];
     case 4:
-      return ['성과보장형 계약은 기준선 정의와 정산식 합의가 선행되어야 합니다.'];
+      return ['성과보장형 계약은 기준선 정의와 정산식 합의가 선행되어야 합니다.', '성과정산 주기와 운영 책임 범위를 계약서에서 분리해야 분쟁 가능성을 줄일 수 있습니다.'];
     case 5:
       return ['유사 사례: (참고용) - 자료 부족'];
     case 6:
@@ -106,6 +117,7 @@ function extractNarrativeBullets(bullets, allowNumbers = true) {
   return (Array.isArray(bullets) ? bullets : [])
     .map(normalizeBullet)
     .filter(Boolean)
+    .filter((text) => !STOCK_NARRATIVE_PATTERNS.some((pattern) => pattern.test(text)))
     .filter((text) => allowNumbers || !NUMERIC_SIGNAL_RE.test(text))
     .slice(0, 4);
 }

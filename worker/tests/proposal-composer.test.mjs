@@ -81,3 +81,43 @@ test('composeProposalContent injects deterministic sections and fixed headings',
     completeness: { allSections: true }
   }), true);
 });
+
+test('composeProposalContent filters stock narrative phrases and uses project-specific fallbacks', () => {
+  const proposalInput = {
+    buildingType: 'office',
+    area: 45000,
+    floors: 25,
+    currentBMS: 'Honeywell EBI',
+    monthlyEnergyCost: 7500,
+    systemFlags: { hvac: true, lighting: true, power: true, fire: true, extra: true }
+  };
+  const estimation = estimateDesigoPointAndController({
+    totalArea: proposalInput.area,
+    floors: proposalInput.floors,
+    systemFlags: proposalInput.systemFlags
+  });
+  const cpaEstimate = calculateCpaEstimate({
+    area: proposalInput.area,
+    floors: proposalInput.floors,
+    buildingType: proposalInput.buildingType,
+    region: 'seoul',
+    monthlyEnergyCost: proposalInput.monthlyEnergyCost
+  });
+  const sections = {
+    1: ['웹 기반 인터페이스를 통해 언제 어디서든 시스템에 접속하여 실시간 모니터링 및 제어가 가능합니다.'],
+    2: ['웹 기반 인터페이스를 통해 언제 어디서든 시스템에 접속하여 실시간 모니터링 및 제어가 가능합니다.'],
+    3: ['에너지 절감 시뮬레이션은 빌딩의 에너지 소비 패턴을 분석하여 최적의 제어 전략을 도출합니다.'],
+    4: ['ESCO 모델은 에너지 성능 보장 계약을 통해 에너지 절감 효과를 보장합니다.'],
+    5: ['유사 사례를 비교합니다.'],
+    6: ['시운전 기간 동안 시스템의 안정성을 확보하고, 모든 기능이 정상적으로 작동하는지 철저히 검증합니다.'],
+    7: ['운영 데이터 통합 역량을 강조합니다.']
+  };
+
+  const content = composeProposalContent({ proposalInput, estimation, cpaEstimate, sections, references: [] });
+
+  assert.doesNotMatch(content, /웹 기반 인터페이스를 통해 언제 어디서든 시스템에 접속/);
+  assert.doesNotMatch(content, /에너지 절감 시뮬레이션은 빌딩의 에너지 소비 패턴을 분석/);
+  assert.doesNotMatch(content, /ESCO 모델은 에너지 성능 보장 계약을 통해 에너지 절감 효과를 보장/);
+  assert.match(content, /기존 BMS 연계 범위와 현장 포인트 우선순위를 먼저 확정/);
+  assert.match(content, /성과정산 주기와 운영 책임 범위를 계약서에서 분리/);
+});

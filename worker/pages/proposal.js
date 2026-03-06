@@ -11,9 +11,25 @@ export function getProposalPage() {
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
-    .proposal-output { background: #1e2a3a; border-radius: 12px; padding: 24px; margin-top: 20px; text-align: left; white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #ddd; display: none; max-height: 70vh; overflow-y: auto; }
-    .estimate-box { display:none; margin-top:12px; background:#121a24; border:1px solid #2a3a4a; border-radius:10px; padding:12px; text-align:left; font-size:12px; color:#c8d5e2; line-height:1.7; }
-    .proposal-output h1, .proposal-output h2, .proposal-output h3 { color: #e94560; }
+    .proposal-output { background: linear-gradient(180deg, #172230 0%, #101823 100%); border-radius: 16px; padding: 24px; margin-top: 20px; text-align: left; font-size: 14px; line-height: 1.8; color: #ddd; display: none; max-height: 75vh; overflow-y: auto; border: 1px solid #2a3a4a; box-shadow: 0 14px 40px rgba(0,0,0,0.24); }
+    .estimate-box { display:none; margin-top:12px; background:#121a24; border:1px solid #2a3a4a; border-radius:12px; padding:14px 16px; text-align:left; font-size:12px; color:#c8d5e2; line-height:1.7; }
+    .estimate-box strong { display:block; margin-bottom:8px; color:#f4f7fb; font-size:13px; }
+    .estimate-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px; margin-top:8px; }
+    .estimate-item { background:#182433; border:1px solid #233447; border-radius:10px; padding:10px 12px; }
+    .estimate-label { display:block; color:#8fa4b8; font-size:11px; margin-bottom:4px; }
+    .estimate-value { display:block; color:#f4f7fb; font-size:13px; font-weight:700; }
+    .proposal-doc { display:flex; flex-direction:column; gap:14px; }
+    .proposal-section { background:#121b27; border:1px solid #223245; border-radius:14px; padding:16px 18px; }
+    .proposal-section-head { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+    .proposal-index { width:32px; height:32px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:#e94560; color:#fff; font-size:12px; font-weight:700; flex:none; }
+    .proposal-section h2 { color:#f3f6fa; font-size:17px; margin:0; }
+    .proposal-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+    .proposal-item { padding:10px 12px; border-radius:10px; background:#182433; border:1px solid #223447; color:#d5dfeb; }
+    .proposal-item.marker { background:transparent; border:none; padding:4px 0 0; color:#ffb4c0; font-weight:700; letter-spacing:0.01em; }
+    .proposal-item-label { display:block; color:#8fa4b8; font-size:11px; text-transform:none; margin-bottom:4px; }
+    .proposal-item-value { display:block; color:#f4f7fb; font-size:14px; }
+    .proposal-source { display:block; margin-top:6px; color:#90a5ba; font-size:11px; }
+    .proposal-note { color:#90a5ba; font-size:12px; margin-top:10px; }
     select, .form-input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #1a1a2e; color: #fff; font-size: 14px; margin-bottom: 12px; }
     .form-row { display: flex; gap: 12px; }
     .form-row > * { flex: 1; }
@@ -22,6 +38,11 @@ export function getProposalPage() {
     .system-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px; margin:8px 0 12px; }
     .system-grid label { display:flex; align-items:center; gap:8px; margin:0; font-size:12px; color:#ccc; }
     .system-grid input { margin:0; }
+    @media (max-width: 720px) {
+      .estimate-grid { grid-template-columns:1fr; }
+      .proposal-output { padding:18px; }
+      .proposal-section { padding:14px; }
+    }
   </style>
 </head>
 <body>
@@ -146,21 +167,82 @@ export function getProposalPage() {
       const range = est.pointRange || {};
       return [
         '<strong>산정 엔진 결과(고정)</strong>',
-        'HVAC ' + (ps.hvac || 0) + ' | 조명 ' + (ps.lighting || 0) + ' | 전력 ' + (ps.power || 0) + ' | 방재 ' + (ps.fire || 0) + ' | 기타 ' + (ps.extra || 0),
-        '총 포인트: ' + (est.totalPoints || 0) + ' (범위 ' + (range.min || 0) + '~' + (range.max || 0) + ')',
-        '컨트롤러: 최소 ' + (ctr.min || 0) + '대 / 권장 ' + (ctr.recommended || 0) + '대 / 최대 ' + (ctr.max || 0) + '대'
-      ].join('<br>');
+        '<div class="estimate-grid">',
+        renderEstimateItem('HVAC', (ps.hvac || 0) + ' 포인트'),
+        renderEstimateItem('조명', (ps.lighting || 0) + ' 포인트'),
+        renderEstimateItem('전력', (ps.power || 0) + ' 포인트'),
+        renderEstimateItem('방재', (ps.fire || 0) + ' 포인트'),
+        renderEstimateItem('기타', (ps.extra || 0) + ' 포인트'),
+        renderEstimateItem('총 포인트', (est.totalPoints || 0) + ' (' + (range.min || 0) + '~' + (range.max || 0) + ')'),
+        renderEstimateItem('컨트롤러', '최소 ' + (ctr.min || 0) + ' / 권장 ' + (ctr.recommended || 0) + ' / 최대 ' + (ctr.max || 0)),
+        '</div>'
+      ].join('');
+    }
+
+    function renderEstimateItem(label, value) {
+      return '<div class="estimate-item"><span class="estimate-label">' + esc(label) + '</span><span class="estimate-value">' + esc(value) + '</span></div>';
     }
 
     function formatMarkdown(text) {
-      return esc(text)
-        .replace(/### (.*)/g, '<h3>$1</h3>')
-        .replace(/## (.*)/g, '<h2>$1</h2>')
-        .replace(/# (.*)/g, '<h1>$1</h1>')
-        .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
-        .replace(/\\*(.*?)\\*/g, '<em>$1</em>')
-        .replace(/- (.*)/g, '<li>$1</li>')
-        .replace(/\\n/g, '<br>');
+      const sections = parseProposalSections(text);
+      if (!sections.length) {
+        return '<div class="proposal-note">문서 본문을 구조화하지 못했습니다. 원문을 그대로 표시합니다.</div><pre>' + esc(text) + '</pre>';
+      }
+      return '<div class="proposal-doc">' + sections.map(renderProposalSection).join('') + '</div>';
+    }
+
+    function parseProposalSections(text) {
+      const lines = String(text || '').split(/\\r?\\n/);
+      const sections = [];
+      let current = null;
+
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+        const headingMatch = line.match(/^##\\s+(\\d+)\\.\\s+(.+)$/);
+        if (headingMatch) {
+          current = { number: headingMatch[1], title: headingMatch[2], items: [] };
+          sections.push(current);
+          continue;
+        }
+        if (!current) continue;
+        if (line.startsWith('- ')) {
+          current.items.push(line.slice(2).trim());
+        } else {
+          current.items.push(line);
+        }
+      }
+
+      return sections;
+    }
+
+    function renderProposalSection(section) {
+      return '<section class="proposal-section">'
+        + '<div class="proposal-section-head"><span class="proposal-index">' + esc(section.number) + '</span><h2>' + esc(section.title) + '</h2></div>'
+        + '<ul class="proposal-list">' + section.items.map(renderProposalItem).join('') + '</ul>'
+        + '</section>';
+    }
+
+    function renderProposalItem(item) {
+      const markerMatch = item.match(/^(?:[A-D]\\(.+\\)|M&V\\/검증(?: placeholder)?)$/);
+      if (markerMatch) {
+        return '<li class="proposal-item marker">' + esc(item.replace(' placeholder', '')) + '</li>';
+      }
+
+      const sourceMatch = item.match(/\\s*\\(근거:\\s*([^)]*)\\)\\s*$/);
+      const source = sourceMatch ? sourceMatch[1].trim() : '';
+      const body = sourceMatch ? item.slice(0, sourceMatch.index).trim() : item.trim();
+      const labelMatch = body.match(/^([^:]{1,32}):\\s+(.+)$/);
+
+      if (labelMatch) {
+        return '<li class="proposal-item"><span class="proposal-item-label">' + esc(labelMatch[1]) + '</span><span class="proposal-item-value">' + esc(labelMatch[2]) + '</span>' + renderSource(source) + '</li>';
+      }
+
+      return '<li class="proposal-item"><span class="proposal-item-value">' + esc(body) + '</span>' + renderSource(source) + '</li>';
+    }
+
+    function renderSource(source) {
+      return source ? '<span class="proposal-source">근거: ' + esc(source) + '</span>' : '';
     }
   </script>
 </body>
