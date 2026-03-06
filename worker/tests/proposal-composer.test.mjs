@@ -63,11 +63,14 @@ test('composeProposalContent injects deterministic sections and fixed headings',
 
   assert.match(content, /## 1\. 프로젝트 개요/);
   assert.match(content, /A\(입력 요약\)/);
+  assert.match(content, /근거: proposal input/);
   assert.match(content, /## 2\. Desigo CC 아키텍처/);
   assert.match(content, /총 포인트: 6,501/);
+  assert.match(content, /근거: estimation\.totalPoints/);
   assert.match(content, /권장 6대/);
   assert.match(content, /## 4\. ESCO 모델 제안/);
   assert.match(content, /5년 누적 순절감액/);
+  assert.match(content, /근거: CPA 권장안/);
   assert.match(content, /유사 사례/);
   assert.match(content, /M&V\/검증/);
   assert.match(content, /## 7\. Why Siemens/);

@@ -77,6 +77,7 @@ function buildProposalPrompt({ proposalInput, estimation, cpaEstimate, reference
   return `당신은 지멘스 Smart Infrastructure 기술영업 전문가입니다.
 아래 프로젝트 정보를 바탕으로 실제 프로젝트 제안서에 들어갈 설명 bullet을 작성하세요.
 예시 문장처럼 쓰지 말고, 현재 입력 조건과 기술 과제를 중심으로 작성하세요.
+각 bullet은 발주처 검토 문서에 들어갈 수준으로 구체적으로 쓰고, 추상적인 표현만 반복하지 마세요.
 
 [프로젝트 입력]
 - 빌딩 유형: ${proposalInput.buildingType}
@@ -123,6 +124,8 @@ ${referenceText}
 7) 섹션 2, 3, 4, 6은 숫자/퍼센트/금액/기간을 쓰지 마세요.
 8) 표 형식 금지. 문장 길이는 bullet당 1~2문장으로 제한하세요.
 9) 자료가 부족한 항목은 "N/A"라고 쓰고 이유를 한 문장으로 덧붙이세요.
+10) 섹션 1의 기술 과제는 현재 BMS, 시스템 범위, 운영 입력 누락 상태를 반영해 작성하세요.
+11) 섹션 6은 시운전, 인수인계, 검증 로그, 운영 전환 책임을 반영한 수행형 문장으로 작성하세요.
 
 [섹션 제목]
 ${sectionTitles}`;

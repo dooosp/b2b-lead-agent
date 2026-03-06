@@ -2,6 +2,8 @@ const COMPANY_NAME_MAX_LEN = 40;
 const COMPANY_NAME_RE = /^[\p{L}0-9 .,&()\-]+$/u;
 const PLACEHOLDER_RE = /\{[^}]{1,40}\}/g;
 const NUMBER_SIGNAL_RE = /(\d|억원|조원|만|%|MW|GW|kW|㎡|m²)/i;
+const ROI_RANGE_RE = /\d+(?:\.\d+)?\s*[~-]\s*\d+(?:\.\d+)?\s*년/;
+const ROI_UNKNOWN_RE = /^근거 없음\(추정 불가\)/;
 const EVENT_TYPES = new Set(['착공', '증설', '수주', '규제', '입찰', '투자', '채용', '기타']);
 const SELF_SERVICE_MODEL_SCHEMA_KEYS = Object.freeze([
   'company',
@@ -42,9 +44,14 @@ export function normalizeExpectedRoiText(value, fallback = '') {
   if (/근거\s*없음(?:\s*\(추정\s*불가\))?/u.test(cleaned)) {
     return cleaned.replace(/근거\s*없음(?!\s*\(추정\s*불가\))/u, '근거 없음(추정 불가)');
   }
-  if (/\d+(?:\.\d+)?\s*[~-]\s*\d+(?:\.\d+)?\s*년/.test(cleaned)) return cleaned;
+  if (ROI_RANGE_RE.test(cleaned)) return cleaned;
   if (/\d+(?:\.\d+)?\s*년/.test(cleaned)) return cleaned;
   return `근거 없음(추정 불가) - ${cleaned}`;
+}
+
+function isValidExpectedRoiText(value) {
+  const cleaned = sanitizeLeadText(value, '');
+  return ROI_RANGE_RE.test(cleaned) || ROI_UNKNOWN_RE.test(cleaned);
 }
 
 export function replaceKnownPlaceholders(value, company, product = '') {
@@ -283,7 +290,7 @@ function isValidModelSchemaShape(lead) {
   if (!isValidCompanyNameWorker(lead.company)) return false;
   if (!sanitizeLeadText(lead.project_title, '')) return false;
   if (!sanitizeLeadText(lead.recommended_product, '')) return false;
-  if (!sanitizeLeadText(lead.expected_roi, '')) return false;
+  if (!isValidExpectedRoiText(lead.expected_roi)) return false;
   if (!sanitizeLeadText(lead.sales_pitch, '')) return false;
   if (!sanitizeLeadText(lead.trend, '')) return false;
   if (hasPlaceholders(lead.project_title) || hasPlaceholders(lead.expected_roi) || hasPlaceholders(lead.sales_pitch)) return false;
@@ -303,7 +310,7 @@ function isValidResponseLeadShape(lead) {
   if (!['A', 'B', 'C', 'D'].includes(String(lead.grade || ''))) return false;
   if (!sanitizeLeadText(lead.project_title, '')) return false;
   if (!sanitizeLeadText(lead.recommended_product, '')) return false;
-  if (!sanitizeLeadText(lead.expected_roi, '')) return false;
+  if (!isValidExpectedRoiText(lead.expected_roi)) return false;
   if (!sanitizeLeadText(lead.sales_pitch, '')) return false;
   if (!sanitizeLeadText(lead.trend, '')) return false;
   if (!Array.isArray(lead.sources)) return false;

@@ -372,6 +372,7 @@ async function testSelfServiceSchemaContract() {
     if (!['A', 'B', 'C', 'D'].includes(lead.grade)) return false;
     if (typeof lead.project_title !== 'string' || typeof lead.recommended_product !== 'string') return false;
     if (typeof lead.expected_roi !== 'string' || typeof lead.sales_pitch !== 'string' || typeof lead.trend !== 'string') return false;
+    if (!(/\d+(?:\.\d+)?\s*[~-]\s*\d+(?:\.\d+)?\s*년/.test(lead.expected_roi) || /^근거 없음\(추정 불가\)/.test(lead.expected_roi))) return false;
     if (/\{company\}|\{product\}/i.test(lead.project_title + ' ' + lead.expected_roi + ' ' + lead.sales_pitch)) return false;
     if (!Array.isArray(lead.sources)) return false;
     return lead.sources.every(s => s && typeof s.title === 'string' && s.title && typeof s.url === 'string' && /^https?:\/\//i.test(s.url));

@@ -178,6 +178,8 @@ export function validateCpaOutput(output) {
   if (!Array.isArray(output.options)) return false;
   if (!Array.isArray(output.sensitivity)) return false;
   if (typeof output.escoNote !== 'string') return false;
+  if (output.options.length !== 3) return false;
+  if (output.sensitivity.length < 5) return false;
 
   const input = output.input;
   if (!(Number(input.area) > 0)) return false;
@@ -226,11 +228,15 @@ export function buildDeterministicEscoNote(estimate) {
   const baseCase = Array.isArray(estimate && estimate.sensitivity)
     ? estimate.sensitivity.find((item) => item.pct === 0)
     : null;
+  const input = estimate && estimate.input ? estimate.input : null;
 
   if (!recommended) {
     return '샘플 계약 구조: ESCO 모델 적용 시 초기 투자 0원을 전제로 검토할 수 있으나, 기준선 데이터가 부족해 현재는 권장안을 확정할 수 없습니다.';
   }
 
+  const baselineText = input && input.monthlyEnergyCost > 0
+    ? `월 에너지 비용 ${input.monthlyEnergyCost.toLocaleString('ko-KR')}만원 입력값을 기준선으로 사용했습니다.`
+    : '월 에너지 비용 미입력 상태이므로 면적 기준 기본 에너지 원단위를 적용했습니다.';
   const paybackText = recommended.paybackYears >= 0
     ? `${recommended.paybackYears}년 수준의 투자회수 가정`
     : '현재 입력값 기준으로는 투자회수 기간이 N/A';
@@ -240,6 +246,7 @@ export function buildDeterministicEscoNote(estimate) {
 
   return [
     '샘플 계약 구조: ESCO 모델 적용 시 초기 투자 0원 가정을 전제로 합니다.',
+    baselineText,
     `${recommended.label} 기준 총 투자비 ${recommended.totalCost.toLocaleString('ko-KR')}원, 절감률 ${recommended.savingsRate}%, 순절감 ${recommended.netAnnualSavings.toLocaleString('ko-KR')}원/년을 기준으로 성과보장형 계약을 검토합니다.`,
     `${paybackText}. ${sensitivityText}`,
     '실제 계약 조건은 기준선 에너지 사용량, 검증 방식, 정산식을 확정한 뒤 조정해야 합니다.'

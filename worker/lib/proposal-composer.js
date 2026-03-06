@@ -37,8 +37,20 @@ function formatCurrencyKr(value) {
   return `${Number(value || 0).toLocaleString('ko-KR')}원`;
 }
 
+function formatPercent(value) {
+  return `${Number(value || 0).toLocaleString('ko-KR')}%`;
+}
+
+function formatRange(minValue, maxValue, suffix = '') {
+  return `${formatNumber(minValue)}~${formatNumber(maxValue)}${suffix}`;
+}
+
 function formatBuildingType(buildingType) {
   return BUILDING_TYPE_LABELS[buildingType] || buildingType || '미확인';
+}
+
+function mkDeterministicLine(label, value, source) {
+  return `${label}: ${value} (근거: ${source})`;
 }
 
 function summarizeSystems(systemFlags = {}) {
@@ -177,13 +189,29 @@ function buildProjectOverviewSection(proposalInput, estimation, cpaEstimate, nar
   const recommended = cpaEstimate.options.find((option) => option.scope === 'BEMS') || cpaEstimate.options[1] || cpaEstimate.options[0];
   const deterministicBullets = [
     'A(입력 요약)',
-    `빌딩 유형 ${formatBuildingType(proposalInput.buildingType)} / 연면적 ${formatNumber(proposalInput.area)}㎡ / 층수 ${formatNumber(proposalInput.floors)}층 / 현재 BMS ${proposalInput.currentBMS || '없음/미상'}`,
-    `시스템 범위 ${summarizeSystems(proposalInput.systemFlags)} / 월 에너지 비용 ${proposalInput.monthlyEnergyCost > 0 ? `${formatNumber(proposalInput.monthlyEnergyCost)}만원` : '미입력'}`,
+    mkDeterministicLine(
+      '기본 조건',
+      `빌딩 유형 ${formatBuildingType(proposalInput.buildingType)} / 연면적 ${formatNumber(proposalInput.area)}㎡ / 층수 ${formatNumber(proposalInput.floors)}층 / 현재 BMS ${proposalInput.currentBMS || '없음/미상'}`,
+      'proposal input'
+    ),
+    mkDeterministicLine(
+      '운영 입력',
+      `시스템 범위 ${summarizeSystems(proposalInput.systemFlags)} / 월 에너지 비용 ${proposalInput.monthlyEnergyCost > 0 ? `${formatNumber(proposalInput.monthlyEnergyCost)}만원` : '미입력'}`,
+      'proposal input'
+    ),
     'B(기술과제)',
     ...sanitizeNarrativeBullets(narrativeBullets, 1, false),
     'C(산정결과 요약)',
-    `총 포인트 ${formatNumber(estimation.totalPoints)} / 권장 컨트롤러 ${formatNumber(estimation.controllers.recommended)}대 / 권장 ESCO 옵션 ${recommended.label}`,
-    `권장 ESCO 절감률 ${recommended.savingsRate}% / 순연간 절감 ${formatCurrencyKr(recommended.netAnnualSavings)} / 투자회수 ${recommended.paybackYears >= 0 ? `${recommended.paybackYears}년` : 'N/A'}`,
+    mkDeterministicLine(
+      '산정 요약',
+      `총 포인트 ${formatNumber(estimation.totalPoints)} / 권장 컨트롤러 ${formatNumber(estimation.controllers.recommended)}대 / 권장 ESCO 옵션 ${recommended.label}`,
+      'estimation + CPA 권장안'
+    ),
+    mkDeterministicLine(
+      '성과 요약',
+      `권장 ESCO 절감률 ${formatPercent(recommended.savingsRate)} / 순연간 절감 ${formatCurrencyKr(recommended.netAnnualSavings)} / 투자회수 ${recommended.paybackYears >= 0 ? `${recommended.paybackYears}년` : 'N/A'}`,
+      'CPA 권장안'
+    ),
     'D(가정/리스크)',
     ...buildAssumptionBullets(proposalInput)
   ];
@@ -194,14 +222,14 @@ export function buildSizingSection(estimation, floors, narrativeBullets = []) {
   const avgPerFloor = Math.round((Number(estimation.totalPoints) || 0) / Math.max(1, Number(floors) || 1));
   const deterministicBullets = [
     '시스템 구성도 설명 (HVAC, 조명, 전력, 방재 통합)',
-    `HVAC: ${formatNumber(estimation.pointsBySystem.hvac)} 포인트`,
-    `조명: ${formatNumber(estimation.pointsBySystem.lighting)} 포인트`,
-    `전력: ${formatNumber(estimation.pointsBySystem.power)} 포인트`,
-    `방재: ${formatNumber(estimation.pointsBySystem.fire)} 포인트`,
-    `기타: ${formatNumber(estimation.pointsBySystem.extra)} 포인트`,
-    `총 포인트: ${formatNumber(estimation.totalPoints)} (범위 ${formatNumber(estimation.pointRange.min)}~${formatNumber(estimation.pointRange.max)})`,
-    `층당 평균: ${formatNumber(avgPerFloor)} 포인트`,
-    `컨트롤러: 최소 ${estimation.controllers.min}대 / 권장 ${estimation.controllers.recommended}대 / 최대 ${estimation.controllers.max}대`,
+    mkDeterministicLine('HVAC', `${formatNumber(estimation.pointsBySystem.hvac)} 포인트`, 'estimation.pointsBySystem.hvac'),
+    mkDeterministicLine('조명', `${formatNumber(estimation.pointsBySystem.lighting)} 포인트`, 'estimation.pointsBySystem.lighting'),
+    mkDeterministicLine('전력', `${formatNumber(estimation.pointsBySystem.power)} 포인트`, 'estimation.pointsBySystem.power'),
+    mkDeterministicLine('방재', `${formatNumber(estimation.pointsBySystem.fire)} 포인트`, 'estimation.pointsBySystem.fire'),
+    mkDeterministicLine('기타', `${formatNumber(estimation.pointsBySystem.extra)} 포인트`, 'estimation.pointsBySystem.extra'),
+    mkDeterministicLine('총 포인트', `${formatNumber(estimation.totalPoints)} (범위 ${formatRange(estimation.pointRange.min, estimation.pointRange.max)})`, 'estimation.totalPoints + estimation.pointRange'),
+    mkDeterministicLine('층당 평균', `${formatNumber(avgPerFloor)} 포인트`, 'estimation.totalPoints / floors'),
+    mkDeterministicLine('컨트롤러', `최소 ${estimation.controllers.min}대 / 권장 ${estimation.controllers.recommended}대 / 최대 ${estimation.controllers.max}대`, 'estimation.controllers'),
     ...sanitizeNarrativeBullets(narrativeBullets, 2, false)
   ];
   return buildBulletSection(2, PROPOSAL_SECTION_HEADINGS[2], deterministicBullets);
@@ -213,13 +241,13 @@ export function buildEnergySection(proposalInput, cpaEstimate, narrativeBullets 
   const deterministicBullets = [];
 
   if (Number(proposalInput.monthlyEnergyCost) > 0) {
-    deterministicBullets.push(`현재 연간 에너지 비용(코드 산정): ${formatCurrencyKr(annualEnergyCost)}`);
-    deterministicBullets.push(`권장안(${recommended.label}) 적용 시 예상 절감률: ${recommended.savingsRate}%`);
-    deterministicBullets.push(`예상 연간 절감액: ${formatCurrencyKr(recommended.annualSavings)} / 순절감액: ${formatCurrencyKr(recommended.netAnnualSavings)}`);
-    deterministicBullets.push(recommended.paybackYears >= 0 ? `예상 투자회수 기간: ${recommended.paybackYears}년` : '예상 투자회수 기간: N/A (현재 입력값 기준 투자회수 기간 산정 불가)');
+    deterministicBullets.push(mkDeterministicLine('현재 연간 에너지 비용', formatCurrencyKr(annualEnergyCost), 'monthlyEnergyCost * 12 * 10,000'));
+    deterministicBullets.push(mkDeterministicLine(`권장안(${recommended.label}) 절감률`, formatPercent(recommended.savingsRate), 'CPA 권장안'));
+    deterministicBullets.push(mkDeterministicLine('예상 연간 절감액', `${formatCurrencyKr(recommended.annualSavings)} / 순절감액 ${formatCurrencyKr(recommended.netAnnualSavings)}`, 'CPA 권장안'));
+    deterministicBullets.push(mkDeterministicLine('예상 투자회수 기간', recommended.paybackYears >= 0 ? `${recommended.paybackYears}년` : 'N/A', recommended.paybackYears >= 0 ? 'CPA 권장안' : '입력 데이터 부족 또는 회수기간 산정 불가'));
   } else {
-    deterministicBullets.push('월 에너지 비용이 입력되지 않아 금액 절감액은 계산하지 않았습니다.');
-    deterministicBullets.push(`권장안(${recommended.label}) 기준 절감률 가정: ${recommended.savingsRate}%`);
+    deterministicBullets.push(mkDeterministicLine('현재 연간 에너지 비용', 'N/A', '월 에너지 비용 미입력'));
+    deterministicBullets.push(mkDeterministicLine(`권장안(${recommended.label}) 절감률 가정`, formatPercent(recommended.savingsRate), 'CPA 권장안'));
     deterministicBullets.push('금액 산정이 필요하면 최근 12개월 에너지 비용 데이터를 추가해야 합니다.');
   }
 
@@ -234,9 +262,9 @@ export function buildEscoSection(cpaEstimate, narrativeBullets = []) {
   const recommended = cpaEstimate.options.find((option) => option.scope === 'BEMS') || cpaEstimate.options[1] || cpaEstimate.options[0];
   const terms = buildEscoTermScenarios(recommended);
   const deterministicBullets = [
-    `추천 계약안(코드 산정): ${recommended.label}`,
-    `총 투자비: ${formatCurrencyKr(recommended.totalCost)} / 5년 ROI: ${recommended.roi5y}%`,
-    ...terms.map((term) => `${term.years}년 누적 순절감액: ${formatCurrencyKr(term.netSavings)} / 투자비 커버리지 ${term.costCoverageRate}%`),
+    mkDeterministicLine('추천 계약안', recommended.label, 'CPA 권장안'),
+    mkDeterministicLine('총 투자비 / 5년 ROI', `${formatCurrencyKr(recommended.totalCost)} / ${formatPercent(recommended.roi5y)}`, 'CPA 권장안'),
+    ...terms.map((term) => mkDeterministicLine(`${term.years}년 누적 순절감액`, `${formatCurrencyKr(term.netSavings)} / 투자비 커버리지 ${formatPercent(term.costCoverageRate)}`, 'CPA term scenario')),
     ...sanitizeNarrativeBullets(narrativeBullets, 4, false)
   ];
   return buildBulletSection(4, PROPOSAL_SECTION_HEADINGS[4], deterministicBullets);

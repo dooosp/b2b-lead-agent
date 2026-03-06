@@ -37,6 +37,9 @@ export function getCPAPage() {
     .warning-badge { display: inline-block; background: rgba(231,76,60,0.2); border: 1px solid #e74c3c; color: #e74c3c; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-left: 6px; }
     .esco-inline { background: rgba(52,152,219,0.08); border: 1px dashed #3498db; border-radius: 8px; padding: 10px 14px; margin-top: 10px; font-size: 12px; color: #3498db; text-align: left; line-height: 1.6; }
     .esco-note { background: rgba(52,152,219,0.1); border: 1px solid #3498db; border-radius: 8px; padding: 14px; margin-top: 16px; font-size: 13px; color: #3498db; display: none; text-align: left; }
+    .assumption-card { background: #121a24; border: 1px solid #2a3a4a; border-radius: 10px; padding: 14px; margin-top: 16px; display: none; text-align: left; }
+    .assumption-card h3 { color: #e94560; font-size: 15px; margin: 0 0 10px 0; }
+    .assumption-card p { margin: 6px 0; font-size: 13px; color: #c8d5e2; line-height: 1.6; }
     .range-container { text-align: left; margin-bottom: 12px; }
     .range-value { float: right; color: #e94560; font-weight: bold; font-size: 14px; }
     input[type=range] { width: 100%; -webkit-appearance: none; height: 6px; border-radius: 3px; background: #333; outline: none; margin-top: 6px; }
@@ -92,6 +95,7 @@ export function getCPAPage() {
     <button class="btn btn-primary" id="calcBtn" onclick="recalculate()">견적 계산</button>
     <div class="status" id="status"></div>
 
+    <div class="assumption-card" id="assumptionCard"></div>
     <div class="options-grid" id="optionsGrid"></div>
     <div class="sensitivity-section" id="sensitivitySection">
       <h3>민감도 분석 (BEMS 기준, 면적 변동)</h3>
@@ -112,6 +116,23 @@ export function getCPAPage() {
       if (n >= 100000000) return (n/100000000).toFixed(1) + '억원';
       if (n >= 10000) return (n/10000).toFixed(0) + '만원';
       return fmt(n) + '원';
+    }
+    function labelForBuildingType(value) {
+      const labels = {
+        office: '오피스 빌딩',
+        datacenter: '데이터센터',
+        hospital: '병원/의료시설',
+        hotel: '호텔/리조트',
+        factory: '공장/생산시설',
+        school: '학교/교육시설',
+        apartment: '아파트/주거',
+        commercial: '상업시설/몰'
+      };
+      return labels[value] || value;
+    }
+    function labelForRegion(value) {
+      const labels = { seoul: '서울/수도권', metropolitan: '광역시', local: '지방', jeju: '제주' };
+      return labels[value] || value;
     }
 
     function clampAreaValue(v) {
@@ -153,6 +174,7 @@ export function getCPAPage() {
       const password = getToken();
       const status = document.getElementById('status');
       if (!password) { status.className='status error'; status.textContent='비밀번호를 입력하세요.'; return; }
+      document.getElementById('assumptionCard').style.display = 'none';
 
       status.className = 'status loading';
       status.textContent = '계산 중...';
@@ -174,6 +196,7 @@ export function getCPAPage() {
         if (data.success) {
           status.className = 'status success';
           status.textContent = '견적 계산 완료!';
+          renderAssumptions(data.input);
           renderOptions(data.options);
           renderSensitivity(data.sensitivity);
           const esco = document.getElementById('escoNote');
@@ -192,6 +215,19 @@ export function getCPAPage() {
     function fmtPayback(years) {
       if (years < 0) return '회수불가';
       return years + '년';
+    }
+    function renderAssumptions(input) {
+      const card = document.getElementById('assumptionCard');
+      const monthlyCostText = input.monthlyEnergyCost > 0
+        ? fmt(input.monthlyEnergyCost) + '만원/월 입력값 사용'
+        : '월 에너지 비용 미입력 → 면적 기준 자동추정';
+      card.innerHTML = [
+        '<h3>전제 요약</h3>',
+        '<p>빌딩 유형: ' + esc(labelForBuildingType(input.buildingType)) + ' / 지역: ' + esc(labelForRegion(input.region)) + ' / 연면적: ' + fmt(input.area) + '㎡ / 층수: ' + fmt(input.floors) + '층</p>',
+        '<p>에너지 기준선: ' + monthlyCostText + '</p>',
+        '<p>해석 기준: 업계 평균 단가와 절감률을 사용한 개략 검토이며, 실제 계약 전에는 기준선 검증과 정산식 합의가 필요합니다.</p>'
+      ].join('');
+      card.style.display = 'block';
     }
     function renderOptions(options) {
       const grid = document.getElementById('optionsGrid');

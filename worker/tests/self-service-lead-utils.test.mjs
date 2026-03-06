@@ -76,7 +76,7 @@ test('model payload validation allows empty sources and omits score', () => {
         company: 'LG전자',
         project_title: '스마트팩토리 운영 효율화 검토',
         recommended_product: 'Desigo CC',
-        expected_roi: '근거 없음 - 공개 기사 기준 정량 데이터 부족',
+        expected_roi: '근거 없음(추정 불가) - 공개 기사 기준 정량 데이터 부족',
         sales_pitch: '운영 데이터 통합과 설비 최적화를 함께 제안합니다.',
         trend: '제조업 에너지 효율 투자 확대',
         sources: []
@@ -85,4 +85,21 @@ test('model payload validation allows empty sources and omits score', () => {
   };
 
   assert.equal(isValidLeadPayloadSchema(payload), true);
+});
+
+test('response schema normalizes ROI into allowed formats', () => {
+  const payload = createSelfServiceSchemaPayloadWorker([
+    {
+      company: 'LG전자',
+      score: 82,
+      project_title: '스마트팩토리 운영 효율화 검토',
+      recommended_product: 'Desigo CC',
+      expected_roi: '정량 데이터 부족',
+      sales_pitch: '운영 데이터 통합과 설비 최적화를 함께 제안합니다.',
+      trend: '제조업 에너지 효율 투자 확대',
+      sources: []
+    }
+  ], '요약');
+
+  assert.match(payload.leads[0].expected_roi, /^근거 없음\(추정 불가\)/);
 });
