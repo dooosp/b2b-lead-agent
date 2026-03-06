@@ -187,8 +187,9 @@ test('normalizeSalesPitchText replaces marketing copy with project-facing pitch'
     }
   );
 
-  assert.match(normalized, /스마트팩토리 에너지 효율 개선 투자/);
+  assert.match(normalized, /제조 사업/);
   assert.match(normalized, /에너지 관리 시스템/);
+  assert.match(normalized, /현장 인터뷰, 기준선 데이터 수집, 우선 파일럿 범위/);
   assert.doesNotMatch(normalized, /최고의 시청 경험|압도적인 화질/);
 });
 

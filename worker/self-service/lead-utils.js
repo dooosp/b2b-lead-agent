@@ -85,13 +85,26 @@ function articleContextText(article = {}) {
 
 export function normalizeSalesPitchText(value, { company = '', product = '', projectTitle = '', industry = '', article = null, eventType = '' } = {}) {
   const cleaned = normalizeSentenceEnding(value);
-  const context = articleContextText(article);
-  const shouldFallback = !cleaned || STOCK_SALES_PITCH_PATTERNS.some((pattern) => pattern.test(cleaned));
-  if (!shouldFallback && cleaned.includes(company) && cleaned.includes(product)) return cleaned;
+  const isStructured = cleaned
+    && cleaned.includes(company)
+    && cleaned.includes(product)
+    && !STOCK_SALES_PITCH_PATTERNS.some((pattern) => pattern.test(cleaned))
+    && cleaned.length <= 180;
+  if (isStructured) return cleaned;
 
-  const challenge = projectTitle || context || `${industry || '해당 산업'} 운영 과제`;
-  const eventLabel = eventType && eventType !== '기타' ? `${eventType} 이슈` : '운영 개선 과제';
-  return `${company}의 ${challenge}와 직접 연결되는 ${eventLabel}를 우선 확인해야 합니다. ${product} 기준으로 운영 데이터 연계, 투자 우선순위, 정량 효과 검증 항목을 묶어 제안하는 접근이 적합합니다.`;
+  const industryLabel = industry || '해당 산업';
+  const challengeByEvent = {
+    투자: '신규 투자 이후 운영 표준화와 기준선 정리',
+    증설: '증설 이후 설비 데이터 통합과 운영 기준 정리',
+    수주: '수주 이후 인수인계와 운영 전환 준비',
+    착공: '착공 이후 초기 운영 기준선과 관제 범위 설계',
+    규제: '규제 대응을 위한 운영 데이터 증빙 체계 정리',
+    입찰: '입찰 단계의 운영 성과 근거와 제안 차별화 준비',
+    채용: '운영 인력 부담을 줄이기 위한 자동화 범위 정리',
+    기타: '운영 개선 과제와 데이터 연계 범위 정리'
+  };
+  const challenge = challengeByEvent[eventType] || challengeByEvent.기타;
+  return `${company}의 ${industryLabel} 사업에서는 ${challenge}를 먼저 확인해야 합니다. ${product} 기준으로 현장 인터뷰, 기준선 데이터 수집, 우선 파일럿 범위를 묶어 제안하는 접근이 적합합니다.`;
 }
 
 export function normalizeTrendText(value, { industry = '', eventType = '', article = null } = {}) {
