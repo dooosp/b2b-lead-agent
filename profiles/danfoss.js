@@ -1,3 +1,53 @@
+const { buildLegacyProductKnowledge } = require('./product-knowledge');
+
+const productKnowledgeGraph = {
+  'iC7 Marine 드라이브': {
+    aliases: ['Marine용 드라이브', 'iC7 Marine'],
+    targetIndustries: ['조선', '해운', '친환경 선박'],
+    targetPersonas: ['선박 설계팀', '전장/추진 시스템 책임자', '연료 효율 담당'],
+    useCases: ['하이브리드 추진', 'EEXI/CII 대응 선박 개조', '전기 추진 보조 시스템'],
+    painsSolved: ['연료비 상승', '탄소 규제 대응 부담', '선박 전력 계통 효율 저하'],
+    businessOutcomes: ['연료 사용량 절감', '규제 대응 가속', '선박 운영 효율 개선'],
+    technicalRequirements: ['선박 전력 계통 연동', '추진/보조 모터 제어 범위 정의'],
+    integrationConstraints: ['기존 선박 제어 시스템 인터페이스 확인', '도크 일정과 개조 범위 조율'],
+    deploymentComplexity: 'medium',
+    roiDrivers: ['연료 소비 15~18% 절감', '규제 벌금/운항 제한 회피'],
+    proofPoints: ['Maersk 300척 하이브리드 추진', 'MSC LNG 운반선 적용'],
+    differentiators: ['선박 추진 특화 제어', '친환경 선박 규제 대응 레퍼런스'],
+    commonObjections: ['개조 일정 부담', '기존 추진 시스템과의 통합 리스크']
+  },
+  'Turbocor 컴프레서': {
+    aliases: ['Turbocor 오일리스 칠러', '냉각 솔루션'],
+    targetIndustries: ['데이터센터', '콜드체인', '대형 HVAC'],
+    targetPersonas: ['설비 엔지니어', '냉동/냉각 운영 책임자', '에너지 매니저'],
+    useCases: ['데이터센터 냉각 고도화', '콜드체인 오일리스 전환', '고효율 칠러 교체'],
+    painsSolved: ['냉각 전력비 증가', '오일 관리/유지보수 부담', 'PUE 개선 압박'],
+    businessOutcomes: ['냉각 전력 절감', '유지보수 비용 감소', '가동률 향상'],
+    technicalRequirements: ['냉동 사이클 설계 검토', '기존 냉각 인프라 용량 분석'],
+    integrationConstraints: ['기존 칠러 룸 배치 확인', '제어 시스템 연동 범위 협의'],
+    deploymentComplexity: 'medium',
+    roiDrivers: ['냉각 전력 35~40% 절감', '유지보수비 60% 감소'],
+    proofPoints: ['Equinix PUE 1.58→1.25', 'Lineage Logistics 냉각 효율 개선'],
+    differentiators: ['오일리스 압축 기술', '데이터센터/콜드체인 공용 레퍼런스'],
+    commonObjections: ['초기 교체 비용 부담', '기존 냉각 설비와의 호환성 우려']
+  },
+  'VLT AutomationDrive': {
+    aliases: ['VLT HVAC Drive', 'VACON NXP', 'VACON 100'],
+    targetIndustries: ['제조', '스마트팩토리', '배터리/반도체'],
+    targetPersonas: ['공장장', '생산기술팀', '설비 자동화 엔지니어'],
+    useCases: ['모터 제어 최적화', '라인 에너지 절감', '설비 표준 드라이브 교체'],
+    painsSolved: ['모터 전력비 과다', '라인별 제어 표준 부재', '탄소 대응 압박'],
+    businessOutcomes: ['생산라인 에너지 절감', '설비 제어 안정화', '운영 표준화'],
+    technicalRequirements: ['기존 PLC/모터 사양 확인', '라인별 부하 패턴 분석'],
+    integrationConstraints: ['기존 제어반 교체 범위 산정', '정지시간 최소화 계획 필요'],
+    deploymentComplexity: 'medium',
+    roiDrivers: ['전력 소비 20~35% 절감', '라인 효율 개선'],
+    proofPoints: ['Volkswagen EV 공장 적용', 'Samsung SDI 배터리 공장 자동화'],
+    differentiators: ['산업 모터 구동 특화', '제조/에너지 절감 동시 레퍼런스'],
+    commonObjections: ['라인 다운타임 우려', '기존 자동화 표준과 충돌 가능성']
+  }
+};
+
 module.exports = {
   id: 'danfoss',
   name: '댄포스 코리아',
@@ -12,20 +62,8 @@ module.exports = {
     cooling: ['Turbocor 컴프레서', '냉각 솔루션']
   },
 
-  productKnowledge: {
-    'iC7 / VLT Drives': {
-      value: '모터 속도 제어로 에너지 20~50% 절감',
-      roi: '기존 정속 모터 대비 전력 소비 30% 감소 가정'
-    },
-    'Turbocor 컴프레서': {
-      value: '오일리스 기술로 효율 40% 향상, 유지보수비 급감',
-      roi: '데이터센터/냉동창고 전력비 35% 절감 가정'
-    },
-    '선박용 하이브리드': {
-      value: '탄소 배출 규제(EEXI/CII) 완벽 대응',
-      roi: '연료 소비 15% 절감 및 규제 벌금 회피 비용 산출'
-    }
-  },
+  productKnowledgeGraph,
+  productKnowledge: buildLegacyProductKnowledge(productKnowledgeGraph),
 
   searchQueries: [
     '친환경 선박 수주',

@@ -1,3 +1,53 @@
+const { buildLegacyProductKnowledge } = require('./product-knowledge');
+
+const productKnowledgeGraph = {
+  'GSIS 가스절연개폐장치': {
+    aliases: ['Green GIS', 'MV 변압기', '배전반'],
+    targetIndustries: ['전력 인프라', '변전소', '대형 산업 설비'],
+    targetPersonas: ['전력 설계팀', '변전소 운영 책임자', 'CAPEX 의사결정자'],
+    useCases: ['노후 변전소 교체', '신규 배전 인프라 구축', '도심형 전력 설비 집약화'],
+    painsSolved: ['설치 공간 부족', '유지보수 비용 증가', '노후 설비 교체 압박'],
+    businessOutcomes: ['설치 면적 축소', '유지보수비 절감', '설비 수명 연장'],
+    technicalRequirements: ['전압 등급/설치 환경 검토', '기존 배전 설비 인터페이스 확인'],
+    integrationConstraints: ['정전 일정 조율', '도심형 공간 제약 반영'],
+    deploymentComplexity: 'high',
+    roiDrivers: ['설치면적 60% 축소', '유지보수비 40% 절감'],
+    proofPoints: ['Saudi Aramco GIS 공급', 'KEPCO 345kV 변전소 현대화'],
+    differentiators: ['대형 전력 인프라 납품 레퍼런스', '공간 효율성'],
+    commonObjections: ['초기 CAPEX 부담', '설치 중 정전 리스크']
+  },
+  'XGT PLC + XDL 서보': {
+    aliases: ['XGT PLC', 'XDL 서보드라이브', 'SMART I/O'],
+    targetIndustries: ['스마트팩토리', '배터리', '자동차 조립'],
+    targetPersonas: ['생산기술팀', '자동화 엔지니어', '공장장'],
+    useCases: ['생산라인 자동화', '고속 정밀 제어', '라인 표준 PLC/서보 교체'],
+    painsSolved: ['생산성 병목', '불량률 증가', '라인 제어 표준 부재'],
+    businessOutcomes: ['생산성 향상', '불량률 감소', '유연 생산 체계 확보'],
+    technicalRequirements: ['PLC/서보 네트워크 설계', '라인별 사이클타임 분석'],
+    integrationConstraints: ['기존 MES/SCADA 연동 범위 확인', '라인 다운타임 최소화 필요'],
+    deploymentComplexity: 'medium',
+    roiDrivers: ['생산성 20% 향상', '불량률 30% 감소'],
+    proofPoints: ['LG에너지솔루션 배터리 공장', 'Hyundai Motors EV 조립 라인'],
+    differentiators: ['고속 EtherCAT 기반 제어', '배터리/자동차 라인 레퍼런스'],
+    commonObjections: ['기존 PLC 표준 변경 부담', '서보 튜닝 복잡도 우려']
+  },
+  'ESS + 태양광 인버터': {
+    aliases: ['태양광 인버터', 'ESS(에너지저장장치)', 'EV 충전기'],
+    targetIndustries: ['신재생', 'RE100', '대형 산업단지'],
+    targetPersonas: ['에너지 전략팀', '전력 운영 책임자', 'ESG 담당'],
+    useCases: ['피크 저감', '신재생 연계 저장', 'RE100 전력 운영 최적화'],
+    painsSolved: ['전력 피크 요금 부담', '신재생 출력 변동성', 'RE100 이행 압박'],
+    businessOutcomes: ['전기요금 절감', '계통 안정성 확보', '재생에너지 활용도 향상'],
+    technicalRequirements: ['부하 패턴 분석', '계통 연계 조건 확인'],
+    integrationConstraints: ['부지/배전 설비 제약 검토', '계통 연결 인허가 일정 반영'],
+    deploymentComplexity: 'medium',
+    roiDrivers: ['전력 피크 저감 25%', '전기요금 15~20% 절감'],
+    proofPoints: ['한국전력 제주 ESS 실증', 'Hanwha Q Cells 태양광 발전소'],
+    differentiators: ['ESS-인버터 패키지 제안', 'RE100/계통 안정성 동시 대응'],
+    commonObjections: ['배터리 수명 우려', '계통 연계 승인 일정 불확실성']
+  }
+};
+
 module.exports = {
   id: 'ls-electric',
   name: 'LS일렉트릭',
@@ -12,20 +62,8 @@ module.exports = {
     grid: ['STATCOM', 'SVC', 'HVDC 시스템', '전력품질 솔루션']
   },
 
-  productKnowledge: {
-    'GSIS 가스절연개폐장치': {
-      value: 'SF6 가스 사용량 50% 저감, 설치면적 60% 축소',
-      roi: '기존 AIS 대비 유지보수비 40% 절감, 수명 30년+'
-    },
-    'XGT PLC/서보 시스템': {
-      value: 'EtherCAT 기반 고속제어, 사이클타임 250us',
-      roi: '생산성 20% 향상, 불량률 30% 감소'
-    },
-    'ESS/태양광 인버터': {
-      value: 'RE100 이행 핵심 인프라, 계통연계 기술 보유',
-      roi: '전력 피크 저감 25%, 전기요금 연 15~20% 절감'
-    }
-  },
+  productKnowledgeGraph,
+  productKnowledge: buildLegacyProductKnowledge(productKnowledgeGraph),
 
   searchQueries: [
     '전력 인프라 투자',

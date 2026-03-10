@@ -1,3 +1,5 @@
+import { getProductKnowledgeEntry, getProductKnowledgeTerms } from './product-knowledge.js';
+
 const COMPANY_NAME_MAX_LEN = 40;
 const COMPANY_NAME_RE = /^[\p{L}0-9 .,&()\-]+$/u;
 const PLACEHOLDER_RE = /\{[^}]{1,40}\}/g;
@@ -371,9 +373,9 @@ export function chooseProductForArticle(profile, article, category = '') {
       if (normalizedKeyword && text.includes(normalizedKeyword)) score += 1;
     }
 
-    const knowledge = profile && profile.productKnowledge && profile.productKnowledge[candidate.name];
+    const knowledge = getProductKnowledgeEntry(profile, candidate.name);
     if (knowledge && typeof knowledge === 'object') {
-      for (const term of [...getHintTerms(knowledge.value), ...getHintTerms(knowledge.roi)]) {
+      for (const term of getProductKnowledgeTerms(knowledge).flatMap((text) => getHintTerms(text))) {
         if (term && text.includes(term)) score += 1;
       }
     }

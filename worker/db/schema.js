@@ -24,6 +24,24 @@ export async function ensureD1Schema(db) {
         action_items TEXT DEFAULT '[]',
         key_figures TEXT DEFAULT '[]',
         pain_points TEXT DEFAULT '[]',
+        pain_summary TEXT DEFAULT '',
+        business_impact TEXT DEFAULT '',
+        likely_initiative TEXT DEFAULT '',
+        stakeholder_hint TEXT DEFAULT '',
+        signal_strength INTEGER DEFAULT 0,
+        meddic TEXT DEFAULT '{}',
+        competitive TEXT DEFAULT '{}',
+        buying_signals TEXT DEFAULT '[]',
+        score_reason TEXT DEFAULT '',
+        urgency TEXT DEFAULT '',
+        urgency_reason TEXT DEFAULT '',
+        buyer_role TEXT DEFAULT '',
+        evidence TEXT DEFAULT '[]',
+        confidence TEXT DEFAULT '',
+        confidence_reason TEXT DEFAULT '',
+        assumptions TEXT DEFAULT '[]',
+        missing_information TEXT DEFAULT '[]',
+        event_type TEXT DEFAULT '',
         enriched_at TEXT,
         follow_up_date TEXT DEFAULT '',
         estimated_value INTEGER DEFAULT 0,
@@ -53,7 +71,30 @@ export async function ensureD1Schema(db) {
         to_status TEXT NOT NULL,
         changed_at TEXT NOT NULL
       )`),
-      db.prepare('CREATE INDEX IF NOT EXISTS idx_status_log_lead ON status_log(lead_id)')
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_status_log_lead ON status_log(lead_id)'),
+      db.prepare(`CREATE TABLE IF NOT EXISTS company_signals (
+        id TEXT PRIMARY KEY,
+        lead_id TEXT NOT NULL,
+        profile_id TEXT NOT NULL DEFAULT 'self-service',
+        company TEXT NOT NULL,
+        signal_type TEXT NOT NULL,
+        signal_source TEXT NOT NULL,
+        source_url TEXT DEFAULT '',
+        source_title TEXT DEFAULT '',
+        source_published_at TEXT DEFAULT '',
+        signal_strength INTEGER DEFAULT 0,
+        recency_score INTEGER DEFAULT 0,
+        trust_score INTEGER DEFAULT 0,
+        pain_hint TEXT DEFAULT '',
+        urgency_hint TEXT DEFAULT '',
+        business_impact_hint TEXT DEFAULT '',
+        raw_excerpt TEXT DEFAULT '',
+        structured_evidence_json TEXT DEFAULT '{}',
+        created_at TEXT NOT NULL
+      )`),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_company_signals_lead ON company_signals(lead_id, created_at DESC)'),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_company_signals_company ON company_signals(profile_id, company, created_at DESC)'),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_company_signals_source_published ON company_signals(source_published_at DESC)')
     ]).then(async () => {
       const alterCols = [
         "ALTER TABLE leads ADD COLUMN enriched INTEGER DEFAULT 0",
@@ -61,6 +102,11 @@ export async function ensureD1Schema(db) {
         "ALTER TABLE leads ADD COLUMN action_items TEXT DEFAULT '[]'",
         "ALTER TABLE leads ADD COLUMN key_figures TEXT DEFAULT '[]'",
         "ALTER TABLE leads ADD COLUMN pain_points TEXT DEFAULT '[]'",
+        "ALTER TABLE leads ADD COLUMN pain_summary TEXT DEFAULT ''",
+        "ALTER TABLE leads ADD COLUMN business_impact TEXT DEFAULT ''",
+        "ALTER TABLE leads ADD COLUMN likely_initiative TEXT DEFAULT ''",
+        "ALTER TABLE leads ADD COLUMN stakeholder_hint TEXT DEFAULT ''",
+        "ALTER TABLE leads ADD COLUMN signal_strength INTEGER DEFAULT 0",
         "ALTER TABLE leads ADD COLUMN enriched_at TEXT",
         "ALTER TABLE leads ADD COLUMN follow_up_date TEXT DEFAULT ''",
         "ALTER TABLE leads ADD COLUMN estimated_value INTEGER DEFAULT 0",
@@ -75,11 +121,35 @@ export async function ensureD1Schema(db) {
         "ALTER TABLE leads ADD COLUMN confidence TEXT DEFAULT ''",
         "ALTER TABLE leads ADD COLUMN confidence_reason TEXT DEFAULT ''",
         "ALTER TABLE leads ADD COLUMN assumptions TEXT DEFAULT '[]'",
+        "ALTER TABLE leads ADD COLUMN missing_information TEXT DEFAULT '[]'",
         "ALTER TABLE leads ADD COLUMN event_type TEXT DEFAULT ''"
       ];
       for (const sql of alterCols) {
         try { await db.prepare(sql).run(); } catch { /* column already exists */ }
       }
+      try { await db.prepare(`CREATE TABLE IF NOT EXISTS company_signals (
+        id TEXT PRIMARY KEY,
+        lead_id TEXT NOT NULL,
+        profile_id TEXT NOT NULL DEFAULT 'self-service',
+        company TEXT NOT NULL,
+        signal_type TEXT NOT NULL,
+        signal_source TEXT NOT NULL,
+        source_url TEXT DEFAULT '',
+        source_title TEXT DEFAULT '',
+        source_published_at TEXT DEFAULT '',
+        signal_strength INTEGER DEFAULT 0,
+        recency_score INTEGER DEFAULT 0,
+        trust_score INTEGER DEFAULT 0,
+        pain_hint TEXT DEFAULT '',
+        urgency_hint TEXT DEFAULT '',
+        business_impact_hint TEXT DEFAULT '',
+        raw_excerpt TEXT DEFAULT '',
+        structured_evidence_json TEXT DEFAULT '{}',
+        created_at TEXT NOT NULL
+      )`).run(); } catch { /* table already exists */ }
+      try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_company_signals_lead ON company_signals(lead_id, created_at DESC)').run(); } catch { /* index exists */ }
+      try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_company_signals_company ON company_signals(profile_id, company, created_at DESC)').run(); } catch { /* index exists */ }
+      try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_company_signals_source_published ON company_signals(source_published_at DESC)').run(); } catch { /* index exists */ }
       await db.prepare(`CREATE TABLE IF NOT EXISTS reference_library (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         profile_id TEXT NOT NULL,

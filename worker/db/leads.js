@@ -5,21 +5,31 @@ export async function saveLeadsBatch(db, leads, profileId, source) {
   if (!db || !leads || leads.length === 0) return;
   await ensureD1Schema(db);
   const stmt = db.prepare(
-    `INSERT INTO leads (id, profile_id, source, status, company, summary, product, score, grade, roi, sales_pitch, global_context, sources, notes, score_reason, urgency, urgency_reason, buyer_role, evidence, confidence, confidence_reason, assumptions, event_type, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO leads (id, profile_id, source, status, company, summary, product, score, grade, roi, sales_pitch, global_context, sources, notes, score_reason, urgency, urgency_reason, buyer_role, pain_summary, business_impact, likely_initiative, stakeholder_hint, signal_strength, evidence, confidence, confidence_reason, assumptions, missing_information, event_type, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        summary=excluded.summary, product=excluded.product, score=excluded.score,
        grade=excluded.grade, roi=excluded.roi, sales_pitch=excluded.sales_pitch,
        global_context=excluded.global_context, sources=excluded.sources,
        score_reason=excluded.score_reason, urgency=excluded.urgency,
        urgency_reason=excluded.urgency_reason, buyer_role=excluded.buyer_role,
+       pain_summary=excluded.pain_summary, business_impact=excluded.business_impact,
+       likely_initiative=excluded.likely_initiative, stakeholder_hint=excluded.stakeholder_hint,
+       signal_strength=excluded.signal_strength,
        evidence=excluded.evidence, confidence=excluded.confidence,
        confidence_reason=excluded.confidence_reason, assumptions=excluded.assumptions,
+       missing_information=excluded.missing_information,
        event_type=excluded.event_type, updated_at=excluded.updated_at`
   );
   const batch = leads.map(lead => {
     const r = leadToRow(lead, profileId, source);
-    return stmt.bind(r.id, r.profile_id, r.source, r.status, r.company, r.summary, r.product, r.score, r.grade, r.roi, r.sales_pitch, r.global_context, r.sources, r.notes, r.score_reason, r.urgency, r.urgency_reason, r.buyer_role, r.evidence, r.confidence, r.confidence_reason, r.assumptions, r.event_type, r.created_at, r.updated_at);
+    return stmt.bind(
+      r.id, r.profile_id, r.source, r.status, r.company, r.summary, r.product, r.score, r.grade, r.roi,
+      r.sales_pitch, r.global_context, r.sources, r.notes, r.score_reason, r.urgency, r.urgency_reason,
+      r.buyer_role, r.pain_summary, r.business_impact, r.likely_initiative, r.stakeholder_hint,
+      r.signal_strength, r.evidence, r.confidence, r.confidence_reason, r.assumptions,
+      r.missing_information, r.event_type, r.created_at, r.updated_at
+    );
   });
   await db.batch(batch);
 }
@@ -96,15 +106,19 @@ export async function updateLeadEnrichment(db, id, enrichData, articleBody) {
       enriched = 1,
       summary = ?, roi = ?, sales_pitch = ?, global_context = ?,
       article_body = ?, action_items = ?, key_figures = ?, pain_points = ?,
+      pain_summary = ?, business_impact = ?, likely_initiative = ?, stakeholder_hint = ?,
+      signal_strength = ?, urgency = ?, urgency_reason = ?, buyer_role = ?,
       meddic = ?, competitive = ?, buying_signals = ?,
-      evidence = ?, assumptions = ?,
+      evidence = ?, confidence = ?, confidence_reason = ?, assumptions = ?, missing_information = ?,
       enriched_at = ?, updated_at = ?
     WHERE id = ?`
   ).bind(
     enrichData.summary || '', enrichData.roi || '', enrichData.salesPitch || '', enrichData.globalContext || '',
     articleBody || '', JSON.stringify(enrichData.actionItems || []), JSON.stringify(enrichData.keyFigures || []), JSON.stringify(enrichData.painPoints || []),
+    enrichData.painPoint || '', enrichData.businessImpact || '', enrichData.likelyInitiative || '', enrichData.stakeholderHint || '',
+    Number(enrichData.signalStrength) || 0, enrichData.urgency || '', enrichData.urgencyReason || '', enrichData.stakeholderHint || enrichData.buyerRole || '',
     JSON.stringify(enrichData.meddic || {}), JSON.stringify(enrichData.competitive || {}), JSON.stringify(enrichData.buyingSignals || []),
-    JSON.stringify(enrichData.evidence || []), JSON.stringify(enrichData.assumptions || []),
+    JSON.stringify(enrichData.evidence || []), enrichData.confidence || '', enrichData.confidenceReason || '', JSON.stringify(enrichData.assumptions || []), JSON.stringify(enrichData.missingInformation || []),
     now, now, id
   ).run();
   return true;

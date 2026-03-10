@@ -1,4 +1,5 @@
 import { callGemini } from '../lib/gemini.js';
+import { buildLegacyProductKnowledge } from './product-knowledge.js';
 
 const SOLUTION_BLUEPRINTS = Object.freeze([
   {
@@ -7,18 +8,48 @@ const SOLUTION_BLUEPRINTS = Object.freeze([
       automation: ['스마트팩토리 운영 플랫폼', '설비 예지보전 솔루션'],
       energy: ['산업 에너지 관리 시스템']
     },
-    productKnowledge: {
+    productKnowledgeGraph: {
       '스마트팩토리 운영 플랫폼': {
-        value: '생산라인 운영 표준화와 설비 가동 데이터 통합',
-        roi: '정지시간 감소와 생산성 개선 검증에 적합'
+        targetIndustries: ['제조', '반도체', '배터리'],
+        targetPersonas: ['생산기술팀', '공장장'],
+        useCases: ['생산라인 운영 표준화', '설비 데이터 통합'],
+        painsSolved: ['라인별 운영 기준 불일치', '설비 데이터 단절'],
+        businessOutcomes: ['생산성 개선', '운영 표준화'],
+        technicalRequirements: ['설비 데이터 수집', '라인 시스템 연동'],
+        integrationConstraints: ['MES/SCADA 연동 범위 확인'],
+        deploymentComplexity: 'medium',
+        roiDrivers: ['정지시간 감소', '생산성 개선'],
+        proofPoints: ['라인 운영 표준화 프로젝트'],
+        differentiators: ['운영 데이터 통합'],
+        commonObjections: ['기존 시스템 연동 부담']
       },
       '설비 예지보전 솔루션': {
-        value: '설비 이상 징후 조기 탐지와 유지보수 우선순위 정렬',
-        roi: '정지시간과 긴급 유지보수 비용 절감에 적합'
+        targetIndustries: ['제조', '물류', '에너지 다소비 설비'],
+        targetPersonas: ['설비보전팀', '생산기술팀'],
+        useCases: ['이상 징후 조기 탐지', '정비 우선순위 관리'],
+        painsSolved: ['돌발 정지', '긴급 유지보수 비용'],
+        businessOutcomes: ['정지시간 감소', '정비 효율화'],
+        technicalRequirements: ['설비 이력/센서 데이터 확보'],
+        integrationConstraints: ['기존 CMMS 연동 검토'],
+        deploymentComplexity: 'medium',
+        roiDrivers: ['긴급 유지보수 비용 절감', '가동률 개선'],
+        proofPoints: ['핵심 설비 모니터링 고도화'],
+        differentiators: ['정비 우선순위 자동화'],
+        commonObjections: ['학습 데이터 부족 우려']
       },
       '산업 에너지 관리 시스템': {
-        value: '전력 사용량, 피크 부하, 설비별 에너지 원단위 가시화',
-        roi: '에너지 비용 절감과 ESG 대응 검증에 적합'
+        targetIndustries: ['제조', '에너지 집약 산업'],
+        targetPersonas: ['에너지 매니저', 'ESG 담당'],
+        useCases: ['전력 피크 관리', '설비별 원단위 가시화'],
+        painsSolved: ['에너지 비용 증가', 'ESG 대응 부담'],
+        businessOutcomes: ['전기요금 절감', '탄소 대응'],
+        technicalRequirements: ['전력 데이터 수집', '설비별 계측기 연결'],
+        integrationConstraints: ['기존 계측기/EMS 연동 범위 확인'],
+        deploymentComplexity: 'medium',
+        roiDrivers: ['에너지 비용 절감', '피크 부하 저감'],
+        proofPoints: ['에너지 원단위 관리 체계'],
+        differentiators: ['설비별 원단위 분석'],
+        commonObjections: ['계측 데이터 품질 우려']
       }
     },
     categoryRules: {
@@ -50,18 +81,48 @@ const SOLUTION_BLUEPRINTS = Object.freeze([
       building: ['빌딩 통합관제 플랫폼', '에너지 최적화 솔루션'],
       project: ['프로젝트 운영 데이터 허브']
     },
-    productKnowledge: {
+    productKnowledgeGraph: {
       '빌딩 통합관제 플랫폼': {
-        value: '설비, 에너지, 운영 이벤트를 하나의 화면에서 통합 관리',
-        roi: '운영 인력 효율화와 장애 대응 시간 단축 검증에 적합'
+        targetIndustries: ['건설', '오피스', '빌딩 운영'],
+        targetPersonas: ['시설관리팀', '자산 운영 책임자'],
+        useCases: ['설비/에너지 통합 관제', '운영 이벤트 통합'],
+        painsSolved: ['설비 시스템 분절', '장애 대응 지연'],
+        businessOutcomes: ['운영 효율 개선', '장애 대응 시간 단축'],
+        technicalRequirements: ['설비 포인트 맵 확보'],
+        integrationConstraints: ['기존 BAS/BMS 연동 검토'],
+        deploymentComplexity: 'medium',
+        roiDrivers: ['운영 인력 효율화', '장애 대응 시간 단축'],
+        proofPoints: ['빌딩 운영 통합 프로젝트'],
+        differentiators: ['운영/에너지 이벤트 통합'],
+        commonObjections: ['기존 BAS 교체 부담']
       },
       '에너지 최적화 솔루션': {
-        value: '빌딩 에너지 사용량 가시화와 피크 관리 자동화',
-        roi: '운영비 절감과 ESG 대응 검증에 적합'
+        targetIndustries: ['빌딩', '상업시설'],
+        targetPersonas: ['에너지 전략팀', '시설 운영팀'],
+        useCases: ['에너지 사용량 가시화', '피크 관리'],
+        painsSolved: ['운영비 증가', 'ESG 보고 부담'],
+        businessOutcomes: ['운영비 절감', '탄소 대응'],
+        technicalRequirements: ['전력 계측 데이터 확보'],
+        integrationConstraints: ['기존 설비 데이터 연결 범위 확인'],
+        deploymentComplexity: 'medium',
+        roiDrivers: ['에너지 비용 절감', '피크 부하 저감'],
+        proofPoints: ['빌딩 에너지 최적화 프로젝트'],
+        differentiators: ['운영 데이터와 에너지 분석 결합'],
+        commonObjections: ['기준선 데이터 부족']
       },
       '프로젝트 운영 데이터 허브': {
-        value: '시공, 인수인계, 운영 전환 데이터를 연결하는 프로젝트 데이터 체계',
-        roi: '운영 전환 리스크 감소와 보고 체계 표준화에 적합'
+        targetIndustries: ['건설', '디벨로퍼'],
+        targetPersonas: ['개발 PM', '운영 전환 팀'],
+        useCases: ['시공-운영 인수인계 표준화', '프로젝트 KPI 연결'],
+        painsSolved: ['운영 전환 리스크', '보고 체계 불일치'],
+        businessOutcomes: ['운영 전환 안정화', '보고 체계 표준화'],
+        technicalRequirements: ['프로젝트 문서/운영 KPI 연결'],
+        integrationConstraints: ['시공/운영 시스템 데이터 구조 조율'],
+        deploymentComplexity: 'medium',
+        roiDrivers: ['운영 전환 리스크 감소', '보고 시간 절감'],
+        proofPoints: ['프로젝트 인수인계 데이터 표준화'],
+        differentiators: ['시공-운영 데이터 연결'],
+        commonObjections: ['시공/운영 조직 협업 부담']
       }
     },
     categoryRules: {
@@ -93,18 +154,48 @@ const SOLUTION_BLUEPRINTS = Object.freeze([
       logistics: ['물류 운영 가시화 플랫폼', '에너지 최적화 솔루션'],
       maintenance: ['설비 예지보전 솔루션']
     },
-    productKnowledge: {
+    productKnowledgeGraph: {
       '물류 운영 가시화 플랫폼': {
-        value: '창고, 설비, 온도, 운영 이벤트의 실시간 통합 모니터링',
-        roi: '운영 병목 해소와 SLA 대응 검증에 적합'
+        targetIndustries: ['물류', '유통', '풀필먼트'],
+        targetPersonas: ['센터 운영 책임자', '물류 기획팀'],
+        useCases: ['센터 운영 모니터링', '온도/설비 이벤트 통합'],
+        painsSolved: ['운영 병목 파악 어려움', 'SLA 대응 지연'],
+        businessOutcomes: ['운영 병목 해소', 'SLA 대응 강화'],
+        technicalRequirements: ['센터 운영 데이터 수집'],
+        integrationConstraints: ['WMS/설비 데이터 연동 범위 정의'],
+        deploymentComplexity: 'medium',
+        roiDrivers: ['운영 효율 개선', '센터 대응 시간 단축'],
+        proofPoints: ['센터 운영 가시화 체계'],
+        differentiators: ['운영/설비/온도 통합 모니터링'],
+        commonObjections: ['현장 데이터 연결 복잡도']
       },
       '에너지 최적화 솔루션': {
-        value: '센터별 전력 사용량과 냉난방 부하 가시화',
-        roi: '에너지 비용 절감 검증에 적합'
+        targetIndustries: ['물류', '리테일'],
+        targetPersonas: ['시설팀', '에너지 담당'],
+        useCases: ['센터 전력 모니터링', '냉난방 부하 최적화'],
+        painsSolved: ['에너지 비용 증가', '냉난방 부하 가시성 부족'],
+        businessOutcomes: ['전기요금 절감', '센터 운영 안정화'],
+        technicalRequirements: ['전력 계측/부하 데이터 확보'],
+        integrationConstraints: ['기존 BMS/EMS 데이터 연계 확인'],
+        deploymentComplexity: 'medium',
+        roiDrivers: ['에너지 비용 절감'],
+        proofPoints: ['센터별 에너지 원단위 개선'],
+        differentiators: ['센터 단위 비교 분석'],
+        commonObjections: ['계측 데이터 미비']
       },
       '설비 예지보전 솔루션': {
-        value: '핵심 설비 이상 징후 조기 탐지',
-        roi: '장애 예방과 유지보수 비용 절감 검증에 적합'
+        targetIndustries: ['물류', '냉동/냉장 시설'],
+        targetPersonas: ['시설 유지보수팀', '센터 운영 책임자'],
+        useCases: ['핵심 설비 이상 징후 탐지', '장애 예방'],
+        painsSolved: ['설비 장애', '유지보수 비용 증가'],
+        businessOutcomes: ['장애 예방', '유지보수 비용 절감'],
+        technicalRequirements: ['설비 상태 데이터 확보'],
+        integrationConstraints: ['설비 벤더별 인터페이스 확인'],
+        deploymentComplexity: 'medium',
+        roiDrivers: ['장애 예방', '긴급 수리 비용 절감'],
+        proofPoints: ['핵심 설비 모니터링 구축'],
+        differentiators: ['설비 이상 징후 선제 탐지'],
+        commonObjections: ['설비 데이터 부족']
       }
     },
     categoryRules: {
@@ -137,14 +228,34 @@ function buildDefaultBlueprint() {
     products: {
       core: ['운영 데이터 통합 플랫폼', '에너지 최적화 솔루션']
     },
-    productKnowledge: {
+    productKnowledgeGraph: {
       '운영 데이터 통합 플랫폼': {
-        value: '운영 이벤트와 설비 데이터를 연결해 의사결정 속도를 높임',
-        roi: '운영 효율 개선 검증에 적합'
+        targetIndustries: ['범용 B2B'],
+        targetPersonas: ['운영 책임자', '디지털전환 담당'],
+        useCases: ['운영 이벤트/설비 데이터 통합'],
+        painsSolved: ['운영 데이터 단절'],
+        businessOutcomes: ['의사결정 속도 향상'],
+        technicalRequirements: ['기본 운영 데이터 연결'],
+        integrationConstraints: ['기존 운영 시스템 매핑 필요'],
+        deploymentComplexity: 'medium',
+        roiDrivers: ['운영 효율 개선'],
+        proofPoints: ['운영 데이터 통합 프로젝트'],
+        differentiators: ['운영/설비 데이터 연결'],
+        commonObjections: ['시스템 연결 범위 불명확']
       },
       '에너지 최적화 솔루션': {
-        value: '에너지 사용량과 피크 부하를 가시화하고 최적화',
-        roi: '에너지 비용 절감 검증에 적합'
+        targetIndustries: ['범용 B2B'],
+        targetPersonas: ['에너지 담당', '시설팀'],
+        useCases: ['에너지 사용량 가시화', '피크 부하 최적화'],
+        painsSolved: ['에너지 비용 증가'],
+        businessOutcomes: ['전기요금 절감'],
+        technicalRequirements: ['에너지 데이터 확보'],
+        integrationConstraints: ['기존 계측 인프라 확인'],
+        deploymentComplexity: 'medium',
+        roiDrivers: ['에너지 비용 절감'],
+        proofPoints: ['에너지 최적화 프로젝트'],
+        differentiators: ['피크 부하 최적화'],
+        commonObjections: ['기준선 데이터 부족']
       }
     },
     categoryRules: {
@@ -170,7 +281,8 @@ export function buildDeterministicSolutionProfile(company, industry) {
     industry,
     competitors: [],
     products: blueprint.products,
-    productKnowledge: blueprint.productKnowledge,
+    productKnowledgeGraph: blueprint.productKnowledgeGraph,
+    productKnowledge: buildLegacyProductKnowledge(blueprint.productKnowledgeGraph),
     searchQueries: [
       `${company} ${industry} 투자`,
       `${company} ${industry} 수주`,

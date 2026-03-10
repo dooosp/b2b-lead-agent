@@ -1,4 +1,5 @@
 const { createLLMClient } = require('./lib/llm-client');
+const { formatKnowledgeBase } = require('./profiles/product-knowledge');
 
 // 키워드 기반 카테고리 분류 → 관련 레퍼런스만 선별
 function categorizeArticles(articles, profile) {
@@ -44,9 +45,11 @@ async function analyzeLeads(articles, profile) {
   }).join('\n\n');
 
   // 제품 지식 베이스 문자열 생성
-  const knowledgeBase = Object.entries(profile.productKnowledge)
-    .map(([name, info]) => `- ${name}: 핵심가치="${info.value}", ROI="${info.roi}"`)
-    .join('\n');
+  const knowledgeBase = profile.productKnowledgeGraph
+    ? formatKnowledgeBase(profile.productKnowledgeGraph)
+    : Object.entries(profile.productKnowledge)
+        .map(([name, info]) => `- ${name}: 핵심가치="${info.value}", ROI="${info.roi}"`)
+        .join('\n');
 
   // 제품 라인업 문자열 생성
   const productLineup = Object.entries(profile.products)

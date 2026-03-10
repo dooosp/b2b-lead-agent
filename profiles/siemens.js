@@ -1,3 +1,53 @@
+const { buildLegacyProductKnowledge } = require('./product-knowledge');
+
+const productKnowledgeGraph = {
+  'Desigo CC': {
+    aliases: ['Desigo CC 통합 빌딩관리', 'APOGEE', 'Climatix'],
+    targetIndustries: ['빌딩 운영', '오피스', '공공시설'],
+    targetPersonas: ['시설관리 책임자', '빌딩 운영팀', '에너지 매니저'],
+    useCases: ['통합 BMS 구축', 'HVAC/조명/전력 통합 관제', '노후 빌딩 운영 현대화'],
+    painsSolved: ['설비 시스템 분절', '운영 인력 과다 투입', '에너지 사용 가시성 부족'],
+    businessOutcomes: ['운영 효율 개선', '에너지 절감', '통합 관제 기반 확보'],
+    technicalRequirements: ['기존 BAS/BMS 인터페이스 파악', '설비 포인트 맵 정리'],
+    integrationConstraints: ['서드파티 설비 연동 범위 조정', '현장 운영 중 무중단 전환 설계'],
+    deploymentComplexity: 'medium',
+    roiDrivers: ['에너지 비용 25~40% 절감', '운영 인력 30% 절감'],
+    proofPoints: ['Changi Airport 터미널 4', 'Deutsche Bank HQ BMS 현대화'],
+    differentiators: ['HVAC/조명/방재 통합', '대형 빌딩 운영 레퍼런스'],
+    commonObjections: ['기존 BAS 교체 부담', '포인트 통합 비용 우려']
+  },
+  'Building X': {
+    aliases: ['Building Performance', 'Energy Analytics'],
+    targetIndustries: ['스마트빌딩', 'ESCO', '데이터센터'],
+    targetPersonas: ['디지털전환 책임자', '에너지 전략팀', '자산 운영 총괄'],
+    useCases: ['클라우드 에너지 최적화', '디지털 트윈 기반 운영 분석', '멀티사이트 성과 비교'],
+    painsSolved: ['자산별 운영 데이터 단절', '탄소/ESG 보고 부담', '현장별 최적화 속도 저하'],
+    businessOutcomes: ['탄소배출 감축', '운영비 절감', '멀티사이트 표준화'],
+    technicalRequirements: ['클라우드 연결', '센서/BMS 데이터 수집 체계'],
+    integrationConstraints: ['기존 관제 데이터 품질 확인', '보안/클라우드 정책 검토'],
+    deploymentComplexity: 'medium',
+    roiDrivers: ['운영비 15% 절감', '탄소배출 20% 감축'],
+    proofPoints: ['Mercedes-Benz Factory 56', 'Siemens HQ 넷제로 리노베이션'],
+    differentiators: ['클라우드 기반 확장성', '에너지/탄소 분석 결합'],
+    commonObjections: ['클라우드 보안 우려', '현장 데이터 정합성 부족']
+  },
+  'Cerberus PRO': {
+    aliases: ['Cerberus PRO 화재감지', 'Sinteso', 'FC726 화재감지기'],
+    targetIndustries: ['초고층', '공항', '반도체/클린룸'],
+    targetPersonas: ['안전관리 책임자', '소방 설계팀', '시설 운영팀'],
+    useCases: ['초고층 화재 감지', '클린룸 특수 감지', '공항/복합시설 안전 고도화'],
+    painsSolved: ['오보 과다', '대형 시설 피난 리스크', '규제 대응 부담'],
+    businessOutcomes: ['인명 안전 강화', '오보율 감소', '보험/규제 대응 개선'],
+    technicalRequirements: ['기존 소방 루프 구성 파악', '감지 포인트별 위험 시나리오 정의'],
+    integrationConstraints: ['기존 소방 시스템 교체 범위 검토', '법규 인증 일정 반영'],
+    deploymentComplexity: 'high',
+    roiDrivers: ['오보율 90% 감소', '보험료 15% 절감'],
+    proofPoints: ['Lotte World Tower', 'Heathrow Airport'],
+    differentiators: ['EN54/UL 인증', '초고층/공항 레퍼런스'],
+    commonObjections: ['법규 승인 일정 우려', '기존 소방 인프라 교체 비용 부담']
+  }
+};
+
 module.exports = {
   id: 'siemens',
   name: '지멘스 Smart Infra',
@@ -12,24 +62,8 @@ module.exports = {
     security: ['Siveillance', 'Access Control', 'Video Surveillance']
   },
 
-  productKnowledge: {
-    'Desigo CC': {
-      value: '통합 빌딩관리 플랫폼, HVAC/조명/전력/방재 원스톱 제어',
-      roi: '에너지 비용 25~40% 절감, 운영인력 30% 절감'
-    },
-    'Building X': {
-      value: '클라우드 기반 디지털 트윈, AI 에너지 최적화',
-      roi: '탄소배출 20% 감축, 운영비 15% 절감'
-    },
-    'ESCO 모델': {
-      value: '초기 투자 없이 에너지 절감분으로 비용 상환',
-      roi: '5~10년 계약, 절감 보장 20~35%, 리스크 제로'
-    },
-    'Cerberus PRO': {
-      value: 'EN54/UL 인증 화재감지, 오보율 90% 감소',
-      roi: '인명안전 + 보험료 15% 절감'
-    }
-  },
+  productKnowledgeGraph,
+  productKnowledge: buildLegacyProductKnowledge(productKnowledgeGraph),
 
   searchQueries: [
     '빌딩 자동화 BMS 구축',

@@ -273,7 +273,8 @@ export function getLeadsPage() {
               </div>
               <div class="lead-badges">
                 <span class="badge badge-a" style="background:#3498db;">\${parseInt(lead.score) || 0}점</span>
-                \${lead.urgency ? \`<span class="badge" style="background:\${lead.urgency === 'HIGH' ? '#e74c3c' : '#f39c12'};color:#fff;">\${lead.urgency === 'HIGH' ? '긴급' : '보통'}</span>\` : ''}
+                \${lead.signalStrength ? \`<span class="badge" style="background:#243547;color:#c5d5e6;">신호 \${parseInt(lead.signalStrength) || 0}</span>\` : ''}
+                \${lead.urgency ? \`<span class="badge" style="background:\${lead.urgency === 'HIGH' ? '#e74c3c' : lead.urgency === 'LOW' ? '#7f8c8d' : '#f39c12'};color:#fff;">\${lead.urgency === 'HIGH' ? '긴급' : lead.urgency === 'LOW' ? '낮음' : '보통'}</span>\` : ''}
                 \${lead.confidence ? \`<span class="badge" style="background:\${lead.confidence === 'HIGH' ? '#27ae60' : lead.confidence === 'MEDIUM' ? '#f39c12' : '#e74c3c'};color:#fff;">신뢰도 \${lead.confidence}</span>\` : ''}
                 \${lead.eventType ? \`<span class="badge" style="background:#243547;color:#c5d5e6;">\${esc(lead.eventType)}</span>\` : ''}
               </div>
@@ -281,10 +282,13 @@ export function getLeadsPage() {
             <div class="lead-metrics">
               <div class="lead-metric"><span class="metric-label">추천 제품</span><span class="metric-value">\${esc(lead.product || '-')}</span></div>
               <div class="lead-metric"><span class="metric-label">예상 ROI</span><span class="metric-value">\${esc(lead.roi) || '-'}</span></div>
-              \${lead.buyerRole ? \`<div class="lead-metric"><span class="metric-label">예상 키맨</span><span class="metric-value">\${esc(lead.buyerRole)}</span></div>\` : ''}
+              \${lead.stakeholderHint || lead.buyerRole ? \`<div class="lead-metric"><span class="metric-label">이해관계자 힌트</span><span class="metric-value">\${esc(lead.stakeholderHint || lead.buyerRole)}</span></div>\` : ''}
               \${lead.followUpDate ? \`<div class="lead-metric"><span class="metric-label">후속 일정</span><span class="metric-value">\${esc(lead.followUpDate)}</span></div>\` : ''}
             </div>
             <div class="lead-sections">
+              \${lead.painPoint ? \`<div class="lead-block"><span class="block-label">핵심 Pain</span><div class="block-value">\${esc(lead.painPoint)}</div></div>\` : ''}
+              \${lead.businessImpact ? \`<div class="lead-block"><span class="block-label">사업 영향</span><div class="block-value">\${esc(lead.businessImpact)}</div></div>\` : ''}
+              \${lead.likelyInitiative ? \`<div class="lead-block"><span class="block-label">추정 이니셔티브</span><div class="block-value">\${esc(lead.likelyInitiative)}</div></div>\` : ''}
               \${lead.urgencyReason ? \`<div class="lead-block"><span class="block-label">우선순위 근거</span><div class="block-value">\${esc(lead.urgencyReason)}</div></div>\` : ''}
               \${lead.confidenceReason ? \`<div class="lead-block"><span class="block-label">신뢰도 근거</span><div class="block-value">\${esc(lead.confidenceReason)}</div></div>\` : ''}
               \${lead.scoreReason ? \`<div class="lead-block"><span class="block-label">점수 해설</span><div class="block-value">\${esc(lead.scoreReason)}</div></div>\` : ''}
@@ -315,6 +319,7 @@ export function getLeadsPage() {
                   </ul></div>\` : ''}
                   \${lead.buyingSignals && lead.buyingSignals.length > 0 ? \`<div class="enriched-block"><h4>구매 신호</h4><ul>\${lead.buyingSignals.map(s => \`<li>\${esc(s)}</li>\`).join('')}</ul></div>\` : ''}
                   \${lead.evidence && lead.evidence.length > 0 ? \`<div class="enriched-block"><h4>근거 (Evidence)</h4><ul>\${lead.evidence.map(e => \`<li><strong>[\${esc(e.field)}]</strong> "\${esc(e.quote)}" \${e.sourceUrl ? \`<a href="\${esc(e.sourceUrl)}" target="_blank" style="color:#3498db;font-size:11px;">출처</a>\` : ''}</li>\`).join('')}</ul></div>\` : ''}
+                  \${lead.missingInformation && lead.missingInformation.length > 0 ? \`<div class="enriched-block" style="background:#2a2230;border-left:3px solid #9b59b6;padding:8px 12px;"><h4 style="color:#d2b4de;">추가 확인 필요</h4><ul>\${lead.missingInformation.map(item => \`<li style="color:#e8daef;">\${esc(item)}</li>\`).join('')}</ul></div>\` : ''}
                   \${lead.assumptions && lead.assumptions.length > 0 ? \`<div class="enriched-block" style="background:#fff3cd;border-left:3px solid #f39c12;padding:8px 12px;"><h4 style="color:#856404;">가정 (Assumptions)</h4><ul>\${lead.assumptions.map(a => \`<li style="color:#856404;">\${esc(a)}</li>\`).join('')}</ul></div>\` : ''}
                   \${lead.enrichedAt ? \`<p style="color:#666;font-size:11px;margin-top:8px;">분석일: \${esc(lead.enrichedAt.split('T')[0])}</p>\` : ''}
                 </div>

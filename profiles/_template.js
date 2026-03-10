@@ -2,6 +2,26 @@
  * 고객사 프로필 템플릿
  * 새 고객사 추가 시 이 파일을 복사하여 {고객사id}.js로 저장
  */
+const { buildLegacyProductKnowledge } = require('./product-knowledge');
+
+const productKnowledgeGraph = {
+  // '대표 솔루션명': {
+  //   aliases: ['별칭1', '별칭2'],
+  //   targetIndustries: ['산업1', '산업2'],
+  //   targetPersonas: ['의사결정자', '실무자'],
+  //   useCases: ['사용 사례1', '사용 사례2'],
+  //   painsSolved: ['해결 pain1', '해결 pain2'],
+  //   businessOutcomes: ['사업 성과1', '사업 성과2'],
+  //   technicalRequirements: ['기술 요구1'],
+  //   integrationConstraints: ['연동 제약1'],
+  //   deploymentComplexity: 'low|medium|high',
+  //   roiDrivers: ['ROI 드라이버1'],
+  //   proofPoints: ['레퍼런스1'],
+  //   differentiators: ['차별점1'],
+  //   commonObjections: ['반론1']
+  // }
+};
+
 module.exports = {
   id: 'my-company',           // 파일명과 일치 (영문 소문자, 하이픈)
   name: '회사명 한글',         // 리포트/이메일에 표시
@@ -15,9 +35,8 @@ module.exports = {
   },
 
   // 프롬프트용 제품 지식 (핵심 3~5개)
-  productKnowledge: {
-    // '제품명': { value: '핵심 가치', roi: 'ROI 산출 근거' },
-  },
+  productKnowledgeGraph,
+  productKnowledge: buildLegacyProductKnowledge(productKnowledgeGraph),
 
   // 뉴스 검색 키워드 (Google News 쿼리)
   searchQueries: [],

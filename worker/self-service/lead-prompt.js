@@ -1,3 +1,5 @@
+import { formatProductKnowledgeLines } from './product-knowledge.js';
+
 export function buildLeadAnalysisPrompt(profile, articles) {
   const newsList = articles.map((article, index) => {
     let entry = `${index + 1}. [${article.source}] ${article.title} (URL: ${article.link}) (검색키워드: ${article.query})`;
@@ -9,11 +11,7 @@ export function buildLeadAnalysisPrompt(profile, articles) {
     return entry;
   }).join('\n\n');
 
-  const knowledgeBase = profile.productKnowledge
-    ? Object.entries(profile.productKnowledge)
-        .map(([name, info]) => `- ${name}: 핵심가치="${info.value}", ROI="${info.roi}"`)
-        .join('\n')
-    : '(자동 생성 프로필)';
+  const knowledgeBase = formatProductKnowledgeLines(profile);
 
   const productLineup = profile.products
     ? Object.entries(profile.products)

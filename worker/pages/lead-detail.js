@@ -92,12 +92,15 @@ export function getLeadDetailPage(lead, statusLogs) {
         html += '<span style="color:' + (statusColors[currentStatus] || '#fff') + ';font-weight:bold;">' + esc(statusLabels[currentStatus]) + '</span>';
       }
       html += '</span></div>';
-      html += '<div class="detail-row"><span class="label">등급</span><span class="value"><span class="badge ' + (lead.grade === 'A' ? 'badge-a' : 'badge-b') + '">' + esc(lead.grade) + '</span> (' + lead.score + '점)' + (lead.urgency ? ' <span style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:bold;color:#fff;background:' + (lead.urgency === 'HIGH' ? '#e74c3c' : '#f39c12') + ';">' + (lead.urgency === 'HIGH' ? '긴급' : '보통') + '</span>' : '') + '</span></div>';
+      html += '<div class="detail-row"><span class="label">등급</span><span class="value"><span class="badge ' + (lead.grade === 'A' ? 'badge-a' : 'badge-b') + '">' + esc(lead.grade) + '</span> (' + lead.score + '점)' + (lead.urgency ? ' <span style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:bold;color:#fff;background:' + (lead.urgency === 'HIGH' ? '#e74c3c' : lead.urgency === 'LOW' ? '#7f8c8d' : '#f39c12') + ';">' + (lead.urgency === 'HIGH' ? '긴급' : lead.urgency === 'LOW' ? '낮음' : '보통') + '</span>' : '') + (lead.signalStrength ? ' <span style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:bold;color:#c5d5e6;background:#243547;">신호 ' + esc(String(lead.signalStrength)) + '</span>' : '') + '</span></div>';
       if (lead.scoreReason) html += '<div class="detail-row"><span class="label">등급 근거</span><span class="value">' + esc(lead.scoreReason) + '</span></div>';
       if (lead.urgencyReason) html += '<div class="detail-row"><span class="label">긴급도 근거</span><span class="value">' + esc(lead.urgencyReason) + '</span></div>';
-      if (lead.buyerRole) html += '<div class="detail-row"><span class="label">예상 키맨</span><span class="value">' + esc(lead.buyerRole) + '</span></div>';
+      if (lead.stakeholderHint || lead.buyerRole) html += '<div class="detail-row"><span class="label">이해관계자 힌트</span><span class="value">' + esc(lead.stakeholderHint || lead.buyerRole) + '</span></div>';
       if (lead.confidence) html += '<div class="detail-row"><span class="label">신뢰도</span><span class="value"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;color:#fff;background:' + (lead.confidence === 'HIGH' ? '#27ae60' : lead.confidence === 'MEDIUM' ? '#f39c12' : '#e74c3c') + ';">' + esc(lead.confidence) + '</span>' + (lead.confidenceReason ? ' <span style="color:#aaa;font-size:11px;">' + esc(lead.confidenceReason) + '</span>' : '') + '</span></div>';
       if (lead.eventType) html += '<div class="detail-row"><span class="label">이벤트 유형</span><span class="value">' + esc(lead.eventType) + '</span></div>';
+      if (lead.painPoint) html += '<div class="detail-row"><span class="label">핵심 Pain</span><span class="value">' + esc(lead.painPoint) + '</span></div>';
+      if (lead.businessImpact) html += '<div class="detail-row"><span class="label">사업 영향</span><span class="value">' + esc(lead.businessImpact) + '</span></div>';
+      if (lead.likelyInitiative) html += '<div class="detail-row"><span class="label">추정 이니셔티브</span><span class="value">' + esc(lead.likelyInitiative) + '</span></div>';
       html += '<div class="detail-row"><span class="label">추천 제품</span><span class="value">' + esc(lead.product) + '</span></div>';
       html += '<div class="detail-row"><span class="label">예상 ROI</span><span class="value">' + esc(lead.roi || '-') + '</span></div>';
       html += '<div class="detail-row"><span class="label">영업 제안</span><span class="value">' + esc(lead.salesPitch) + '</span></div>';
@@ -187,6 +190,16 @@ export function getLeadDetailPage(lead, statusLogs) {
           html += '<ul style="list-style:none;padding:0;margin:0;">';
           lead.assumptions.forEach(a => {
             html += '<li style="color:#e6c200;font-size:12px;padding:2px 0;">⚠ ' + esc(a) + '</li>';
+          });
+          html += '</ul></div>';
+        }
+
+        if (lead.missingInformation && lead.missingInformation.length) {
+          html += '<div style="background:#2a2230;border-left:3px solid #9b59b6;padding:8px 12px;border-radius:4px;margin-bottom:12px;">';
+          html += '<p style="color:#d2b4de;font-size:13px;font-weight:bold;margin-bottom:6px;">추가 확인 필요</p>';
+          html += '<ul style="list-style:none;padding:0;margin:0;">';
+          lead.missingInformation.forEach(item => {
+            html += '<li style="color:#e8daef;font-size:12px;padding:2px 0;">• ' + esc(item) + '</li>';
           });
           html += '</ul></div>';
         }
