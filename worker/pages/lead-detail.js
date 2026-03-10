@@ -133,6 +133,20 @@ export function getLeadDetailPage(lead, statusLogs) {
         html += '</div>';
       }
 
+      if (lead.stakeholderPersuasion && lead.stakeholderPersuasion.length) {
+        html += '<div class="detail-section">';
+        html += '<h3>이해관계자 설득 포인트</h3>';
+        lead.stakeholderPersuasion.slice(0, 3).forEach(item => {
+          html += '<div style="border:1px solid #2a3a4a;border-radius:10px;padding:12px;margin-bottom:10px;background:#182231;">';
+          html += '<div style="color:#e94560;font-size:12px;font-weight:bold;margin-bottom:6px;">' + esc(item.stakeholderType) + '</div>';
+          html += '<div style="color:#ddd;font-size:13px;line-height:1.6;">' + esc(item.recommendedMessage) + '</div>';
+          html += '<div style="color:#9fb0c0;font-size:12px;margin-top:8px;">반론: ' + esc(item.likelyObjection) + '</div>';
+          html += '<div style="color:#9fb0c0;font-size:12px;">다음 질문: ' + esc(item.nextQuestion) + '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+
       // Enrichment 섹션
       if (lead.enriched) {
         const listItem = (text) => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(text) + '</li>';

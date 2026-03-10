@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { buildSolutionTranslation } from '../lib/solution-translation.js';
+import { buildStakeholderPersuasion } from '../lib/persuasion-engine.js';
 import { hydrateLeadIntelligence } from '../lib/lead-intelligence.js';
 
 function makeLead(overrides = {}) {
@@ -35,9 +36,19 @@ test('buildSolutionTranslation maps product knowledge into customer value langua
   assert.ok(Array.isArray(translation.implementationConsiderations));
 });
 
-test('hydrateLeadIntelligence adds solution translation output', () => {
+test('buildStakeholderPersuasion returns stakeholder-aware messaging', () => {
+  const messages = buildStakeholderPersuasion(makeLead());
+  const economicBuyer = messages.find((item) => item.stakeholderType === 'economic_buyer');
+  const technicalEvaluator = messages.find((item) => item.stakeholderType === 'technical_evaluator');
+
+  assert.equal(messages.length, 6);
+  assert.match(economicBuyer.recommendedMessage, /투자 회수|운영비/);
+  assert.match(technicalEvaluator.keyPriority, /연동 범위|기술 적합성/);
+});
+
+test('hydrateLeadIntelligence composes translation and persuasion outputs', () => {
   const hydrated = hydrateLeadIntelligence(makeLead());
 
   assert.ok(hydrated.solutionTranslation);
-  assert.match(hydrated.solutionTranslation.whyNow, /설계 단계|증설 일정/);
+  assert.equal(hydrated.stakeholderPersuasion.length, 6);
 });

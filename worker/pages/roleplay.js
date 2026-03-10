@@ -33,6 +33,14 @@ export function getRoleplayPage() {
     <p class="subtitle">까다로운 고객과 영업 연습을 해보세요</p>
 
     <select id="leadSelect" aria-label="리드 선택"><option value="">리드 로딩 중...</option></select>
+    <select id="stakeholderSelect" aria-label="이해관계자 선택">
+      <option value="economic_buyer">Economic buyer</option>
+      <option value="technical_evaluator">Technical evaluator</option>
+      <option value="end_user_operator">End user / operator</option>
+      <option value="procurement">Procurement</option>
+      <option value="executive_sponsor">Executive sponsor</option>
+      <option value="champion">Champion</option>
+    </select>
     <input type="password" id="password" placeholder="비밀번호 입력" aria-label="비밀번호 입력" class="input-field">
     <button class="btn btn-primary" onclick="startSession()">시뮬레이션 시작</button>
     <div class="status" id="status"></div>
@@ -116,7 +124,7 @@ export function getRoleplayPage() {
         const res = await fetch('/api/roleplay', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ lead: currentLead, history, userMessage: message })
+          body: JSON.stringify({ lead: currentLead, history, userMessage: message, stakeholderType: document.getElementById('stakeholderSelect').value })
         });
         const data = await res.json();
 
