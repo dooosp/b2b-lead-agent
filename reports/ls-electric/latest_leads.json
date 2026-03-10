@@ -1,101 +1,101 @@
 [
   {
-    "id": "10억명_20260214_d7ae",
+    "id": "보성파워텍_20260310_46qm",
     "status": "NEW",
-    "createdAt": "2026-02-14T02:05:17.550Z",
-    "updatedAt": "2026-02-14T02:05:17.550Z",
-    "company": "10억명",
-    "summary": "10억명 앞 칼군무…中 최대 명절쇼 휩쓴 로봇 굴기 [차이나 워치]",
-    "product": "XGT PLC + XDL 서보",
-    "score": 75,
-    "grade": "B",
-    "roi": "생산성 20% 향상, 불량률 30% 감소",
-    "salesPitch": "10억명 스마트 팩토리에 LG에너지솔루션이 표준으로 채택한 XGT PLC + XDL 서보로 생산성 20% 향상을 제안합니다.",
-    "globalContext": "Industry 4.0 전환 가속, 스마트 제조 혁신법 시행. 레퍼런스: LG에너지솔루션 (한국) - 생산 사이클 15% 단축, 불량률 절반",
+    "createdAt": "2026-03-10T08:47:08.525Z",
+    "updatedAt": "2026-03-10T08:47:08.525Z",
+    "company": "보성파워텍",
+    "summary": "AI 시대의 혈관 전력망 확충… 보성파워텍, 국가 전력 고속도로 뚫는다",
+    "product": "GSIS 가스절연개폐장치",
+    "score": 85,
+    "grade": "A",
+    "roi": "설치면적 60% 축소, 유지보수비 40% 절감, 수명 30년+",
+    "salesPitch": "보성파워텍의 전력 인프라 프로젝트에 Saudi Aramco가 검증한 GSIS 가스절연개폐장치로 설치면적 60% 축소와 유지비 40% 절감을 제안합니다.",
+    "globalContext": "SF6 가스 규제 강화 (EU F-Gas 규정), 노후 변전소 교체 수요. 레퍼런스: PLN (인도네시아) - 정전율 35% 감소, 전력손실 8% 개선",
     "sources": [
       {
-        "title": "10억명 앞 칼군무…中 최대 명절쇼 휩쓴 '로봇 굴기' [차이나 워치]",
-        "url": "https://www.hankyung.com/article/202602134829i"
+        "title": "'AI 시대의 혈관' 전력망 확충… 보성파워텍, 국가 전력 고속도로 뚫는다 - 핀포인트뉴스",
+        "url": "https://search.naver.com/search.naver?where=news&query='AI%20%EC%8B%9C%EB%8C%80%EC%9D%98%20%ED%98%88%EA%B4%80'%20%EC%A0%84%EB%A0%A5%EB%A7%9D%20%ED%99%95%EC%B6%A9%E2%80%A6%20%EB%B3%B4%EC%84%B1%ED%8C%8C%EC%9B%8C%ED%85%8D%2C%20%EA%B5%AD%EA%B0%80%20%EC%A0%84%EB%A0%A5%20%EA%B3%A0%EC%86%8D%EB%8F%84%EB%A1%9C%20%EB%9A%AB%EB%8A%94%EB%8B%A4"
       }
     ]
   },
   {
-    "id": "LVMH_20260214_gbrt",
+    "id": "SK이노_20260310_e6wo",
     "status": "NEW",
-    "createdAt": "2026-02-14T02:05:17.550Z",
-    "updatedAt": "2026-02-14T02:05:17.550Z",
-    "company": "LVMH",
-    "summary": "LVMH·케링 흔들릴 때 나홀로 성장…에르메스 매출 12% 껑충",
+    "createdAt": "2026-03-10T08:47:08.525Z",
+    "updatedAt": "2026-03-10T08:47:08.525Z",
+    "company": "SK이노",
+    "summary": "SK이노, SK하이닉스 AI 컴퍼니 투자…AI 인프라 전략 본격화",
     "product": "STATCOM 전력품질 솔루션",
     "score": 70,
     "grade": "B",
     "roi": "전압 변동 90% 감소, 역률 0.99 달성",
-    "salesPitch": "LVMH 전력계통에 KEPCO가 적용한 STATCOM 전력품질 솔루션로 전압 안정성과 역률을 획기적으로 개선하세요.",
-    "globalContext": "신재생 확대에 따른 계통 안정성 문제, 전력품질 기준 강화. 레퍼런스: State Grid (중국) - 전력 손실 3% 미만, 500km 장거리 송전",
-    "sources": [
-      {
-        "title": "LVMH·케링 흔들릴 때 '나홀로 성장'…에르메스 매출 12% 껑충",
-        "url": "https://www.hankyung.com/article/202602135073i"
-      }
-    ]
-  },
-  {
-    "id": "지적도_20260214_pdp4",
-    "status": "NEW",
-    "createdAt": "2026-02-14T02:05:17.550Z",
-    "updatedAt": "2026-02-14T02:05:17.550Z",
-    "company": "지적도",
-    "summary": "다주택자 매물만 갭투자 허용에…1주택자 역차별 지적도",
-    "product": "STATCOM 전력품질 솔루션",
-    "score": 70,
-    "grade": "B",
-    "roi": "전압 변동 90% 감소, 역률 0.99 달성",
-    "salesPitch": "지적도 전력계통에 KEPCO가 적용한 STATCOM 전력품질 솔루션로 전압 안정성과 역률을 획기적으로 개선하세요.",
+    "salesPitch": "SK이노 전력계통에 KEPCO가 적용한 STATCOM 전력품질 솔루션로 전압 안정성과 역률을 획기적으로 개선하세요.",
     "globalContext": "신재생 확대에 따른 계통 안정성 문제, 전력품질 기준 강화. 레퍼런스: KEPCO (한국) - 전압 변동 90% 감소, 플리커 해소",
     "sources": [
       {
-        "title": "다주택자 매물만 '갭투자' 허용에…1주택자 역차별 지적도",
-        "url": "https://www.hankyung.com/article/202602135210i"
+        "title": "SK이노, SK하이닉스 AI 컴퍼니 투자…AI 인프라 전략 본격화 - 뉴스저널리즘",
+        "url": "https://search.naver.com/search.naver?where=news&query=SK%EC%9D%B4%EB%85%B8%2C%20SK%ED%95%98%EC%9D%B4%EB%8B%89%EC%8A%A4%20AI%20%EC%BB%B4%ED%8D%BC%EB%8B%88%20%ED%88%AC%EC%9E%90%E2%80%A6AI%20%EC%9D%B8%ED%94%84%EB%9D%BC%20%EC%A0%84%EB%9E%B5%20%EB%B3%B8%EA%B2%A9%ED%99%94"
       }
     ]
   },
   {
-    "id": "GS더프레시_20260214_b8k1",
+    "id": "SK이노베이션의_20260310_95ib",
     "status": "NEW",
-    "createdAt": "2026-02-14T02:05:17.550Z",
-    "updatedAt": "2026-02-14T02:05:17.550Z",
-    "company": "GS더프레시",
-    "summary": "SSM 줄어드는데 홀로 50개 더 출점한 GS더프레시 1위 굳힌다",
+    "createdAt": "2026-03-10T08:47:08.525Z",
+    "updatedAt": "2026-03-10T08:47:08.525Z",
+    "company": "SK이노베이션의",
+    "summary": "SK이노베이션의 AI 전력 선견지명…하이닉스 AI 컴퍼니 투자 합류 배경",
     "product": "STATCOM 전력품질 솔루션",
     "score": 70,
     "grade": "B",
     "roi": "전압 변동 90% 감소, 역률 0.99 달성",
-    "salesPitch": "GS더프레시 전력계통에 KEPCO가 적용한 STATCOM 전력품질 솔루션로 전압 안정성과 역률을 획기적으로 개선하세요.",
+    "salesPitch": "SK이노베이션의 전력계통에 KEPCO가 적용한 STATCOM 전력품질 솔루션로 전압 안정성과 역률을 획기적으로 개선하세요.",
     "globalContext": "신재생 확대에 따른 계통 안정성 문제, 전력품질 기준 강화. 레퍼런스: EGAT (태국) - 역률 0.99 달성, 계통 안정성 확보",
     "sources": [
       {
-        "title": "SSM 줄어드는데 홀로 50개 더 출점한 GS더프레시 \"1위 굳힌다\"",
-        "url": "https://www.hankyung.com/article/202602134780i"
+        "title": "SK이노베이션의 AI 전력 선견지명…하이닉스 'AI 컴퍼니' 투자 합류 배경 - 네이트",
+        "url": "https://search.naver.com/search.naver?where=news&query=SK%EC%9D%B4%EB%85%B8%EB%B2%A0%EC%9D%B4%EC%85%98%EC%9D%98%20AI%20%EC%A0%84%EB%A0%A5%20%EC%84%A0%EA%B2%AC%EC%A7%80%EB%AA%85%E2%80%A6%ED%95%98%EC%9D%B4%EB%8B%89%EC%8A%A4%20'AI%20%EC%BB%B4%ED%8D%BC%EB%8B%88'%20%ED%88%AC%EC%9E%90%20%ED%95%A9%EB%A5%98%20%EB%B0%B0%EA%B2%BD"
       }
     ]
   },
   {
-    "id": "어펄마_20260214_bnqz",
+    "id": "본궤도_20260310_1goj",
     "status": "NEW",
-    "createdAt": "2026-02-14T02:05:17.550Z",
-    "updatedAt": "2026-02-14T02:05:17.550Z",
-    "company": "어펄마",
-    "summary": "어펄마, 스마트스코어에 1100억 투자",
-    "product": "STATCOM 전력품질 솔루션",
-    "score": 70,
-    "grade": "B",
-    "roi": "전압 변동 90% 감소, 역률 0.99 달성",
-    "salesPitch": "어펄마 전력계통에 KEPCO가 적용한 STATCOM 전력품질 솔루션로 전압 안정성과 역률을 획기적으로 개선하세요.",
-    "globalContext": "신재생 확대에 따른 계통 안정성 문제, 전력품질 기준 강화. 레퍼런스: KEPCO (한국) - 전압 변동 90% 감소, 플리커 해소",
+    "createdAt": "2026-03-10T08:47:08.525Z",
+    "updatedAt": "2026-03-10T08:47:08.525Z",
+    "company": "본궤도",
+    "summary": "신송도변전소 공사 본궤도…바이오 클러스터 숨통 - v.daum.net",
+    "product": "GSIS 가스절연개폐장치",
+    "score": 85,
+    "grade": "A",
+    "roi": "설치면적 60% 축소, 유지보수비 40% 절감, 수명 30년+",
+    "salesPitch": "본궤도의 전력 인프라 프로젝트에 Saudi Aramco가 검증한 GSIS 가스절연개폐장치로 설치면적 60% 축소와 유지비 40% 절감을 제안합니다.",
+    "globalContext": "SF6 가스 규제 강화 (EU F-Gas 규정), 노후 변전소 교체 수요. 레퍼런스: Saudi Aramco (사우디) - 중동 최대 154kV GIS 납품, 3년 무장애 운영",
     "sources": [
       {
-        "title": "어펄마, 스마트스코어에 1100억 투자",
-        "url": "https://www.hankyung.com/article/2026021355551"
+        "title": "신송도변전소 공사 본궤도…바이오 클러스터 '숨통' - v.daum.net",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EC%8B%A0%EC%86%A1%EB%8F%84%EB%B3%80%EC%A0%84%EC%86%8C%20%EA%B3%B5%EC%82%AC%20%EB%B3%B8%EA%B6%A4%EB%8F%84%E2%80%A6%EB%B0%94%EC%9D%B4%EC%98%A4%20%ED%81%B4%EB%9F%AC%EC%8A%A4%ED%84%B0%20'%EC%88%A8%ED%86%B5'"
+      }
+    ]
+  },
+  {
+    "id": "송도국제신도시_20260310_ykxp",
+    "status": "NEW",
+    "createdAt": "2026-03-10T08:47:08.525Z",
+    "updatedAt": "2026-03-10T08:47:08.525Z",
+    "company": "송도국제신도시",
+    "summary": "송도국제신도시 전력 안정화에 앞장··· 안전·보건으로 신송도변전소 건설에 완벽 기한다",
+    "product": "GSIS 가스절연개폐장치",
+    "score": 85,
+    "grade": "A",
+    "roi": "설치면적 60% 축소, 유지보수비 40% 절감, 수명 30년+",
+    "salesPitch": "송도국제신도시의 전력 인프라 프로젝트에 Saudi Aramco가 검증한 GSIS 가스절연개폐장치로 설치면적 60% 축소와 유지비 40% 절감을 제안합니다.",
+    "globalContext": "SF6 가스 규제 강화 (EU F-Gas 규정), 노후 변전소 교체 수요. 레퍼런스: Saudi Aramco (사우디) - 중동 최대 154kV GIS 납품, 3년 무장애 운영",
+    "sources": [
+      {
+        "title": "[이일환 고덕건설 현장소장] 송도국제신도시 전력 안정화에 앞장··· 안전·보건으로 신송도변전소 건설에 완벽 기한다 - 일렉트릭파워",
+        "url": "https://search.naver.com/search.naver?where=news&query=%5B%EC%9D%B4%EC%9D%BC%ED%99%98%20%EA%B3%A0%EB%8D%95%EA%B1%B4%EC%84%A4%20%ED%98%84%EC%9E%A5%EC%86%8C%EC%9E%A5%5D%20%EC%86%A1%EB%8F%84%EA%B5%AD%EC%A0%9C%EC%8B%A0%EB%8F%84%EC%8B%9C%20%EC%A0%84%EB%A0%A5%20%EC%95%88%EC%A0%95%ED%99%94%EC%97%90%20%EC%95%9E%EC%9E%A5%C2%B7%C2%B7%C2%B7%20%EC%95%88%EC%A0%84%C2%B7%EB%B3%B4%EA%B1%B4%EC%9C%BC%EB%A1%9C%20%EC%8B%A0%EC%86%A1%EB%8F%84%EB%B3%80%EC%A0%84%EC%86%8C%20%EA%B1%B4%EC%84%A4%EC%97%90%20%EC%99%84%EB%B2%BD%20%EA%B8%B0%ED%95%9C%EB%8B%A4"
       }
     ]
   }
