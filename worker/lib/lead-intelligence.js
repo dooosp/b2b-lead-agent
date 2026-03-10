@@ -1,14 +1,18 @@
 import { buildSolutionTranslation } from './solution-translation.js';
 import { buildStakeholderPersuasion } from './persuasion-engine.js';
+import { buildDealExecution } from './deal-execution.js';
 
 export function hydrateLeadIntelligence(lead, options = {}) {
   if (!lead || typeof lead !== 'object') return lead;
   const solutionTranslation = buildSolutionTranslation(lead);
   const stakeholderPersuasion = buildStakeholderPersuasion(lead);
+  const dealExecution = buildDealExecution(lead, options.nowIso);
   return {
     ...lead,
     solutionTranslation,
-    stakeholderPersuasion
+    stakeholderPersuasion,
+    dealExecution,
+    nextBestAction: dealExecution.recommendedNextAction
   };
 }
 

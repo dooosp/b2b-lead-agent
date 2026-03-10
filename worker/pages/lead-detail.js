@@ -147,6 +147,17 @@ export function getLeadDetailPage(lead, statusLogs) {
         html += '</div>';
       }
 
+      if (lead.dealExecution) {
+        const execution = lead.dealExecution;
+        html += '<div class="detail-section">';
+        html += '<h3>실행 / 딜 리스크</h3>';
+        html += '<div class="detail-row"><span class="label">리스크 점수</span><span class="value">' + esc(String(execution.dealRiskScore || 0)) + ' / 100</span></div>';
+        html += '<div class="detail-row"><span class="label">단계 체류일</span><span class="value">' + esc(String(execution.daysInStage || 0)) + '일</span></div>';
+        html += '<div class="detail-row"><span class="label">다음 액션</span><span class="value">' + esc(execution.recommendedNextAction || '-') + '</span></div>';
+        if (execution.dealRiskReason && execution.dealRiskReason.length) html += '<div class="detail-row"><span class="label">리스크 사유</span><span class="value">' + esc(execution.dealRiskReason.join(' / ')) + '</span></div>';
+        html += '</div>';
+      }
+
       // Enrichment 섹션
       if (lead.enriched) {
         const listItem = (text) => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(text) + '</li>';

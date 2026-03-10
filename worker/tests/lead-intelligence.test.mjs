@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { buildSolutionTranslation } from '../lib/solution-translation.js';
 import { buildStakeholderPersuasion } from '../lib/persuasion-engine.js';
+import { buildDealExecution } from '../lib/deal-execution.js';
 import { hydrateLeadIntelligence } from '../lib/lead-intelligence.js';
 
 function makeLead(overrides = {}) {
@@ -46,9 +47,20 @@ test('buildStakeholderPersuasion returns stakeholder-aware messaging', () => {
   assert.match(technicalEvaluator.keyPriority, /연동 범위|기술 적합성/);
 });
 
-test('hydrateLeadIntelligence composes translation and persuasion outputs', () => {
-  const hydrated = hydrateLeadIntelligence(makeLead());
+test('buildDealExecution scores stalled deals and recommends next action', () => {
+  const execution = buildDealExecution(makeLead({ followUpDate: '2026-02-10' }), '2026-03-10T00:00:00.000Z');
+
+  assert.equal(execution.overdueFollowup, true);
+  assert.equal(execution.stalled, true);
+  assert.ok(execution.dealRiskScore >= 70);
+  assert.match(execution.recommendedNextAction, /후속 연락|챔피언|예산/);
+});
+
+test('hydrateLeadIntelligence composes translation, persuasion, and execution outputs', () => {
+  const hydrated = hydrateLeadIntelligence(makeLead(), { nowIso: '2026-03-10T00:00:00.000Z' });
 
   assert.ok(hydrated.solutionTranslation);
   assert.equal(hydrated.stakeholderPersuasion.length, 6);
+  assert.ok(hydrated.dealExecution);
+  assert.equal(hydrated.nextBestAction, hydrated.dealExecution.recommendedNextAction);
 });

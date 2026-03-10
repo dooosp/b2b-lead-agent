@@ -294,6 +294,7 @@ export function getLeadsPage() {
               \${lead.scoreReason ? \`<div class="lead-block"><span class="block-label">점수 해설</span><div class="block-value">\${esc(lead.scoreReason)}</div></div>\` : ''}
               \${lead.solutionTranslation && lead.solutionTranslation.whyThisSolution ? \`<div class="lead-block"><span class="block-label">Why this solution</span><div class="block-value">\${esc(lead.solutionTranslation.whyThisSolution)}</div></div>\` : ''}
               \${lead.solutionTranslation && lead.solutionTranslation.roiNarrative ? \`<div class="lead-block"><span class="block-label">ROI 내러티브</span><div class="block-value">\${esc(lead.solutionTranslation.roiNarrative)}</div></div>\` : ''}
+              \${lead.dealExecution && lead.dealExecution.recommendedNextAction ? \`<div class="lead-block"><span class="block-label">Next best action</span><div class="block-value">\${esc(lead.dealExecution.recommendedNextAction)}</div></div>\` : ''}
               <div class="lead-block"><span class="block-label">영업 제안</span><div class="block-value">\${esc(lead.salesPitch)}</div></div>
               <div class="lead-block"><span class="block-label">시장 트렌드</span><div class="block-value">\${esc(lead.globalContext) || '-'}</div></div>
             </div>
@@ -324,6 +325,7 @@ export function getLeadsPage() {
                   \${lead.missingInformation && lead.missingInformation.length > 0 ? \`<div class="enriched-block" style="background:#2a2230;border-left:3px solid #9b59b6;padding:8px 12px;"><h4 style="color:#d2b4de;">추가 확인 필요</h4><ul>\${lead.missingInformation.map(item => \`<li style="color:#e8daef;">\${esc(item)}</li>\`).join('')}</ul></div>\` : ''}
                   \${lead.assumptions && lead.assumptions.length > 0 ? \`<div class="enriched-block" style="background:#fff3cd;border-left:3px solid #f39c12;padding:8px 12px;"><h4 style="color:#856404;">가정 (Assumptions)</h4><ul>\${lead.assumptions.map(a => \`<li style="color:#856404;">\${esc(a)}</li>\`).join('')}</ul></div>\` : ''}
                   \${lead.stakeholderPersuasion && lead.stakeholderPersuasion.length > 0 ? \`<div class="enriched-block"><h4>이해관계자 설득</h4><ul>\${lead.stakeholderPersuasion.slice(0, 2).map(item => \`<li><strong>\${esc(item.stakeholderType)}</strong>: \${esc(item.recommendedMessage)}</li>\`).join('')}</ul></div>\` : ''}
+                  \${lead.dealExecution ? \`<div class="enriched-block"><h4>딜 실행</h4><ul><li><strong>리스크:</strong> \${esc(String(lead.dealExecution.dealRiskScore || 0))}</li><li><strong>다음 액션:</strong> \${esc(lead.dealExecution.recommendedNextAction || '-')}</li></ul></div>\` : ''}
                   \${lead.enrichedAt ? \`<p style="color:#666;font-size:11px;margin-top:8px;">분석일: \${esc(lead.enrichedAt.split('T')[0])}</p>\` : ''}
                 </div>
               </details>
