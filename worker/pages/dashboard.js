@@ -338,6 +338,82 @@ export function getDashboardPage(env) {
           html += '</div>';
         }
 
+        if (m.strongestRecentSignals && m.strongestRecentSignals.length > 0) {
+          html += '<div class="section-shell"><h3 class="section-title">강한 최근 구매 신호</h3>';
+          html += '<ul class="activity-feed">';
+          m.strongestRecentSignals.forEach(signal => {
+            html += \`<li><a href="\${detailLink(signal.leadId)}" style="color:#e94560;text-decoration:none;font-weight:bold;">\${esc(signal.company)}</a> <span style="color:#ccc;">\${esc(signal.signalType)}</span> <span style="color:#8fa4b8;">/ \${esc(signal.signalSource)}</span> <span style="color:#27ae60;font-weight:bold;">\${esc(String(signal.signalStrength))}</span><div class="time">\${esc(signal.urgencyHint || signal.painHint || signal.sourceTitle || '')}</div></li>\`;
+          });
+          html += '</ul></div>';
+        }
+
+        if (m.highestUrgencyLeads && m.highestUrgencyLeads.length > 0) {
+          html += '<div class="section-shell"><h3 class="section-title">가장 긴급한 리드</h3>';
+          html += '<div style="display:grid;gap:8px;">';
+          m.highestUrgencyLeads.forEach(item => {
+            html += \`<div style="background:#1e2a3a;border-radius:10px;padding:12px;">
+              <a href="\${detailLink(item.id)}" style="color:#e94560;text-decoration:none;font-weight:bold;">\${esc(item.company)}</a>
+              <div style="font-size:12px;color:#ddd;margin-top:6px;">\${esc(item.reason || '근거 보강 필요')}</div>
+              <div style="font-size:11px;color:#8fa4b8;margin-top:4px;">긴급도 \${esc(item.urgency)} / 신호 \${esc(String(item.signalStrength || 0))}</div>
+            </div>\`;
+          });
+          html += '</div></div>';
+        }
+
+        if (m.stakeholderSummary && m.stakeholderSummary.length > 0) {
+          html += '<div class="section-shell"><h3 class="section-title">주요 이해관계자 요약</h3>';
+          html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+          m.stakeholderSummary.forEach(item => {
+            html += \`<div style="background:#1e2a3a;border-radius:999px;padding:8px 12px;font-size:12px;color:#ddd;">\${esc(item.stakeholderType)} <span style="color:#8fa4b8;">\${item.count}</span></div>\`;
+          });
+          html += '</div></div>';
+        }
+
+        if (m.stalledDeals && m.stalledDeals.length > 0) {
+          html += '<div class="section-shell"><h3 class="section-title">정체된 딜</h3>';
+          html += '<ul class="activity-feed">';
+          m.stalledDeals.forEach(item => {
+            html += \`<li><a href="\${detailLink(item.id)}" style="color:#e94560;text-decoration:none;font-weight:bold;">\${esc(item.company)}</a> <span class="badge badge-status \${(item.status||'').toLowerCase()}" style="font-size:10px;padding:1px 6px;margin-left:6px;">\${esc(statusLabels[item.status] || item.status)}</span><div class="time">\${esc(String(item.daysInStage))}일 체류 / 리스크 \${esc(String(item.dealRiskScore))} / \${esc(item.reason || '')}</div></li>\`;
+          });
+          html += '</ul></div>';
+        }
+
+        if (m.highestRiskOpportunities && m.highestRiskOpportunities.length > 0) {
+          html += '<div class="section-shell"><h3 class="section-title">고위험 기회</h3>';
+          html += '<div style="display:grid;gap:8px;">';
+          m.highestRiskOpportunities.forEach(item => {
+            html += \`<div style="background:#1e2a3a;border-radius:10px;padding:12px;border-left:3px solid #e74c3c;">
+              <a href="\${detailLink(item.id)}" style="color:#e94560;text-decoration:none;font-weight:bold;">\${esc(item.company)}</a>
+              <div style="font-size:12px;color:#ddd;margin-top:6px;">\${esc(item.recommendedNextAction || '')}</div>
+              <div style="font-size:11px;color:#8fa4b8;margin-top:4px;">단계 \${esc(statusLabels[item.status] || item.status)} / 리스크 \${esc(String(item.dealRiskScore || 0))}</div>
+            </div>\`;
+          });
+          html += '</div></div>';
+        }
+
+        if (m.nextBestActionQueue && m.nextBestActionQueue.length > 0) {
+          html += '<div class="section-shell"><h3 class="section-title">Next Best Action Queue</h3>';
+          html += '<ul class="activity-feed">';
+          m.nextBestActionQueue.forEach(item => {
+            html += \`<li><a href="\${detailLink(item.id)}" style="color:#e94560;text-decoration:none;font-weight:bold;">\${esc(item.company)}</a> <span style="color:#8fa4b8;">\${esc(statusLabels[item.currentStage] || item.currentStage)} / \${esc(item.urgency)}</span><div class="time">\${esc(item.recommendedNextAction || '')}</div></li>\`;
+          });
+          html += '</ul></div>';
+        }
+
+        if (m.segmentSummary && m.segmentSummary.length > 0) {
+          html += '<div class="section-shell"><h3 class="section-title">세그먼트 요약</h3>';
+          html += '<div style="display:grid;gap:8px;">';
+          m.segmentSummary.forEach(segment => {
+            html += \`<div style="display:grid;grid-template-columns:minmax(0,2fr) repeat(3,minmax(70px,1fr));gap:10px;background:#1e2a3a;border-radius:10px;padding:12px;align-items:center;">
+              <div style="color:#f3f6fa;font-size:13px;font-weight:bold;">\${esc(segment.segment)}</div>
+              <div style="font-size:11px;color:#8fa4b8;">리드 \${segment.leadCount}</div>
+              <div style="font-size:11px;color:#8fa4b8;">신호 \${segment.avgSignalStrength}</div>
+              <div style="font-size:11px;color:#8fa4b8;">점수 \${segment.avgLeadScore}</div>
+            </div>\`;
+          });
+          html += '</div></div>';
+        }
+
         // 최근 활동
         if (m.recentActivity && m.recentActivity.length > 0) {
           html += '<div class="section-shell"><h3 class="section-title">최근 활동</h3>';

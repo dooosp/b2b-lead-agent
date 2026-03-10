@@ -1,5 +1,7 @@
 import { ensureD1Schema } from './schema.js';
 import { rowToLead, leadToRow } from './transform.js';
+import { buildDealExecution } from '../lib/deal-execution.js';
+import { buildStakeholderPersuasion } from '../lib/persuasion-engine.js';
 
 export async function saveLeadsBatch(db, leads, profileId, source) {
   if (!db || !leads || leads.length === 0) return;
@@ -178,7 +180,7 @@ export async function getDashboardMetrics(db, profileId) {
   const monthStart = today.slice(0, 7) + '-01';
 
   const [total, gradeA, statusCounts, wonCount, recentActivity, analyticsCounts, allLogs, pipelineValue, followUpLeads,
-    monthlyNew, wonDetails, lostDetails, enrichCoverage, activeEnriched] = await db.batch([
+    monthlyNew, wonDetails, lostDetails, enrichCoverage, activeEnriched, recentSignals, leadSnapshot] = await db.batch([
     db.prepare(`SELECT COUNT(*) as cnt FROM leads${where}`).bind(...bind),
     db.prepare(`SELECT COUNT(*) as cnt FROM leads${where ? where + ' AND' : ' WHERE'} grade = 'A'`).bind(...bind),
     db.prepare(`SELECT status, COUNT(*) as cnt FROM leads${where} GROUP BY status`).bind(...bind),
@@ -197,7 +199,12 @@ export async function getDashboardMetrics(db, profileId) {
     // Q13: Enrichment 커버리지
     db.prepare(`SELECT COUNT(*) as total_enriched, SUM(CASE WHEN meddic != '{}' AND meddic != '' AND meddic IS NOT NULL THEN 1 ELSE 0 END) as has_meddic FROM leads${where ? where + ' AND' : ' WHERE'} enriched=1`).bind(...bind),
     // Q14: 활성 enriched 리드
-    db.prepare(`SELECT pain_points, competitive, estimated_value, meddic FROM leads${where ? where + ' AND' : ' WHERE'} enriched=1 AND status NOT IN ('WON','LOST') LIMIT 200`).bind(...bind)
+    db.prepare(`SELECT pain_points, competitive, estimated_value, meddic FROM leads${where ? where + ' AND' : ' WHERE'} enriched=1 AND status NOT IN ('WON','LOST') LIMIT 200`).bind(...bind),
+    db.prepare(`SELECT lead_id, company, signal_type, signal_source, signal_strength, urgency_hint, pain_hint, source_title, source_published_at
+      FROM company_signals${where ? ' WHERE profile_id = ?' : ''}
+      ORDER BY COALESCE(source_published_at, created_at) DESC, signal_strength DESC
+      LIMIT 12`).bind(...(isAll ? [] : [profileId])),
+    db.prepare(`SELECT * FROM leads${where} ORDER BY updated_at DESC LIMIT 250`).bind(...bind)
   ]);
 
   const totalCount = total.results?.[0]?.cnt || 0;
@@ -343,7 +350,106 @@ export async function getDashboardMetrics(db, profileId) {
   const summaryInput = { total: totalCount, gradeA: gradeACount, active, won: wonCountVal, conversionRate: totalCount > 0 ? Math.round((wonCountVal / totalCount) * 100) : 0,
     totalPipelineValue, followUpAlerts, monthlyNewCount, pipelineVelocity, winLossAnalysis, businessCaseInsights };
   const executiveSummary = buildExecutiveSummary(summaryInput);
-
+  const snapshotLeads = (leadSnapshot.results || []).map(rowToLead);
+  const executionRows = snapshotLeads.map((lead) => ({
+    lead,
+    execution: buildDealExecution(lead)
+  }));
+  const strongestRecentSignals = (recentSignals.results || []).map((row) => ({
+    leadId: row.lead_id,
+    company: row.company,
+    signalType: row.signal_type,
+    signalSource: row.signal_source,
+    signalStrength: Number(row.signal_strength) || 0,
+    urgencyHint: row.urgency_hint || '',
+    painHint: row.pain_hint || '',
+    sourceTitle: row.source_title || '',
+    sourcePublishedAt: row.source_published_at || ''
+  })).sort((a, b) => b.signalStrength - a.signalStrength).slice(0, 5);
+  const urgencyRank = { HIGH: 3, MEDIUM: 2, LOW: 1, '': 0 };
+  const highestUrgencyLeads = snapshotLeads
+    .slice()
+    .sort((a, b) => {
+      const urgencyDelta = (urgencyRank[b.urgency] || 0) - (urgencyRank[a.urgency] || 0);
+      if (urgencyDelta !== 0) return urgencyDelta;
+      return (b.signalStrength || 0) - (a.signalStrength || 0);
+    })
+    .slice(0, 5)
+    .map((lead) => ({
+      id: lead.id,
+      company: lead.company,
+      urgency: lead.urgency || 'LOW',
+      signalStrength: lead.signalStrength || 0,
+      reason: lead.urgencyReason || lead.businessImpact || lead.painPoint || ''
+    }));
+  const stalledDeals = executionRows
+    .filter((item) => item.execution.stalled)
+    .sort((a, b) => b.execution.dealRiskScore - a.execution.dealRiskScore)
+    .slice(0, 5)
+    .map((item) => ({
+      id: item.lead.id,
+      company: item.lead.company,
+      status: item.lead.status,
+      daysInStage: item.execution.daysInStage,
+      dealRiskScore: item.execution.dealRiskScore,
+      reason: item.execution.dealRiskReason[0] || ''
+    }));
+  const highestRiskOpportunities = executionRows
+    .slice()
+    .sort((a, b) => b.execution.dealRiskScore - a.execution.dealRiskScore)
+    .slice(0, 5)
+    .map((item) => ({
+      id: item.lead.id,
+      company: item.lead.company,
+      status: item.lead.status,
+      dealRiskScore: item.execution.dealRiskScore,
+      recommendedNextAction: item.execution.recommendedNextAction
+    }));
+  const nextBestActionQueue = executionRows
+    .filter((item) => !['WON', 'LOST'].includes(item.lead.status))
+    .sort((a, b) => {
+      if (b.execution.ownerAlert !== a.execution.ownerAlert) return Number(b.execution.ownerAlert) - Number(a.execution.ownerAlert);
+      return b.execution.dealRiskScore - a.execution.dealRiskScore;
+    })
+    .slice(0, 7)
+    .map((item) => ({
+      id: item.lead.id,
+      company: item.lead.company,
+      currentStage: item.execution.currentStage,
+      urgency: item.execution.urgency,
+      recommendedNextAction: item.execution.recommendedNextAction
+    }));
+  const stakeholderCounts = {};
+  snapshotLeads.forEach((lead) => {
+    const topStakeholder = buildStakeholderPersuasion(lead)[0];
+    if (!topStakeholder) return;
+    stakeholderCounts[topStakeholder.stakeholderType] = (stakeholderCounts[topStakeholder.stakeholderType] || 0) + 1;
+  });
+  const stakeholderSummary = Object.entries(stakeholderCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([stakeholderType, count]) => ({ stakeholderType, count }));
+  const segmentBucket = {};
+  executionRows.forEach((item) => {
+    const key = item.lead.product || '미분류';
+    if (!segmentBucket[key]) {
+      segmentBucket[key] = { segment: key, leadCount: 0, signalTotal: 0, scoreTotal: 0, riskTotal: 0 };
+    }
+    segmentBucket[key].leadCount += 1;
+    segmentBucket[key].signalTotal += item.lead.signalStrength || 0;
+    segmentBucket[key].scoreTotal += item.lead.score || 0;
+    segmentBucket[key].riskTotal += item.execution.dealRiskScore || 0;
+  });
+  const segmentSummary = Object.values(segmentBucket)
+    .map((bucket) => ({
+      segment: bucket.segment,
+      leadCount: bucket.leadCount,
+      avgSignalStrength: Math.round(bucket.signalTotal / Math.max(bucket.leadCount, 1)),
+      avgLeadScore: Math.round(bucket.scoreTotal / Math.max(bucket.leadCount, 1)),
+      avgRiskScore: Math.round(bucket.riskTotal / Math.max(bucket.leadCount, 1))
+    }))
+    .sort((a, b) => (b.avgSignalStrength + b.avgLeadScore) - (a.avgSignalStrength + a.avgLeadScore))
+    .slice(0, 6);
   return {
     total: totalCount,
     gradeA: gradeACount,
@@ -366,6 +472,13 @@ export async function getDashboardMetrics(db, profileId) {
     pipelineVelocity,
     winLossAnalysis,
     businessCaseInsights,
-    monthlyNewCount
+    monthlyNewCount,
+    strongestRecentSignals,
+    highestUrgencyLeads,
+    stakeholderSummary,
+    stalledDeals,
+    highestRiskOpportunities,
+    nextBestActionQueue,
+    segmentSummary
   };
 }
