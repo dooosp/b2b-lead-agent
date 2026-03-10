@@ -2,6 +2,7 @@ import { jsonResponse } from '../lib/utils.js';
 import { resolveProfileId } from '../lib/profile.js';
 import { VALID_TRANSITIONS } from '../db/transform.js';
 import { getLeadsByProfile, getAllLeads, getLeadById, saveLeadsBatch, updateLeadStatus, updateLeadNotes } from '../db/leads.js';
+import { saveDealLearning } from '../db/deal-learning.js';
 import { hydrateLeadIntelligence, hydrateLeadList } from '../lib/lead-intelligence.js';
 
 export async function fetchLeads(env, profile) {
@@ -83,6 +84,11 @@ export async function handleUpdateLead(request, env, leadId) {
     await updateLeadNotes(env.DB, leadId, body.notes.slice(0, 2000));
   }
 
+  let savedLearning = null;
+  if (body.learning && typeof body.learning === 'object') {
+    savedLearning = await saveDealLearning(env.DB, leadId, body.learning);
+  }
+
   if (typeof body.follow_up_date === 'string') {
     const dateVal = body.follow_up_date.trim();
     if (dateVal && !/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
@@ -106,7 +112,7 @@ export async function handleUpdateLead(request, env, leadId) {
   }
 
   const updated = await getLeadById(env.DB, leadId);
-  return jsonResponse({ success: true, lead: hydrateLeadIntelligence(updated) });
+  return jsonResponse({ success: true, lead: hydrateLeadIntelligence(updated), learning: savedLearning });
 }
 
 export async function handleExportCSV(request, env) {

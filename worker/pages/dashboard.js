@@ -414,6 +414,14 @@ export function getDashboardPage(env) {
           html += '</div></div>';
         }
 
+        if (m.learningInsights && (m.learningInsights.commonLossReasons.length > 0 || m.learningInsights.commonObjectionThemes.length > 0 || m.learningInsights.strongestWinPatterns.length > 0)) {
+          html += '<div class="section-shell"><h3 class="section-title">Win/Loss Learning</h3>';
+          html += renderInsightBlock('공통 실주 사유', m.learningInsights.commonLossReasons);
+          html += renderInsightBlock('자주 나온 반론', m.learningInsights.commonObjectionThemes);
+          html += renderInsightBlock('강한 수주 패턴', m.learningInsights.strongestWinPatterns);
+          html += '</div>';
+        }
+
         // 최근 활동
         if (m.recentActivity && m.recentActivity.length > 0) {
           html += '<div class="section-shell"><h3 class="section-title">최근 활동</h3>';
@@ -442,6 +450,13 @@ export function getDashboardPage(env) {
 
     function renderDashCard(value, label, meta, color) {
       return \`<div class="dash-card"><span class="num" style="color:\${color || '#e94560'}">\${value}</span><span class="label">\${label}</span><div class="meta">\${meta}</div></div>\`;
+    }
+
+    function renderInsightBlock(title, items) {
+      if (!items || items.length === 0) return '';
+      return '<div style="margin-bottom:12px;"><div style="font-size:12px;color:#8fa4b8;margin-bottom:6px;">' + esc(title) + '</div>'
+        + items.map(item => '<div style="font-size:12px;color:#ddd;padding:4px 0;border-bottom:1px solid #223447;">' + esc(item.name) + ' <span style="color:#8fa4b8;">(' + esc(String(item.count || 0)) + ')</span></div>').join('')
+        + '</div>';
     }
 
     if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});

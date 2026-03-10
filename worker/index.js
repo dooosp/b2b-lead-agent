@@ -5,6 +5,7 @@ import { verifyAuth, checkRateLimit } from './lib/auth.js';
 import { resolveLeadProfileForQuery } from './lib/profile.js';
 
 import { getLeadById, getStatusLogByLead } from './db/leads.js';
+import { getLatestDealLearningByLead } from './db/deal-learning.js';
 import { handleTrigger } from './api/trigger.js';
 import { fetchLeads, fetchHistory, handleUpdateLead, handleExportCSV } from './api/leads-api.js';
 import { handleGetReferences, handleAddReference, handleDeleteReference } from './api/references-api.js';
@@ -158,7 +159,8 @@ export default {
       const lead = await getLeadById(env.DB, leadId);
       if (!lead) return new Response('리드를 찾을 수 없습니다.', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
       const statusLogs = await getStatusLogByLead(env.DB, leadId);
-      return new Response(getLeadDetailPage(hydrateLeadIntelligence(lead), statusLogs), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      const learning = await getLatestDealLearningByLead(env.DB, leadId);
+      return new Response(getLeadDetailPage(hydrateLeadIntelligence(lead), statusLogs, learning), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
     if (url.pathname === '/leads') {
       return new Response(getLeadsPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });

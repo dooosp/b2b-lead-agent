@@ -2,6 +2,7 @@ import { ensureD1Schema } from './schema.js';
 import { rowToLead, leadToRow } from './transform.js';
 import { buildDealExecution } from '../lib/deal-execution.js';
 import { buildStakeholderPersuasion } from '../lib/persuasion-engine.js';
+import { getDealLearningInsights } from './deal-learning.js';
 
 export async function saveLeadsBatch(db, leads, profileId, source) {
   if (!db || !leads || leads.length === 0) return;
@@ -450,6 +451,8 @@ export async function getDashboardMetrics(db, profileId) {
     }))
     .sort((a, b) => (b.avgSignalStrength + b.avgLeadScore) - (a.avgSignalStrength + a.avgLeadScore))
     .slice(0, 6);
+  const learningInsights = await getDealLearningInsights(db, profileId);
+
   return {
     total: totalCount,
     gradeA: gradeACount,
@@ -479,6 +482,7 @@ export async function getDashboardMetrics(db, profileId) {
     stalledDeals,
     highestRiskOpportunities,
     nextBestActionQueue,
-    segmentSummary
+    segmentSummary,
+    learningInsights
   };
 }

@@ -95,3 +95,21 @@ CREATE TABLE IF NOT EXISTS company_signals (
 CREATE INDEX IF NOT EXISTS idx_company_signals_lead ON company_signals(lead_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_company_signals_company ON company_signals(profile_id, company, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_company_signals_source_published ON company_signals(source_published_at DESC);
+
+CREATE TABLE IF NOT EXISTS deal_learning (
+  id TEXT PRIMARY KEY,
+  lead_id TEXT NOT NULL,
+  outcome TEXT DEFAULT '',
+  reason_code TEXT DEFAULT '',
+  freeform_reason TEXT DEFAULT '',
+  observed_objection TEXT DEFAULT '',
+  signal_accuracy_notes TEXT DEFAULT '',
+  pitch_effectiveness_notes TEXT DEFAULT '',
+  stage_where_lost TEXT DEFAULT '',
+  competitor_if_known TEXT DEFAULT '',
+  lessons_learned TEXT DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_deal_learning_lead ON deal_learning(lead_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_deal_learning_outcome ON deal_learning(outcome, updated_at DESC);

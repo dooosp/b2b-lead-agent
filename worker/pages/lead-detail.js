@@ -1,12 +1,13 @@
 import { getCommonStyles } from './common-styles.js';
 import { getEscScript, getQueryTokenBridgeScript, getSafeUrlScript, getStoredTokenScript } from './script-snippets.js';
 
-export function getLeadDetailPage(lead, statusLogs) {
+export function getLeadDetailPage(lead, statusLogs, learningRecord = null) {
   const statusLabelsJS = JSON.stringify({ NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' });
   const statusColorsJS = JSON.stringify({ NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' });
   const transitionsJS = JSON.stringify({ NEW: ['CONTACTED'], CONTACTED: ['MEETING'], MEETING: ['PROPOSAL'], PROPOSAL: ['NEGOTIATION'], NEGOTIATION: ['WON','LOST'], LOST: ['NEW'], WON: [] });
   const leadJSON = JSON.stringify(lead).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   const logsJSON = JSON.stringify(statusLogs || []).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+  const learningJSON = JSON.stringify(learningRecord).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   return `<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -57,6 +58,7 @@ export function getLeadDetailPage(lead, statusLogs) {
   <script>
     const lead = ${leadJSON};
     const statusLogs = ${logsJSON};
+    let learningRecord = ${learningJSON};
     const statusLabels = ${statusLabelsJS};
     const statusColors = ${statusColorsJS};
     const transitions = ${transitionsJS};
@@ -264,6 +266,21 @@ export function getLeadDetailPage(lead, statusLogs) {
       html += '<textarea class="notes-area" id="notesArea" aria-label="메모를 입력하세요" placeholder="메모를 입력하세요..." oninput="scheduleNoteSave()">' + esc(lead.notes || '') + '</textarea>';
       html += '</div>';
 
+      html += '<div class="detail-section">';
+      html += '<h3>Win/Loss Learning</h3>';
+      html += '<div class="field-group">';
+      html += '<div><label>Outcome</label><input id="learningOutcome" value="' + esc((learningRecord && learningRecord.outcome) || (lead.status === 'WON' || lead.status === 'LOST' ? lead.status : '')) + '" placeholder="WON / LOST / NO_DECISION"></div>';
+      html += '<div><label>Reason code</label><input id="learningReasonCode" value="' + esc((learningRecord && learningRecord.reasonCode) || '') + '" placeholder="budget, competition, timing"></div>';
+      html += '</div>';
+      html += '<div class="field-group">';
+      html += '<div><label>Observed objection</label><input id="learningObjection" value="' + esc((learningRecord && learningRecord.observedObjection) || '') + '" placeholder="반론 요약"></div>';
+      html += '<div><label>Competitor</label><input id="learningCompetitor" value="' + esc((learningRecord && learningRecord.competitorIfKnown) || '') + '" placeholder="알려진 경쟁사"></div>';
+      html += '</div>';
+      html += '<label style="color:#aaa;font-size:12px;display:block;margin-top:12px;">Lessons learned</label>';
+      html += '<textarea class="notes-area" id="learningLessons" placeholder="무엇이 먹혔고 무엇이 막혔는지 기록하세요.">' + esc((learningRecord && learningRecord.lessonsLearned) || '') + '</textarea>';
+      html += '<button class="btn btn-secondary" style="margin-top:10px;" onclick="saveLearning()">Learning 저장</button>';
+      html += '</div>';
+
       // 타임라인 섹션
       html += '<div class="detail-section">';
       html += '<h3>상태 변경 타임라인</h3>';
@@ -301,6 +318,35 @@ export function getLeadDetailPage(lead, statusLogs) {
         showSaved();
         if (field === 'status') location.reload();
       } catch(e) { alert('업데이트 실패: ' + e.message); }
+    }
+
+    async function saveLearning() {
+      try {
+        const body = {
+          learning: {
+            id: learningRecord && learningRecord.id ? learningRecord.id : '',
+            outcome: document.getElementById('learningOutcome').value.trim(),
+            reasonCode: document.getElementById('learningReasonCode').value.trim(),
+            observedObjection: document.getElementById('learningObjection').value.trim(),
+            competitorIfKnown: document.getElementById('learningCompetitor').value.trim(),
+            lessonsLearned: document.getElementById('learningLessons').value.trim(),
+            stageWhereLost: lead.status === 'LOST' ? lead.status : '',
+            freeformReason: document.getElementById('learningLessons').value.trim()
+          }
+        };
+        const res = await fetch('/api/leads/' + encodeURIComponent(lead.id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!data.success) { alert(data.message); return; }
+        if (data.lead) Object.assign(lead, data.lead);
+        if (data.learning) learningRecord = data.learning;
+        showSaved();
+      } catch (e) {
+        alert('Learning 저장 실패: ' + e.message);
+      }
     }
 
     let noteTimer;
