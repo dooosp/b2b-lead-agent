@@ -119,6 +119,20 @@ export function getLeadDetailPage(lead, statusLogs) {
       html += '<span class="save-indicator" id="saveIndicator">저장됨</span>';
       html += '</div>';
 
+      if (lead.solutionTranslation) {
+        const translation = lead.solutionTranslation;
+        html += '<div class="detail-section">';
+        html += '<h3>솔루션 번역</h3>';
+        html += '<div class="detail-row"><span class="label">Why this solution</span><span class="value">' + esc(translation.whyThisSolution || 'unknown') + '</span></div>';
+        html += '<div class="detail-row"><span class="label">Why now</span><span class="value">' + esc(translation.whyNow || 'unknown') + '</span></div>';
+        html += '<div class="detail-row"><span class="label">Why us</span><span class="value">' + esc(translation.whyUs || 'unknown') + '</span></div>';
+        html += '<div class="detail-row"><span class="label">기대 성과</span><span class="value">' + esc(translation.expectedBusinessOutcome || 'unknown') + '</span></div>';
+        if (translation.roiNarrative) html += '<div class="detail-row"><span class="label">ROI 내러티브</span><span class="value">' + esc(translation.roiNarrative) + '</span></div>';
+        if (translation.implementationConsiderations && translation.implementationConsiderations.length) html += '<div class="detail-row"><span class="label">구현 고려사항</span><span class="value">' + esc(translation.implementationConsiderations.join(', ')) + '</span></div>';
+        if (translation.proofPoints && translation.proofPoints.length) html += '<div class="detail-row"><span class="label">Proof point</span><span class="value">' + esc(translation.proofPoints.join(', ')) + '</span></div>';
+        html += '</div>';
+      }
+
       // Enrichment 섹션
       if (lead.enriched) {
         const listItem = (text) => '<li style="color:#ccc;font-size:13px;padding:2px 0 2px 12px;position:relative;"><span style="position:absolute;left:0;color:#8e44ad;">→</span>' + esc(text) + '</li>';

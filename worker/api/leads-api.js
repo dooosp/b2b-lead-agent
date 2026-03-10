@@ -2,13 +2,14 @@ import { jsonResponse } from '../lib/utils.js';
 import { resolveProfileId } from '../lib/profile.js';
 import { VALID_TRANSITIONS } from '../db/transform.js';
 import { getLeadsByProfile, getAllLeads, getLeadById, saveLeadsBatch, updateLeadStatus, updateLeadNotes } from '../db/leads.js';
+import { hydrateLeadIntelligence, hydrateLeadList } from '../lib/lead-intelligence.js';
 
 export async function fetchLeads(env, profile) {
   try {
     const isSelfServiceProfile = profile.startsWith('self-service:');
     if (env.DB) {
       const dbLeads = await getLeadsByProfile(env.DB, profile);
-      if (dbLeads.length > 0) return jsonResponse({ leads: dbLeads, profile, source: 'd1' });
+      if (dbLeads.length > 0) return jsonResponse({ leads: hydrateLeadList(dbLeads), profile, source: 'd1' });
     }
 
     if (isSelfServiceProfile) {
@@ -26,7 +27,7 @@ export async function fetchLeads(env, profile) {
       try { await saveLeadsBatch(env.DB, leads, profile, 'managed'); } catch { /* ignore migration errors */ }
     }
 
-    return jsonResponse({ leads, profile, source: 'github' });
+    return jsonResponse({ leads: hydrateLeadList(leads), profile, source: 'github' });
   } catch (e) {
     return jsonResponse({ leads: [], message: e.message }, 500);
   }
@@ -37,7 +38,7 @@ export async function fetchHistory(env, profile) {
     const isSelfServiceProfile = profile.startsWith('self-service:');
     if (env.DB) {
       const dbHistory = await getLeadsByProfile(env.DB, profile, { limit: 500 });
-      if (dbHistory.length > 0) return jsonResponse({ history: dbHistory, profile, source: 'd1' });
+      if (dbHistory.length > 0) return jsonResponse({ history: hydrateLeadList(dbHistory), profile, source: 'd1' });
     }
 
     if (isSelfServiceProfile) {
@@ -55,7 +56,7 @@ export async function fetchHistory(env, profile) {
       try { await saveLeadsBatch(env.DB, history, profile, 'managed'); } catch { /* ignore */ }
     }
 
-    return jsonResponse({ history, profile, source: 'github' });
+    return jsonResponse({ history: hydrateLeadList(history), profile, source: 'github' });
   } catch (e) {
     return jsonResponse({ history: [], message: e.message }, 500);
   }
@@ -105,7 +106,7 @@ export async function handleUpdateLead(request, env, leadId) {
   }
 
   const updated = await getLeadById(env.DB, leadId);
-  return jsonResponse({ success: true, lead: updated });
+  return jsonResponse({ success: true, lead: hydrateLeadIntelligence(updated) });
 }
 
 export async function handleExportCSV(request, env) {

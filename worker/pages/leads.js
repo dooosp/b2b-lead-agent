@@ -292,6 +292,8 @@ export function getLeadsPage() {
               \${lead.urgencyReason ? \`<div class="lead-block"><span class="block-label">우선순위 근거</span><div class="block-value">\${esc(lead.urgencyReason)}</div></div>\` : ''}
               \${lead.confidenceReason ? \`<div class="lead-block"><span class="block-label">신뢰도 근거</span><div class="block-value">\${esc(lead.confidenceReason)}</div></div>\` : ''}
               \${lead.scoreReason ? \`<div class="lead-block"><span class="block-label">점수 해설</span><div class="block-value">\${esc(lead.scoreReason)}</div></div>\` : ''}
+              \${lead.solutionTranslation && lead.solutionTranslation.whyThisSolution ? \`<div class="lead-block"><span class="block-label">Why this solution</span><div class="block-value">\${esc(lead.solutionTranslation.whyThisSolution)}</div></div>\` : ''}
+              \${lead.solutionTranslation && lead.solutionTranslation.roiNarrative ? \`<div class="lead-block"><span class="block-label">ROI 내러티브</span><div class="block-value">\${esc(lead.solutionTranslation.roiNarrative)}</div></div>\` : ''}
               <div class="lead-block"><span class="block-label">영업 제안</span><div class="block-value">\${esc(lead.salesPitch)}</div></div>
               <div class="lead-block"><span class="block-label">시장 트렌드</span><div class="block-value">\${esc(lead.globalContext) || '-'}</div></div>
             </div>

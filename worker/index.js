@@ -29,6 +29,7 @@ import { getDashboardPage } from './pages/dashboard.js';
 import { getProposalPage } from './pages/proposal.js';
 import { getCPAPage } from './pages/cpa.js';
 import { getAuthRequiredPage } from './pages/auth-required.js';
+import { hydrateLeadIntelligence } from './lib/lead-intelligence.js';
 
 // ===== Router =====
 export default {
@@ -157,7 +158,7 @@ export default {
       const lead = await getLeadById(env.DB, leadId);
       if (!lead) return new Response('리드를 찾을 수 없습니다.', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
       const statusLogs = await getStatusLogByLead(env.DB, leadId);
-      return new Response(getLeadDetailPage(lead, statusLogs), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      return new Response(getLeadDetailPage(hydrateLeadIntelligence(lead), statusLogs), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
     if (url.pathname === '/leads') {
       return new Response(getLeadsPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
