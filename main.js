@@ -2,7 +2,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const { loadProfile, listProfiles } = require('./config');
-const scout = require('./scout');
+const newsOrchestrator = require('./orchestrator/news-orchestrator');
 const qualifier = require('./qualifier');
 const briefing = require('./briefing');
 const emailSender = require('./email-sender');
@@ -30,9 +30,9 @@ async function run() {
   obs.log('pipeline', 'info', `B2B 리드 발굴 에이전트 시작 [${profile.name}]`);
 
   try {
-    // Step 1: Scout - 산업 뉴스 수집
+    // Step 1: Orchestrator - 산업 뉴스 수집
     const tScout = obs.time('scout');
-    const rawNews = await scout.fetchIndustryNews(profile);
+    const rawNews = await newsOrchestrator.fetchIndustryNews(profile);
     tScout.end();
     obs.count('articles_raw', rawNews.length);
 
