@@ -56,6 +56,7 @@ Examples:
 - Keep `b2b-lead-agent` as the repository name.
 - Keep `main.js` as the batch entrypoint.
 - Keep `scout.js` only as a compatibility wrapper.
+- Treat `config.js` as the current profile registry layer until a file rename is worth the migration cost.
 - Standardize internal symbol names before renaming files.
 - Defer artifact, route, and profile filename changes until a compatibility plan exists.
 
@@ -64,6 +65,7 @@ Examples:
 - Standardize internal symbol names such as `rawArticles`, `qualifiedLeads`, `leadReport`, and `reportArtifacts`.
 - Add clearer alias exports for existing modules without breaking current imports.
 - Prefer role-oriented import names at call sites even when file names stay unchanged.
+- In later phases, flip aliases so role-based names become the internal canonical names and legacy names remain as compatibility exports.
 
 ## Deferred To P1+
 

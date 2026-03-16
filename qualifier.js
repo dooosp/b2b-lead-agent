@@ -13,7 +13,7 @@ function categorizeArticles(articles, profile) {
   return matched.size > 0 ? [...matched] : Object.keys(rules); // 폴백: 전체
 }
 
-async function analyzeLeads(articles, profile) {
+async function qualifyLeads(articles, profile) {
   console.log('[Step 2] Gemini API로 리드 분석 시작...');
 
   if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
@@ -293,6 +293,6 @@ function generateDemoLeads(articles, profile) {
   return demoLeads;
 }
 
-const qualifyLeads = analyzeLeads;
+const analyzeLeads = qualifyLeads;
 
 module.exports = { analyzeLeads, qualifyLeads };

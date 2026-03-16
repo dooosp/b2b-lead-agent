@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-function generateReport(leads, profile) {
+function composeLeadReport(leads, profile) {
   console.log('[Step 3] 영업용 리포트 생성...');
 
   const today = new Date();
@@ -65,7 +65,7 @@ function getProfileReportsDir(profile) {
   return dir;
 }
 
-function saveReport(report, profile) {
+function saveLeadReport(report, profile) {
   const reportsDir = getProfileReportsDir(profile);
   const filePath = path.join(reportsDir, `lead_report_${report.dateStr}.md`);
   fs.writeFileSync(filePath, report.content, 'utf-8');
@@ -80,7 +80,7 @@ function generateLeadId(company) {
   return `${slug}_${date}_${Math.random().toString(36).substring(2, 6)}`;
 }
 
-function saveLeadsJson(leads, profile) {
+function saveLeadSnapshot(leads, profile) {
   const reportsDir = getProfileReportsDir(profile);
   const now = new Date().toISOString();
 
@@ -137,15 +137,15 @@ function saveLeadsJson(leads, profile) {
 
 function publishLeadReport(leadReport, qualifiedLeads, profile) {
   const reportsDir = getProfileReportsDir(profile);
-  const reportPath = saveReport(leadReport, profile);
-  const latestLeadsPath = saveLeadsJson(qualifiedLeads, profile);
+  const reportPath = saveLeadReport(leadReport, profile);
+  const latestLeadsPath = saveLeadSnapshot(qualifiedLeads, profile);
   const historyPath = path.join(reportsDir, 'lead_history.json');
   return { reportsDir, reportPath, latestLeadsPath, historyPath };
 }
 
-const composeLeadReport = generateReport;
-const saveLeadReport = saveReport;
-const saveLeadSnapshot = saveLeadsJson;
+const generateReport = composeLeadReport;
+const saveReport = saveLeadReport;
+const saveLeadsJson = saveLeadSnapshot;
 
 module.exports = {
   generateReport,
