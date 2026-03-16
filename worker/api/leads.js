@@ -3,6 +3,21 @@ import { resolveProfileId } from '../lib/profile.js';
 import { VALID_TRANSITIONS } from '../db/transform.js';
 import { getLeadsByProfile, getAllLeads, getLeadById, saveLeadsBatch, updateLeadStatus, updateLeadNotes } from '../db/leads.js';
 
+async function fetchGitHubArtifactJson(env, profile, artifactNames) {
+  for (const artifactName of artifactNames) {
+    const response = await fetch(
+      `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/${profile}/${artifactName}?t=${Date.now()}`,
+      { headers: { 'User-Agent': 'B2B-Lead-Worker', 'Cache-Control': 'no-cache' } }
+    );
+
+    if (response.ok) {
+      return response.json();
+    }
+  }
+
+  return null;
+}
+
 export async function fetchLeads(env, profile) {
   try {
     const isSelfServiceProfile = profile.startsWith('self-service:');
@@ -15,12 +30,8 @@ export async function fetchLeads(env, profile) {
       return jsonResponse({ leads: [], profile, source: 'd1', message: '해당 셀프서비스 리드가 없습니다.' });
     }
 
-    const response = await fetch(
-      `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/${profile}/latest_leads.json?t=${Date.now()}`,
-      { headers: { 'User-Agent': 'B2B-Lead-Worker', 'Cache-Control': 'no-cache' } }
-    );
-    if (!response.ok) return jsonResponse({ leads: [], message: '아직 생성된 리드가 없습니다.' });
-    const leads = await response.json();
+    const leads = await fetchGitHubArtifactJson(env, profile, ['latest-leads.json', 'latest_leads.json']);
+    if (!leads) return jsonResponse({ leads: [], message: '아직 생성된 리드가 없습니다.' });
 
     if (env.DB && leads.length > 0) {
       try { await saveLeadsBatch(env.DB, leads, profile, 'managed'); } catch { /* ignore migration errors */ }
@@ -44,12 +55,8 @@ export async function fetchHistory(env, profile) {
       return jsonResponse({ history: [], profile, source: 'd1', message: '해당 셀프서비스 히스토리가 없습니다.' });
     }
 
-    const response = await fetch(
-      `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/${profile}/lead_history.json?t=${Date.now()}`,
-      { headers: { 'User-Agent': 'B2B-Lead-Worker', 'Cache-Control': 'no-cache' } }
-    );
-    if (!response.ok) return jsonResponse({ history: [], message: '아직 히스토리가 없습니다.' });
-    const history = await response.json();
+    const history = await fetchGitHubArtifactJson(env, profile, ['lead-history.json', 'lead_history.json']);
+    if (!history) return jsonResponse({ history: [], message: '아직 히스토리가 없습니다.' });
 
     if (env.DB && history.length > 0) {
       try { await saveLeadsBatch(env.DB, history, profile, 'managed'); } catch { /* ignore */ }
@@ -127,7 +134,7 @@ export async function handleExportCSV(request, env) {
     return [esc(l.company), esc(l.summary), esc(l.product), l.score, l.grade, esc(l.roi), l.status, esc(l.notes), l.createdAt?.split('T')[0] || ''].join(',');
   });
   const csv = BOM + header + '\n' + rows.join('\n');
-  const filename = `leads_${profileId}_${new Date().toISOString().split('T')[0]}.csv`;
+  const filename = `leads-${profileId}-${new Date().toISOString().split('T')[0]}.csv`;
   return new Response(csv, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',

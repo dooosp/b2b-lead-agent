@@ -1,6 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 
+const ARTIFACT_NAMES = {
+  markdownLegacy: (dateStr) => `lead_report_${dateStr}.md`,
+  markdownCanonical: (dateStr) => `lead-report-${dateStr}.md`,
+  latestLegacy: 'latest_leads.json',
+  latestCanonical: 'latest-leads.json',
+  historyLegacy: 'lead_history.json',
+  historyCanonical: 'lead-history.json',
+};
+
 function composeLeadReport(leads, profile) {
   console.log('[Step 3] 영업용 리포트 생성...');
 
@@ -67,10 +76,16 @@ function getProfileReportsDir(profile) {
 
 function saveLeadReport(report, profile) {
   const reportsDir = getProfileReportsDir(profile);
-  const filePath = path.join(reportsDir, `lead_report_${report.dateStr}.md`);
-  fs.writeFileSync(filePath, report.content, 'utf-8');
-  console.log(`  리포트 저장: ${filePath}\n`);
-  return filePath;
+  const canonicalPath = path.join(reportsDir, ARTIFACT_NAMES.markdownCanonical(report.dateStr));
+  const legacyPath = path.join(reportsDir, ARTIFACT_NAMES.markdownLegacy(report.dateStr));
+
+  fs.writeFileSync(canonicalPath, report.content, 'utf-8');
+  fs.writeFileSync(legacyPath, report.content, 'utf-8');
+
+  console.log(`  리포트 저장: ${canonicalPath}`);
+  console.log(`  리포트 호환 저장: ${legacyPath}\n`);
+
+  return canonicalPath;
 }
 
 // 리드 ID 생성 (기업명 + 날짜 기반)
@@ -94,16 +109,22 @@ function saveLeadSnapshot(leads, profile) {
   }));
 
   // 최신 리드 저장
-  const latestPath = path.join(reportsDir, 'latest_leads.json');
-  fs.writeFileSync(latestPath, JSON.stringify(enrichedLeads, null, 2), 'utf-8');
-  console.log(`  리드 JSON 저장: ${latestPath}`);
+  const latestCanonicalPath = path.join(reportsDir, ARTIFACT_NAMES.latestCanonical);
+  const latestLegacyPath = path.join(reportsDir, ARTIFACT_NAMES.latestLegacy);
+  const latestPayload = JSON.stringify(enrichedLeads, null, 2);
+  fs.writeFileSync(latestCanonicalPath, latestPayload, 'utf-8');
+  fs.writeFileSync(latestLegacyPath, latestPayload, 'utf-8');
+  console.log(`  리드 JSON 저장: ${latestCanonicalPath}`);
+  console.log(`  리드 JSON 호환 저장: ${latestLegacyPath}`);
 
   // 히스토리에 추가 (기존 데이터 유지)
-  const historyPath = path.join(reportsDir, 'lead_history.json');
+  const historyCanonicalPath = path.join(reportsDir, ARTIFACT_NAMES.historyCanonical);
+  const historyLegacyPath = path.join(reportsDir, ARTIFACT_NAMES.historyLegacy);
+  const historyReadPath = fs.existsSync(historyCanonicalPath) ? historyCanonicalPath : historyLegacyPath;
   let history = [];
-  if (fs.existsSync(historyPath)) {
+  if (fs.existsSync(historyReadPath)) {
     try {
-      history = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
+      history = JSON.parse(fs.readFileSync(historyReadPath, 'utf-8'));
     } catch (e) {
       history = [];
     }
@@ -129,17 +150,20 @@ function saveLeadSnapshot(leads, profile) {
     }
   }
 
-  fs.writeFileSync(historyPath, JSON.stringify(history, null, 2), 'utf-8');
-  console.log(`  히스토리 저장: ${historyPath} (총 ${history.length}개 리드)\n`);
+  const historyPayload = JSON.stringify(history, null, 2);
+  fs.writeFileSync(historyCanonicalPath, historyPayload, 'utf-8');
+  fs.writeFileSync(historyLegacyPath, historyPayload, 'utf-8');
+  console.log(`  히스토리 저장: ${historyCanonicalPath} (총 ${history.length}개 리드)`);
+  console.log(`  히스토리 호환 저장: ${historyLegacyPath}\n`);
 
-  return latestPath;
+  return latestCanonicalPath;
 }
 
 function publishLeadReport(leadReport, qualifiedLeads, profile) {
   const reportsDir = getProfileReportsDir(profile);
   const reportPath = saveLeadReport(leadReport, profile);
   const latestLeadsPath = saveLeadSnapshot(qualifiedLeads, profile);
-  const historyPath = path.join(reportsDir, 'lead_history.json');
+  const historyPath = path.join(reportsDir, ARTIFACT_NAMES.historyCanonical);
   return { reportsDir, reportPath, latestLeadsPath, historyPath };
 }
 
@@ -155,4 +179,5 @@ module.exports = {
   saveLeadReport,
   saveLeadSnapshot,
   publishLeadReport,
+  ARTIFACT_NAMES,
 };

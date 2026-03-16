@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node main.js --profile danfoss",
     "email": "node main.js --profile danfoss --email",
+    "check:naming": "node scripts/check-naming.js",
     "e2e": "node e2e-test.mjs",
     "test:worker": "node --test worker/tests/*.test.mjs"
   },

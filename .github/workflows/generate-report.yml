@@ -36,6 +36,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add reports/$PROFILE/latest_leads.json reports/$PROFILE/lead_history.json
+          git add \
+            reports/$PROFILE/latest_leads.json \
+            reports/$PROFILE/latest-leads.json \
+            reports/$PROFILE/lead_history.json \
+            reports/$PROFILE/lead-history.json \
+            reports/$PROFILE/lead_report_*.md \
+            reports/$PROFILE/lead-report-*.md
           git diff --cached --quiet || git commit -m "Update $PROFILE leads data"
           git push

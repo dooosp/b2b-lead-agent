@@ -92,6 +92,23 @@ Examples:
   - `worker/api/leads-api.js`
   - `worker/api/references-api.js`
 
+## P2-B Status
+
+- Artifact writers now dual-write canonical and legacy names during the migration window.
+- Artifact readers should prefer canonical names first and fall back to legacy names.
+- Current dual-write pairs:
+  - `lead-report-YYYY-MM-DD.md` + `lead_report_YYYY-MM-DD.md`
+  - `latest-leads.json` + `latest_leads.json`
+  - `lead-history.json` + `lead_history.json`
+- Workflow commits should include both canonical and legacy artifact names until downstream consumers are fully migrated.
+
+## P2-C Status
+
+- Add `npm run check:naming` to enforce the current migration baseline.
+- Allow only explicit legacy wrapper files in `worker/api/*-api.js`.
+- Require canonical role-oriented files to exist before merge.
+- Keep naming checks narrow enough that they protect the standard without blocking unrelated work.
+
 ## Enforcement Ideas
 
 - PR checklist item: is this a stable identity or mutable metadata?
