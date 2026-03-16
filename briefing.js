@@ -8,53 +8,53 @@ function generateReport(leads, profile) {
   const dateStr = today.toISOString().split('T')[0];
   const dateKor = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
 
-  const gradeA = leads.filter(l => l.grade === 'A').sort((a, b) => b.score - a.score);
-  const gradeB = leads.filter(l => l.grade === 'B').sort((a, b) => b.score - a.score);
+  const gradeALeads = leads.filter(l => l.grade === 'A').sort((a, b) => b.score - a.score);
+  const gradeBLeads = leads.filter(l => l.grade === 'B').sort((a, b) => b.score - a.score);
 
-  let report = `# [${profile.name}] B2B 리드 리포트 - ${dateKor}\n\n`;
-  report += `> 생성 시각: ${today.toLocaleString('ko-KR')}\n`;
-  report += `> 분석 대상: ${leads.length}개 리드\n\n`;
+  let reportMarkdown = `# [${profile.name}] B2B 리드 리포트 - ${dateKor}\n\n`;
+  reportMarkdown += `> 생성 시각: ${today.toLocaleString('ko-KR')}\n`;
+  reportMarkdown += `> 분석 대상: ${leads.length}개 리드\n\n`;
 
   // Grade A
-  report += `## Grade A - 즉시 영업 가능 (${gradeA.length}건)\n\n`;
-  if (gradeA.length > 0) {
-    for (const lead of gradeA) {
-      report += `### ${lead.company} (${lead.score}점)\n`;
-      report += `- **프로젝트:** ${lead.summary}\n`;
-      report += `- **추천 제품:** ${lead.product}\n`;
-      report += `- **예상 ROI:** ${lead.roi || '-'}\n`;
-      report += `- **영업 Pitch:** ${lead.salesPitch}\n`;
-      report += `- **글로벌 트렌드:** ${lead.globalContext || '-'}\n\n`;
+  reportMarkdown += `## Grade A - 즉시 영업 가능 (${gradeALeads.length}건)\n\n`;
+  if (gradeALeads.length > 0) {
+    for (const lead of gradeALeads) {
+      reportMarkdown += `### ${lead.company} (${lead.score}점)\n`;
+      reportMarkdown += `- **프로젝트:** ${lead.summary}\n`;
+      reportMarkdown += `- **추천 제품:** ${lead.product}\n`;
+      reportMarkdown += `- **예상 ROI:** ${lead.roi || '-'}\n`;
+      reportMarkdown += `- **영업 Pitch:** ${lead.salesPitch}\n`;
+      reportMarkdown += `- **글로벌 트렌드:** ${lead.globalContext || '-'}\n\n`;
     }
   } else {
-    report += '_해당 없음_\n\n';
+    reportMarkdown += '_해당 없음_\n\n';
   }
 
   // Grade B
-  report += `## Grade B - 파이프라인 관리 (${gradeB.length}건)\n\n`;
-  if (gradeB.length > 0) {
-    for (const lead of gradeB) {
-      report += `### ${lead.company} (${lead.score}점)\n`;
-      report += `- **프로젝트:** ${lead.summary}\n`;
-      report += `- **추천 제품:** ${lead.product}\n`;
-      report += `- **예상 ROI:** ${lead.roi || '-'}\n`;
-      report += `- **영업 Pitch:** ${lead.salesPitch}\n`;
-      report += `- **글로벌 트렌드:** ${lead.globalContext || '-'}\n\n`;
+  reportMarkdown += `## Grade B - 파이프라인 관리 (${gradeBLeads.length}건)\n\n`;
+  if (gradeBLeads.length > 0) {
+    for (const lead of gradeBLeads) {
+      reportMarkdown += `### ${lead.company} (${lead.score}점)\n`;
+      reportMarkdown += `- **프로젝트:** ${lead.summary}\n`;
+      reportMarkdown += `- **추천 제품:** ${lead.product}\n`;
+      reportMarkdown += `- **예상 ROI:** ${lead.roi || '-'}\n`;
+      reportMarkdown += `- **영업 Pitch:** ${lead.salesPitch}\n`;
+      reportMarkdown += `- **글로벌 트렌드:** ${lead.globalContext || '-'}\n\n`;
     }
   } else {
-    report += '_해당 없음_\n\n';
+    reportMarkdown += '_해당 없음_\n\n';
   }
 
   // 요약
-  report += '---\n\n';
-  report += '## 요약\n\n';
-  report += `- **Grade A (즉시 영업):** ${gradeA.length}건\n`;
-  report += `- **Grade B (파이프라인):** ${gradeB.length}건\n`;
-  report += `- **총 리드:** ${leads.length}건\n`;
+  reportMarkdown += '---\n\n';
+  reportMarkdown += '## 요약\n\n';
+  reportMarkdown += `- **Grade A (즉시 영업):** ${gradeALeads.length}건\n`;
+  reportMarkdown += `- **Grade B (파이프라인):** ${gradeBLeads.length}건\n`;
+  reportMarkdown += `- **총 리드:** ${leads.length}건\n`;
 
-  console.log(`  리포트 생성 완료: Grade A ${gradeA.length}건, Grade B ${gradeB.length}건\n`);
+  console.log(`  리포트 생성 완료: Grade A ${gradeALeads.length}건, Grade B ${gradeBLeads.length}건\n`);
 
-  return { content: report, dateStr };
+  return { content: reportMarkdown, dateStr };
 }
 
 function getProfileReportsDir(profile) {
@@ -135,4 +135,24 @@ function saveLeadsJson(leads, profile) {
   return latestPath;
 }
 
-module.exports = { generateReport, saveReport, saveLeadsJson };
+function publishLeadReport(leadReport, qualifiedLeads, profile) {
+  const reportsDir = getProfileReportsDir(profile);
+  const reportPath = saveReport(leadReport, profile);
+  const latestLeadsPath = saveLeadsJson(qualifiedLeads, profile);
+  const historyPath = path.join(reportsDir, 'lead_history.json');
+  return { reportsDir, reportPath, latestLeadsPath, historyPath };
+}
+
+const composeLeadReport = generateReport;
+const saveLeadReport = saveReport;
+const saveLeadSnapshot = saveLeadsJson;
+
+module.exports = {
+  generateReport,
+  saveReport,
+  saveLeadsJson,
+  composeLeadReport,
+  saveLeadReport,
+  saveLeadSnapshot,
+  publishLeadReport,
+};

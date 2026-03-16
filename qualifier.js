@@ -31,7 +31,7 @@ async function analyzeLeads(articles, profile) {
   });
 
   // 본문 유무 표시 + 예외 처리 안내
-  const newsList = articles.map((a, i) => {
+  const articleList = articles.map((a, i) => {
     const safeTitle = JSON.stringify(a.title || '');
     const safeContent = a.content ? JSON.stringify(a.content.substring(0, 500)) : null;
     let entry = `${i + 1}. [${a.source}] ${safeTitle} (URL: ${a.link}) (검색키워드: ${a.query})`;
@@ -114,7 +114,7 @@ ${globalRefStr}
 - salesPitch는 고객 관점(pain point 해결) 중심, ${profile.name} 자랑 X.
 
 [뉴스 목록]
-${newsList}
+${articleList}
 
 [Verification - 출력 전 자체 점검]
 □ company가 실제 기업명인가? (산업 키워드가 아닌 법인명)
@@ -147,10 +147,10 @@ Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요
 ]`;
 
   try {
-    const leads = await llm.chatJSON(prompt, { label: 'Gemini-qualify' });
+    const qualifiedLeads = await llm.chatJSON(prompt, { label: 'Gemini-qualify' });
 
     // 스키마 검증: 배열 + 필수 필드 확인
-    const validLeads = (Array.isArray(leads) ? leads : []).filter(lead =>
+    const validLeads = (Array.isArray(qualifiedLeads) ? qualifiedLeads : []).filter(lead =>
       lead && typeof lead.company === 'string' && typeof lead.score === 'number'
     ).map(lead => ({
       ...lead,
@@ -293,4 +293,6 @@ function generateDemoLeads(articles, profile) {
   return demoLeads;
 }
 
-module.exports = { analyzeLeads };
+const qualifyLeads = analyzeLeads;
+
+module.exports = { analyzeLeads, qualifyLeads };

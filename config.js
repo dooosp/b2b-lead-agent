@@ -31,4 +31,15 @@ const leadStatus = {
   LOST: '실패/보류'
 };
 
-module.exports = { loadProfile, listProfiles, leadStatus };
+const loadAgentProfile = loadProfile;
+const listAgentProfiles = listProfiles;
+const profileRegistry = { loadProfile, listProfiles };
+
+module.exports = {
+  loadProfile,
+  listProfiles,
+  loadAgentProfile,
+  listAgentProfiles,
+  profileRegistry,
+  leadStatus,
+};

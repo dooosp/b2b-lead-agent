@@ -382,3 +382,5 @@ export function getMainPage(env) {
 </body>
 </html>`;
 }
+
+export const getHomePage = getMainPage;

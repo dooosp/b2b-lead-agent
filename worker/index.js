@@ -6,8 +6,17 @@ import { resolveLeadProfileForQuery } from './lib/profile.js';
 
 import { getLeadById, getStatusLogByLead } from './db/leads.js';
 import { handleTrigger } from './api/trigger.js';
-import { fetchLeads, fetchHistory, handleUpdateLead, handleExportCSV } from './api/leads-api.js';
-import { handleGetReferences, handleAddReference, handleDeleteReference } from './api/references-api.js';
+import {
+  fetchLeads as fetchLeadCollection,
+  fetchHistory as fetchLeadHistory,
+  handleUpdateLead as handleLeadUpdate,
+  handleExportCSV as handleLeadCsvExport
+} from './api/leads-api.js';
+import {
+  handleGetReferences as listReferences,
+  handleAddReference as createReference,
+  handleDeleteReference as removeReference
+} from './api/references-api.js';
 import { generatePPT } from './api/ppt.js';
 import { generateProposal } from './api/proposal.js';
 import { calculateCPA } from './api/cpa.js';
@@ -19,7 +28,7 @@ import { checkSelfServiceRateLimit } from './self-service/rate-limit.js';
 import { handleSelfServiceAnalyze } from './self-service/orchestrator.js';
 
 import { getPWAManifest, getServiceWorkerJS } from './pages/pwa.js';
-import { getMainPage } from './pages/main.js';
+import { getHomePage } from './pages/main.js';
 import { getLeadsPage } from './pages/leads.js';
 import { getLeadDetailPage } from './pages/lead-detail.js';
 import { getPPTPage } from './pages/ppt.js';
@@ -66,7 +75,7 @@ export default {
       if (!profileRes.ok) {
         return addCorsHeaders(jsonResponse({ success: false, message: profileRes.message }, 400), origin, env);
       }
-      return addCorsHeaders(await fetchLeads(env, profileRes.profileId), origin, env);
+      return addCorsHeaders(await fetchLeadCollection(env, profileRes.profileId), origin, env);
     }
     if (url.pathname === '/api/ppt' && request.method === 'POST') {
       return addCorsHeaders(await generatePPT(request, env), origin, env);
@@ -85,7 +94,7 @@ export default {
       if (!profileRes.ok) {
         return addCorsHeaders(jsonResponse({ success: false, message: profileRes.message }, 400), origin, env);
       }
-      return addCorsHeaders(await fetchHistory(env, profileRes.profileId), origin, env);
+      return addCorsHeaders(await fetchLeadHistory(env, profileRes.profileId), origin, env);
     }
     // POST /api/leads/batch-enrich — 일괄 심층 분석
     if (url.pathname === '/api/leads/batch-enrich' && request.method === 'POST') {
@@ -101,30 +110,30 @@ export default {
     const leadPatchMatch = url.pathname.match(/^\/api\/leads\/([^/]+)$/);
     if (leadPatchMatch && request.method === 'PATCH') {
       const leadId = decodeURIComponent(leadPatchMatch[1]);
-      return addCorsHeaders(await handleUpdateLead(request, env, leadId), origin, env);
+      return addCorsHeaders(await handleLeadUpdate(request, env, leadId), origin, env);
     }
     if (url.pathname === '/api/dashboard' && request.method === 'GET') {
       return addCorsHeaders(await handleDashboard(request, env), origin, env);
     }
     if (url.pathname === '/api/export/csv' && request.method === 'GET') {
-      return addCorsHeaders(await handleExportCSV(request, env), origin, env);
+      return addCorsHeaders(await handleLeadCsvExport(request, env), origin, env);
     }
     // Reference Library API
     if (url.pathname === '/api/references' && request.method === 'GET') {
       const authErr = await verifyAuth(request, env);
       if (authErr) return addCorsHeaders(authErr, origin, env);
-      return addCorsHeaders(await handleGetReferences(env, url), origin, env);
+      return addCorsHeaders(await listReferences(env, url), origin, env);
     }
     if (url.pathname === '/api/references' && request.method === 'POST') {
       const authErr = await verifyAuth(request, env);
       if (authErr) return addCorsHeaders(authErr, origin, env);
-      return addCorsHeaders(await handleAddReference(request, env), origin, env);
+      return addCorsHeaders(await createReference(request, env), origin, env);
     }
     const refDeleteMatch = url.pathname.match(/^\/api\/references\/(\d+)$/);
     if (refDeleteMatch && request.method === 'DELETE') {
       const authErr = await verifyAuth(request, env);
       if (authErr) return addCorsHeaders(authErr, origin, env);
-      return addCorsHeaders(await handleDeleteReference(env, Number(refDeleteMatch[1])), origin, env);
+      return addCorsHeaders(await removeReference(env, Number(refDeleteMatch[1])), origin, env);
     }
     // PWA
     if (url.pathname === '/manifest.json') {
@@ -181,6 +190,6 @@ export default {
       return new Response(getCPAPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
 
-    return new Response(getMainPage(env), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    return new Response(getHomePage(env), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
   }
 };
