@@ -12,10 +12,20 @@ const requiredCanonicalPaths = [
   'worker/api/references.js',
 ];
 
-const allowedLegacyApiWrappers = new Set([
+const forbiddenLegacyPaths = [
+  'qualifier.js',
+  'briefing.js',
+  'config.js',
+  'worker/pages/main.js',
   'worker/api/leads-api.js',
   'worker/api/references-api.js',
-]);
+];
+
+const forbiddenArtifactPatterns = [
+  /^latest_leads\.json$/,
+  /^lead_history\.json$/,
+  /^lead_report_.*\.md$/,
+];
 
 function fail(message) {
   console.error(`Naming check failed: ${message}`);
@@ -29,6 +39,13 @@ for (const relativePath of requiredCanonicalPaths) {
   }
 }
 
+for (const relativePath of forbiddenLegacyPaths) {
+  const absolutePath = path.join(repoRoot, relativePath);
+  if (fs.existsSync(absolutePath)) {
+    fail(`legacy path must be removed: ${relativePath}`);
+  }
+}
+
 const workerApiDir = path.join(repoRoot, 'worker', 'api');
 if (fs.existsSync(workerApiDir)) {
   for (const entry of fs.readdirSync(workerApiDir)) {
@@ -36,27 +53,51 @@ if (fs.existsSync(workerApiDir)) {
     if (!entry.endsWith('-api.js')) continue;
 
     const relativePath = path.posix.join('worker/api', entry);
-    if (!allowedLegacyApiWrappers.has(relativePath)) {
-      fail(`unexpected legacy API filename ${relativePath}`);
-    }
+    fail(`legacy API filename is no longer allowed: ${relativePath}`);
   }
 }
 
 const artifactPublisherPath = path.join(repoRoot, 'lead-report-publisher.js');
 if (fs.existsSync(artifactPublisherPath)) {
   const publisherSource = fs.readFileSync(artifactPublisherPath, 'utf8');
-  const expectedMarkers = [
+  const requiredMarkers = [
     'latest-leads.json',
-    'latest_leads.json',
     'lead-history.json',
-    'lead_history.json',
     'lead-report-',
+  ];
+  const forbiddenMarkers = [
+    'latest_leads.json',
+    'lead_history.json',
     'lead_report_',
   ];
 
-  for (const marker of expectedMarkers) {
+  for (const marker of requiredMarkers) {
     if (!publisherSource.includes(marker)) {
-      fail(`lead-report-publisher.js is missing compatibility marker ${marker}`);
+      fail(`lead-report-publisher.js is missing canonical marker ${marker}`);
+    }
+  }
+
+  for (const marker of forbiddenMarkers) {
+    if (publisherSource.includes(marker)) {
+      fail(`lead-report-publisher.js still includes legacy marker ${marker}`);
+    }
+  }
+}
+
+const reportsDir = path.join(repoRoot, 'reports');
+if (fs.existsSync(reportsDir)) {
+  for (const profileEntry of fs.readdirSync(reportsDir, { withFileTypes: true })) {
+    if (!profileEntry.isDirectory()) continue;
+
+    const profileDir = path.join(reportsDir, profileEntry.name);
+    for (const artifactEntry of fs.readdirSync(profileDir, { withFileTypes: true })) {
+      if (!artifactEntry.isFile()) continue;
+
+      for (const pattern of forbiddenArtifactPatterns) {
+        if (pattern.test(artifactEntry.name)) {
+          fail(`legacy artifact must be removed: reports/${profileEntry.name}/${artifactEntry.name}`);
+        }
+      }
     }
   }
 }

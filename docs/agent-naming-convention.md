@@ -5,7 +5,7 @@
 - Define a reusable naming system for agent repositories without forcing every repo to share the same stage verbs.
 - Treat names as operational identifiers for runtime entrypoints, automation, observability, and policy.
 - Keep stable identities in names, and move mutable details into metadata.
-- P2-A moves canonical module paths to role-oriented file names while keeping legacy paths as compatibility wrappers.
+- Canonical module paths, artifact names, and worker surfaces now use role-oriented names only.
 
 ## Stable Names
 
@@ -57,9 +57,9 @@ Examples:
 - Keep `b2b-lead-agent` as the repository name.
 - Keep `main.js` as the batch entrypoint.
 - Keep `scout.js` only as a compatibility wrapper.
-- Treat `config.js` as the current profile registry layer until a file rename is worth the migration cost.
-- Standardize internal symbol names before renaming files.
-- Defer artifact, route, and profile filename changes until a compatibility plan exists.
+- Use `profile-registry.js` as the profile registry layer.
+- Use canonical role-based file paths directly in runtime code.
+- Use canonical artifact names directly in storage, workflows, and worker fetch logic.
 
 ## P0 Changes
 
@@ -68,14 +68,7 @@ Examples:
 - Prefer role-oriented import names at call sites even when file names stay unchanged.
 - In later phases, flip aliases so role-based names become the internal canonical names and legacy names remain as compatibility exports.
 
-## Deferred To P1+
-
-- File renames like `qualifier.js -> lead-qualifier.js`
-- Page and API file renames such as `worker/pages/main.js -> worker/pages/home-page.js`
-- Artifact path renames such as `latest_leads.json -> latest-leads.json`
-- Any route, storage, or profile ID changes
-
-## P2-A Status
+## Current Canonical Paths
 
 - Canonical file paths now use:
   - `lead-qualifier.js`
@@ -84,30 +77,22 @@ Examples:
   - `worker/pages/home-page.js`
   - `worker/api/leads.js`
   - `worker/api/references.js`
-- Legacy paths remain as wrappers during the migration window:
-  - `qualifier.js`
-  - `briefing.js`
-  - `config.js`
-  - `worker/pages/main.js`
-  - `worker/api/leads-api.js`
-  - `worker/api/references-api.js`
 
-## P2-B Status
+## Current Canonical Artifacts
 
-- Artifact writers now dual-write canonical and legacy names during the migration window.
-- Artifact readers should prefer canonical names first and fall back to legacy names.
-- Current dual-write pairs:
-  - `lead-report-YYYY-MM-DD.md` + `lead_report_YYYY-MM-DD.md`
-  - `latest-leads.json` + `latest_leads.json`
-  - `lead-history.json` + `lead_history.json`
-- Workflow commits should include both canonical and legacy artifact names until downstream consumers are fully migrated.
+- Reports:
+  - `lead-report-YYYY-MM-DD.md`
+- Lead snapshot:
+  - `latest-leads.json`
+- Lead history:
+  - `lead-history.json`
 
-## P2-C Status
+## Validation Status
 
-- Add `npm run check:naming` to enforce the current migration baseline.
-- Allow only explicit legacy wrapper files in `worker/api/*-api.js`.
-- Require canonical role-oriented files to exist before merge.
-- Keep naming checks narrow enough that they protect the standard without blocking unrelated work.
+- `npm run check:naming` enforces the current canonical baseline.
+- Legacy wrapper files and `worker/api/*-api.js` filenames are no longer allowed.
+- Canonical role-oriented files must exist before merge.
+- `lead-report-publisher.js` must write canonical artifact names only.
 
 ## Enforcement Ideas
 

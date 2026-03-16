@@ -2,11 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ARTIFACT_NAMES = {
-  markdownLegacy: (dateStr) => `lead_report_${dateStr}.md`,
   markdownCanonical: (dateStr) => `lead-report-${dateStr}.md`,
-  latestLegacy: 'latest_leads.json',
   latestCanonical: 'latest-leads.json',
-  historyLegacy: 'lead_history.json',
   historyCanonical: 'lead-history.json',
 };
 
@@ -77,13 +74,11 @@ function getProfileReportsDir(profile) {
 function saveLeadReport(report, profile) {
   const reportsDir = getProfileReportsDir(profile);
   const canonicalPath = path.join(reportsDir, ARTIFACT_NAMES.markdownCanonical(report.dateStr));
-  const legacyPath = path.join(reportsDir, ARTIFACT_NAMES.markdownLegacy(report.dateStr));
 
   fs.writeFileSync(canonicalPath, report.content, 'utf-8');
-  fs.writeFileSync(legacyPath, report.content, 'utf-8');
 
   console.log(`  리포트 저장: ${canonicalPath}`);
-  console.log(`  리포트 호환 저장: ${legacyPath}\n`);
+  console.log('');
 
   return canonicalPath;
 }
@@ -110,21 +105,16 @@ function saveLeadSnapshot(leads, profile) {
 
   // 최신 리드 저장
   const latestCanonicalPath = path.join(reportsDir, ARTIFACT_NAMES.latestCanonical);
-  const latestLegacyPath = path.join(reportsDir, ARTIFACT_NAMES.latestLegacy);
   const latestPayload = JSON.stringify(enrichedLeads, null, 2);
   fs.writeFileSync(latestCanonicalPath, latestPayload, 'utf-8');
-  fs.writeFileSync(latestLegacyPath, latestPayload, 'utf-8');
   console.log(`  리드 JSON 저장: ${latestCanonicalPath}`);
-  console.log(`  리드 JSON 호환 저장: ${latestLegacyPath}`);
 
   // 히스토리에 추가 (기존 데이터 유지)
   const historyCanonicalPath = path.join(reportsDir, ARTIFACT_NAMES.historyCanonical);
-  const historyLegacyPath = path.join(reportsDir, ARTIFACT_NAMES.historyLegacy);
-  const historyReadPath = fs.existsSync(historyCanonicalPath) ? historyCanonicalPath : historyLegacyPath;
   let history = [];
-  if (fs.existsSync(historyReadPath)) {
+  if (fs.existsSync(historyCanonicalPath)) {
     try {
-      history = JSON.parse(fs.readFileSync(historyReadPath, 'utf-8'));
+      history = JSON.parse(fs.readFileSync(historyCanonicalPath, 'utf-8'));
     } catch (e) {
       history = [];
     }
@@ -152,9 +142,8 @@ function saveLeadSnapshot(leads, profile) {
 
   const historyPayload = JSON.stringify(history, null, 2);
   fs.writeFileSync(historyCanonicalPath, historyPayload, 'utf-8');
-  fs.writeFileSync(historyLegacyPath, historyPayload, 'utf-8');
   console.log(`  히스토리 저장: ${historyCanonicalPath} (총 ${history.length}개 리드)`);
-  console.log(`  히스토리 호환 저장: ${historyLegacyPath}\n`);
+  console.log('');
 
   return latestCanonicalPath;
 }
