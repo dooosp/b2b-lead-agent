@@ -5,6 +5,7 @@
 - Define a reusable naming system for agent repositories without forcing every repo to share the same stage verbs.
 - Treat names as operational identifiers for runtime entrypoints, automation, observability, and policy.
 - Keep stable identities in names, and move mutable details into metadata.
+- P2-A moves canonical module paths to role-oriented file names while keeping legacy paths as compatibility wrappers.
 
 ## Stable Names
 
@@ -73,6 +74,23 @@ Examples:
 - Page and API file renames such as `worker/pages/main.js -> worker/pages/home-page.js`
 - Artifact path renames such as `latest_leads.json -> latest-leads.json`
 - Any route, storage, or profile ID changes
+
+## P2-A Status
+
+- Canonical file paths now use:
+  - `lead-qualifier.js`
+  - `lead-report-publisher.js`
+  - `profile-registry.js`
+  - `worker/pages/home-page.js`
+  - `worker/api/leads.js`
+  - `worker/api/references.js`
+- Legacy paths remain as wrappers during the migration window:
+  - `qualifier.js`
+  - `briefing.js`
+  - `config.js`
+  - `worker/pages/main.js`
+  - `worker/api/leads-api.js`
+  - `worker/api/references-api.js`
 
 ## Enforcement Ideas
 

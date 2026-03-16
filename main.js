@@ -1,10 +1,10 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
-const { loadAgentProfile, listAgentProfiles } = require('./config');
+const { loadAgentProfile, listAgentProfiles } = require('./profile-registry');
 const articleCollector = require('./orchestrator/news-orchestrator');
-const leadQualifier = require('./qualifier');
-const leadReportPublisher = require('./briefing');
+const leadQualifier = require('./lead-qualifier');
+const leadReportPublisher = require('./lead-report-publisher');
 const emailSender = require('./email-sender');
 const { createRun } = require('./lib/obs');
 

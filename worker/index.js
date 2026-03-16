@@ -11,12 +11,12 @@ import {
   fetchHistory as fetchLeadHistory,
   handleUpdateLead as handleLeadUpdate,
   handleExportCSV as handleLeadCsvExport
-} from './api/leads-api.js';
+} from './api/leads.js';
 import {
   handleGetReferences as listReferences,
   handleAddReference as createReference,
   handleDeleteReference as removeReference
-} from './api/references-api.js';
+} from './api/references.js';
 import { generatePPT } from './api/ppt.js';
 import { generateProposal } from './api/proposal.js';
 import { calculateCPA } from './api/cpa.js';
@@ -28,7 +28,7 @@ import { checkSelfServiceRateLimit } from './self-service/rate-limit.js';
 import { handleSelfServiceAnalyze } from './self-service/orchestrator.js';
 
 import { getPWAManifest, getServiceWorkerJS } from './pages/pwa.js';
-import { getHomePage } from './pages/main.js';
+import { getHomePage } from './pages/home-page.js';
 import { getLeadsPage } from './pages/leads.js';
 import { getLeadDetailPage } from './pages/lead-detail.js';
 import { getPPTPage } from './pages/ppt.js';
