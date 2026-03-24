@@ -13,6 +13,12 @@ PROFILES = '[{"id":"danfoss","name":"댄포스 코리아"},{"id":"ls-electric","
 ENABLE_SELF_SERVICE_RATE_LIMIT = "false"
 SELF_SERVICE_RATE_LIMIT_MAX = "3"
 SELF_SERVICE_RATE_LIMIT_WINDOW_SEC = "3600"
+REPORT_TRIGGER_TARGET = "github-actions"
+# Optional when REPORT_TRIGGER_TARGET="cloud-run-job"
+# GCP_PROJECT_ID = "your-project-id"
+# GCP_REGION = "asia-northeast3"
+# CLOUD_RUN_JOB_NAME = "b2b-lead-agent"
+# CLOUD_RUN_JOB_SEND_EMAIL = "true"
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT"

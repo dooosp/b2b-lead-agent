@@ -6,39 +6,67 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   generate:
     runs-on: ubuntu-latest
+    env:
+      BATCH_RUNTIME_TARGET: ${{ vars.BATCH_RUNTIME_TARGET || 'github-actions' }}
+      PROFILE: ${{ github.event.client_payload.profile || 'danfoss' }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      CLOUD_RUN_JOB_NAME: ${{ vars.CLOUD_RUN_JOB_NAME }}
+      CLOUD_RUN_JOB_REGION: ${{ vars.CLOUD_RUN_JOB_REGION }}
 
     steps:
+      - name: Authenticate to Google Cloud
+        if: env.BATCH_RUNTIME_TARGET == 'cloud-run-job'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        if: env.BATCH_RUNTIME_TARGET == 'cloud-run-job'
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Execute Cloud Run Job
+        if: env.BATCH_RUNTIME_TARGET == 'cloud-run-job'
+        run: >
+          gcloud run jobs execute "$CLOUD_RUN_JOB_NAME"
+          --project "$GCP_PROJECT_ID"
+          --region "$CLOUD_RUN_JOB_REGION"
+          --wait
+          --args="--profile,$PROFILE,--email"
+
       - uses: actions/checkout@v4
+        if: env.BATCH_RUNTIME_TARGET != 'cloud-run-job'
 
       - uses: actions/setup-node@v4
+        if: env.BATCH_RUNTIME_TARGET != 'cloud-run-job'
         with:
           node-version: '20'
 
       - name: Install dependencies
+        if: env.BATCH_RUNTIME_TARGET != 'cloud-run-job'
         run: npm install
 
       - name: Run pipeline and send email
+        if: env.BATCH_RUNTIME_TARGET != 'cloud-run-job'
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_PASS: ${{ secrets.GMAIL_PASS }}
           GMAIL_RECIPIENT: ${{ secrets.GMAIL_RECIPIENT }}
-          PROFILE: ${{ github.event.client_payload.profile || 'danfoss' }}
         run: node main.js --profile $PROFILE --email
 
       - name: Commit leads data
-        env:
-          PROFILE: ${{ github.event.client_payload.profile || 'danfoss' }}
+        if: env.BATCH_RUNTIME_TARGET != 'cloud-run-job'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add \
-            reports/$PROFILE/latest-leads.json \
-            reports/$PROFILE/lead-history.json \
-            reports/$PROFILE/lead-report-*.md
+          git add reports/$PROFILE/latest_leads.json reports/$PROFILE/lead_history.json
           git diff --cached --quiet || git commit -m "Update $PROFILE leads data"
           git push
