@@ -55,7 +55,7 @@ async function run() {
     // Step 3: Briefing - 영업용 리포트 생성
     const tBriefing = obs.time('briefing');
     const leadReport = leadReportPublisher.composeLeadReport(qualifiedLeads, profile);
-    const reportArtifacts = leadReportPublisher.publishLeadReport(leadReport, qualifiedLeads, profile);
+    const reportArtifacts = await leadReportPublisher.publishLeadReport(leadReport, qualifiedLeads, profile);
     tBriefing.end();
     obs.count('report_artifacts', Object.keys(reportArtifacts).length);
 
