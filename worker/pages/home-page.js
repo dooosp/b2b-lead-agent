@@ -356,11 +356,11 @@ export function getMainPage(env) {
         const res = await fetch('/trigger', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + password },
-          body: JSON.stringify({ password, profile })
+          body: JSON.stringify({ profile })
         });
         const data = await res.json();
         status.className = data.success ? 'status success' : 'status error';
-        status.textContent = data.message;
+        status.textContent = data.message + (data.requestId ? ' (requestId: ' + data.requestId + ')' : '');
       } catch (e) {
         status.className = 'status error';
         status.textContent = '요청 실패: ' + e.message;

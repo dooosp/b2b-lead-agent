@@ -25,7 +25,7 @@ async function run() {
   }
 
   const profile = loadAgentProfile(profileId);
-  const obs = createRun();
+  const obs = createRun({ runId: process.env.REQUEST_ID });
 
   obs.log('pipeline', 'info', `B2B 리드 발굴 에이전트 시작 [${profile.name}]`);
 

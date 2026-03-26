@@ -17,6 +17,7 @@ import {
   handleAddReference as createReference,
   handleDeleteReference as removeReference
 } from './api/references.js';
+import { handleGetJob, handleJobEvent } from './api/jobs.js';
 import { generatePPT } from './api/ppt.js';
 import { generateProposal } from './api/proposal.js';
 import { calculateCPA } from './api/cpa.js';
@@ -52,7 +53,13 @@ export default {
 
     // API 라우팅 — 인증 필요 경로
     const apiPaths = ['/api/leads', '/api/leads/batch-enrich', '/api/ppt', '/api/proposal', '/api/cpa', '/api/roleplay', '/api/history', '/api/dashboard', '/api/export/csv'];
-    if (apiPaths.includes(url.pathname) || url.pathname.startsWith('/api/leads/')) {
+    const jobEventMatch = url.pathname.match(/^\/api\/jobs\/([^/]+)\/events$/);
+    const jobStatusMatch = url.pathname.match(/^\/api\/jobs\/([^/]+)$/);
+    const requiresApiAuth = apiPaths.includes(url.pathname)
+      || url.pathname.startsWith('/api/leads/')
+      || Boolean(jobStatusMatch);
+
+    if (requiresApiAuth) {
       const authErr = await verifyAuth(request, env);
       if (authErr) return addCorsHeaders(authErr, origin, env);
     }
@@ -69,6 +76,14 @@ export default {
       const rlErr = await checkRateLimit(request, env);
       if (rlErr) return rlErr;
       return await handleTrigger(request, env);
+    }
+    if (jobStatusMatch && request.method === 'GET') {
+      const requestId = decodeURIComponent(jobStatusMatch[1]);
+      return addCorsHeaders(await handleGetJob(requestId, env), origin, env);
+    }
+    if (jobEventMatch && request.method === 'POST') {
+      const requestId = decodeURIComponent(jobEventMatch[1]);
+      return addCorsHeaders(await handleJobEvent(request, env, requestId), origin, env);
     }
     if (url.pathname === '/api/leads' && request.method === 'GET') {
       const profileRes = resolveLeadProfileForQuery(url.searchParams.get('profile'), env);
