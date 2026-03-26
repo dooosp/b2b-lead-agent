@@ -571,7 +571,7 @@
     "id": "장성_20260214_mfab",
     "status": "NEW",
     "createdAt": "2026-02-14T04:16:30.292Z",
-    "updatedAt": "2026-03-26T10:28:41.265Z",
+    "updatedAt": "2026-03-26T10:33:35.259Z",
     "company": "장성",
     "summary": "장성 파인데이터센터 착공으로 지역 경기 활성화 기대 상승",
     "product": "Turbocor 컴프레서",
@@ -579,7 +579,7 @@
     "grade": "A",
     "roi": "냉각 전력 35~40% 절감, PUE 1.25 달성",
     "salesPitch": "장성 데이터센터에 Equinix가 글로벌 표준으로 채택한 Turbocor 컴프레서로 PUE 1.25를 달성하세요.",
-    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: Equinix (미국) - PUE 1.58→1.25 개선, 냉각 전력 40% 절감",
+    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: NTT (일본) - 유지보수 비용 60% 감소, 가동률 99.99%",
     "sources": [
       {
         "title": "장성 파인데이터센터 착공으로 지역 경기 활성화 기대 상승 - 장성투데이",
@@ -611,7 +611,7 @@
     "id": "HD현대_20260221_o2j3",
     "status": "NEW",
     "createdAt": "2026-02-21T09:56:02.117Z",
-    "updatedAt": "2026-03-26T10:28:41.265Z",
+    "updatedAt": "2026-03-26T10:33:35.259Z",
     "company": "HD현대",
     "summary": "“친환경 대체연료 선박 수주 전쟁” 현대삼호·HD현대, 글로벌 해운시장 선도",
     "product": "iC7 Marine 드라이브",
@@ -619,7 +619,7 @@
     "grade": "A",
     "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
     "salesPitch": "HD현대의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
-    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: MSC (스위스) - 탄소 배출 25% 감소, CII 등급 A 달성",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: NYK Line (일본) - EEXI 규제 100% 충족, 연간 $2M 연료비 절감",
     "sources": [
       {
         "title": "[초점] “친환경 대체연료 선박 수주 전쟁” 현대삼호·HD현대, 글로벌 해운시장 선도 - 글로벌이코노믹",
@@ -671,7 +671,7 @@
     "id": "판도_20260306_mrhh",
     "status": "NEW",
     "createdAt": "2026-03-06T09:55:00.822Z",
-    "updatedAt": "2026-03-26T10:28:41.265Z",
+    "updatedAt": "2026-03-26T10:33:35.259Z",
     "company": "판도",
     "summary": "친환경·AI 선박 승부수… 수주 판도 흔들",
     "product": "iC7 Marine 드라이브",
@@ -679,7 +679,7 @@
     "grade": "A",
     "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
     "salesPitch": "판도의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
-    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: MSC (스위스) - 탄소 배출 25% 감소, CII 등급 A 달성",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: Maersk (덴마크) - 연료비 18% 절감, IMO 2030 규제 선제 대응",
     "sources": [
       {
         "title": "[키플레이어 한화오션①] 친환경·AI 선박 승부수… 수주 판도 '흔들' - 서울와이어",
@@ -731,7 +731,7 @@
     "id": "친환경선박_20260326_gfaj",
     "status": "NEW",
     "createdAt": "2026-03-26T10:28:41.265Z",
-    "updatedAt": "2026-03-26T10:28:41.265Z",
+    "updatedAt": "2026-03-26T10:33:35.259Z",
     "company": "“친환경 선박",
     "summary": "“친환경 선박, 방산 수주 증가… 국내 조선업 호황 몇십 년 이어질 듯”",
     "product": "iC7 Marine 드라이브",
@@ -739,7 +739,7 @@
     "grade": "A",
     "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
     "salesPitch": "“친환경 선박의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
-    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: Maersk (덴마크) - 연료비 18% 절감, IMO 2030 규제 선제 대응",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: MSC (스위스) - 탄소 배출 25% 감소, CII 등급 A 달성",
     "sources": [
       {
         "title": "[영상] “친환경 선박, 방산 수주 증가… 국내 조선업 호황 몇십 년 이어질 듯” - 주간동아",
@@ -751,7 +751,7 @@
     "id": "메타_20260326_lxcn",
     "status": "NEW",
     "createdAt": "2026-03-26T10:28:41.265Z",
-    "updatedAt": "2026-03-26T10:28:41.265Z",
+    "updatedAt": "2026-03-26T10:33:35.259Z",
     "company": "메타",
     "summary": "메타, 美 인디애나에 1GW급 초대형 데이터센터 착공",
     "product": "Turbocor 컴프레서",
