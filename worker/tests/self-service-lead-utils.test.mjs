@@ -9,6 +9,7 @@ import {
   normalizeSalesPitchText,
   normalizeTrendText,
   normalizeCompanyNameWorker,
+  normalizeSourceList,
   toSchemaLeadWorker
 } from '../self-service/lead-utils.js';
 
@@ -41,6 +42,7 @@ test('toSchemaLeadWorker keeps only contract fields', () => {
     'trend',
     'sources'
   ]);
+  assert.deepEqual(lead.sources, [{ title: '기사', url: 'https://example.com/news', resolution: 'direct' }]);
 });
 
 test('createSelfServiceSchemaPayloadWorker filters invalid leads and preserves summary', () => {
@@ -109,6 +111,61 @@ test('response schema normalizes ROI into allowed formats', () => {
   assert.match(payload.leads[0].expected_roi, /^근거 없음\(추정 불가\)/);
 });
 
+test('normalizeSourceList preserves unresolved discovery context from fallback article', () => {
+  const sources = normalizeSourceList([
+    {
+      title: 'LG전자, 공장 에너지 효율 투자 확대',
+      url: 'https://news.google.com/rss/articles/CBMiT2h0dHBzOi8vZXhhbXBsZS5jb20vZ29vZ2xlLW5ld3PSAQA'
+    }
+  ], {
+    title: 'LG전자, 공장 에너지 효율 투자 확대',
+    link: 'https://news.google.com/rss/articles/CBMiT2h0dHBzOi8vZXhhbXBsZS5jb20vZ29vZ2xlLW5ld3PSAQA',
+    query: 'LG전자 제조 투자',
+    source: 'Google News',
+    sourceUrl: 'https://www.mk.co.kr'
+  });
+
+  assert.deepEqual(sources, [
+    {
+      title: 'LG전자, 공장 에너지 효율 투자 확대',
+      url: 'https://news.google.com/rss/articles/CBMiT2h0dHBzOi8vZXhhbXBsZS5jb20vZ29vZ2xlLW5ld3PSAQA',
+      originUrl: 'https://news.google.com/rss/articles/CBMiT2h0dHBzOi8vZXhhbXBsZS5jb20vZ29vZ2xlLW5ld3PSAQA',
+      query: 'LG전자 제조 투자',
+      resolution: 'unresolved',
+      publisher: 'Google News',
+      publisherUrl: 'https://www.mk.co.kr'
+    }
+  ]);
+});
+
+test('normalizeSourceList preserves discovery lineage for resolved direct article URLs', () => {
+  const sources = normalizeSourceList([
+    {
+      title: 'LG전자, 공장 에너지 효율 투자 확대',
+      url: 'https://example.com/news/lg-energy'
+    }
+  ], {
+    title: 'LG전자, 공장 에너지 효율 투자 확대',
+    link: 'https://example.com/news/lg-energy',
+    originalLink: 'https://news.google.com/rss/articles/CBMiT2h0dHBzOi8vZXhhbXBsZS5jb20vZ29vZ2xlLW5ld3PSAQA',
+    query: 'LG전자 제조 투자',
+    source: '매일경제',
+    sourceUrl: 'https://www.mk.co.kr'
+  });
+
+  assert.deepEqual(sources, [
+    {
+      title: 'LG전자, 공장 에너지 효율 투자 확대',
+      url: 'https://example.com/news/lg-energy',
+      originUrl: 'https://news.google.com/rss/articles/CBMiT2h0dHBzOi8vZXhhbXBsZS5jb20vZ29vZ2xlLW5ld3PSAQA',
+      query: 'LG전자 제조 투자',
+      resolution: 'direct',
+      publisher: '매일경제',
+      publisherUrl: 'https://www.mk.co.kr'
+    }
+  ]);
+});
+
 test('target company filter removes unrelated articles', () => {
   const articles = [
     { title: 'LG전자, 공장 에너지 효율 투자 확대', query: 'LG전자 제조 투자', link: 'https://example.com/1' },
@@ -143,6 +200,8 @@ test('quick leads use target company when article matches target', () => {
 
   assert.equal(leads.length, 1);
   assert.equal(leads[0].company, 'LG전자');
+  assert.equal(leads[0].sources[0].query, 'LG전자 제조 투자');
+  assert.equal(leads[0].sources[0].resolution, 'direct');
 });
 
 test('chooseProductForArticle prefers category-matched product', () => {

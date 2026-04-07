@@ -55,6 +55,8 @@ const SELF_SERVICE_RESPONSE_SCHEMA_KEYS = Object.freeze([
   'trend',
   'sources'
 ]);
+const SOURCE_RESOLUTIONS = new Set(['direct', 'unresolved']);
+const DISCOVERY_URL_RE = /(news\.google\.com|search\.naver\.com)/i;
 
 export function sanitizeLeadText(value, fallback = '') {
   const input = typeof value === 'string' ? value : '';
@@ -65,6 +67,83 @@ export function sanitizeLeadText(value, fallback = '') {
     .trim();
   if (cleaned) return cleaned;
   return typeof fallback === 'string' ? fallback.trim() : '';
+}
+
+function isHttpUrl(value = '') {
+  return /^https?:\/\//i.test(String(value || ''));
+}
+
+function normalizeSourceUrl(value) {
+  const cleaned = sanitizeLeadText(value, '');
+  return isHttpUrl(cleaned) ? cleaned : '';
+}
+
+function normalizeSourceMetaText(value, maxLen = 200) {
+  return sanitizeLeadText(value, '').slice(0, maxLen);
+}
+
+function isDiscoveryUrl(url = '') {
+  return DISCOVERY_URL_RE.test(String(url || ''));
+}
+
+function shouldMergeSourceArticle(source, article) {
+  if (!source || !article) return false;
+  const sourceTitle = sanitizeLeadText(source.title, '');
+  const sourceUrl = normalizeSourceUrl(source.url);
+  const sourceOriginUrl = normalizeSourceUrl(source.originUrl || source.discoveryUrl);
+  const articleTitle = sanitizeLeadText(article.title, '');
+  const articleUrl = normalizeSourceUrl(article.link);
+  const articleOriginUrl = normalizeSourceUrl(article.originalLink || article.originalUrl);
+
+  return Boolean(
+    (sourceTitle && articleTitle && sourceTitle === articleTitle)
+    || (sourceUrl && articleUrl && sourceUrl === articleUrl)
+    || (sourceUrl && articleOriginUrl && sourceUrl === articleOriginUrl)
+    || (sourceOriginUrl && articleUrl && sourceOriginUrl === articleUrl)
+    || (sourceOriginUrl && articleOriginUrl && sourceOriginUrl === articleOriginUrl)
+  );
+}
+
+function normalizeSourceResolution(value, { url = '', originUrl = '' } = {}) {
+  const cleaned = normalizeSourceMetaText(value, 40).toLowerCase();
+  if (SOURCE_RESOLUTIONS.has(cleaned)) return cleaned;
+  if (isDiscoveryUrl(url)) return 'unresolved';
+  if (originUrl && originUrl !== url) return 'direct';
+  return isHttpUrl(url) ? 'direct' : '';
+}
+
+function buildSourceContract(source, article) {
+  const articleTitle = sanitizeLeadText(article && article.title, '');
+  const articleUrl = normalizeSourceUrl(article && article.link);
+  const title = sanitizeLeadText(source && source.title, articleTitle);
+  const url = normalizeSourceUrl(source && source.url) || articleUrl;
+  if (!title || !url) return null;
+
+  const explicitOriginUrl = normalizeSourceUrl(source && (source.originUrl || source.discoveryUrl));
+  const articleOriginUrl = normalizeSourceUrl(article && (article.originalLink || article.originalUrl));
+  const rawOriginUrl = explicitOriginUrl || articleOriginUrl || (isDiscoveryUrl(url) ? url : '');
+  const resolution = normalizeSourceResolution(source && source.resolution, { url, originUrl: rawOriginUrl });
+  const normalized = { title, url };
+
+  if (rawOriginUrl && (resolution === 'unresolved' || rawOriginUrl !== url || explicitOriginUrl)) {
+    normalized.originUrl = rawOriginUrl;
+  }
+
+  const query = normalizeSourceMetaText(source && (source.query || source.queryToken), 160)
+    || normalizeSourceMetaText(article && article.query, 160);
+  if (query) normalized.query = query;
+
+  if (resolution) normalized.resolution = resolution;
+
+  const publisher = normalizeSourceMetaText(source && source.publisher, 120)
+    || normalizeSourceMetaText(article && article.source, 120);
+  if (publisher) normalized.publisher = publisher;
+
+  const publisherUrl = normalizeSourceUrl(source && source.publisherUrl)
+    || normalizeSourceUrl(article && article.sourceUrl);
+  if (publisherUrl) normalized.publisherUrl = publisherUrl;
+
+  return normalized;
 }
 
 export function normalizeExpectedRoiText(value, fallback = '') {
@@ -242,17 +321,16 @@ export function gradeFromScore(score) {
 export function normalizeSourceList(sources, fallbackArticle) {
   const cleaned = (Array.isArray(sources) ? sources : [])
     .map(source => {
-      const title = sanitizeLeadText(source && source.title, '');
-      const url = sanitizeLeadText(source && source.url, '');
-      if (!title || !/^https?:\/\//i.test(url)) return null;
-      return { title, url };
+      const article = shouldMergeSourceArticle(source, fallbackArticle) ? fallbackArticle : null;
+      return buildSourceContract(source, article);
     })
     .filter(Boolean)
     .slice(0, 3);
 
   if (cleaned.length > 0) return cleaned;
-  if (fallbackArticle && fallbackArticle.title && /^https?:\/\//i.test(fallbackArticle.link || '')) {
-    return [{ title: sanitizeLeadText(fallbackArticle.title, ''), url: fallbackArticle.link }];
+  const fallbackSource = buildSourceContract(null, fallbackArticle);
+  if (fallbackSource) {
+    return [fallbackSource];
   }
   return [];
 }
@@ -441,8 +519,16 @@ function hasPlaceholders(value) {
 function isValidSchemaSource(source) {
   if (!source || typeof source !== 'object') return false;
   const title = sanitizeLeadText(source.title, '');
-  const url = sanitizeLeadText(source.url, '');
-  return Boolean(title) && /^https?:\/\//i.test(url);
+  const url = normalizeSourceUrl(source.url);
+  const originUrl = normalizeSourceUrl(source.originUrl || source.discoveryUrl);
+  const publisherUrl = normalizeSourceUrl(source.publisherUrl);
+  const resolution = normalizeSourceMetaText(source.resolution, 40).toLowerCase();
+
+  if (!title || !url) return false;
+  if ((source.originUrl || source.discoveryUrl) && !originUrl) return false;
+  if (source.publisherUrl && !publisherUrl) return false;
+  if (resolution && !SOURCE_RESOLUTIONS.has(resolution)) return false;
+  return true;
 }
 
 function isValidModelSchemaShape(lead) {
@@ -555,6 +641,9 @@ function normalizeSourcesTitle(lead) {
 export function findArticleForLead(lead, normalizedSources, articles, articleByUrl, fallbackIndex, company) {
   if (normalizedSources.length > 0 && articleByUrl.has(normalizedSources[0].url)) {
     return articleByUrl.get(normalizedSources[0].url);
+  }
+  if (normalizedSources.length > 0 && normalizedSources[0].originUrl && articleByUrl.has(normalizedSources[0].originUrl)) {
+    return articleByUrl.get(normalizedSources[0].originUrl);
   }
 
   const sourceTitle = normalizeSourcesTitle(lead);
