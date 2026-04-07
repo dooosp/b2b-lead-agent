@@ -1,5 +1,5 @@
 import { ensureD1Schema } from './schema.js';
-import { rowToLead, leadToRow } from './transform.js';
+import { VALID_TRANSITIONS, rowToLead, leadToRow } from './transform.js';
 
 export async function saveLeadsBatch(db, leads, profileId, source) {
   if (!db || !leads || leads.length === 0) return;
@@ -74,6 +74,94 @@ export async function updateLeadNotes(db, id, notes) {
   const now = new Date().toISOString();
   await db.prepare('UPDATE leads SET notes = ?, updated_at = ? WHERE id = ?').bind(notes, now, id).run();
   return true;
+}
+
+function normalizeLeadPatch(lead, patch) {
+  const changedFields = [];
+  const leadUpdates = {};
+  let statusLogEntry = null;
+
+  if (patch.status && patch.status !== lead.status) {
+    const allowed = VALID_TRANSITIONS[lead.status] || [];
+    if (!allowed.includes(patch.status)) {
+      const message = `상태 전환 불가: ${lead.status} → ${patch.status}. 허용: ${allowed.join(', ') || '없음'}`;
+      throw Object.assign(new Error(message), { status: 400 });
+    }
+    leadUpdates.status = patch.status;
+    statusLogEntry = { fromStatus: lead.status, toStatus: patch.status };
+    changedFields.push('status');
+  }
+
+  if (typeof patch.notes === 'string') {
+    const notes = patch.notes.slice(0, 2000);
+    if (notes !== (lead.notes || '')) {
+      leadUpdates.notes = notes;
+      changedFields.push('notes');
+    }
+  }
+
+  if (typeof patch.follow_up_date === 'string') {
+    const dateVal = patch.follow_up_date.trim();
+    if (dateVal && !/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+      throw Object.assign(new Error('날짜 형식이 올바르지 않습니다 (YYYY-MM-DD)'), { status: 400 });
+    }
+    if (dateVal) {
+      const parsed = new Date(`${dateVal}T00:00:00.000Z`);
+      if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== dateVal) {
+        throw Object.assign(new Error('유효하지 않은 날짜입니다.'), { status: 400 });
+      }
+    }
+    if (dateVal !== (lead.followUpDate || '')) {
+      leadUpdates.follow_up_date = dateVal;
+      changedFields.push('follow_up_date');
+    }
+  }
+
+  if (patch.estimated_value !== undefined) {
+    const parsed = Number(patch.estimated_value);
+    const estimatedValue = Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0;
+    if (estimatedValue !== (lead.estimatedValue || 0)) {
+      leadUpdates.estimated_value = estimatedValue;
+      changedFields.push('estimated_value');
+    }
+  }
+
+  return { leadUpdates, statusLogEntry, changedFields };
+}
+
+export async function updateLeadPatchAtomic(db, lead, patch) {
+  if (!db || !lead) return { lead, changedFields: [] };
+  await ensureD1Schema(db);
+
+  const { leadUpdates, statusLogEntry, changedFields } = normalizeLeadPatch(lead, patch);
+  if (changedFields.length === 0) return { lead, changedFields };
+
+  const now = new Date().toISOString();
+  const updateFields = Object.keys(leadUpdates);
+  const setClause = [
+    ...updateFields.map((field) => `${field} = ?`),
+    'updated_at = ?',
+  ].join(', ');
+  const updateValues = [
+    ...updateFields.map((field) => leadUpdates[field]),
+    now,
+    lead.id,
+  ];
+
+  const statements = [
+    db.prepare(`UPDATE leads SET ${setClause} WHERE id = ?`).bind(...updateValues),
+  ];
+
+  if (statusLogEntry) {
+    statements.push(
+      db.prepare('INSERT INTO status_log (lead_id, from_status, to_status, changed_at) VALUES (?, ?, ?, ?)')
+        .bind(lead.id, statusLogEntry.fromStatus, statusLogEntry.toStatus, now)
+    );
+  }
+
+  await db.batch(statements);
+  const updatedLead = await getLeadById(db, lead.id);
+  return { lead: updatedLead, changedFields };
 }
 
 export async function getStatusLogByLead(db, leadId) {
