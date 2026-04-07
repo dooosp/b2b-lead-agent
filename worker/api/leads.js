@@ -1,7 +1,6 @@
 import { jsonResponse } from '../lib/utils.js';
 import { resolveProfileId } from '../lib/profile.js';
-import { VALID_TRANSITIONS } from '../db/transform.js';
-import { getLeadsByProfile, getAllLeads, getLeadById, saveLeadsBatch, updateLeadStatus, updateLeadNotes } from '../db/leads.js';
+import { getLeadsByProfile, getAllLeads, getLeadById, saveLeadsBatch, updateLeadPatchAtomic } from '../db/leads.js';
 
 export async function fetchLeads(env, profile) {
   try {
@@ -67,45 +66,15 @@ export async function handleUpdateLead(request, env, leadId) {
   const lead = await getLeadById(env.DB, leadId);
   if (!lead) return jsonResponse({ success: false, message: '리드를 찾을 수 없습니다.' }, 404);
 
-  if (body.status && body.status !== lead.status) {
-    const allowed = VALID_TRANSITIONS[lead.status] || [];
-    if (!allowed.includes(body.status)) {
-      return jsonResponse({
-        success: false,
-        message: `상태 전환 불가: ${lead.status} → ${body.status}. 허용: ${allowed.join(', ') || '없음'}`
-      }, 400);
+  try {
+    const result = await updateLeadPatchAtomic(env.DB, lead, body);
+    return jsonResponse({ success: true, lead: result.lead, changedFields: result.changedFields });
+  } catch (error) {
+    if (error?.status) {
+      return jsonResponse({ success: false, message: error.message }, error.status);
     }
-    await updateLeadStatus(env.DB, leadId, body.status, lead.status);
+    throw error;
   }
-
-  if (typeof body.notes === 'string') {
-    await updateLeadNotes(env.DB, leadId, body.notes.slice(0, 2000));
-  }
-
-  if (typeof body.follow_up_date === 'string') {
-    const dateVal = body.follow_up_date.trim();
-    if (dateVal && !/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
-      return jsonResponse({ success: false, message: '날짜 형식이 올바르지 않습니다 (YYYY-MM-DD)' }, 400);
-    }
-    if (dateVal) {
-      const parsed = new Date(`${dateVal}T00:00:00.000Z`);
-      if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== dateVal) {
-        return jsonResponse({ success: false, message: '유효하지 않은 날짜입니다.' }, 400);
-      }
-    }
-    const now = new Date().toISOString();
-    await env.DB.prepare('UPDATE leads SET follow_up_date = ?, updated_at = ? WHERE id = ?').bind(dateVal, now, leadId).run();
-  }
-
-  if (body.estimated_value !== undefined) {
-    const parsed = Number(body.estimated_value);
-    const val = Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0;
-    const now = new Date().toISOString();
-    await env.DB.prepare('UPDATE leads SET estimated_value = ?, updated_at = ? WHERE id = ?').bind(val, now, leadId).run();
-  }
-
-  const updated = await getLeadById(env.DB, leadId);
-  return jsonResponse({ success: true, lead: updated });
 }
 
 export async function handleExportCSV(request, env) {
