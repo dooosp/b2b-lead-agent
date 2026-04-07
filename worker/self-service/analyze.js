@@ -96,7 +96,7 @@ export function generateQuickLeadsWorker(articles, profile, targetCompany = '') 
       { company, product, projectTitle, industry: profile.industry, article, eventType }
     );
     const trend = normalizeTrendText(cfg.policy || '', { industry: profile.industry, eventType, article });
-    const sources = article.title && article.link ? [{ title: article.title, url: article.link }] : [];
+    const sources = normalizeSourceList([], article);
 
     leads.push({
       company,

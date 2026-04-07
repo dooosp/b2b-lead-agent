@@ -47,7 +47,7 @@ ${(profile.competitors || []).join(', ')}
       "expected_roi": "투자회수 기간 범위(예: 2.0~3.0년) 또는 '근거 없음(추정 불가)'로 시작하는 문장",
       "sales_pitch": "고객 과제→정량 해결→레퍼런스 포함 2~3문장",
       "trend": "시장/규제 트렌드",
-      "sources": [{"title":"기사 제목","url":"기사 URL"}],
+      "sources": [{"title":"기사 제목","url":"실제로 확인된 URL","originUrl":"발견/검색 URL(optional)","query":"검색 키워드(optional)","resolution":"direct|unresolved(optional)"}],
       "confidence": "HIGH|MEDIUM|LOW",
       "confidenceReason": "신뢰도 근거",
       "evidence": [{"field":"title|summary|roi","quote":"원문 문장","sourceUrl":"URL"}],
@@ -60,13 +60,15 @@ ${(profile.competitors || []).join(', ')}
 4) {company}, {product} 같은 플레이스홀더 절대 금지.
 5) 회사명이 "A | ..." 같이 접두 라벨을 포함하지 않도록 하세요.
 6) sources는 반드시 배열로 포함하세요. 없으면 []를 사용하세요.
-7) expected_roi에는 근거 없는 숫자를 쓰지 마세요. 투자회수 기간 범위를 제시할 수 없으면 반드시 "근거 없음(추정 불가)"로 시작하세요.
-8) Grade C는 출력하지 마세요.
-9) company는 반드시 타깃 회사명("${profile.name}")이어야 합니다. 타깃 회사와 무관한 기사는 제외하세요.
-10) 기사 제목/본문에 타깃 회사명이 직접 확인되지 않으면 lead로 채택하지 마세요.
-11) sales_pitch는 제품 광고 문구가 아니라 영업 접점 제안이어야 합니다. "최고의 경험", "브랜드 가치 강화", "압도적" 같은 마케팅 문구 금지.
-12) trend는 일반론이 아니라 기사 사건과 연결된 업계 변화여야 합니다. 단순 "시장 성장"만 쓰지 마세요.
-13) recommended_product는 타깃 회사의 소비자 제품 홍보가 아니라, 기사 이벤트와 연결되는 제안 대상 제품/솔루션 1개만 쓰세요.
+7) sources[].url에는 실제로 확인된 URL만 쓰세요. 직접 기사 URL이 없으면 discovery URL을 유지하고, 확인되지 않은 canonical URL을 추정해 쓰지 마세요.
+8) 검색/발견 맥락이 있으면 sources[].originUrl, sources[].query, sources[].resolution에 보존하세요. resolution은 direct 또는 unresolved만 사용하세요.
+9) expected_roi에는 근거 없는 숫자를 쓰지 마세요. 투자회수 기간 범위를 제시할 수 없으면 반드시 "근거 없음(추정 불가)"로 시작하세요.
+10) Grade C는 출력하지 마세요.
+11) company는 반드시 타깃 회사명("${profile.name}")이어야 합니다. 타깃 회사와 무관한 기사는 제외하세요.
+12) 기사 제목/본문에 타깃 회사명이 직접 확인되지 않으면 lead로 채택하지 마세요.
+13) sales_pitch는 제품 광고 문구가 아니라 영업 접점 제안이어야 합니다. "최고의 경험", "브랜드 가치 강화", "압도적" 같은 마케팅 문구 금지.
+14) trend는 일반론이 아니라 기사 사건과 연결된 업계 변화여야 합니다. 단순 "시장 성장"만 쓰지 마세요.
+15) recommended_product는 타깃 회사의 소비자 제품 홍보가 아니라, 기사 이벤트와 연결되는 제안 대상 제품/솔루션 1개만 쓰세요.
 
 [신뢰도 정책]
 - 본문 확보 기사: confidence=HIGH

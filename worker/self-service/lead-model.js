@@ -30,12 +30,8 @@ async function callSalesModel(prompt, env) {
   throw new Error('OPENAI_API_KEY 또는 GEMINI_API_KEY가 설정되지 않았습니다.');
 }
 
-export async function requestLeadPayload(prompt, env) {
-  const raw = await callSalesModel(prompt, env);
-  let payload = parseLeadPayload(raw);
-  if (isValidLeadPayloadSchema(payload)) return payload;
-
-  const repairPrompt = `Return JSON only. Validate schema.
+export function buildLeadPayloadRepairPrompt(raw) {
+  return `Return JSON only. Validate schema.
 
 아래 원문을 지정 스키마의 JSON 객체로 변환하세요. 설명/마크다운 금지.
 
@@ -50,7 +46,7 @@ export async function requestLeadPayload(prompt, env) {
       "expected_roi": "string",
       "sales_pitch": "string",
       "trend": "string",
-      "sources": [{"title":"string","url":"string"}]
+      "sources": [{"title":"string","url":"string","originUrl":"string(optional)","query":"string(optional)","resolution":"direct|unresolved(optional)"}]
     }
   ]
 }
@@ -60,11 +56,20 @@ export async function requestLeadPayload(prompt, env) {
 - company는 40자 이하의 회사명만
 - score/grade는 제거
 - sources는 반드시 배열([] 허용)
+- 직접 기사 URL이 없으면 discovery URL을 유지하고, 확인되지 않은 canonical URL을 꾸며내지 말 것
+- 검색/발견 맥락이 있으면 sources[].originUrl, sources[].query, sources[].resolution에 보존할 것
 - expected_roi는 "2.0~3.0년" 같은 기간 범위 또는 "근거 없음(추정 불가)"로 시작하는 문장만 허용
 
 원문:
 ${String(raw || '').slice(0, 12000)}`;
+}
 
+export async function requestLeadPayload(prompt, env) {
+  const raw = await callSalesModel(prompt, env);
+  let payload = parseLeadPayload(raw);
+  if (isValidLeadPayloadSchema(payload)) return payload;
+
+  const repairPrompt = buildLeadPayloadRepairPrompt(raw);
   const repaired = await callSalesModel(repairPrompt, env);
   payload = parseLeadPayload(repaired);
   return payload;
