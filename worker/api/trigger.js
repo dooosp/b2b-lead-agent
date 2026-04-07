@@ -1,6 +1,7 @@
 import { jsonResponse } from '../lib/utils.js';
 import { verifyAuth, timingSafeCompare } from '../lib/auth.js';
 import { resolveProfileId } from '../lib/profile.js';
+import { buildAcceptedTriggerPayload, submitGenerateReport } from '../lib/job-trigger.js';
 
 export async function handleTrigger(request, env) {
   const body = await request.json().catch(() => ({}));
@@ -15,24 +16,10 @@ export async function handleTrigger(request, env) {
     return jsonResponse({ success: false, message: `유효하지 않은 프로필입니다: ${requestedProfile}` }, 400);
   }
 
-  const response = await fetch(
-    `https://api.github.com/repos/${env.GITHUB_REPO}/dispatches`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `token ${env.GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'B2B-Lead-Worker'
-      },
-      body: JSON.stringify({
-        event_type: 'generate-report',
-        client_payload: { profile }
-      })
-    }
-  );
+  const result = await submitGenerateReport(profile, env);
 
-  if (response.status === 204) {
-    return jsonResponse({ success: true, message: `[${profile}] 보고서 생성이 시작되었습니다. 1~2분 후 이메일을 확인하세요.` });
+  if (result.accepted) {
+    return jsonResponse(buildAcceptedTriggerPayload(profile), 202);
   }
-  return jsonResponse({ success: false, message: `오류: ${response.status}` }, 500);
+  return jsonResponse({ success: false, message: `오류: ${result.responseStatus}` }, 500);
 }
