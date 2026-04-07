@@ -1,5 +1,9 @@
 # 콘텐츠 품질 기반 시스템 리팩토링
 
+> 상태: 보존용 historical plan.
+> 이 문서는 2026-02-14 시점 계획으로, 2026-04-07 hardening cycle 이전 문맥입니다.
+> 현재 저장소의 source of truth는 `AGENTS.md`와 `HARDENING_PLAN.md`입니다.
+
 > 작성: 2026-02-14
 > 대상: worker/index.js + qualifier.js + profiles/*.js
 > 핵심: "기능 추가" 아님. **근거·정확·신뢰** 구조로 전환

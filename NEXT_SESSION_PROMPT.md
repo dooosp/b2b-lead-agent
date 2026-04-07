@@ -1,45 +1,34 @@
 # 다음 세션 프롬프트
 
-## 현재 상태
-b2b-lead-agent Enrichment 파이프라인 구현 + 배포 + API 테스트 완료.
-- 최신 커밋: `a609bf0` (master, pushed)
-- 배포: `https://b2b-lead-trigger.jangho1383.workers.dev`
-- Worker: 2614줄 (`worker/index.js`)
-- D1: `8effbfab-bf05-4726-bb74-8d9b6c1cccfe`
-- Gemini 모델: `gemini-2.0-flash` (3-flash-preview는 한국 지역 차단)
-- E2E: `e2e-test.mjs` 17시나리오 (playwright)
+## 현재 기준 상태
 
-## 이번 세션에서 완료한 것
-1. **Enrichment 파이프라인 9블록 구현** — 기사 본문 스크래핑(regex 기반), Gemini CoT 분석, D1 저장
-2. **API 엔드포인트** — `POST /api/leads/:id/enrich`, `POST /api/leads/batch-enrich`
-3. **UI** — 리드 카드에 심층 분석 배지/상세(keyFigures, painPoints, actionItems), 일괄 분석 바
-4. **보강 커밋 (별도 세션)** — 예외 처리, 프로필 검증, normalizeEnrichData, score/enriched 타입 안정화
-5. **curl 전체 검증** — 단일 enrich, force 재분석, 409 중복 차단, 404, batch-enrich, 400 잘못된 프로필, 401 인증
+- 기준 브랜치: `master`
+- 기준 커밋: `1e2d4e6` (`hardening: separate queue acceptance from completion semantics (#18)`)
+- 현재 hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`
+- 2026-04-07 hardening shipped 상태:
+  - Wave 1: PR #11 + PR #12
+  - Wave 2: PR #16
+  - Wave 3: PR #18
+- 이번 문서 refresh 기준으로, Wave 1-3에서 남아 있는 신규 코드 blocker는 확인되지 않음
+- 남은 항목은 운영 정리 위주:
+  - superseded raw PR `#10`은 아직 open 상태이므로 직접 merge하지 말 것
+  - `origin/hardening/*` raw branches는 historical lane일 수 있으나 current `master` 기준 merge-safe artifact가 아님
 
-## 다음 세션에서 할 일
+## 다음 세션 시작 규칙
 
-### 1. 브라우저 UI 피드백 반영
-```
-/leads 페이지에서 실제 사용 후 발견된 이슈를 수정해줘.
+1. `origin/master` 기준으로 sync하고 repo fingerprint를 다시 확인한다.
+2. 먼저 `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`를 읽는다.
+3. 이미 shipped 된 finding을 다시 열지 말고, 현재 `master`에서 재현되는 새 증거나 회귀가 있을 때만 follow-up으로 다룬다.
+4. integration/control은 한 스레드에서 유지하고, 구현은 scope가 좁은 owned worktree로 분리한다.
+5. 여러 lane이 동시에 진행되면 raw branch를 바로 merge하지 말고 current `master` 위에서 integration artifact PR로 ship한다.
 
-확인 포인트:
-1. "일괄 상세 분석" 버튼 클릭 → 상태 메시지 표시 → 완료 후 카드 갱신
-2. 개별 "상세 분석" 버튼 → 분석 중 스피너 → 완료 후 배지+상세 표시
-3. "심층 분석 상세 보기" details 펼치기 → keyFigures, painPoints, actionItems 렌더링
-4. "재분석" 버튼 → force=true로 재실행 → enrichedAt 갱신
-5. 모바일에서 레이아웃 깨짐 없는지
+## 바로 붙여 넣을 프롬프트
+
+```text
+You are working on the B2B Lead Agent repository after the April 7, 2026 hardening cycle. Start from updated `origin/master`. Before changing code, read `AGENTS.md`, `HARDENING_PLAN.md`, and `NEXT_SESSION_PROMPT.md`. Treat merged `master` history as the source of truth: Wave 1 shipped via PRs #11 and #12, Wave 2 via PR #16, and Wave 3 via PR #18. Do not reopen those findings unless you can show a current-`master` regression or a newly verified gap. Keep integration/control in one thread, do implementation in owned worktrees, and use a fresh integration artifact branch/PR when multiple lanes need to ship together. Preserve `docs/exec-plans/*` and `tmp/codex/*` as archival evidence unless the active task is explicitly refreshing them.
 ```
 
-### 2. ls-electric 프로필 실데이터 테스트
-```
-ls-electric 프로필로 /trigger 실행해서 리드 생성 후 enrichment까지 돌려봐.
-danfoss 외 프로필에서도 전체 파이프라인 정상 동작하는지 확인.
-```
+## 추천 다음 작업
 
-### 3. (선택) 다음 프로젝트 중 택 1
-```
-A) quant-data-viz — 투자 데이터 시각화 대시보드
-B) mcp-gateway — MCP 프로토콜 게이트웨이
-C) agent-hub UI 개선 — shadcn/ui + Cloudflare Tunnel
-D) b2b-lead-agent 추가 — 이메일 알림, Notion CRM 연동, 자동 재분석 크론
-```
+- 운영 정리: superseded raw PR #10 정리 여부 결정, 오래된 `origin/hardening/*` 브랜치 정리 여부 점검
+- 신규 개발: current `master` 기준 새 blocker audit 후 별도 task로 진행
