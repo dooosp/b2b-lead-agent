@@ -2,9 +2,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const { applyArticleBodyTrust } = require('../article-trust');
-const { mergeLeadHistory } = require('../briefing');
 const { computeStableLeadId } = require('../lead-identity');
-const { buildLeadAnalysisPrompt, normalizeAnalyzedLeads } = require('../qualifier');
+const { mergeLeadHistory } = require('../lead-report-publisher');
+const { buildLeadAnalysisPrompt, postProcessQualifiedLeads } = require('../lead-qualifier');
 
 function makeProfile() {
   return {
@@ -78,8 +78,10 @@ function makeLead(overrides = {}) {
 }
 
 test('same logical lead with reordered sources preserves the same identity in history merge', () => {
-  const profile = makeProfile();
-  const first = mergeLeadHistory([], [makeLead()], profile, '2026-04-07T01:00:00.000Z');
+  const first = mergeLeadHistory([], [makeLead()], {
+    profileId: 'fixture-profile',
+    now: '2026-04-07T01:00:00.000Z'
+  });
   const second = mergeLeadHistory(
     first,
     [makeLead({
@@ -94,8 +96,10 @@ test('same logical lead with reordered sources preserves the same identity in hi
         }
       ]
     })],
-    profile,
-    '2026-04-08T01:00:00.000Z'
+    {
+      profileId: 'fixture-profile',
+      now: '2026-04-08T01:00:00.000Z'
+    }
   );
 
   assert.equal(first.length, 1);
@@ -170,7 +174,7 @@ test('low-trust body input is downgraded before prompt construction', () => {
 });
 
 test('company-name rejection behavior does not regress for invalid generic company labels', () => {
-  const normalized = normalizeAnalyzedLeads([
+  const normalized = postProcessQualifiedLeads([
     {
       company: 'A | 잘못된 회사명',
       summary: '무효 케이스',

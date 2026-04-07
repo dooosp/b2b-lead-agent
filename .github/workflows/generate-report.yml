@@ -1,4 +1,5 @@
 name: Generate B2B Lead Report
+run-name: Generate report [${{ github.event.client_payload.profile || 'danfoss' }}] [${{ github.event.client_payload.requestId || 'no-request-id' }}]
 
 on:
   repository_dispatch:
@@ -10,16 +11,36 @@ permissions:
 jobs:
   generate:
     runs-on: ubuntu-latest
+    env:
+      PROFILE: ${{ github.event.client_payload.profile || 'danfoss' }}
+      REQUEST_ID: ${{ github.event.client_payload.requestId || '' }}
+      STATUS_EVENT_URL: ${{ github.event.client_payload.statusEventUrl || '' }}
+      CALLBACK_TOKEN: ${{ github.event.client_payload.callbackToken || '' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '20'
 
       - name: Install dependencies
         run: npm install
+
+      - name: Mark run running
+        continue-on-error: true
+        run: |
+          if [ -z "$REQUEST_ID" ] || [ -z "$STATUS_EVENT_URL" ] || [ -z "$CALLBACK_TOKEN" ]; then
+            echo "Skipping status callback; requestId, callback URL, or callback token missing."
+            exit 0
+          fi
+          cat <<EOF >/tmp/job-running.json
+          {"state":"running","githubRunId":"${{ github.run_id }}","githubRunAttempt":"${{ github.run_attempt }}","githubRunUrl":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}","githubWorkflow":"${{ github.workflow }}","githubSha":"${{ github.sha }}"}
+          EOF
+          curl -fsS -X POST "$STATUS_EVENT_URL" \
+            -H "X-Job-Callback-Token: $CALLBACK_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data @/tmp/job-running.json || true
 
       - name: Run pipeline and send email
         env:
@@ -27,15 +48,40 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_PASS: ${{ secrets.GMAIL_PASS }}
           GMAIL_RECIPIENT: ${{ secrets.GMAIL_RECIPIENT }}
-          PROFILE: ${{ github.event.client_payload.profile || 'danfoss' }}
-        run: node main.js --profile $PROFILE --email
+        run: node main.js --profile "$PROFILE" --email
 
       - name: Commit leads data
-        env:
-          PROFILE: ${{ github.event.client_payload.profile || 'danfoss' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add reports/$PROFILE/latest_leads.json reports/$PROFILE/lead_history.json
+          git add \
+            reports/$PROFILE/latest-leads.json \
+            reports/$PROFILE/lead-history.json \
+            reports/$PROFILE/lead-report-*.md
           git diff --cached --quiet || git commit -m "Update $PROFILE leads data"
           git push
+
+      - name: Mark run completion
+        if: ${{ always() }}
+        continue-on-error: true
+        run: |
+          if [ -z "$REQUEST_ID" ] || [ -z "$STATUS_EVENT_URL" ] || [ -z "$CALLBACK_TOKEN" ]; then
+            echo "Skipping status callback; requestId, callback URL, or callback token missing."
+            exit 0
+          fi
+          JOB_STATE="failed"
+          LAST_ERROR="GitHub job failed."
+          if [ "${{ job.status }}" = "success" ]; then
+            JOB_STATE="succeeded"
+            LAST_ERROR=""
+          elif [ "${{ job.status }}" = "cancelled" ]; then
+            JOB_STATE="cancelled"
+            LAST_ERROR="GitHub job was cancelled."
+          fi
+          cat <<EOF >/tmp/job-complete.json
+          {"state":"$JOB_STATE","githubRunId":"${{ github.run_id }}","githubRunAttempt":"${{ github.run_attempt }}","githubRunUrl":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}","githubWorkflow":"${{ github.workflow }}","githubSha":"${{ github.sha }}","lastError":"$LAST_ERROR"}
+          EOF
+          curl -fsS -X POST "$STATUS_EVENT_URL" \
+            -H "X-Job-Callback-Token: $CALLBACK_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data @/tmp/job-complete.json || true

@@ -1,22 +1,23 @@
 import { jsonResponse } from './utils.js';
 
-export async function verifyAuth(request, env) {
+export function getBearerToken(request, { allowQueryToken = true } = {}) {
+  const auth = request.headers.get('Authorization') || '';
+  let bearer = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  if (!bearer && allowQueryToken) {
+    const url = new URL(request.url);
+    bearer = (url.searchParams.get('token') || '').trim();
+  }
+  return bearer;
+}
+
+export async function verifyAuth(request, env, options = {}) {
   const token = env.API_TOKEN || env.TRIGGER_PASSWORD;
   if (!token) {
     return jsonResponse({ success: false, message: '서버 인증 설정이 필요합니다.' }, 503);
   }
-  const auth = request.headers.get('Authorization') || '';
-  let bearer = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-  if (!bearer) {
-    const url = new URL(request.url);
-    bearer = url.searchParams.get('token') || '';
-  }
+  const bearer = getBearerToken(request, options);
   if (!bearer) return jsonResponse({ success: false, message: '인증이 필요합니다.' }, 401);
-  const enc = new TextEncoder();
-  const a = enc.encode(bearer);
-  const b = enc.encode(token);
-  if (a.byteLength !== b.byteLength) return jsonResponse({ success: false, message: '인증 실패' }, 401);
-  const match = await crypto.subtle.timingSafeEqual(a, b);
+  const match = await timingSafeCompare(bearer, token);
   if (!match) return jsonResponse({ success: false, message: '인증 실패' }, 401);
   return null;
 }
@@ -25,8 +26,12 @@ export async function timingSafeCompare(a, b) {
   const enc = new TextEncoder();
   const bufA = enc.encode(String(a));
   const bufB = enc.encode(String(b));
-  if (bufA.byteLength !== bufB.byteLength) return false;
-  return crypto.subtle.timingSafeEqual(bufA, bufB);
+  let mismatch = bufA.byteLength ^ bufB.byteLength;
+  const len = Math.max(bufA.byteLength, bufB.byteLength);
+  for (let i = 0; i < len; i++) {
+    mismatch |= (bufA[i] || 0) ^ (bufB[i] || 0);
+  }
+  return mismatch === 0;
 }
 
 export async function checkRateLimit(request, env) {

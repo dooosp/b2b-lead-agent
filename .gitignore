@@ -3,5 +3,6 @@ node_modules/
 .dev.vars
 .wrangler/
 reports/**/*.md
-!reports/*/latest_leads.json
-!reports/*/lead_history.json
+!reports/*/latest-leads.json
+!reports/*/lead-history.json
+!reports/*/lead-report-*.md

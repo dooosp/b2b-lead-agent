@@ -491,7 +491,7 @@
     "id": "DL이앤씨_20260213_dnwp",
     "status": "NEW",
     "createdAt": "2026-02-13T07:51:28.613Z",
-    "updatedAt": "2026-02-21T09:56:02.117Z",
+    "updatedAt": "2026-03-10T08:34:33.016Z",
     "company": "DL이앤씨",
     "summary": "DL이앤씨, 데이터센터 영토 확장 가속",
     "product": "Turbocor 컴프레서",
@@ -511,7 +511,7 @@
     "id": "부평청천동_20260213_8032",
     "status": "NEW",
     "createdAt": "2026-02-13T07:51:28.613Z",
-    "updatedAt": "2026-02-14T02:59:23.663Z",
+    "updatedAt": "2026-03-10T08:34:33.016Z",
     "company": "부평 청천동",
     "summary": "부평 청천동 데이터센터 2단계 착공··· 1단계 1.7배 높은 규모",
     "product": "Turbocor 컴프레서",
@@ -571,7 +571,7 @@
     "id": "장성_20260214_mfab",
     "status": "NEW",
     "createdAt": "2026-02-14T04:16:30.292Z",
-    "updatedAt": "2026-02-15T00:39:28.253Z",
+    "updatedAt": "2026-03-26T10:33:35.259Z",
     "company": "장성",
     "summary": "장성 파인데이터센터 착공으로 지역 경기 활성화 기대 상승",
     "product": "Turbocor 컴프레서",
@@ -579,7 +579,7 @@
     "grade": "A",
     "roi": "냉각 전력 35~40% 절감, PUE 1.25 달성",
     "salesPitch": "장성 데이터센터에 Equinix가 글로벌 표준으로 채택한 Turbocor 컴프레서로 PUE 1.25를 달성하세요.",
-    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: Digital Realty (미국) - 연간 운영비 $1.5M 절감",
+    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: NTT (일본) - 유지보수 비용 60% 감소, 가동률 99.99%",
     "sources": [
       {
         "title": "장성 파인데이터센터 착공으로 지역 경기 활성화 기대 상승 - 장성투데이",
@@ -611,7 +611,7 @@
     "id": "HD현대_20260221_o2j3",
     "status": "NEW",
     "createdAt": "2026-02-21T09:56:02.117Z",
-    "updatedAt": "2026-02-21T09:56:02.117Z",
+    "updatedAt": "2026-03-26T10:33:35.259Z",
     "company": "HD현대",
     "summary": "“친환경 대체연료 선박 수주 전쟁” 현대삼호·HD현대, 글로벌 해운시장 선도",
     "product": "iC7 Marine 드라이브",
@@ -619,7 +619,7 @@
     "grade": "A",
     "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
     "salesPitch": "HD현대의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
-    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: Maersk (덴마크) - 연료비 18% 절감, IMO 2030 규제 선제 대응",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: NYK Line (일본) - EEXI 규제 100% 충족, 연간 $2M 연료비 절감",
     "sources": [
       {
         "title": "[초점] “친환경 대체연료 선박 수주 전쟁” 현대삼호·HD현대, 글로벌 해운시장 선도 - 글로벌이코노믹",
@@ -631,7 +631,7 @@
     "id": "건설업계_20260221_0yp7",
     "status": "NEW",
     "createdAt": "2026-02-21T09:56:02.117Z",
-    "updatedAt": "2026-02-21T09:56:02.117Z",
+    "updatedAt": "2026-03-10T07:49:17.817Z",
     "company": "건설업계",
     "summary": "건설업계, 차세대 먹거리 데이터센터 사업 확장 박차",
     "product": "Turbocor 컴프레서",
@@ -639,11 +639,131 @@
     "grade": "A",
     "roi": "냉각 전력 35~40% 절감, PUE 1.25 달성",
     "salesPitch": "건설업계 데이터센터에 Equinix가 글로벌 표준으로 채택한 Turbocor 컴프레서로 PUE 1.25를 달성하세요.",
+    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: Equinix (미국) - PUE 1.58→1.25 개선, 냉각 전력 40% 절감",
+    "sources": [
+      {
+        "title": "건설업계, 차세대 먹거리 데이터센터 사업 확장 박차 - 여성소비자신문",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EA%B1%B4%EC%84%A4%EC%97%85%EA%B3%84%2C%20%EC%B0%A8%EC%84%B8%EB%8C%80%20%EB%A8%B9%EA%B1%B0%EB%A6%AC%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0%20%EC%82%AC%EC%97%85%20%ED%99%95%EC%9E%A5%20%EB%B0%95%EC%B0%A8"
+      }
+    ]
+  },
+  {
+    "id": "선박까지_20260306_ou66",
+    "status": "NEW",
+    "createdAt": "2026-03-06T09:55:00.822Z",
+    "updatedAt": "2026-03-10T08:34:33.016Z",
+    "company": "선박까지",
+    "summary": "中, 친환경 선박까지 전면 공세···韓 조선 ‘다음 승부처’는?",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
+    "grade": "A",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "선박까지의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: Maersk (덴마크) - 연료비 18% 절감, IMO 2030 규제 선제 대응",
+    "sources": [
+      {
+        "title": "中, 친환경 선박까지 전면 공세···韓 조선 ‘다음 승부처’는? - 이뉴스투데이",
+        "url": "https://search.naver.com/search.naver?where=news&query=%E4%B8%AD%2C%20%EC%B9%9C%ED%99%98%EA%B2%BD%20%EC%84%A0%EB%B0%95%EA%B9%8C%EC%A7%80%20%EC%A0%84%EB%A9%B4%20%EA%B3%B5%EC%84%B8%C2%B7%C2%B7%C2%B7%E9%9F%93%20%EC%A1%B0%EC%84%A0%20%E2%80%98%EB%8B%A4%EC%9D%8C%20%EC%8A%B9%EB%B6%80%EC%B2%98%E2%80%99%EB%8A%94%3F"
+      }
+    ]
+  },
+  {
+    "id": "판도_20260306_mrhh",
+    "status": "NEW",
+    "createdAt": "2026-03-06T09:55:00.822Z",
+    "updatedAt": "2026-03-26T10:33:35.259Z",
+    "company": "판도",
+    "summary": "친환경·AI 선박 승부수… 수주 판도 흔들",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
+    "grade": "A",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "판도의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: Maersk (덴마크) - 연료비 18% 절감, IMO 2030 규제 선제 대응",
+    "sources": [
+      {
+        "title": "[키플레이어 한화오션①] 친환경·AI 선박 승부수… 수주 판도 '흔들' - 서울와이어",
+        "url": "https://search.naver.com/search.naver?where=news&query=%5B%ED%82%A4%ED%94%8C%EB%A0%88%EC%9D%B4%EC%96%B4%20%ED%95%9C%ED%99%94%EC%98%A4%EC%85%98%E2%91%A0%5D%20%EC%B9%9C%ED%99%98%EA%B2%BD%C2%B7AI%20%EC%84%A0%EB%B0%95%20%EC%8A%B9%EB%B6%80%EC%88%98%E2%80%A6%20%EC%88%98%EC%A3%BC%20%ED%8C%90%EB%8F%84%20'%ED%9D%94%EB%93%A4'"
+      }
+    ]
+  },
+  {
+    "id": "K조선_20260306_96fz",
+    "status": "NEW",
+    "createdAt": "2026-03-06T09:55:00.822Z",
+    "updatedAt": "2026-03-10T08:34:33.016Z",
+    "company": "② K-조선",
+    "summary": "② K-조선, 고부가·친환경 세계 1위 ‘옛말’",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
+    "grade": "A",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "② K-조선의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: MSC (스위스) - 탄소 배출 25% 감소, CII 등급 A 달성",
+    "sources": [
+      {
+        "title": "[창간 11주년 특별기획-조선·방산산업 전망] ② K-조선, 고부가·친환경 세계 1위 ‘옛말’ - 한스경제",
+        "url": "https://search.naver.com/search.naver?where=news&query=%5B%EC%B0%BD%EA%B0%84%2011%EC%A3%BC%EB%85%84%20%ED%8A%B9%EB%B3%84%EA%B8%B0%ED%9A%8D-%EC%A1%B0%EC%84%A0%C2%B7%EB%B0%A9%EC%82%B0%EC%82%B0%EC%97%85%20%EC%A0%84%EB%A7%9D%5D%20%E2%91%A1%20K-%EC%A1%B0%EC%84%A0%2C%20%EA%B3%A0%EB%B6%80%EA%B0%80%C2%B7%EC%B9%9C%ED%99%98%EA%B2%BD%20%EC%84%B8%EA%B3%84%201%EC%9C%84%20%E2%80%98%EC%98%9B%EB%A7%90%E2%80%99"
+      }
+    ]
+  },
+  {
+    "id": "조선사도_20260310_6bbx",
+    "status": "NEW",
+    "createdAt": "2026-03-10T07:49:17.817Z",
+    "updatedAt": "2026-03-10T08:34:33.016Z",
+    "company": "조선사도",
+    "summary": "조선업 호황에 중소 조선사도 역대급 실적... 주특기 장착해 수퍼사이클 탔다",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
+    "grade": "A",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "조선사도의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: Maersk (덴마크) - 연료비 18% 절감, IMO 2030 규제 선제 대응",
+    "sources": [
+      {
+        "title": "조선업 호황에 중소 조선사도 역대급 실적... 주특기 장착해 수퍼사이클 탔다 - 조선일보",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EC%A1%B0%EC%84%A0%EC%97%85%20%ED%98%B8%ED%99%A9%EC%97%90%20%EC%A4%91%EC%86%8C%20%EC%A1%B0%EC%84%A0%EC%82%AC%EB%8F%84%20%EC%97%AD%EB%8C%80%EA%B8%89%20%EC%8B%A4%EC%A0%81...%20%EC%A3%BC%ED%8A%B9%EA%B8%B0%20%EC%9E%A5%EC%B0%A9%ED%95%B4%20%EC%88%98%ED%8D%BC%EC%82%AC%EC%9D%B4%ED%81%B4%20%ED%83%94%EB%8B%A4"
+      }
+    ]
+  },
+  {
+    "id": "친환경선박_20260326_gfaj",
+    "status": "NEW",
+    "createdAt": "2026-03-26T10:28:41.265Z",
+    "updatedAt": "2026-03-26T10:33:35.259Z",
+    "company": "“친환경 선박",
+    "summary": "“친환경 선박, 방산 수주 증가… 국내 조선업 호황 몇십 년 이어질 듯”",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
+    "grade": "A",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "“친환경 선박의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: MSC (스위스) - 탄소 배출 25% 감소, CII 등급 A 달성",
+    "sources": [
+      {
+        "title": "[영상] “친환경 선박, 방산 수주 증가… 국내 조선업 호황 몇십 년 이어질 듯” - 주간동아",
+        "url": "https://search.naver.com/search.naver?where=news&query=%5B%EC%98%81%EC%83%81%5D%20%E2%80%9C%EC%B9%9C%ED%99%98%EA%B2%BD%20%EC%84%A0%EB%B0%95%2C%20%EB%B0%A9%EC%82%B0%20%EC%88%98%EC%A3%BC%20%EC%A6%9D%EA%B0%80%E2%80%A6%20%EA%B5%AD%EB%82%B4%20%EC%A1%B0%EC%84%A0%EC%97%85%20%ED%98%B8%ED%99%A9%20%EB%AA%87%EC%8B%AD%20%EB%85%84%20%EC%9D%B4%EC%96%B4%EC%A7%88%20%EB%93%AF%E2%80%9D"
+      }
+    ]
+  },
+  {
+    "id": "메타_20260326_lxcn",
+    "status": "NEW",
+    "createdAt": "2026-03-26T10:28:41.265Z",
+    "updatedAt": "2026-03-26T10:33:35.259Z",
+    "company": "메타",
+    "summary": "메타, 美 인디애나에 1GW급 초대형 데이터센터 착공",
+    "product": "Turbocor 컴프레서",
+    "score": 80,
+    "grade": "A",
+    "roi": "냉각 전력 35~40% 절감, PUE 1.25 달성",
+    "salesPitch": "메타 데이터센터에 Equinix가 글로벌 표준으로 채택한 Turbocor 컴프레서로 PUE 1.25를 달성하세요.",
     "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: NTT (일본) - 유지보수 비용 60% 감소, 가동률 99.99%",
     "sources": [
       {
-        "title": "건설업계, 차세대 먹거리 데이터센터 사업 확장 박차 - 트래블데일리",
-        "url": "https://search.naver.com/search.naver?where=news&query=%EA%B1%B4%EC%84%A4%EC%97%85%EA%B3%84%2C%20%EC%B0%A8%EC%84%B8%EB%8C%80%20%EB%A8%B9%EA%B1%B0%EB%A6%AC%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0%20%EC%82%AC%EC%97%85%20%ED%99%95%EC%9E%A5%20%EB%B0%95%EC%B0%A8"
+        "title": "메타, 美 인디애나에 1GW급 초대형 데이터센터 착공 - 더구루",
+        "url": "https://search.naver.com/search.naver?where=news&query=%EB%A9%94%ED%83%80%2C%20%E7%BE%8E%20%EC%9D%B8%EB%94%94%EC%95%A0%EB%82%98%EC%97%90%201GW%EA%B8%89%20%EC%B4%88%EB%8C%80%ED%98%95%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0%20%EC%B0%A9%EA%B3%B5"
       }
     ]
   }

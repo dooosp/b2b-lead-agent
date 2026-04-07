@@ -3,6 +3,10 @@
 ## Phase: Test Execution
 - Command: `node --test tests/*.test.js`
 - Result: passed
+- Command: `npm run check:naming`
+- Result: passed
+- Command: `npm test`
+- Result: passed
 
 ## Verified Behaviors
 - Reordered sources keep the same lead identity during root history merge.
@@ -12,5 +16,5 @@
 - Invalid/generic company labels are rejected from accepted analyzed leads.
 
 ## Audit Notes
-- Verification claims are limited to root helper/prompt/persistence logic covered by the added regression tests.
-- No worker files were modified or revalidated in this task.
+- Verification claims now include the root regression suite plus the repository's current naming check and CI-equivalent test command.
+- Worker files were synced from current `master` and revalidated via `npm test`, but this task's intentional logic changes remain root-only.

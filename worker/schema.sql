@@ -53,3 +53,29 @@ CREATE TABLE IF NOT EXISTS status_log (
   changed_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_status_log_lead ON status_log(lead_id);
+
+CREATE TABLE IF NOT EXISTS job_runs (
+  request_id TEXT PRIMARY KEY,
+  profile_id TEXT NOT NULL,
+  target TEXT NOT NULL DEFAULT 'github-actions',
+  state TEXT NOT NULL,
+  idempotency_key TEXT,
+  github_event_type TEXT DEFAULT '',
+  github_run_id INTEGER,
+  github_run_attempt INTEGER,
+  github_run_url TEXT DEFAULT '',
+  github_workflow TEXT DEFAULT '',
+  github_sha TEXT DEFAULT '',
+  cloud_run_operation TEXT DEFAULT '',
+  cloud_run_execution TEXT DEFAULT '',
+  accepted_at TEXT NOT NULL,
+  started_at TEXT,
+  completed_at TEXT,
+  last_error TEXT DEFAULT '',
+  updated_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_job_runs_idempotency ON job_runs(idempotency_key)
+  WHERE idempotency_key IS NOT NULL AND idempotency_key != '';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_job_runs_active_profile ON job_runs(profile_id)
+  WHERE state IN ('accepted', 'running');
+CREATE INDEX IF NOT EXISTS idx_job_runs_updated ON job_runs(updated_at DESC);
