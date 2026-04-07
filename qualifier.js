@@ -1,11 +1,12 @@
-const { createLLMClient } = require('./lib/llm-client');
+const { classifyArticleBody, getArticleContextText, getTrustedArticleBody } = require('./article-trust');
+const { isValidCompanyName, normalizeCompanyName, normalizeSources } = require('./lead-identity');
 
 // 키워드 기반 카테고리 분류 → 관련 레퍼런스만 선별
 function categorizeArticles(articles, profile) {
   const rules = profile.categoryRules;
   const matched = new Set();
   for (const a of articles) {
-    const text = `${a.title} ${a.query} ${a.content || ''}`.toLowerCase();
+    const text = getArticleContextText(a).toLowerCase();
     for (const [cat, kws] of Object.entries(rules)) {
       if (kws.some(kw => text.includes(kw))) matched.add(cat);
     }
@@ -13,35 +14,43 @@ function categorizeArticles(articles, profile) {
   return matched.size > 0 ? [...matched] : Object.keys(rules); // 폴백: 전체
 }
 
-async function analyzeLeads(articles, profile) {
-  console.log('[Step 2] Gemini API로 리드 분석 시작...');
-
-  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-    console.error('  [오류] GEMINI_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.');
-    console.log('  → 데모 모드로 실행합니다.\n');
-    return generateDemoLeads(articles, profile);
-  }
-
-  const llm = createLLMClient({
-    provider: 'gemini',
-    apiKey: process.env.GEMINI_API_KEY,
-    model: 'gemini-3-flash-preview',
-    timeout: 30000,
-    maxRetries: 1,
-  });
-
-  // 본문 유무 표시 + 예외 처리 안내
-  const newsList = articles.map((a, i) => {
-    const safeTitle = JSON.stringify(a.title || '');
-    const safeContent = a.content ? JSON.stringify(a.content.substring(0, 500)) : null;
-    let entry = `${i + 1}. [${a.source}] ${safeTitle} (URL: ${a.link}) (검색키워드: ${a.query})`;
-    if (safeContent) {
-      entry += `\n   [본문 있음] ${safeContent}`;
+function buildNewsList(articles) {
+  return articles.map((article, index) => {
+    const safeTitle = JSON.stringify(article.title || '');
+    const trustedBody = getTrustedArticleBody(article);
+    const trust = classifyArticleBody(article);
+    let entry = `${index + 1}. [${article.source}] ${safeTitle} (URL: ${article.link}) (검색키워드: ${article.query})`;
+    if (trustedBody) {
+      entry += `\n   [검증 본문] ${JSON.stringify(trustedBody.substring(0, 500))}`;
+    } else if (trust.bodyTrust === 'low') {
+      entry += `\n   [본문 저신뢰 - ${trust.bodyTrustReason}]`;
     } else {
       entry += `\n   [본문 없음 - 제목과 키워드 기반 추론 필요]`;
     }
     return entry;
   }).join('\n\n');
+}
+
+function normalizeAnalyzedLeads(leads) {
+  return (Array.isArray(leads) ? leads : [])
+    .filter((lead) => lead && typeof lead.score === 'number')
+    .map((lead) => {
+      const company = normalizeCompanyName(lead.company || '');
+      if (!isValidCompanyName(company)) return null;
+      return {
+        ...lead,
+        company,
+        sources: normalizeSources(lead.sources).map((source) => ({
+          title: source.title,
+          url: source.url || source.canonicalUrl
+        }))
+      };
+    })
+    .filter(Boolean);
+}
+
+function buildLeadAnalysisPrompt(profile, articles) {
+  const newsList = buildNewsList(articles);
 
   // 제품 지식 베이스 문자열 생성
   const knowledgeBase = Object.entries(profile.productKnowledge)
@@ -63,7 +72,7 @@ async function analyzeLeads(articles, profile) {
     }).join('\n\n');
   console.log(`  카테고리 매칭: ${relevantCategories.join(', ')} (${relevantCategories.length * 3} 레퍼런스)`);
 
-  const prompt = `[Context]
+  return `[Context]
 - 분석 시점: ${new Date().toISOString().split('T')[0]}
 - 데이터 소스: 한국 산업 뉴스 (최근 24시간 크롤링)
 - 경쟁사: ${profile.competitors.join(', ')}
@@ -91,8 +100,13 @@ ${globalRefStr}
 5. Global Context: 해당 산업과 관련된 글로벌 탄소 중립 정책 + **위 글로벌 성공 사례 중 유사 프로젝트 1개 언급**.
 6. Sources: 이 리드 분석에 참고한 뉴스 기사의 제목과 URL을 배열로 포함. 반드시 위 뉴스 목록에 있는 실제 URL만 사용하세요.
 
+[Body Trust Guard]
+- [검증 본문]으로 표시된 텍스트만 기사 본문 근거로 사용할 수 있습니다.
+- [본문 저신뢰] 또는 [본문 없음] 항목의 본문은 사실 근거로 취급하지 말고 제목, URL, 검색키워드만 사용하세요.
+- [본문 저신뢰] 항목에서는 body evidence 인용 금지. 제목 인용만 허용합니다.
+
 [Confidence 판정 - 본문 없는 기사]
-일부 뉴스는 [본문 미확보]로 표시됩니다. 이 경우:
+일부 뉴스는 [본문 없음] 또는 [본문 저신뢰]로 표시됩니다. 이 경우:
 - 제목에 구체 숫자/규모/일정/금액이 포함: confidence="MEDIUM", score 최대 80점.
 - 제목이 모호(트렌드/일반): confidence="LOW", score 최대 65점.
 - confidenceReason에 판정 근거를 명시하세요.
@@ -145,17 +159,32 @@ Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요
     "eventType": "착공|증설|수주|규제|입찰|투자|채용|기타"
   }
 ]`;
+}
+
+async function analyzeLeads(articles, profile) {
+  console.log('[Step 2] Gemini API로 리드 분석 시작...');
+
+  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+    console.error('  [오류] GEMINI_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.');
+    console.log('  → 데모 모드로 실행합니다.\n');
+    return generateDemoLeads(articles, profile);
+  }
+
+  const { createLLMClient } = require('./lib/llm-client');
+  const llm = createLLMClient({
+    provider: 'gemini',
+    apiKey: process.env.GEMINI_API_KEY,
+    model: 'gemini-3-flash-preview',
+    timeout: 30000,
+    maxRetries: 1,
+  });
+
+  const prompt = buildLeadAnalysisPrompt(profile, articles);
 
   try {
     const leads = await llm.chatJSON(prompt, { label: 'Gemini-qualify' });
 
-    // 스키마 검증: 배열 + 필수 필드 확인
-    const validLeads = (Array.isArray(leads) ? leads : []).filter(lead =>
-      lead && typeof lead.company === 'string' && typeof lead.score === 'number'
-    ).map(lead => ({
-      ...lead,
-      sources: Array.isArray(lead.sources) ? lead.sources.filter(s => s && s.title && s.url) : []
-    }));
+    const validLeads = normalizeAnalyzedLeads(leads);
 
     console.log(`  분석 완료: ${validLeads.length}개 리드 발견\n`);
     return validLeads;
@@ -236,7 +265,7 @@ function extractCompanyName(title) {
 
 // 카테고리 판별
 function detectCategory(article, profile) {
-  const text = `${article.title} ${article.query} ${article.content || ''}`.toLowerCase();
+  const text = getArticleContextText(article).toLowerCase();
   const categories = Object.keys(profile.categoryRules);
 
   for (const cat of categories) {
@@ -290,7 +319,13 @@ function generateDemoLeads(articles, profile) {
     });
   }
 
-  return demoLeads;
+  return normalizeAnalyzedLeads(demoLeads);
 }
 
-module.exports = { analyzeLeads };
+module.exports = {
+  analyzeLeads,
+  buildLeadAnalysisPrompt,
+  buildNewsList,
+  categorizeArticles,
+  normalizeAnalyzedLeads
+};
