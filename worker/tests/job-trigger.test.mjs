@@ -8,6 +8,10 @@ import {
   getJobRunByRequestId,
   updateJobRunState
 } from '../db/job-runs.js';
+import {
+  buildTriggerAcceptedBody,
+  dispatchGitHubTrigger
+} from '../lib/job-trigger.js';
 import { FakeD1Database } from './helpers/fake-d1.mjs';
 
 test('createAcceptedJobRun coalesces duplicate active runs by profile', async () => {
@@ -125,4 +129,73 @@ test('updateJobRunState keeps correlation metadata for both GitHub and Cloud Run
   assert.equal(cloudJob.state, JOB_STATES.SUCCEEDED);
   assert.equal(cloudJob.operation, 'operations/123');
   assert.equal(cloudJob.execution, 'executions/456');
+});
+
+test('buildTriggerAcceptedBody stays intake-only and does not synthesize completion fields', () => {
+  const payload = buildTriggerAcceptedBody({
+    requestId: 'req_123',
+    profile: 'danfoss',
+    state: JOB_STATES.ACCEPTED,
+    target: JOB_TARGETS.GITHUB_ACTIONS
+  }, {
+    statusUrl: 'https://example.com/api/jobs/req_123'
+  });
+
+  assert.deepEqual(payload, {
+    success: true,
+    status: 'accepted',
+    requestId: 'req_123',
+    profile: 'danfoss',
+    state: JOB_STATES.ACCEPTED,
+    target: JOB_TARGETS.GITHUB_ACTIONS,
+    deduplicated: false,
+    statusUrl: 'https://example.com/api/jobs/req_123',
+    message: '[danfoss] 보고서 생성이 접수되었습니다. 상태 엔드포인트에서 진행 상황을 확인하세요.'
+  });
+  assert.equal('execution' in payload, false);
+  assert.equal('completedAt' in payload, false);
+  assert.equal('completion' in payload, false);
+});
+
+test('dispatchGitHubTrigger dispatches submission metadata without reporting completion', async () => {
+  const originalFetch = globalThis.fetch;
+  const fetchCalls = [];
+  globalThis.fetch = async (url, init) => {
+    fetchCalls.push({ url, init });
+    return new Response(null, { status: 204 });
+  };
+
+  try {
+    const request = new Request('https://example.com/trigger');
+    const result = await dispatchGitHubTrigger(request, {
+      GITHUB_REPO: 'owner/repo',
+      GITHUB_TOKEN: 'secret-token',
+      JOB_STATUS_CALLBACK_SECRET: 'callback-secret'
+    }, {
+      requestId: 'req_123',
+      profile: 'danfoss'
+    });
+
+    assert.deepEqual(result, {
+      ok: true,
+      statusUrl: 'https://example.com/api/jobs/req_123'
+    });
+    assert.equal(fetchCalls.length, 1);
+    assert.equal(fetchCalls[0].url, 'https://api.github.com/repos/owner/repo/dispatches');
+    assert.equal(fetchCalls[0].init.method, 'POST');
+    assert.equal(fetchCalls[0].init.headers.Authorization, 'token secret-token');
+
+    const body = JSON.parse(fetchCalls[0].init.body);
+    assert.equal(body.event_type, 'generate-report');
+    assert.equal(body.client_payload.profile, 'danfoss');
+    assert.equal(body.client_payload.requestId, 'req_123');
+    assert.equal(body.client_payload.statusUrl, 'https://example.com/api/jobs/req_123');
+    assert.equal(body.client_payload.statusEventUrl, 'https://example.com/api/jobs/req_123/events');
+    assert.equal(typeof body.client_payload.callbackToken, 'string');
+    assert.ok(body.client_payload.callbackToken.length > 0);
+    assert.equal('completedAt' in body.client_payload, false);
+    assert.equal('completion' in body.client_payload, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

@@ -186,6 +186,7 @@ export function buildTriggerAcceptedBody(job, {
 
   const body = {
     success: true,
+    status: 'accepted',
     requestId: job.requestId,
     profile: job.profile,
     state: job.state,

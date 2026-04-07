@@ -64,9 +64,13 @@ test('POST /trigger returns 202 and dispatches requestId correlation metadata', 
     const payload = await readJson(response);
     assert.equal(response.status, 202);
     assert.equal(payload.success, true);
+    assert.equal(payload.status, 'accepted');
     assert.match(payload.requestId, /^req_/);
     assert.equal(payload.profile, 'danfoss');
     assert.equal(payload.state, 'accepted');
+    assert.equal('completedAt' in payload, false);
+    assert.equal('completion' in payload, false);
+    assert.equal(payload.message.includes('완료되었습니다'), false);
     assert.equal(fetchCalls.length, 1);
 
     const dispatchPayload = JSON.parse(fetchCalls[0].init.body);
@@ -326,7 +330,9 @@ test('dispatch failure returns 502 and persists failed job status', async () => 
     const triggerPayload = await readJson(trigger);
 
     assert.equal(trigger.status, 502);
+    assert.equal(triggerPayload.success, false);
     assert.match(triggerPayload.requestId, /^req_/);
+    assert.equal('status' in triggerPayload, false);
 
     const statusResponse = await worker.fetch(createRequest(`/api/jobs/${triggerPayload.requestId}`, {
       headers: { 'Authorization': 'Bearer api-secret' }
