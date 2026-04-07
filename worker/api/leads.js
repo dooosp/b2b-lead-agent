@@ -1,13 +1,20 @@
 import { jsonResponse } from '../lib/utils.js';
-import { resolveProfileId } from '../lib/profile.js';
+import { canonicalizeLeadCollectionForProfile, resolveProfileId } from '../lib/profile.js';
 import { getLeadsByProfile, getAllLeads, getLeadById, saveLeadsBatch, updateLeadPatchAtomic } from '../db/leads.js';
+
+function canonicalizeLeadPayload(profile, leads) {
+  return canonicalizeLeadCollectionForProfile(profile, Array.isArray(leads) ? leads : []);
+}
 
 export async function fetchLeads(env, profile) {
   try {
     const isSelfServiceProfile = profile.startsWith('self-service:');
     if (env.DB) {
       const dbLeads = await getLeadsByProfile(env.DB, profile);
-      if (dbLeads.length > 0) return jsonResponse({ leads: dbLeads, profile, source: 'd1' });
+      if (dbLeads.length > 0) {
+        const canonicalized = canonicalizeLeadPayload(profile, dbLeads);
+        return jsonResponse({ leads: canonicalized.leads, profile: canonicalized.profileId, source: 'd1' });
+      }
     }
 
     if (isSelfServiceProfile) {
@@ -20,12 +27,13 @@ export async function fetchLeads(env, profile) {
     );
     if (!response.ok) return jsonResponse({ leads: [], message: '아직 생성된 리드가 없습니다.' });
     const leads = await response.json();
+    const canonicalized = canonicalizeLeadPayload(profile, leads);
 
-    if (env.DB && leads.length > 0) {
-      try { await saveLeadsBatch(env.DB, leads, profile, 'managed'); } catch { /* ignore migration errors */ }
+    if (env.DB && canonicalized.leads.length > 0) {
+      try { await saveLeadsBatch(env.DB, canonicalized.leads, canonicalized.profileId, 'managed'); } catch { /* ignore migration errors */ }
     }
 
-    return jsonResponse({ leads, profile, source: 'github' });
+    return jsonResponse({ leads: canonicalized.leads, profile: canonicalized.profileId, source: 'github' });
   } catch (e) {
     return jsonResponse({ leads: [], message: e.message }, 500);
   }
@@ -36,7 +44,10 @@ export async function fetchHistory(env, profile) {
     const isSelfServiceProfile = profile.startsWith('self-service:');
     if (env.DB) {
       const dbHistory = await getLeadsByProfile(env.DB, profile, { limit: 500 });
-      if (dbHistory.length > 0) return jsonResponse({ history: dbHistory, profile, source: 'd1' });
+      if (dbHistory.length > 0) {
+        const canonicalized = canonicalizeLeadPayload(profile, dbHistory);
+        return jsonResponse({ history: canonicalized.leads, profile: canonicalized.profileId, source: 'd1' });
+      }
     }
 
     if (isSelfServiceProfile) {
@@ -49,12 +60,13 @@ export async function fetchHistory(env, profile) {
     );
     if (!response.ok) return jsonResponse({ history: [], message: '아직 히스토리가 없습니다.' });
     const history = await response.json();
+    const canonicalized = canonicalizeLeadPayload(profile, history);
 
-    if (env.DB && history.length > 0) {
-      try { await saveLeadsBatch(env.DB, history, profile, 'managed'); } catch { /* ignore */ }
+    if (env.DB && canonicalized.leads.length > 0) {
+      try { await saveLeadsBatch(env.DB, canonicalized.leads, canonicalized.profileId, 'managed'); } catch { /* ignore */ }
     }
 
-    return jsonResponse({ history, profile, source: 'github' });
+    return jsonResponse({ history: canonicalized.leads, profile: canonicalized.profileId, source: 'github' });
   } catch (e) {
     return jsonResponse({ history: [], message: e.message }, 500);
   }
