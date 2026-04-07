@@ -7,6 +7,48 @@ const ARTIFACT_NAMES = {
   historyCanonical: 'lead-history.json',
 };
 
+function normalizeSnapshotText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeSnapshotUrl(value) {
+  const url = normalizeSnapshotText(value);
+  if (!url) return '';
+
+  try {
+    const parsed = new URL(url);
+    parsed.hash = '';
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+function normalizePublicationSource(source = {}) {
+  const title = normalizeSnapshotText(source.title);
+  const url = normalizeSnapshotUrl(source.url);
+  if (!title && !url) return null;
+
+  return {
+    ...source,
+    sourceId: normalizeSnapshotText(source.sourceId),
+    title,
+    url,
+    source: normalizeSnapshotText(source.source),
+    query: normalizeSnapshotText(source.query),
+    publishedAt: normalizeSnapshotText(source.publishedAt),
+    originUrl: normalizeSnapshotUrl(source.originUrl),
+    resolution: normalizeSnapshotText(source.resolution),
+    contentAvailable: Boolean(source.contentAvailable),
+  };
+}
+
+function normalizePublicationSources(sources) {
+  return (Array.isArray(sources) ? sources : [])
+    .map((source) => normalizePublicationSource(source))
+    .filter(Boolean);
+}
+
 function composeLeadReport(leads, profile) {
   console.log('[Step 3] 영업용 리포트 생성...');
 
@@ -90,18 +132,22 @@ function generateLeadId(company) {
   return `${slug}_${date}_${Math.random().toString(36).substring(2, 6)}`;
 }
 
+function prepareLeadSnapshotRecords(leads, { now = new Date().toISOString(), idFactory = generateLeadId } = {}) {
+  return (Array.isArray(leads) ? leads : []).map(lead => ({
+    id: idFactory(lead.company),
+    status: 'NEW',
+    createdAt: now,
+    updatedAt: now,
+    ...lead,
+    sources: normalizePublicationSources(lead && lead.sources),
+  }));
+}
 function saveLeadSnapshot(leads, profile) {
   const reportsDir = getProfileReportsDir(profile);
   const now = new Date().toISOString();
 
   // 각 리드에 ID, 상태, 생성일 추가
-  const enrichedLeads = leads.map(lead => ({
-    id: generateLeadId(lead.company),
-    status: 'NEW',  // 신규 발굴
-    createdAt: now,
-    updatedAt: now,
-    ...lead
-  }));
+  const enrichedLeads = prepareLeadSnapshotRecords(leads, { now, idFactory: generateLeadId });
 
   // 최신 리드 저장
   const latestCanonicalPath = path.join(reportsDir, ARTIFACT_NAMES.latestCanonical);
@@ -169,4 +215,6 @@ module.exports = {
   saveLeadSnapshot,
   publishLeadReport,
   ARTIFACT_NAMES,
+  prepareLeadSnapshotRecords,
+  normalizePublicationSources,
 };

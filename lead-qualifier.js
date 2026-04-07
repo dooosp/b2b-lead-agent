@@ -1,5 +1,148 @@
 const { createLLMClient } = require('./lib/llm-client');
 
+function normalizeText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeSourceUrl(value) {
+  const url = normalizeText(value);
+  if (!url) return '';
+
+  try {
+    const parsed = new URL(url);
+    parsed.hash = '';
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+function detectSourceResolution(article = {}) {
+  const explicit = normalizeText(article.resolution || article.resolutionStatus);
+  if (explicit) return explicit;
+  if (article.resolvedUrl === true) return 'resolved';
+  if (article.resolvedUrl === false) return 'unresolved';
+  return 'direct';
+}
+
+function buildTraceableSource(article = {}, index = 0) {
+  const url = normalizeSourceUrl(article.link);
+  const originUrl = normalizeSourceUrl(article.originalLink || article.originalUrl || '');
+  const resolution = detectSourceResolution(article);
+  return {
+    sourceId: `A${index + 1}`,
+    title: normalizeText(article.title),
+    url,
+    source: normalizeText(article.source),
+    query: normalizeText(article.query),
+    publishedAt: normalizeText(article.pubDate || article.publishedAt),
+    originUrl: originUrl && (originUrl !== url || resolution !== 'direct') ? originUrl : '',
+    resolution,
+    contentAvailable: Boolean(normalizeText(article.content)),
+  };
+}
+
+function buildArticleTraceIndex(articles = []) {
+  const byId = new Map();
+  const byUrl = new Map();
+  const byTitle = new Map();
+
+  articles.forEach((article, index) => {
+    const trace = buildTraceableSource(article, index);
+    if (!trace.title && !trace.url) return;
+
+    byId.set(trace.sourceId, trace);
+    if (trace.title) byTitle.set(trace.title, trace);
+    if (trace.url) byUrl.set(trace.url, trace);
+    if (trace.originUrl) byUrl.set(trace.originUrl, trace);
+  });
+
+  return { byId, byUrl, byTitle };
+}
+
+function normalizeLeadSourceIds(sourceIds) {
+  return (Array.isArray(sourceIds) ? sourceIds : [])
+    .map(value => normalizeText(value).toUpperCase())
+    .filter(value => /^A\d+$/.test(value));
+}
+
+function dedupeSourceTraces(traces = []) {
+  const seen = new Set();
+  const unique = [];
+
+  for (const trace of traces) {
+    if (!trace || !trace.title || !trace.url) continue;
+    const key = [trace.sourceId || '', trace.url, trace.title].join('|');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(trace);
+  }
+
+  return unique;
+}
+
+function normalizeLeadSources(lead = {}, traceIndex = buildArticleTraceIndex()) {
+  const sourceIds = normalizeLeadSourceIds(lead.sourceIds);
+  const normalizedFromIds = [];
+
+  for (const sourceId of sourceIds) {
+    const matchedById = traceIndex.byId.get(sourceId);
+    if (matchedById) normalizedFromIds.push(matchedById);
+  }
+
+  if (normalizedFromIds.length > 0) {
+    return dedupeSourceTraces(normalizedFromIds);
+  }
+
+  const normalized = [];
+  for (const source of Array.isArray(lead.sources) ? lead.sources : []) {
+    const title = normalizeText(source && source.title);
+    const url = normalizeSourceUrl(source && source.url);
+    if (!title && !url) continue;
+
+    const matched =
+      (url && traceIndex.byUrl.get(url)) ||
+      (title && traceIndex.byTitle.get(title));
+
+    if (matched) {
+      normalized.push(matched);
+      continue;
+    }
+
+    if (title && url) {
+      normalized.push({
+        sourceId: '',
+        title,
+        url,
+        source: normalizeText(source && source.source),
+        query: normalizeText(source && source.query),
+        publishedAt: normalizeText(source && source.publishedAt),
+        originUrl: normalizeSourceUrl(source && source.originUrl),
+        resolution: normalizeText(source && source.resolution) || 'unverified',
+        contentAvailable: Boolean(source && source.contentAvailable),
+      });
+    }
+  }
+
+  return dedupeSourceTraces(normalized);
+}
+
+function normalizeQualifiedLead(lead, traceIndex) {
+  const sourceIds = normalizeLeadSourceIds(lead && lead.sourceIds);
+  return {
+    ...lead,
+    sourceIds,
+    sources: normalizeLeadSources(lead, traceIndex),
+  };
+}
+
+function normalizeQualifiedLeads(leads, articles) {
+  const traceIndex = buildArticleTraceIndex(articles);
+  return (Array.isArray(leads) ? leads : [])
+    .filter(lead => lead && typeof lead.company === 'string' && typeof lead.score === 'number')
+    .map((lead) => normalizeQualifiedLead(lead, traceIndex));
+}
+
 // 키워드 기반 카테고리 분류 → 관련 레퍼런스만 선별
 function categorizeArticles(articles, profile) {
   const rules = profile.categoryRules;
@@ -13,16 +156,18 @@ function categorizeArticles(articles, profile) {
   return matched.size > 0 ? [...matched] : Object.keys(rules); // 폴백: 전체
 }
 
-async function qualifyLeads(articles, profile) {
+async function qualifyLeads(articles, profile, options = {}) {
   console.log('[Step 2] Gemini API로 리드 분석 시작...');
 
-  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+  const llm = options.llm || null;
+
+  if (!llm && (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE')) {
     console.error('  [오류] GEMINI_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.');
     console.log('  → 데모 모드로 실행합니다.\n');
-    return generateDemoLeads(articles, profile);
+    return normalizeQualifiedLeads(generateDemoLeads(articles, profile), articles);
   }
 
-  const llm = createLLMClient({
+  const activeLlm = llm || createLLMClient({
     provider: 'gemini',
     apiKey: process.env.GEMINI_API_KEY,
     model: 'gemini-3-flash-preview',
@@ -34,7 +179,7 @@ async function qualifyLeads(articles, profile) {
   const articleList = articles.map((a, i) => {
     const safeTitle = JSON.stringify(a.title || '');
     const safeContent = a.content ? JSON.stringify(a.content.substring(0, 500)) : null;
-    let entry = `${i + 1}. [${a.source}] ${safeTitle} (URL: ${a.link}) (검색키워드: ${a.query})`;
+    let entry = `${i + 1}. [기사ID: A${i + 1}] [${a.source}] ${safeTitle} (URL: ${a.link}) (검색키워드: ${a.query})`;
     if (safeContent) {
       entry += `\n   [본문 있음] ${safeContent}`;
     } else {
@@ -90,6 +235,7 @@ ${globalRefStr}
 4. Key Pitch (Value Selling): 고객사 담당자에게 보낼 메일의 '첫 문장' (핵심 가치 중심).
 5. Global Context: 해당 산업과 관련된 글로벌 탄소 중립 정책 + **위 글로벌 성공 사례 중 유사 프로젝트 1개 언급**.
 6. Sources: 이 리드 분석에 참고한 뉴스 기사의 제목과 URL을 배열로 포함. 반드시 위 뉴스 목록에 있는 실제 URL만 사용하세요.
+7. sourceIds: 위 뉴스 목록의 [기사ID]를 배열로 포함하세요. 최소 1개 이상이며, sources와 같은 기사만 가리켜야 합니다.
 
 [Confidence 판정 - 본문 없는 기사]
 일부 뉴스는 [본문 미확보]로 표시됩니다. 이 경우:
@@ -121,6 +267,7 @@ ${articleList}
 □ product가 제품 라인업에 존재하는 실제 제품인가?
 □ ROI 수치가 비현실적이지 않은가? (절감률 50% 이상이면 재검토)
 □ sources의 URL이 위 뉴스 목록에 실제 존재하는가?
+□ sourceIds가 실제 기사ID와 일치하는가?
 □ Grade A와 B만 포함했는가?
 
 [Format]
@@ -137,6 +284,7 @@ Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요
     "roi": "ROI 요약 (숫자 있으면 범위 계산, 없으면 절감률%만)",
     "salesPitch": "고객사 담당자에게 보낼 메일 첫 문장 (Value Selling)",
     "globalContext": "관련 글로벌 정책/트렌드",
+    "sourceIds": ["A1"],
     "sources": [{"title": "참고한 기사 제목", "url": "기사 원본 URL"}],
     "evidence": [{"field": "근거 대상 필드(summary/roi 등)", "quote": "기사 본문에서 직접 인용", "sourceUrl": "기사 URL"}],
     "confidence": "HIGH 또는 MEDIUM 또는 LOW",
@@ -147,22 +295,15 @@ Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요
 ]`;
 
   try {
-    const qualifiedLeads = await llm.chatJSON(prompt, { label: 'Gemini-qualify' });
-
-    // 스키마 검증: 배열 + 필수 필드 확인
-    const validLeads = (Array.isArray(qualifiedLeads) ? qualifiedLeads : []).filter(lead =>
-      lead && typeof lead.company === 'string' && typeof lead.score === 'number'
-    ).map(lead => ({
-      ...lead,
-      sources: Array.isArray(lead.sources) ? lead.sources.filter(s => s && s.title && s.url) : []
-    }));
+    const qualifiedLeads = await activeLlm.chatJSON(prompt, { label: 'Gemini-qualify' });
+    const validLeads = normalizeQualifiedLeads(qualifiedLeads, articles);
 
     console.log(`  분석 완료: ${validLeads.length}개 리드 발견\n`);
     return validLeads;
   } catch (error) {
     console.error('  [오류] Gemini API 분석 실패:', error.message);
     console.log('  → 데모 모드로 실행합니다.\n');
-    return generateDemoLeads(articles, profile);
+    return normalizeQualifiedLeads(generateDemoLeads(articles, profile), articles);
   }
 }
 
@@ -295,4 +436,11 @@ function generateDemoLeads(articles, profile) {
 
 const analyzeLeads = qualifyLeads;
 
-module.exports = { analyzeLeads, qualifyLeads };
+module.exports = {
+  analyzeLeads,
+  qualifyLeads,
+  buildArticleTraceIndex,
+  buildTraceableSource,
+  normalizeLeadSources,
+  normalizeQualifiedLeads,
+};
