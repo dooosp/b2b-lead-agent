@@ -56,6 +56,7 @@ class FakeD1Database {
 
     if (
       normalized.startsWith('CREATE TABLE') ||
+      normalized.startsWith('CREATE UNIQUE INDEX') ||
       normalized.startsWith('CREATE INDEX') ||
       normalized.startsWith('ALTER TABLE')
     ) {

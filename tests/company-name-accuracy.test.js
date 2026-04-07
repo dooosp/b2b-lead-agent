@@ -1,41 +1,35 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('fs');
-const path = require('path');
 
 const { postProcessQualifiedLeads } = require('../lead-qualifier');
 
-function loadFixture(...segments) {
-  const filePath = path.join(__dirname, '..', ...segments);
-  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+function createLead(company, title, salesPitch = `${company}에 제안합니다.`) {
+  return {
+    company,
+    summary: title,
+    salesPitch,
+    sources: [{ title, url: 'https://example.com/article' }],
+  };
 }
 
-function findLead(leads, company) {
-  const lead = leads.find(item => item.company === company);
-  assert.ok(lead, `fixture lead not found for ${company}`);
-  return lead;
-}
-
-test('root company hardening rejects or corrects known bad fixture companies', () => {
-  const siemensLeads = loadFixture('reports', 'siemens', 'latest-leads.json');
-  const danfossLeads = loadFixture('reports', 'danfoss', 'latest-leads.json');
-
-  const correctedInterview = postProcessQualifiedLeads([findLead(siemensLeads, '[인터뷰]')]);
+test('root company hardening rejects or corrects representative low-trust company strings', () => {
+  const correctedInterview = postProcessQualifiedLeads([
+    createLead('[인터뷰]', '[인터뷰] 동양BMS, 스마트빌딩 사업 전략 공개', '[인터뷰]에 제안합니다.')
+  ]);
   assert.equal(correctedInterview.length, 1);
   assert.equal(correctedInterview[0].company, '동양BMS');
   assert.doesNotMatch(correctedInterview[0].salesPitch, /\[인터뷰\]/u);
 
   for (const company of ['건물에너지', '김연재', '② K-조선', '선박까지', '부평 청천동']) {
-    const fixtureLead = company === '건물에너지' || company === '김연재'
-      ? findLead(siemensLeads, company)
-      : findLead(danfossLeads, company);
-    assert.deepEqual(postProcessQualifiedLeads([fixtureLead]), [], `${company} should be rejected`);
+    const rejected = postProcessQualifiedLeads([
+      createLead(company, `${company} 관련 일반 산업 동향`)
+    ]);
+    assert.deepEqual(rejected, [], `${company} should be rejected`);
   }
 });
 
 test('root company hardening preserves clearly valid project owners', () => {
-  const danfossLeads = loadFixture('reports', 'danfoss', 'latest-leads.json');
-  const validLead = findLead(danfossLeads, 'DL이앤씨');
+  const validLead = createLead('DL이앤씨', 'DL이앤씨, 데이터센터 냉각 인프라 증설');
 
   const processed = postProcessQualifiedLeads([validLead]);
 
