@@ -5,9 +5,10 @@ export async function saveLeadsBatch(db, leads, profileId, source) {
   if (!db || !leads || leads.length === 0) return;
   await ensureD1Schema(db);
   const stmt = db.prepare(
-    `INSERT INTO leads (id, profile_id, source, status, company, summary, product, score, grade, roi, sales_pitch, global_context, sources, notes, score_reason, urgency, urgency_reason, buyer_role, evidence, confidence, confidence_reason, assumptions, event_type, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO leads (id, identity_key, profile_id, source, status, company, summary, product, score, grade, roi, sales_pitch, global_context, sources, notes, score_reason, urgency, urgency_reason, buyer_role, evidence, confidence, confidence_reason, assumptions, event_type, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
+       identity_key=excluded.identity_key,
        summary=excluded.summary, product=excluded.product, score=excluded.score,
        grade=excluded.grade, roi=excluded.roi, sales_pitch=excluded.sales_pitch,
        global_context=excluded.global_context, sources=excluded.sources,
@@ -19,7 +20,7 @@ export async function saveLeadsBatch(db, leads, profileId, source) {
   );
   const batch = leads.map(lead => {
     const r = leadToRow(lead, profileId, source);
-    return stmt.bind(r.id, r.profile_id, r.source, r.status, r.company, r.summary, r.product, r.score, r.grade, r.roi, r.sales_pitch, r.global_context, r.sources, r.notes, r.score_reason, r.urgency, r.urgency_reason, r.buyer_role, r.evidence, r.confidence, r.confidence_reason, r.assumptions, r.event_type, r.created_at, r.updated_at);
+    return stmt.bind(r.id, r.identity_key, r.profile_id, r.source, r.status, r.company, r.summary, r.product, r.score, r.grade, r.roi, r.sales_pitch, r.global_context, r.sources, r.notes, r.score_reason, r.urgency, r.urgency_reason, r.buyer_role, r.evidence, r.confidence, r.confidence_reason, r.assumptions, r.event_type, r.created_at, r.updated_at);
   });
   await db.batch(batch);
 }
