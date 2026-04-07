@@ -10,6 +10,7 @@ async function enrichArticles(articles, { batchSize = 3, delayMs = 300, resolveU
     const batch = articles.slice(i, i + batchSize);
     await Promise.allSettled(batch.map(async (article) => {
       if (resolveUrls && article.link.includes('news.google.com')) {
+        article.originalLink = article.originalLink || article.link;
         const originalUrl = await resolveOriginalUrl(article.title);
         if (originalUrl) {
           article.link = originalUrl;

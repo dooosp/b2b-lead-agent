@@ -90,18 +90,22 @@ function generateLeadId(company) {
   return `${slug}_${date}_${Math.random().toString(36).substring(2, 6)}`;
 }
 
+function prepareLeadSnapshotRecords(leads, { now = new Date().toISOString(), idFactory = generateLeadId } = {}) {
+  return (Array.isArray(leads) ? leads : []).map(lead => ({
+    id: idFactory(lead.company),
+    status: 'NEW',
+    createdAt: now,
+    updatedAt: now,
+    ...lead
+  }));
+}
+
 function saveLeadSnapshot(leads, profile) {
   const reportsDir = getProfileReportsDir(profile);
   const now = new Date().toISOString();
 
   // 각 리드에 ID, 상태, 생성일 추가
-  const enrichedLeads = leads.map(lead => ({
-    id: generateLeadId(lead.company),
-    status: 'NEW',  // 신규 발굴
-    createdAt: now,
-    updatedAt: now,
-    ...lead
-  }));
+  const enrichedLeads = prepareLeadSnapshotRecords(leads, { now, idFactory: generateLeadId });
 
   // 최신 리드 저장
   const latestCanonicalPath = path.join(reportsDir, ARTIFACT_NAMES.latestCanonical);
@@ -169,4 +173,5 @@ module.exports = {
   saveLeadSnapshot,
   publishLeadReport,
   ARTIFACT_NAMES,
+  prepareLeadSnapshotRecords,
 };
