@@ -6,6 +6,7 @@ export async function ensureD1Schema(db) {
     d1SchemaReadyPromise = db.batch([
       db.prepare(`CREATE TABLE IF NOT EXISTS leads (
         id TEXT PRIMARY KEY,
+        identity_key TEXT DEFAULT '',
         profile_id TEXT NOT NULL DEFAULT 'self-service',
         source TEXT NOT NULL DEFAULT 'managed',
         status TEXT NOT NULL DEFAULT 'NEW',
@@ -30,6 +31,7 @@ export async function ensureD1Schema(db) {
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )`),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_leads_identity_key ON leads(identity_key)'),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_leads_profile ON leads(profile_id)'),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status)'),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at DESC)'),
@@ -79,6 +81,7 @@ export async function ensureD1Schema(db) {
       db.prepare('CREATE INDEX IF NOT EXISTS idx_job_runs_updated ON job_runs(updated_at DESC)')
     ]).then(async () => {
       const alterCols = [
+        "ALTER TABLE leads ADD COLUMN identity_key TEXT DEFAULT ''",
         "ALTER TABLE leads ADD COLUMN enriched INTEGER DEFAULT 0",
         "ALTER TABLE leads ADD COLUMN article_body TEXT DEFAULT ''",
         "ALTER TABLE leads ADD COLUMN action_items TEXT DEFAULT '[]'",
@@ -103,6 +106,7 @@ export async function ensureD1Schema(db) {
       for (const sql of alterCols) {
         try { await db.prepare(sql).run(); } catch { /* column already exists */ }
       }
+      try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_leads_identity_key ON leads(identity_key)').run(); } catch { /* index exists */ }
       await db.prepare(`CREATE TABLE IF NOT EXISTS job_runs (
         request_id TEXT PRIMARY KEY,
         profile_id TEXT NOT NULL,
