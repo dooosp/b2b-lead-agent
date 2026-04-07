@@ -1,3 +1,5 @@
+const { applyArticleBodyTrust } = require('../article-trust');
+
 function fetchArticleContent(...args) {
   return require('./article-content-scraper').fetchArticleContent(...args);
 }
@@ -41,8 +43,14 @@ async function enrichArticles(
       }
 
       if (!article.content || article.content.length < 50) {
-        article.content = await contentFetcher(article.link);
+        const fetchedBody = await contentFetcher(article.link);
+        if (fetchedBody) {
+          article.content = fetchedBody;
+          article.bodySource = 'article-body';
+        }
       }
+
+      applyArticleBodyTrust(article);
     }));
 
     if (i + batchSize < articles.length) {

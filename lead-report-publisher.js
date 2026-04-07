@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { computeStableLeadId } = require('./lead-identity');
 
 const ARTIFACT_NAMES = {
   markdownCanonical: (dateStr) => `lead-report-${dateStr}.md`,
@@ -125,16 +126,13 @@ function saveLeadReport(report, profile) {
   return canonicalPath;
 }
 
-// 리드 ID 생성 (기업명 + 날짜 기반)
-function generateLeadId(company) {
-  const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
-  const slug = company.replace(/[^a-zA-Z가-힣0-9]/g, '').substring(0, 10);
-  return `${slug}_${date}_${Math.random().toString(36).substring(2, 6)}`;
+function generateLeadId(lead, { profileId = '' } = {}) {
+  return computeStableLeadId(lead, { profileId });
 }
 
-function prepareLeadSnapshotRecords(leads, { now = new Date().toISOString(), idFactory = generateLeadId } = {}) {
+function prepareLeadSnapshotRecords(leads, { now = new Date().toISOString(), idFactory = generateLeadId, profileId = '' } = {}) {
   return (Array.isArray(leads) ? leads : []).map(lead => ({
-    id: idFactory(lead.company),
+    id: idFactory(lead, { profileId }),
     status: 'NEW',
     createdAt: now,
     updatedAt: now,
@@ -142,12 +140,49 @@ function prepareLeadSnapshotRecords(leads, { now = new Date().toISOString(), idF
     sources: normalizePublicationSources(lead && lead.sources),
   }));
 }
+
+function findExistingLeadIndex(history, newLead) {
+  let existingIdx = history.findIndex(h => h && h.id === newLead.id);
+  if (existingIdx >= 0) return existingIdx;
+  return history.findIndex(h =>
+    h
+    && h.company === newLead.company
+    && h.summary === newLead.summary
+  );
+}
+
+function mergeLeadHistory(history, newLeads, { now = new Date().toISOString(), profileId = '' } = {}) {
+  const nextHistory = Array.isArray(history) ? history.map((entry) => ({ ...entry })) : [];
+  const preparedLeads = prepareLeadSnapshotRecords(newLeads, { now, profileId });
+
+  for (const newLead of preparedLeads) {
+    const existingIdx = findExistingLeadIndex(nextHistory, newLead);
+    if (existingIdx >= 0) {
+      nextHistory[existingIdx] = {
+        ...nextHistory[existingIdx],
+        ...newLead,
+        id: newLead.id,
+        status: nextHistory[existingIdx].status || newLead.status,
+        createdAt: nextHistory[existingIdx].createdAt || newLead.createdAt,
+        updatedAt: now
+      };
+    } else {
+      nextHistory.push(newLead);
+    }
+  }
+
+  return nextHistory;
+}
+
 function saveLeadSnapshot(leads, profile) {
   const reportsDir = getProfileReportsDir(profile);
   const now = new Date().toISOString();
 
   // 각 리드에 ID, 상태, 생성일 추가
-  const enrichedLeads = prepareLeadSnapshotRecords(leads, { now, idFactory: generateLeadId });
+  const enrichedLeads = prepareLeadSnapshotRecords(leads, {
+    now,
+    profileId: profile && profile.id
+  });
 
   // 최신 리드 저장
   const latestCanonicalPath = path.join(reportsDir, ARTIFACT_NAMES.latestCanonical);
@@ -166,25 +201,7 @@ function saveLeadSnapshot(leads, profile) {
     }
   }
 
-  // 중복 체크 (같은 기업+프로젝트는 업데이트)
-  for (const newLead of enrichedLeads) {
-    const existingIdx = history.findIndex(h =>
-      h.company === newLead.company && h.summary === newLead.summary
-    );
-    if (existingIdx >= 0) {
-      // 기존 리드의 상태는 유지하고 정보만 업데이트
-      history[existingIdx] = {
-        ...history[existingIdx],
-        ...newLead,
-        id: history[existingIdx].id,  // 기존 ID 유지
-        status: history[existingIdx].status,  // 기존 상태 유지
-        createdAt: history[existingIdx].createdAt,  // 기존 생성일 유지
-        updatedAt: now
-      };
-    } else {
-      history.push(newLead);
-    }
-  }
+  history = mergeLeadHistory(history, leads, { now, profileId: profile && profile.id });
 
   const historyPayload = JSON.stringify(history, null, 2);
   fs.writeFileSync(historyCanonicalPath, historyPayload, 'utf-8');
@@ -215,6 +232,7 @@ module.exports = {
   saveLeadSnapshot,
   publishLeadReport,
   ARTIFACT_NAMES,
+  mergeLeadHistory,
   prepareLeadSnapshotRecords,
   normalizePublicationSources,
 };

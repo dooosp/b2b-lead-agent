@@ -1,4 +1,4 @@
-const { createLLMClient } = require('./lib/llm-client');
+const { classifyArticleBody, getArticleContextText, getTrustedArticleBody } = require('./article-trust');
 
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -181,12 +181,141 @@ function categorizeArticles(articles, profile) {
   const rules = profile.categoryRules;
   const matched = new Set();
   for (const a of articles) {
-    const text = `${a.title} ${a.query} ${a.content || ''}`.toLowerCase();
+    const text = getArticleContextText(a).toLowerCase();
     for (const [cat, kws] of Object.entries(rules)) {
       if (kws.some(kw => text.includes(kw))) matched.add(cat);
     }
   }
   return matched.size > 0 ? [...matched] : Object.keys(rules); // 폴백: 전체
+}
+
+function buildArticlePromptList(articles) {
+  return articles.map((article, index) => {
+    const safeTitle = JSON.stringify(article.title || '');
+    const trustedBody = getTrustedArticleBody(article);
+    const trust = classifyArticleBody(article);
+    let entry = `${index + 1}. [기사ID: A${index + 1}] [${article.source}] ${safeTitle} (URL: ${article.link}) (검색키워드: ${article.query})`;
+    if (trustedBody) {
+      entry += `\n   [검증 본문] ${JSON.stringify(trustedBody.substring(0, 500))}`;
+    } else if (trust.bodyTrust === 'low') {
+      entry += `\n   [본문 저신뢰 - ${trust.bodyTrustReason}]`;
+    } else {
+      entry += `\n   [본문 없음 - 제목과 키워드 기반 추론 필요]`;
+    }
+    return entry;
+  }).join('\n\n');
+}
+
+function buildLeadAnalysisPrompt(profile, articles) {
+  const articleList = buildArticlePromptList(articles);
+
+  const knowledgeBase = Object.entries(profile.productKnowledge)
+    .map(([name, info]) => `- ${name}: 핵심가치="${info.value}", ROI="${info.roi}"`)
+    .join('\n');
+
+  const productLineup = Object.entries(profile.products)
+    .map(([cat, items]) => `- ${cat.charAt(0).toUpperCase() + cat.slice(1)}: ${items.join(', ')}`)
+    .join('\n');
+
+  const relevantCategories = categorizeArticles(articles, profile);
+  const globalRefStr = Object.entries(profile.globalReferences)
+    .filter(([category]) => relevantCategories.includes(category))
+    .map(([category, cases]) => {
+      const caseList = cases.slice(0, 3).map(c => `  • ${c.client}: ${c.project} → ${c.result}`).join('\n');
+      return `[${category.toUpperCase()}]\n${caseList}`;
+    }).join('\n\n');
+  console.log(`  카테고리 매칭: ${relevantCategories.join(', ')} (${relevantCategories.length * 3} 레퍼런스)`);
+
+  return `[Context]
+- 분석 시점: ${new Date().toISOString().split('T')[0]}
+- 데이터 소스: 한국 산업 뉴스 (최근 24시간 크롤링)
+- 경쟁사: ${profile.competitors.join(', ')}
+
+[Role]
+당신은 ${profile.name}의 'AI 기술 영업 전략가'입니다.
+10년 이상 B2B 산업장비 영업 경험으로, 뉴스에서 영업 기회를 포착하고 Value Selling 전략을 수립합니다.
+아래 뉴스를 읽고 단순 요약이 아닌, **'영업 기회 분석 보고서'**를 작성하세요.
+
+[${profile.name} 제품 지식 베이스]
+${knowledgeBase}
+
+[제품 라인업]
+${productLineup}
+
+[${profile.name} 글로벌 성공 사례 - Cross-border Selling Reference]
+아래 본사 및 해외 성공 사례를 한국 고객에게 레퍼런스로 제시하세요:
+${globalRefStr}
+
+[Action]
+1. Target Opportunity: 어떤 기업의 어떤 프로젝트인가?
+2. ${profile.name} Solution: 위 지식 베이스를 참고하여 최적의 제품 1개를 선정.
+3. Estimated ROI: 제품 도입 시 예상되는 에너지 절감률 또는 비용 편익을 수치(%)로 제시.
+4. Key Pitch (Value Selling): 고객사 담당자에게 보낼 메일의 '첫 문장' (핵심 가치 중심).
+5. Global Context: 해당 산업과 관련된 글로벌 탄소 중립 정책 + **위 글로벌 성공 사례 중 유사 프로젝트 1개 언급**.
+6. Sources: 이 리드 분석에 참고한 뉴스 기사의 제목과 URL을 배열로 포함. 반드시 위 뉴스 목록에 있는 실제 URL만 사용하세요.
+7. sourceIds: 위 뉴스 목록의 [기사ID]를 배열로 포함하세요. 최소 1개 이상이며, sources와 같은 기사만 가리켜야 합니다.
+
+[Body Trust Guard]
+- [검증 본문]으로 표시된 텍스트만 기사 본문 근거로 사용할 수 있습니다.
+- [본문 저신뢰] 또는 [본문 없음] 항목의 본문은 사실 근거로 취급하지 말고 제목, URL, 검색키워드만 사용하세요.
+- [본문 저신뢰] 항목에서는 body evidence 인용 금지. 제목 인용만 허용합니다.
+
+[Confidence 판정 - 본문 없는 기사]
+일부 뉴스는 [본문 없음] 또는 [본문 저신뢰]로 표시됩니다. 이 경우:
+- 제목에 구체 숫자/규모/일정/금액이 포함: confidence="MEDIUM", score 최대 80점.
+- 제목이 모호(트렌드/일반): confidence="LOW", score 최대 65점.
+- confidenceReason에 판정 근거를 명시하세요.
+- evidence에 기사 제목의 핵심 팩트를 인용 가능 (field: "title").
+
+[스코어링 기준]
+- Grade A (80-100점): 구체적 착공/수주/예산이 언급된 프로젝트
+- Grade B (50-79점): 산업 트렌드로 향후 수요 예상
+- Grade C (0-49점): 단순 동정 뉴스 (제외)
+
+[ROI 작성 정책]
+- 기사 본문에서 발견한 구체 숫자(금액/면적/용량 등)가 있으면: 산업 평균 절감률 + 발견 숫자로 ROI 범위를 산출하세요.
+- 숫자가 없으면: "정량 데이터 부족 — 유사 사례 기준 절감률 N~M% 예상" 형태로만 작성하세요. 구체 금액을 창작하지 마세요.
+- assumptions에 ROI 산출에 사용한 모든 가정을 반드시 나열하세요.
+
+[Tone]
+- 객관적이고 데이터 중심적으로 분석. 과장 금지.
+- ROI는 보수적 추정 (업계 평균 기반).
+- salesPitch는 고객 관점(pain point 해결) 중심, ${profile.name} 자랑 X.
+
+[뉴스 목록]
+${articleList}
+
+[Verification - 출력 전 자체 점검]
+□ company가 실제 기업명인가? (산업 키워드가 아닌 법인명)
+□ product가 제품 라인업에 존재하는 실제 제품인가?
+□ ROI 수치가 비현실적이지 않은가? (절감률 50% 이상이면 재검토)
+□ sources의 URL이 위 뉴스 목록에 실제 존재하는가?
+□ sourceIds가 실제 기사ID와 일치하는가?
+□ Grade A와 B만 포함했는가?
+
+[Format]
+반드시 아래 JSON 배열 형식으로만 응답하세요. 다른 텍스트 없이 JSON만 출력하세요.
+Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요.
+
+[
+  {
+    "company": "타겟 기업명",
+    "summary": "프로젝트 내용 요약 (1줄)",
+    "product": "추천 ${profile.name} 제품 1개",
+    "score": 85,
+    "grade": "A",
+    "roi": "ROI 요약 (숫자 있으면 범위 계산, 없으면 절감률%만)",
+    "salesPitch": "고객사 담당자에게 보낼 메일 첫 문장 (Value Selling)",
+    "globalContext": "관련 글로벌 정책/트렌드",
+    "sourceIds": ["A1"],
+    "sources": [{"title": "참고한 기사 제목", "url": "기사 원본 URL"}],
+    "evidence": [{"field": "근거 대상 필드(summary/roi 등)", "quote": "기사 본문에서 직접 인용", "sourceUrl": "기사 URL"}],
+    "confidence": "HIGH 또는 MEDIUM 또는 LOW",
+    "confidenceReason": "신뢰도 판정 근거",
+    "assumptions": ["ROI 산출 가정1", "가정2"],
+    "eventType": "착공|증설|수주|규제|입찰|투자|채용|기타"
+  }
+]`;
 }
 
 function cleanArticleTitle(title = '') {
@@ -357,6 +486,7 @@ async function qualifyLeads(articles, profile, options = {}) {
     return normalizeQualifiedLeads(generateDemoLeads(articles, profile), articles);
   }
 
+  const { createLLMClient } = require('./lib/llm-client');
   const activeLlm = llm || createLLMClient({
     provider: 'gemini',
     apiKey: process.env.GEMINI_API_KEY,
@@ -364,125 +494,7 @@ async function qualifyLeads(articles, profile, options = {}) {
     timeout: 30000,
     maxRetries: 1,
   });
-
-  // 본문 유무 표시 + 예외 처리 안내
-  const articleList = articles.map((a, i) => {
-    const safeTitle = JSON.stringify(a.title || '');
-    const safeContent = a.content ? JSON.stringify(a.content.substring(0, 500)) : null;
-    let entry = `${i + 1}. [기사ID: A${i + 1}] [${a.source}] ${safeTitle} (URL: ${a.link}) (검색키워드: ${a.query})`;
-    if (safeContent) {
-      entry += `\n   [본문 있음] ${safeContent}`;
-    } else {
-      entry += `\n   [본문 없음 - 제목과 키워드 기반 추론 필요]`;
-    }
-    return entry;
-  }).join('\n\n');
-
-  // 제품 지식 베이스 문자열 생성
-  const knowledgeBase = Object.entries(profile.productKnowledge)
-    .map(([name, info]) => `- ${name}: 핵심가치="${info.value}", ROI="${info.roi}"`)
-    .join('\n');
-
-  // 제품 라인업 문자열 생성
-  const productLineup = Object.entries(profile.products)
-    .map(([cat, items]) => `- ${cat.charAt(0).toUpperCase() + cat.slice(1)}: ${items.join(', ')}`)
-    .join('\n');
-
-  // 관련 카테고리만 선별하여 글로벌 성공 사례 생성
-  const relevantCategories = categorizeArticles(articles, profile);
-  const globalRefStr = Object.entries(profile.globalReferences)
-    .filter(([category]) => relevantCategories.includes(category))
-    .map(([category, cases]) => {
-      const caseList = cases.slice(0, 3).map(c => `  • ${c.client}: ${c.project} → ${c.result}`).join('\n');
-      return `[${category.toUpperCase()}]\n${caseList}`;
-    }).join('\n\n');
-  console.log(`  카테고리 매칭: ${relevantCategories.join(', ')} (${relevantCategories.length * 3} 레퍼런스)`);
-
-  const prompt = `[Context]
-- 분석 시점: ${new Date().toISOString().split('T')[0]}
-- 데이터 소스: 한국 산업 뉴스 (최근 24시간 크롤링)
-- 경쟁사: ${profile.competitors.join(', ')}
-
-[Role]
-당신은 ${profile.name}의 'AI 기술 영업 전략가'입니다.
-10년 이상 B2B 산업장비 영업 경험으로, 뉴스에서 영업 기회를 포착하고 Value Selling 전략을 수립합니다.
-아래 뉴스를 읽고 단순 요약이 아닌, **'영업 기회 분석 보고서'**를 작성하세요.
-
-[${profile.name} 제품 지식 베이스]
-${knowledgeBase}
-
-[제품 라인업]
-${productLineup}
-
-[${profile.name} 글로벌 성공 사례 - Cross-border Selling Reference]
-아래 본사 및 해외 성공 사례를 한국 고객에게 레퍼런스로 제시하세요:
-${globalRefStr}
-
-[Action]
-1. Target Opportunity: 어떤 기업의 어떤 프로젝트인가?
-2. ${profile.name} Solution: 위 지식 베이스를 참고하여 최적의 제품 1개를 선정.
-3. Estimated ROI: 제품 도입 시 예상되는 에너지 절감률 또는 비용 편익을 수치(%)로 제시.
-4. Key Pitch (Value Selling): 고객사 담당자에게 보낼 메일의 '첫 문장' (핵심 가치 중심).
-5. Global Context: 해당 산업과 관련된 글로벌 탄소 중립 정책 + **위 글로벌 성공 사례 중 유사 프로젝트 1개 언급**.
-6. Sources: 이 리드 분석에 참고한 뉴스 기사의 제목과 URL을 배열로 포함. 반드시 위 뉴스 목록에 있는 실제 URL만 사용하세요.
-7. sourceIds: 위 뉴스 목록의 [기사ID]를 배열로 포함하세요. 최소 1개 이상이며, sources와 같은 기사만 가리켜야 합니다.
-
-[Confidence 판정 - 본문 없는 기사]
-일부 뉴스는 [본문 미확보]로 표시됩니다. 이 경우:
-- 제목에 구체 숫자/규모/일정/금액이 포함: confidence="MEDIUM", score 최대 80점.
-- 제목이 모호(트렌드/일반): confidence="LOW", score 최대 65점.
-- confidenceReason에 판정 근거를 명시하세요.
-- evidence에 기사 제목의 핵심 팩트를 인용 가능 (field: "title").
-
-[스코어링 기준]
-- Grade A (80-100점): 구체적 착공/수주/예산이 언급된 프로젝트
-- Grade B (50-79점): 산업 트렌드로 향후 수요 예상
-- Grade C (0-49점): 단순 동정 뉴스 (제외)
-
-[ROI 작성 정책]
-- 기사 본문에서 발견한 구체 숫자(금액/면적/용량 등)가 있으면: 산업 평균 절감률 + 발견 숫자로 ROI 범위를 산출하세요.
-- 숫자가 없으면: "정량 데이터 부족 — 유사 사례 기준 절감률 N~M% 예상" 형태로만 작성하세요. 구체 금액을 창작하지 마세요.
-- assumptions에 ROI 산출에 사용한 모든 가정을 반드시 나열하세요.
-
-[Tone]
-- 객관적이고 데이터 중심적으로 분석. 과장 금지.
-- ROI는 보수적 추정 (업계 평균 기반).
-- salesPitch는 고객 관점(pain point 해결) 중심, ${profile.name} 자랑 X.
-
-[뉴스 목록]
-${articleList}
-
-[Verification - 출력 전 자체 점검]
-□ company가 실제 기업명인가? (산업 키워드가 아닌 법인명)
-□ product가 제품 라인업에 존재하는 실제 제품인가?
-□ ROI 수치가 비현실적이지 않은가? (절감률 50% 이상이면 재검토)
-□ sources의 URL이 위 뉴스 목록에 실제 존재하는가?
-□ sourceIds가 실제 기사ID와 일치하는가?
-□ Grade A와 B만 포함했는가?
-
-[Format]
-반드시 아래 JSON 배열 형식으로만 응답하세요. 다른 텍스트 없이 JSON만 출력하세요.
-Grade C(49점 이하)인 뉴스는 제외하고, Grade A와 B만 포함하세요.
-
-[
-  {
-    "company": "타겟 기업명",
-    "summary": "프로젝트 내용 요약 (1줄)",
-    "product": "추천 ${profile.name} 제품 1개",
-    "score": 85,
-    "grade": "A",
-    "roi": "ROI 요약 (숫자 있으면 범위 계산, 없으면 절감률%만)",
-    "salesPitch": "고객사 담당자에게 보낼 메일 첫 문장 (Value Selling)",
-    "globalContext": "관련 글로벌 정책/트렌드",
-    "sourceIds": ["A1"],
-    "sources": [{"title": "참고한 기사 제목", "url": "기사 원본 URL"}],
-    "evidence": [{"field": "근거 대상 필드(summary/roi 등)", "quote": "기사 본문에서 직접 인용", "sourceUrl": "기사 URL"}],
-    "confidence": "HIGH 또는 MEDIUM 또는 LOW",
-    "confidenceReason": "신뢰도 판정 근거",
-    "assumptions": ["ROI 산출 가정1", "가정2"],
-    "eventType": "착공|증설|수주|규제|입찰|투자|채용|기타"
-  }
-]`;
+  const prompt = buildLeadAnalysisPrompt(profile, articles);
 
   try {
     const qualifiedLeads = await activeLlm.chatJSON(prompt, { label: 'Gemini-qualify' });
@@ -623,6 +635,8 @@ const analyzeLeads = qualifyLeads;
 module.exports = {
   analyzeLeads,
   qualifyLeads,
+  buildArticlePromptList,
+  buildLeadAnalysisPrompt,
   buildArticleTraceIndex,
   buildTraceableSource,
   normalizeLeadSources,

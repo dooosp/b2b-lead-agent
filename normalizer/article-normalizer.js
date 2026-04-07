@@ -10,6 +10,7 @@ function normalizeGoogleNewsItem(item, query) {
     source: item.source?._ || item.creator || extractGoogleNewsSource(item.title),
     pubDate: item.pubDate || '',
     content: item.contentSnippet || '',
+    bodySource: item.contentSnippet ? 'feed-snippet' : 'missing',
     query
   };
 }
@@ -21,6 +22,7 @@ function normalizeRssItem(item, { source, query }) {
     source,
     pubDate: item.pubDate || '',
     content: item.contentSnippet || '',
+    bodySource: item.contentSnippet ? 'feed-snippet' : 'missing',
     query
   };
 }
