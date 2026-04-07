@@ -121,7 +121,7 @@ test('qualifyLeads falls back to source title/url matching and dedupes canonical
   const discoveryUrl = 'https://news.google.com/rss/articles/CBMiQ2h0dHBzOi8vbmV3cy5nb29nbGUuY29tL2FydGljbGUvMg';
   const articles = [
     {
-      title: '부평 청천동 데이터센터 2단계 착공',
+      title: 'DL이앤씨, 부평 데이터센터 2단계 착공',
       link: discoveryUrl,
       originalLink: discoveryUrl,
       source: '인천투데이',
@@ -136,17 +136,17 @@ test('qualifyLeads falls back to source title/url matching and dedupes canonical
     async chatJSON() {
       return [
         {
-          company: '부평 청천동',
+          company: 'DL이앤씨',
           summary: '데이터센터 2단계 착공',
           product: 'Turbocor 컴프레서',
           score: 80,
           grade: 'A',
           roi: '정량 데이터 부족 — 유사 사례 기준 절감률 30~35% 예상',
-          salesPitch: '부평 청천동 데이터센터에 냉각 효율 개선을 제안합니다.',
+          salesPitch: 'DL이앤씨 데이터센터에 냉각 효율 개선을 제안합니다.',
           globalContext: 'EU 데이터센터 에너지효율 지침',
           sources: [
-            { title: '부평 청천동 데이터센터 2단계 착공', url: discoveryUrl },
-            { title: '부평 청천동 데이터센터 2단계 착공', url: 'https://search.naver.com/search.naver?where=news&query=%EB%B6%80%ED%8F%89%20%EC%B2%AD%EC%B2%9C%EB%8F%99%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0' }
+            { title: 'DL이앤씨, 부평 데이터센터 2단계 착공', url: discoveryUrl },
+            { title: 'DL이앤씨, 부평 데이터센터 2단계 착공', url: 'https://search.naver.com/search.naver?where=news&query=DL%EC%9D%B4%EC%95%A4%EC%94%A8%20%EB%B6%80%ED%8F%89%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0' }
           ]
         }
       ];
@@ -159,7 +159,7 @@ test('qualifyLeads falls back to source title/url matching and dedupes canonical
   assert.equal(leads[0].sources.length, 1);
   assert.deepEqual(leads[0].sources[0], {
     sourceId: 'A1',
-    title: '부평 청천동 데이터센터 2단계 착공',
+    title: 'DL이앤씨, 부평 데이터센터 2단계 착공',
     url: discoveryUrl,
     source: '인천투데이',
     query: '데이터센터 신축 착공',
