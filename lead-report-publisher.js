@@ -7,6 +7,48 @@ const ARTIFACT_NAMES = {
   historyCanonical: 'lead-history.json',
 };
 
+function normalizeSnapshotText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeSnapshotUrl(value) {
+  const url = normalizeSnapshotText(value);
+  if (!url) return '';
+
+  try {
+    const parsed = new URL(url);
+    parsed.hash = '';
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+function normalizePublicationSource(source = {}) {
+  const title = normalizeSnapshotText(source.title);
+  const url = normalizeSnapshotUrl(source.url);
+  if (!title && !url) return null;
+
+  return {
+    ...source,
+    sourceId: normalizeSnapshotText(source.sourceId),
+    title,
+    url,
+    source: normalizeSnapshotText(source.source),
+    query: normalizeSnapshotText(source.query),
+    publishedAt: normalizeSnapshotText(source.publishedAt),
+    originUrl: normalizeSnapshotUrl(source.originUrl),
+    resolution: normalizeSnapshotText(source.resolution),
+    contentAvailable: Boolean(source.contentAvailable),
+  };
+}
+
+function normalizePublicationSources(sources) {
+  return (Array.isArray(sources) ? sources : [])
+    .map((source) => normalizePublicationSource(source))
+    .filter(Boolean);
+}
+
 function composeLeadReport(leads, profile) {
   console.log('[Step 3] 영업용 리포트 생성...');
 
@@ -96,7 +138,8 @@ function prepareLeadSnapshotRecords(leads, { now = new Date().toISOString(), idF
     status: 'NEW',
     createdAt: now,
     updatedAt: now,
-    ...lead
+    ...lead,
+    sources: normalizePublicationSources(lead && lead.sources),
   }));
 }
 
@@ -174,4 +217,5 @@ module.exports = {
   publishLeadReport,
   ARTIFACT_NAMES,
   prepareLeadSnapshotRecords,
+  normalizePublicationSources,
 };

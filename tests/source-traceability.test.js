@@ -2,8 +2,68 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const danfoss = require('../profiles/danfoss');
+const { enrichArticles } = require('../enricher/article-enricher');
 const { qualifyLeads } = require('../lead-qualifier');
-const { prepareLeadSnapshotRecords } = require('../lead-report-publisher');
+const { prepareLeadSnapshotRecords, normalizePublicationSources } = require('../lead-report-publisher');
+
+test('enrichArticles keeps the resolved direct article URL for Google News items', async () => {
+  const discoveryUrl = 'https://news.google.com/rss/articles/CBMiQ2h0dHBzOi8vbmV3cy5nb29nbGUuY29tL2FydGljbGUvMDHSAQA';
+  const articles = [
+    {
+      title: 'DL이앤씨, 데이터센터 영토 확장 가속 - 딜사이트',
+      link: discoveryUrl,
+      source: '딜사이트',
+      query: '데이터센터 신축 착공',
+      content: '',
+    }
+  ];
+  const fetchedUrls = [];
+
+  await enrichArticles(articles, {
+    batchSize: 1,
+    delayMs: 0,
+    urlResolver: async () => 'https://www.example.com/article/dl-data-center#section',
+    contentFetcher: async (url) => {
+      fetchedUrls.push(url);
+      return 'resolved article body that is definitely longer than fifty characters for regression coverage.';
+    }
+  });
+
+  assert.equal(articles[0].link, 'https://www.example.com/article/dl-data-center#section');
+  assert.equal(articles[0].originalLink, discoveryUrl);
+  assert.equal(articles[0].resolvedUrl, true);
+  assert.deepEqual(fetchedUrls, ['https://www.example.com/article/dl-data-center#section']);
+});
+
+test('enrichArticles keeps the discovery URL when Google News resolution fails', async () => {
+  const discoveryUrl = 'https://news.google.com/rss/articles/CBMiQ2h0dHBzOi8vbmV3cy5nb29nbGUuY29tL2FydGljbGUvMDLSAQA';
+  const articles = [
+    {
+      title: '부평 청천동 데이터센터 2단계 착공 - 인천투데이',
+      link: discoveryUrl,
+      source: '인천투데이',
+      query: '데이터센터 신축 착공',
+      content: '',
+    }
+  ];
+  const fetchedUrls = [];
+
+  await enrichArticles(articles, {
+    batchSize: 1,
+    delayMs: 0,
+    urlResolver: async () => null,
+    contentFetcher: async (url) => {
+      fetchedUrls.push(url);
+      return '';
+    }
+  });
+
+  assert.equal(articles[0].link, discoveryUrl);
+  assert.equal(articles[0].originalLink, discoveryUrl);
+  assert.equal(articles[0].resolvedUrl, false);
+  assert.deepEqual(fetchedUrls, [discoveryUrl]);
+  assert.ok(!/search\.naver\.com/i.test(articles[0].link));
+});
 
 test('qualifyLeads maps sourceIds back to canonical article traces', async () => {
   const articles = [
@@ -58,11 +118,12 @@ test('qualifyLeads maps sourceIds back to canonical article traces', async () =>
 });
 
 test('qualifyLeads falls back to source title/url matching and dedupes canonical traces', async () => {
+  const discoveryUrl = 'https://news.google.com/rss/articles/CBMiQ2h0dHBzOi8vbmV3cy5nb29nbGUuY29tL2FydGljbGUvMg';
   const articles = [
     {
       title: '부평 청천동 데이터센터 2단계 착공',
-      link: 'https://www.incheontoday.com/news/articleView.html?idxno=100',
-      originalLink: 'https://news.google.com/rss/articles/CBMiQ2h0dHBzOi8vbmV3cy5nb29nbGUuY29tL2FydGljbGUvMg',
+      link: discoveryUrl,
+      originalLink: discoveryUrl,
       source: '인천투데이',
       query: '데이터센터 신축 착공',
       pubDate: 'Tue, 07 Apr 2026 10:00:00 GMT',
@@ -84,8 +145,8 @@ test('qualifyLeads falls back to source title/url matching and dedupes canonical
           salesPitch: '부평 청천동 데이터센터에 냉각 효율 개선을 제안합니다.',
           globalContext: 'EU 데이터센터 에너지효율 지침',
           sources: [
-            { title: '부평 청천동 데이터센터 2단계 착공', url: 'https://news.google.com/rss/articles/CBMiQ2h0dHBzOi8vbmV3cy5nb29nbGUuY29tL2FydGljbGUvMg' },
-            { title: '부평 청천동 데이터센터 2단계 착공', url: 'https://www.incheontoday.com/news/articleView.html?idxno=100' }
+            { title: '부평 청천동 데이터센터 2단계 착공', url: discoveryUrl },
+            { title: '부평 청천동 데이터센터 2단계 착공', url: 'https://search.naver.com/search.naver?where=news&query=%EB%B6%80%ED%8F%89%20%EC%B2%AD%EC%B2%9C%EB%8F%99%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0' }
           ]
         }
       ];
@@ -99,12 +160,12 @@ test('qualifyLeads falls back to source title/url matching and dedupes canonical
   assert.deepEqual(leads[0].sources[0], {
     sourceId: 'A1',
     title: '부평 청천동 데이터센터 2단계 착공',
-    url: 'https://www.incheontoday.com/news/articleView.html?idxno=100',
+    url: discoveryUrl,
     source: '인천투데이',
     query: '데이터센터 신축 착공',
     publishedAt: 'Tue, 07 Apr 2026 10:00:00 GMT',
-    originUrl: 'https://news.google.com/rss/articles/CBMiQ2h0dHBzOi8vbmV3cy5nb29nbGUuY29tL2FydGljbGUvMg',
-    resolution: 'search-fallback',
+    originUrl: discoveryUrl,
+    resolution: 'unresolved',
     contentAvailable: false
   });
 });
@@ -155,6 +216,35 @@ test('prepareLeadSnapshotRecords preserves enriched source trace metadata', () =
           contentAvailable: true
         }
       ]
+    }
+  ]);
+});
+
+test('normalizePublicationSources preserves unresolved discovery provenance', () => {
+  const discoveryUrl = 'https://news.google.com/rss/articles/CBMiQ2h0dHBzOi8vbmV3cy5nb29nbGUuY29tL2FydGljbGUvMw#fragment';
+  assert.deepEqual(normalizePublicationSources([
+    {
+      sourceId: 'A1',
+      title: '부평 청천동 데이터센터 2단계 착공',
+      url: discoveryUrl,
+      source: '인천투데이',
+      query: '데이터센터 신축 착공',
+      publishedAt: 'Tue, 07 Apr 2026 10:00:00 GMT',
+      originUrl: discoveryUrl,
+      resolution: 'unresolved',
+      contentAvailable: false,
+    }
+  ]), [
+    {
+      sourceId: 'A1',
+      title: '부평 청천동 데이터센터 2단계 착공',
+      url: 'https://news.google.com/rss/articles/CBMiQ2h0dHBzOi8vbmV3cy5nb29nbGUuY29tL2FydGljbGUvMw',
+      source: '인천투데이',
+      query: '데이터센터 신축 착공',
+      publishedAt: 'Tue, 07 Apr 2026 10:00:00 GMT',
+      originUrl: 'https://news.google.com/rss/articles/CBMiQ2h0dHBzOi8vbmV3cy5nb29nbGUuY29tL2FydGljbGUvMw',
+      resolution: 'unresolved',
+      contentAvailable: false,
     }
   ]);
 });

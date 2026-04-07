@@ -16,14 +16,17 @@ function normalizeSourceUrl(value) {
 }
 
 function detectSourceResolution(article = {}) {
+  const explicit = normalizeText(article.resolution || article.resolutionStatus);
+  if (explicit) return explicit;
   if (article.resolvedUrl === true) return 'resolved';
-  if (article.resolvedUrl === false) return 'search-fallback';
+  if (article.resolvedUrl === false) return 'unresolved';
   return 'direct';
 }
 
 function buildTraceableSource(article = {}, index = 0) {
   const url = normalizeSourceUrl(article.link);
   const originUrl = normalizeSourceUrl(article.originalLink || article.originalUrl || '');
+  const resolution = detectSourceResolution(article);
   return {
     sourceId: `A${index + 1}`,
     title: normalizeText(article.title),
@@ -31,8 +34,8 @@ function buildTraceableSource(article = {}, index = 0) {
     source: normalizeText(article.source),
     query: normalizeText(article.query),
     publishedAt: normalizeText(article.pubDate || article.publishedAt),
-    originUrl: originUrl && originUrl !== url ? originUrl : '',
-    resolution: detectSourceResolution(article),
+    originUrl: originUrl && (originUrl !== url || resolution !== 'direct') ? originUrl : '',
+    resolution,
     contentAvailable: Boolean(normalizeText(article.content)),
   };
 }
