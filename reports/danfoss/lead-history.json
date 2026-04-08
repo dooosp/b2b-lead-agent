@@ -766,5 +766,145 @@
         "url": "https://search.naver.com/search.naver?where=news&query=%EB%A9%94%ED%83%80%2C%20%E7%BE%8E%20%EC%9D%B8%EB%94%94%EC%95%A0%EB%82%98%EC%97%90%201GW%EA%B8%89%20%EC%B4%88%EB%8C%80%ED%98%95%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%84%BC%ED%84%B0%20%EC%B0%A9%EA%B3%B5"
       }
     ]
+  },
+  {
+    "id": "기술력은_ebdef0714ff1c6",
+    "status": "NEW",
+    "createdAt": "2026-04-08T01:44:50.980Z",
+    "updatedAt": "2026-04-08T01:44:50.980Z",
+    "company": "기술력은",
+    "summary": "기술력은 韓이 앞서지만… 中, 자국 물량 발주 앞세워 친환경선박 시장 독주 - 조선비즈",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
+    "grade": "A",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "기술력은의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: NYK Line (일본) - EEXI 규제 100% 충족, 연간 $2M 연료비 절감",
+    "sources": [
+      {
+        "sourceId": "A1",
+        "title": "기술력은 韓이 앞서지만… 中, 자국 물량 발주 앞세워 친환경선박 시장 독주 - 조선비즈 - Chosunbiz",
+        "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxQalFfeHRhTXVIejE4akVLMFlaS0h1dXdNSTg0RWZnSXhKYjJFQkZfWGhXdnRDai1tU1dTa3phV0p4eVFCM3FWam5taTE1dVh4RlVqSElZM2ZuWDdka0Z1OVFuZWlkWjh4WEExaGpLdG5heGdNYVhuWjR5ZFBkU0dfYzdTOG7SAZgBQVVfeXFMTThwSUN4aTlNSUh0R3YtUFlCTW1YSFBvajZWN19tSVJkdDB3d05IQTNhaThpcnVJaXJBNFc0cHVCOWJYTFRuLXJRMV9OUHdieHp6c3VRLVZSb0JmWlZHdGZpazcwYVVQcVJQWWRfOC10cFA0WU9iTVhCVkFLZkN1ODJhbGhNeFBrSXRVQnBCOVA1ZkV1SjJQSVQ?oc=5",
+        "source": "Chosunbiz",
+        "query": "친환경 선박 수주",
+        "publishedAt": "Fri, 03 Apr 2026 21:05:00 GMT",
+        "originUrl": "https://news.google.com/rss/articles/CBMihAFBVV95cUxQalFfeHRhTXVIejE4akVLMFlaS0h1dXdNSTg0RWZnSXhKYjJFQkZfWGhXdnRDai1tU1dTa3phV0p4eVFCM3FWam5taTE1dVh4RlVqSElZM2ZuWDdka0Z1OVFuZWlkWjh4WEExaGpLdG5heGdNYVhuWjR5ZFBkU0dfYzdTOG7SAZgBQVVfeXFMTThwSUN4aTlNSUh0R3YtUFlCTW1YSFBvajZWN19tSVJkdDB3d05IQTNhaThpcnVJaXJBNFc0cHVCOWJYTFRuLXJRMV9OUHdieHp6c3VRLVZSb0JmWlZHdGZpazcwYVVQcVJQWWRfOC10cFA0WU9iTVhCVkFLZkN1ODJhbGhNeFBrSXRVQnBCOVA1ZkV1SjJQSVQ?oc=5",
+        "resolution": "unresolved",
+        "contentAvailable": true
+      }
+    ],
+    "sourceIds": []
+  },
+  {
+    "id": "전세계_b233dbef07717a",
+    "status": "NEW",
+    "createdAt": "2026-04-08T01:44:50.980Z",
+    "updatedAt": "2026-04-08T01:44:50.980Z",
+    "company": "전세계",
+    "summary": "전세계 친환경 선박 발주 급증…한국이 54% 수주",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
+    "grade": "A",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "전세계의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: MSC (스위스) - 탄소 배출 25% 감소, CII 등급 A 달성",
+    "sources": [
+      {
+        "sourceId": "A2",
+        "title": "전세계 친환경 선박 발주 급증…한국이 54% 수주 - 한겨레",
+        "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTFBiY0x3S0tCWHpzOWdYS3k2cjNuSml6eUFRdjdOTkRWcjJ6U1pZTzN1a1lWazQtMDVCTmJOeV9YMnpCWjVRclNzU0w3ZF9ZQS1BakZkYmN1N2kyRXJjNWtGNWdCUm40VjVWbGc?oc=5",
+        "source": "한겨레",
+        "query": "친환경 선박 수주",
+        "publishedAt": "Fri, 03 Apr 2026 18:13:00 GMT",
+        "originUrl": "https://news.google.com/rss/articles/CBMiakFVX3lxTFBiY0x3S0tCWHpzOWdYS3k2cjNuSml6eUFRdjdOTkRWcjJ6U1pZTzN1a1lWazQtMDVCTmJOeV9YMnpCWjVRclNzU0w3ZF9ZQS1BakZkYmN1N2kyRXJjNWtGNWdCUm40VjVWbGc?oc=5",
+        "resolution": "unresolved",
+        "contentAvailable": true
+      }
+    ],
+    "sourceIds": []
+  },
+  {
+    "id": "한국_81e361a81daba5",
+    "status": "NEW",
+    "createdAt": "2026-04-08T01:44:50.980Z",
+    "updatedAt": "2026-04-08T01:44:50.980Z",
+    "company": "한국",
+    "summary": "한국, 기술 경쟁력 앞선 친환경 선박에서도 중국에 수주 빼앗기는 이유",
+    "product": "iC7 Marine 드라이브",
+    "score": 85,
+    "grade": "A",
+    "roi": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+    "salesPitch": "한국의 친환경 선박 프로젝트에 Maersk 300척이 검증한 iC7 Marine 드라이브로 연료비 18% 절감을 제안합니다.",
+    "globalContext": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제). 레퍼런스: MSC (스위스) - 탄소 배출 25% 감소, CII 등급 A 달성",
+    "sources": [
+      {
+        "sourceId": "A3",
+        "title": "한국, 기술 경쟁력 앞선 친환경 선박에서도 중국에 수주 빼앗기는 이유 - 이코노미트리뷴",
+        "url": "https://news.google.com/rss/articles/CBMid0FVX3lxTE9zUmRWQ2ZwQ21hTnlHajRQYUpNbnAyX2N6X3czWXVqdUlwVjloMXRfb2Z4bk8zUHRjVHhaTnowZXNCLVI5ZkJpNS03cXJwbHdpbS1uWDhvQ05FNlk4NE1hcS16UWRsV3BETjVwUUxiSnA5YWtDemhn?oc=5",
+        "source": "이코노미트리뷴",
+        "query": "친환경 선박 수주",
+        "publishedAt": "Sat, 04 Apr 2026 10:05:38 GMT",
+        "originUrl": "https://news.google.com/rss/articles/CBMid0FVX3lxTE9zUmRWQ2ZwQ21hTnlHajRQYUpNbnAyX2N6X3czWXVqdUlwVjloMXRfb2Z4bk8zUHRjVHhaTnowZXNCLVI5ZkJpNS03cXJwbHdpbS1uWDhvQ05FNlk4NE1hcS16UWRsV3BETjVwUUxiSnA5YWtDemhn?oc=5",
+        "resolution": "unresolved",
+        "contentAvailable": true
+      }
+    ],
+    "sourceIds": []
+  },
+  {
+    "id": "대우건설_942930583afa79",
+    "status": "NEW",
+    "createdAt": "2026-04-08T01:44:50.980Z",
+    "updatedAt": "2026-04-08T01:44:50.980Z",
+    "company": "대우건설",
+    "summary": "대우건설, 전남 1호 ‘장성 파인데이터센터’ 착공…비수도권 분산 첫 모델 출범",
+    "product": "Turbocor 컴프레서",
+    "score": 80,
+    "grade": "A",
+    "roi": "냉각 전력 35~40% 절감, PUE 1.25 달성",
+    "salesPitch": "대우건설 데이터센터에 Equinix가 글로벌 표준으로 채택한 Turbocor 컴프레서로 PUE 1.25를 달성하세요.",
+    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: Digital Realty (미국) - 연간 운영비 $1.5M 절감",
+    "sources": [
+      {
+        "sourceId": "A4",
+        "title": "대우건설, 전남 1호 ‘장성 파인데이터센터’ 착공…비수도권 분산 첫 모델 출범 - 조세금융신문",
+        "url": "https://news.google.com/rss/articles/CBMiY0FVX3lxTE9GaGlzUTFnZUdQc2dkSmxON3VYbXhnd3d4UWVCcjAwdkVKcDAySlRBX0tmWjZiMUpOSUdEMTV6RWx1OTFrd0xydmNEaXhDOHRwWXJTRkxyMC0xQlBBRjFkdnF4cw?oc=5",
+        "source": "조세금융신문",
+        "query": "데이터센터 신축 착공",
+        "publishedAt": "Tue, 16 Dec 2025 08:00:00 GMT",
+        "originUrl": "https://news.google.com/rss/articles/CBMiY0FVX3lxTE9GaGlzUTFnZUdQc2dkSmxON3VYbXhnd3d4UWVCcjAwdkVKcDAySlRBX0tmWjZiMUpOSUdEMTV6RWx1OTFrd0xydmNEaXhDOHRwWXJTRkxyMC0xQlBBRjFkdnF4cw?oc=5",
+        "resolution": "unresolved",
+        "contentAvailable": true
+      }
+    ],
+    "sourceIds": []
+  },
+  {
+    "id": "코스콤_3021ccb8a4ec48",
+    "status": "NEW",
+    "createdAt": "2026-04-08T01:44:50.980Z",
+    "updatedAt": "2026-04-08T01:44:50.980Z",
+    "company": "코스콤",
+    "summary": "코스콤, 760억원 규모 안양 데이터센터 본격 착공 나선다",
+    "product": "Turbocor 컴프레서",
+    "score": 80,
+    "grade": "A",
+    "roi": "냉각 전력 35~40% 절감, PUE 1.25 달성",
+    "salesPitch": "코스콤 데이터센터에 Equinix가 글로벌 표준으로 채택한 Turbocor 컴프레서로 PUE 1.25를 달성하세요.",
+    "globalContext": "EU 데이터센터 에너지효율 지침 (2027 시행). 레퍼런스: Digital Realty (미국) - 연간 운영비 $1.5M 절감",
+    "sources": [
+      {
+        "sourceId": "A5",
+        "title": "코스콤, 760억원 규모 안양 데이터센터 본격 착공 나선다 - 디지털데일리",
+        "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE10OGJGeDdMbk4xeDRXV0pHVVF2R2pLa3J5V1dCZUVzeXZxcEl0bHhld2JCREVDMTliLUhRbHNzeDN3ek9DNGxFZHNuZHBacWJOd21UaTNvT0ROU3pYd3FBMFFaNE0?oc=5",
+        "source": "디지털데일리",
+        "query": "데이터센터 신축 착공",
+        "publishedAt": "Tue, 09 Jul 2024 07:00:00 GMT",
+        "originUrl": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE10OGJGeDdMbk4xeDRXV0pHVVF2R2pLa3J5V1dCZUVzeXZxcEl0bHhld2JCREVDMTliLUhRbHNzeDN3ek9DNGxFZHNuZHBacWJOd21UaTNvT0ROU3pYd3FBMFFaNE0?oc=5",
+        "resolution": "unresolved",
+        "contentAvailable": true
+      }
+    ],
+    "sourceIds": []
   }
 ]
