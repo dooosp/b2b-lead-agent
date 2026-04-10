@@ -1,0 +1,78 @@
+{
+  "task_slug": "ops-baseline-cleanup-2026-04",
+  "status": "complete",
+  "repo": {
+    "root": "/Users/jangtaeho/Documents/New/worktrees/ops-baseline-cleanup-2026-04",
+    "branch": "codex/ops-baseline-cleanup-2026-04",
+    "base_ref": "origin/master",
+    "base_sha": "67258096e17e5a56aa34e4ecc04c53fba84a15ab",
+    "last_validated_sha": "347077863f4d6778228c19d58df61a506020658d"
+  },
+  "scope": {
+    "baseline_cursor_cleanup": "done",
+    "worker_test_gate_clarity": "done",
+    "open_pr_cleanup_policy": "done"
+  },
+  "changed_files": [
+    ".github/workflows/validate-naming.yml",
+    "AGENTS.md",
+    "NEXT_SESSION_PROMPT.md",
+    "package.json",
+    "tmp/codex/repo-preflight.json",
+    "tmp/codex/ops-baseline-cleanup-2026-04/pr-cleanup-plan.md",
+    "tmp/codex/ops-baseline-cleanup-2026-04/task-state.json",
+    "tmp/codex/ops-baseline-cleanup-2026-04/handoff.json",
+    "tmp/codex/ops-baseline-cleanup-2026-04/review.json",
+    "tmp/codex/ops-baseline-cleanup-2026-04/human-brief.md"
+  ],
+  "validations": [
+    {
+      "command": "npm ci --no-audit --no-fund",
+      "result": "passed",
+      "notes": "Installed dependencies directly in the fresh worktree."
+    },
+    {
+      "command": "npm run check:naming",
+      "result": "passed",
+      "notes": "Naming checks passed."
+    },
+    {
+      "command": "npm run test:unit",
+      "result": "passed",
+      "notes": "Worker unit coverage passed: 45 tests."
+    },
+    {
+      "command": "npm run test:contract",
+      "result": "passed",
+      "notes": "Worker contract coverage passed: 17 tests."
+    },
+    {
+      "command": "npm run test:root",
+      "result": "passed",
+      "notes": "Root coverage passed in the fresh worktree: 14 tests."
+    },
+    {
+      "command": "npm run test:worker",
+      "result": "passed",
+      "notes": "Combined worker gate passed in the fresh worktree."
+    },
+    {
+      "command": "npm test",
+      "result": "passed",
+      "notes": "Full root plus combined worker gate passed in the fresh worktree."
+    }
+  ],
+  "review": {
+    "requested": true,
+    "result": "pass"
+  },
+  "blockers": [],
+  "notes": [
+    "Initial skeptical review found false worktree evidence in tmp/codex/repo-preflight.json and missing task-local artifacts.",
+    "Those findings were fixed before the final read-only review and invariance check.",
+    "Before this cleanup, test:worker was a unit-only alias; after this cleanup, test:worker is the combined worker gate while npm test keeps the same effective root+worker coverage.",
+    "The final six-command validation pass was rerun after local npm ci in the fresh worktree, with no NODE_PATH override.",
+    "repo.last_validated_sha records the last pushed cleanup commit that completed the full clean-worktree validation set.",
+    "The current PR head can move forward for metadata-only follow-ups after validation; use PR metadata for the live head and base_sha for the pinned master baseline."
+  ]
+}

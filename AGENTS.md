@@ -59,8 +59,9 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 
 ## Validation
 
-- `npm run check:naming`
-- `npm run test:root`
-- `npm run test:unit`
-- `npm run test:contract`
-- `npm test`
+- `npm run check:naming` for naming and repo contract checks
+- `npm run test:root` for root pipeline coverage only
+- `npm run test:unit` for worker unit coverage only
+- `npm run test:contract` for worker trigger and contract coverage only
+- `npm run test:worker` for the combined worker gate (`test:unit` + `test:contract`)
+- `npm test` for the root gate plus the combined worker gate
