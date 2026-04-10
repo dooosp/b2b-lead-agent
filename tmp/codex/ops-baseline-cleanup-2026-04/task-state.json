@@ -4,9 +4,9 @@
   "repo": {
     "root": "/Users/jangtaeho/Documents/New/worktrees/ops-baseline-cleanup-2026-04",
     "branch": "codex/ops-baseline-cleanup-2026-04",
-    "head_sha": "7df9fb05952782025bd4883f83b47cfc7905e275",
     "base_ref": "origin/master",
-    "base_sha": "67258096e17e5a56aa34e4ecc04c53fba84a15ab"
+    "base_sha": "67258096e17e5a56aa34e4ecc04c53fba84a15ab",
+    "last_validated_sha": "347077863f4d6778228c19d58df61a506020658d"
   },
   "scope": {
     "baseline_cursor_cleanup": "done",
@@ -72,6 +72,7 @@
     "Those findings were fixed before the final read-only review and invariance check.",
     "Before this cleanup, test:worker was a unit-only alias; after this cleanup, test:worker is the combined worker gate while npm test keeps the same effective root+worker coverage.",
     "The final six-command validation pass was rerun after local npm ci in the fresh worktree, with no NODE_PATH override.",
-    "repo.head_sha tracks the last fully validated pushed cleanup artifact commit, not the origin/master base pin."
+    "repo.last_validated_sha records the last pushed cleanup commit that completed the full clean-worktree validation set.",
+    "The current PR head can move forward for metadata-only follow-ups after validation; use PR metadata for the live head and base_sha for the pinned master baseline."
   ]
 }

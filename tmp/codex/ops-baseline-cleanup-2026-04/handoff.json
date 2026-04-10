@@ -4,7 +4,8 @@
   "repo": {
     "root": "/Users/jangtaeho/Documents/New/worktrees/ops-baseline-cleanup-2026-04",
     "branch": "codex/ops-baseline-cleanup-2026-04",
-    "head_sha": "67258096e17e5a56aa34e4ecc04c53fba84a15ab"
+    "base_sha": "67258096e17e5a56aa34e4ecc04c53fba84a15ab",
+    "last_validated_sha": "347077863f4d6778228c19d58df61a506020658d"
   },
   "what_changed": [
     "Refreshed NEXT_SESSION_PROMPT.md so current master head 6725809 is the active baseline while 1e2d4e6 is retained as hardening merge history.",

@@ -14,7 +14,6 @@
 - `replace via fresh artifact PR` means the old open PR should not be reviewed or merged as-is; if the idea still matters, re-land it from updated `master` with current validations and then close the stale PR
 - `keep/rebase later` means the work still appears active, but it is not merge-safe on the current base and should not move until its external blocker clears
 - `park` means keep only as historical reference until a human explicitly decides whether to revive or discard it
-- No GitHub mutation was applied during this task
 - GitHub comment actions were later applied on 2026-04-10 for PRs `#1-#9`
 - PR close actions are still pending
 - Reason: the available GitHub connector path supports commenting but not closing pull requests, and `gh auth status` reported an invalid token for the local `dooosp` account
