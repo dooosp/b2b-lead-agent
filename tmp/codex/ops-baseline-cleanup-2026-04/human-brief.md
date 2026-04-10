@@ -28,11 +28,12 @@ Evidence
   - `#7`: park
   - `#8`: replace via fresh artifact PR
   - `#9`: keep/rebase later
-- GitHub cleanup actions were documented only in `tmp/codex/ops-baseline-cleanup-2026-04/pr-cleanup-plan.md`; no remote mutation was applied
+- GitHub cleanup comments were posted on PRs `#1-#9`
+- PR close actions are still pending because the available local auth/tooling path cannot close them automatically
 
 Risks
 
-- Open PR cleanup still requires a human decision on whether to post the documented comments and close the stale PRs.
+- Open PR cleanup still requires a human decision on whether to close the already-commented stale PRs.
 - Final SHIP still depends on merge plus fresh-master post-merge verification.
 
 Next Action

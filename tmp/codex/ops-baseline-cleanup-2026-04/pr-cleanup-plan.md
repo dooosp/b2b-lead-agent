@@ -14,7 +14,9 @@
 - `keep/rebase later` means the work still appears active, but it is not merge-safe on the current base and should not move until its external blocker clears
 - `park` means keep only as historical reference until a human explicitly decides whether to revive or discard it
 - No GitHub mutation was applied during this task
-- Reason: closing or commenting on long-lived feature PRs is product-sensitive, and this cleanup task can finish truthfully with an exact repo-local action plan
+- GitHub comment actions were later applied on 2026-04-10 for PRs `#1-#9`
+- PR close actions are still pending
+- Reason: the available GitHub connector path supports commenting but not closing pull requests, and `gh auth status` reported an invalid token for the local `dooosp` account
 
 ## PR Decisions
 
@@ -32,7 +34,7 @@
 Closing this stale raw March stack lane instead of carrying it forward on current master. If this feature is still wanted, re-land it as a fresh artifact PR from updated master with current validation truth (`npm run test:unit`, `npm run test:contract`, `npm run test:worker`, and `npm test` as appropriate).
 ```
 
-- Applied now: documented only
+- Applied now: commented only
 
 ### PR #2 - Add solution translation outputs for leads
 
@@ -48,7 +50,7 @@ Closing this stale raw March stack lane instead of carrying it forward on curren
 Closing this stale stacked PR because its base is another unmerged March lane rather than current master. If this feature still matters, re-slice it from updated master as a fresh artifact PR with current worker gate and root gate validation.
 ```
 
-- Applied now: documented only
+- Applied now: commented only
 
 ### PR #3 - Expand dashboard intelligence views
 
@@ -64,7 +66,7 @@ Closing this stale stacked PR because its base is another unmerged March lane ra
 Closing this stale stacked dashboard lane because it no longer reflects a merge-safe diff on current master. If the work is still desired, reopen it as a fresh artifact PR rooted on updated master instead of continuing the March stack.
 ```
 
-- Applied now: documented only
+- Applied now: commented only
 
 ### PR #4 - Add win-loss learning foundation
 
@@ -80,7 +82,7 @@ Closing this stale stacked dashboard lane because it no longer reflects a merge-
 Closing this stale stack tip instead of trying to land it through an outdated parent chain. If win-loss learning is still in scope, re-land it from updated master as a fresh artifact PR with current validation coverage.
 ```
 
-- Applied now: documented only
+- Applied now: commented only
 
 ### PR #5 - Add next-best-action and deal risk signals
 
@@ -96,7 +98,7 @@ Closing this stale stack tip instead of trying to land it through an outdated pa
 Closing this stale stacked risk-engine lane because it is not a current-master review artifact. If the feature still matters, rebuild it as a fresh PR from updated master and validate it against the current worker and root gates.
 ```
 
-- Applied now: documented only
+- Applied now: commented only
 
 ### PR #6 - Add stakeholder persuasion flows
 
@@ -112,7 +114,7 @@ Closing this stale stacked risk-engine lane because it is not a current-master r
 Closing this stale stacked persuasion lane because its base is an old unmerged parent rather than current master. If it is still wanted, re-slice it from updated master as a fresh artifact PR with current validation truth.
 ```
 
-- Applied now: documented only
+- Applied now: commented only
 
 ### PR #7 - Refactor scout role modules
 
@@ -128,7 +130,7 @@ Closing this stale stacked persuasion lane because its base is an old unmerged p
 Parking this refactor PR as historical context only. It is not merge-safe on current master, and it should be revived only by re-slicing the intended refactor into a fresh current-master artifact PR.
 ```
 
-- Applied now: documented only
+- Applied now: commented only
 
 ### PR #8 - Add staged GCP runtime and storage migration seams
 
@@ -144,7 +146,7 @@ Parking this refactor PR as historical context only. It is not merge-safe on cur
 Closing this stale runtime-migration PR. `master` has since shipped hardening and source-of-truth alignment updates, so this is no longer the right landing artifact. Resume this lane only with a fresh current-`master` PR after the external secret and live-validation blockers clear.
 ```
 
-- Applied now: documented only
+- Applied now: commented only
 
 ### PR #9 - Thread 2: add local-first storage seam for GCP migration
 
@@ -160,16 +162,17 @@ Closing this stale runtime-migration PR. `master` has since shipped hardening an
 Keeping this as the storage-migration placeholder, but it is behind current `master`. Next step is a rebase onto updated `master` plus fresh validation before any review continues; do not merge it as-is.
 ```
 
-- Applied now: documented only
+- Applied now: commented only
 
 ## Safe Actions Already Taken
 
 - Pinned the cleanup task to `origin/master@67258096e17e5a56aa34e4ecc04c53fba84a15ab`
 - Captured the full nine-PR disposition plan in this repo-local artifact
+- Posted the planned cleanup comments on GitHub for PRs `#1-#9`
 
 ## Follow-Up Actions Still Required
 
-- Human owner should confirm whether PRs #1 through #6 should be closed immediately as stale raw stack artifacts
+- Human owner should confirm whether PRs #1 through #6 should now be closed as stale raw stack artifacts
 - Human owner should decide whether PR #7 stays parked as reference or is closed
 - PR #8 should be closed if the owner agrees that a fresh current-`master` runtime artifact is the safer resume path
 - External runtime secrets and live validation prerequisites must be resolved before any GCP migration lane is resumed

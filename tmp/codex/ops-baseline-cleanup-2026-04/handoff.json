@@ -55,55 +55,55 @@
       {
         "pr": 1,
         "decision": "replace via fresh artifact PR",
-        "action_taken": "documented only",
+        "action_taken": "commented",
         "reason": "stale pre-hardening foundation lane on old master"
       },
       {
         "pr": 2,
         "decision": "replace via fresh artifact PR",
-        "action_taken": "documented only",
+        "action_taken": "commented",
         "reason": "stacked on stale PR #1 instead of current master"
       },
       {
         "pr": 3,
         "decision": "replace via fresh artifact PR",
-        "action_taken": "documented only",
+        "action_taken": "commented",
         "reason": "downstream stale dashboard lane built on abandoned parent PRs"
       },
       {
         "pr": 4,
         "decision": "replace via fresh artifact PR",
-        "action_taken": "documented only",
+        "action_taken": "commented",
         "reason": "stale stack tip on outdated product branches"
       },
       {
         "pr": 5,
         "decision": "replace via fresh artifact PR",
-        "action_taken": "documented only",
+        "action_taken": "commented",
         "reason": "stale risk-engine lane based on outdated parent branch"
       },
       {
         "pr": 6,
         "decision": "replace via fresh artifact PR",
-        "action_taken": "documented only",
+        "action_taken": "commented",
         "reason": "stale persuasion lane on abandoned pre-hardening chain"
       },
       {
         "pr": 7,
         "decision": "park",
-        "action_taken": "documented only",
+        "action_taken": "commented",
         "reason": "refactor-only lane not merge-safe and not active priority"
       },
       {
         "pr": 8,
         "decision": "replace via fresh artifact PR",
-        "action_taken": "documented only",
+        "action_taken": "commented",
         "reason": "broad runtime migration diff is no longer the right landing artifact on current master"
       },
       {
         "pr": 9,
         "decision": "keep/rebase later",
-        "action_taken": "documented only",
+        "action_taken": "commented",
         "reason": "narrowest remaining migration placeholder, but behind current master"
       }
     ]
@@ -139,7 +139,7 @@
     }
   ],
   "remaining_risks": [
-    "Open PR cleanup actions are documented locally, but GitHub comment/close actions still need to be applied or explicitly deferred through the cleanup PR.",
+    "GitHub cleanup comments were posted, but PR close actions still need to be applied or explicitly deferred through the cleanup PR because the available local auth/tooling path cannot close them automatically.",
     "Final SHIP still depends on merge plus fresh-master post-merge verification."
   ],
   "next_action": "Open a single cleanup PR from codex/ops-baseline-cleanup-2026-04, then have the owner decide which documented stale-PR comments and closures to apply."
