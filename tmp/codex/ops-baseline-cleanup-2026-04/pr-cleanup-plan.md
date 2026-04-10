@@ -7,6 +7,7 @@
 - Shipped source of truth: current `master` plus merged PR history through PR #19 and later direct `master` updates
 - Current open PR audit source: GitHub open PR state for `dooosp/b2b-lead-agent`
 - Important correction: the current open PR set is `#1` through `#9`; PR `#10` is not part of the current open set and should not be treated as the active cleanup anchor
+- Scope correction after opening PR #20: the stale cleanup target set remains `#1` through `#9`; PR `#20` is the active integration artifact for this cleanup and must not be included in stale-PR actions
 
 ## Action Policy
 
