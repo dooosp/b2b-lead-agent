@@ -1,0 +1,146 @@
+{
+  "task_slug": "ops-baseline-cleanup-2026-04",
+  "final_status": "FOLLOW_UP",
+  "repo": {
+    "root": "/Users/jangtaeho/Documents/New/worktrees/ops-baseline-cleanup-2026-04",
+    "branch": "codex/ops-baseline-cleanup-2026-04",
+    "head_sha": "67258096e17e5a56aa34e4ecc04c53fba84a15ab"
+  },
+  "what_changed": [
+    "Refreshed NEXT_SESSION_PROMPT.md so current master head 6725809 is the active baseline while 1e2d4e6 is retained as hardening merge history.",
+    "Made package.json test:worker the combined worker gate and aligned AGENTS.md plus validate-naming workflow wording with that meaning.",
+    "Added repo-local operational artifacts for preflight evidence, stale open PR dispositions, review status, and the final human brief."
+  ],
+  "files_changed": [
+    ".github/workflows/validate-naming.yml",
+    "AGENTS.md",
+    "NEXT_SESSION_PROMPT.md",
+    "package.json",
+    "tmp/codex/repo-preflight.json",
+    "tmp/codex/ops-baseline-cleanup-2026-04/pr-cleanup-plan.md",
+    "tmp/codex/ops-baseline-cleanup-2026-04/task-state.json",
+    "tmp/codex/ops-baseline-cleanup-2026-04/handoff.json",
+    "tmp/codex/ops-baseline-cleanup-2026-04/review.json",
+    "tmp/codex/ops-baseline-cleanup-2026-04/human-brief.md"
+  ],
+  "baseline_decision": {
+    "stale_cursor_found": true,
+    "updated_docs": [
+      "NEXT_SESSION_PROMPT.md",
+      "AGENTS.md"
+    ],
+    "current_source_of_truth": [
+      "AGENTS.md",
+      "HARDENING_PLAN.md",
+      "master history"
+    ]
+  },
+  "worker_test_gate": {
+    "before": {
+      "test_unit": "worker unit coverage only",
+      "test_contract": "worker contract and trigger coverage only",
+      "test_worker": "unit-only alias via npm run test:unit",
+      "npm_test": "root coverage plus worker unit and contract coverage"
+    },
+    "after": {
+      "test_unit": "worker unit coverage only",
+      "test_contract": "worker contract and trigger coverage only",
+      "test_worker": "combined worker gate via npm run test:unit && npm run test:contract",
+      "npm_test": "root coverage plus the combined worker gate"
+    }
+  },
+  "pr_cleanup": {
+    "artifact": "tmp/codex/ops-baseline-cleanup-2026-04/pr-cleanup-plan.md",
+    "decisions": [
+      {
+        "pr": 1,
+        "decision": "replace via fresh artifact PR",
+        "action_taken": "documented only",
+        "reason": "stale pre-hardening foundation lane on old master"
+      },
+      {
+        "pr": 2,
+        "decision": "replace via fresh artifact PR",
+        "action_taken": "documented only",
+        "reason": "stacked on stale PR #1 instead of current master"
+      },
+      {
+        "pr": 3,
+        "decision": "replace via fresh artifact PR",
+        "action_taken": "documented only",
+        "reason": "downstream stale dashboard lane built on abandoned parent PRs"
+      },
+      {
+        "pr": 4,
+        "decision": "replace via fresh artifact PR",
+        "action_taken": "documented only",
+        "reason": "stale stack tip on outdated product branches"
+      },
+      {
+        "pr": 5,
+        "decision": "replace via fresh artifact PR",
+        "action_taken": "documented only",
+        "reason": "stale risk-engine lane based on outdated parent branch"
+      },
+      {
+        "pr": 6,
+        "decision": "replace via fresh artifact PR",
+        "action_taken": "documented only",
+        "reason": "stale persuasion lane on abandoned pre-hardening chain"
+      },
+      {
+        "pr": 7,
+        "decision": "park",
+        "action_taken": "documented only",
+        "reason": "refactor-only lane not merge-safe and not active priority"
+      },
+      {
+        "pr": 8,
+        "decision": "replace via fresh artifact PR",
+        "action_taken": "documented only",
+        "reason": "broad runtime migration diff is no longer the right landing artifact on current master"
+      },
+      {
+        "pr": 9,
+        "decision": "keep/rebase later",
+        "action_taken": "documented only",
+        "reason": "narrowest remaining migration placeholder, but behind current master"
+      }
+    ]
+  },
+  "validations": [
+    {
+      "command": "npm ci --no-audit --no-fund",
+      "result": "passed"
+    },
+    {
+      "command": "npm run check:naming",
+      "result": "passed"
+    },
+    {
+      "command": "npm run test:unit",
+      "result": "passed"
+    },
+    {
+      "command": "npm run test:contract",
+      "result": "passed"
+    },
+    {
+      "command": "npm run test:root",
+      "result": "passed"
+    },
+    {
+      "command": "npm run test:worker",
+      "result": "passed"
+    },
+    {
+      "command": "npm test",
+      "result": "passed"
+    }
+  ],
+  "remaining_risks": [
+    "Open PR cleanup actions are documented locally, but GitHub comment/close actions still need to be applied or explicitly deferred through the cleanup PR.",
+    "Final SHIP still depends on merge plus fresh-master post-merge verification."
+  ],
+  "next_action": "Open a single cleanup PR from codex/ops-baseline-cleanup-2026-04, then have the owner decide which documented stale-PR comments and closures to apply."
+}
