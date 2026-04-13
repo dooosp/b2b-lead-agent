@@ -12,6 +12,7 @@ import {
   handleUpdateLead as handleLeadUpdate,
   handleExportCSV as handleLeadCsvExport
 } from './api/leads.js';
+import { handleGetLatestPublishedReport } from './api/internal-reports.js';
 import {
   handleGetReferences as listReferences,
   handleAddReference as createReference,
@@ -55,9 +56,15 @@ export default {
     const apiPaths = ['/api/leads', '/api/leads/batch-enrich', '/api/ppt', '/api/proposal', '/api/cpa', '/api/roleplay', '/api/history', '/api/dashboard', '/api/export/csv'];
     const jobEventMatch = url.pathname.match(/^\/api\/jobs\/([^/]+)\/events$/);
     const jobStatusMatch = url.pathname.match(/^\/api\/jobs\/([^/]+)$/);
+    const requiresInternalApiAuth = url.pathname.startsWith('/api/internal/');
     const requiresApiAuth = apiPaths.includes(url.pathname)
       || url.pathname.startsWith('/api/leads/')
       || Boolean(jobStatusMatch);
+
+    if (requiresInternalApiAuth) {
+      const authErr = await verifyAuth(request, env, { allowQueryToken: false });
+      if (authErr) return addCorsHeaders(authErr, origin, env);
+    }
 
     if (requiresApiAuth) {
       const authErr = await verifyAuth(request, env);
@@ -110,6 +117,11 @@ export default {
         return addCorsHeaders(jsonResponse({ success: false, message: profileRes.message }, 400), origin, env);
       }
       return addCorsHeaders(await fetchLeadHistory(env, profileRes.profileId), origin, env);
+    }
+    const internalLatestPublishedMatch = url.pathname.match(/^\/api\/internal\/profiles\/([^/]+)\/latest-published$/);
+    if (internalLatestPublishedMatch && request.method === 'GET') {
+      const profileId = decodeURIComponent(internalLatestPublishedMatch[1]);
+      return addCorsHeaders(await handleGetLatestPublishedReport(env, profileId), origin, env);
     }
     // POST /api/leads/batch-enrich — 일괄 심층 분석
     if (url.pathname === '/api/leads/batch-enrich' && request.method === 'POST') {

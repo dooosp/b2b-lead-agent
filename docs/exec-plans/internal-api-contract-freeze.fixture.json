@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "crm.published-report.v1",
+  "profileId": "danfoss",
+  "syncReady": true,
+  "publishedAt": "2026-04-07T12:34:56.000Z",
+  "leadCount": 1,
+  "leads": [
+    {
+      "id": "dl이앤씨_0f6c4dfdf57a2a",
+      "status": "NEW",
+      "createdAt": "2026-04-07T12:34:56.000Z",
+      "updatedAt": "2026-04-07T12:34:56.000Z",
+      "company": "DL이앤씨",
+      "summary": "데이터센터 영토 확장 가속",
+      "product": "Turbocor 컴프레서",
+      "score": 84,
+      "grade": "A",
+      "roi": "냉각 전력 35% 절감",
+      "salesPitch": "DL이앤씨 데이터센터에 Turbocor를 제안합니다.",
+      "globalContext": "EU 데이터센터 에너지효율 지침",
+      "sources": [
+        {
+          "sourceId": "A1",
+          "title": "DL이앤씨, 데이터센터 영토 확장 가속",
+          "url": "https://www.example.com/article/dl-data-center",
+          "source": "딜사이트",
+          "query": "데이터센터 신축 착공",
+          "publishedAt": "Tue, 07 Apr 2026 09:00:00 GMT",
+          "originUrl": "https://news.google.com/rss/articles/CBMiQ2h0dHBzOi8vbmV3cy5nb29nbGUuY29tL2FydGljbGUvMQ",
+          "resolution": "resolved",
+          "contentAvailable": true
+        }
+      ]
+    }
+  ]
+}
