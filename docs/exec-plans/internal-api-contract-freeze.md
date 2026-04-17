@@ -133,7 +133,7 @@ Required error body fields:
 Return `503` when the repository cannot verify readiness safely because a required internal dependency or auth configuration is unavailable.
 
 - Missing `API_TOKEN` for `/api/internal/*`: `503`
-- Job-run readiness lookup failure while no finalized published snapshot exists: `503`
+- Job ledger cannot be consulted while no finalized published snapshot exists: `503`
 
 Required error body fields:
 

@@ -176,13 +176,15 @@ export async function handleGetLatestPublishedReport(env, profileId) {
     return createSuccessResponse(requestedProfileId, publishedAt, leads);
   }
 
+  if (!env.DB) {
+    return createReadinessUnavailableResponse(requestedProfileId);
+  }
+
   let activeJob = null;
-  if (env.DB) {
-    try {
-      activeJob = await getActiveJobRunByProfile(env.DB, requestedProfileId);
-    } catch {
-      return createReadinessUnavailableResponse(requestedProfileId);
-    }
+  try {
+    activeJob = await getActiveJobRunByProfile(env.DB, requestedProfileId);
+  } catch {
+    return createReadinessUnavailableResponse(requestedProfileId);
   }
   if (activeJob) {
     return createNotReadyResponse(

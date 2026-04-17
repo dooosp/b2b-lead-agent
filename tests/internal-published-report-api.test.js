@@ -276,7 +276,9 @@ test('GET /api/internal/profiles/:profileId/latest-published returns 404 for a k
       createRequest('/api/internal/profiles/danfoss/latest-published', {
         headers: { Authorization: 'Bearer api-secret' }
       }),
-      createEnv(),
+      createEnv({
+        DB: new FakeInternalReportDb()
+      }),
       {}
     );
     const payload = await response.json();
@@ -303,6 +305,31 @@ test('GET /api/internal/profiles/:profileId/latest-published returns 503 when qu
       createEnv({
         DB: new ThrowingJobRunDb()
       }),
+      {}
+    );
+    const payload = await response.json();
+
+    assert.equal(response.status, 503);
+    assert.equal(payload.schemaVersion, 'crm.published-report.v1');
+    assert.equal(payload.profileId, 'danfoss');
+    assert.equal(payload.syncReady, false);
+    assert.equal(payload.error.code, 'readiness_unavailable');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('GET /api/internal/profiles/:profileId/latest-published returns 503 when the job ledger is unavailable entirely', async () => {
+  const { default: worker } = await workerModulePromise;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => jsonFixtureResponse({ message: 'not found' }, 404);
+
+  try {
+    const response = await worker.fetch(
+      createRequest('/api/internal/profiles/danfoss/latest-published', {
+        headers: { Authorization: 'Bearer api-secret' }
+      }),
+      createEnv({ DB: undefined }),
       {}
     );
     const payload = await response.json();
