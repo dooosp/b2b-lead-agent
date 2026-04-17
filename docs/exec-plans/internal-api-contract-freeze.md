@@ -128,6 +128,23 @@ Required error body fields:
 | `error.code` | string | Freeze as `"report_not_ready"` |
 | `error.message` | string | Human-readable not-ready message |
 
+### Operational Error: `HTTP 503`
+
+Return `503` when the repository cannot verify readiness safely because a required internal dependency or auth configuration is unavailable.
+
+- Missing `API_TOKEN` for `/api/internal/*`: `503`
+- Job-run readiness lookup failure while no finalized published snapshot exists: `503`
+
+Required error body fields:
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `schemaVersion` | string | Exact contract version: `"crm.published-report.v1"` |
+| `profileId` | string | Requested profile id |
+| `syncReady` | boolean | Must be `false` |
+| `error.code` | string | `readiness_unavailable` for operational readiness lookup failures, or the existing auth error body from the worker auth boundary |
+| `error.message` | string | Human-readable operational failure message |
+
 ## Acceptance And Readiness Semantics
 
 1. Internal trigger acceptance is not CRM sync readiness.
@@ -135,7 +152,8 @@ Required error body fields:
 3. If a finalized latest published snapshot already exists, a newer queued run does not invalidate that existing published snapshot.
 4. `publishedAt` is the latest published snapshot timestamp proved from the snapshot itself, not the trigger acceptance time.
 5. If the latest published artifact exists but required lead or source fields cannot be proved safely, return `409` with `readiness.reason = "not_finalized"`.
-6. No separate `unpublished`, `not_accepted`, `routeType`, `reportId`, or `artifactVersion` semantics are frozen in this contract.
+6. If readiness cannot be verified safely because the job ledger cannot be consulted, return `503` instead of asserting `404`.
+7. No separate `unpublished`, `not_accepted`, `routeType`, `reportId`, or `artifactVersion` semantics are frozen in this contract.
 
 ## Non-Goals
 

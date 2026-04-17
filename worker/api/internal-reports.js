@@ -51,6 +51,18 @@ function createNotReadyResponse(profileId, reason, message) {
   }, 409);
 }
 
+function createReadinessUnavailableResponse(profileId) {
+  return jsonResponse({
+    schemaVersion: SCHEMA_VERSION,
+    profileId,
+    syncReady: false,
+    error: {
+      code: 'readiness_unavailable',
+      message: 'Canonical report readiness could not be verified safely.'
+    }
+  }, 503);
+}
+
 function pickUniformSnapshotTimestamp(leads, fieldName) {
   const values = [...new Set(
     (Array.isArray(leads) ? leads : [])
@@ -164,7 +176,14 @@ export async function handleGetLatestPublishedReport(env, profileId) {
     return createSuccessResponse(requestedProfileId, publishedAt, leads);
   }
 
-  const activeJob = env.DB ? await getActiveJobRunByProfile(env.DB, requestedProfileId).catch(() => null) : null;
+  let activeJob = null;
+  if (env.DB) {
+    try {
+      activeJob = await getActiveJobRunByProfile(env.DB, requestedProfileId);
+    } catch {
+      return createReadinessUnavailableResponse(requestedProfileId);
+    }
+  }
   if (activeJob) {
     return createNotReadyResponse(
       requestedProfileId,
