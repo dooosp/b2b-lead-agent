@@ -74,7 +74,7 @@ export async function verifyJobCallbackRequest(request, env, requestId) {
 }
 
 export async function authenticateTriggerRequest(request, env, body = {}) {
-  const bearerError = await verifyAuth(request, env, { allowQueryToken: false });
+  const bearerError = await verifyAuth(request, env);
   if (!bearerError) {
     return { ok: true, authMode: 'bearer', warning: null };
   }

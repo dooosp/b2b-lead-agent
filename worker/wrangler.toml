@@ -10,7 +10,8 @@ hint = "wnam"
 GITHUB_REPO = "dooosp/b2b-lead-agent"
 WORKER_ORIGIN = "https://b2b-lead-trigger.jangho1383.workers.dev"
 PROFILES = '[{"id":"danfoss","name":"댄포스 코리아"},{"id":"ls-electric","name":"LS일렉트릭"},{"id":"siemens","name":"지멘스 Smart Infra"}]'
-ENABLE_SELF_SERVICE_RATE_LIMIT = "false"
+ENABLE_SELF_SERVICE_RATE_LIMIT = "true"
+REQUIRE_SELF_SERVICE_AUTH = "true"
 SELF_SERVICE_RATE_LIMIT_MAX = "3"
 SELF_SERVICE_RATE_LIMIT_WINDOW_SEC = "3600"
 

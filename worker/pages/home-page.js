@@ -155,7 +155,7 @@ export function getMainPage(env) {
       try {
         const res = await fetch('/api/analyze', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({ company, industry })
         });
         const data = await res.json();

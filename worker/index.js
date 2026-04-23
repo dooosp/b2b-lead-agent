@@ -62,7 +62,7 @@ export default {
       || Boolean(jobStatusMatch);
 
     if (requiresInternalApiAuth) {
-      const authErr = await verifyAuth(request, env, { allowQueryToken: false });
+      const authErr = await verifyAuth(request, env);
       if (authErr) return addCorsHeaders(authErr, origin, env);
     }
 
@@ -73,6 +73,11 @@ export default {
 
     // 셀프서비스 API — 인증 불필요, rate limit만 적용
     if (url.pathname === '/api/analyze' && request.method === 'POST') {
+      const requiresSelfServiceAuth = String(env.REQUIRE_SELF_SERVICE_AUTH ?? 'true').toLowerCase() !== 'false';
+      if (requiresSelfServiceAuth) {
+        const authErr = await verifyAuth(request, env);
+        if (authErr) return addCorsHeaders(authErr, origin, env);
+      }
       const rlErr = await checkSelfServiceRateLimit(request, env);
       if (rlErr) return addCorsHeaders(rlErr, origin, env);
       return addCorsHeaders(await handleSelfServiceAnalyze(request, env, ctx), origin, env);

@@ -1,8 +1,14 @@
 import { jsonResponse } from '../lib/utils.js';
 
 export async function checkSelfServiceRateLimit(request, env) {
-  const enabled = String(env.ENABLE_SELF_SERVICE_RATE_LIMIT || '').toLowerCase() === 'true';
-  if (!enabled || !env.RATE_LIMIT) return null;
+  const disabled = String(env.ENABLE_SELF_SERVICE_RATE_LIMIT || '').toLowerCase() === 'false';
+  if (disabled) return null;
+  if (!env.RATE_LIMIT) {
+    return jsonResponse({
+      success: false,
+      message: '셀프서비스 사용량 제한 설정이 필요합니다.'
+    }, 503);
+  }
   const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() || 'unknown';
   const key = `ss:${ip}`;
   const now = Math.floor(Date.now() / 1000);
