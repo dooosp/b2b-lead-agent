@@ -122,9 +122,19 @@ export function getLeadsPage() {
     ${getSafeUrlScript()}
     ${getStoredTokenScript()}
     function detailLink(leadId) {
-      const base = '/leads/' + encodeURIComponent(leadId);
-      const token = getToken();
-      return token ? (base + '?token=' + encodeURIComponent(token)) : base;
+      return '/leads/' + encodeURIComponent(leadId);
+    }
+    async function openLeadDetail(leadId, event) {
+      if (!leadId) return;
+      if (event) event.preventDefault();
+      try {
+        const href = detailLink(leadId);
+        const res = await fetch(href, { headers: authHeaders() });
+        const html = await res.text();
+        if (!res.ok) { document.open(); document.write(html); document.close(); return; }
+        history.pushState(null, '', href);
+        document.open(); document.write(html); document.close();
+      } catch(e) { window.location.href = detailLink(leadId); }
     }
     ${getProfileScript('danfoss')}
 
@@ -263,7 +273,7 @@ export function getLeadsPage() {
           <div class="lead-card \${lead.grade === 'A' ? 'grade-a' : lead.grade === 'B' ? 'grade-b' : ''}">
             <div class="lead-head">
               <div class="lead-title">
-                <h3>\${lead.id ? \`<a href="\${detailLink(lead.id)}" style="color:inherit;text-decoration:none;">\${esc(lead.company)}</a>\` : esc(lead.company)}</h3>
+                <h3>\${lead.id ? \`<a href="\${detailLink(lead.id)}" onclick="openLeadDetail('\${esc(lead.id)}', event)" style="color:inherit;text-decoration:none;">\${esc(lead.company)}</a>\` : esc(lead.company)}</h3>
                 <div class="lead-subtitle">\${esc(lead.summary || '-')}</div>
                 <div class="lead-status-row">
                   <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${esc(lead.grade)}등급</span>
@@ -314,7 +324,7 @@ export function getLeadsPage() {
                     \${lead.competitive.switchBarrier ? \`<li><strong>전환 장벽:</strong> \${esc(lead.competitive.switchBarrier)}</li>\` : ''}
                   </ul></div>\` : ''}
                   \${lead.buyingSignals && lead.buyingSignals.length > 0 ? \`<div class="enriched-block"><h4>구매 신호</h4><ul>\${lead.buyingSignals.map(s => \`<li>\${esc(s)}</li>\`).join('')}</ul></div>\` : ''}
-                  \${lead.evidence && lead.evidence.length > 0 ? \`<div class="enriched-block"><h4>근거 (Evidence)</h4><ul>\${lead.evidence.map(e => \`<li><strong>[\${esc(e.field)}]</strong> "\${esc(e.quote)}" \${e.sourceUrl ? \`<a href="\${esc(e.sourceUrl)}" target="_blank" style="color:#3498db;font-size:11px;">출처</a>\` : ''}</li>\`).join('')}</ul></div>\` : ''}
+                  \${lead.evidence && lead.evidence.length > 0 ? \`<div class="enriched-block"><h4>근거 (Evidence)</h4><ul>\${lead.evidence.map(e => \`<li><strong>[\${esc(e.field)}]</strong> "\${esc(e.quote)}" \${e.sourceUrl ? \`<a href="\${safeUrl(e.sourceUrl)}" target="_blank" rel="noopener noreferrer" style="color:#3498db;font-size:11px;">출처</a>\` : ''}</li>\`).join('')}</ul></div>\` : ''}
                   \${lead.assumptions && lead.assumptions.length > 0 ? \`<div class="enriched-block" style="background:#fff3cd;border-left:3px solid #f39c12;padding:8px 12px;"><h4 style="color:#856404;">가정 (Assumptions)</h4><ul>\${lead.assumptions.map(a => \`<li style="color:#856404;">\${esc(a)}</li>\`).join('')}</ul></div>\` : ''}
                   \${lead.enrichedAt ? \`<p style="color:#666;font-size:11px;margin-top:8px;">분석일: \${esc(lead.enrichedAt.split('T')[0])}</p>\` : ''}
                 </div>
@@ -382,7 +392,7 @@ export function getLeadsPage() {
         cards.forEach(l => {
           const fu = l.followUpDate || '';
           const isWarn = fu && fu <= today;
-          html += '<div class="kanban-card' + (isWarn ? ' followup-warn' : '') + '" onclick="location.href=\\'' + detailLink(l.id) + '\\'">';
+          html += '<div class="kanban-card' + (isWarn ? ' followup-warn' : '') + '" onclick="openLeadDetail(\\'' + esc(l.id) + '\\', event)">';
           html += '<div class="k-company">' + esc(l.company) + '</div>';
           html += '<div class="k-product">' + esc(l.product || l.summary || '-') + '</div>';
           html += '<div class="k-meta">';

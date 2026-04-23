@@ -3,7 +3,7 @@ export function getEscScript() {
 }
 
 export function getSafeUrlScript() {
-  return `function safeUrl(u) { if(!u) return '#'; const c=String(u).replace(/[\\x00-\\x1f\\x7f\\s]+/g,'').toLowerCase(); if(/^(javascript|data|vbscript|blob):/i.test(c)||/^[/\\\\]{2}/.test(c)) return '#'; return esc(u); }`;
+  return `function safeUrl(u) { if(!u) return '#'; try { const parsed = new URL(String(u)); return (parsed.protocol === 'https:' || parsed.protocol === 'http:') ? esc(parsed.href) : '#'; } catch { return '#'; } }`;
 }
 
 export function getStoredTokenScript() {
@@ -19,15 +19,4 @@ function getToken() { const p=document.getElementById('${inputId}').value; if(p)
 
 export function getProfileScript(defaultProfile = 'danfoss') {
   return `function getProfile() { return new URLSearchParams(window.location.search).get('profile') || '${defaultProfile}'; }`;
-}
-
-export function getQueryTokenBridgeScript() {
-  return `const urlState = new URL(window.location.href);
-const queryToken = urlState.searchParams.get('token') || '';
-if (queryToken) {
-  sessionStorage.setItem('b2b_token', queryToken);
-  urlState.searchParams.delete('token');
-  const cleanQuery = urlState.searchParams.toString();
-  history.replaceState(null, '', urlState.pathname + (cleanQuery ? ('?' + cleanQuery) : ''));
-}`;
 }

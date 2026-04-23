@@ -1,21 +1,16 @@
 import { jsonResponse } from './utils.js';
 
-export function getBearerToken(request, { allowQueryToken = true } = {}) {
+export function getBearerToken(request) {
   const auth = request.headers.get('Authorization') || '';
-  let bearer = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
-  if (!bearer && allowQueryToken) {
-    const url = new URL(request.url);
-    bearer = (url.searchParams.get('token') || '').trim();
-  }
-  return bearer;
+  return auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
 }
 
-export async function verifyAuth(request, env, options = {}) {
+export async function verifyAuth(request, env) {
   const token = env.API_TOKEN || env.TRIGGER_PASSWORD;
   if (!token) {
     return jsonResponse({ success: false, message: '서버 인증 설정이 필요합니다.' }, 503);
   }
-  const bearer = getBearerToken(request, options);
+  const bearer = getBearerToken(request);
   if (!bearer) return jsonResponse({ success: false, message: '인증이 필요합니다.' }, 401);
   const match = await timingSafeCompare(bearer, token);
   if (!match) return jsonResponse({ success: false, message: '인증 실패' }, 401);

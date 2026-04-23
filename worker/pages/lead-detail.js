@@ -1,5 +1,5 @@
 import { getCommonStyles } from './common-styles.js';
-import { getEscScript, getQueryTokenBridgeScript, getSafeUrlScript, getStoredTokenScript } from './script-snippets.js';
+import { getEscScript, getSafeUrlScript, getStoredTokenScript } from './script-snippets.js';
 
 export function getLeadDetailPage(lead, statusLogs) {
   const statusLabelsJS = JSON.stringify({ NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' });
@@ -63,7 +63,6 @@ export function getLeadDetailPage(lead, statusLogs) {
 
     ${getEscScript()}
     ${getSafeUrlScript()}
-    ${getQueryTokenBridgeScript()}
     ${getStoredTokenScript()}
     function getProfile() { return lead.profileId || 'danfoss'; }
 
@@ -174,7 +173,7 @@ export function getLeadDetailPage(lead, statusLogs) {
           html += '<ul style="list-style:none;padding:0;margin:0 0 12px 0;">';
           lead.evidence.forEach(e => {
             html += '<li style="color:#ccc;font-size:13px;padding:3px 0;border-left:2px solid #27ae60;padding-left:10px;margin:4px 0;"><strong style="color:#27ae60;">[' + esc(e.field || '') + ']</strong> "' + esc(e.quote || '') + '"';
-            if (e.sourceUrl) html += ' <a href="' + safeUrl(e.sourceUrl) + '" target="_blank" style="color:#3498db;font-size:11px;">출처</a>';
+            if (e.sourceUrl) html += ' <a href="' + safeUrl(e.sourceUrl) + '" target="_blank" rel="noopener noreferrer" style="color:#3498db;font-size:11px;">출처</a>';
             html += '</li>';
           });
           html += '</ul>';

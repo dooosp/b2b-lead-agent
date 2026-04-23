@@ -65,9 +65,19 @@ export function getDashboardPage(env) {
     ${getEscScript()}
     ${getStoredTokenScript()}
     function detailLink(leadId) {
-      const base = '/leads/' + encodeURIComponent(leadId);
-      const token = getToken();
-      return token ? (base + '?token=' + encodeURIComponent(token)) : base;
+      return '/leads/' + encodeURIComponent(leadId);
+    }
+    async function openLeadDetail(leadId, event) {
+      if (!leadId) return;
+      if (event) event.preventDefault();
+      try {
+        const href = detailLink(leadId);
+        const res = await fetch(href, { headers: authHeaders() });
+        const html = await res.text();
+        if (!res.ok) { document.open(); document.write(html); document.close(); return; }
+        history.pushState(null, '', href);
+        document.open(); document.write(html); document.close();
+      } catch(e) { window.location.href = detailLink(leadId); }
     }
     const statusLabels = { NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
     const statusColors = { NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' };
@@ -143,7 +153,7 @@ export function getDashboardPage(env) {
             const icon = a.isOverdue ? '🔴' : a.isToday ? '🟡' : '🔵';
             const label = a.isOverdue ? '기한 초과' : a.isToday ? '오늘' : '내일';
             html += \`<li style="border-left:3px solid \${a.isOverdue ? '#e74c3c' : '#f39c12'};padding-left:12px;">
-              \${icon} <a href="\${detailLink(a.id)}" style="color:#e94560;text-decoration:none;font-weight:bold;">\${esc(a.company)}</a>
+              \${icon} <a href="\${detailLink(a.id)}" onclick="openLeadDetail('\${esc(a.id)}', event)" style="color:#e94560;text-decoration:none;font-weight:bold;">\${esc(a.company)}</a>
               <span style="color:#888;font-size:11px;margin-left:8px;">\${esc(a.followUpDate)} (\${label})</span>
               <span class="badge badge-status \${(a.status||'').toLowerCase()}" style="font-size:10px;padding:1px 6px;margin-left:6px;">\${esc(statusLabels[a.status] || a.status)}</span>
             </li>\`;
