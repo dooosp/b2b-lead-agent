@@ -50,6 +50,70 @@ function normalizePublicationSources(sources) {
     .filter(Boolean);
 }
 
+function normalizeSnapshotStringList(values) {
+  return (Array.isArray(values) ? values : [])
+    .map((value) => normalizeSnapshotText(value))
+    .filter(Boolean);
+}
+
+function normalizeGenerationMode(value, fallback = 'llm') {
+  const mode = normalizeSnapshotText(value).toLowerCase();
+  if (mode === 'llm' || mode === 'heuristic' || mode === 'demo') return mode;
+  return fallback;
+}
+
+function normalizeVerificationStatus(value, { generationMode, confidence, sources, evidence } = {}) {
+  const status = normalizeSnapshotText(value).toLowerCase();
+  if (status === 'verified' || status === 'needs_review' || status === 'draft' || status === 'unverified') {
+    return status;
+  }
+  if (generationMode === 'demo') return 'draft';
+  if (generationMode === 'heuristic') return 'needs_review';
+  const normalizedConfidence = normalizeSnapshotText(confidence).toUpperCase();
+  const hasSources = Array.isArray(sources) && sources.length > 0;
+  const hasEvidence = Array.isArray(evidence) && evidence.some((item) => normalizeSnapshotText(item && item.quote));
+  return hasSources && hasEvidence && (normalizedConfidence === 'HIGH' || normalizedConfidence === 'MEDIUM')
+    ? 'verified'
+    : 'needs_review';
+}
+
+function normalizePublicationTrust(lead = {}) {
+  const generationMode = normalizeGenerationMode(lead.generationMode);
+  const confidence = normalizeSnapshotText(lead.confidence).toUpperCase();
+  const assumptions = normalizeSnapshotStringList(lead.assumptions);
+  const dataGaps = normalizeSnapshotStringList(lead.dataGaps);
+  const addGap = (value) => {
+    if (value && !dataGaps.includes(value)) dataGaps.push(value);
+  };
+
+  if (generationMode === 'demo') {
+    throw new Error('Refusing to publish demo leads as canonical latest leads.');
+  }
+  if (generationMode === 'heuristic') {
+    addGap('LLM lead qualification not completed');
+  }
+  if (!confidence) addGap('Confidence was not provided by the lead generator');
+  if (confidence === 'LOW') addGap('Low-confidence public signal');
+  if (!Array.isArray(lead.sources) || lead.sources.length === 0) addGap('Published source evidence missing');
+  if (!Array.isArray(lead.evidence) || !lead.evidence.some((item) => normalizeSnapshotText(item && item.quote))) {
+    addGap('Direct evidence quote missing');
+  }
+
+  return {
+    generationMode,
+    verificationStatus: normalizeVerificationStatus(lead.verificationStatus, {
+      generationMode,
+      confidence,
+      sources: lead.sources,
+      evidence: lead.evidence,
+    }),
+    confidence,
+    confidenceReason: normalizeSnapshotText(lead.confidenceReason),
+    assumptions,
+    dataGaps,
+  };
+}
+
 function composeLeadReport(leads, profile) {
   console.log('[Step 3] 영업용 리포트 생성...');
 
@@ -73,7 +137,11 @@ function composeLeadReport(leads, profile) {
       reportMarkdown += `- **추천 제품:** ${lead.product}\n`;
       reportMarkdown += `- **예상 ROI:** ${lead.roi || '-'}\n`;
       reportMarkdown += `- **영업 Pitch:** ${lead.salesPitch}\n`;
-      reportMarkdown += `- **글로벌 트렌드:** ${lead.globalContext || '-'}\n\n`;
+      reportMarkdown += `- **글로벌 트렌드:** ${lead.globalContext || '-'}\n`;
+      if (lead.verificationStatus && lead.verificationStatus !== 'verified') {
+        reportMarkdown += `- **검증 상태:** ${lead.verificationStatus} (${lead.generationMode || 'llm'})\n`;
+      }
+      reportMarkdown += '\n';
     }
   } else {
     reportMarkdown += '_해당 없음_\n\n';
@@ -88,7 +156,11 @@ function composeLeadReport(leads, profile) {
       reportMarkdown += `- **추천 제품:** ${lead.product}\n`;
       reportMarkdown += `- **예상 ROI:** ${lead.roi || '-'}\n`;
       reportMarkdown += `- **영업 Pitch:** ${lead.salesPitch}\n`;
-      reportMarkdown += `- **글로벌 트렌드:** ${lead.globalContext || '-'}\n\n`;
+      reportMarkdown += `- **글로벌 트렌드:** ${lead.globalContext || '-'}\n`;
+      if (lead.verificationStatus && lead.verificationStatus !== 'verified') {
+        reportMarkdown += `- **검증 상태:** ${lead.verificationStatus} (${lead.generationMode || 'llm'})\n`;
+      }
+      reportMarkdown += '\n';
     }
   } else {
     reportMarkdown += '_해당 없음_\n\n';
@@ -131,14 +203,23 @@ function generateLeadId(lead, { profileId = '' } = {}) {
 }
 
 function prepareLeadSnapshotRecords(leads, { now = new Date().toISOString(), idFactory = generateLeadId, profileId = '' } = {}) {
-  return (Array.isArray(leads) ? leads : []).map(lead => ({
-    id: idFactory(lead, { profileId }),
-    status: 'NEW',
-    createdAt: now,
-    updatedAt: now,
-    ...lead,
-    sources: normalizePublicationSources(lead && lead.sources),
-  }));
+  return (Array.isArray(leads) ? leads : []).map(lead => {
+    const trust = normalizePublicationTrust(lead);
+    return {
+      id: idFactory(lead, { profileId }),
+      status: 'NEW',
+      createdAt: now,
+      updatedAt: now,
+      ...lead,
+      generationMode: trust.generationMode,
+      verificationStatus: trust.verificationStatus,
+      confidence: trust.confidence,
+      confidenceReason: trust.confidenceReason,
+      assumptions: trust.assumptions,
+      dataGaps: trust.dataGaps,
+      sources: normalizePublicationSources(lead && lead.sources),
+    };
+  });
 }
 
 function findExistingLeadIndex(history, newLead) {

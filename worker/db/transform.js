@@ -29,6 +29,28 @@ function stringOrEmpty(value) {
   return typeof value === 'string' ? value : '';
 }
 
+function normalizeGenerationMode(value, fallback = 'llm') {
+  const mode = sanitizeLeadText(value, '').toLowerCase();
+  if (mode === 'llm' || mode === 'heuristic' || mode === 'demo') return mode;
+  return fallback;
+}
+
+function normalizeVerificationStatus(value, generationMode = 'llm') {
+  const status = sanitizeLeadText(value, '').toLowerCase();
+  if (status === 'verified' || status === 'needs_review' || status === 'draft' || status === 'unverified') {
+    return status;
+  }
+  if (generationMode === 'demo') return 'draft';
+  if (generationMode === 'heuristic') return 'needs_review';
+  return 'needs_review';
+}
+
+function normalizeStringArray(value) {
+  return (Array.isArray(value) ? value : [])
+    .map((item) => sanitizeLeadText(item, ''))
+    .filter(Boolean);
+}
+
 export function sanitizeLeadText(value, fallback = '') {
   const cleaned = String(value ?? '')
     .replace(/\s+/g, ' ')
@@ -212,6 +234,12 @@ function normalizePersistedLead(lead = {}, { profileId = '', source = '', rowId 
     confidence: stringOrEmpty(lead.confidence),
     confidenceReason: stringOrEmpty(lead.confidenceReason ?? lead.confidence_reason),
     assumptions: Array.isArray(lead.assumptions) ? lead.assumptions : [],
+    generationMode: normalizeGenerationMode(lead.generationMode ?? lead.generation_mode, 'llm'),
+    verificationStatus: normalizeVerificationStatus(
+      lead.verificationStatus ?? lead.verification_status,
+      normalizeGenerationMode(lead.generationMode ?? lead.generation_mode, 'llm')
+    ),
+    dataGaps: normalizeStringArray(lead.dataGaps ?? lead.data_gaps),
     eventType: sanitizeLeadText(lead.eventType ?? lead.event_type, ''),
     enrichedAt: lead.enrichedAt ?? lead.enriched_at ?? null,
     followUpDate: stringOrEmpty(lead.followUpDate ?? lead.follow_up_date),
@@ -255,6 +283,9 @@ export function rowToLead(row) {
     confidence: row.confidence,
     confidence_reason: row.confidence_reason,
     assumptions: parseJson(row.assumptions || '[]', []),
+    generation_mode: row.generation_mode,
+    verification_status: row.verification_status,
+    data_gaps: parseJson(row.data_gaps || '[]', []),
     event_type: row.event_type,
     enriched_at: row.enriched_at,
     follow_up_date: row.follow_up_date,
@@ -299,6 +330,9 @@ export function rowToLead(row) {
     confidence: normalized.confidence,
     confidenceReason: normalized.confidenceReason,
     assumptions: normalized.assumptions,
+    generationMode: normalized.generationMode,
+    verificationStatus: normalized.verificationStatus,
+    dataGaps: normalized.dataGaps,
     eventType: normalized.eventType,
     enrichedAt: normalized.enrichedAt,
     followUpDate: normalized.followUpDate,
@@ -335,6 +369,9 @@ export function leadToRow(lead, profileId, source) {
     confidence: normalized.confidence,
     confidence_reason: normalized.confidenceReason,
     assumptions: JSON.stringify(normalized.assumptions),
+    generation_mode: normalized.generationMode,
+    verification_status: normalized.verificationStatus,
+    data_gaps: JSON.stringify(normalized.dataGaps),
     event_type: normalized.eventType,
     created_at: normalized.createdAt || now,
     updated_at: normalized.updatedAt || now

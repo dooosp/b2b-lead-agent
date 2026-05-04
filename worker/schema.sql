@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS leads (
   enriched_at TEXT,
   follow_up_date TEXT DEFAULT '',
   estimated_value INTEGER DEFAULT 0,
+  generation_mode TEXT DEFAULT 'llm',
+  verification_status TEXT DEFAULT 'needs_review',
+  data_gaps TEXT DEFAULT '[]',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );

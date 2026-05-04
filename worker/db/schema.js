@@ -28,6 +28,9 @@ export async function ensureD1Schema(db) {
         enriched_at TEXT,
         follow_up_date TEXT DEFAULT '',
         estimated_value INTEGER DEFAULT 0,
+        generation_mode TEXT DEFAULT 'llm',
+        verification_status TEXT DEFAULT 'needs_review',
+        data_gaps TEXT DEFAULT '[]',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )`),
@@ -101,6 +104,9 @@ export async function ensureD1Schema(db) {
         "ALTER TABLE leads ADD COLUMN confidence TEXT DEFAULT ''",
         "ALTER TABLE leads ADD COLUMN confidence_reason TEXT DEFAULT ''",
         "ALTER TABLE leads ADD COLUMN assumptions TEXT DEFAULT '[]'",
+        "ALTER TABLE leads ADD COLUMN generation_mode TEXT DEFAULT 'llm'",
+        "ALTER TABLE leads ADD COLUMN verification_status TEXT DEFAULT 'needs_review'",
+        "ALTER TABLE leads ADD COLUMN data_gaps TEXT DEFAULT '[]'",
         "ALTER TABLE leads ADD COLUMN event_type TEXT DEFAULT ''"
       ];
       for (const sql of alterCols) {

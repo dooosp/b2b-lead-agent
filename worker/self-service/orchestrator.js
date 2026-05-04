@@ -14,6 +14,7 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
   const company = (body.company || '').trim().slice(0, 50);
   const industry = (body.industry || '').trim().slice(0, 50);
   let profile = null;
+  let profileGenerationMode = 'llm';
   let articles = [];
   let bodyHitRate = 0;
   const persistSelfServiceRun = (leads) => {
@@ -40,7 +41,16 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
     return jsonResponse({ success: false, message: '회사명과 산업 분야를 모두 입력하세요.' }, 400);
   }
   if (!env.GEMINI_API_KEY && !env.OPENAI_API_KEY) {
-    return jsonResponse({ success: false, message: '서버 설정 오류: GEMINI_API_KEY 또는 OPENAI_API_KEY가 설정되지 않았습니다.' }, 503);
+    return jsonResponse({
+      success: false,
+      message: '서버 설정 오류: GEMINI_API_KEY 또는 OPENAI_API_KEY가 설정되지 않았습니다.',
+      generationMode: 'unavailable',
+      verificationStatus: 'unverified',
+      confidence: 'LOW',
+      confidenceReason: 'LLM API key is not configured, so lead generation did not run.',
+      assumptions: [],
+      dataGaps: ['LLM API key missing']
+    }, 503);
   }
 
   try {
@@ -51,6 +61,7 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       ]);
     } catch (e) {
       profile = generateHeuristicProfile(company, industry);
+      profileGenerationMode = 'heuristic';
     }
 
     const elapsed1 = Date.now() - startTime;
@@ -87,7 +98,11 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       return jsonResponse({
         success: true,
         leads: [],
-        summary: '관련 뉴스가 부족하여 리드를 생성하지 못했습니다.'
+        summary: '관련 뉴스가 부족하여 리드를 생성하지 못했습니다.',
+        generationMode: 'unavailable',
+        verificationStatus: 'unverified',
+        profileGenerationMode,
+        dataGaps: ['관련 공개 뉴스 부족']
       });
     }
 
@@ -100,11 +115,23 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       if (!isValidSelfServiceResponseSchema(responsePayload)) {
         throw new Error('SELF_SERVICE_RESPONSE_SCHEMA_VALIDATION_FAILED');
       }
+      const generationModes = [...new Set(responsePayload.leads.map((lead) => lead.generationMode).filter(Boolean))];
+      const generationMode = generationModes.length === 1
+        ? generationModes[0]
+        : (generationModes.includes('heuristic') ? 'heuristic' : 'llm');
+      const verificationStatus = responsePayload.leads.length > 0 && responsePayload.leads.every((lead) => lead.verificationStatus === 'verified')
+        ? 'verified'
+        : (generationMode === 'heuristic' ? 'needs_review' : 'needs_review');
+      const dataGaps = [...new Set(responsePayload.leads.flatMap((lead) => Array.isArray(lead.dataGaps) ? lead.dataGaps : []))];
       persistSelfServiceRun(rawLeads);
       return jsonResponse({
         success: true,
         leads: responsePayload.leads,
-        summary: responsePayload.summary
+        summary: responsePayload.summary,
+        generationMode,
+        verificationStatus,
+        profileGenerationMode,
+        dataGaps
       });
     };
 
@@ -135,7 +162,11 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       return jsonResponse({
         success: true,
         leads: responsePayload.leads,
-        summary: responsePayload.summary
+        summary: responsePayload.summary,
+        generationMode: 'heuristic',
+        verificationStatus: 'needs_review',
+        profileGenerationMode,
+        dataGaps: [...new Set(responsePayload.leads.flatMap((lead) => Array.isArray(lead.dataGaps) ? lead.dataGaps : []))]
       });
     }
 
@@ -150,7 +181,11 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       return jsonResponse({
         success: true,
         leads: responsePayload.leads,
-        summary: responsePayload.summary
+        summary: responsePayload.summary,
+        generationMode: 'heuristic',
+        verificationStatus: 'needs_review',
+        profileGenerationMode,
+        dataGaps: [...new Set(responsePayload.leads.flatMap((lead) => Array.isArray(lead.dataGaps) ? lead.dataGaps : []))]
       });
     }
     return jsonResponse({ success: false, message: '분석 실패: ' + e.message }, 500);

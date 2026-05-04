@@ -40,9 +40,19 @@ test('toSchemaLeadWorker keeps only contract fields', () => {
     'expected_roi',
     'sales_pitch',
     'trend',
-    'sources'
+    'sources',
+    'generationMode',
+    'verificationStatus',
+    'confidence',
+    'confidenceReason',
+    'assumptions',
+    'dataGaps'
   ]);
   assert.deepEqual(lead.sources, [{ title: '기사', url: 'https://example.com/news', resolution: 'direct' }]);
+  assert.equal(lead.generationMode, 'llm');
+  assert.equal(lead.verificationStatus, 'needs_review');
+  assert.equal(lead.confidence, 'LOW');
+  assert.ok(lead.dataGaps.includes('직접 근거 인용 미확보'));
 });
 
 test('createSelfServiceSchemaPayloadWorker filters invalid leads and preserves summary', () => {

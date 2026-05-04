@@ -51,6 +51,18 @@ function createNotReadyResponse(profileId, reason, message) {
   }, 409);
 }
 
+function createReadinessUnavailableResponse(profileId, message = 'Canonical report readiness could not be verified safely.') {
+  return jsonResponse({
+    schemaVersion: SCHEMA_VERSION,
+    profileId,
+    syncReady: false,
+    error: {
+      code: 'readiness_unavailable',
+      message
+    }
+  }, 503);
+}
+
 function pickUniformSnapshotTimestamp(leads, fieldName) {
   const values = [...new Set(
     (Array.isArray(leads) ? leads : [])
@@ -150,7 +162,13 @@ export async function handleGetLatestPublishedReport(env, profileId) {
     return createNotFoundResponse(requestedProfileId);
   }
 
-  const latest = await loadPublishedLatestSnapshot(env, requestedProfileId);
+  let latest = null;
+  try {
+    latest = await loadPublishedLatestSnapshot(env, requestedProfileId);
+  } catch {
+    return createReadinessUnavailableResponse(requestedProfileId);
+  }
+
   if (latest.found) {
     const publishedAt = resolvePublishedAt(latest.leads);
     const leads = mapPublishedLeads(latest.leads);
@@ -164,7 +182,17 @@ export async function handleGetLatestPublishedReport(env, profileId) {
     return createSuccessResponse(requestedProfileId, publishedAt, leads);
   }
 
-  const activeJob = env.DB ? await getActiveJobRunByProfile(env.DB, requestedProfileId).catch(() => null) : null;
+  if (!env.DB) {
+    return createReadinessUnavailableResponse(requestedProfileId);
+  }
+
+  let activeJob = null;
+  try {
+    activeJob = await getActiveJobRunByProfile(env.DB, requestedProfileId);
+  } catch {
+    return createReadinessUnavailableResponse(requestedProfileId);
+  }
+
   if (activeJob) {
     return createNotReadyResponse(
       requestedProfileId,

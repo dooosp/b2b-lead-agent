@@ -1,7 +1,7 @@
 // ===== Imports =====
 import { jsonResponse } from './lib/utils.js';
 import { addCorsHeaders, handleOptions } from './lib/cors.js';
-import { verifyAuth, checkRateLimit } from './lib/auth.js';
+import { verifyAuth, verifyInternalApiAuth, checkRateLimit } from './lib/auth.js';
 import { resolveLeadProfileForQuery } from './lib/profile.js';
 
 import { getLeadById, getStatusLogByLead } from './db/leads.js';
@@ -62,7 +62,7 @@ export default {
       || Boolean(jobStatusMatch);
 
     if (requiresInternalApiAuth) {
-      const authErr = await verifyAuth(request, env);
+      const authErr = await verifyInternalApiAuth(request, env);
       if (authErr) return addCorsHeaders(authErr, origin, env);
     }
 

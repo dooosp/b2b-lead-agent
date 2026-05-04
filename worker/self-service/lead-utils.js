@@ -53,8 +53,16 @@ const SELF_SERVICE_RESPONSE_SCHEMA_KEYS = Object.freeze([
   'expected_roi',
   'sales_pitch',
   'trend',
-  'sources'
+  'sources',
+  'generationMode',
+  'verificationStatus',
+  'confidence',
+  'confidenceReason',
+  'assumptions',
+  'dataGaps'
 ]);
+const GENERATION_MODES = new Set(['llm', 'heuristic', 'demo', 'unavailable']);
+const VERIFICATION_STATUSES = new Set(['verified', 'needs_review', 'draft', 'unverified']);
 const SOURCE_RESOLUTIONS = new Set(['direct', 'unresolved']);
 const DISCOVERY_URL_RE = /(news\.google\.com|search\.naver\.com)/i;
 
@@ -260,6 +268,59 @@ export function normalizeConfidence(value, article) {
   if (article && article._hasBody) return 'HIGH';
   if (NUMBER_SIGNAL_RE.test(String((article && article.title) || ''))) return 'MEDIUM';
   return 'LOW';
+}
+
+export function normalizeGenerationMode(value, fallback = 'llm') {
+  const mode = sanitizeLeadText(value, '').toLowerCase();
+  if (GENERATION_MODES.has(mode)) return mode;
+  return GENERATION_MODES.has(fallback) ? fallback : 'llm';
+}
+
+function normalizeStringList(values) {
+  return (Array.isArray(values) ? values : [])
+    .map(value => sanitizeLeadText(value, ''))
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+export function normalizeVerificationStatus(value, {
+  generationMode = 'llm',
+  confidence = '',
+  sources = [],
+  evidence = []
+} = {}) {
+  const status = sanitizeLeadText(value, '').toLowerCase();
+  if (VERIFICATION_STATUSES.has(status)) return status;
+  const mode = normalizeGenerationMode(generationMode);
+  if (mode === 'demo') return 'draft';
+  if (mode === 'heuristic' || mode === 'unavailable') return mode === 'unavailable' ? 'unverified' : 'needs_review';
+  const normalizedConfidence = normalizeConfidence(confidence, null);
+  const hasSources = Array.isArray(sources) && sources.length > 0;
+  const hasEvidence = Array.isArray(evidence) && evidence.some(item => sanitizeLeadText(item && item.quote, ''));
+  return hasSources && hasEvidence && (normalizedConfidence === 'HIGH' || normalizedConfidence === 'MEDIUM')
+    ? 'verified'
+    : 'needs_review';
+}
+
+export function normalizeDataGapsList(values, {
+  generationMode = 'llm',
+  confidence = '',
+  sources = [],
+  evidence = []
+} = {}) {
+  const gaps = normalizeStringList(values);
+  const add = (value) => {
+    if (value && !gaps.includes(value)) gaps.push(value);
+  };
+
+  const mode = normalizeGenerationMode(generationMode);
+  if (mode === 'heuristic') add('LLM 정밀 분석 미완료');
+  if (mode === 'demo') add('데모 데이터 - 실제 검증 근거 없음');
+  if (!Array.isArray(sources) || sources.length === 0) add('공개 출처 미확인');
+  if (!Array.isArray(evidence) || !evidence.some(item => sanitizeLeadText(item && item.quote, ''))) add('직접 근거 인용 미확보');
+  const normalizedConfidence = normalizeConfidence(confidence, null);
+  if (normalizedConfidence === 'LOW') add('낮은 신뢰도 신호');
+  return gaps.slice(0, 8);
 }
 
 export function clampScoreByConfidence(score, confidence) {
@@ -563,6 +624,12 @@ function isValidResponseLeadShape(lead) {
   if (!sanitizeLeadText(lead.sales_pitch, '')) return false;
   if (!sanitizeLeadText(lead.trend, '')) return false;
   if (!Array.isArray(lead.sources)) return false;
+  if (!GENERATION_MODES.has(String(lead.generationMode || ''))) return false;
+  if (!VERIFICATION_STATUSES.has(String(lead.verificationStatus || ''))) return false;
+  if (!['HIGH', 'MEDIUM', 'LOW'].includes(String(lead.confidence || ''))) return false;
+  if (!sanitizeLeadText(lead.confidenceReason, '')) return false;
+  if (!Array.isArray(lead.assumptions)) return false;
+  if (!Array.isArray(lead.dataGaps)) return false;
   return lead.sources.every(isValidSchemaSource);
 }
 
@@ -604,6 +671,22 @@ export function toSchemaLeadWorker(lead) {
   const salesPitch = sanitizeLeadText(getLeadField(lead, ['sales_pitch', 'salesPitch']) || '', '');
   const trend = sanitizeLeadText(getLeadField(lead, ['trend', 'globalContext']) || '', '');
   const sources = normalizeSourceList(getLeadField(lead, ['sources']) || [], null);
+  const evidence = normalizeEvidenceList(getLeadField(lead, ['evidence']) || []);
+  const generationMode = normalizeGenerationMode(getLeadField(lead, ['generationMode', 'generation_mode']), 'llm');
+  const confidence = normalizeConfidence(getLeadField(lead, ['confidence']), null);
+  const assumptions = normalizeStringList(getLeadField(lead, ['assumptions']) || []);
+  if (generationMode === 'heuristic' && assumptions.length === 0) {
+    assumptions.push('규칙 기반 빠른 분석이며 LLM 정밀 검토 전 초안입니다.');
+  }
+  if (generationMode === 'demo' && assumptions.length === 0) {
+    assumptions.push('데모 데이터이며 실제 고객 검증 전 초안입니다.');
+  }
+  const dataGaps = normalizeDataGapsList(getLeadField(lead, ['dataGaps', 'data_gaps']) || [], {
+    generationMode,
+    confidence,
+    sources,
+    evidence
+  });
   const schemaLead = {
     company,
     score,
@@ -613,7 +696,21 @@ export function toSchemaLeadWorker(lead) {
     expected_roi: expectedRoi,
     sales_pitch: salesPitch,
     trend,
-    sources
+    sources,
+    generationMode,
+    verificationStatus: normalizeVerificationStatus(getLeadField(lead, ['verificationStatus', 'verification_status']), {
+      generationMode,
+      confidence,
+      sources,
+      evidence
+    }),
+    confidence,
+    confidenceReason: sanitizeLeadText(
+      getLeadField(lead, ['confidenceReason', 'confidence_reason']) || '',
+      generationMode === 'llm' ? 'LLM 분석 결과입니다.' : '규칙 기반 fallback 결과로 사람 검토가 필요합니다.'
+    ),
+    assumptions,
+    dataGaps
   };
   return isValidResponseLeadShape(schemaLead) ? schemaLead : null;
 }

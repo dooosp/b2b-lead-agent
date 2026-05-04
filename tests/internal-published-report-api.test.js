@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const contractFixture = require('../docs/exec-plans/internal-api-contract-freeze.fixture.json');
 
 const workerModulePromise = import('../worker/index.js');
 
@@ -82,6 +83,15 @@ class FakeInternalReportDb {
     }
 
     throw new Error(`Unsupported fake DB SQL: ${normalized}`);
+  }
+}
+
+class ThrowingJobRunDb extends FakeInternalReportDb {
+  prepare(sql) {
+    if (sql.includes('FROM job_runs')) {
+      throw new Error('job run lookup unavailable');
+    }
+    return super.prepare(sql);
   }
 }
 
@@ -172,41 +182,45 @@ test('internal published-report route rejects query-string token auth', async ()
   assert.equal(payload.message, '인증이 필요합니다.');
 });
 
+test('internal published-report route does not fall back to TRIGGER_PASSWORD when API_TOKEN is unset', async () => {
+  const { default: worker } = await workerModulePromise;
+  const response = await worker.fetch(
+    createRequest('/api/internal/profiles/danfoss/latest-published', {
+      headers: { Authorization: 'Bearer legacy-secret' }
+    }),
+    createEnv({ API_TOKEN: '' }),
+    {}
+  );
+  const payload = await response.json();
+
+  assert.equal(response.status, 503);
+  assert.equal(payload.success, false);
+  assert.equal(payload.message, '서버 인증 설정이 필요합니다.');
+});
+
+test('internal published-report route rejects TRIGGER_PASSWORD when API_TOKEN is different', async () => {
+  const { default: worker } = await workerModulePromise;
+  const response = await worker.fetch(
+    createRequest('/api/internal/profiles/danfoss/latest-published', {
+      headers: { Authorization: 'Bearer legacy-secret' }
+    }),
+    createEnv({ API_TOKEN: 'api-secret', TRIGGER_PASSWORD: 'legacy-secret' }),
+    {}
+  );
+  const payload = await response.json();
+
+  assert.equal(response.status, 401);
+  assert.equal(payload.success, false);
+  assert.equal(payload.message, '인증 실패');
+});
+
 test('GET /api/internal/profiles/:profileId/latest-published uses the GitHub published snapshot and ignores mutable DB cache rows', async () => {
   const { default: worker } = await workerModulePromise;
   const originalFetch = globalThis.fetch;
   const fetchCalls = [];
   globalThis.fetch = async (url) => {
     fetchCalls.push(String(url));
-    return jsonFixtureResponse([
-      {
-        id: 'lead-1',
-        status: 'NEW',
-        createdAt: '2026-04-07T12:34:56.000Z',
-        updatedAt: '2026-04-07T12:34:56.000Z',
-        company: 'DL이앤씨',
-        summary: '데이터센터 영토 확장 가속',
-        product: 'Turbocor 컴프레서',
-        score: 84,
-        grade: 'A',
-        roi: '냉각 전력 35% 절감',
-        salesPitch: 'DL이앤씨 데이터센터에 Turbocor를 제안합니다.',
-        globalContext: 'EU 데이터센터 에너지효율 지침',
-        sources: [
-          {
-            sourceId: 'A1',
-            title: 'DL이앤씨, 데이터센터 영토 확장 가속',
-            url: 'https://www.example.com/article/dl-data-center',
-            source: '딜사이트',
-            query: '데이터센터 신축 착공',
-            publishedAt: 'Tue, 07 Apr 2026 09:00:00 GMT',
-            originUrl: 'https://news.google.com/rss/articles/example',
-            resolution: 'resolved',
-            contentAvailable: true
-          }
-        ]
-      }
-    ]);
+    return jsonFixtureResponse(contractFixture.leads);
   };
 
   try {
@@ -225,42 +239,7 @@ test('GET /api/internal/profiles/:profileId/latest-published uses the GitHub pub
 
     assert.equal(response.status, 200);
     assert.equal(fetchCalls.length, 1);
-    assert.deepEqual(payload, {
-      schemaVersion: 'crm.published-report.v1',
-      profileId: 'danfoss',
-      syncReady: true,
-      publishedAt: '2026-04-07T12:34:56.000Z',
-      leadCount: 1,
-      leads: [
-        {
-          id: 'lead-1',
-          status: 'NEW',
-          createdAt: '2026-04-07T12:34:56.000Z',
-          updatedAt: '2026-04-07T12:34:56.000Z',
-          company: 'DL이앤씨',
-          summary: '데이터센터 영토 확장 가속',
-          product: 'Turbocor 컴프레서',
-          score: 84,
-          grade: 'A',
-          roi: '냉각 전력 35% 절감',
-          salesPitch: 'DL이앤씨 데이터센터에 Turbocor를 제안합니다.',
-          globalContext: 'EU 데이터센터 에너지효율 지침',
-          sources: [
-            {
-              sourceId: 'A1',
-              title: 'DL이앤씨, 데이터센터 영토 확장 가속',
-              url: 'https://www.example.com/article/dl-data-center',
-              source: '딜사이트',
-              query: '데이터센터 신축 착공',
-              publishedAt: 'Tue, 07 Apr 2026 09:00:00 GMT',
-              originUrl: 'https://news.google.com/rss/articles/example',
-              resolution: 'resolved',
-              contentAvailable: true
-            }
-          ]
-        }
-      ]
-    });
+    assert.deepEqual(payload, contractFixture);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -313,7 +292,9 @@ test('GET /api/internal/profiles/:profileId/latest-published returns 404 for a k
       createRequest('/api/internal/profiles/danfoss/latest-published', {
         headers: { Authorization: 'Bearer api-secret' }
       }),
-      createEnv(),
+      createEnv({
+        DB: new FakeInternalReportDb()
+      }),
       {}
     );
     const payload = await response.json();
@@ -322,6 +303,58 @@ test('GET /api/internal/profiles/:profileId/latest-published returns 404 for a k
     assert.equal(payload.schemaVersion, 'crm.published-report.v1');
     assert.equal(payload.syncReady, false);
     assert.equal(payload.error.code, 'report_not_found');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('GET /api/internal/profiles/:profileId/latest-published returns 503 when queued readiness cannot be verified safely', async () => {
+  const { default: worker } = await workerModulePromise;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => jsonFixtureResponse({ message: 'not found' }, 404);
+
+  try {
+    const response = await worker.fetch(
+      createRequest('/api/internal/profiles/danfoss/latest-published', {
+        headers: { Authorization: 'Bearer api-secret' }
+      }),
+      createEnv({
+        DB: new ThrowingJobRunDb()
+      }),
+      {}
+    );
+    const payload = await response.json();
+
+    assert.equal(response.status, 503);
+    assert.equal(payload.schemaVersion, 'crm.published-report.v1');
+    assert.equal(payload.profileId, 'danfoss');
+    assert.equal(payload.syncReady, false);
+    assert.equal(payload.error.code, 'readiness_unavailable');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('GET /api/internal/profiles/:profileId/latest-published returns 503 when the job ledger is unavailable entirely', async () => {
+  const { default: worker } = await workerModulePromise;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => jsonFixtureResponse({ message: 'not found' }, 404);
+
+  try {
+    const response = await worker.fetch(
+      createRequest('/api/internal/profiles/danfoss/latest-published', {
+        headers: { Authorization: 'Bearer api-secret' }
+      }),
+      createEnv({ DB: undefined }),
+      {}
+    );
+    const payload = await response.json();
+
+    assert.equal(response.status, 503);
+    assert.equal(payload.schemaVersion, 'crm.published-report.v1');
+    assert.equal(payload.profileId, 'danfoss');
+    assert.equal(payload.syncReady, false);
+    assert.equal(payload.error.code, 'readiness_unavailable');
   } finally {
     globalThis.fetch = originalFetch;
   }

@@ -203,6 +203,15 @@ test('prepareLeadSnapshotRecords preserves enriched source trace metadata', () =
       updatedAt: now,
       company: 'DL이앤씨',
       summary: '데이터센터 영토 확장 가속',
+      generationMode: 'llm',
+      verificationStatus: 'needs_review',
+      confidence: '',
+      confidenceReason: '',
+      assumptions: [],
+      dataGaps: [
+        'Confidence was not provided by the lead generator',
+        'Direct evidence quote missing'
+      ],
       sources: [
         {
           sourceId: 'A1',
