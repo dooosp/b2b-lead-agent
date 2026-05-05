@@ -1,3 +1,5 @@
+import { toLeadBriefV1 } from '../lib/leadbrief-v1.js';
+
 const COMPANY_NAME_MAX_LEN = 40;
 const COMPANY_NAME_RE = /^[\p{L}0-9 .,&()\-]+$/u;
 const PLACEHOLDER_RE = /\{[^}]{1,40}\}/g;
@@ -54,8 +56,12 @@ const SELF_SERVICE_RESPONSE_SCHEMA_KEYS = Object.freeze([
   'sales_pitch',
   'trend',
   'sources',
+  'signal',
+  'whyNow',
+  'recommendedMessage',
   'generationMode',
   'verificationStatus',
+  'reviewStatus',
   'confidence',
   'confidenceReason',
   'assumptions',
@@ -687,6 +693,25 @@ export function toSchemaLeadWorker(lead) {
     sources,
     evidence
   });
+  const brief = toLeadBriefV1({
+    company,
+    signal: projectTitle,
+    summary: projectTitle,
+    whyNow: trend,
+    recommendedMessage: salesPitch,
+    sources,
+    evidence,
+    confidence,
+    assumptions,
+    dataGaps,
+    generationMode,
+    verificationStatus: normalizeVerificationStatus(getLeadField(lead, ['verificationStatus', 'verification_status']), {
+      generationMode,
+      confidence,
+      sources,
+      evidence
+    })
+  });
   const schemaLead = {
     company,
     score,
@@ -697,20 +722,19 @@ export function toSchemaLeadWorker(lead) {
     sales_pitch: salesPitch,
     trend,
     sources,
+    signal: brief.signal,
+    whyNow: brief.whyNow,
+    recommendedMessage: brief.recommendedMessage,
     generationMode,
-    verificationStatus: normalizeVerificationStatus(getLeadField(lead, ['verificationStatus', 'verification_status']), {
-      generationMode,
-      confidence,
-      sources,
-      evidence
-    }),
+    verificationStatus: brief.verificationStatus,
+    reviewStatus: brief.reviewStatus,
     confidence,
     confidenceReason: sanitizeLeadText(
       getLeadField(lead, ['confidenceReason', 'confidence_reason']) || '',
       generationMode === 'llm' ? 'LLM 분석 결과입니다.' : '규칙 기반 fallback 결과로 사람 검토가 필요합니다.'
     ),
     assumptions,
-    dataGaps
+    dataGaps: brief.dataGaps
   };
   return isValidResponseLeadShape(schemaLead) ? schemaLead : null;
 }

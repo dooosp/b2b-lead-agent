@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { normalizeReviewStatus, toLeadBriefV1 } from '../lib/leadbrief-v1.js';
 
 export const VALID_TRANSITIONS = {
   NEW: ['CONTACTED'],
@@ -201,20 +202,21 @@ function normalizePersistedLead(lead = {}, { profileId = '', source = '', rowId 
   const stableIdentityKey = sanitizeLeadText(lead.identityKey || lead.identity_key, '')
     || buildLeadIdentityKey(identityLead, { profileId });
 
-  return {
+  const persistedLead = {
     id: sanitizeLeadText(rowId || lead.id, '')
       || computeStableLeadId(identityLead, { profileId, identityKey: stableIdentityKey }),
     identityKey: stableIdentityKey,
     profileId: sanitizeLeadText(profileId || lead.profileId || lead.profile_id, '') || 'self-service',
     source: sanitizeLeadText(source || lead.source, '') || 'managed',
     status: sanitizeLeadText(lead.status, '') || 'NEW',
+    reviewStatus: normalizeReviewStatus(lead.reviewStatus ?? lead.review_status),
     company: sanitizeLeadText(lead.company, ''),
-    summary: sanitizeLeadText(lead.summary, ''),
+    summary: sanitizeLeadText(lead.summary ?? lead.signal, ''),
     product: sanitizeLeadText(lead.product, ''),
     score: toFiniteNumber(lead.score, 0),
     grade: sanitizeLeadText(lead.grade, '') || 'B',
     roi: stringOrEmpty(lead.roi),
-    salesPitch: stringOrEmpty(lead.salesPitch ?? lead.sales_pitch),
+    salesPitch: stringOrEmpty(lead.salesPitch ?? lead.sales_pitch ?? lead.recommendedMessage ?? lead.recommended_message),
     globalContext: stringOrEmpty(lead.globalContext ?? lead.global_context),
     sources: normalizedSources,
     notes: stringOrEmpty(lead.notes),
@@ -228,7 +230,7 @@ function normalizePersistedLead(lead = {}, { profileId = '', source = '', rowId 
     buyingSignals: Array.isArray(lead.buyingSignals ?? lead.buying_signals) ? (lead.buyingSignals ?? lead.buying_signals) : [],
     scoreReason: stringOrEmpty(lead.scoreReason ?? lead.score_reason),
     urgency: stringOrEmpty(lead.urgency),
-    urgencyReason: stringOrEmpty(lead.urgencyReason ?? lead.urgency_reason),
+    urgencyReason: stringOrEmpty(lead.urgencyReason ?? lead.urgency_reason ?? lead.whyNow ?? lead.why_now),
     buyerRole: stringOrEmpty(lead.buyerRole ?? lead.buyer_role),
     evidence: Array.isArray(lead.evidence) ? lead.evidence : [],
     confidence: stringOrEmpty(lead.confidence),
@@ -247,6 +249,8 @@ function normalizePersistedLead(lead = {}, { profileId = '', source = '', rowId 
     createdAt: lead.createdAt ?? lead.created_at ?? null,
     updatedAt: lead.updatedAt ?? lead.updated_at ?? null,
   };
+
+  return toLeadBriefV1(persistedLead);
 }
 
 export function rowToLead(row) {
@@ -257,6 +261,7 @@ export function rowToLead(row) {
     profile_id: row.profile_id,
     source: row.source,
     status: row.status,
+    review_status: row.review_status,
     company: row.company,
     summary: row.summary,
     product: row.product,
@@ -304,14 +309,18 @@ export function rowToLead(row) {
     profileId: normalized.profileId,
     source: normalized.source,
     status: normalized.status,
+    reviewStatus: normalized.reviewStatus,
     company: normalized.company,
+    signal: normalized.signal,
     summary: normalized.summary,
     product: normalized.product,
     score: normalized.score,
     grade: normalized.grade,
     roi: normalized.roi,
     salesPitch: normalized.salesPitch,
+    recommendedMessage: normalized.recommendedMessage,
     globalContext: normalized.globalContext,
+    whyNow: normalized.whyNow,
     sources: normalized.sources,
     notes: normalized.notes,
     enriched: normalized.enriched,
@@ -351,6 +360,7 @@ export function leadToRow(lead, profileId, source) {
     profile_id: normalized.profileId,
     source: normalized.source,
     status: normalized.status,
+    review_status: normalized.reviewStatus,
     company: normalized.company,
     summary: normalized.summary,
     product: normalized.product,

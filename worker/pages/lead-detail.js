@@ -5,6 +5,7 @@ export function getLeadDetailPage(lead, statusLogs) {
   const statusLabelsJS = JSON.stringify({ NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' });
   const statusColorsJS = JSON.stringify({ NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' });
   const transitionsJS = JSON.stringify({ NEW: ['CONTACTED'], CONTACTED: ['MEETING'], MEETING: ['PROPOSAL'], PROPOSAL: ['NEGOTIATION'], NEGOTIATION: ['WON','LOST'], LOST: ['NEW'], WON: [] });
+  const reviewStatusLabelsJS = JSON.stringify({ NEW: '새 검토', NEEDS_REVIEW: '검토 필요', APPROVED: '승인', REJECTED: '반려', DEFERRED: '보류' });
   const leadJSON = JSON.stringify(lead).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   const logsJSON = JSON.stringify(statusLogs || []).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   return `<!DOCTYPE html>
@@ -34,6 +35,7 @@ export function getLeadDetailPage(lead, statusLogs) {
     .save-indicator { color: #27ae60; font-size: 11px; opacity: 0; transition: opacity 0.3s; margin-left: 8px; }
     .save-indicator.show { opacity: 1; }
     .status-select-lg { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 14px; cursor: pointer; }
+    .review-select-lg { padding: 8px 12px; border-radius: 6px; border: 1px solid #52667c; background: #172233; color: #fff; font-size: 14px; cursor: pointer; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     .badge-a { background: #e94560; color: #fff; }
     .badge-b { background: #f39c12; color: #fff; }
@@ -60,6 +62,8 @@ export function getLeadDetailPage(lead, statusLogs) {
     const statusLabels = ${statusLabelsJS};
     const statusColors = ${statusColorsJS};
     const transitions = ${transitionsJS};
+    const reviewStatusLabels = ${reviewStatusLabelsJS};
+    const reviewStatuses = Object.keys(reviewStatusLabels);
 
     ${getEscScript()}
     ${getSafeUrlScript()}
@@ -97,12 +101,27 @@ export function getLeadDetailPage(lead, statusLogs) {
       if (lead.buyerRole) html += '<div class="detail-row"><span class="label">예상 키맨</span><span class="value">' + esc(lead.buyerRole) + '</span></div>';
       if (lead.confidence) html += '<div class="detail-row"><span class="label">신뢰도</span><span class="value"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;color:#fff;background:' + (lead.confidence === 'HIGH' ? '#27ae60' : lead.confidence === 'MEDIUM' ? '#f39c12' : '#e74c3c') + ';">' + esc(lead.confidence) + '</span>' + (lead.confidenceReason ? ' <span style="color:#aaa;font-size:11px;">' + esc(lead.confidenceReason) + '</span>' : '') + '</span></div>';
       if (lead.eventType) html += '<div class="detail-row"><span class="label">이벤트 유형</span><span class="value">' + esc(lead.eventType) + '</span></div>';
+      html += '<div class="detail-row"><span class="label">신호</span><span class="value">' + esc(lead.signal || lead.summary || '-') + '</span></div>';
+      if (lead.whyNow) html += '<div class="detail-row"><span class="label">왜 지금</span><span class="value">' + esc(lead.whyNow) + '</span></div>';
       html += '<div class="detail-row"><span class="label">추천 제품</span><span class="value">' + esc(lead.product) + '</span></div>';
       html += '<div class="detail-row"><span class="label">예상 ROI</span><span class="value">' + esc(lead.roi || '-') + '</span></div>';
-      html += '<div class="detail-row"><span class="label">영업 제안</span><span class="value">' + esc(lead.salesPitch) + '</span></div>';
+      html += '<div class="detail-row"><span class="label">추천 메시지</span><span class="value">' + esc(lead.recommendedMessage || lead.salesPitch) + '</span></div>';
       html += '<div class="detail-row"><span class="label">글로벌 트렌드</span><span class="value">' + esc(lead.globalContext || '-') + '</span></div>';
       html += '<div class="detail-row"><span class="label">프로필</span><span class="value">' + esc(lead.profileId) + '</span></div>';
       html += '<div class="detail-row"><span class="label">생성일</span><span class="value">' + esc((lead.createdAt || '').split('T')[0]) + '</span></div>';
+      html += '</div>';
+
+      const currentReviewStatus = reviewStatuses.includes(String(lead.reviewStatus || '').toUpperCase()) ? String(lead.reviewStatus).toUpperCase() : 'NEEDS_REVIEW';
+      const reviewOpts = reviewStatuses.map(s =>
+        '<option value="' + s + '"' + (s === currentReviewStatus ? ' selected' : '') + '>' + esc(reviewStatusLabels[s]) + '</option>'
+      ).join('');
+      html += '<div class="detail-section">';
+      html += '<h3>사람 검토</h3>';
+      html += '<div class="detail-row"><span class="label">검토 상태</span><span class="value"><select class="review-select-lg" aria-label="검토 상태" onchange="updateField(\\'reviewStatus\\', this.value)">' + reviewOpts + '</select></span></div>';
+      html += '<div class="detail-row"><span class="label">판정 기준</span><span class="value">' + esc((lead.confidence || 'LOW') + (lead.verificationStatus ? ' / ' + lead.verificationStatus : '')) + '</span></div>';
+      if (lead.assumptions && lead.assumptions.length) html += '<div class="detail-row"><span class="label">가정</span><span class="value">' + esc(lead.assumptions.join(', ')) + '</span></div>';
+      if (lead.dataGaps && lead.dataGaps.length) html += '<div class="detail-row"><span class="label">데이터 공백</span><span class="value">' + esc(lead.dataGaps.join(', ')) + '</span></div>';
+      html += '<span class="save-indicator" id="reviewSaveIndicator">저장됨</span>';
       html += '</div>';
 
       // 후속 조치 + 예상 계약액 섹션
@@ -260,8 +279,10 @@ export function getLeadDetailPage(lead, statusLogs) {
     }
 
     function showSaved() {
-      const el = document.getElementById('saveIndicator');
-      if (el) { el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2000); }
+      ['saveIndicator', 'reviewSaveIndicator'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) { el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2000); }
+      });
     }
 
     renderDetail();

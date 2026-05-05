@@ -160,6 +160,10 @@ function normalizeConfidenceValue(value) {
   return confidence === 'HIGH' || confidence === 'MEDIUM' || confidence === 'LOW' ? confidence : '';
 }
 
+function normalizeReviewStatusValue() {
+  return 'NEEDS_REVIEW';
+}
+
 function hasUsableSourceEvidence(lead = {}) {
   return Array.isArray(lead.sources) && lead.sources.some((source) => normalizeText(source && source.title) && normalizeText(source && source.url));
 }
@@ -220,6 +224,10 @@ function withGenerationMetadata(lead = {}, generationMode = 'llm') {
 
   return {
     ...lead,
+    signal: normalizeText(lead.signal || lead.summary || lead.project_title),
+    whyNow: normalizeText(lead.whyNow || lead.urgencyReason || lead.globalContext || lead.trend),
+    recommendedMessage: normalizeText(lead.recommendedMessage || lead.salesPitch || lead.sales_pitch),
+    reviewStatus: normalizeReviewStatusValue(lead.reviewStatus),
     generationMode: mode,
     verificationStatus: deriveVerificationStatus({ ...lead, confidence }, mode),
     confidence,

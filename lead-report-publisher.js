@@ -56,6 +56,43 @@ function normalizeSnapshotStringList(values) {
     .filter(Boolean);
 }
 
+function addUniqueSnapshotGap(gaps, value) {
+  if (value && !gaps.includes(value)) gaps.push(value);
+}
+
+function normalizePublicationConfidence(value) {
+  const confidence = normalizeSnapshotText(value).toUpperCase();
+  return confidence === 'HIGH' || confidence === 'MEDIUM' || confidence === 'LOW' ? confidence : 'LOW';
+}
+
+function buildPublicationLeadBriefFields(lead = {}, { profileId = '', sources = [], dataGaps = [] } = {}) {
+  const confidence = normalizePublicationConfidence(lead.confidence);
+  const evidence = Array.isArray(lead.evidence) ? lead.evidence : [];
+  const signal = normalizeSnapshotText(lead.signal || lead.summary || lead.project_title || lead.projectTitle);
+  const whyNow = normalizeSnapshotText(lead.whyNow || lead.why_now || lead.urgencyReason || lead.urgency_reason || lead.globalContext || lead.global_context || lead.trend);
+  const recommendedMessage = normalizeSnapshotText(lead.recommendedMessage || lead.recommended_message || lead.salesPitch || lead.sales_pitch || lead.pitch);
+  const assumptions = normalizeSnapshotStringList(lead.assumptions);
+  const gaps = normalizeSnapshotStringList(dataGaps.length > 0 ? dataGaps : lead.dataGaps);
+
+  if (!normalizeSnapshotText(lead.confidence)) addUniqueSnapshotGap(gaps, 'Confidence was not provided by the lead generator');
+  if (confidence === 'LOW') addUniqueSnapshotGap(gaps, 'Low-confidence public signal');
+  if (!Array.isArray(sources) || sources.length === 0) addUniqueSnapshotGap(gaps, 'Published source evidence missing');
+  if (!evidence.some((item) => normalizeSnapshotText(item && item.quote))) addUniqueSnapshotGap(gaps, 'Direct evidence quote missing');
+  if (!whyNow) addUniqueSnapshotGap(gaps, 'Why-now rationale missing');
+  if (!recommendedMessage) addUniqueSnapshotGap(gaps, 'Recommended first message missing');
+
+  return {
+    profileId: normalizeSnapshotText(profileId || lead.profileId || lead.profile_id),
+    signal,
+    whyNow,
+    recommendedMessage,
+    reviewStatus: 'NEEDS_REVIEW',
+    confidence,
+    assumptions,
+    dataGaps: gaps,
+  };
+}
+
 function normalizeGenerationMode(value, fallback = 'llm') {
   const mode = normalizeSnapshotText(value).toLowerCase();
   if (mode === 'llm' || mode === 'heuristic' || mode === 'demo') return mode;
@@ -129,7 +166,7 @@ function composeLeadReport(leads, profile) {
   reportMarkdown += `> 분석 대상: ${leads.length}개 리드\n\n`;
 
   // Grade A
-  reportMarkdown += `## Grade A - 즉시 영업 가능 (${gradeALeads.length}건)\n\n`;
+  reportMarkdown += `## Grade A - 우선 검토 후보 (${gradeALeads.length}건)\n\n`;
   if (gradeALeads.length > 0) {
     for (const lead of gradeALeads) {
       reportMarkdown += `### ${lead.company} (${lead.score}점)\n`;
@@ -169,7 +206,7 @@ function composeLeadReport(leads, profile) {
   // 요약
   reportMarkdown += '---\n\n';
   reportMarkdown += '## 요약\n\n';
-  reportMarkdown += `- **Grade A (즉시 영업):** ${gradeALeads.length}건\n`;
+  reportMarkdown += `- **Grade A (우선 검토):** ${gradeALeads.length}건\n`;
   reportMarkdown += `- **Grade B (파이프라인):** ${gradeBLeads.length}건\n`;
   reportMarkdown += `- **총 리드:** ${leads.length}건\n`;
 
@@ -205,19 +242,33 @@ function generateLeadId(lead, { profileId = '' } = {}) {
 function prepareLeadSnapshotRecords(leads, { now = new Date().toISOString(), idFactory = generateLeadId, profileId = '' } = {}) {
   return (Array.isArray(leads) ? leads : []).map(lead => {
     const trust = normalizePublicationTrust(lead);
+    const sources = normalizePublicationSources(lead && lead.sources);
+    const brief = buildPublicationLeadBriefFields({
+      ...lead,
+      generationMode: trust.generationMode,
+      verificationStatus: trust.verificationStatus,
+      confidence: trust.confidence,
+      assumptions: trust.assumptions,
+      dataGaps: trust.dataGaps,
+    }, { profileId, sources, dataGaps: trust.dataGaps });
     return {
       id: idFactory(lead, { profileId }),
       status: 'NEW',
       createdAt: now,
       updatedAt: now,
       ...lead,
+      profileId: brief.profileId,
+      signal: brief.signal,
+      whyNow: brief.whyNow,
+      recommendedMessage: brief.recommendedMessage,
+      reviewStatus: brief.reviewStatus,
       generationMode: trust.generationMode,
       verificationStatus: trust.verificationStatus,
-      confidence: trust.confidence,
+      confidence: brief.confidence,
       confidenceReason: trust.confidenceReason,
-      assumptions: trust.assumptions,
-      dataGaps: trust.dataGaps,
-      sources: normalizePublicationSources(lead && lead.sources),
+      assumptions: brief.assumptions,
+      dataGaps: brief.dataGaps,
+      sources,
     };
   });
 }

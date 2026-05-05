@@ -199,6 +199,7 @@ export function getMainPage(env) {
       const generationMode = normalizeGenerationModeForUi(lead?.generationMode || lead?.generation_mode);
       const confidence = normalizeConfidenceForUi(lead?.confidence);
       const verificationStatus = normalizeVerificationStatusForUi(lead?.verificationStatus || lead?.verification_status, generationMode);
+      const reviewStatus = normalizeReviewStatusForUi(lead?.reviewStatus || lead?.review_status);
       const dataGaps = normalizeStringArrayForUi(lead?.dataGaps || lead?.data_gaps);
       const assumptions = normalizeStringArrayForUi(lead?.assumptions);
       return {
@@ -210,9 +211,13 @@ export function getMainPage(env) {
         expected_roi: roi,
         sales_pitch: salesPitch,
         trend,
+        signal: String(lead?.signal || projectTitle).trim(),
+        whyNow: String(lead?.whyNow || lead?.why_now || trend).trim(),
+        recommendedMessage: String(lead?.recommendedMessage || lead?.recommended_message || salesPitch).trim(),
         sources: Array.isArray(lead?.sources) ? lead.sources.filter(s => s && s.title && s.url) : [],
         generationMode,
         verificationStatus,
+        reviewStatus,
         confidence,
         confidenceReason: String(lead?.confidenceReason || lead?.confidence_reason || defaultConfidenceReason(generationMode)).trim(),
         assumptions,
@@ -232,6 +237,11 @@ export function getMainPage(env) {
       if (generationMode === 'heuristic') return 'needs_review';
       if (generationMode === 'demo') return 'draft';
       return 'unverified';
+    }
+
+    function normalizeReviewStatusForUi(value) {
+      const status = String(value || '').toUpperCase();
+      return ['NEW', 'NEEDS_REVIEW', 'APPROVED', 'REJECTED', 'DEFERRED'].includes(status) ? status : 'NEEDS_REVIEW';
     }
 
     function normalizeConfidenceForUi(value) {
@@ -367,7 +377,7 @@ export function getMainPage(env) {
           </div>
           <div class="ss-copy">
             <span class="ss-section-label">신뢰 상태</span>
-            \${esc(lead.confidence)} · \${esc(lead.confidenceReason)}
+            \${esc(lead.confidence)} · 검토 상태 \${esc(lead.reviewStatus)} · \${esc(lead.confidenceReason)}
             \${lead.dataGaps.length > 0 ? \`<div class="ss-trust-list">데이터 공백: \${esc(lead.dataGaps.join(', '))}</div>\` : ''}
           </div>
           \${lead.sources && lead.sources.length > 0 ? \`
@@ -384,7 +394,7 @@ export function getMainPage(env) {
     function copySelfServiceResults() {
       if (!window._ssLeads) return;
       const text = window._ssLeads.map(l =>
-        \`[\${l.grade}] \${l.company} (\${l.score}점)\\n신뢰 상태: \${trustLabelForLead(l)} / \${l.generationMode} / \${l.verificationStatus} / \${l.confidence}\\n신뢰 근거: \${l.confidenceReason}\\n가정: \${l.assumptions.length ? l.assumptions.join(', ') : '-'}\\n데이터 공백: \${l.dataGaps.length ? l.dataGaps.join(', ') : '-'}\\n프로젝트: \${l.project_title}\\n제품: \${l.recommended_product}\\nROI: \${l.expected_roi}\\nPitch: \${l.sales_pitch}\\n트렌드: \${l.trend}\`
+        \`[\${l.grade}] \${l.company} (\${l.score}점)\\n신뢰 상태: \${trustLabelForLead(l)} / \${l.generationMode} / \${l.verificationStatus} / \${l.confidence}\\n검토 상태: \${l.reviewStatus}\\n신뢰 근거: \${l.confidenceReason}\\n가정: \${l.assumptions.length ? l.assumptions.join(', ') : '-'}\\n데이터 공백: \${l.dataGaps.length ? l.dataGaps.join(', ') : '-'}\\n프로젝트: \${l.signal || l.project_title}\\n제품: \${l.recommended_product}\\nROI: \${l.expected_roi}\\nPitch: \${l.recommendedMessage || l.sales_pitch}\\n트렌드: \${l.whyNow || l.trend}\`
       ).join('\\n\\n---\\n\\n');
       return navigator.clipboard.writeText(text).then(() => {
         const status = document.getElementById('ssStatus');

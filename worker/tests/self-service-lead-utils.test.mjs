@@ -41,8 +41,12 @@ test('toSchemaLeadWorker keeps only contract fields', () => {
     'sales_pitch',
     'trend',
     'sources',
+    'signal',
+    'whyNow',
+    'recommendedMessage',
     'generationMode',
     'verificationStatus',
+    'reviewStatus',
     'confidence',
     'confidenceReason',
     'assumptions',
@@ -51,6 +55,9 @@ test('toSchemaLeadWorker keeps only contract fields', () => {
   assert.deepEqual(lead.sources, [{ title: '기사', url: 'https://example.com/news', resolution: 'direct' }]);
   assert.equal(lead.generationMode, 'llm');
   assert.equal(lead.verificationStatus, 'needs_review');
+  assert.equal(lead.reviewStatus, 'NEEDS_REVIEW');
+  assert.equal(lead.signal, '캠퍼스 에너지효율화 운영 협약 체결');
+  assert.equal(lead.recommendedMessage, '고효율 설비 개선안을 제안합니다.');
   assert.equal(lead.confidence, 'LOW');
   assert.ok(lead.dataGaps.includes('직접 근거 인용 미확보'));
 });
