@@ -6,7 +6,7 @@ This packet is a docs-only approval template for a future human-approved product
 
 This packet does not approve, execute, or claim any production action. It exists so a human can fill the required approvals, owners, policies, and evidence fields before any production deploy, production D1 access, lazy DDL, production write, or observation claim.
 
-Source facts in this packet are constrained to the current worktree and these repo files: `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, `docs/exec-plans/d1-lazy-migration-observation-plan.md`, `docs/exec-plans/leadbrief-v1-contract.md`, `docs/exec-plans/internal-api-contract-freeze.md`, `worker/wrangler.toml`, `.github/workflows/*`, `worker/db/schema.js`, `worker/schema.sql`, `worker/db/leads.js`, `worker/db/transform.js`, `worker/api/leads.js`, and `worker/lib/leadbrief-v1.js`.
+Source facts in this packet are constrained to the current worktree and these repo files: `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, `docs/exec-plans/d1-lazy-migration-observation-plan.md`, `docs/exec-plans/leadbrief-v1-contract.md`, `docs/exec-plans/internal-api-contract-freeze.md`, `worker/wrangler.toml`, `worker/index.js`, `.github/workflows/*`, `worker/db/schema.js`, `worker/schema.sql`, `worker/db/leads.js`, `worker/db/transform.js`, `worker/api/leads.js`, and `worker/lib/leadbrief-v1.js`.
 
 For the auto-extracted readiness table only, this packet also cites read-only GitHub metadata captured during the extraction run: current default branch, current `master` SHA, current check runs for that SHA, repository metadata, and PR metadata for PR #25, PR #27, PR #29, and PR #30. GitHub metadata is a timestamped external fact and must be rechecked before any future deploy/observe run.
 
@@ -31,6 +31,7 @@ This table separates machine-discovered facts from future human approvals. `CONF
 | `EXPECTED_MASTER_SHA` | `e1967e27b87e14b73bbf90fd1cb40d828d7a2f52` | `CONFIRMED_FROM_GITHUB` | GitHub `master` branch metadata and PR #30 merge metadata: https://github.com/dooosp/b2b-lead-agent/pull/30 | Yes, as current GitHub fact only | Yes, before using it as an approved deploy SHA | This is not `APPROVED_MASTER_SHA` for deploy. Future operator must re-check if `master` moves. |
 | `CURRENT_CI_PROOF_FOR_EXPECTED_SHA` | GitHub Actions `CI / test` success and `Validate Naming / validate` success for `e1967e27b87e14b73bbf90fd1cb40d828d7a2f52`, completed `2026-05-05T12:51Z` | `CONFIRMED_FROM_GITHUB` | Check runs for current master SHA: `CI` run https://github.com/dooosp/b2b-lead-agent/actions/runs/25377408564 job `test`; `Validate Naming` run https://github.com/dooosp/b2b-lead-agent/actions/runs/25377408543 job `validate`; workflow definitions in `.github/workflows/ci.yml` and `.github/workflows/validate-naming.yml` | Yes, as current GitHub fact only | Re-check required before any future deploy/observe run | CI is not production evidence and does not prove production D1 observation. |
 | `ALLOW_DEPLOY` | `UNAPPROVED / UNFILLED` | `MISSING_REQUIRES_HUMAN` | Required approvals table below | No | Yes | Must remain unfilled until a human provides approver, UTC timestamp, and approval record. |
+| `ALLOW_PRODUCTION_DB_ACCESS` | `UNAPPROVED / UNFILLED` | `MISSING_REQUIRES_HUMAN` | Required approvals table below | No | Yes | Required before any production D1 command/query, Worker endpoint, or path that accesses production DB. |
 | `ALLOW_PRODUCTION_DB_MIGRATION` | `UNAPPROVED / UNFILLED` | `MISSING_REQUIRES_HUMAN` | Required approvals table below | No | Yes | Required before any path expected to run lazy DDL through `ensureD1Schema()`. |
 | `ALLOW_PRODUCTION_DB_WRITE` | `UNAPPROVED / UNFILLED` | `MISSING_REQUIRES_HUMAN` | Required approvals table below | No | Yes | Required before PATCH, self-service persistence, or read-looking cache-write paths. |
 | `ALLOW_PRODUCTION_OBSERVATION_CLAIM` | `UNAPPROVED / UNFILLED` | `MISSING_REQUIRES_HUMAN` | Required approvals table below | No | Yes | Required before saying production D1 lazy migration was observed. |
@@ -57,12 +58,13 @@ This table separates machine-discovered facts from future human approvals. `CONF
 | `CRM_CONTRACT_FREEZE_CONFIRMATION` | Repo docs confirm `crm.published-report.v1` remains backward-compatible and excludes LeadBrief fields unless separately scoped; policy approval record is still unfilled | `CONFIRMED_FROM_REPO` | `docs/exec-plans/internal-api-contract-freeze.md:42-48`; `docs/exec-plans/leadbrief-v1-contract.md:87` | Yes, as repo fact only | Yes, for policy approval | Repo fact does not satisfy the required human policy confirmation record. |
 | `HUMAN_REVIEW_OVERWRITE_RISK_CHECK` | Repo code preserves existing `review_status` on managed/self-service upsert conflict and PATCH updates `review_status` separately from pipeline `status`; row-specific no-overwrite/no-toggle check is still unfilled | `CONFIRMED_FROM_REPO` | `worker/db/leads.js:11-23`, `worker/db/leads.js:100-113`, `worker/db/leads.js:153-185`; `docs/exec-plans/leadbrief-v1-contract.md:71-75` | Yes, as repo behavior evidence | Yes, before any selected row write | Code evidence does not approve a real row/action. HOLD if PATCH would overwrite a human decision or toggle only for evidence. |
 | `TARGET_COLUMNS` | Primary: `generation_mode`, `verification_status`, `data_gaps`, `review_status`; adjacent row-proof: `evidence`, `confidence`, `confidence_reason`, `assumptions`, `event_type` | `CONFIRMED_FROM_REPO` | `docs/exec-plans/d1-lazy-migration-observation-plan.md:20-32`; `worker/db/schema.js:88-113`; `worker/db/transform.js:287-294`, `worker/db/transform.js:378-385` | Yes | No for repo fact; yes before production observation scope is approved | Target column list is not production schema proof. |
-| `ENSURE_D1_SCHEMA_PATH` | `ensureD1Schema(db)` in `worker/db/schema.js`; invoked by D1 helpers including `saveLeadsBatch()`, `getLeadsByProfile()`, `getAllLeads()`, `getLeadById()`, and `updateLeadPatchAtomic()` | `CONFIRMED_FROM_REPO` | `worker/db/schema.js:3-119`; `worker/db/leads.js:1-7`, `worker/db/leads.js:32-60`, `worker/db/leads.js:153-185` | Yes | No for repo fact; yes before invoking in production | Any production path expected to run this requires `ALLOW_PRODUCTION_DB_MIGRATION=yes`. |
+| `ENSURE_D1_SCHEMA_PATH` | `ensureD1Schema(db)` in `worker/db/schema.js`; invoked by D1 helpers including `saveLeadsBatch()`, `getLeadsByProfile()`, `getAllLeads()`, `getLeadById()`, and `updateLeadPatchAtomic()` | `CONFIRMED_FROM_REPO` | `worker/db/schema.js:3-162`; `worker/db/leads.js:1-7`, `worker/db/leads.js:32-60`, `worker/db/leads.js:153-185` | Yes | No for repo fact; yes before invoking in production | Any production path expected to run this requires `ALLOW_PRODUCTION_DB_MIGRATION=yes`. |
 | `UNSAFE_PATHS_TO_AVOID` | Deploy, production DB access, lazy DDL, production write, read-looking GET cache writes, PATCH review toggles, synthetic/fake evidence, unredacted evidence, CI/docs as production evidence, and production-observed claim without approved row proof | `CONFIRMED_FROM_REPO` | Non-goals above; invalid evidence list below; `docs/exec-plans/d1-lazy-migration-observation-plan.md:36-45`, `docs/exec-plans/d1-lazy-migration-observation-plan.md:128-138`, `docs/exec-plans/d1-lazy-migration-observation-plan.md:246-258` | Yes | Yes before any future operation | Any unsafe or ambiguous path remains HOLD. |
 
-Hard rule: the four dangerous gates remain `UNAPPROVED / UNFILLED` here and must not be auto-filled by Codex:
+Hard rule: the five dangerous gates remain `UNAPPROVED / UNFILLED` here and must not be auto-filled by Codex:
 
 - `ALLOW_DEPLOY`
+- `ALLOW_PRODUCTION_DB_ACCESS`
 - `ALLOW_PRODUCTION_DB_MIGRATION`
 - `ALLOW_PRODUCTION_DB_WRITE`
 - `ALLOW_PRODUCTION_OBSERVATION_CLAIM`
@@ -74,6 +76,7 @@ All approval placeholders are intentionally unapproved. A future operator must f
 | Approval key | Required value before action | Approval record requirement | Current packet state | Blocks |
 | --- | --- | --- | --- | --- |
 | `ALLOW_DEPLOY` | exactly `yes` | Approver, UTC approval timestamp, and approval record link/id | `UNAPPROVED / UNFILLED` | Any production deploy |
+| `ALLOW_PRODUCTION_DB_ACCESS` | exactly `yes` | Approver, UTC approval timestamp, and approval record link/id | `UNAPPROVED / UNFILLED` | Any production D1 command/query, Worker endpoint, or path that accesses production DB |
 | `ALLOW_PRODUCTION_DB_MIGRATION` | exactly `yes` | Approver, UTC approval timestamp, and approval record link/id | `UNAPPROVED / UNFILLED` | Any path expected to run lazy DDL through `ensureD1Schema()` |
 | `ALLOW_PRODUCTION_DB_WRITE` | exactly `yes` | Approver, UTC approval timestamp, and approval record link/id | `UNAPPROVED / UNFILLED` | Any production row write, cache write, self-service persistence, or PATCH |
 | `ALLOW_PRODUCTION_OBSERVATION_CLAIM` | exactly `yes` | Approver, UTC approval timestamp, and approval record link/id | `UNAPPROVED / UNFILLED` | Any statement that production D1 lazy migration was observed |
@@ -182,6 +185,7 @@ Schema proof only is the lowest-write option. It may prove that the target colum
 Required before schema proof only:
 
 - `ALLOW_DEPLOY=yes`
+- `ALLOW_PRODUCTION_DB_ACCESS=yes`
 - `ALLOW_PRODUCTION_DB_MIGRATION=yes`
 - `DEPLOY_OWNER` named
 - `PRODUCTION_DB_OWNER` named
@@ -221,7 +225,7 @@ Required before row roundtrip:
 - Proof that the selected row/action needs that real new human review decision, or an explicit `NO_WRITE` decision.
 - A stop decision before any PATCH that would overwrite an existing human review decision or toggle `review_status` only to manufacture evidence.
 
-Approved candidate paths from listed code and plan:
+Candidate paths only; not approved for execution until all gates are filled:
 
 - Authenticated `PATCH /api/leads/<lead-id>` with a real review decision using one of `NEW`, `NEEDS_REVIEW`, `APPROVED`, `REJECTED`, or `DEFERRED`; it must not overwrite an existing human review decision or toggle `review_status` solely to manufacture evidence.
 - Authenticated `POST /api/analyze` only for a real, approved self-service target.
@@ -233,7 +237,7 @@ Current packet state: `UNAPPROVED / UNFILLED`.
 
 | Decision path | Required approvals | Required owner/policy state | Allowed result | Current packet state |
 | --- | --- | --- | --- | --- |
-| Schema proof only | `ALLOW_DEPLOY=yes`, `ALLOW_PRODUCTION_DB_MIGRATION=yes` | Owners, policies, observation window, communication channel, and safe profile/lead-id decision filled; no write approval required | May record production schema proof only; no row-roundtrip claim | `HOLD` until all required placeholders are filled |
+| Schema proof only | `ALLOW_DEPLOY=yes`, `ALLOW_PRODUCTION_DB_ACCESS=yes`, `ALLOW_PRODUCTION_DB_MIGRATION=yes` | Owners, policies, observation window, communication channel, and safe profile/lead-id decision filled; no write approval required | May record production schema proof only; no row-roundtrip claim | `HOLD` until all required placeholders are filled |
 | Row roundtrip | Schema proof approvals plus `ALLOW_PRODUCTION_DB_WRITE=yes` | Safe real row/action selected and evidence policy filled | May record schema proof plus real row proof with `observationLevel=row_roundtrip_confirmed` | `HOLD` until all required placeholders are filled |
 | No write allowed | No `ALLOW_PRODUCTION_DB_WRITE` | Explicit no-write decision recorded | May proceed only with schema proof if other approvals exist; must not claim row roundtrip | `HOLD`; no row-roundtrip claim |
 | No safe row available | `ALLOW_PRODUCTION_DB_WRITE` may be present, but safe real row/action is missing | `SAFE_REAL_ROW_OR_ACTION_POLICY` missing or says hold | Stop before row write; no row-roundtrip claim | `HOLD_NEEDS_SAFE_WRITE_PATH` |
@@ -253,6 +257,12 @@ This is a template only. Empty placeholders are intentionally unapproved/unfille
   "deploymentIdOrVersion": "[UNFILLED]",
   "approvals": {
     "ALLOW_DEPLOY": {
+      "value": "UNAPPROVED / UNFILLED",
+      "approver": "[UNFILLED]",
+      "approvedAtUtc": "[UNFILLED]",
+      "approvalRecord": "[UNFILLED]"
+    },
+    "ALLOW_PRODUCTION_DB_ACCESS": {
       "value": "UNAPPROVED / UNFILLED",
       "approver": "[UNFILLED]",
       "approvedAtUtc": "[UNFILLED]",
@@ -429,7 +439,7 @@ Stop with HOLD if any required approval, approval record, owner, policy record, 
 
 | Decision value | Condition |
 | --- | --- |
-| `READY_TO_DEPLOY_OBSERVE` | Deploy owner, rollback owner, backup policy, migration approval, write approval, safe path, CI, and evidence template are all ready |
+| `READY_TO_DEPLOY_OBSERVE` | All dangerous approval gates, approval records, owners, policies, coordination fields, approved SHA/current CI proof, deploy path, production DB binding, schema proof method, safe path, evidence/redaction preconditions, CRM freeze, and human-review overwrite check are present and unambiguous |
 | `HOLD_NEEDS_DEPLOY_OWNER` | `DEPLOY_OWNER` is unnamed |
 | `HOLD_NEEDS_PROD_DB_BACKUP_POLICY` | `BACKUP_OR_EXPORT_POLICY` is unknown or missing |
 | `HOLD_NEEDS_SAFE_WRITE_PATH` | No real owner-approved row/action is available for row roundtrip proof |
@@ -470,7 +480,7 @@ The ready-to-paste future prompt below must be enforced as an all-gates checklis
 - confirmation that `crm.published-report.v1` will not expand
 - confirmation that no human review decision can be overwritten or toggled only to manufacture evidence
 
-Four approval flags alone are not enough for `READY_TO_DEPLOY_OBSERVE`.
+Five approval flags alone are not enough for `READY_TO_DEPLOY_OBSERVE`.
 
 ## All-Gates Authorization Wording
 
@@ -499,6 +509,7 @@ Repository and target:
 
 Required approvals before action:
 - ALLOW_DEPLOY=<UNAPPROVED yes/no>
+- ALLOW_PRODUCTION_DB_ACCESS=<UNAPPROVED yes/no>
 - ALLOW_PRODUCTION_DB_MIGRATION=<UNAPPROVED yes/no>
 - ALLOW_PRODUCTION_DB_WRITE=<UNAPPROVED yes/no>
 - ALLOW_PRODUCTION_OBSERVATION_CLAIM=<UNAPPROVED yes/no>
@@ -525,7 +536,7 @@ Required run coordination:
 - SAFE_PRODUCTION_PROFILE_OR_LEAD_SELECTION=<UNFILLED_OR_NO_ROW>
 
 All-gates authorization:
-- Four approval flags alone are not sufficient.
+- Five approval flags alone are not sufficient.
 - Before any deploy, production DB access, lazy DDL, production write, row roundtrip, or observation claim, every approval flag, approval record, owner, policy record, coordination field, approved SHA, current CI proof, deploy path, production DB binding confirmation, schema proof method, evidence storage/redaction policy, safe row/action precondition, CRM freeze confirmation, and human-review overwrite check must be present and unambiguous.
 - If any all-gates item is missing or ambiguous, stop with HOLD and state the exact missing key.
 
@@ -551,6 +562,8 @@ Execution rules:
 - If production DB binding confirmation from worker/wrangler.toml is missing or ambiguous, stop with HOLD and state missing PRODUCTION_DB_BINDING_CONFIRMATION.
 - If ALLOW_DEPLOY is not exactly yes, stop with HOLD and state missing ALLOW_DEPLOY.
 - If ALLOW_DEPLOY lacks approver, approvedAtUtc, or approvalRecord, stop with HOLD and state missing ALLOW_DEPLOY approval record.
+- If ALLOW_PRODUCTION_DB_ACCESS is not exactly yes, do not run any production D1 command/query, Worker endpoint, or path that accesses production DB; stop with HOLD and state missing ALLOW_PRODUCTION_DB_ACCESS.
+- If ALLOW_PRODUCTION_DB_ACCESS lacks approver, approvedAtUtc, or approvalRecord, stop with HOLD and state missing ALLOW_PRODUCTION_DB_ACCESS approval record.
 - If ALLOW_PRODUCTION_DB_MIGRATION is not exactly yes, do not invoke a path expected to run ensureD1Schema(); stop with HOLD and state missing ALLOW_PRODUCTION_DB_MIGRATION.
 - If ALLOW_PRODUCTION_DB_MIGRATION lacks approver, approvedAtUtc, or approvalRecord, stop with HOLD and state missing ALLOW_PRODUCTION_DB_MIGRATION approval record.
 - If ALLOW_PRODUCTION_DB_WRITE is not exactly yes, do not perform PATCH, self-service analyze persistence, GET /api/leads cache-write observation, or GET /api/history cache-write observation; schema proof only may proceed if separately approved.
