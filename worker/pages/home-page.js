@@ -244,6 +244,16 @@ export function getMainPage(env) {
       return ['NEW', 'NEEDS_REVIEW', 'APPROVED', 'REJECTED', 'DEFERRED'].includes(status) ? status : 'NEEDS_REVIEW';
     }
 
+    function reviewStatusLabelForUi(value) {
+      return ({
+        NEW: '새 검토',
+        NEEDS_REVIEW: '검토 필요',
+        APPROVED: '승인',
+        REJECTED: '반려',
+        DEFERRED: '보류'
+      })[normalizeReviewStatusForUi(value)] || '검토 필요';
+    }
+
     function normalizeConfidenceForUi(value) {
       const confidence = String(value || '').toUpperCase();
       return ['HIGH', 'MEDIUM', 'LOW'].includes(confidence) ? confidence : 'LOW';
@@ -377,7 +387,7 @@ export function getMainPage(env) {
           </div>
           <div class="ss-copy">
             <span class="ss-section-label">신뢰 상태</span>
-            \${esc(lead.confidence)} · 검토 상태 \${esc(lead.reviewStatus)} · \${esc(lead.confidenceReason)}
+            \${esc(lead.confidence)} · 검토 상태 \${esc(reviewStatusLabelForUi(lead.reviewStatus))} · \${esc(lead.confidenceReason)}
             \${lead.dataGaps.length > 0 ? \`<div class="ss-trust-list">데이터 공백: \${esc(lead.dataGaps.join(', '))}</div>\` : ''}
           </div>
           \${lead.sources && lead.sources.length > 0 ? \`
@@ -394,7 +404,7 @@ export function getMainPage(env) {
     function copySelfServiceResults() {
       if (!window._ssLeads) return;
       const text = window._ssLeads.map(l =>
-        \`[\${l.grade}] \${l.company} (\${l.score}점)\\n신뢰 상태: \${trustLabelForLead(l)} / \${l.generationMode} / \${l.verificationStatus} / \${l.confidence}\\n검토 상태: \${l.reviewStatus}\\n신뢰 근거: \${l.confidenceReason}\\n가정: \${l.assumptions.length ? l.assumptions.join(', ') : '-'}\\n데이터 공백: \${l.dataGaps.length ? l.dataGaps.join(', ') : '-'}\\n프로젝트: \${l.signal || l.project_title}\\n제품: \${l.recommended_product}\\nROI: \${l.expected_roi}\\nPitch: \${l.recommendedMessage || l.sales_pitch}\\n트렌드: \${l.whyNow || l.trend}\`
+        \`[\${l.grade}] \${l.company} (\${l.score}점)\\n신뢰 상태: \${trustLabelForLead(l)} / \${l.generationMode} / \${l.verificationStatus} / \${l.confidence}\\n검토 상태: \${reviewStatusLabelForUi(l.reviewStatus)} (\${l.reviewStatus})\\n신뢰 근거: \${l.confidenceReason}\\n가정: \${l.assumptions.length ? l.assumptions.join(', ') : '-'}\\n데이터 공백: \${l.dataGaps.length ? l.dataGaps.join(', ') : '-'}\\n프로젝트: \${l.signal || l.project_title}\\n제품: \${l.recommended_product}\\nROI: \${l.expected_roi}\\nPitch: \${l.recommendedMessage || l.sales_pitch}\\n트렌드: \${l.whyNow || l.trend}\`
       ).join('\\n\\n---\\n\\n');
       return navigator.clipboard.writeText(text).then(() => {
         const status = document.getElementById('ssStatus');

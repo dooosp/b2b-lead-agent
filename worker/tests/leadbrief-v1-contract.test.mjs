@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { fetchLeads } from '../api/leads.js';
+import { fetchLeads, handleExportCSV } from '../api/leads.js';
 import { leadToRow, rowToLead } from '../db/transform.js';
 import { normalizeReviewStatus, toLeadBriefV1 } from '../lib/leadbrief-v1.js';
 
@@ -163,6 +163,26 @@ test('/api/leads exposes LeadBrief v1 canonical fields from D1 rows', async () =
   assert.equal(payload.leads[0].recommendedMessage, 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.');
   assert.equal(payload.leads[0].reviewStatus, 'APPROVED');
   assert.equal(payload.leads[0].status, 'CONTACTED');
+});
+
+test('CSV export includes reviewStatus and trust metadata without dropping pipeline status', async () => {
+  const env = {
+    DB: new FakeLeadDb([createStoredRow()]),
+    PROFILES: JSON.stringify([{ id: 'danfoss', name: 'Danfoss' }])
+  };
+  const request = new Request('https://example.com/api/export/csv?profile=danfoss');
+
+  const response = await handleExportCSV(request, env);
+  const csv = await response.text();
+
+  assert.equal(response.status, 200);
+  assert.match(csv.split('\n')[0], /상태,메모,생성일,검토상태,신뢰도,검증상태,생성모드,데이터공백/);
+  assert.match(csv, /CONTACTED/);
+  assert.match(csv, /APPROVED/);
+  assert.match(csv, /MEDIUM/);
+  assert.match(csv, /verified/);
+  assert.match(csv, /llm/);
+  assert.match(csv, /상세 발주 일정 미확인/);
 });
 
 test('review status normalization accepts only the frozen state machine', () => {

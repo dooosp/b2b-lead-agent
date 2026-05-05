@@ -1,4 +1,4 @@
-import { toLeadBriefV1 } from '../lib/leadbrief-v1.js';
+import { REVIEW_STATUSES, toLeadBriefV1 } from '../lib/leadbrief-v1.js';
 
 const COMPANY_NAME_MAX_LEN = 40;
 const COMPANY_NAME_RE = /^[\p{L}0-9 .,&()\-]+$/u;
@@ -630,8 +630,12 @@ function isValidResponseLeadShape(lead) {
   if (!sanitizeLeadText(lead.sales_pitch, '')) return false;
   if (!sanitizeLeadText(lead.trend, '')) return false;
   if (!Array.isArray(lead.sources)) return false;
+  if (typeof lead.signal !== 'string') return false;
+  if (typeof lead.whyNow !== 'string') return false;
+  if (typeof lead.recommendedMessage !== 'string') return false;
   if (!GENERATION_MODES.has(String(lead.generationMode || ''))) return false;
   if (!VERIFICATION_STATUSES.has(String(lead.verificationStatus || ''))) return false;
+  if (!REVIEW_STATUSES.includes(String(lead.reviewStatus || ''))) return false;
   if (!['HIGH', 'MEDIUM', 'LOW'].includes(String(lead.confidence || ''))) return false;
   if (!sanitizeLeadText(lead.confidenceReason, '')) return false;
   if (!Array.isArray(lead.assumptions)) return false;
