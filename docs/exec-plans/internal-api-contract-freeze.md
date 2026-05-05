@@ -18,6 +18,7 @@ Freeze the CRM-facing read-only contract for the exact latest published report t
 - `normalizePublicationSources()` and `tests/source-traceability.test.js` prove optional source provenance fields are preserved when present in the published snapshot.
 - `worker/api/leads.js` proves profile/product canonicalization happens at read time, but its D1-first path is a mutable cache and therefore is not authoritative published-snapshot evidence for this CRM contract.
 - `worker/db/job-runs.js`, `worker/lib/job-trigger.js`, and `worker/tests/trigger-handler.test.mjs` prove `accepted` and `running` are explicit active states that can justify `queued` readiness when no finalized published snapshot is available.
+- PR #27 (`5776d4a`) added LeadBrief v1 fields to canonical published snapshots and `/api/leads`, but this internal latest-published CRM contract remains intentionally backward-compatible.
 
 ## Scope Boundary
 
@@ -36,6 +37,15 @@ This freeze is for one exact managed `profileId` and its latest canonical publis
 - Published snapshot lookup failure, missing job ledger, or job-ledger lookup failure returns HTTP `503` with `error.code = "readiness_unavailable"` when no safe success or queued body can be proved.
 - PR #25 did not deploy production and did not prove production D1 lazy migration.
 - D1 trust metadata columns are lazy-migration-compatible elsewhere in the app; the first production write after deploy should be observed before claiming production migration.
+- PR #27 added D1 `review_status` as a lazy-migration-compatible column, but production deploy and production DB writes were not performed during PR #27 landing.
+
+## PR #27 LeadBrief Boundary Notes
+
+- LeadBrief v1 is now the internal human-review unit, not a replacement for the CRM-facing latest-published contract.
+- Canonical `latest-leads.json` records may contain LeadBrief fields such as `signal`, `whyNow`, `recommendedMessage`, and `reviewStatus`.
+- The `crm.published-report.v1` success body below remains frozen to its existing required fields and does not expose LeadBrief fields unless a later scoped contract update explicitly expands it.
+- `status` in this CRM body remains the published lead lifecycle status and must not be interpreted as `reviewStatus`.
+- CRM consumers must not infer human approval from `verificationStatus`, `grade`, or `score`; LeadBrief approval is outside this frozen CRM response body.
 
 ## Frozen Contract
 

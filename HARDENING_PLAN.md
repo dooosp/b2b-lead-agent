@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-05-05.
-> Audited against first-parent `master` history through `95c9d54` and current GitHub PR state through PR #25.
+> Audited against first-parent `master` history through `5776d4a` and current GitHub PR state through PR #27.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -13,6 +13,7 @@
 | 3 | 2026-04-07 | #16 | `419941c` | `codex/w2-integration-review` | Wave 2 worker contract integration artifact |
 | 4 | 2026-04-07 | #18 | `1e2d4e6` | `codex/w3-queue-semantics-review` | Wave 3 safe shipping artifact on top of updated `master` |
 | 5 | 2026-05-05 | #25 | `95c9d54` | `p0/trust-boundary-and-fallback-publish-guard` | P0 trust-boundary and fallback-publication guard baseline |
+| 6 | 2026-05-05 | #27 | `5776d4a` | `feat/leadbrief-v1-review-contract` | LeadBrief v1 contract and minimum human-review baseline |
 
 ## Wave Summary
 
@@ -61,6 +62,33 @@
   - D1 trust metadata columns are lazy-migration-compatible through `ensureD1Schema()`
 - Production deploy was not performed as part of PR #25 landing.
 - The first production write after deploy should be observed to confirm the lazy D1 trust-column migration in production.
+
+### PR #27 LeadBrief v1 Baseline
+
+- PR #27 shipped LeadBrief v1 as the central human-review unit.
+- Required LeadBrief v1 fields are:
+  - `company`
+  - `signal`
+  - `sources`
+  - `whyNow`
+  - `recommendedMessage`
+  - `confidence`
+  - `assumptions`
+  - `dataGaps`
+  - `reviewStatus`
+- Compatibility fields remain preserved when present: `id`, `profileId`, `product`, `score`, `grade`, `generationMode`, `verificationStatus`, `evidence`, `createdAt`, and `updatedAt`.
+- ReviewStatus frozen states are `NEW`, `NEEDS_REVIEW`, `APPROVED`, `REJECTED`, and `DEFERRED`.
+- LLM leads default to `NEEDS_REVIEW`, even when `verificationStatus` is `verified`.
+- Heuristic and fallback leads remain `NEEDS_REVIEW`.
+- Demo leads remain blocked from canonical publication.
+- Human PATCH actions can update `reviewStatus` with frozen-state validation.
+- `status` remains the sales pipeline state and is separate from `reviewStatus`.
+- Managed/self-service upserts preserve existing `review_status` on conflict so refreshed generation does not erase human review decisions.
+- `/api/leads`, CSV export, browser UI, self-service copy, and downloads preserve review/trust metadata.
+- The internal latest-published CRM contract remains backward-compatible and does not expose LeadBrief fields unless later scoped.
+- D1 `review_status` is lazy-migration-compatible but not production-observed until a post-deploy production write is confirmed.
+- Production deploy was not performed as part of PR #27 landing.
+- Production DB writes were not performed as part of PR #27 landing.
 
 ## Findings Closed On `master`
 
@@ -114,13 +142,16 @@
 
 - No new unresolved Wave 1 to Wave 3 runtime or worker blocker was verified during this docs refresh.
 - No new unresolved PR #25 P0 trust-boundary blocker was verified during this docs refresh.
+- No new unresolved PR #27 LeadBrief v1 blocker was verified during this docs refresh.
 - Operator cleanup only:
   - PR #10 (`Harden source traceability for qualified leads`) is still open and is superseded by merged PR #11. Do not merge PR #10 directly.
   - PR #22 (`[codex] Harden internal latest-published auth`) is still open and is superseded by merged PR #25. Do not merge PR #22 directly unless it is re-scoped on top of current `master`.
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote `origin/hardening/*` branches remain as historical raw lanes. Because shipping used cherry-picked integration artifacts, those raw branch heads are not direct ancestors of `master`; prune them only after confirming no active work depends on them.
 - Product next step:
-  - LeadBrief v1 Contract + Human Review UX Freeze is the next safe product mega goal after PR #25.
+  - Recommended next mega goal: `Production Readiness: D1 Lazy Migration Observation Plan`.
+  - Rationale: PR #27 adds the lazy `review_status` D1 column while PR #25 already had lazy trust columns; no production deploy or production write was performed during PR #27 landing.
+  - Do not implement Review Inbox v1 or external/internal contract expansion until the D1 observation plan is written and accepted or explicitly deprioritized.
 
 ## Current Operating Sequence
 
@@ -131,7 +162,7 @@
 5. Validate inside the owned worktree with the smallest relevant commands, then use a single integration artifact branch or PR if multiple lanes must ship together.
 6. Mark old plans and status files as archival context instead of deleting them.
 7. Refresh these root source-of-truth docs whenever merged reality changes.
-8. Do not claim production D1 trust-column migration until a post-deploy production write has been observed.
+8. Do not claim production D1 trust/review-column migration until a post-deploy production write has been observed.
 
 ## Archival Guidance
 

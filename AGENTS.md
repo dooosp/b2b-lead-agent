@@ -14,14 +14,15 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 
 ## Current Shipped Baseline
 
-- `master` includes the April 7, 2026 hardening cycle and the PR #25 P0 trust-boundary baseline merged on May 5, 2026.
+- `master` includes the April 7, 2026 hardening cycle, the PR #25 P0 trust-boundary baseline, and the PR #27 LeadBrief v1 review contract baseline merged on May 5, 2026.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
 - PR #25 shipped `/api/internal/*` API_TOKEN-only auth, latest-published `503 readiness_unavailable` fail-closed behavior, managed/root fallback publication guards, self-service trust metadata, and D1 trust metadata persistence.
+- PR #27 shipped LeadBrief v1 as the central human-review unit across root qualification, published snapshots, D1 persistence, `/api/leads`, self-service responses, CSV/export trust metadata, and the minimum review UI.
 - Do not reopen those findings unless you can point to a current-`master` regression or a newly verified gap.
 - Treat PR #22 as superseded by PR #25 unless it is explicitly re-scoped on top of current `master`.
-- Next product mega goal: LeadBrief v1 Contract + Human Review UX Freeze.
+- Recommended next mega goal: Production Readiness: D1 Lazy Migration Observation Plan. Prepare deploy/observation evidence for lazy trust/review columns without performing deploy in planning docs.
 
 ## Repo Layout
 
@@ -49,7 +50,15 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - Managed/root runs must fail closed when the LLM is missing or fails unless explicit demo mode is enabled.
 - Demo leads must not be canonical-published.
 - Heuristic/self-service fallback leads must remain non-verified / review-needed in machine-readable payloads, browser cards, copy output, downloads, and D1 rows.
-- D1 trust columns are lazy-migration-compatible but not production-observed until the first post-deploy production write is confirmed.
+- LeadBrief v1 required fields are `company`, `signal`, `sources`, `whyNow`, `recommendedMessage`, `confidence`, `assumptions`, `dataGaps`, and `reviewStatus`.
+- `reviewStatus` frozen states are `NEW`, `NEEDS_REVIEW`, `APPROVED`, `REJECTED`, and `DEFERRED`.
+- LLM, heuristic, and fallback leads default to `NEEDS_REVIEW`; LLM `verificationStatus: "verified"` does not imply human approval.
+- `status` remains the sales pipeline state and must not be conflated with `reviewStatus`.
+- Human PATCH actions may update `reviewStatus` only with frozen-state validation.
+- Managed/self-service upserts preserve existing `review_status` on conflict so refreshes do not erase human review decisions.
+- CSV, browser UI, self-service copy, and downloads must preserve review/trust metadata.
+- D1 trust and review columns are lazy-migration-compatible but not production-observed until the first post-deploy production write is confirmed.
+- Production deploy and production DB writes were not performed during PR #25, PR #26, or PR #27 landing.
 
 ## Canonical Repo Rules
 
