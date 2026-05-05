@@ -51,6 +51,11 @@ export function getLeadsPage() {
     .badge-status.negotiation { background: #2980b9; }
     .badge-status.won { background: #27ae60; }
     .badge-status.lost { background: #7f8c8d; }
+    .badge-review { background:#243547; color:#dbeafe; border:1px solid #36506c; }
+    .badge-review.needs_review { background:#4a3a12; color:#ffe58a; border-color:#806718; }
+    .badge-review.approved { background:#17462a; color:#a8efc0; border-color:#2e7d4f; }
+    .badge-review.rejected { background:#4a1f1f; color:#ffc4c4; border-color:#8a3b3b; }
+    .badge-review.deferred { background:#2f3542; color:#d7dee8; border-color:#566273; }
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
     .top-nav-links { display: flex; gap: 8px; }
     .status-select { padding: 4px 8px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 12px; cursor: pointer; }
@@ -141,6 +146,8 @@ export function getLeadsPage() {
     const statusLabels = { NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
     const statusColors = { NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' };
     const transitions = { NEW: ['CONTACTED'], CONTACTED: ['MEETING'], MEETING: ['PROPOSAL'], PROPOSAL: ['NEGOTIATION'], NEGOTIATION: ['WON','LOST'], LOST: ['NEW'], WON: [] };
+    const reviewStatusLabels = { NEW: '새 검토', NEEDS_REVIEW: '검토 필요', APPROVED: '승인', REJECTED: '반려', DEFERRED: '보류' };
+    const reviewStatuses = Object.keys(reviewStatusLabels);
 
     function renderStatusSelect(lead) {
       if (!lead.id) return '';
@@ -151,6 +158,20 @@ export function getLeadsPage() {
         \`<option value="\${s}" \${s === current ? 'selected' : ''}>\${esc(statusLabels[s] || s)}</option>\`
       ).join('');
       return \`<select class="status-select" onchange="updateStatus('\${esc(lead.id)}', this.value, '\${current}')">\${opts}</select>\`;
+    }
+
+    function normalizeReviewStatus(value) {
+      const status = String(value || '').toUpperCase();
+      return reviewStatuses.includes(status) ? status : 'NEEDS_REVIEW';
+    }
+
+    function renderReviewStatusSelect(lead) {
+      const current = normalizeReviewStatus(lead.reviewStatus || lead.review_status);
+      const opts = reviewStatuses.map(s =>
+        \`<option value="\${s}" \${s === current ? 'selected' : ''}>\${esc(reviewStatusLabels[s])}</option>\`
+      ).join('');
+      if (!lead.id) return \`<span class="badge badge-review \${current.toLowerCase()}">\${esc(reviewStatusLabels[current])}</span>\`;
+      return \`<select class="status-select" aria-label="검토 상태" onchange="updateReviewStatus('\${esc(lead.id)}', this.value, '\${current}')">\${opts}</select>\`;
     }
 
     async function updateStatus(leadId, newStatus, fromStatus) {
@@ -165,6 +186,20 @@ export function getLeadsPage() {
         if (!data.success) { alert(data.message); loadLeads(); return; }
         loadLeads();
       } catch(e) { alert('상태 변경 실패: ' + e.message); }
+    }
+
+    async function updateReviewStatus(leadId, newStatus, fromStatus) {
+      if (newStatus === fromStatus) return;
+      try {
+        const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ reviewStatus: newStatus })
+        });
+        const data = await res.json();
+        if (!data.success) { alert(data.message); loadLeads(); return; }
+        loadLeads();
+      } catch(e) { alert('검토 상태 변경 실패: ' + e.message); }
     }
 
     let saveTimers = {};
@@ -274,9 +309,11 @@ export function getLeadsPage() {
             <div class="lead-head">
               <div class="lead-title">
                 <h3>\${lead.id ? \`<a href="\${detailLink(lead.id)}" onclick="openLeadDetail('\${esc(lead.id)}', event)" style="color:inherit;text-decoration:none;">\${esc(lead.company)}</a>\` : esc(lead.company)}</h3>
-                <div class="lead-subtitle">\${esc(lead.summary || '-')}</div>
+                <div class="lead-subtitle">\${esc(lead.signal || lead.summary || '-')}</div>
                 <div class="lead-status-row">
                   <span class="badge \${lead.grade === 'A' ? 'badge-a' : 'badge-b'}">\${esc(lead.grade)}등급</span>
+                  <span class="badge badge-review \${normalizeReviewStatus(lead.reviewStatus).toLowerCase()}">\${esc(reviewStatusLabels[normalizeReviewStatus(lead.reviewStatus)])}</span>
+                  \${renderReviewStatusSelect(lead)}
                   \${renderStatusSelect(lead)}
                   \${lead.enriched ? '<span class="badge-enriched">심층 분석 완료</span>' : ''}
                 </div>
@@ -295,10 +332,13 @@ export function getLeadsPage() {
               \${lead.followUpDate ? \`<div class="lead-metric"><span class="metric-label">후속 일정</span><span class="metric-value">\${esc(lead.followUpDate)}</span></div>\` : ''}
             </div>
             <div class="lead-sections">
+              \${lead.whyNow ? \`<div class="lead-block"><span class="block-label">왜 지금</span><div class="block-value">\${esc(lead.whyNow)}</div></div>\` : ''}
               \${lead.urgencyReason ? \`<div class="lead-block"><span class="block-label">우선순위 근거</span><div class="block-value">\${esc(lead.urgencyReason)}</div></div>\` : ''}
               \${lead.confidenceReason ? \`<div class="lead-block"><span class="block-label">신뢰도 근거</span><div class="block-value">\${esc(lead.confidenceReason)}</div></div>\` : ''}
+              \${lead.dataGaps && lead.dataGaps.length > 0 ? \`<div class="lead-block"><span class="block-label">데이터 공백</span><div class="block-value">\${esc(lead.dataGaps.join(', '))}</div></div>\` : ''}
+              \${lead.assumptions && lead.assumptions.length > 0 ? \`<div class="lead-block"><span class="block-label">가정</span><div class="block-value">\${esc(lead.assumptions.join(', '))}</div></div>\` : ''}
               \${lead.scoreReason ? \`<div class="lead-block"><span class="block-label">점수 해설</span><div class="block-value">\${esc(lead.scoreReason)}</div></div>\` : ''}
-              <div class="lead-block"><span class="block-label">영업 제안</span><div class="block-value">\${esc(lead.salesPitch)}</div></div>
+              <div class="lead-block"><span class="block-label">추천 메시지</span><div class="block-value">\${esc(lead.recommendedMessage || lead.salesPitch)}</div></div>
               <div class="lead-block"><span class="block-label">시장 트렌드</span><div class="block-value">\${esc(lead.globalContext) || '-'}</div></div>
             </div>
             \${lead.enriched ? \`
@@ -415,11 +455,13 @@ export function getLeadsPage() {
       const total = leads.length;
       const gradeA = leads.filter(l => l.grade === 'A').length;
       const enriched = leads.filter(l => l.enriched).length;
+      const needsReview = leads.filter(l => normalizeReviewStatus(l.reviewStatus) === 'NEEDS_REVIEW').length;
       const avgScore = Math.round(leads.reduce((sum, lead) => sum + (parseInt(lead.score, 10) || 0), 0) / Math.max(1, total));
       return \`
         <div class="leads-summary">
           <div class="summary-card"><span class="label">총 리드</span><span class="value">\${total}</span><div class="meta">현재 프로필 기준 전체 건수</div></div>
-          <div class="summary-card"><span class="label">A등급</span><span class="value">\${gradeA}</span><div class="meta">우선 제안 후보</div></div>
+          <div class="summary-card"><span class="label">검토 필요</span><span class="value">\${needsReview}</span><div class="meta">사람 검토 전 상태</div></div>
+          <div class="summary-card"><span class="label">A등급</span><span class="value">\${gradeA}</span><div class="meta">우선 검토 후보</div></div>
           <div class="summary-card"><span class="label">평균 점수</span><span class="value">\${avgScore}</span><div class="meta">기사 신호 기준 평균</div></div>
           <div class="summary-card"><span class="label">심층 분석 완료</span><span class="value">\${enriched}</span><div class="meta">추가 근거가 확보된 리드</div></div>
         </div>

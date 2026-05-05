@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS leads (
   profile_id TEXT NOT NULL DEFAULT 'self-service',
   source TEXT NOT NULL DEFAULT 'managed',
   status TEXT NOT NULL DEFAULT 'NEW',
+  review_status TEXT NOT NULL DEFAULT 'NEEDS_REVIEW',
   company TEXT NOT NULL,
   summary TEXT,
   product TEXT,
@@ -34,6 +35,7 @@ CREATE TABLE IF NOT EXISTS leads (
 CREATE INDEX IF NOT EXISTS idx_leads_identity_key ON leads(identity_key);
 CREATE INDEX IF NOT EXISTS idx_leads_profile ON leads(profile_id);
 CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+CREATE INDEX IF NOT EXISTS idx_leads_review_status ON leads(review_status);
 CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at DESC);
 
 CREATE TABLE IF NOT EXISTS analytics (

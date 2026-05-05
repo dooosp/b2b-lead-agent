@@ -1,12 +1,13 @@
 import { ensureD1Schema } from './schema.js';
 import { VALID_TRANSITIONS, rowToLead, leadToRow } from './transform.js';
+import { REVIEW_STATUSES, normalizeReviewStatus } from '../lib/leadbrief-v1.js';
 
 export async function saveLeadsBatch(db, leads, profileId, source) {
   if (!db || !leads || leads.length === 0) return;
   await ensureD1Schema(db);
   const stmt = db.prepare(
-    `INSERT INTO leads (id, identity_key, profile_id, source, status, company, summary, product, score, grade, roi, sales_pitch, global_context, sources, notes, score_reason, urgency, urgency_reason, buyer_role, evidence, confidence, confidence_reason, assumptions, generation_mode, verification_status, data_gaps, event_type, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO leads (id, identity_key, profile_id, source, status, review_status, company, summary, product, score, grade, roi, sales_pitch, global_context, sources, notes, score_reason, urgency, urgency_reason, buyer_role, evidence, confidence, confidence_reason, assumptions, generation_mode, verification_status, data_gaps, event_type, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        identity_key=excluded.identity_key,
        summary=excluded.summary, product=excluded.product, score=excluded.score,
@@ -23,7 +24,7 @@ export async function saveLeadsBatch(db, leads, profileId, source) {
   );
   const batch = leads.map(lead => {
     const r = leadToRow(lead, profileId, source);
-    return stmt.bind(r.id, r.identity_key, r.profile_id, r.source, r.status, r.company, r.summary, r.product, r.score, r.grade, r.roi, r.sales_pitch, r.global_context, r.sources, r.notes, r.score_reason, r.urgency, r.urgency_reason, r.buyer_role, r.evidence, r.confidence, r.confidence_reason, r.assumptions, r.generation_mode, r.verification_status, r.data_gaps, r.event_type, r.created_at, r.updated_at);
+    return stmt.bind(r.id, r.identity_key, r.profile_id, r.source, r.status, r.review_status, r.company, r.summary, r.product, r.score, r.grade, r.roi, r.sales_pitch, r.global_context, r.sources, r.notes, r.score_reason, r.urgency, r.urgency_reason, r.buyer_role, r.evidence, r.confidence, r.confidence_reason, r.assumptions, r.generation_mode, r.verification_status, r.data_gaps, r.event_type, r.created_at, r.updated_at);
   });
   await db.batch(batch);
 }
@@ -94,6 +95,22 @@ function normalizeLeadPatch(lead, patch) {
     leadUpdates.status = patch.status;
     statusLogEntry = { fromStatus: lead.status, toStatus: patch.status };
     changedFields.push('status');
+  }
+
+  const hasReviewStatus = Object.prototype.hasOwnProperty.call(patch, 'reviewStatus')
+    || Object.prototype.hasOwnProperty.call(patch, 'review_status');
+  if (hasReviewStatus) {
+    const rawReviewStatus = Object.prototype.hasOwnProperty.call(patch, 'reviewStatus')
+      ? patch.reviewStatus
+      : patch.review_status;
+    const reviewStatus = normalizeReviewStatus(rawReviewStatus, { fallback: '' });
+    if (!REVIEW_STATUSES.includes(reviewStatus)) {
+      throw Object.assign(new Error(`reviewStatus must be one of: ${REVIEW_STATUSES.join(', ')}`), { status: 400 });
+    }
+    if (reviewStatus !== lead.reviewStatus) {
+      leadUpdates.review_status = reviewStatus;
+      changedFields.push('reviewStatus');
+    }
   }
 
   if (typeof patch.notes === 'string') {

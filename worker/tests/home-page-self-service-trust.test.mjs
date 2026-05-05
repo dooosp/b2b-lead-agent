@@ -128,6 +128,7 @@ test('home page self-service client preserves and exports fallback trust metadat
   const normalized = context.normalizeSelfServiceLead(lead);
   assert.equal(normalized.generationMode, 'heuristic');
   assert.equal(normalized.verificationStatus, 'needs_review');
+  assert.equal(normalized.reviewStatus, 'NEEDS_REVIEW');
   assert.equal(normalized.confidence, 'MEDIUM');
   assert.deepEqual(normalized.assumptions, lead.assumptions);
   assert.deepEqual(normalized.dataGaps, lead.dataGaps);
@@ -135,12 +136,14 @@ test('home page self-service client preserves and exports fallback trust metadat
   context.renderSelfServiceResults([lead], { name: 'LG전자' }, 'AI 분석 지연으로 규칙 기반 결과를 우선 제공합니다.');
   const html = getElement('ssResults').innerHTML;
   assert.match(html, /검토 필요 \/ 규칙 기반/);
+  assert.match(html, /검토 상태 검토 필요/);
   assert.match(html, /검증 완료 전 결과/);
   assert.match(html, /데이터 공백: LLM 정밀 분석 미완료, 고객 내부 예산\/일정 미확인/);
   assert.equal(context.window._ssLeads[0].generationMode, 'heuristic');
 
   await context.copySelfServiceResults();
   assert.match(captured.clipboardText, /신뢰 상태: 검토 필요 \/ 규칙 기반 \/ heuristic \/ needs_review \/ MEDIUM/);
+  assert.match(captured.clipboardText, /검토 상태: 검토 필요 \(NEEDS_REVIEW\)/);
   assert.match(captured.clipboardText, /데이터 공백: LLM 정밀 분석 미완료, 고객 내부 예산\/일정 미확인/);
 
   context.downloadSelfServiceResults();
@@ -149,6 +152,7 @@ test('home page self-service client preserves and exports fallback trust metadat
   const payload = JSON.parse(captured.downloadText);
   assert.equal(payload.leads[0].generationMode, 'heuristic');
   assert.equal(payload.leads[0].verificationStatus, 'needs_review');
+  assert.equal(payload.leads[0].reviewStatus, 'NEEDS_REVIEW');
   assert.equal(payload.leads[0].confidence, 'MEDIUM');
   assert.deepEqual(payload.leads[0].assumptions, lead.assumptions);
   assert.deepEqual(payload.leads[0].dataGaps, lead.dataGaps);

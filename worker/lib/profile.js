@@ -1,4 +1,5 @@
 import { escapeHtml } from './utils.js';
+import { toLeadBriefV1 } from './leadbrief-v1.js';
 
 function normalizeProductToken(value) {
   return String(value || '')
@@ -238,11 +239,11 @@ export function canonicalizeLeadForProfile(profileId, lead) {
     : (typeof leadRecord.recommended_product === 'string' ? leadRecord.recommended_product : '');
   const productResolution = canonicalizeLeadProductForProfile(canonicalProfileId, rawProduct);
 
-  const canonicalLead = {
+  const canonicalLead = toLeadBriefV1({
     ...leadRecord,
     profileId: canonicalProfileId,
     product: productResolution.product,
-  };
+  });
 
   if (typeof leadRecord.recommended_product === 'string') {
     canonicalLead.recommended_product = productResolution.product;
