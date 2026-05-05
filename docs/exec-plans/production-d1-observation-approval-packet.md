@@ -8,6 +8,8 @@ This packet does not approve, execute, or claim any production action. It exists
 
 Source facts in this packet are constrained to the current worktree and these repo files: `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, `docs/exec-plans/d1-lazy-migration-observation-plan.md`, `docs/exec-plans/leadbrief-v1-contract.md`, `docs/exec-plans/internal-api-contract-freeze.md`, `worker/wrangler.toml`, `.github/workflows/*`, `worker/db/schema.js`, `worker/schema.sql`, `worker/db/leads.js`, `worker/db/transform.js`, `worker/api/leads.js`, and `worker/lib/leadbrief-v1.js`.
 
+For the auto-extracted readiness table only, this packet also cites read-only GitHub metadata captured during the extraction run: current default branch, current `master` SHA, current check runs for that SHA, repository metadata, and PR metadata for PR #25, PR #27, PR #29, and PR #30. GitHub metadata is a timestamped external fact and must be rechecked before any future deploy/observe run.
+
 ## Non-goals
 
 - No deploy.
@@ -17,6 +19,53 @@ Source facts in this packet are constrained to the current worktree and these re
 - No observation claim.
 - No CRM expansion.
 - No runtime code, schema file, test, package, workflow, generated report, or production data change.
+
+## Auto-extracted readiness values
+
+Auto-extraction run: `2026-05-05T13:09:50Z`.
+
+This table separates machine-discovered facts from future human approvals. `CONFIRMED_FROM_REPO` and `CONFIRMED_FROM_GITHUB` mean only that Codex found the fact in repo files or GitHub metadata. They do not approve deploy, production D1 access, lazy DDL, production write, rollback, or production observation. `CANDIDATE_*` values are starting points for a future human operator. They must not be treated as approved values.
+
+| Field | Extracted value | Classification | Source/evidence | Can Codex auto-fill? | Requires human confirmation? | Notes / HOLD rule |
+| --- | --- | --- | --- | --- | --- | --- |
+| `EXPECTED_MASTER_SHA` | `e1967e27b87e14b73bbf90fd1cb40d828d7a2f52` | `CONFIRMED_FROM_GITHUB` | GitHub `master` branch metadata and PR #30 merge metadata: https://github.com/dooosp/b2b-lead-agent/pull/30 | Yes, as current GitHub fact only | Yes, before using it as an approved deploy SHA | This is not `APPROVED_MASTER_SHA` for deploy. Future operator must re-check if `master` moves. |
+| `CURRENT_CI_PROOF_FOR_EXPECTED_SHA` | GitHub Actions `CI / test` success and `Validate Naming / validate` success for `e1967e27b87e14b73bbf90fd1cb40d828d7a2f52`, completed `2026-05-05T12:51Z` | `CONFIRMED_FROM_GITHUB` | Check runs for current master SHA: `CI` run https://github.com/dooosp/b2b-lead-agent/actions/runs/25377408564 job `test`; `Validate Naming` run https://github.com/dooosp/b2b-lead-agent/actions/runs/25377408543 job `validate`; workflow definitions in `.github/workflows/ci.yml` and `.github/workflows/validate-naming.yml` | Yes, as current GitHub fact only | Re-check required before any future deploy/observe run | CI is not production evidence and does not prove production D1 observation. |
+| `ALLOW_DEPLOY` | `UNAPPROVED / UNFILLED` | `MISSING_REQUIRES_HUMAN` | Required approvals table below | No | Yes | Must remain unfilled until a human provides approver, UTC timestamp, and approval record. |
+| `ALLOW_PRODUCTION_DB_MIGRATION` | `UNAPPROVED / UNFILLED` | `MISSING_REQUIRES_HUMAN` | Required approvals table below | No | Yes | Required before any path expected to run lazy DDL through `ensureD1Schema()`. |
+| `ALLOW_PRODUCTION_DB_WRITE` | `UNAPPROVED / UNFILLED` | `MISSING_REQUIRES_HUMAN` | Required approvals table below | No | Yes | Required before PATCH, self-service persistence, or read-looking cache-write paths. |
+| `ALLOW_PRODUCTION_OBSERVATION_CLAIM` | `UNAPPROVED / UNFILLED` | `MISSING_REQUIRES_HUMAN` | Required approvals table below | No | Yes | Required before saying production D1 lazy migration was observed. |
+| `WORKER_NAME` | `b2b-lead-trigger` | `CANDIDATE_FROM_CONFIG` | `worker/wrangler.toml:1` | Yes, as config inventory | Yes, before deploy targeting | Config inventory only; not deploy approval. |
+| `PRODUCTION_DB_BINDING` | `DB` | `CANDIDATE_FROM_CONFIG` | `worker/wrangler.toml:22-25` | Yes, as config inventory | Yes, before production DB access | Binding existence is not production DB access approval or production observation. |
+| `D1_DATABASE_NAME` | `b2b-leads-db` | `CANDIDATE_FROM_CONFIG` | `worker/wrangler.toml:22-25` | Yes, as config inventory | Yes, before production DB access | Database name is inventory only. |
+| `D1_DATABASE_ID` | `8effbfab-bf05-4726-bb74-8d9b6c1cccfe` | `CANDIDATE_FROM_CONFIG` | `worker/wrangler.toml:22-25` | Yes, as config inventory | Yes, before production DB access | Database id is inventory only. |
+| `DEPLOY_PATH_CANDIDATE` | Cloudflare Worker target from `worker/wrangler.toml`; Worker entrypoint `worker/index.js`; Worker origin variable `https://b2b-lead-trigger.jangho1383.workers.dev` | `CANDIDATE_FROM_CONFIG` | `worker/wrangler.toml:1-2`, `worker/wrangler.toml:9-11`, `worker/index.js` | Yes, as candidate inventory | Yes | No exact deploy command/path is approved. Candidate target must not be executed in this run. |
+| `APPROVED_DEPLOY_PATH` | `[UNAPPROVED_DEPLOY_PATH_COMMAND]` | `MISSING_REQUIRES_HUMAN` | Existing deploy approval state below | No | Yes | HOLD until a human approves exact command/path and deploy owner. |
+| `ROLLBACK_PATH_CANDIDATE` | No exact rollback command found; repo docs require rollback only through approved Worker rollback owner/process | `MISSING_REQUIRES_HUMAN` | `docs/exec-plans/d1-lazy-migration-observation-plan.md:214-222` | No | Yes | HOLD until rollback owner, command/process, and stop criteria are recorded. |
+| `APPROVED_ROLLBACK_PATH` | `[UNAPPROVED_ROLLBACK_PLAN]` | `MISSING_REQUIRES_HUMAN` | Required policies table below | No | Yes | HOLD until rollback plan has owner/approver, UTC timestamp, and policy record. |
+| `SCHEMA_PROOF_METHOD_CANDIDATE` | Production D1 schema proof for exact target columns; candidate query: `PRAGMA table_info(leads);` via approved Cloudflare/D1 read path with machine-readable transcript | `CANDIDATE_FROM_HISTORY` | `docs/exec-plans/d1-lazy-migration-observation-plan.md:89-97` | Yes, as candidate method | Yes | Requires deploy/lazy-DDL approvals, production DB owner, evidence policy, and transcript plan before use. |
+| `APPROVED_SCHEMA_PROOF_METHOD` | `[UNFILLED]` | `MISSING_REQUIRES_HUMAN` | HOLD rules below require schema proof method and machine-readable transcript plan | No | Yes | HOLD until approved method and transcript plan are filled. |
+| `SCHEMA_PROOF_ONLY_OBSERVATION_PATH` | Schema-only proof can show target production columns exist, but cannot prove row serialization or human-review write behavior | `CANDIDATE_FROM_HISTORY` | `docs/exec-plans/d1-lazy-migration-observation-plan.md:92-97`; schema-only evidence rules below | Yes, as candidate path | Yes | Must keep `observationLevel=schema_only`, `rowRoundtripProof.performed=false`, and no production-observed lazy migration claim. |
+| `ROW_ROUNDTRIP_PATH_CANDIDATE` | Candidate paths: real `PATCH /api/leads/<lead-id>`, real approved `POST /api/analyze`, or `GET /api/leads`/`GET /api/history` only if cache-write risk is approved | `CANDIDATE_FROM_HISTORY` | `docs/exec-plans/d1-lazy-migration-observation-plan.md:62-66`; `worker/api/leads.js:9-36`, `worker/api/leads.js:42-69`, `worker/api/leads.js:75-83` | Yes, as candidate path | Yes | Requires explicit write approval and owner-approved real row/action. GET cache-write paths are not read-only proof. |
+| `SAFE_PRODUCTION_PROFILE_OR_LEAD_SELECTION` | Config lists profile candidates `danfoss`, `ls-electric`, and `siemens`; no safe production profile, lead id, or no-row decision is approved | `MISSING_REQUIRES_HUMAN` | `worker/wrangler.toml:12`; required run coordination table below | No | Yes | HOLD until product/release owner selects a safe target or explicit no-row decision. |
+| `SAFE_REAL_ROW_OR_ACTION_PATH_BEFORE_WRITE` | `[UNFILLED_OR_NO_WRITE]` | `MISSING_REQUIRES_HUMAN` | Required policies and row-roundtrip rules below | No | Yes | HOLD before any write if no real owner-approved row/action needing a real new human review decision exists. |
+| `DEPLOY_OWNER` | Candidate only: GitHub repo owner/PR author/merger `dooosp` / Taeho Jang from PR #25, #27, #29, and #30 metadata | `CANDIDATE_FROM_HISTORY` | GitHub repo metadata plus PR URLs: https://github.com/dooosp/b2b-lead-agent/pull/25, https://github.com/dooosp/b2b-lead-agent/pull/27, https://github.com/dooosp/b2b-lead-agent/pull/29, https://github.com/dooosp/b2b-lead-agent/pull/30 | No | Yes | Candidate owner is not deploy approval and not a confirmed owner assignment. |
+| `PRODUCTION_DB_OWNER` | No confirmed production D1 owner found; unsafe to infer Cloudflare/D1 ownership from GitHub admin or repo owner | `UNSAFE_TO_INFER` | GitHub metadata shows repo ownership/admin only; packet owner table remains `[UNFILLED]` | No | Yes | HOLD until production DB owner is explicitly documented. |
+| `ROLLBACK_OWNER` | Candidate only: GitHub repo owner/PR author/merger `dooosp` / Taeho Jang from PR history | `CANDIDATE_FROM_HISTORY` | GitHub repo metadata plus PR URLs: https://github.com/dooosp/b2b-lead-agent/pull/25, https://github.com/dooosp/b2b-lead-agent/pull/27, https://github.com/dooosp/b2b-lead-agent/pull/29, https://github.com/dooosp/b2b-lead-agent/pull/30 | No | Yes | Candidate owner is not approved rollback owner or rollback plan. |
+| `OBSERVATION_OWNER` | Candidate only: GitHub repo owner/PR author/merger `dooosp` / Taeho Jang from PR history | `CANDIDATE_FROM_HISTORY` | GitHub repo metadata plus PR URLs: https://github.com/dooosp/b2b-lead-agent/pull/25, https://github.com/dooosp/b2b-lead-agent/pull/27, https://github.com/dooosp/b2b-lead-agent/pull/29, https://github.com/dooosp/b2b-lead-agent/pull/30 | No | Yes | Candidate owner is not evidence owner or observation-claim approval. |
+| `BACKUP_OR_EXPORT_POLICY` | `UNAPPROVED / UNFILLED` | `MISSING_REQUIRES_HUMAN` | Required policies table below; risk register in observation plan | No | Yes | HOLD_NEEDS_PROD_DB_BACKUP_POLICY until policy or explicit hold decision is recorded. |
+| `EVIDENCE_STORAGE_REDACTION_POLICY` | Redaction constraints are documented, but approved release-record location, access controls, sanitized/restricted evidence locations, and policy record are unfilled | `MISSING_REQUIRES_HUMAN` | Required policies table below; evidence template below | No | Yes | HOLD until evidence storage policy has owner/approver, timestamp, policy record, and redaction/access controls. |
+| `CRM_CONTRACT_FREEZE_CONFIRMATION` | Repo docs confirm `crm.published-report.v1` remains backward-compatible and excludes LeadBrief fields unless separately scoped; policy approval record is still unfilled | `CONFIRMED_FROM_REPO` | `docs/exec-plans/internal-api-contract-freeze.md:42-48`; `docs/exec-plans/leadbrief-v1-contract.md:87` | Yes, as repo fact only | Yes, for policy approval | Repo fact does not satisfy the required human policy confirmation record. |
+| `HUMAN_REVIEW_OVERWRITE_RISK_CHECK` | Repo code preserves existing `review_status` on managed/self-service upsert conflict and PATCH updates `review_status` separately from pipeline `status`; row-specific no-overwrite/no-toggle check is still unfilled | `CONFIRMED_FROM_REPO` | `worker/db/leads.js:11-23`, `worker/db/leads.js:100-113`, `worker/db/leads.js:153-185`; `docs/exec-plans/leadbrief-v1-contract.md:71-75` | Yes, as repo behavior evidence | Yes, before any selected row write | Code evidence does not approve a real row/action. HOLD if PATCH would overwrite a human decision or toggle only for evidence. |
+| `TARGET_COLUMNS` | Primary: `generation_mode`, `verification_status`, `data_gaps`, `review_status`; adjacent row-proof: `evidence`, `confidence`, `confidence_reason`, `assumptions`, `event_type` | `CONFIRMED_FROM_REPO` | `docs/exec-plans/d1-lazy-migration-observation-plan.md:20-32`; `worker/db/schema.js:88-113`; `worker/db/transform.js:287-294`, `worker/db/transform.js:378-385` | Yes | No for repo fact; yes before production observation scope is approved | Target column list is not production schema proof. |
+| `ENSURE_D1_SCHEMA_PATH` | `ensureD1Schema(db)` in `worker/db/schema.js`; invoked by D1 helpers including `saveLeadsBatch()`, `getLeadsByProfile()`, `getAllLeads()`, `getLeadById()`, and `updateLeadPatchAtomic()` | `CONFIRMED_FROM_REPO` | `worker/db/schema.js:3-119`; `worker/db/leads.js:1-7`, `worker/db/leads.js:32-60`, `worker/db/leads.js:153-185` | Yes | No for repo fact; yes before invoking in production | Any production path expected to run this requires `ALLOW_PRODUCTION_DB_MIGRATION=yes`. |
+| `UNSAFE_PATHS_TO_AVOID` | Deploy, production DB access, lazy DDL, production write, read-looking GET cache writes, PATCH review toggles, synthetic/fake evidence, unredacted evidence, CI/docs as production evidence, and production-observed claim without approved row proof | `CONFIRMED_FROM_REPO` | Non-goals above; invalid evidence list below; `docs/exec-plans/d1-lazy-migration-observation-plan.md:36-45`, `docs/exec-plans/d1-lazy-migration-observation-plan.md:128-138`, `docs/exec-plans/d1-lazy-migration-observation-plan.md:246-258` | Yes | Yes before any future operation | Any unsafe or ambiguous path remains HOLD. |
+
+Hard rule: the four dangerous gates remain `UNAPPROVED / UNFILLED` here and must not be auto-filled by Codex:
+
+- `ALLOW_DEPLOY`
+- `ALLOW_PRODUCTION_DB_MIGRATION`
+- `ALLOW_PRODUCTION_DB_WRITE`
+- `ALLOW_PRODUCTION_OBSERVATION_CLAIM`
 
 ## Required approvals
 
@@ -63,7 +112,7 @@ Candidate deployment target from config only:
 
 - Worker config file: `worker/wrangler.toml`
 - Worker name: `b2b-lead-trigger`
-- Worker main: `index.js`
+- Worker entrypoint: `worker/index.js`
 - Worker origin variable: `https://b2b-lead-trigger.jangho1383.workers.dev`
 
 Unresolved deploy approval state:
