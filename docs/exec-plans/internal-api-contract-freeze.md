@@ -10,6 +10,9 @@ Freeze the CRM-facing read-only contract for the exact latest published report t
 
 ## Repo Evidence Used
 
+- PR #25 (`95c9d54`) shipped the current internal API trust-boundary baseline.
+- `worker/lib/auth.js` and `worker/index.js` prove `/api/internal/*` uses `API_TOKEN` only through `verifyInternalApiAuth()`.
+- `tests/internal-published-report-api.test.js` proves `TRIGGER_PASSWORD` does not grant internal API access and readiness lookup failures return `503 readiness_unavailable`.
 - `lead-report-publisher.js` writes the canonical published artifacts to `reports/<profile>/latest-leads.json` and `reports/<profile>/lead-history.json`.
 - `prepareLeadSnapshotRecords()` proves the published snapshot lead shape includes `id`, `status`, `createdAt`, `updatedAt`, and normalized `sources`.
 - `normalizePublicationSources()` and `tests/source-traceability.test.js` prove optional source provenance fields are preserved when present in the published snapshot.
@@ -24,6 +27,15 @@ This freeze is for one exact managed `profileId` and its latest canonical publis
 - The contract is latest-only, not history-scoped.
 - The contract must not expose D1 vs GitHub source-selection details.
 - The contract must not guess route-type, report-id, acceptance-state, or artifact-version semantics that the repository does not encode authoritatively.
+- The route is internal-only and must be authenticated with `API_TOKEN`; `TRIGGER_PASSWORD` is not accepted for this API family.
+
+## PR #25 Trust Baseline Notes
+
+- Missing or invalid internal API auth fails closed before contract handling.
+- Missing `API_TOKEN` returns HTTP `503` as an operational auth configuration error.
+- Published snapshot lookup failure, missing job ledger, or job-ledger lookup failure returns HTTP `503` with `error.code = "readiness_unavailable"` when no safe success or queued body can be proved.
+- PR #25 did not deploy production and did not prove production D1 lazy migration.
+- D1 trust metadata columns are lazy-migration-compatible elsewhere in the app; the first production write after deploy should be observed before claiming production migration.
 
 ## Frozen Contract
 

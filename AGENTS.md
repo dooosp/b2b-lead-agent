@@ -14,11 +14,14 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 
 ## Current Shipped Baseline
 
-- `master` already includes the April 7, 2026 hardening cycle.
+- `master` includes the April 7, 2026 hardening cycle and the PR #25 P0 trust-boundary baseline merged on May 5, 2026.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
+- PR #25 shipped `/api/internal/*` API_TOKEN-only auth, latest-published `503 readiness_unavailable` fail-closed behavior, managed/root fallback publication guards, self-service trust metadata, and D1 trust metadata persistence.
 - Do not reopen those findings unless you can point to a current-`master` regression or a newly verified gap.
+- Treat PR #22 as superseded by PR #25 unless it is explicitly re-scoped on top of current `master`.
+- Next product mega goal: LeadBrief v1 Contract + Human Review UX Freeze.
 
 ## Repo Layout
 
@@ -38,6 +41,15 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - Regression suites:
   - `tests/*.test.js`
   - `worker/tests/*.test.mjs`
+
+## Trust Boundary Rules
+
+- `/api/internal/*` must use `API_TOKEN` only; `TRIGGER_PASSWORD` is not internal API auth.
+- Latest-published readiness lookup failures must fail closed with HTTP `503` and `error.code = "readiness_unavailable"`.
+- Managed/root runs must fail closed when the LLM is missing or fails unless explicit demo mode is enabled.
+- Demo leads must not be canonical-published.
+- Heuristic/self-service fallback leads must remain non-verified / review-needed in machine-readable payloads, browser cards, copy output, downloads, and D1 rows.
+- D1 trust columns are lazy-migration-compatible but not production-observed until the first post-deploy production write is confirmed.
 
 ## Canonical Repo Rules
 

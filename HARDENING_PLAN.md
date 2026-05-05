@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
-> Status: current hardening source of truth for `master` as of 2026-04-07.
-> Audited against first-parent `master` history through `1e2d4e6` and current GitHub PR state through PR #18.
+> Status: current hardening source of truth for `master` as of 2026-05-05.
+> Audited against first-parent `master` history through `95c9d54` and current GitHub PR state through PR #25.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -12,6 +12,7 @@
 | 2 | 2026-04-07 | #12 | `91e4890` | `hardening/root-identity-trust` | Wave 1 root-only follow-up that closed the remaining root blockers |
 | 3 | 2026-04-07 | #16 | `419941c` | `codex/w2-integration-review` | Wave 2 worker contract integration artifact |
 | 4 | 2026-04-07 | #18 | `1e2d4e6` | `codex/w3-queue-semantics-review` | Wave 3 safe shipping artifact on top of updated `master` |
+| 5 | 2026-05-05 | #25 | `95c9d54` | `p0/trust-boundary-and-fallback-publish-guard` | P0 trust-boundary and fallback-publication guard baseline |
 
 ## Wave Summary
 
@@ -46,6 +47,21 @@
   - accepted responses use `status: "accepted"`
   - runtime completion is emitted only after real execution and `summary()`-style completion evidence
 
+### PR #25 P0 Trust Baseline
+
+- PR #25 shipped the P0 trust-boundary and fallback-publication guard baseline.
+- Current `master` therefore includes:
+  - `/api/internal/*` authenticates with `API_TOKEN` only
+  - `TRIGGER_PASSWORD` does not grant access to internal APIs
+  - latest-published readiness lookup failures return HTTP `503` with `error.code = "readiness_unavailable"`
+  - managed/root qualification fails closed when the LLM is missing or fails, unless explicit demo mode is enabled
+  - demo leads are refused as canonical published latest leads
+  - heuristic/self-service fallback leads are machine-readable and browser-visible as non-verified / needs review
+  - self-service UI copy and JSON downloads preserve trust metadata
+  - D1 trust metadata columns are lazy-migration-compatible through `ensureD1Schema()`
+- Production deploy was not performed as part of PR #25 landing.
+- The first production write after deploy should be observed to confirm the lazy D1 trust-column migration in production.
+
 ## Findings Closed On `master`
 
 - `source canonical URL laundering / traceability drift`
@@ -78,14 +94,33 @@
 - `queued run premature completion`
   - shipped by PR #18
   - current evidence: `worker/lib/job-trigger.js`, `worker/api/trigger.js`, `tests/main.runtime.test.js`
+- `internal API fallback auth boundary`
+  - shipped by PR #25
+  - current evidence: `worker/lib/auth.js`, `worker/index.js`, `tests/internal-published-report-api.test.js`
+- `latest-published unsafe readiness fallback`
+  - shipped by PR #25
+  - current evidence: `worker/api/internal-reports.js`, `tests/internal-published-report-api.test.js`
+- `root/demo fallback canonical publication risk`
+  - shipped by PR #25
+  - current evidence: `lead-qualifier.js`, `lead-report-publisher.js`, `tests/fallback-publication-guard.test.js`
+- `self-service fallback trust opacity`
+  - shipped by PR #25
+  - current evidence: `worker/self-service/*`, `worker/pages/home-page.js`, `worker/tests/self-service-fallback-contract.test.mjs`, `worker/tests/home-page-self-service-trust.test.mjs`
+- `D1 trust metadata persistence gap`
+  - shipped by PR #25
+  - current evidence: `worker/db/schema.js`, `worker/db/transform.js`, `worker/schema.sql`, `worker/tests/data-contract.test.mjs`
 
 ## Remaining Open Items
 
 - No new unresolved Wave 1 to Wave 3 runtime or worker blocker was verified during this docs refresh.
+- No new unresolved PR #25 P0 trust-boundary blocker was verified during this docs refresh.
 - Operator cleanup only:
   - PR #10 (`Harden source traceability for qualified leads`) is still open and is superseded by merged PR #11. Do not merge PR #10 directly.
+  - PR #22 (`[codex] Harden internal latest-published auth`) is still open and is superseded by merged PR #25. Do not merge PR #22 directly unless it is re-scoped on top of current `master`.
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote `origin/hardening/*` branches remain as historical raw lanes. Because shipping used cherry-picked integration artifacts, those raw branch heads are not direct ancestors of `master`; prune them only after confirming no active work depends on them.
+- Product next step:
+  - LeadBrief v1 Contract + Human Review UX Freeze is the next safe product mega goal after PR #25.
 
 ## Current Operating Sequence
 
@@ -96,6 +131,7 @@
 5. Validate inside the owned worktree with the smallest relevant commands, then use a single integration artifact branch or PR if multiple lanes must ship together.
 6. Mark old plans and status files as archival context instead of deleting them.
 7. Refresh these root source-of-truth docs whenever merged reality changes.
+8. Do not claim production D1 trust-column migration until a post-deploy production write has been observed.
 
 ## Archival Guidance
 
