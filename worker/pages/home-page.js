@@ -45,11 +45,16 @@ export function getMainPage(env) {
     .ss-badge.grade-a { background:rgba(233,69,96,0.16); color:#ffb5c1; border:1px solid rgba(233,69,96,0.28); }
     .ss-badge.grade-b { background:rgba(243,156,18,0.16); color:#ffd399; border:1px solid rgba(243,156,18,0.28); }
     .ss-badge.score { background:rgba(52,152,219,0.14); color:#9edcff; border:1px solid rgba(52,152,219,0.28); }
+    .ss-badge.trust-verified { background:rgba(46,204,113,0.14); color:#a8efc0; border:1px solid rgba(46,204,113,0.28); }
+    .ss-badge.trust-review { background:rgba(241,196,15,0.14); color:#ffe58a; border:1px solid rgba(241,196,15,0.3); }
+    .ss-badge.trust-unverified { background:rgba(149,165,166,0.16); color:#d7dee0; border:1px solid rgba(149,165,166,0.3); }
     .ss-metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:12px 0; }
     .ss-metric { background:#121a24; border:1px solid #223447; border-radius:10px; padding:10px 12px; }
     .ss-metric-label { display:block; color:#8fa4b8; font-size:11px; margin-bottom:4px; }
     .ss-metric-value { display:block; color:#f4f7fb; font-size:14px; font-weight:700; }
     .ss-copy { margin-top:12px; color:#d2dbe5; font-size:13px; line-height:1.7; }
+    .ss-trust-note { background:rgba(241,196,15,0.08); border:1px solid rgba(241,196,15,0.24); color:#f6dda0; border-radius:10px; padding:10px 12px; font-size:12px; line-height:1.6; margin-bottom:14px; }
+    .ss-trust-list { margin-top:8px; color:#b9c5cf; font-size:12px; line-height:1.6; }
     .ss-section-label { color:#8fa4b8; font-size:11px; margin-bottom:4px; display:block; text-transform:uppercase; letter-spacing:0.04em; }
     .ss-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: center; }
     .ss-stats { font-size: 12px; color: #888; margin-top: 8px; }
@@ -191,6 +196,11 @@ export function getMainPage(env) {
       const roi = String(lead?.expected_roi || lead?.roi || '').trim();
       const salesPitch = String(lead?.sales_pitch || lead?.salesPitch || lead?.pitch || '').trim();
       const trend = String(lead?.trend || lead?.trends || lead?.globalContext || '').trim();
+      const generationMode = normalizeGenerationModeForUi(lead?.generationMode || lead?.generation_mode);
+      const confidence = normalizeConfidenceForUi(lead?.confidence);
+      const verificationStatus = normalizeVerificationStatusForUi(lead?.verificationStatus || lead?.verification_status, generationMode);
+      const dataGaps = normalizeStringArrayForUi(lead?.dataGaps || lead?.data_gaps);
+      const assumptions = normalizeStringArrayForUi(lead?.assumptions);
       return {
         company: String(lead?.company || '').trim(),
         score,
@@ -200,8 +210,61 @@ export function getMainPage(env) {
         expected_roi: roi,
         sales_pitch: salesPitch,
         trend,
-        sources: Array.isArray(lead?.sources) ? lead.sources.filter(s => s && s.title && s.url) : []
+        sources: Array.isArray(lead?.sources) ? lead.sources.filter(s => s && s.title && s.url) : [],
+        generationMode,
+        verificationStatus,
+        confidence,
+        confidenceReason: String(lead?.confidenceReason || lead?.confidence_reason || defaultConfidenceReason(generationMode)).trim(),
+        assumptions,
+        dataGaps
       };
+    }
+
+    function normalizeGenerationModeForUi(value) {
+      const mode = String(value || '').toLowerCase();
+      return ['llm', 'heuristic', 'demo', 'unavailable'].includes(mode) ? mode : 'unavailable';
+    }
+
+    function normalizeVerificationStatusForUi(value, generationMode) {
+      const status = String(value || '').toLowerCase();
+      if (['verified', 'needs_review', 'draft', 'unverified'].includes(status)) return status;
+      if (generationMode === 'llm') return 'needs_review';
+      if (generationMode === 'heuristic') return 'needs_review';
+      if (generationMode === 'demo') return 'draft';
+      return 'unverified';
+    }
+
+    function normalizeConfidenceForUi(value) {
+      const confidence = String(value || '').toUpperCase();
+      return ['HIGH', 'MEDIUM', 'LOW'].includes(confidence) ? confidence : 'LOW';
+    }
+
+    function normalizeStringArrayForUi(values) {
+      return (Array.isArray(values) ? values : [])
+        .map((value) => String(value || '').trim())
+        .filter(Boolean)
+        .slice(0, 8);
+    }
+
+    function defaultConfidenceReason(generationMode) {
+      if (generationMode === 'llm') return 'LLM 분석 결과이나 최종 영업 사용 전 검토가 필요합니다.';
+      if (generationMode === 'heuristic') return '규칙 기반 fallback 결과로 사람 검토가 필요합니다.';
+      if (generationMode === 'demo') return '데모 데이터로 실제 검증 근거가 없습니다.';
+      return '분석을 완료하지 못해 검증 근거가 없습니다.';
+    }
+
+    function trustLabelForLead(lead) {
+      if (lead.generationMode === 'llm' && lead.verificationStatus === 'verified') return '검증됨';
+      if (lead.generationMode === 'heuristic' && lead.verificationStatus === 'needs_review') return '검토 필요 / 규칙 기반';
+      if (lead.generationMode === 'unavailable' || lead.verificationStatus === 'unverified') return '분석 불가 / 미검증';
+      if (lead.generationMode === 'demo' || lead.verificationStatus === 'draft') return '데모 / 미검증';
+      return '검토 필요';
+    }
+
+    function trustClassForLead(lead) {
+      if (lead.generationMode === 'llm' && lead.verificationStatus === 'verified') return 'trust-verified';
+      if (lead.generationMode === 'unavailable' || lead.verificationStatus === 'unverified') return 'trust-unverified';
+      return 'trust-review';
     }
 
     function renderSelfServiceResults(leads, profile, summary) {
@@ -220,8 +283,9 @@ export function getMainPage(env) {
       const avgScore = Math.round(validLeads.reduce((sum, lead) => sum + lead.score, 0) / validLeads.length);
       const topLead = validLeads[0];
       const gradeACount = validLeads.filter((lead) => lead.grade === 'A').length;
+      const needsReviewCount = validLeads.filter((lead) => lead.verificationStatus !== 'verified').length;
       container.innerHTML = [
-        renderSelfServiceSummary(validLeads.length, avgScore, gradeACount, topLead, summary),
+        renderSelfServiceSummary(validLeads.length, avgScore, gradeACount, topLead, summary, needsReviewCount),
         validLeads.map(renderSelfServiceLeadCard).join('')
       ].join('');
 
@@ -239,13 +303,13 @@ export function getMainPage(env) {
       window._ssProfile = profile;
     }
 
-    function renderSelfServiceSummary(count, avgScore, gradeACount, topLead, summary) {
+    function renderSelfServiceSummary(count, avgScore, gradeACount, topLead, summary, needsReviewCount) {
       return \`
         <div class="ss-summary">
           <div class="ss-summary-card">
             <span class="ss-summary-label">분석 리드 수</span>
             <span class="ss-summary-value">\${count}건</span>
-            <div class="ss-summary-meta">즉시 검토 가능한 후보만 남겼습니다.</div>
+            <div class="ss-summary-meta">검토 대상 후보를 추렸습니다.</div>
           </div>
           <div class="ss-summary-card">
             <span class="ss-summary-label">평균 점수</span>
@@ -263,6 +327,7 @@ export function getMainPage(env) {
             <div class="ss-summary-meta">\${topLead ? esc(topLead.company + ' 기준') : '추천 제품 없음'}</div>
           </div>
         </div>
+        \${needsReviewCount > 0 ? \`<div class="ss-trust-note">\${needsReviewCount}건은 검증 완료 전 결과입니다. 규칙 기반/미검증 항목은 사람 검토 후 사용하세요.</div>\` : ''}
         <div class="ss-summary-note">\${esc(String(summary || '').trim() || (count + '개 영업 기회를 즉시 분석했습니다.'))}</div>
       \`;
     }
@@ -279,6 +344,7 @@ export function getMainPage(env) {
             <div class="ss-badges">
               <span class="ss-badge \${lead.grade === 'A' ? 'grade-a' : 'grade-b'}">\${esc(lead.grade)}등급</span>
               <span class="ss-badge score">\${parseInt(lead.score, 10) || 0}점</span>
+              <span class="ss-badge \${trustClassForLead(lead)}">\${esc(trustLabelForLead(lead))}</span>
             </div>
           </div>
           <div class="ss-metrics">
@@ -299,6 +365,11 @@ export function getMainPage(env) {
             <span class="ss-section-label">시장 트렌드</span>
             \${esc(lead.trend)}
           </div>
+          <div class="ss-copy">
+            <span class="ss-section-label">신뢰 상태</span>
+            \${esc(lead.confidence)} · \${esc(lead.confidenceReason)}
+            \${lead.dataGaps.length > 0 ? \`<div class="ss-trust-list">데이터 공백: \${esc(lead.dataGaps.join(', '))}</div>\` : ''}
+          </div>
           \${lead.sources && lead.sources.length > 0 ? \`
           <div class="ss-sources">
             <details>
@@ -313,9 +384,9 @@ export function getMainPage(env) {
     function copySelfServiceResults() {
       if (!window._ssLeads) return;
       const text = window._ssLeads.map(l =>
-        \`[\${l.grade}] \${l.company} (\${l.score}점)\\n프로젝트: \${l.project_title}\\n제품: \${l.recommended_product}\\nROI: \${l.expected_roi}\\nPitch: \${l.sales_pitch}\\n트렌드: \${l.trend}\`
+        \`[\${l.grade}] \${l.company} (\${l.score}점)\\n신뢰 상태: \${trustLabelForLead(l)} / \${l.generationMode} / \${l.verificationStatus} / \${l.confidence}\\n신뢰 근거: \${l.confidenceReason}\\n가정: \${l.assumptions.length ? l.assumptions.join(', ') : '-'}\\n데이터 공백: \${l.dataGaps.length ? l.dataGaps.join(', ') : '-'}\\n프로젝트: \${l.project_title}\\n제품: \${l.recommended_product}\\nROI: \${l.expected_roi}\\nPitch: \${l.sales_pitch}\\n트렌드: \${l.trend}\`
       ).join('\\n\\n---\\n\\n');
-      navigator.clipboard.writeText(text).then(() => {
+      return navigator.clipboard.writeText(text).then(() => {
         const status = document.getElementById('ssStatus');
         status.className = 'status success'; status.textContent = '클립보드에 복사되었습니다!';
       });

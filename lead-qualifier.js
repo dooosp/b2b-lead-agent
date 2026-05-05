@@ -143,6 +143,112 @@ function normalizeQualifiedLeads(leads, articles) {
     .map((lead) => normalizeQualifiedLead(lead, traceIndex));
 }
 
+function normalizeStringList(values) {
+  return (Array.isArray(values) ? values : [])
+    .map((value) => normalizeText(value))
+    .filter(Boolean);
+}
+
+function normalizeGenerationMode(value, fallback = 'llm') {
+  const mode = normalizeText(value).toLowerCase();
+  if (mode === 'llm' || mode === 'heuristic' || mode === 'demo') return mode;
+  return fallback;
+}
+
+function normalizeConfidenceValue(value) {
+  const confidence = normalizeText(value).toUpperCase();
+  return confidence === 'HIGH' || confidence === 'MEDIUM' || confidence === 'LOW' ? confidence : '';
+}
+
+function hasUsableSourceEvidence(lead = {}) {
+  return Array.isArray(lead.sources) && lead.sources.some((source) => normalizeText(source && source.title) && normalizeText(source && source.url));
+}
+
+function hasEvidenceQuotes(lead = {}) {
+  return Array.isArray(lead.evidence) && lead.evidence.some((item) => normalizeText(item && item.quote));
+}
+
+function deriveVerificationStatus(lead = {}, generationMode = 'llm') {
+  const explicit = normalizeText(lead.verificationStatus).toLowerCase();
+  if (['verified', 'needs_review', 'draft', 'unverified'].includes(explicit)) return explicit;
+  if (generationMode === 'demo') return 'draft';
+  if (generationMode === 'heuristic') return 'needs_review';
+
+  const confidence = normalizeConfidenceValue(lead.confidence);
+  if (hasUsableSourceEvidence(lead) && hasEvidenceQuotes(lead) && (confidence === 'HIGH' || confidence === 'MEDIUM')) {
+    return 'verified';
+  }
+  return 'needs_review';
+}
+
+function deriveDataGaps(lead = {}, generationMode = 'llm') {
+  const gaps = normalizeStringList(lead.dataGaps);
+  const add = (value) => {
+    if (value && !gaps.includes(value)) gaps.push(value);
+  };
+
+  if (generationMode === 'demo') {
+    add('Synthetic demo lead, not generated from current market evidence');
+    add('Customer-specific budget, timing, and stakeholder validation missing');
+    return gaps;
+  }
+
+  if (generationMode === 'heuristic') {
+    add('LLM lead qualification not completed');
+    add('Customer-specific budget, timing, and stakeholder validation missing');
+  }
+
+  if (!hasUsableSourceEvidence(lead)) add('Published source evidence missing');
+  const confidence = normalizeConfidenceValue(lead.confidence);
+  if (!confidence) add('Confidence was not provided by the lead generator');
+  if (confidence === 'LOW') add('Low-confidence public signal');
+  if (!hasEvidenceQuotes(lead)) add('Direct evidence quote missing');
+
+  return gaps;
+}
+
+function withGenerationMetadata(lead = {}, generationMode = 'llm') {
+  const mode = normalizeGenerationMode(lead.generationMode, generationMode);
+  const confidence = normalizeConfidenceValue(lead.confidence) || (mode === 'llm' ? '' : 'LOW');
+  const assumptions = normalizeStringList(lead.assumptions);
+  if (mode === 'demo' && assumptions.length === 0) {
+    assumptions.push('Demo lead generated from templates and public article titles only.');
+  }
+  if (mode === 'heuristic' && assumptions.length === 0) {
+    assumptions.push('Rule-based fallback lead that requires human review before use.');
+  }
+
+  return {
+    ...lead,
+    generationMode: mode,
+    verificationStatus: deriveVerificationStatus({ ...lead, confidence }, mode),
+    confidence,
+    confidenceReason: normalizeText(lead.confidenceReason) || (mode === 'llm'
+      ? 'LLM analysis completed, but confidence rationale was not supplied.'
+      : 'Fallback output requires human review.'),
+    assumptions,
+    dataGaps: deriveDataGaps({ ...lead, confidence }, mode),
+  };
+}
+
+function withGenerationMetadataForAll(leads, generationMode) {
+  return (Array.isArray(leads) ? leads : []).map((lead) => withGenerationMetadata(lead, generationMode));
+}
+
+function isDemoFallbackAllowed(options = {}) {
+  return options.allowDemoFallback === true
+    || options.allowDemoLeads === true
+    || process.env.ALLOW_DEMO_LEADS === 'true'
+    || process.env.B2B_LEAD_AGENT_MODE === 'demo';
+}
+
+function createQualificationUnavailableError(message, cause) {
+  const error = new Error(message);
+  error.code = 'LEAD_QUALIFICATION_UNAVAILABLE';
+  if (cause) error.cause = cause;
+  return error;
+}
+
 const COMPANY_MAX_LEN = 40;
 const COMPANY_ALLOWED_RE = /^[\p{L}0-9 .,&()\-]+$/u;
 const PROJECT_SIGNAL_RE = /(착공|증설|신축|준공|오픈|투자|수주|입찰|채용|확장|가속|도입|구축|양산|공급|개발|계약|선정|진출|발주|협약|MOU)/u;
@@ -482,18 +588,24 @@ async function qualifyLeads(articles, profile, options = {}) {
 
   if (!llm && (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE')) {
     console.error('  [오류] GEMINI_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.');
-    console.log('  → 데모 모드로 실행합니다.\n');
-    return normalizeQualifiedLeads(generateDemoLeads(articles, profile), articles);
+    if (isDemoFallbackAllowed(options)) {
+      console.log('  → 명시적 데모 모드로 실행합니다.\n');
+      return withGenerationMetadataForAll(generateDemoLeads(articles, profile), 'demo');
+    }
+    throw createQualificationUnavailableError('Lead qualification unavailable: GEMINI_API_KEY is required for managed production runs.');
   }
 
-  const { createLLMClient } = require('./lib/llm-client');
-  const activeLlm = llm || createLLMClient({
-    provider: 'gemini',
-    apiKey: process.env.GEMINI_API_KEY,
-    model: 'gemini-3-flash-preview',
-    timeout: 30000,
-    maxRetries: 1,
-  });
+  let activeLlm = llm;
+  if (!activeLlm) {
+    const { createLLMClient } = require('./lib/llm-client');
+    activeLlm = createLLMClient({
+      provider: 'gemini',
+      apiKey: process.env.GEMINI_API_KEY,
+      model: 'gemini-3-flash-preview',
+      timeout: 30000,
+      maxRetries: 1,
+    });
+  }
   const prompt = buildLeadAnalysisPrompt(profile, articles);
 
   try {
@@ -506,11 +618,14 @@ async function qualifyLeads(articles, profile, options = {}) {
       console.log(`  회사명 신뢰 필터로 ${rejectedCount}개 리드 제외`);
     }
     console.log(`  분석 완료: ${hardenedLeads.length}개 리드 발견\n`);
-    return hardenedLeads;
+    return withGenerationMetadataForAll(hardenedLeads, 'llm');
   } catch (error) {
     console.error('  [오류] Gemini API 분석 실패:', error.message);
-    console.log('  → 데모 모드로 실행합니다.\n');
-    return normalizeQualifiedLeads(generateDemoLeads(articles, profile), articles);
+    if (isDemoFallbackAllowed(options)) {
+      console.log('  → 명시적 데모 모드로 실행합니다.\n');
+      return withGenerationMetadataForAll(generateDemoLeads(articles, profile), 'demo');
+    }
+    throw createQualificationUnavailableError(`Lead qualification unavailable: ${error.message}`, error);
   }
 }
 

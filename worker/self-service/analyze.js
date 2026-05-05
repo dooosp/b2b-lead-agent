@@ -16,8 +16,10 @@ import {
   normalizeAssumptionsList,
   normalizeCompanyNameWorker,
   normalizeConfidence,
+  normalizeDataGapsList,
   normalizeEvidenceList,
   normalizeExpectedRoiText,
+  normalizeVerificationStatus,
   normalizeSalesPitchText,
   normalizeTrendText,
   normalizeEventType,
@@ -97,6 +99,18 @@ export function generateQuickLeadsWorker(articles, profile, targetCompany = '') 
     );
     const trend = normalizeTrendText(cfg.policy || '', { industry: profile.industry, eventType, article });
     const sources = normalizeSourceList([], article);
+    const generationMode = 'heuristic';
+    const assumptions = ['규칙 기반 빠른 분석이며 LLM 정밀 검토 전 초안입니다.'];
+    const dataGaps = normalizeDataGapsList([
+      'LLM 정밀 분석 미완료',
+      article && article._hasBody ? '' : '기사 본문 미확보',
+      '고객 내부 예산/일정 미확인'
+    ], {
+      generationMode,
+      confidence,
+      sources,
+      evidence: []
+    });
 
     leads.push({
       company,
@@ -114,11 +128,14 @@ export function generateQuickLeadsWorker(articles, profile, targetCompany = '') 
       roi: expectedRoi,
       salesPitch,
       globalContext: trend,
+      generationMode,
+      verificationStatus: 'needs_review',
       confidence,
       confidenceReason: confidence === 'MEDIUM'
-        ? '본문 미확보이나 기사 제목에 정량 신호가 포함되어 신뢰도 보통으로 판정'
-        : '본문 미확보 및 제목 정보가 제한적이어서 신뢰도 낮음으로 판정',
-      assumptions: [],
+        ? '규칙 기반 fallback: 본문 미확보이나 기사 제목에 정량 신호가 포함되어 신뢰도 보통으로 판정'
+        : '규칙 기반 fallback: 본문 미확보 및 제목 정보가 제한적이어서 신뢰도 낮음으로 판정',
+      assumptions,
+      dataGaps,
       eventType
     });
 
@@ -199,6 +216,20 @@ export async function analyzeLeadsWorker(articles, profile, env, targetCompany =
         sourceUrl: article.link || ''
       });
     }
+    const generationMode = 'llm';
+    const assumptions = normalizeAssumptionsList(lead.assumptions, roi);
+    const verificationStatus = normalizeVerificationStatus(getLeadField(lead, ['verificationStatus', 'verification_status']), {
+      generationMode,
+      confidence,
+      sources,
+      evidence
+    });
+    const dataGaps = normalizeDataGapsList(getLeadField(lead, ['dataGaps', 'data_gaps']) || [], {
+      generationMode,
+      confidence,
+      sources,
+      evidence
+    });
 
     companySeen.add(companyKey);
     normalizedLeads.push({
@@ -228,6 +259,8 @@ export async function analyzeLeadsWorker(articles, profile, env, targetCompany =
       buyerRole: sanitizeLeadText(getLeadField(lead, ['buyerRole', 'buyer_role']) || '', '운영/설비 담당 부서'),
       sources,
       evidence,
+      generationMode,
+      verificationStatus,
       confidence,
       confidenceReason: sanitizeLeadText(
         getLeadField(lead, ['confidenceReason', 'confidence_reason']) || '',
@@ -237,7 +270,8 @@ export async function analyzeLeadsWorker(articles, profile, env, targetCompany =
             ? '본문은 없지만 제목에 정량 신호가 있어 신뢰도 보통으로 판정'
             : '본문 미확보 및 제목 정보 제한으로 신뢰도 낮음으로 판정'
       ),
-      assumptions: normalizeAssumptionsList(lead.assumptions, roi),
+      assumptions,
+      dataGaps,
       eventType
     });
   });
