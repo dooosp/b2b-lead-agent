@@ -2,13 +2,20 @@
 
 ## Purpose
 
-Plan a future, human-approved production deploy and observation run for the lazy D1 lead trust and review columns shipped by PR #25 and PR #27.
+Plan a future, human-approved production deploy and observation run for the lazy D1 lead trust and review columns whose production observation is still pending after PR #25 and PR #27.
 
 This document is a readiness plan only. It is not production evidence, not a deployment record, and not a database migration record.
 
 ## Scope
 
 The production observation scope is limited to the D1 `leads` table columns that current `master` proves through `worker/db/schema.js`, `worker/schema.sql`, and `worker/db/transform.js`.
+
+The primary PR #25/#27 lazy-migration target is exact:
+
+- PR #25 added fallback/trust D1 persistence for `generation_mode`, `verification_status`, and `data_gaps`.
+- PR #27 added LeadBrief human-review D1 persistence for `review_status`.
+
+The broader row-read observation below also verifies adjacent current LeadBrief/trust fields that are persisted by the current D1 transform. Those adjacent fields help prove row serialization after deploy, but they must not be described as newly introduced by PR #25 or PR #27.
 
 Columns to observe:
 
@@ -19,7 +26,7 @@ Columns to observe:
 | `confidence` | LeadBrief confidence level | `worker/db/schema.js`, `worker/db/transform.js` |
 | `confidence_reason` | Explanation for confidence/trust posture | `worker/db/schema.js`, `worker/db/transform.js` |
 | `assumptions` | Explicit assumptions behind the brief | `worker/db/schema.js`, `worker/db/transform.js` |
-| `generation_mode` | Generation path such as `llm`, `heuristic`, `demo`, or `unavailable` | `worker/db/schema.js`, `worker/schema.sql`, `worker/db/transform.js` |
+| `generation_mode` | Stored generation path; current D1 transform preserves `llm`, `heuristic`, or `demo` and defaults unknown values to `llm` | `worker/db/schema.js`, `worker/schema.sql`, `worker/db/transform.js` |
 | `verification_status` | Machine verification state such as `verified`, `needs_review`, `draft`, or `unverified` | `worker/db/schema.js`, `worker/schema.sql`, `worker/db/transform.js` |
 | `data_gaps` | Known missing data or review gaps | `worker/db/schema.js`, `worker/schema.sql`, `worker/db/transform.js` |
 | `event_type` | Optional signal/event classification | `worker/db/schema.js`, `worker/db/transform.js` |
@@ -46,7 +53,7 @@ Related non-trust columns such as `identity_key`, `score_reason`, `urgency`, `ur
 - `updateLeadPatchAtomic()` before authenticated PATCH updates.
 - dashboard, enrichment, job, and reference helpers that use D1.
 
-Low-risk future paths that can invoke `ensureD1Schema()` after an approved deploy:
+Read-oriented future paths that can invoke `ensureD1Schema()` after an approved deploy and explicit lazy-DDL approval:
 
 - Authenticated `GET /api/leads?profile=<managed-profile>` through `worker/api/leads.js`.
 - Authenticated `GET /api/history?profile=<managed-profile>` through `worker/api/leads.js`.
@@ -69,6 +76,7 @@ Before any future deploy/observe run, record:
 - Confirmation that the deploy owner is explicitly authorized to trigger production deploy.
 - Confirmation that production DB migration/lazy DDL is explicitly approved, because `ensureD1Schema()` may run `ALTER TABLE`.
 - Confirmation that production DB write approval is explicit for any row roundtrip action.
+- Confirmation that production observation-claim approval is explicit before anyone states production D1 lazy migration was observed.
 - Production DB backup/export policy, or a documented owner decision to hold until that policy is known.
 - Rollback owner and rollback command/process for the Worker deploy.
 - Observation window start/end, owner, and communication channel.
@@ -91,6 +99,7 @@ The future observation run should use the least risky path that proves the neede
    - Use a real lead and a real human review decision through `PATCH /api/leads/<lead-id>`.
    - Do not toggle review state only to manufacture evidence.
    - Capture request timestamp, endpoint, response status, response body fields, and D1 row values.
+   - If no real owner-approved row/action exists, stop with `HOLD_NEEDS_SAFE_WRITE_PATH`.
 7. Verify row values:
    - `review_status` stores the intended human review value.
    - `status` remains the sales pipeline value and was not overwritten by `review_status`.
@@ -109,7 +118,7 @@ Production-observed evidence must include all of:
 - Deployed Worker commit SHA.
 - Deployed Worker version or deployment id if available.
 - Exact endpoint, UI action, or D1 command used.
-- Actor/owner who approved deploy, lazy DDL/migration, and production write if a write occurred.
+- Actor/owner who approved deploy, lazy DDL/migration, production write if a write occurred, and production observation claim.
 - HTTP response status or D1 command result.
 - D1 schema proof showing the target columns in production.
 - Row roundtrip proof for trust/review fields if a production write was approved and safely available.
@@ -149,6 +158,11 @@ This is a template only.
     "approvalRecord": ""
   },
   "productionDbWriteApproval": {
+    "approved": false,
+    "approver": "",
+    "approvalRecord": ""
+  },
+  "productionObservationClaimApproval": {
     "approved": false,
     "approver": "",
     "approvalRecord": ""
@@ -222,6 +236,27 @@ If CSV, API, or UI surfaces show missing columns/fields:
 - Do not expand the frozen CRM latest-published contract as part of the fix.
 - Prefer a narrow follow-up PR with tests over manual production changes.
 
+If old rows lack expected defaults or readable trust/review fields:
+
+- Stop before making a production-observed claim.
+- Capture the schema proof, row id/profile used, field names, timestamp, and deployed SHA.
+- Do not backfill, rewrite, or manually edit production rows without a separately approved production DB repair plan.
+- Decide whether the expected behavior is a transform/defaulting bug, a one-time backfill need, or an acceptable legacy-row limitation before retrying.
+
+If human review decisions appear at risk of overwrite:
+
+- Stop all write-path observation immediately.
+- Preserve before/after evidence for `review_status`, `status`, endpoint/action, and deployed SHA.
+- Do not rerun managed/self-service generation or PATCH unrelated fields to force a clean result.
+- Hold for a scoped root-cause review before any further production DB write.
+
+If the frozen CRM latest-published contract appears expanded unexpectedly:
+
+- Stop and do not treat that response as D1 observation evidence.
+- Compare the response against `docs/exec-plans/internal-api-contract-freeze.md`.
+- Do not accept LeadBrief/trust fields in `crm.published-report.v1` unless a separate contract-expansion PR was approved.
+- Hold for a scoped contract follow-up instead of folding CRM changes into the D1 observation run.
+
 ## Risk Register
 
 | Risk | Impact | Mitigation |
@@ -264,6 +299,7 @@ Scope:
 - observe only D1 leads columns review_status, evidence, confidence, confidence_reason, assumptions, generation_mode, verification_status, data_gaps, and event_type.
 - do not expand CRM, Review Inbox, dashboard, PPT, proposal, CPA, roleplay, RBAC, comments, assignment, or notifications.
 - do not use fake customer data unless separately approved and labeled.
+- stop with HOLD_NEEDS_SAFE_WRITE_PATH if no real owner-approved row/action is available for row roundtrip proof.
 
 If approvals are missing, stop with HOLD and state exactly which approval is missing.
 If approvals are present, deploy only the approved master commit, run the minimal observation checklist from docs/exec-plans/d1-lazy-migration-observation-plan.md, capture evidence using the template, and report whether the readiness decision is READY_TO_DEPLOY_OBSERVE or a HOLD_* value.
