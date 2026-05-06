@@ -39,12 +39,14 @@ Use exactly one status for every fillable field.
 
 | Status | Meaning |
 | --- | --- |
-| `CONFIRM` | Human confirms the candidate value as approved for the later scoped run. |
+| `CONFIRM` | Human confirms the specific field value only when the matching approved-value field is exact, non-placeholder, and backed by the required approver, UTC timestamp, and record. |
 | `REPLACE` | Human rejects the candidate value and provides an approved replacement. |
 | `REJECT` | Human rejects the candidate value and does not provide a replacement. |
 | `HOLD` | Human cannot decide yet, the field is ambiguous, or the value requires a separate owner/policy record. |
 
 If any field is ambiguous, return `HOLD`.
+
+For non-exact path or method candidates, `CONFIRM` is not enough. `DEPLOY_PATH`, `ROLLBACK_PATH`, and `SCHEMA_PROOF_METHOD` remain `HOLD` unless their exact approved command, process, method, and transcript plan fields are filled with non-placeholder values and approval records.
 
 ## Dangerous Gates
 
@@ -85,7 +87,7 @@ Do not auto-confirm any owner. Do not treat GitHub ownership, PR authorship, rep
 
 ## Config Candidate Confirmation
 
-These values are inventory from repo/config/history. They are not approved deploy, DB access, migration, write, or observation values until a human records `CONFIRM` or `REPLACE` with an approval record.
+These values are inventory from repo/config/history. They are not approved deploy, DB access, migration, write, or observation values until a human records `CONFIRM` or `REPLACE`, fills the matching approved-value field with an exact non-placeholder value, and provides an approval record.
 
 | Field | Candidate value | Source | Human decision | Approved value | Approval record | HOLD rule |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -93,15 +95,17 @@ These values are inventory from repo/config/history. They are not approved deplo
 | `D1_BINDING` | `DB` | `worker/wrangler.toml` | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED]` | `[UNFILLED]` | HOLD if binding is treated as DB access approval. |
 | `D1_DATABASE_NAME` | `b2b-leads-db` | `worker/wrangler.toml` | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED]` | `[UNFILLED]` | HOLD if database name is not confirmed by the production DB owner. |
 | `D1_DATABASE_ID` | `8effbfab-bf05-4726-bb74-8d9b6c1cccfe` | `worker/wrangler.toml` | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED]` | `[UNFILLED]` | HOLD if database id is not confirmed by the production DB owner. |
-| `DEPLOY_PATH` | Candidate target only: Cloudflare Worker config in `worker/wrangler.toml`, Worker entrypoint `worker/index.js`, Worker origin variable `https://b2b-lead-trigger.jangho1383.workers.dev`; no exact deploy command is approved. | approval packet | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED_EXACT_COMMAND_OR_PATH]` | `[UNFILLED]` | HOLD until exact deploy command/path and deploy owner approval are recorded. |
-| `ROLLBACK_PATH` | No exact rollback command found; source docs require rollback through approved Worker rollback owner/process. | approval packet and observation plan | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED_EXACT_COMMAND_OR_PROCESS]` | `[UNFILLED]` | HOLD until rollback owner, process, command if any, and stop criteria are recorded. |
-| `SCHEMA_PROOF_METHOD` | Candidate query: `PRAGMA table_info(leads);` through an approved Cloudflare/D1 read path with a machine-readable transcript. | observation plan | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED]` | `[UNFILLED]` | HOLD until production DB owner, DB access, lazy-DDL/migration approval, and evidence transcript plan are filled. |
+| `DEPLOY_PATH` | Candidate target only: Cloudflare Worker config in `worker/wrangler.toml`, Worker entrypoint `worker/index.js`, Worker origin variable `https://b2b-lead-trigger.jangho1383.workers.dev`; no exact deploy command is approved. | approval packet | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED_EXACT_COMMAND_OR_PATH]` | `[UNFILLED]` | HOLD until exact deploy command/path and deploy owner approval are recorded; do not `CONFIRM` the candidate prose. |
+| `ROLLBACK_PATH` | No exact rollback command found; source docs require rollback through approved Worker rollback owner/process. | approval packet and observation plan | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED_EXACT_COMMAND_OR_PROCESS]` | `[UNFILLED]` | HOLD until rollback owner, process, command if any, and stop criteria are recorded; do not `CONFIRM` a missing command. |
+| `SCHEMA_PROOF_METHOD` | Candidate query: `PRAGMA table_info(leads);` through an approved Cloudflare/D1 read path with a machine-readable transcript. | observation plan | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED_EXACT_METHOD_AND_TRANSCRIPT_PLAN]` | `[UNFILLED]` | HOLD until production DB owner, DB access, lazy-DDL/migration approval, exact method, and evidence transcript plan are filled. |
 
 Config values prove inventory only. D1 config is not production observation, and a deploy path candidate is not an approved deploy path.
 
 ## Auto-Extraction Candidate Coverage
 
 This section ensures every relevant value from the approval packet's auto-extracted readiness table has an intake decision.
+
+Approval packet compatibility note: if an upstream readiness row uses `EVIDENCE_STORAGE_REDACTION_POLICY`, treat it as the same intake requirement as `EVIDENCE_STORAGE_POLICY`. Do not create two separate evidence policy gates, and do not weaken the stricter storage, access-control, approval-record, and redaction requirements in this intake.
 
 | Extracted field | Candidate or current state | Required human action |
 | --- | --- | --- |
@@ -126,7 +130,7 @@ Human must provide a policy record or choose `HOLD`. Repo facts can support the 
 | --- | --- | --- | --- | --- | --- | --- |
 | `BACKUP_OR_EXPORT_POLICY` | Production D1 backup/export policy, or explicit owner decision to hold. | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED]` | `[UNFILLED]` | `[UNFILLED]` | HOLD_NEEDS_PROD_DB_BACKUP_POLICY until policy or explicit hold decision is recorded. |
 | `ROLLBACK_PLAN` | Approved Worker rollback owner, command/process, and stop criteria. | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED]` | `[UNFILLED]` | `[UNFILLED]` | HOLD_NEEDS_ROLLBACK_OWNER until rollback plan is explicit. |
-| `EVIDENCE_STORAGE_REDACTION_POLICY` | Release-record location, access controls, redaction rules, and forbidden evidence content. | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED]` | `[UNFILLED]` | `[UNFILLED]` | HOLD if evidence could expose secrets, tokens, auth headers, cookies, private URLs, customer payloads, or PII. |
+| `EVIDENCE_STORAGE_POLICY` | Release-record location, access controls, redaction rules, and forbidden evidence content. | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED]` | `[UNFILLED]` | `[UNFILLED]` | HOLD if evidence could expose secrets, tokens, auth headers, cookies, private URLs, customer payloads, or PII. |
 | `CRM_CONTRACT_FREEZE_CONFIRMATION` | Confirmation that `crm.published-report.v1` remains backward-compatible and does not expose LeadBrief fields unless separately scoped. | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED]` | `[UNFILLED]` | `[UNFILLED]` | HOLD if CRM contract expansion is implied. |
 | `SAFE_PRODUCTION_PROFILE_OR_LEAD_SELECTION` | Safe production profile, lead id, or explicit no-row decision selected by product/release owner. | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED]` | `[UNFILLED]` | `[UNFILLED]` | HOLD until target or no-row decision is explicit. |
 | `SAFE_REAL_ROW_OR_ACTION_POLICY` | Owner-approved real lead/action needing a real review decision, or explicit `NO_WRITE`; no synthetic action, overwrite, or evidence-only toggle. | `[CONFIRM/REPLACE/REJECT/HOLD]` | `[UNFILLED]` | `[UNFILLED]` | `[UNFILLED]` | HOLD_NEEDS_SAFE_WRITE_PATH before any write if this is missing or unsafe. |
@@ -178,11 +182,13 @@ Human must choose one evidence storage path before any future production evidenc
 | Evidence storage choice | Human decision | Location or policy record | Notes |
 | --- | --- | --- | --- |
 | `KEEP_LOCAL_ONLY` | `[SELECTED/NOT_SELECTED]` | `[UNFILLED]` | Local evidence must still be redacted and access-controlled. |
-| `SECURE_RELEASE_RECORD` | `[SELECTED/NOT_SELECTED]` | `[UNFILLED]` | Preferred for restricted production evidence. |
+| `SECURE_RELEASE_RECORD` | `[SELECTED/NOT_SELECTED]` | `[UNFILLED]` | Preferred for restricted production evidence; raw secrets, auth material, private URLs, customer payloads, and PII are still forbidden. |
 | `REDACTED_REPO_ARTIFACT` | `[SELECTED/NOT_SELECTED]` | `[UNFILLED]` | Repo artifacts may contain sanitized excerpts only, never secrets or sensitive payloads. |
 | `OTHER_APPROVED_PATH` | `[SELECTED/NOT_SELECTED]` | `[UNFILLED]` | Must include owner, access controls, redaction rules, and approval record. |
 
 Machine-readable transcripts are required for future production evidence. Screenshots are supplemental only and are never sufficient as the sole proof.
+
+Exactly one evidence storage choice must be selected before production evidence capture. The selected path must include a concrete location or record, redaction confirmation, access controls, and approval record. Secrets, tokens, auth headers, cookies, private URLs, customer payloads, and PII are forbidden in any evidence artifact, transcript, log, release record, local record, repo artifact, or PR artifact; only sanitized or redacted excerpts may be retained.
 
 ## Machine-Readable Confirmation Block
 
@@ -305,6 +311,8 @@ confirmationPacket:
       decision: "HOLD"
       approvedMethod: "[UNFILLED]"
       transcriptPlan: "[UNFILLED]"
+      transcriptMustShowAllTargetColumns: true
+      targetColumnProofRecord: "[UNFILLED]"
       approvalRecord: "[UNFILLED]"
   policyConfirmations:
     BACKUP_OR_EXPORT_POLICY:
@@ -319,13 +327,13 @@ confirmationPacket:
       ownerOrApprover: "[UNFILLED]"
       approvedAtUtc: "[UNFILLED]"
       policyRecord: "[UNFILLED]"
-    EVIDENCE_STORAGE_REDACTION_POLICY:
+    EVIDENCE_STORAGE_POLICY:
       decision: "HOLD"
       value: "[UNFILLED]"
       ownerOrApprover: "[UNFILLED]"
       approvedAtUtc: "[UNFILLED]"
       policyRecord: "[UNFILLED]"
-      forbiddenInRepoOrEvidenceArtifacts:
+      forbiddenInAnyEvidenceArtifactOrRecord:
         - "secrets"
         - "tokens"
         - "auth headers"
@@ -385,6 +393,12 @@ confirmationPacket:
       ownerOrApprover: "[UNFILLED]"
       approvedAtUtc: "[UNFILLED]"
       record: "[UNFILLED]"
+  productionDeployMetadata:
+    deployedWorkerSha: "[UNFILLED]"
+    deploymentIdOrVersion: "[UNFILLED]"
+    deployedAtUtc: "[UNFILLED]"
+    deployTranscriptOrRecord: "[UNFILLED]"
+    productionServiceMatchesApprovedSha: false
   safeRowActionChoice:
     selected: "HOLD_NO_SAFE_ROW"
     allowedChoices:
@@ -409,6 +423,8 @@ confirmationPacket:
       - "REDACTED_REPO_ARTIFACT"
       - "OTHER_APPROVED_PATH"
     locationOrRecord: "[UNFILLED]"
+    accessControls: "[UNFILLED]"
+    approvalRecord: "[UNFILLED]"
     redactionConfirmed: false
   observationScope:
     targetColumns:
@@ -423,6 +439,7 @@ confirmationPacket:
       - "event_type"
     schemaProofOnlyAllowedToClaimProductionObservation: false
     rowRoundtripRequiredForProductionObservationClaim: true
+    schemaTranscriptMustShowAllTargetColumns: true
   explicitHoldFields:
     - "ALLOW_DEPLOY"
     - "ALLOW_PRODUCTION_DB_ACCESS"
@@ -435,7 +452,7 @@ confirmationPacket:
     - "OBSERVATION_OWNER"
     - "BACKUP_OR_EXPORT_POLICY"
     - "ROLLBACK_PLAN"
-    - "EVIDENCE_STORAGE_REDACTION_POLICY"
+    - "EVIDENCE_STORAGE_POLICY"
     - "CRM_CONTRACT_FREEZE_CONFIRMATION"
     - "SAFE_PRODUCTION_PROFILE_OR_LEAD_SELECTION"
     - "SAFE_REAL_ROW_OR_ACTION_POLICY"
@@ -445,9 +462,22 @@ confirmationPacket:
     - "OBSERVATION_COMMUNICATION_CHANNEL"
     - "APPROVED_DEPLOY_SHA"
     - "CI_PROOF_FOR_APPROVED_SHA"
+    - "WORKER_NAME"
+    - "D1_BINDING"
+    - "D1_DATABASE_NAME"
+    - "D1_DATABASE_ID"
     - "DEPLOY_PATH"
     - "ROLLBACK_PATH"
     - "SCHEMA_PROOF_METHOD"
+    - "SCHEMA_TARGET_COLUMN_PROOF"
+    - "DEPLOYED_WORKER_SHA"
+    - "DEPLOYMENT_ID_OR_VERSION"
+    - "DEPLOYED_AT_UTC"
+    - "DEPLOY_TRANSCRIPT_OR_RECORD"
+    - "PRODUCTION_SERVICE_MATCHES_APPROVED_SHA"
+    - "EVIDENCE_STORAGE_CHOICE"
+    - "EVIDENCE_STORAGE_ACCESS_CONTROLS"
+    - "EVIDENCE_STORAGE_APPROVAL_RECORD"
     - "SAFE_REAL_ROW_OR_ACTION_PATH_BEFORE_WRITE"
 ```
 
@@ -458,9 +488,15 @@ confirmationPacket:
 - GitHub CI is not production evidence.
 - D1 config is not production evidence and not production observation.
 - Docs are not production evidence.
+- PR descriptions, generated summaries, local tests, fixtures, staging D1, local D1, and test databases are not production evidence.
 - GitHub owner, admin, PR author, or merger is not automatically the production DB owner.
 - Deploy path candidate is not an approved deploy path.
+- Candidate strings for deploy path, rollback path, and schema proof method are not actionable unless the exact approved command, process, method, transcript plan, and approval records are filled.
+- Raw secrets, tokens, auth headers, cookies, private URLs, customer payloads, and PII are forbidden in any evidence location, including secure release records and local-only storage.
+- Exactly one evidence storage path with concrete location, access controls, redaction confirmation, and approval record is required before production evidence capture.
+- Deployed Worker SHA, deployment id or version, deploy timestamp, deploy transcript or record, and proof that the production service matches the approved SHA are required before any production observation claim.
 - Schema proof only cannot claim row serialization or human-review write behavior.
+- Schema-only or no-write outcomes must not be reported as `READY_TO_DEPLOY_OBSERVE`; they can only support limited schema evidence if separately approved.
 - Production observation cannot be claimed from this packet alone.
 - If `safeRowActionChoice` is not `WRITE_ALLOWED_WITH_REAL_ROW` with complete approved real row/action proof, do not state that production D1 lazy migration was observed.
 - If a write would overwrite a human review decision or toggle `review_status` only to manufacture evidence, return `HOLD_NEEDS_SAFE_WRITE_PATH`.
@@ -478,12 +514,14 @@ Goal: consume the filled Human Confirmation Intake Packet block and perform no p
 Required input:
 - Filled confirmation block from docs/exec-plans/production-d1-observation-human-confirmation-intake.md.
 - Treat all dangerous gates as no unless the filled block explicitly sets them to yes with approver, approvedAtUtc, and approvalRecord.
-- Treat candidate values as unapproved unless the filled block marks CONFIRM or REPLACE and includes the required owner/policy/approval record.
+- Treat candidate values as unapproved unless the filled block marks CONFIRM or REPLACE, fills the matching approved-value field with an exact non-placeholder value, and includes the required owner/policy/approval record.
+- Ignore candidate prose for DEPLOY_PATH, ROLLBACK_PATH, and SCHEMA_PROOF_METHOD. Require approvedExactCommandOrPath, approvedExactCommandOrProcess, approvedMethod, transcriptPlan, and approval records before action.
 
 Start with repo preflight:
 - Prove repo root, repo identity, branch, default branch, HEAD SHA, origin/master SHA, HEAD equals approved SHA yes/no, dirty status, and checkout safety.
 - Fetch the approved SHA from the filled block and stop with HOLD if HEAD is not exactly that SHA before any deploy command.
 - Confirm CI is current and green for the approved SHA. CI is not production evidence.
+- Do not treat local HEAD or CI as proof of what is deployed. Production observation claims require deployed Worker SHA, deployment id or version, deployedAtUtc, deploy transcript or record, and proof that the production service matches the approved SHA.
 - Read AGENTS.md, HARDENING_PLAN.md, NEXT_SESSION_PROMPT.md, docs/exec-plans/internal-api-contract-freeze.md, docs/exec-plans/leadbrief-v1-contract.md, docs/exec-plans/d1-lazy-migration-observation-plan.md, docs/exec-plans/production-d1-observation-approval-packet.md, docs/exec-plans/production-d1-observation-human-confirmation-intake.md, worker/wrangler.toml, .github/workflows/ci.yml, .github/workflows/validate-naming.yml, .github/workflows/generate-report.yml, worker/db/schema.js, worker/schema.sql, worker/db/leads.js, worker/db/transform.js, worker/api/leads.js, and worker/lib/leadbrief-v1.js.
 
 Before any action, enforce all gates:
@@ -492,16 +530,30 @@ Before any action, enforce all gates:
 - If ALLOW_PRODUCTION_DB_MIGRATION is not exactly yes with approver, approvedAtUtc, and approvalRecord, do not invoke any path expected to run ensureD1Schema(); stop with HOLD missing ALLOW_PRODUCTION_DB_MIGRATION.
 - If ALLOW_PRODUCTION_DB_WRITE is not exactly yes with approver, approvedAtUtc, and approvalRecord, do not perform PATCH, self-service analyze persistence, GET /api/leads cache-write observation, GET /api/history cache-write observation, or any production row write.
 - If ALLOW_PRODUCTION_OBSERVATION_CLAIM is not exactly yes with approver, approvedAtUtc, and approvalRecord, do not state that production D1 lazy migration was observed.
-- If DEPLOY_OWNER, PRODUCTION_DB_OWNER, ROLLBACK_OWNER, or OBSERVATION_OWNER is missing or inferred only from GitHub metadata, stop with HOLD and state the exact missing owner.
-- If BACKUP_OR_EXPORT_POLICY, ROLLBACK_PLAN, EVIDENCE_STORAGE_REDACTION_POLICY, CRM_CONTRACT_FREEZE_CONFIRMATION, SAFE_PRODUCTION_PROFILE_OR_LEAD_SELECTION, or HUMAN_REVIEW_OVERWRITE_RISK_CHECK is missing, ambiguous, or lacks a policy record, stop with HOLD and state the exact missing policy.
+- If DEPLOY_OWNER is missing or inferred only from GitHub metadata, stop with HOLD_NEEDS_DEPLOY_OWNER.
+- If PRODUCTION_DB_OWNER is missing or inferred only from GitHub metadata, stop with HOLD and state missing PRODUCTION_DB_OWNER.
+- If ROLLBACK_OWNER is missing or inferred only from GitHub metadata, stop with HOLD_NEEDS_ROLLBACK_OWNER.
+- If OBSERVATION_OWNER is missing or inferred only from GitHub metadata, stop with HOLD and state missing OBSERVATION_OWNER.
+- If BACKUP_OR_EXPORT_POLICY is missing, ambiguous, or lacks a policy record, stop with HOLD_NEEDS_PROD_DB_BACKUP_POLICY.
+- If ROLLBACK_PLAN is missing, ambiguous, or lacks a policy record, stop with HOLD_NEEDS_ROLLBACK_OWNER.
+- If EVIDENCE_STORAGE_POLICY, CRM_CONTRACT_FREEZE_CONFIRMATION, SAFE_PRODUCTION_PROFILE_OR_LEAD_SELECTION, or HUMAN_REVIEW_OVERWRITE_RISK_CHECK is missing, ambiguous, or lacks a policy record, stop with HOLD and state the exact missing policy.
 - If OBSERVATION_WINDOW_START_UTC, OBSERVATION_WINDOW_END_UTC, or OBSERVATION_COMMUNICATION_CHANNEL is missing, ambiguous, or lacks a record, stop with HOLD and state the exact missing coordination key.
-- If WORKER_NAME, D1_BINDING, D1_DATABASE_NAME, D1_DATABASE_ID, DEPLOY_PATH, ROLLBACK_PATH, or SCHEMA_PROOF_METHOD is missing, ambiguous, or lacks an approval record, stop with HOLD and state the exact missing config key.
+- If WORKER_NAME, D1_BINDING, D1_DATABASE_NAME, or D1_DATABASE_ID is missing, ambiguous, or lacks an exact approved value and approval record, stop with HOLD and state the exact missing config key.
+- If DEPLOY_PATH lacks a non-placeholder approvedExactCommandOrPath and approval record, stop with HOLD and state missing DEPLOY_PATH.
+- If ROLLBACK_PATH lacks a non-placeholder approvedExactCommandOrProcess and approval record, stop with HOLD_NEEDS_ROLLBACK_OWNER.
+- If SCHEMA_PROOF_METHOD lacks a non-placeholder approvedMethod, transcriptPlan, targetColumnProofRecord, and approval record, stop with HOLD missing SCHEMA_PROOF_METHOD.
+- If the approved schema transcript does not prove every observationScope.targetColumns entry exists in production, stop with HOLD missing SCHEMA_TARGET_COLUMN_PROOF.
 - If CRM_CONTRACT_FREEZE_CONFIRMATION does not keep crm.published-report.v1 frozen, stop with HOLD and state CRM_CONTRACT_EXPANSION_RISK.
-- If evidence storage would place secrets, tokens, auth headers, cookies, private URLs, customer payloads, or PII in repo/PR artifacts or unrestricted records, stop with HOLD and state EVIDENCE_STORAGE_POLICY.
+- If evidenceStorageChoice does not select exactly one allowed storage path, or if locationOrRecord, accessControls, or approvalRecord is missing, or if redactionConfirmed is not true, stop with HOLD and state EVIDENCE_STORAGE_POLICY.
+- If evidence storage would capture, store, or report secrets, tokens, auth headers, cookies, private URLs, customer payloads, or PII in any artifact, transcript, log, release record, local record, repo artifact, or PR artifact, stop with HOLD and state EVIDENCE_STORAGE_POLICY. Only sanitized or redacted excerpts are allowed anywhere.
+- If local tests, fixtures, generated summaries, PR descriptions, docs, CI, D1 config, staging D1, local D1, or test databases are offered as production evidence, stop with HOLD and state INVALID_PRODUCTION_EVIDENCE.
+- Before any production observation claim, require productionDeployMetadata.deployedWorkerSha, deploymentIdOrVersion, deployedAtUtc, deployTranscriptOrRecord, and productionServiceMatchesApprovedSha=true; otherwise do not claim observation and stop with HOLD missing PRODUCTION_DEPLOY_METADATA.
 - If SCHEMA_PROOF_METHOD or its machine-readable transcript plan is missing, stop with HOLD missing SCHEMA_PROOF_METHOD.
+- If schema proof is used for any readiness or observation decision, the machine-readable production schema transcript must show every target column listed in observationScope.targetColumns.
 - If safeRowActionChoice is HOLD_NO_SAFE_ROW, stop before any write and do not claim production observation.
-- If safeRowActionChoice is NO_WRITE_SCHEMA_PROOF_ONLY, do not write and do not claim row roundtrip or production-observed lazy migration.
+- If safeRowActionChoice is NO_WRITE_SCHEMA_PROOF_ONLY, do not write, do not claim row roundtrip or production-observed lazy migration, and do not report READY_TO_DEPLOY_OBSERVE.
 - If safeRowActionChoice is WRITE_ALLOWED_WITH_REAL_ROW, proceed only if SAFE_REAL_ROW_OR_ACTION_POLICY and the row/action fields include exact real row/action, ownerOrApprover, approvedAtUtc, policyOrApprovalRecord, rollback/restoration plan, real business/review reason, evidence redaction policy, reviewStatusBeforeIfKnown or an explicit unavailable reason, reviewStatusAfter, pipelineStatusPreservationCheck, and human-review overwrite-risk check.
+- If write approval or a safe real row/action is missing, stop with HOLD_NEEDS_SAFE_WRITE_PATH before any row roundtrip or READY_TO_DEPLOY_OBSERVE report.
 - If a PATCH would overwrite an existing human review decision, toggle review_status only to manufacture evidence, or lacks a real new human review decision, stop with HOLD_NEEDS_SAFE_WRITE_PATH.
 
 Scope:
@@ -510,5 +562,5 @@ Scope:
 - Do not use fake customer data unless separately approved and labeled.
 - Treat GET /api/leads?profile=<managed-profile> and GET /api/history?profile=<managed-profile> as possible production writes because they can cache GitHub artifacts into D1 when D1 has no rows.
 
-If every all-gates item is present and unambiguous, perform only the minimal approved action from the filled block, capture machine-readable evidence using the approved evidence policy, preserve status vs review_status separation, keep crm.published-report.v1 frozen, and report READY_TO_DEPLOY_OBSERVE, a source-of-truth HOLD_* value, or HOLD with the exact missing key. Do not claim production D1 lazy migration was observed unless approved row roundtrip proof exists and ALLOW_PRODUCTION_OBSERVATION_CLAIM is exactly yes with a complete approval record.
+If and only if every all-gates item is present and unambiguous, safeRowActionChoice is WRITE_ALLOWED_WITH_REAL_ROW with complete safe real row/action proof, deployed production metadata proves the service matches the approved SHA, evidence storage is approved and sanitized, and ALLOW_PRODUCTION_OBSERVATION_CLAIM is exactly yes with a complete approval record, perform only the minimal approved action from the filled block, capture machine-readable evidence using the approved evidence policy, preserve status vs review_status separation, keep crm.published-report.v1 frozen, and report READY_TO_DEPLOY_OBSERVE. Otherwise report the exact source-of-truth HOLD_* value or HOLD with the exact missing key. Do not claim production D1 lazy migration was observed unless approved row roundtrip proof exists and ALLOW_PRODUCTION_OBSERVATION_CLAIM is exactly yes with a complete approval record.
 ```
