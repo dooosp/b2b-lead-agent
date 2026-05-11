@@ -114,7 +114,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   });
   const failingPayload = await readJson(failingResponse);
   assert.equal(failingResponse.status, 500);
-  assert.match(failingPayload.message, /fake D1 forced failure/);
+  assert.equal(failingPayload.success, false);
+  assert.match(failingPayload.message, /리드 데이터를 불러오는 중 오류/);
+  assert.doesNotMatch(JSON.stringify(failingPayload), /fake D1 forced failure/);
 
   browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
