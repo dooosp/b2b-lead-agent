@@ -107,8 +107,12 @@
   - synthetic lead-quality evaluation harness.
   - current-master replacement for old dashboard unauthorized UX PR #23.
   - roadmap synthesis for old PR disposition and product boundaries.
+- PRs #52-#55 then refreshed repo state and shipped bounded review-quality follow-ups:
+  - advisory next-review-action reasons and checklist items.
+  - cached `/leads` review queue filters.
+  - Workbench Solution Translation Summary guidance.
 - Stale PRs #1-#9 were audited after PR #51, received disposition comments, and were closed without merge or branch deletion. Their useful ideas remain concept inventory to recut from current `master`.
-- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#51 or the stale PR cleanup.
+- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#55 or the stale PR cleanup.
 
 ## Findings Closed On `master`
 
@@ -181,8 +185,8 @@
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
-  - Recommended next non-production goal: recut deterministic next-review-action guidance from old PR #5 on top of current LeadBrief/Opportunity Workbench data.
-  - Rationale: Workbench, local E2E, and synthetic lead-quality evaluation are now shipped, so advisory next-action guidance can be implemented without reviving the old stacked branch or expanding CRM ownership.
+  - Recommended next non-production goal: recut bounded product context and signal-fusion guidance from old PR #1 on top of current LeadBrief/Opportunity Workbench data.
+  - Rationale: Workbench, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, and solution translation are now shipped, so the next product-quality increment should improve context quality without reviving the old stacked branch or expanding CRM ownership.
   - Keep production proof, platform migration, storage migration, and production observation work behind separate approval gates.
 
 ## Current Operating Sequence
