@@ -136,6 +136,69 @@ test('opportunity workbench gives approved verified leads an advisory outreach c
   assert.match(html, /후속 조치일과 담당 메모를 남기세요\./);
 });
 
+test('opportunity workbench translates solution fit from current LeadBrief fields', () => {
+  const model = buildOpportunityWorkbenchModel({
+    id: 'lead-solution-fit',
+    company: 'Solution Fit Co',
+    reviewStatus: 'APPROVED',
+    verificationStatus: 'verified',
+    generationMode: 'llm',
+    signal: 'Chiller retrofit program entered vendor shortlist',
+    whyNow: 'Shortlist closes this quarter.',
+    recommendedMessage: 'Follow up with operations director about a compressor retrofit pilot.',
+    product: 'Turbocor compressor',
+    confidence: 'HIGH',
+    evidence: [
+      { field: 'summary', quote: 'vendor shortlist', sourceUrl: 'https://example.com/solution-fit' },
+    ],
+    sources: [{ title: 'Solution Fit source', url: 'https://example.com/solution-fit' }],
+    dataGaps: [],
+  });
+  const html = renderOpportunityWorkbench(model);
+
+  assert.equal(model.solutionTranslation.solution, 'Turbocor compressor');
+  assert.equal(
+    model.solutionTranslation.whyThisSolution,
+    'Turbocor compressor is the candidate solution to review against Chiller retrofit program entered vendor shortlist.'
+  );
+  assert.equal(model.solutionTranslation.whyNow, 'Shortlist closes this quarter.');
+  assert.equal(
+    model.solutionTranslation.reviewCaveat,
+    'Approved and verified context is ready for human-personalized outreach, not automatic sending.'
+  );
+  assert.match(html, /솔루션 번역/);
+  assert.match(html, /왜 이 솔루션/);
+  assert.match(html, /Turbocor compressor/);
+  assert.match(html, /Shortlist closes this quarter\./);
+  assert.match(html, /not automatic sending/);
+});
+
+test('opportunity workbench keeps solution translation conservative for weak evidence', () => {
+  const model = buildOpportunityWorkbenchModel({
+    id: 'lead-weak-solution',
+    company: 'Weak Solution Co',
+    reviewStatus: 'NEEDS_REVIEW',
+    verificationStatus: 'needs_review',
+    generationMode: 'heuristic',
+    signal: 'Expansion rumor needs confirmation',
+    whyNow: '',
+    recommendedMessage: '',
+    confidence: 'LOW',
+    evidence: [],
+    sources: [],
+    dataGaps: ['Buyer not confirmed'],
+  });
+  const html = renderOpportunityWorkbench(model);
+
+  assert.equal(model.solutionTranslation.solution, '추천 솔루션 확인 필요');
+  assert.equal(
+    model.solutionTranslation.reviewCaveat,
+    'Use only as an internal review note until evidence, data gaps, and human review state are resolved.'
+  );
+  assert.match(html, /추천 솔루션 확인 필요/);
+  assert.match(html, /Use only as an internal review note/);
+});
+
 test('opportunity workbench turns missing evidence into explicit data-gap review items', () => {
   const model = buildOpportunityWorkbenchModel({
     id: 'lead-missing',

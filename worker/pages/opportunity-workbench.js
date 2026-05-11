@@ -252,6 +252,33 @@ function buildNextAction({ reviewStatus, verificationStatus, generationMode, con
   };
 }
 
+function buildSolutionTranslation({ brief, reviewStatus, verificationStatus, confidence, evidence, dataGaps }) {
+  const solution = cleanText(
+    brief.product || brief.solution || brief.recommendedProduct || brief.productName,
+    '추천 솔루션 확인 필요'
+  );
+  const signal = cleanText(brief.signal || brief.summary, 'current lead signal');
+  const whyThisSolution = solution === '추천 솔루션 확인 필요'
+    ? `No candidate solution is explicit yet; review ${signal} before shaping outreach.`
+    : `${solution} is the candidate solution to review against ${signal}.`;
+  const whyNow = cleanText(brief.whyNow, 'Timing rationale needs review before outreach.');
+  const isReadyForHumanOutreach = reviewStatus.value === 'APPROVED'
+    && verificationStatus.value === 'verified'
+    && confidence.value === 'HIGH'
+    && evidence.count > 0
+    && dataGaps.count === 0;
+  const reviewCaveat = isReadyForHumanOutreach
+    ? 'Approved and verified context is ready for human-personalized outreach, not automatic sending.'
+    : 'Use only as an internal review note until evidence, data gaps, and human review state are resolved.';
+
+  return {
+    solution,
+    whyThisSolution,
+    whyNow,
+    reviewCaveat,
+  };
+}
+
 export function buildOpportunityWorkbenchModel(lead = {}) {
   const brief = toLeadBriefV1(lead);
   const reviewStatus = buildStatus(normalizeReviewStatus(brief.reviewStatus), REVIEW_STATUS_LABELS, 'NEEDS_REVIEW');
@@ -274,6 +301,14 @@ export function buildOpportunityWorkbenchModel(lead = {}) {
     sources,
     dataGaps,
   });
+  const solutionTranslation = buildSolutionTranslation({
+    brief,
+    reviewStatus,
+    verificationStatus,
+    confidence,
+    evidence,
+    dataGaps,
+  });
 
   return {
     id: cleanText(brief.id),
@@ -293,6 +328,7 @@ export function buildOpportunityWorkbenchModel(lead = {}) {
     dataGaps,
     assumptions,
     nextAction,
+    solutionTranslation,
   };
 }
 
@@ -314,7 +350,7 @@ function renderTextItems(items, emptyLabel) {
 }
 
 export function renderOpportunityWorkbench(model) {
-  const workbench = model && model.nextAction ? model : buildOpportunityWorkbenchModel(model);
+  const workbench = model && model.nextAction && model.solutionTranslation ? model : buildOpportunityWorkbenchModel(model);
   const scoreLabel = workbench.score === null ? '점수 미확인' : `${workbench.score}점`;
   const gradeLabel = workbench.grade ? `${workbench.grade}등급` : '등급 미확인';
   const dataGapTitle = workbench.dataGaps.count > 0 ? `데이터 공백 ${workbench.dataGaps.count}건` : '데이터 공백 없음';
@@ -338,6 +374,24 @@ export function renderOpportunityWorkbench(model) {
           <span>${escapeHtml(workbench.whyNow)}</span>
         </div>
         <div class="opportunity-workbench-grid">
+          <div class="opportunity-workbench-panel opportunity-workbench-wide opportunity-workbench-solution">
+            <span class="panel-label">솔루션 번역</span>
+            <div class="opportunity-workbench-solution-grid">
+              <div>
+                <strong>추천 솔루션</strong>
+                <p>${escapeHtml(workbench.solutionTranslation.solution)}</p>
+              </div>
+              <div>
+                <strong>왜 이 솔루션</strong>
+                <p>${escapeHtml(workbench.solutionTranslation.whyThisSolution)}</p>
+              </div>
+              <div>
+                <strong>왜 지금</strong>
+                <p>${escapeHtml(workbench.solutionTranslation.whyNow)}</p>
+              </div>
+            </div>
+            <p class="opportunity-workbench-caveat">${escapeHtml(workbench.solutionTranslation.reviewCaveat)}</p>
+          </div>
           <div class="opportunity-workbench-panel">
             <span class="panel-label">검토 상태</span>
             <div class="opportunity-workbench-pill-row">
@@ -408,6 +462,10 @@ export function getOpportunityWorkbenchStyles() {
     .opportunity-workbench-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
     .opportunity-workbench-panel { border:1px solid #26384c; border-radius:8px; padding:12px; background:#121a24; min-width:0; }
     .opportunity-workbench-wide { grid-column:span 2; }
+    .opportunity-workbench-solution-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .opportunity-workbench-solution-grid div { border:1px solid #223447; border-radius:8px; padding:10px; background:#101925; min-width:0; }
+    .opportunity-workbench-solution-grid strong { color:#a8efc0; display:block; font-size:12px; margin-bottom:5px; }
+    .opportunity-workbench-caveat { border-top:1px solid #223447; color:#9fb0c0 !important; margin-top:10px !important; padding-top:10px; }
     .opportunity-workbench-pill-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
     .opportunity-workbench-pill { border:1px solid #3a5575; border-radius:999px; color:#dbeafe; display:inline-flex; font-size:11px; font-weight:700; line-height:1; padding:5px 8px; }
     .review-needs_review, .verification-needs_review, .confidence-medium, .generation-heuristic, .generation-unavailable { background:#4a3a12; border-color:#806718; color:#ffe58a; }
@@ -428,6 +486,7 @@ export function getOpportunityWorkbenchStyles() {
       .opportunity-workbench-header { flex-direction:column; }
       .opportunity-workbench-action { min-width:0; width:100%; }
       .opportunity-workbench-grid { grid-template-columns:1fr; }
+      .opportunity-workbench-solution-grid { grid-template-columns:1fr; }
       .opportunity-workbench-wide { grid-column:auto; }
       .opportunity-workbench-evidence-list { max-height: none; }
     }

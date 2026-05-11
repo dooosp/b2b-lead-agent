@@ -4,9 +4,9 @@ This roadmap turns the current PR train, old branch archaeology, Issue #34 proof
 
 Current baseline:
 
-- `master` includes PRs #36-#43, PR #51's integration of #44-#49, the post-merge roadmap audit in PR #52, and advisory next-review-action guidance in PR #53 at `0621e83aca7ca59316a33f28291518567e0748ff`.
+- `master` includes PRs #36-#43, PR #51's integration of #44-#49, the post-merge roadmap audit in PR #52, advisory next-review-action guidance in PR #53, and review queue filters in PR #54 at `b6607a82126db04597875b555d9249c4f9787853`.
 - The canonical product unit is a LeadBrief-style lead with source, trust, confidence, assumptions, data gaps, and human `reviewStatus`.
-- Opportunity Workbench includes deterministic, advisory next-review-action reasons and a human review checklist derived from evidence gaps, confidence, verification, generation mode, and review state.
+- Opportunity Workbench includes deterministic, advisory next-review-action reasons, a human review checklist, and a Solution Translation Summary derived from evidence gaps, confidence, verification, generation mode, review state, product, signal, and why-now rationale.
 - The `/leads` review queue can filter cached LeadBriefs by review status, verification status, generation mode, confidence, and data-gap presence without adding CRM ownership or production query behavior.
 - The product is a B2B lead discovery, briefing, and human-review aid.
 - It is not a CRM replacement, automatic salesperson, proposal generator source of truth, or PPT-first product.
@@ -35,7 +35,7 @@ Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm te
 | Priority | Feature | Source | Scope |
 | --- | --- | --- | --- |
 | Shipped | Review queue filters | Current LeadBrief baseline plus Workbench | Filter cached `/leads` rows by `reviewStatus`, `verificationStatus`, generation mode, data gaps, and confidence. Avoid full CRM ownership concepts. |
-| P1 | Solution translation summary | Old #2 concept, recut | Explain "why this solution" and "why now" inside LeadBrief/Workbench, sourced from existing profile/product context and evidence. |
+| Shipped | Solution translation summary | Old #2 concept, recut | Explain "why this solution" and "why now" inside LeadBrief/Workbench, sourced from existing product, signal, why-now, evidence, and review state. |
 | P2 | Product context and signal fusion | Old #1 concept, recut | Add bounded product/signal context only where it improves LeadBrief review quality. Avoid broad schema expansion until scoped. |
 | P2 | Stakeholder-specific prep | Old #6 concept, recut | Roleplay/helper guidance for economic buyer, technical evaluator, operator, procurement, sponsor, and champion. Not approval automation. |
 
