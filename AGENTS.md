@@ -14,8 +14,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 
 ## Current Shipped Baseline
 
-- `master` includes the April 7, 2026 hardening cycle, the PR #25 P0 trust-boundary baseline, the PR #27 LeadBrief v1 review contract baseline, the May 11 route/data/schema/evidence/docs cleanup train, PR #51's post-train integration, PR #52/#53 review-roadmap follow-ups, PR #54 review queue filters, PR #55 Solution Translation Summary, PR #56 source-of-truth doc sync, PR #57 Product Context / Signal Fusion, and PR #58 post-PR57 doc sync at `9f7c795`.
-- The active Workbench Stakeholder Prep follow-up recuts old PR #6 as advisory role-specific helper guidance on top of existing LeadBrief/Opportunity Workbench data.
+- `master` includes the April 7, 2026 hardening cycle, the PR #25 P0 trust-boundary baseline, the PR #27 LeadBrief v1 review contract baseline, the May 11 route/data/schema/evidence/docs cleanup train, PR #51's post-train integration, PR #52/#53 review-roadmap follow-ups, PR #54 review queue filters, PR #55 Solution Translation Summary, PR #56 source-of-truth doc sync, PR #57 Product Context / Signal Fusion, PR #58 post-PR57 doc sync, and PR #59 Workbench Stakeholder Prep through `39f69fa`.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -23,6 +22,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - PR #27 shipped LeadBrief v1 as the central human-review unit across root qualification, published snapshots, D1 persistence, `/api/leads`, self-service responses, CSV/export trust metadata, and the minimum review UI.
 - PRs #36-#43 shipped Worker route dispatch, LeadBrief data-path hardening, schema drift checks, test helper refactors, review UX metadata, release evidence tooling, architecture docs, and canonical naming cleanup.
 - PR #51 integrated PRs #44-#49: Opportunity Workbench v1, local-only Worker E2E harness, Worker auth/error hardening, synthetic lead-quality evaluation, old PR #23 replacement, and roadmap synthesis.
+- PR #59 recut old PR #6 as advisory role-specific Workbench helper guidance on top of existing LeadBrief/Opportunity Workbench data.
 - Do not reopen those findings unless you can point to a current-`master` regression or a newly verified gap.
 - Treat closed PRs #1-#9, #10, #22, and #23 as stale/superseded concept inventory unless explicitly re-scoped on top of current `master`.
 - Recommended next non-production product goal: recut the remaining evidence/data-gap dashboard ideas from old PR #3 as review helper guidance, or extend roleplay with explicitly advisory stakeholder context, keeping either path human-reviewed and outside CRM ownership.
