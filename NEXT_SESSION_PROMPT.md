@@ -3,78 +3,66 @@
 ## 현재 기준 상태
 
 - 기준 브랜치: `master`
-- 이번 refresh 기준 현재 `master` HEAD: `d48af7e` (`Merge pull request #32 from dooosp/docs/production-d1-observation-human-confirmation-intake`)
+- 마지막 검증된 pre-PR #43 `origin/master` HEAD: `0e182c1a5ad7e445915c15c4bd047c7bf250dfc2` (`Merge pull request #42 from dooosp/codex/architecture-map-docs-v1`)
+- PR #43이 merge된 뒤에는 반드시 `git fetch origin master`와 `git rev-parse origin/master`로 실제 최신 HEAD를 다시 기록한다.
+- hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`, `docs/architecture/*.md`, `NEXT_SESSION_PROMPT.md`
 - LeadBrief v1 merge baseline: `5776d4a` (`[Product] Freeze LeadBrief v1 review contract (#27)`)
-- hardening merge baseline: `95c9d54` (`[P0] Harden trust boundary and fallback lead publication (#25)`)
-- 현재 hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`
-- 2026-05-05 PR #27 landing refresh 기준 shipped 상태:
-  - Wave 1: PR #11 + PR #12
-  - Wave 2: PR #16
-  - Wave 3: PR #18
-  - P0 trust boundary and fallback publication guard: PR #25
-  - LeadBrief v1 review contract and minimum human-review baseline: PR #27
-- PR #25 shipped facts:
-  - `/api/internal/*` uses `API_TOKEN` only; `TRIGGER_PASSWORD` cannot access internal APIs
-  - latest-published readiness failures return `503 readiness_unavailable`
-  - managed/root LLM missing/failure fails closed unless explicit demo mode is enabled
-  - demo leads cannot be canonical-published
-  - heuristic/self-service fallback output is non-verified / needs review in payloads, UI cards, copy output, downloads, and D1 rows
-  - D1 trust metadata columns are lazy-migration-compatible, not yet production-observed
-- PR #27 shipped facts:
-  - LeadBrief v1 is the central human-review unit across root qualification, published snapshots, D1 persistence, `/api/leads`, self-service responses, CSV/export trust metadata, and the minimum review UI.
-  - Required fields: `company`, `signal`, `sources`, `whyNow`, `recommendedMessage`, `confidence`, `assumptions`, `dataGaps`, `reviewStatus`.
-  - ReviewStatus states are frozen as `NEW`, `NEEDS_REVIEW`, `APPROVED`, `REJECTED`, and `DEFERRED`.
-  - LLM leads default to `NEEDS_REVIEW`, even when `verificationStatus` is `verified`.
-  - Heuristic and fallback leads remain `NEEDS_REVIEW`.
-  - Demo leads remain blocked from canonical publication.
-  - Human PATCH actions can update `reviewStatus` with frozen-state validation.
-  - `status` remains the sales pipeline state and is separate from `reviewStatus`.
-  - Managed/self-service upserts preserve existing `review_status` on conflict.
-  - CSV/export/UI/self-service surfaces preserve review/trust metadata.
-  - Internal latest-published CRM contract remains backward-compatible and does not expose LeadBrief fields unless later scoped.
-  - D1 `review_status` is lazy-migration-compatible, not yet production-observed.
-- Production deploy was not performed during PR #25, PR #26, or PR #27 landing.
-- Production DB writes were not performed during PR #27 landing.
-- First production write after deploy should be observed to confirm D1 lazy migration for trust/review columns.
-- PR #22 is superseded by merged PR #25 unless re-scoped from current `master`.
-- 현재 `master` truth 기준으로, shipped finding을 다시 여는 새 증거나 회귀는 이번 refresh에서 확인되지 않음
-- 현재 운영 정리 source of truth:
-  - stale open PR disposition은 `tmp/codex/ops-baseline-cleanup-2026-04/pr-cleanup-plan.md`
-  - raw branch나 오래된 open PR은 current `master` 기준 merge-safe artifact로 간주하지 말 것
-- 추천 다음 mega goal: `Production Readiness: D1 Lazy Migration Observation Plan`
-  - Goal: prepare a safe deploy/observation checklist for lazy trust/review columns without performing deploy.
-  - Do not implement Review Inbox v1, contract externalization, CRM expansion, PPT, RBAC, assignment, notifications, or dashboard redesign in that run.
-- D1 lazy migration observation plan exists at `docs/exec-plans/d1-lazy-migration-observation-plan.md`.
-- No production deploy, production DB write, production DB migration, or production-observed D1 migration claim was performed by that planning PR.
-- Production D1 observation approval packet exists at `docs/exec-plans/production-d1-observation-approval-packet.md`.
-- PR #31 landed the auto-extracted readiness values in the approval packet at `c9e55a81e2b27a06228d54b24a48937c66410ccd`, but those values remain candidate-only and are not approvals.
-- Human confirmation intake packet exists at `docs/exec-plans/production-d1-observation-human-confirmation-intake.md`.
-- PR #32 landed the human confirmation intake packet at `d48af7eff1fe5f2c5591ffc4fc33a823a5d45095`.
-- Auto-filled production D1 observation confirmation draft exists at `docs/exec-plans/production-d1-observation-confirmation-draft.md` as `DRAFT_NOT_APPROVED`; all dangerous gates remain `no`, owner/policy fields remain human-only, and repo/GitHub/config facts are candidates only.
-- Recommended next action: a human release owner reviews, confirms/replaces/rejects, or holds the auto-filled confirmation draft before any production deploy/observe run is attempted.
+- P0 trust-boundary baseline: `95c9d54` (`[P0] Harden trust boundary and fallback lead publication (#25)`)
+
+## 최근 landed PR train
+
+- PR #36 landed Worker route dispatch refactor:
+  - `worker/index.js` is now a thin delegate to `worker/routes/dispatcher.js`.
+  - Route matching, route inventory, static/page/API dispatch, and response helpers live under `worker/routes/*`.
+  - Unknown `/api/*` paths return JSON `404`; known routes with unsupported methods return JSON `405` with `Allow` where route metadata knows allowed methods.
+- PR #37 landed LeadBrief data-path hardening:
+  - Missing LeadBrief `verificationStatus` now normalizes to conservative mode-based defaults.
+  - Trust fields are covered across transforms, D1 row serialization, API serialization, CSV, and PATCH response contracts.
+- PR #38 landed test architecture refactor:
+  - Shared root fixtures, Worker HTTP helpers, and fake D1 helpers are the preferred test utilities.
+  - Route-boundary and schema/default/error tests were consolidated around those helpers.
+- PR #39 landed D1 schema drift hardening:
+  - `npm run check:schema` verifies consistency between `worker/schema.sql` and `worker/db/schema.js`.
+  - CI runs the schema check before `npm test`.
+- PR #40 landed lead review UX metadata improvements:
+  - Lead list/detail pages show review, verification, generation, confidence, evidence, and data-gap metadata more explicitly.
+- PR #41 landed local release evidence toolkit:
+  - `npm run evidence:packet` and `npm run test:evidence` are local-only tooling.
+  - Evidence packet generation does not prove production observation.
+- PR #42 landed architecture docs:
+  - `docs/architecture/repo-map.md`, `docs/architecture/worker-routes.md`, and `docs/architecture/data-path.md` map the current route/data/release boundaries.
+- PR #43, when merged, lands dead-code/dependency/naming cleanup:
+  - News-fetcher alias wrappers are removed or routed through canonical modules.
+  - `scripts/check-naming.js` guards removed alias wrapper names.
+  - No package upgrades, production deploys, production DB writes, production DB access, Worker endpoint calls, or production observation claims are part of the train.
+
+## Production boundary
+
+- Issue #34 production proof work is closed out. Do not continue production proof work unless a new human-approved production prompt explicitly opens it.
+- CI, docs, source inspection, local fake-D1 tests, and release evidence packets are not production D1 evidence.
+- Production deploy, Wrangler deploy, Wrangler D1 execute, production Worker endpoint calls, production DB access, and production writes remain separate human-approved operations.
+- The auto-filled production D1 observation confirmation draft remains `DRAFT_NOT_APPROVED` unless a human owner explicitly changes it.
 
 ## 검증 기준선
 
-- `npm run test:unit` = worker unit coverage
-- `npm run test:contract` = worker contract and trigger coverage
-- `npm run test:worker` = combined worker gate
-- `npm test` = root coverage + combined worker gate
+- `npm run check:naming` = canonical path/naming guard
+- `npm run check:schema` = local D1 schema drift guard
+- `npm run test:evidence` = release evidence toolkit tests
+- `npm run test:unit` = Worker unit coverage
+- `npm run test:contract` = Worker contract and trigger coverage
+- `npm run test:worker` = combined Worker gate
+- `npm test` = root coverage + combined Worker gate
 
 ## 다음 세션 시작 규칙
 
 1. `origin/master` 기준으로 sync하고 repo fingerprint를 다시 확인한다.
-2. 먼저 `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`를 읽는다.
+2. 먼저 `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md`를 읽는다.
 3. 이미 shipped 된 finding을 다시 열지 말고, 현재 `master`에서 재현되는 새 증거나 회귀가 있을 때만 follow-up으로 다룬다.
-4. integration/control은 한 스레드에서 유지하고, 구현은 scope가 좁은 owned worktree로 분리한다.
-5. 여러 lane이 동시에 진행되면 raw branch를 바로 merge하지 말고 current `master` 위에서 integration artifact PR로 ship한다.
+4. raw branch나 오래된 open PR은 current `master` 기준 merge-safe artifact로 간주하지 않는다.
+5. production deploy/observe/D1 work는 별도 human approval 없이는 시작하지 않는다.
 
 ## 바로 붙여 넣을 프롬프트
 
 ```text
-You are working on the B2B Lead Agent repository after the May 5, 2026 PR #27 landing refresh, the follow-up D1 lazy migration observation planning PR, the production D1 observation approval packet, PR #31 auto-extracted readiness refresh, and PR #32 human confirmation intake packet. Start from updated `origin/master`. Before changing code, read `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, `docs/exec-plans/internal-api-contract-freeze.md`, `docs/exec-plans/leadbrief-v1-contract.md`, `docs/exec-plans/d1-lazy-migration-observation-plan.md`, `docs/exec-plans/production-d1-observation-approval-packet.md`, `docs/exec-plans/production-d1-observation-human-confirmation-intake.md`, and `docs/exec-plans/production-d1-observation-confirmation-draft.md`. Treat current `master` history as the source of truth: the latest LeadBrief merge baseline is `5776d4a`, the merge commit for `[Product] Freeze LeadBrief v1 review contract (#27)`, PR #31 landed candidate-only auto-extracted D1 observation readiness values at `c9e55a81e2b27a06228d54b24a48937c66410ccd`, and PR #32 landed the human confirmation intake packet at `d48af7eff1fe5f2c5591ffc4fc33a823a5d45095`. Wave 1 shipped via PRs #11 and #12, Wave 2 via PR #16, Wave 3 via PR #18, PR #25 shipped the P0 trust-boundary/fallback-publication baseline, and PR #27 shipped LeadBrief v1 as the central human-review unit. Preserve PR #27 facts: required LeadBrief v1 fields are `company`, `signal`, `sources`, `whyNow`, `recommendedMessage`, `confidence`, `assumptions`, `dataGaps`, and `reviewStatus`; ReviewStatus states are `NEW`, `NEEDS_REVIEW`, `APPROVED`, `REJECTED`, and `DEFERRED`; LLM leads default to `NEEDS_REVIEW` even when `verificationStatus` is `verified`; heuristic/fallback leads remain `NEEDS_REVIEW`; demo leads remain blocked from canonical publication; `status` remains the sales pipeline state and is separate from `reviewStatus`; human PATCH actions can update `reviewStatus` with validation; managed/self-service upserts preserve existing `review_status`; CSV/export/UI/self-service surfaces preserve review/trust metadata; the internal latest-published CRM contract remains backward-compatible and does not expose LeadBrief fields unless later scoped. D1 trust/review columns are lazy-migration-compatible but not production-observed until a post-deploy production write is confirmed. Candidate values are not approvals; GitHub owner/admin is not production DB owner; CI, docs, and D1 config are not production evidence. The auto-filled confirmation draft is `DRAFT_NOT_APPROVED`, all dangerous gates remain `no`, and owner/policy assignments remain human-only. Production deploy, production DB writes, production DB access, production DB migration, and production observation were not performed during PR #27 landing, the D1 observation planning PR, the approval packet PR, the human confirmation intake packet PR, or the auto-fill draft PR. Do not claim production D1 lazy migration has been observed unless the observation plan evidence requirements are actually satisfied. Treat PR #22 as superseded by PR #25 unless it is re-scoped from current `master`. Recommended next action: a human release owner reviews `docs/exec-plans/production-d1-observation-confirmation-draft.md` and confirms/replaces/rejects/holds the candidate values; only after an approved machine-readable block exists should a separate deploy/observe prompt be considered. Do not reopen shipped findings unless you can show a current-`master` regression or a newly verified gap.
+You are working on dooosp/b2b-lead-agent after the May 11, 2026 PR train that landed PRs #36 through #43. Start from a fresh `origin/master` sync and prove the repo root, branch, HEAD SHA, default branch, dirty state, and available validation commands before changing code. Read `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md` first. Treat current `master` as the source of truth: Worker routing is split into `worker/routes/*`, LeadBrief data-path defaults are hardened, D1 schema drift has `npm run check:schema`, release evidence packet tooling is local-only, architecture docs were refreshed, and cleanup/naming guards landed. Do not reopen shipped findings unless you can show a current-master regression. Do not deploy, call production Worker endpoints, access or write production D1, run Wrangler deploy/D1 commands, or claim production observation without a separate human-approved production prompt.
 ```
-
-## 추천 다음 작업
-
-- 운영 정리: PR #22 superseded disposition 확인 및 필요 시 current `master` 기준 re-scope/close follow-up
-- 운영 준비: have a human release owner review `docs/exec-plans/production-d1-observation-confirmation-draft.md`; then use only a human-approved filled block to decide whether a separately approved production deploy/observe run is allowed

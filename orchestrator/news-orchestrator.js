@@ -1,9 +1,9 @@
 const {
   fetchGoogleNewsBatch
-} = require('../sources/google-news-source');
+} = require('../lib/news-fetcher/sources/google-news');
 const {
   fetchRSSFeed
-} = require('../sources/korean-rss-source');
+} = require('../lib/news-fetcher/sources/korean-rss');
 const { removeDuplicates } = require('../deduper/article-deduper');
 const { enrichArticles } = require('../enricher/article-enricher');
 

@@ -1,6 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createRun } = require('../lib/obs');
+const { withRetry: sharedWithRetry } = require('../lib/http');
+const { withRetry: newsFetcherWithRetry } = require('../lib/news-fetcher/utils/retry');
 
 test('runtime completion is emitted only after the runtime calls summary()', () => {
   const originalLog = console.log;
@@ -25,4 +27,8 @@ test('runtime completion is emitted only after the runtime calls summary()', () 
     console.log = originalLog;
     console.error = originalError;
   }
+});
+
+test('news fetcher retry helper reuses the shared runtime retry helper', () => {
+  assert.equal(newsFetcherWithRetry, sharedWithRetry);
 });
