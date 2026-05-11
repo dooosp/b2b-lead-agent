@@ -1,6 +1,7 @@
 import { jsonResponse } from '../lib/utils.js';
 import { canonicalizeLeadCollectionForProfile, resolveProfileId } from '../lib/profile.js';
 import { getLeadsByProfile, getAllLeads, getLeadById, saveLeadsBatch, updateLeadPatchAtomic } from '../db/leads.js';
+import { createLeadsCsvFilename, serializeLeadsCsv } from './serializers/lead-csv.js';
 
 function canonicalizeLeadPayload(profile, leads) {
   return canonicalizeLeadCollectionForProfile(profile, Array.isArray(leads) ? leads : []);
@@ -101,29 +102,8 @@ export async function handleExportCSV(request, env) {
     ? await getAllLeads(env.DB, { limit: 1000 })
     : await getLeadsByProfile(env.DB, profileId, { limit: 1000 });
 
-  const BOM = '\uFEFF';
-  const header = '회사명,프로젝트,추천제품,점수,등급,ROI,상태,메모,생성일,검토상태,신뢰도,검증상태,생성모드,데이터공백';
-  const rows = leads.map(l => {
-    const esc = (s) => `"${String(s || '').replace(/"/g, '""')}"`;
-    return [
-      esc(l.company),
-      esc(l.summary),
-      esc(l.product),
-      l.score,
-      l.grade,
-      esc(l.roi),
-      l.status,
-      esc(l.notes),
-      l.createdAt?.split('T')[0] || '',
-      l.reviewStatus || 'NEEDS_REVIEW',
-      l.confidence || 'LOW',
-      l.verificationStatus || 'needs_review',
-      l.generationMode || 'llm',
-      esc(Array.isArray(l.dataGaps) ? l.dataGaps.join('; ') : '')
-    ].join(',');
-  });
-  const csv = BOM + header + '\n' + rows.join('\n');
-  const filename = `leads-${profileId}-${new Date().toISOString().split('T')[0]}.csv`;
+  const csv = serializeLeadsCsv(leads);
+  const filename = createLeadsCsvFilename(profileId);
   return new Response(csv, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
