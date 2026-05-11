@@ -4,7 +4,7 @@ This roadmap turns the current PR train, old branch archaeology, Issue #34 proof
 
 Current baseline:
 
-- `master` includes PRs #36-#43, PR #51's integration of #44-#49, review-quality follow-ups through PR #55, and post-PR55 doc sync in PR #56 at `84ea44ba29e266f2e1aad6a2dd58276e21c5112f`.
+- `master` includes PRs #36-#43, PR #51's integration of #44-#49, review-quality follow-ups through PR #57 at `c2ddf9614debdf863e509d39ea3af38967a78803`.
 - The canonical product unit is a LeadBrief-style lead with source, trust, confidence, assumptions, data gaps, and human `reviewStatus`.
 - Opportunity Workbench includes deterministic, advisory next-review-action reasons, a human review checklist, a Solution Translation Summary, and Product Context / Signal Fusion guidance derived from existing product, event, buyer, evidence, enrichment, and review fields.
 - The `/leads` review queue can filter cached LeadBriefs by review status, verification status, generation mode, confidence, and data-gap presence without adding CRM ownership or production query behavior.
