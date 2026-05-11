@@ -73,6 +73,12 @@ export function getLeadsPage() {
     .select-label { color:#8fa4b8; font-size:11px; font-weight:700; }
     .lead-block.data-gap-summary { border-color:#6f5525; background:#171d25; }
     .lead-block.data-gap-clear { border-color:#2e7d4f; background:#141f1b; }
+    .review-filter-bar { background:#121a24; border:1px solid #26384c; border-radius:10px; display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); margin:0 0 14px; padding:12px; text-align:left; }
+    .review-filter-bar label { color:#8fa4b8; display:grid; gap:5px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0; }
+    .review-filter-bar select { background:#16213e; border:1px solid #36506c; border-radius:7px; color:#f4f7fb; font-size:12px; padding:7px 8px; width:100%; }
+    .review-filter-actions { align-self:end; display:flex; gap:8px; justify-content:flex-end; }
+    .review-filter-actions button { min-height:33px; padding:6px 12px; white-space:nowrap; }
+    .filter-empty-state { background:#121a24; border:1px dashed #566273; border-radius:10px; color:#9fb0c0; margin:14px 0; padding:18px; text-align:center; }
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
     .top-nav-links { display: flex; gap: 8px; }
     .status-select { padding: 4px 8px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 12px; cursor: pointer; }
@@ -135,6 +141,54 @@ export function getLeadsPage() {
     </div>
     <div id="batchStatus" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div>
 
+    <div id="reviewQueueFilters" class="review-filter-bar" aria-label="리드 검토 필터">
+      <label>검토 상태
+        <select data-filter-key="reviewStatus" onchange="setReviewQueueFilter(this)">
+          <option value="all">전체</option>
+          <option value="NEW">새 검토</option>
+          <option value="NEEDS_REVIEW">검토 필요</option>
+          <option value="APPROVED">승인</option>
+          <option value="REJECTED">반려</option>
+          <option value="DEFERRED">보류</option>
+        </select>
+      </label>
+      <label>검증 상태
+        <select data-filter-key="verificationStatus" onchange="setReviewQueueFilter(this)">
+          <option value="all">전체</option>
+          <option value="verified">검증됨</option>
+          <option value="needs_review">검증 필요</option>
+          <option value="draft">초안</option>
+          <option value="unverified">미검증</option>
+        </select>
+      </label>
+      <label>생성 방식
+        <select data-filter-key="generationMode" onchange="setReviewQueueFilter(this)">
+          <option value="all">전체</option>
+          <option value="llm">LLM 생성</option>
+          <option value="heuristic">휴리스틱 생성</option>
+          <option value="demo">데모</option>
+          <option value="unavailable">생성 불가</option>
+        </select>
+      </label>
+      <label>신뢰도
+        <select data-filter-key="confidence" onchange="setReviewQueueFilter(this)">
+          <option value="all">전체</option>
+          <option value="HIGH">HIGH</option>
+          <option value="MEDIUM">MEDIUM</option>
+          <option value="LOW">LOW</option>
+        </select>
+      </label>
+      <label>데이터 공백
+        <select data-filter-key="dataGaps" onchange="setReviewQueueFilter(this)">
+          <option value="all">전체</option>
+          <option value="has">공백 있음</option>
+          <option value="none">공백 없음</option>
+        </select>
+      </label>
+      <div class="review-filter-actions">
+        <button class="btn btn-secondary" type="button" onclick="resetReviewQueueFilters()">초기화</button>
+      </div>
+    </div>
     <div id="leadsSummary"></div>
     <div id="leadsList"><p style="color:#aaa;">로딩 중...</p></div>
     <div id="kanbanView" style="display:none;"></div>
@@ -169,6 +223,13 @@ export function getLeadsPage() {
     const verificationStatusLabels = { verified: '검증됨', needs_review: '검증 필요', draft: '초안', unverified: '미검증' };
     const generationModeLabels = { llm: 'LLM 생성', heuristic: '휴리스틱 생성', demo: '데모', unavailable: '생성 불가' };
     const confidenceLabels = { HIGH: '신뢰도 HIGH', MEDIUM: '신뢰도 MEDIUM', LOW: '신뢰도 LOW' };
+    const reviewQueueFilters = {
+      reviewStatus: 'all',
+      verificationStatus: 'all',
+      generationMode: 'all',
+      confidence: 'all',
+      dataGaps: 'all'
+    };
 
     function renderStatusSelect(lead) {
       if (!lead.id) return '';
@@ -289,6 +350,36 @@ export function getLeadsPage() {
       ).join('');
       if (!lead.id) return \`<span class="badge badge-review \${current.toLowerCase()}">\${esc(reviewStatusLabels[current])}</span>\`;
       return \`<select class="status-select" aria-label="검토 상태" onchange="updateReviewStatus('\${esc(lead.id)}', this.value, '\${current}')">\${opts}</select>\`;
+    }
+
+    function applyReviewQueueFilters(leads) {
+      return (Array.isArray(leads) ? leads : []).filter((lead) => {
+        if (reviewQueueFilters.reviewStatus !== 'all' && getReviewStatus(lead) !== reviewQueueFilters.reviewStatus) return false;
+        if (reviewQueueFilters.verificationStatus !== 'all' && getVerificationStatus(lead) !== reviewQueueFilters.verificationStatus) return false;
+        if (reviewQueueFilters.generationMode !== 'all' && getGenerationMode(lead) !== reviewQueueFilters.generationMode) return false;
+        if (reviewQueueFilters.confidence !== 'all' && getConfidence(lead) !== reviewQueueFilters.confidence) return false;
+        const gapCount = getDataGaps(lead).length;
+        if (reviewQueueFilters.dataGaps === 'has' && gapCount === 0) return false;
+        if (reviewQueueFilters.dataGaps === 'none' && gapCount > 0) return false;
+        return true;
+      });
+    }
+
+    function getFilteredLeads() {
+      return applyReviewQueueFilters(cachedLeads);
+    }
+
+    function setReviewQueueFilter(select) {
+      const key = select && select.dataset ? select.dataset.filterKey : '';
+      if (!Object.prototype.hasOwnProperty.call(reviewQueueFilters, key)) return;
+      reviewQueueFilters[key] = select.value || 'all';
+      renderCurrentLeads();
+    }
+
+    function resetReviewQueueFilters() {
+      Object.keys(reviewQueueFilters).forEach((key) => { reviewQueueFilters[key] = 'all'; });
+      document.querySelectorAll('#reviewQueueFilters [data-filter-key]').forEach((select) => { select.value = 'all'; });
+      renderCurrentLeads();
     }
 
     async function updateStatus(leadId, newStatus, fromStatus) {
@@ -418,10 +509,27 @@ export function getLeadsPage() {
         }
 
         cachedLeads = data.leads;
-        summaryContainer.innerHTML = renderLeadsSummary(cachedLeads);
-        if (currentView === 'kanban') renderKanban(cachedLeads);
+        renderCurrentLeads();
+      } catch(e) {
+        document.getElementById('leadsList').innerHTML = '<p style="color:#e74c3c;">데이터 로드 실패: ' + esc(e.message) + '</p>';
+      }
+    }
+    let currentView = 'list';
+    let cachedLeads = [];
 
-        container.innerHTML = data.leads.map((lead, i) => \`
+    function renderCurrentLeads() {
+      const container = document.getElementById('leadsList');
+      const summaryContainer = document.getElementById('leadsSummary');
+      const filteredLeads = getFilteredLeads();
+      summaryContainer.innerHTML = renderLeadsSummary(filteredLeads, cachedLeads.length);
+      if (currentView === 'kanban') renderKanban(filteredLeads);
+
+      if (filteredLeads.length === 0) {
+        container.innerHTML = '<div class="filter-empty-state">필터 결과가 없습니다. 필터를 초기화하거나 다른 조건을 선택하세요.</div>';
+        return;
+      }
+
+      container.innerHTML = filteredLeads.map((lead, i) => \`
           <div class="lead-card \${lead.grade === 'A' ? 'grade-a' : lead.grade === 'B' ? 'grade-b' : ''}">
             <div class="lead-head">
               <div class="lead-title">
@@ -515,12 +623,7 @@ export function getLeadsPage() {
             </div>
           </div>
         \`).join('');
-      } catch(e) {
-        document.getElementById('leadsList').innerHTML = '<p style="color:#e74c3c;">데이터 로드 실패: ' + esc(e.message) + '</p>';
-      }
     }
-    let currentView = 'list';
-    let cachedLeads = [];
 
     function switchView(view) {
       currentView = view;
@@ -531,7 +634,7 @@ export function getLeadsPage() {
       document.getElementById('kanbanView').style.display = view === 'kanban' ? '' : 'none';
       const container = document.querySelector('.container');
       container.style.maxWidth = view === 'kanban' ? '1400px' : '700px';
-      if (view === 'kanban') renderKanban(cachedLeads);
+      if (view === 'kanban') renderKanban(getFilteredLeads());
     }
 
     function renderKanban(leads) {
@@ -571,7 +674,7 @@ export function getLeadsPage() {
       document.getElementById('kanbanView').innerHTML = html;
     }
 
-    function renderLeadsSummary(leads) {
+    function renderLeadsSummary(leads, totalBeforeFilter = leads.length) {
       const total = leads.length;
       const gradeA = leads.filter(l => l.grade === 'A').length;
       const enriched = leads.filter(l => l.enriched).length;
@@ -581,7 +684,7 @@ export function getLeadsPage() {
       const avgScore = Math.round(leads.reduce((sum, lead) => sum + (parseInt(lead.score, 10) || 0), 0) / Math.max(1, total));
       return \`
         <div class="leads-summary">
-          <div class="summary-card"><span class="label">총 리드</span><span class="value">\${total}</span><div class="meta">현재 프로필 기준 전체 건수</div></div>
+          <div class="summary-card"><span class="label">필터 결과</span><span class="value">\${total}</span><div class="meta">전체 \${totalBeforeFilter}건 중 표시</div></div>
           <div class="summary-card"><span class="label">검토 필요</span><span class="value">\${needsReview}</span><div class="meta">사람 검토 전 상태</div></div>
           <div class="summary-card"><span class="label">검증됨</span><span class="value">\${verified}</span><div class="meta">공개 근거 확인 리드</div></div>
           <div class="summary-card"><span class="label">A등급</span><span class="value">\${gradeA}</span><div class="meta">우선 검토 후보</div></div>
@@ -594,6 +697,8 @@ export function getLeadsPage() {
 
     document.getElementById('historyLink').href = '/history?profile=' + encodeURIComponent(getProfile());
     if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+    window.setReviewQueueFilter = setReviewQueueFilter;
+    window.resetReviewQueueFilters = resetReviewQueueFilters;
 
     loadLeads();
   </script>
