@@ -32,10 +32,10 @@ test('unknown API routes stay inside the JSON API boundary', async () => {
 
   assert.equal(response.status, 404);
   assert.equal(payload.success, false);
-  assert.equal(payload.message, 'API route not found');
+  assert.equal(payload.message, 'Not Found');
 });
 
-test('unsupported methods on known API routes return JSON 404 after auth succeeds', async () => {
+test('unsupported methods on known API routes return JSON 405 after auth succeeds', async () => {
   const response = await worker.fetch(
     createWorkerRequest('/api/leads', {
       method: 'POST',
@@ -46,7 +46,8 @@ test('unsupported methods on known API routes return JSON 404 after auth succeed
   );
   const payload = await readJson(response);
 
-  assert.equal(response.status, 404);
+  assert.equal(response.status, 405);
+  assert.equal(response.headers.get('Allow'), 'GET');
   assert.equal(payload.success, false);
-  assert.equal(payload.message, 'API route not found');
+  assert.match(payload.message, /Method Not Allowed/);
 });
