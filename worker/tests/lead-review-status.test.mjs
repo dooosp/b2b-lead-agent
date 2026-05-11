@@ -143,6 +143,16 @@ test('PATCH /api/leads/:id updates reviewStatus without changing pipeline status
   assert.equal(response.status, 200);
   assert.equal(payload.lead.reviewStatus, 'APPROVED');
   assert.equal(payload.lead.status, 'NEW');
+  assert.equal(payload.lead.generationMode, 'llm');
+  assert.equal(payload.lead.verificationStatus, 'verified');
+  assert.deepEqual(payload.lead.evidence, [
+    { field: 'summary', quote: '데이터센터 증설 착공', sourceUrl: 'https://example.com/dl' }
+  ]);
+  assert.equal(payload.lead.confidence, 'MEDIUM');
+  assert.equal(payload.lead.confidenceReason, '공개 기사 출처와 제목 근거가 확인되었습니다.');
+  assert.deepEqual(payload.lead.assumptions, ['현장 냉각 부하 데이터는 미확인입니다.']);
+  assert.deepEqual(payload.lead.dataGaps, ['상세 발주 일정 미확인']);
+  assert.equal(payload.lead.eventType, '착공');
   assert.deepEqual(payload.changedFields, ['reviewStatus']);
   assert.equal(db.row.review_status, 'APPROVED');
   assert.equal(db.row.status, 'NEW');
@@ -189,4 +199,66 @@ test('lead list and detail pages render reviewStatus controls and trust metadata
   assert.match(detailHtml, /데이터 공백/);
   assert.match(detailHtml, /가정/);
   assert.match(detailHtml, /출처/);
+});
+
+test('lead review pages expose clear trust metadata display helpers', () => {
+  const listHtml = getLeadsPage();
+  const detailHtml = getLeadDetailPage({
+    id: 'lead-1',
+    profileId: 'danfoss',
+    status: 'NEW',
+    review_status: 'DEFERRED',
+    generation_mode: 'heuristic',
+    verification_status: 'needs_review',
+    company: 'LG전자',
+    summary: '스마트팩토리 증설 프로젝트',
+    confidence: 'LOW',
+    data_gaps: ['직접 인용 없음', '발주 일정 미확인'],
+    evidence: [],
+    sources: [],
+    product: 'A-Controller',
+    score: 72,
+    grade: 'B'
+  }, []);
+
+  assert.match(listHtml, /function getReviewStatus\(lead\)/);
+  assert.match(listHtml, /lead\.review_status/);
+  assert.match(listHtml, /verificationStatusLabels/);
+  assert.match(listHtml, /generationModeLabels/);
+  assert.match(listHtml, /function renderReviewTrustBadges\(lead\)/);
+  assert.match(listHtml, /function renderDataGapSummary\(lead\)/);
+  assert.match(listHtml, /function renderEvidenceSummary\(lead\)/);
+
+  assert.match(detailHtml, /function getReviewStatus\(lead\)/);
+  assert.match(detailHtml, /lead\.review_status/);
+  assert.match(detailHtml, /verificationStatusLabels/);
+  assert.match(detailHtml, /generationModeLabels/);
+  assert.match(detailHtml, /function renderReviewBadge\(lead\)/);
+  assert.match(detailHtml, /function renderReviewTrustBadges\(lead\)/);
+  assert.match(detailHtml, /function renderDataGapSummary\(lead\)/);
+  assert.match(detailHtml, /function renderEvidenceSummary\(lead\)/);
+});
+
+test('lead detail script is isolated for list-to-detail document replacement', () => {
+  const detailHtml = getLeadDetailPage({
+    id: 'lead-1',
+    profileId: 'danfoss',
+    status: 'NEW',
+    reviewStatus: 'NEEDS_REVIEW',
+    company: 'DL이앤씨',
+    summary: '데이터센터 냉각 설비 증설 착공',
+    confidence: 'MEDIUM',
+    generationMode: 'llm',
+    verificationStatus: 'verified',
+    dataGaps: [],
+    evidence: [],
+    sources: [],
+    product: 'Turbocor 컴프레서',
+    score: 84,
+    grade: 'A'
+  }, []);
+
+  assert.match(detailHtml, /<script>\s*\(\(\) => \{/);
+  assert.match(detailHtml, /window\.updateField = updateField/);
+  assert.match(detailHtml, /window\.scheduleNoteSave = scheduleNoteSave/);
 });

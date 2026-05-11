@@ -4,57 +4,21 @@ import assert from 'node:assert/strict';
 import { fetchLeads, handleExportCSV } from '../api/leads.js';
 import { leadToRow, rowToLead } from '../db/transform.js';
 import { normalizeReviewStatus, toLeadBriefV1 } from '../lib/leadbrief-v1.js';
+import { FakeD1Database } from './helpers/fake-d1.mjs';
+import { createLeadRow, createWorkerEnv } from './helpers/fixtures.mjs';
+import { createWorkerRequest } from './helpers/http.mjs';
 
-class FakeStatement {
-  constructor(db, sql, params = []) {
-    this.db = db;
-    this.sql = sql;
-    this.params = params;
-  }
-
-  bind(...params) {
-    return new FakeStatement(this.db, this.sql, params);
-  }
-
-  async run() {
-    return { meta: { changes: 0 } };
-  }
-
-  async all() {
-    const normalized = this.sql.replace(/\s+/g, ' ').trim();
-    if (normalized === 'SELECT * FROM leads WHERE profile_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?') {
-      const [profileId, limit, offset] = this.params;
-      return {
-        results: this.db.rows
-          .filter((row) => row.profile_id === profileId)
-          .slice(offset, offset + limit)
-          .map((row) => ({ ...row }))
-      };
+function createGithubResponse(body) {
+  return {
+    ok: true,
+    async json() {
+      return body;
     }
-    return { results: [] };
-  }
-}
-
-class FakeLeadDb {
-  constructor(rows = []) {
-    this.rows = rows;
-  }
-
-  prepare(sql) {
-    return new FakeStatement(this, sql);
-  }
-
-  async batch(statements) {
-    return Promise.all(statements.map((statement) => statement.run()));
-  }
+  };
 }
 
 function createStoredRow(overrides = {}) {
-  return {
-    id: 'lead-1',
-    identity_key: 'identity-1',
-    profile_id: 'danfoss',
-    source: 'managed',
+  return createLeadRow({
     status: 'CONTACTED',
     review_status: 'APPROVED',
     company: 'DL이앤씨',
@@ -84,8 +48,8 @@ function createStoredRow(overrides = {}) {
     estimated_value: 0,
     created_at: '2026-05-05T00:00:00.000Z',
     updated_at: '2026-05-05T00:00:00.000Z',
-    ...overrides
-  };
+    ...overrides,
+  });
 }
 
 test('LeadBrief v1 normalization maps legacy lead fields without conflating pipeline status', () => {
@@ -132,6 +96,24 @@ test('LeadBrief v1 normalization defaults conservatively when evidence or source
   assert.ok(brief.dataGaps.includes('Why-now rationale missing'));
 });
 
+test('LeadBrief v1 normalization defaults complete LLM leads to review-needed trust metadata', () => {
+  const brief = toLeadBriefV1({
+    company: 'LG전자',
+    summary: '스마트팩토리 증설 프로젝트',
+    salesPitch: '현장 자동화 기준선 정립을 제안합니다.',
+    urgencyReason: '증설 직후 제어 표준 확정 전 검토가 필요합니다.',
+    sources: [{ title: 'LG전자 증설 계획 발표', url: 'https://example.com/lg' }],
+    evidence: [{ field: 'summary', quote: '스마트팩토리 증설', sourceUrl: 'https://example.com/lg' }],
+    confidence: 'MEDIUM'
+  });
+
+  assert.equal(brief.reviewStatus, 'NEEDS_REVIEW');
+  assert.equal(brief.generationMode, 'llm');
+  assert.equal(brief.verificationStatus, 'needs_review');
+  assert.deepEqual(brief.assumptions, []);
+  assert.deepEqual(brief.dataGaps, []);
+});
+
 test('D1 row roundtrip preserves reviewStatus separately from sales pipeline status', () => {
   const row = createStoredRow();
   const lead = rowToLead(row);
@@ -140,18 +122,22 @@ test('D1 row roundtrip preserves reviewStatus separately from sales pipeline sta
   assert.equal(lead.reviewStatus, 'APPROVED');
   assert.equal(lead.signal, '데이터센터 냉각 설비 증설 착공');
   assert.equal(lead.recommendedMessage, 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.');
+  assert.equal(lead.generationMode, 'llm');
+  assert.equal(lead.verificationStatus, 'verified');
+  assert.deepEqual(lead.dataGaps, ['상세 발주 일정 미확인']);
+  assert.deepEqual(lead.evidence, [{ field: 'summary', quote: '데이터센터 증설 착공', sourceUrl: 'https://example.com/dl' }]);
 
   const nextRow = leadToRow({ ...lead, status: 'MEETING', reviewStatus: 'DEFERRED' }, 'danfoss', 'managed');
   assert.equal(nextRow.status, 'MEETING');
   assert.equal(nextRow.review_status, 'DEFERRED');
+  assert.equal(nextRow.generation_mode, 'llm');
+  assert.equal(nextRow.verification_status, 'verified');
+  assert.equal(nextRow.data_gaps, JSON.stringify(['상세 발주 일정 미확인']));
+  assert.equal(nextRow.evidence, JSON.stringify([{ field: 'summary', quote: '데이터센터 증설 착공', sourceUrl: 'https://example.com/dl' }]));
 });
 
 test('/api/leads exposes LeadBrief v1 canonical fields from D1 rows', async () => {
-  const env = {
-    DB: new FakeLeadDb([createStoredRow()]),
-    GITHUB_REPO: 'dooosp/b2b-lead-agent',
-    PROFILES: JSON.stringify([{ id: 'danfoss', name: 'Danfoss' }])
-  };
+  const env = createWorkerEnv({ DB: new FakeD1Database({ leads: [createStoredRow()] }) });
 
   const response = await fetchLeads(env, 'danfoss');
   const payload = await response.json();
@@ -163,14 +149,66 @@ test('/api/leads exposes LeadBrief v1 canonical fields from D1 rows', async () =
   assert.equal(payload.leads[0].recommendedMessage, 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.');
   assert.equal(payload.leads[0].reviewStatus, 'APPROVED');
   assert.equal(payload.leads[0].status, 'CONTACTED');
+  assert.equal(payload.leads[0].generationMode, 'llm');
+  assert.equal(payload.leads[0].verificationStatus, 'verified');
+  assert.deepEqual(payload.leads[0].evidence, [
+    { field: 'summary', quote: '데이터센터 증설 착공', sourceUrl: 'https://example.com/dl' }
+  ]);
+  assert.equal(payload.leads[0].confidence, 'MEDIUM');
+  assert.equal(payload.leads[0].confidenceReason, '공개 기사 출처와 제목 근거가 확인되었습니다.');
+  assert.deepEqual(payload.leads[0].assumptions, ['현장 냉각 부하 데이터는 미확인입니다.']);
+  assert.deepEqual(payload.leads[0].dataGaps, ['상세 발주 일정 미확인']);
+  assert.equal(payload.leads[0].eventType, '착공');
+});
+
+test('/api/leads applies LeadBrief defaults to GitHub published records before serialization', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => createGithubResponse([
+    {
+      id: 'github-lead-1',
+      company: 'LG전자',
+      summary: '스마트팩토리 증설 프로젝트',
+      product: 'VLT AutomationDrive',
+      score: 82,
+      grade: 'A',
+      salesPitch: '현장 자동화 기준선 정립을 제안합니다.',
+      urgencyReason: '증설 직후 제어 표준 확정 전 검토가 필요합니다.',
+      sources: [{ title: 'LG전자 증설 계획 발표', url: 'https://example.com/lg' }],
+      evidence: [{ field: 'summary', quote: '스마트팩토리 증설', sourceUrl: 'https://example.com/lg' }],
+      confidence: 'MEDIUM',
+      confidenceReason: '공개 기사 출처가 확인되었습니다.',
+      eventType: '증설'
+    }
+  ]);
+
+  try {
+    const response = await fetchLeads({
+      GITHUB_REPO: 'dooosp/b2b-lead-agent',
+      PROFILES: JSON.stringify([{ id: 'danfoss', name: 'Danfoss' }])
+    }, 'danfoss');
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.source, 'github');
+    assert.equal(payload.leads[0].reviewStatus, 'NEEDS_REVIEW');
+    assert.equal(payload.leads[0].generationMode, 'llm');
+    assert.equal(payload.leads[0].verificationStatus, 'needs_review');
+    assert.deepEqual(payload.leads[0].assumptions, []);
+    assert.deepEqual(payload.leads[0].dataGaps, []);
+    assert.deepEqual(payload.leads[0].evidence, [
+      { field: 'summary', quote: '스마트팩토리 증설', sourceUrl: 'https://example.com/lg' }
+    ]);
+    assert.equal(payload.leads[0].confidence, 'MEDIUM');
+    assert.equal(payload.leads[0].confidenceReason, '공개 기사 출처가 확인되었습니다.');
+    assert.equal(payload.leads[0].eventType, '증설');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('CSV export includes reviewStatus and trust metadata without dropping pipeline status', async () => {
-  const env = {
-    DB: new FakeLeadDb([createStoredRow()]),
-    PROFILES: JSON.stringify([{ id: 'danfoss', name: 'Danfoss' }])
-  };
-  const request = new Request('https://example.com/api/export/csv?profile=danfoss');
+  const env = createWorkerEnv({ DB: new FakeD1Database({ leads: [createStoredRow()] }) });
+  const request = createWorkerRequest('/api/export/csv?profile=danfoss');
 
   const response = await handleExportCSV(request, env);
   const csv = await response.text();

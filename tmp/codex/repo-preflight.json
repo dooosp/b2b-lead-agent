@@ -1,17 +1,17 @@
 {
-  "repo_root": "/Users/jangtaeho/Documents/New/worktrees/ops-baseline-cleanup-2026-04",
+  "repo_root": "/Users/jangtaeho/Documents/New/worktrees/b2b-worker-api-architecture-refactor-v1",
   "repo_identity_ok": true,
   "identity_evidence": [
-    "git rev-parse --show-toplevel => /Users/jangtaeho/Documents/New/worktrees/ops-baseline-cleanup-2026-04 (active owned worktree)",
-    "fresh worktree created at /Users/jangtaeho/Documents/New/worktrees/ops-baseline-cleanup-2026-04 from origin/master",
+    "git rev-parse --show-toplevel => /Users/jangtaeho/Documents/New/worktrees/b2b-worker-api-architecture-refactor-v1",
+    "fresh worktree created at /Users/jangtaeho/Documents/New/worktrees/b2b-worker-api-architecture-refactor-v1 from origin/master",
     "package.json name => b2b-lead-agent",
     "main.js exists",
     "worker/index.js exists",
     "tests/main.runtime.test.js exists",
     ".github/workflows/validate-naming.yml exists"
   ],
-  "current_branch": "codex/ops-baseline-cleanup-2026-04",
-  "head_sha": "67258096e17e5a56aa34e4ecc04c53fba84a15ab",
+  "current_branch": "codex/worker-api-architecture-refactor-v1",
+  "head_sha": "12d44374a24a9958de179fae5f9311621606ad24",
   "local_base_candidates": [
     "master",
     "origin/master"
@@ -20,20 +20,34 @@
     "origin"
   ],
   "pinned_base_ref": "origin/master",
-  "pinned_base_sha": "67258096e17e5a56aa34e4ecc04c53fba84a15ab",
-  "worktree_clean": true,
-  "dirty_paths": [],
+  "pinned_base_sha": "12d44374a24a9958de179fae5f9311621606ad24",
+  "worktree_clean_at_preflight": true,
+  "dirty_paths_at_preflight": [],
   "required_commands": {
     "git": "/usr/bin/git",
     "node": "/opt/homebrew/bin/node",
     "npm": "/opt/homebrew/bin/npm",
+    "gh": "/opt/homebrew/bin/gh",
     "python3": "/usr/bin/python3",
     "rg": "/Applications/Codex.app/Contents/Resources/rg"
   },
+  "available_scripts": [
+    "check:naming",
+    "e2e",
+    "email",
+    "start",
+    "test",
+    "test:contract",
+    "test:root",
+    "test:runtime",
+    "test:unit",
+    "test:worker"
+  ],
   "can_proceed": true,
   "stop_reasons": [],
   "notes": [
     "Source checkout /Users/jangtaeho/Documents/New/b2b-lead-agent had unrelated dirty changes in files required by this task, so edits are isolated in this fresh worktree.",
-    "Fresh worktree dependencies were installed locally with npm ci before the final validation pass."
+    "Remote default branch was resolved as origin/master and pinned to 12d44374a24a9958de179fae5f9311621606ad24 before branch/worktree work.",
+    "Dependencies were installed locally with npm ci. No deploy, Wrangler D1 command, Wrangler tail, production Worker call, production write, or production observation was performed."
   ]
 }
