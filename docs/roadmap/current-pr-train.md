@@ -5,14 +5,14 @@ This document summarizes the May 2026 PR train, stale PR disposition, and next w
 Evidence baseline:
 
 - Repo default branch: `master`
-- Current pinned `origin/master`: `a3f44df58bb231b060ff42fa13b17ad573b1cc1a`
+- Current pinned `origin/master`: `01c7ef94c0d71ac0c60f13fe207e6ce485220bcd`
 - Evidence collected from GitHub PR/issue metadata, PR bodies, current `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md`
 - Scope: documentation synthesis only
 - Production actions performed for this synthesis: none
 
 ## May 11 PR Train
 
-PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs #44 through #49. Together they established the current post-LeadBrief baseline: Worker routes are split into `worker/routes/*`, LeadBrief trust data is preserved across the data path, schema drift has a local/CI guard, release evidence tooling is local-only, architecture docs are refreshed, stale module alias wrappers are removed, Opportunity Workbench v1 is shipped, local-only Worker E2E is available, Worker auth/error boundaries are hardened, and synthetic lead-quality evaluation is available.
+PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs #44 through #49. PRs #52 through #55 refreshed repo state and shipped the first review-quality follow-ups. Together they established the current post-LeadBrief baseline: Worker routes are split into `worker/routes/*`, LeadBrief trust data is preserved across the data path, schema drift has a local/CI guard, release evidence tooling is local-only, architecture docs are refreshed, stale module alias wrappers are removed, Opportunity Workbench v1 is shipped, advisory next-review guidance is available, `/leads` review queue filters are shipped, Solution Translation Summary is shipped, local-only Worker E2E is available, Worker auth/error boundaries are hardened, and synthetic lead-quality evaluation is available.
 
 | Actual merge order | PR | Merged at UTC | Role | Roadmap implication |
 | --- | --- | --- | --- | --- |
@@ -26,9 +26,18 @@ PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs
 | 8 | [#43](https://github.com/dooosp/b2b-lead-agent/pull/43) Clean up unused module aliases | 2026-05-11T07:17:02Z | Cleanup/naming | Canonical module paths are the shipped baseline; do not revive alias-wrapper surfaces. |
 | 9 | [#51](https://github.com/dooosp/b2b-lead-agent/pull/51) Integrate post-train PRs #44-#49 | 2026-05-11T13:08:16Z | Integration | Treat #44-#49 as shipped through current `master`; do not manage them as separate queue items. |
 
+## Post-PR51 Follow-Ups
+
+| PR | Role | Roadmap implication |
+| --- | --- | --- |
+| [#52](https://github.com/dooosp/b2b-lead-agent/pull/52) | Post-merge repo audit | Current source-of-truth docs and roadmap were refreshed after PR #51 and stale PR cleanup. |
+| [#53](https://github.com/dooosp/b2b-lead-agent/pull/53) | Advisory next-review guidance | Old PR #5's useful next-action idea was recut as deterministic Workbench guidance without CRM ownership. |
+| [#54](https://github.com/dooosp/b2b-lead-agent/pull/54) | Review queue filters | Old PR #3's useful review filtering idea was recut into cached `/leads` filters without API/query/schema changes. |
+| [#55](https://github.com/dooosp/b2b-lead-agent/pull/55) | Solution Translation Summary | Old PR #2's useful solution-translation idea was recut into Workbench "why this solution" and "why now" guidance. |
+
 ## Immediate Merge Queue
 
-No open PRs remain after the post-PR #51 stale-PR cleanup. PRs #44-#49 are merged through #51, and old PRs #1-#9 are closed without merge after disposition comments.
+No open PRs remain after PR #55. PRs #44-#49 are merged through #51, PRs #52-#55 are merged into `master`, and old PRs #1-#9 are closed without merge after disposition comments.
 
 ## Old PR Disposition
 
@@ -37,10 +46,10 @@ These PRs are closed without merge. Treat them as concept inventory unless expli
 | PR | Current status | Disposition |
 | --- | --- | --- |
 | [#1](https://github.com/dooosp/b2b-lead-agent/pull/1) Signal fusion and product knowledge foundation | Closed, conflicted | Salvage product context and signal fusion later as bounded LeadBrief/Workbench enhancement on current `master`. |
-| [#2](https://github.com/dooosp/b2b-lead-agent/pull/2) Solution translation outputs | Closed, stacked on #1 | Salvage as a LeadBrief/Workbench field or helper. Do not merge the old branch because it predates the current LeadBrief, route, and trust baseline. |
-| [#3](https://github.com/dooosp/b2b-lead-agent/pull/3) Dashboard intelligence views | Closed, stacked | Salvage as review queue filters or evidence/data-gap dashboards after current local E2E/evaluator coverage. |
+| [#2](https://github.com/dooosp/b2b-lead-agent/pull/2) Solution translation outputs | Closed, stacked on #1 | Useful "why this solution" / "why now" concept was recut by PR #55. Do not merge the old branch because it predates the current LeadBrief, route, and trust baseline. |
+| [#3](https://github.com/dooosp/b2b-lead-agent/pull/3) Dashboard intelligence views | Closed, stacked | Useful review queue filtering concept was recut by PR #54. Remaining evidence/data-gap dashboard ideas should be scoped from current `master`. |
 | [#4](https://github.com/dooosp/b2b-lead-agent/pull/4) Win-loss learning foundation | Closed, stacked | Deprioritize until review quality is proven; avoid CRM-like lifecycle expansion for now. |
-| [#5](https://github.com/dooosp/b2b-lead-agent/pull/5) Next-best-action and deal risk signals | Closed, stacked | Salvage as deterministic review guidance now that Workbench and synthetic evaluation are shipped. |
+| [#5](https://github.com/dooosp/b2b-lead-agent/pull/5) Next-best-action and deal risk signals | Closed, stacked | Useful next-review guidance concept was recut by PR #53. Do not merge the old stacked branch. |
 | [#6](https://github.com/dooosp/b2b-lead-agent/pull/6) Stakeholder persuasion flows | Closed, stacked | Salvage as a roleplay/helper feature only. Keep it clearly non-approval and human-reviewed. |
 | [#7](https://github.com/dooosp/b2b-lead-agent/pull/7) Scout role modules | Closed, conflicted/obsolete | Abandon as a merge candidate. #43 already cleaned canonical module paths; revive only with a fresh modularization goal. |
 | [#8](https://github.com/dooosp/b2b-lead-agent/pull/8) Staged GCP runtime/storage migration | Closed, conflicted and approval-blocked | Hold as platform-migration concept inventory only. Requires explicit migration decision, secret readiness, and fresh validation. |
