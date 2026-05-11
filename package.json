@@ -10,6 +10,7 @@
     "check:schema": "node scripts/check-d1-schema-consistency.js",
     "evidence:packet": "node scripts/generate-release-evidence-packet.js",
     "e2e": "node e2e-test.mjs",
+    "test:e2e:local": "node --test worker/e2e/local-e2e.test.mjs",
     "test:evidence": "node --test tests/release-evidence-redaction.test.js tests/release-evidence-packet.test.js",
     "test:root": "node --test tests/*.test.js",
     "test:runtime": "npm run test:root",
