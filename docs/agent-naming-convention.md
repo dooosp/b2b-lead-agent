@@ -59,6 +59,7 @@ Examples:
 - Keep `scout.js` only as a compatibility wrapper.
 - Use `profile-registry.js` as the profile registry layer.
 - Use canonical role-based file paths directly in runtime code.
+- Use canonical news-fetcher, enricher, and deduper module paths directly instead of alias wrappers.
 - Use canonical artifact names directly in storage, workflows, and worker fetch logic.
 
 ## P0 Changes
@@ -91,6 +92,7 @@ Examples:
 
 - `npm run check:naming` enforces the current canonical baseline.
 - Legacy wrapper files and `worker/api/*-api.js` filenames are no longer allowed.
+- Legacy source wrappers and unused news-fetcher utility alias wrappers are no longer allowed.
 - Canonical role-oriented files must exist before merge.
 - `lead-report-publisher.js` must write canonical artifact names only.
 

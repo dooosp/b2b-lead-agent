@@ -19,6 +19,11 @@ const forbiddenLegacyPaths = [
   'worker/pages/main.js',
   'worker/api/leads-api.js',
   'worker/api/references-api.js',
+  'sources/google-news-source.js',
+  'sources/korean-rss-source.js',
+  'lib/news-fetcher/utils/content-scraper.js',
+  'lib/news-fetcher/utils/deduplication.js',
+  'lib/news-fetcher/utils/url-resolver.js',
 ];
 
 const forbiddenArtifactPatterns = [
