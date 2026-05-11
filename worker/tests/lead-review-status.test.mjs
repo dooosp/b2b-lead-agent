@@ -239,6 +239,21 @@ test('lead review pages expose clear trust metadata display helpers', () => {
   assert.match(detailHtml, /function renderEvidenceSummary\(lead\)/);
 });
 
+test('lead list page exposes review queue filters for current LeadBrief fields', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /id="reviewQueueFilters"/);
+  assert.match(listHtml, /data-filter-key="reviewStatus"/);
+  assert.match(listHtml, /data-filter-key="verificationStatus"/);
+  assert.match(listHtml, /data-filter-key="generationMode"/);
+  assert.match(listHtml, /data-filter-key="confidence"/);
+  assert.match(listHtml, /data-filter-key="dataGaps"/);
+  assert.match(listHtml, /function applyReviewQueueFilters\(leads\)/);
+  assert.match(listHtml, /function getFilteredLeads\(\)/);
+  assert.match(listHtml, /function resetReviewQueueFilters\(\)/);
+  assert.match(listHtml, /필터 결과가 없습니다/);
+});
+
 test('lead detail script is isolated for list-to-detail document replacement', () => {
   const detailHtml = getLeadDetailPage({
     id: 'lead-1',
