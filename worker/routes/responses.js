@@ -8,6 +8,10 @@ export function jsonNotFoundResponse(message = 'Not Found') {
   return jsonResponse({ success: false, message }, 404);
 }
 
+export function jsonInternalErrorResponse(message = '요청 처리 중 오류가 발생했습니다.') {
+  return jsonResponse({ success: false, message }, 500);
+}
+
 export function methodNotAllowedResponse(allowedMethods, { json = true } = {}) {
   const response = json
     ? jsonResponse({ success: false, message: 'Method Not Allowed' }, 405)

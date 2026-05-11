@@ -35,8 +35,8 @@ export async function fetchLeads(env, profile) {
     }
 
     return jsonResponse({ leads: canonicalized.leads, profile: canonicalized.profileId, source: 'github' });
-  } catch (e) {
-    return jsonResponse({ leads: [], message: e.message }, 500);
+  } catch {
+    return jsonResponse({ success: false, leads: [], message: '리드 데이터를 불러오는 중 오류가 발생했습니다.' }, 500);
   }
 }
 
@@ -68,8 +68,8 @@ export async function fetchHistory(env, profile) {
     }
 
     return jsonResponse({ history: canonicalized.leads, profile: canonicalized.profileId, source: 'github' });
-  } catch (e) {
-    return jsonResponse({ history: [], message: e.message }, 500);
+  } catch {
+    return jsonResponse({ success: false, history: [], message: '리드 히스토리를 불러오는 중 오류가 발생했습니다.' }, 500);
   }
 }
 

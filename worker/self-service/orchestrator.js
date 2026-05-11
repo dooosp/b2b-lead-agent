@@ -188,6 +188,6 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
         dataGaps: [...new Set(responsePayload.leads.flatMap((lead) => Array.isArray(lead.dataGaps) ? lead.dataGaps : []))]
       });
     }
-    return jsonResponse({ success: false, message: '분석 실패: ' + e.message }, 500);
+    return jsonResponse({ success: false, message: '분석 중 오류가 발생했습니다.' }, 500);
   }
 }
