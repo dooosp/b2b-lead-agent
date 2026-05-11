@@ -138,6 +138,10 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '검증됨',
     '근거 1개',
     '데이터 공백',
+    '검토 리스크',
+    '근거 누락 1건',
+    '데이터 공백 리드 1건',
+    '검토 가능 1건',
   ]);
 
   assert.equal(await page.locator('#leadsList .lead-card').count(), 2);

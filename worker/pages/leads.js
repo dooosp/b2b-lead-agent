@@ -79,6 +79,17 @@ export function getLeadsPage() {
     .review-filter-actions { align-self:end; display:flex; gap:8px; justify-content:flex-end; }
     .review-filter-actions button { min-height:33px; padding:6px 12px; white-space:nowrap; }
     .filter-empty-state { background:#121a24; border:1px dashed #566273; border-radius:10px; color:#9fb0c0; margin:14px 0; padding:18px; text-align:center; }
+    .review-slice-band { background:#121a24; border:1px solid #26384c; border-radius:8px; display:grid; gap:10px; margin:0 0 16px; padding:12px; text-align:left; }
+    .review-slice-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; }
+    .review-slice-head strong { color:#f4f7fb; font-size:13px; line-height:1.4; }
+    .review-slice-head span { color:#8fa4b8; font-size:11px; line-height:1.5; }
+    .review-slice-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .review-slice { border:1px solid #223447; border-radius:8px; background:#101925; min-width:0; padding:10px; }
+    .review-slice strong { color:#f4f7fb; display:block; font-size:13px; line-height:1.4; }
+    .review-slice span { color:#9fb0c0; display:block; font-size:11px; line-height:1.5; margin-top:4px; }
+    .review-slice-risk strong { color:#ffe58a; }
+    .review-slice-ready strong { color:#a8efc0; }
+    .review-slice-caveat { border-top:1px solid #223447; color:#9fb0c0; font-size:12px; line-height:1.6; padding-top:10px; }
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
     .top-nav-links { display: flex; gap: 8px; }
     .status-select { padding: 4px 8px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 12px; cursor: pointer; }
@@ -112,6 +123,7 @@ export function getLeadsPage() {
       .lead-head { flex-direction:column; }
       .lead-badges { justify-content:flex-start; }
       .lead-metrics, .leads-summary { grid-template-columns:1fr; }
+      .review-slice-grid { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -352,6 +364,47 @@ export function getLeadsPage() {
       return \`<select class="status-select" aria-label="검토 상태" onchange="updateReviewStatus('\${esc(lead.id)}', this.value, '\${current}')">\${opts}</select>\`;
     }
 
+    function buildReviewEvidenceSlices(leads) {
+      const list = Array.isArray(leads) ? leads : [];
+      const missingEvidence = list.filter((lead) => getEvidenceItems(lead).length === 0 || getSources(lead).length === 0).length;
+      const dataGapLeads = list.filter((lead) => getDataGaps(lead).length > 0).length;
+      const reviewReady = list.filter((lead) => (
+        getEvidenceItems(lead).length > 0
+        && getSources(lead).length > 0
+        && getDataGaps(lead).length === 0
+        && getVerificationStatus(lead) === 'verified'
+        && getConfidence(lead) !== 'LOW'
+      )).length;
+      const guidance = missingEvidence > 0 || dataGapLeads > 0
+        ? '직접 근거와 데이터 공백이 있는 리드를 먼저 보강하세요.'
+        : '근거와 데이터 공백 기준으로 검토 가능한 상태입니다.';
+
+      return {
+        missingEvidence,
+        dataGapLeads,
+        reviewReady,
+        guidance,
+      };
+    }
+
+    function renderReviewEvidenceSlices(leads) {
+      const slices = buildReviewEvidenceSlices(leads);
+      return \`
+        <section class="review-slice-band" aria-label="검토 리스크">
+          <div class="review-slice-head">
+            <strong>검토 리스크</strong>
+            <span>\${esc(slices.guidance)}</span>
+          </div>
+          <div class="review-slice-grid">
+            <div class="review-slice review-slice-risk"><strong>근거 누락 \${slices.missingEvidence}건</strong><span>직접 인용 또는 출처 보강 필요</span></div>
+            <div class="review-slice review-slice-risk"><strong>데이터 공백 리드 \${slices.dataGapLeads}건</strong><span>의사결정자, 예산, 일정 등 확인 필요</span></div>
+            <div class="review-slice review-slice-ready"><strong>검토 가능 \${slices.reviewReady}건</strong><span>근거와 검증 상태가 정리된 리드</span></div>
+          </div>
+          <div class="review-slice-caveat">This slice does not approve outreach; it only prioritizes human review.</div>
+        </section>
+      \`;
+    }
+
     function applyReviewQueueFilters(leads) {
       return (Array.isArray(leads) ? leads : []).filter((lead) => {
         if (reviewQueueFilters.reviewStatus !== 'all' && getReviewStatus(lead) !== reviewQueueFilters.reviewStatus) return false;
@@ -521,7 +574,7 @@ export function getLeadsPage() {
       const container = document.getElementById('leadsList');
       const summaryContainer = document.getElementById('leadsSummary');
       const filteredLeads = getFilteredLeads();
-      summaryContainer.innerHTML = renderLeadsSummary(filteredLeads, cachedLeads.length);
+      summaryContainer.innerHTML = renderLeadsSummary(filteredLeads, cachedLeads.length) + renderReviewEvidenceSlices(filteredLeads);
       if (currentView === 'kanban') renderKanban(filteredLeads);
 
       if (filteredLeads.length === 0) {

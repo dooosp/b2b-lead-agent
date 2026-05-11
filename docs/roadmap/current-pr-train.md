@@ -38,6 +38,7 @@ PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs
 | [#57](https://github.com/dooosp/b2b-lead-agent/pull/57) | Product Context / Signal Fusion | Old PR #1's useful context-fusion idea was recut into Workbench guidance without schema, API, storage, or CRM expansion. |
 | [#58](https://github.com/dooosp/b2b-lead-agent/pull/58) | Post-PR57 doc sync | Source-of-truth docs were synced after Product Context / Signal Fusion landed. |
 | [#59](https://github.com/dooosp/b2b-lead-agent/pull/59) | Stakeholder Prep | Old PR #6's useful stakeholder-prep idea was recut into Workbench guidance without roleplay API, schema, storage, production, or CRM expansion. |
+| Current follow-up | Evidence/data-gap review slices | Old PR #3's remaining dashboard-intelligence idea is recut into cached `/leads` review helper guidance without API, schema, storage, production, or CRM expansion. |
 
 ## Immediate Merge Queue
 
@@ -51,7 +52,7 @@ These PRs are closed without merge. Treat them as concept inventory unless expli
 | --- | --- | --- |
 | [#1](https://github.com/dooosp/b2b-lead-agent/pull/1) Signal fusion and product knowledge foundation | Closed, conflicted | Useful product-context and signal-fusion concept was recut by PR #57. Do not merge the old branch. |
 | [#2](https://github.com/dooosp/b2b-lead-agent/pull/2) Solution translation outputs | Closed, stacked on #1 | Useful "why this solution" / "why now" concept was recut by PR #55. Do not merge the old branch because it predates the current LeadBrief, route, and trust baseline. |
-| [#3](https://github.com/dooosp/b2b-lead-agent/pull/3) Dashboard intelligence views | Closed, stacked | Useful review queue filtering concept was recut by PR #54. Remaining evidence/data-gap dashboard ideas should be scoped from current `master`. |
+| [#3](https://github.com/dooosp/b2b-lead-agent/pull/3) Dashboard intelligence views | Closed, stacked | Useful review queue filtering concept was recut by PR #54. Remaining evidence/data-gap review-slice concept is recut in the current follow-up from current `master`. |
 | [#4](https://github.com/dooosp/b2b-lead-agent/pull/4) Win-loss learning foundation | Closed, stacked | Deprioritize until review quality is proven; avoid CRM-like lifecycle expansion for now. |
 | [#5](https://github.com/dooosp/b2b-lead-agent/pull/5) Next-best-action and deal risk signals | Closed, stacked | Useful next-review guidance concept was recut by PR #53. Do not merge the old stacked branch. |
 | [#6](https://github.com/dooosp/b2b-lead-agent/pull/6) Stakeholder persuasion flows | Closed, stacked | Useful stakeholder-prep concept was recut as Workbench advisory guidance. Keep any future roleplay extension clearly non-approval and human-reviewed. |

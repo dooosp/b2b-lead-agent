@@ -25,7 +25,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - PR #59 recut old PR #6 as advisory role-specific Workbench helper guidance on top of existing LeadBrief/Opportunity Workbench data.
 - Do not reopen those findings unless you can point to a current-`master` regression or a newly verified gap.
 - Treat closed PRs #1-#9, #10, #22, and #23 as stale/superseded concept inventory unless explicitly re-scoped on top of current `master`.
-- Recommended next non-production product goal: recut the remaining evidence/data-gap dashboard ideas from old PR #3 as review helper guidance, or extend roleplay with explicitly advisory stakeholder context, keeping either path human-reviewed and outside CRM ownership.
+- Recommended next non-production product goal: extend roleplay with explicitly advisory stakeholder context from shipped Workbench prep, keeping it human-reviewed and outside CRM ownership.
 
 ## Repo Layout
 

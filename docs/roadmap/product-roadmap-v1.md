@@ -7,7 +7,7 @@ Current baseline:
 - `master` includes PRs #36-#43, PR #51's integration of #44-#49, and review-quality follow-ups through PR #59 at `39f69fac7f9509ed657f504ee1d9a0c694a00852`.
 - The canonical product unit is a LeadBrief-style lead with source, trust, confidence, assumptions, data gaps, and human `reviewStatus`.
 - Opportunity Workbench includes deterministic, advisory next-review-action reasons, a human review checklist, a Solution Translation Summary, Product Context / Signal Fusion, and Stakeholder Prep guidance derived from existing product, event, buyer, evidence, enrichment, and review fields.
-- The `/leads` review queue can filter cached LeadBriefs by review status, verification status, generation mode, confidence, and data-gap presence without adding CRM ownership or production query behavior.
+- The `/leads` review queue can filter cached LeadBriefs by review status, verification status, generation mode, confidence, and data-gap presence, and can summarize evidence/data-gap review slices without adding CRM ownership or production query behavior.
 - The product is a B2B lead discovery, briefing, and human-review aid.
 - It is not a CRM replacement, automatic salesperson, proposal generator source of truth, or PPT-first product.
 - Production deploy, production D1 access, production D1 writes, Worker endpoint calls, and production observation claims remain separate human-approved operations.
@@ -38,7 +38,8 @@ Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm te
 | Shipped | Solution translation summary | Old #2 concept, recut | Explain "why this solution" and "why now" inside LeadBrief/Workbench, sourced from existing product, signal, why-now, evidence, and review state. |
 | Shipped | Product context and signal fusion | Old #1 concept, recut | Fuse existing product, event type, buyer role, buying signals, pain points, and key figures inside LeadBrief/Workbench. Avoid broad schema expansion. |
 | Shipped | Stakeholder-specific prep | Old #6 concept, recut | Workbench helper guidance for economic buyer, technical evaluator, operator, procurement, sponsor, and champion. Not approval automation. |
-| P2 | Evidence/data-gap dashboard slices | Old #3 remaining concept, recut | Summarize evidence and data-gap density for review prioritization without creating CRM ownership, assignments, notifications, or production query changes. |
+| Shipped | Evidence/data-gap review slices | Old #3 remaining concept, recut | Summarize missing evidence, data-gap density, and review-ready leads on the cached `/leads` queue without creating CRM ownership, assignments, notifications, or production query changes. |
+| P2 | Advisory roleplay stakeholder context | Old #6 remaining concept, recut | Let roleplay consume stakeholder prep context as human-reviewed conversation practice without approving outreach or changing the canonical LeadBrief source of truth. |
 
 ## Hardening Backlog
 
