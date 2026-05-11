@@ -199,6 +199,74 @@ test('opportunity workbench keeps solution translation conservative for weak evi
   assert.match(html, /Use only as an internal review note/);
 });
 
+test('opportunity workbench fuses product context from current enrichment fields', () => {
+  const model = buildOpportunityWorkbenchModel({
+    id: 'lead-product-context',
+    company: 'Context Co',
+    reviewStatus: 'APPROVED',
+    verificationStatus: 'verified',
+    generationMode: 'llm',
+    signal: 'Chiller retrofit program entered vendor shortlist',
+    whyNow: 'Shortlist closes this quarter.',
+    recommendedMessage: 'Follow up with operations director about a compressor retrofit pilot.',
+    product: 'Turbocor compressor',
+    buyerRole: 'Operations Director',
+    eventType: 'vendor_shortlist',
+    buyingSignals: ['Vendor shortlist', 'Energy cost pressure'],
+    painPoints: ['Cooling energy cost'],
+    keyFigures: ['18-24% cooling energy reduction range'],
+    confidence: 'HIGH',
+    evidence: [
+      { field: 'summary', quote: 'vendor shortlist', sourceUrl: 'https://example.com/context' },
+    ],
+    sources: [{ title: 'Context source', url: 'https://example.com/context' }],
+    dataGaps: [],
+  });
+  const html = renderOpportunityWorkbench(model);
+
+  assert.equal(model.productContext.product, 'Turbocor compressor');
+  assert.equal(model.productContext.eventType, 'vendor_shortlist');
+  assert.equal(model.productContext.buyerContext, 'Operations Director');
+  assert.ok(model.productContext.fusionSignals.includes('Buying signal: Vendor shortlist'));
+  assert.ok(model.productContext.fusionSignals.includes('Pain point: Cooling energy cost'));
+  assert.ok(model.productContext.fusionSignals.includes('Key figure: 18-24% cooling energy reduction range'));
+  assert.equal(
+    model.productContext.reviewGuidance,
+    'Use these fused signals to personalize the reviewed message; they are context for a human reviewer, not automatic approval.'
+  );
+  assert.match(html, /제품\/신호 맥락/);
+  assert.match(html, /Operations Director/);
+  assert.match(html, /Buying signal: Vendor shortlist/);
+  assert.match(html, /Pain point: Cooling energy cost/);
+});
+
+test('opportunity workbench keeps product context conservative when signals are thin', () => {
+  const model = buildOpportunityWorkbenchModel({
+    id: 'lead-thin-context',
+    company: 'Thin Context Co',
+    reviewStatus: 'NEEDS_REVIEW',
+    verificationStatus: 'needs_review',
+    generationMode: 'heuristic',
+    signal: 'Expansion rumor needs confirmation',
+    confidence: 'LOW',
+    evidence: [],
+    sources: [],
+    dataGaps: ['Buyer not confirmed'],
+  });
+  const html = renderOpportunityWorkbench(model);
+
+  assert.equal(model.productContext.product, '제품 맥락 확인 필요');
+  assert.equal(model.productContext.eventType, '신호 유형 미확인');
+  assert.equal(model.productContext.buyerContext, '구매자 맥락 확인 필요');
+  assert.deepEqual(model.productContext.fusionSignals, ['Primary signal: Expansion rumor needs confirmation']);
+  assert.equal(
+    model.productContext.reviewGuidance,
+    'Treat this context as tentative until product fit, buyer role, and evidence are confirmed.'
+  );
+  assert.match(html, /제품 맥락 확인 필요/);
+  assert.match(html, /Treat this context as tentative/);
+});
+
 test('opportunity workbench turns missing evidence into explicit data-gap review items', () => {
   const model = buildOpportunityWorkbenchModel({
     id: 'lead-missing',

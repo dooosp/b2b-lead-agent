@@ -163,6 +163,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '솔루션 번역',
     'Turbocor compressor',
     'Approved and verified context',
+    '제품/신호 맥락',
+    'Vendor shortlist',
+    'Cooling energy cost',
     'Local evidence quote',
     'Follow up with operations director',
   ]);
