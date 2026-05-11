@@ -93,6 +93,14 @@ export function getDashboardPage(env) {
       document.getElementById('dashboardHistoryLink').href = '/history' + p;
     }
 
+    function renderDashboardState(title, description, actionHref, actionLabel) {
+      return \`<div class="section-shell" role="alert" style="max-width:520px;margin:18px auto 0;text-align:center;padding:28px 24px;">
+        <h2 style="font-size:28px;color:#e94560;margin:0 0 10px;">\${esc(title)}</h2>
+        <p class="subtitle" style="margin-bottom:18px;">\${esc(description)}</p>
+        <a href="\${esc(actionHref || '/')}" class="btn btn-secondary">\${esc(actionLabel || '메인으로 이동')}</a>
+      </div>\`;
+    }
+
     async function loadDashboard() {
       const profile = document.getElementById('profileFilter').value;
       syncNavLinks(profile);
@@ -100,6 +108,24 @@ export function getDashboardPage(env) {
       try {
         const res = await fetch('/api/dashboard?profile=' + encodeURIComponent(profile), {headers:authHeaders()});
         const data = await res.json();
+        if (res.status === 401) {
+          container.innerHTML = renderDashboardState(
+            '인증이 필요합니다',
+            '이 대시보드는 권한이 확인된 사용자만 볼 수 있습니다. 메인 화면에서 인증한 뒤 다시 시도하세요.',
+            '/',
+            '메인으로 이동'
+          );
+          return;
+        }
+        if (res.status === 503) {
+          container.innerHTML = renderDashboardState(
+            '시스템 설정이 필요합니다',
+            '서버 인증 설정이 누락되었습니다. 관리자에게 문의하세요.',
+            '/',
+            '메인으로 이동'
+          );
+          return;
+        }
         if (!data.success) { container.innerHTML = '<p style="color:#e74c3c;">' + esc(data.message) + '</p>'; return; }
         const m = data.metrics;
 
