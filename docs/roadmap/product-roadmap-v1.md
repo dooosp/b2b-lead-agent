@@ -6,6 +6,7 @@ Current baseline:
 
 - `master` includes PRs #36-#43 and PR #51's integration of #44-#49 at `a3f44df58bb231b060ff42fa13b17ad573b1cc1a`.
 - The canonical product unit is a LeadBrief-style lead with source, trust, confidence, assumptions, data gaps, and human `reviewStatus`.
+- Opportunity Workbench includes deterministic, advisory next-review-action reasons and a human review checklist derived from evidence gaps, confidence, verification, generation mode, and review state.
 - The product is a B2B lead discovery, briefing, and human-review aid.
 - It is not a CRM replacement, automatic salesperson, proposal generator source of truth, or PPT-first product.
 - Production deploy, production D1 access, production D1 writes, Worker endpoint calls, and production observation claims remain separate human-approved operations.
@@ -32,9 +33,8 @@ Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm te
 
 | Priority | Feature | Source | Scope |
 | --- | --- | --- | --- |
-| P0 | Deterministic next review action | Old #5 concept, recut | Suggest human-reviewed actions from evidence gaps, confidence, status, and review state. Keep it advisory. |
+| P0 | Review queue filters | Current LeadBrief baseline plus Workbench | Filter by `reviewStatus`, `verificationStatus`, generation mode, data gaps, and confidence. Avoid full CRM ownership concepts. |
 | P1 | Solution translation summary | Old #2 concept, recut | Explain "why this solution" and "why now" inside LeadBrief/Workbench, sourced from existing profile/product context and evidence. |
-| P1 | Review queue filters | Current LeadBrief baseline plus Workbench | Filter by `reviewStatus`, `verificationStatus`, generation mode, data gaps, and confidence. Avoid full CRM ownership concepts. |
 | P2 | Product context and signal fusion | Old #1 concept, recut | Add bounded product/signal context only where it improves LeadBrief review quality. Avoid broad schema expansion until scoped. |
 | P2 | Stakeholder-specific prep | Old #6 concept, recut | Roleplay/helper guidance for economic buyer, technical evaluator, operator, procurement, sponsor, and champion. Not approval automation. |
 

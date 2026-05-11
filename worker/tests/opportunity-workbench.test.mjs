@@ -79,6 +79,63 @@ test('opportunity workbench accepts legacy snake_case review payloads conservati
   assert.match(html, /데이터 보강 후 재검토/);
 });
 
+test('opportunity workbench derives deterministic advisory checklist for weak review signals', () => {
+  const model = buildOpportunityWorkbenchModel({
+    id: 'lead-weak-action',
+    company: 'Weak Signal Co',
+    reviewStatus: 'NEEDS_REVIEW',
+    verificationStatus: 'needs_review',
+    generationMode: 'heuristic',
+    signal: '공장 자동화 투자 검토',
+    whyNow: '투자 검토 초기 단계입니다.',
+    recommendedMessage: '자동화 효율 진단을 제안합니다.',
+    confidence: 'LOW',
+    confidenceReason: '공개 출처와 직접 인용이 부족합니다.',
+    evidence: [],
+    sources: [],
+    dataGaps: ['의사결정자 미확인', '예산 규모 미확인'],
+  });
+  const html = renderOpportunityWorkbench(model);
+
+  assert.ok(model.nextAction.reasons.includes('신뢰도 LOW'));
+  assert.ok(model.nextAction.reasons.includes('휴리스틱 생성'));
+  assert.ok(model.nextAction.reasons.includes('검증 필요'));
+  assert.ok(model.nextAction.reasons.some((reason) => reason.startsWith('데이터 공백 ')));
+  assert.ok(model.nextAction.checklist.includes('직접 인용과 출처를 보강하세요.'));
+  assert.ok(model.nextAction.checklist.includes('데이터 공백 확인: 의사결정자 미확인'));
+  assert.match(html, /검토 체크리스트/);
+  assert.match(html, /직접 인용과 출처를 보강하세요\./);
+  assert.match(html, /데이터 공백 확인: 의사결정자 미확인/);
+});
+
+test('opportunity workbench gives approved verified leads an advisory outreach checklist', () => {
+  const model = buildOpportunityWorkbenchModel({
+    id: 'lead-ready-action',
+    company: 'Ready Co',
+    reviewStatus: 'APPROVED',
+    verificationStatus: 'verified',
+    generationMode: 'llm',
+    signal: '데이터센터 냉각 설비 발주 검토',
+    whyNow: '설계 기준 확정 전 효율 검토가 필요합니다.',
+    recommendedMessage: '냉각 효율 파일럿 미팅을 제안합니다.',
+    confidence: 'HIGH',
+    confidenceReason: '공개 기사와 직접 인용이 일치합니다.',
+    evidence: [
+      { field: 'summary', quote: '냉각 설비 발주 검토', sourceUrl: 'https://example.com/ready' },
+    ],
+    sources: [{ title: 'Ready Co project', url: 'https://example.com/ready' }],
+    dataGaps: [],
+  });
+  const html = renderOpportunityWorkbench(model);
+
+  assert.equal(model.nextAction.label, '영업 액션 준비');
+  assert.deepEqual(model.nextAction.reasons, ['사람 검토 승인', '검증됨', '신뢰도 HIGH']);
+  assert.ok(model.nextAction.checklist.includes('추천 메시지를 사람 검토 후 개인화하세요.'));
+  assert.ok(model.nextAction.checklist.includes('후속 조치일과 담당 메모를 남기세요.'));
+  assert.match(html, /추천 메시지를 사람 검토 후 개인화하세요\./);
+  assert.match(html, /후속 조치일과 담당 메모를 남기세요\./);
+});
+
 test('opportunity workbench turns missing evidence into explicit data-gap review items', () => {
   const model = buildOpportunityWorkbenchModel({
     id: 'lead-missing',
