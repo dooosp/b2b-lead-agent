@@ -14,15 +14,17 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 
 ## Current Shipped Baseline
 
-- `master` includes the April 7, 2026 hardening cycle, the PR #25 P0 trust-boundary baseline, and the PR #27 LeadBrief v1 review contract baseline merged on May 5, 2026.
+- `master` includes the April 7, 2026 hardening cycle, the PR #25 P0 trust-boundary baseline, the PR #27 LeadBrief v1 review contract baseline, the May 11 route/data/schema/evidence/docs cleanup train, and PR #51's post-train integration through `a3f44df`.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
-- PR #25 shipped `/api/internal/*` API_TOKEN-only auth, latest-published `503 readiness_unavailable` fail-closed behavior, managed/root fallback publication guards, self-service trust metadata, and D1 trust metadata persistence.
+- PR #25 shipped `/api/internal/*` API-token-only auth, latest-published `503 readiness_unavailable` fail-closed behavior, managed/root fallback publication guards, self-service trust metadata, and D1 trust metadata persistence.
 - PR #27 shipped LeadBrief v1 as the central human-review unit across root qualification, published snapshots, D1 persistence, `/api/leads`, self-service responses, CSV/export trust metadata, and the minimum review UI.
+- PRs #36-#43 shipped Worker route dispatch, LeadBrief data-path hardening, schema drift checks, test helper refactors, review UX metadata, release evidence tooling, architecture docs, and canonical naming cleanup.
+- PR #51 integrated PRs #44-#49: Opportunity Workbench v1, local-only Worker E2E harness, Worker auth/error hardening, synthetic lead-quality evaluation, old PR #23 replacement, and roadmap synthesis.
 - Do not reopen those findings unless you can point to a current-`master` regression or a newly verified gap.
-- Treat PR #22 as superseded by PR #25 unless it is explicitly re-scoped on top of current `master`.
-- Recommended next mega goal: Production Readiness: D1 Lazy Migration Observation Plan. Prepare deploy/observation evidence for lazy trust/review columns without performing deploy in planning docs.
+- Treat closed PRs #1-#9, #10, #22, and #23 as stale/superseded concept inventory unless explicitly re-scoped on top of current `master`.
+- Recommended next non-production product goal: recut deterministic next-review-action guidance from old PR #5 on top of current LeadBrief/Opportunity Workbench data, keeping it advisory and human-reviewed.
 
 ## Repo Layout
 
@@ -45,7 +47,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 
 ## Trust Boundary Rules
 
-- `/api/internal/*` must use `API_TOKEN` only; `TRIGGER_PASSWORD` is not internal API auth.
+- `/api/internal/*` must use `INTERNAL_API_TOKEN` when configured, with `API_TOKEN` compatibility fallback only; `TRIGGER_PASSWORD` is not internal API auth.
 - Latest-published readiness lookup failures must fail closed with HTTP `503` and `error.code = "readiness_unavailable"`.
 - Managed/root runs must fail closed when the LLM is missing or fails unless explicit demo mode is enabled.
 - Demo leads must not be canonical-published.
@@ -58,7 +60,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - Managed/self-service upserts preserve existing `review_status` on conflict so refreshes do not erase human review decisions.
 - CSV, browser UI, self-service copy, and downloads must preserve review/trust metadata.
 - D1 trust and review columns are lazy-migration-compatible but not production-observed until the first post-deploy production write is confirmed.
-- Production deploy and production DB writes were not performed during PR #25, PR #26, or PR #27 landing.
+- Production deploy and production DB writes were not performed during PR #25, PR #26, PR #27, or the PR #36-#51 train.
 
 ## Canonical Repo Rules
 

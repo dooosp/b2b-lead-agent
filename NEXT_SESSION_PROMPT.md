@@ -3,8 +3,8 @@
 ## 현재 기준 상태
 
 - 기준 브랜치: `master`
-- 마지막 검증된 pre-PR #43 `origin/master` HEAD: `0e182c1a5ad7e445915c15c4bd047c7bf250dfc2` (`Merge pull request #42 from dooosp/codex/architecture-map-docs-v1`)
-- PR #43이 merge된 뒤에는 반드시 `git fetch origin master`와 `git rev-parse origin/master`로 실제 최신 HEAD를 다시 기록한다.
+- 마지막 검증된 post-PR #51 `origin/master` HEAD: `a3f44df58bb231b060ff42fa13b17ad573b1cc1a` (`Merge pull request #51 from dooosp/codex/post-train-integration-v1`)
+- 다음 세션도 반드시 `git fetch origin master`와 `git rev-parse origin/master`로 실제 최신 HEAD를 다시 기록한다.
 - hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`, `docs/architecture/*.md`, `NEXT_SESSION_PROMPT.md`
 - LeadBrief v1 merge baseline: `5776d4a` (`[Product] Freeze LeadBrief v1 review contract (#27)`)
 - P0 trust-boundary baseline: `95c9d54` (`[P0] Harden trust boundary and fallback lead publication (#25)`)
@@ -31,10 +31,18 @@
   - Evidence packet generation does not prove production observation.
 - PR #42 landed architecture docs:
   - `docs/architecture/repo-map.md`, `docs/architecture/worker-routes.md`, and `docs/architecture/data-path.md` map the current route/data/release boundaries.
-- PR #43, when merged, lands dead-code/dependency/naming cleanup:
+- PR #43 landed dead-code/dependency/naming cleanup:
   - News-fetcher alias wrappers are removed or routed through canonical modules.
   - `scripts/check-naming.js` guards removed alias wrapper names.
   - No package upgrades, production deploys, production DB writes, production DB access, Worker endpoint calls, or production observation claims are part of the train.
+- PR #51 integrated post-train PRs #44-#49:
+  - #44 Opportunity Workbench v1 is now on `master`.
+  - #45 local-only Worker E2E harness is now on `master`.
+  - #46 Worker auth/error hardening is now on `master`.
+  - #47 synthetic lead-quality evaluation harness is now on `master`.
+  - #48 current-master replacement for old dashboard unauthorized UX PR #23 is now on `master`.
+  - #49 roadmap synthesis is now on `master`.
+- Stale PRs #1-#9 received disposition comments and are closed without merge or branch deletion. Treat their ideas as concept inventory only.
 
 ## Production boundary
 
@@ -58,11 +66,11 @@
 1. `origin/master` 기준으로 sync하고 repo fingerprint를 다시 확인한다.
 2. 먼저 `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md`를 읽는다.
 3. 이미 shipped 된 finding을 다시 열지 말고, 현재 `master`에서 재현되는 새 증거나 회귀가 있을 때만 follow-up으로 다룬다.
-4. raw branch나 오래된 open PR은 current `master` 기준 merge-safe artifact로 간주하지 않는다.
+4. raw branch나 오래된 closed PR은 current `master` 기준 merge-safe artifact로 간주하지 않는다.
 5. production deploy/observe/D1 work는 별도 human approval 없이는 시작하지 않는다.
 
 ## 바로 붙여 넣을 프롬프트
 
 ```text
-You are working on dooosp/b2b-lead-agent after the May 11, 2026 PR train that landed PRs #36 through #43. Start from a fresh `origin/master` sync and prove the repo root, branch, HEAD SHA, default branch, dirty state, and available validation commands before changing code. Read `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md` first. Treat current `master` as the source of truth: Worker routing is split into `worker/routes/*`, LeadBrief data-path defaults are hardened, D1 schema drift has `npm run check:schema`, release evidence packet tooling is local-only, architecture docs were refreshed, and cleanup/naming guards landed. Do not reopen shipped findings unless you can show a current-master regression. Do not deploy, call production Worker endpoints, access or write production D1, run Wrangler deploy/D1 commands, or claim production observation without a separate human-approved production prompt.
+You are working on dooosp/b2b-lead-agent after the May 11, 2026 PR train and PR #51 integration. Start from a fresh `origin/master` sync and prove the repo root, branch, HEAD SHA, default branch, dirty state, and available validation commands before changing code. Read `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md` first. Treat current `master` as the source of truth: Worker routing is split into `worker/routes/*`, LeadBrief data-path defaults are hardened, D1 schema drift has `npm run check:schema`, release evidence packet tooling is local-only, architecture docs were refreshed, cleanup/naming guards landed, Opportunity Workbench v1 is shipped, the local-only Worker E2E harness is shipped, auth/error hardening is shipped, and the synthetic lead-quality evaluator is shipped. Old PRs #1-#9 and #23 are closed concept inventory; do not reopen or merge them as-is. Do not reopen shipped findings unless you can show a current-master regression. Do not deploy, call production Worker endpoints, access or write production D1, run Wrangler deploy/D1 commands, or claim production observation without a separate human-approved production prompt.
 ```
