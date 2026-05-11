@@ -7,57 +7,29 @@ import { checkSelfServiceRateLimit } from '../self-service/rate-limit.js';
 import { getLeadsPage } from '../pages/leads.js';
 import { getDashboardPage } from '../pages/dashboard.js';
 import { getSafeUrlScript } from '../pages/script-snippets.js';
-
-function createRequest(path, { method = 'GET', headers = {}, body } = {}) {
-  return new Request(`https://b2b-lead-trigger.example.workers.dev${path}`, {
-    method,
-    headers,
-    body
-  });
-}
-
-function createEnv(overrides = {}) {
-  return {
-    API_TOKEN: 'api-secret',
-    TRIGGER_PASSWORD: 'legacy-secret',
-    PROFILES: JSON.stringify([{ id: 'danfoss', name: 'Danfoss' }]),
-    ...overrides
-  };
-}
-
-function createRateLimitStore() {
-  const values = new Map();
-  return {
-    async get(key, type) {
-      const value = values.get(key);
-      return type === 'json' && value ? JSON.parse(value) : value || null;
-    },
-    async put(key, value) {
-      values.set(key, value);
-    }
-  };
-}
+import { createRateLimitStore, createWorkerEnv } from './helpers/fixtures.mjs';
+import { createWorkerRequest } from './helpers/http.mjs';
 
 test('verifyAuth rejects query token authentication and keeps Bearer auth working', async () => {
   const queryOnly = await verifyAuth(
-    createRequest('/api/leads?token=api-secret'),
-    createEnv()
+    createWorkerRequest('/api/leads?token=api-secret'),
+    createWorkerEnv()
   );
   assert.equal(queryOnly.status, 401);
 
   const bearer = await verifyAuth(
-    createRequest('/api/leads', {
+    createWorkerRequest('/api/leads', {
       headers: { Authorization: 'Bearer api-secret' }
     }),
-    createEnv()
+    createWorkerEnv()
   );
   assert.equal(bearer, null);
 });
 
 test('lead detail page route rejects query token authentication', async () => {
   const response = await worker.fetch(
-    createRequest('/leads/lead-1?token=api-secret'),
-    createEnv(),
+    createWorkerRequest('/leads/lead-1?token=api-secret'),
+    createWorkerEnv(),
     {}
   );
 
@@ -67,12 +39,12 @@ test('lead detail page route rejects query token authentication', async () => {
 
 test('self-service analyze requires Bearer auth by default', async () => {
   const response = await worker.fetch(
-    createRequest('/api/analyze', {
+    createWorkerRequest('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ company: 'Danfoss' })
     }),
-    createEnv(),
+    createWorkerEnv(),
     {}
   );
   const payload = await response.json();
@@ -84,12 +56,12 @@ test('self-service analyze requires Bearer auth by default', async () => {
 
 test('self-service analyze rate limit is enabled by default and fails closed without storage after auth', async () => {
   const response = await worker.fetch(
-    createRequest('/api/analyze', {
+    createWorkerRequest('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer api-secret' },
       body: JSON.stringify({ company: 'Danfoss' })
     }),
-    createEnv(),
+    createWorkerEnv(),
     {}
   );
   const payload = await response.json();
@@ -100,17 +72,17 @@ test('self-service analyze rate limit is enabled by default and fails closed wit
 });
 
 test('self-service rate limiter throttles by default when storage is configured', async () => {
-  const env = createEnv({
+  const env = createWorkerEnv({
     RATE_LIMIT: createRateLimitStore(),
     SELF_SERVICE_RATE_LIMIT_MAX: '1',
     SELF_SERVICE_RATE_LIMIT_WINDOW_SEC: '60'
   });
   const first = await checkSelfServiceRateLimit(
-    createRequest('/api/analyze', { method: 'POST', headers: { 'CF-Connecting-IP': '203.0.113.10' } }),
+    createWorkerRequest('/api/analyze', { method: 'POST', headers: { 'CF-Connecting-IP': '203.0.113.10' } }),
     env
   );
   const second = await checkSelfServiceRateLimit(
-    createRequest('/api/analyze', { method: 'POST', headers: { 'CF-Connecting-IP': '203.0.113.10' } }),
+    createWorkerRequest('/api/analyze', { method: 'POST', headers: { 'CF-Connecting-IP': '203.0.113.10' } }),
     env
   );
 
@@ -119,7 +91,7 @@ test('self-service rate limiter throttles by default when storage is configured'
 });
 
 test('self-service analyze route throttles authenticated callers before expensive work', async () => {
-  const env = createEnv({
+  const env = createWorkerEnv({
     RATE_LIMIT: createRateLimitStore(),
     SELF_SERVICE_RATE_LIMIT_MAX: '1',
     SELF_SERVICE_RATE_LIMIT_WINDOW_SEC: '60'
@@ -134,8 +106,8 @@ test('self-service analyze route throttles authenticated callers before expensiv
     body: JSON.stringify({ company: 'Danfoss', industry: 'HVAC' })
   };
 
-  const first = await worker.fetch(createRequest('/api/analyze', init), env, {});
-  const second = await worker.fetch(createRequest('/api/analyze', init), env, {});
+  const first = await worker.fetch(createWorkerRequest('/api/analyze', init), env, {});
+  const second = await worker.fetch(createWorkerRequest('/api/analyze', init), env, {});
 
   assert.equal(first.status, 503);
   assert.equal(second.status, 429);
@@ -164,7 +136,7 @@ test('safeUrl allows only well-formed http and https URLs', () => {
 });
 
 test('dashboard detail links do not propagate tokens in URLs', () => {
-  const html = getDashboardPage(createEnv());
+  const html = getDashboardPage(createWorkerEnv());
 
   assert.doesNotMatch(html, /\?token=/);
   assert.match(html, /onclick="openLeadDetail/);

@@ -3,51 +3,7 @@ const assert = require('node:assert/strict');
 
 const { qualifyLeads } = require('../lead-qualifier');
 const { prepareLeadSnapshotRecords } = require('../lead-report-publisher');
-
-function createProfile() {
-  return {
-    id: 'fixture-profile',
-    name: 'Fixture Corp',
-    competitors: ['Comp A'],
-    products: {
-      energy: ['E-Manager']
-    },
-    productKnowledge: {
-      'E-Manager': { value: '에너지 관리', roi: '전력비 절감' }
-    },
-    globalReferences: {
-      energy: [
-        { client: 'Reference Plant', project: 'EMS rollout', result: '전력 사용량 12% 절감' }
-      ]
-    },
-    categoryRules: {
-      energy: ['에너지', '전력', '투자']
-    },
-    categoryConfig: {
-      energy: {
-        product: 'E-Manager',
-        score: 78,
-        grade: 'B',
-        roi: '근거 없음(추정 불가) - 공개 기사 기준 정량 데이터 부족',
-        policy: '에너지 효율 규제 강화',
-        pitch: '{company}에 {product} 도입을 제안합니다.'
-      }
-    }
-  };
-}
-
-function createArticle(overrides = {}) {
-  return {
-    title: 'DL이앤씨, 데이터센터 에너지 효율 투자 확대',
-    link: 'https://example.com/news/dl-energy',
-    source: 'Example News',
-    query: 'DL이앤씨 에너지 투자',
-    pubDate: 'Tue, 07 Apr 2026 09:00:00 GMT',
-    content: '검증 가능한 기사 본문입니다.',
-    resolvedUrl: true,
-    ...overrides
-  };
-}
+const { createRootArticle, createRootProfile } = require('./helpers/root-fixtures');
 
 function withoutGeminiKey(fn) {
   const original = process.env.GEMINI_API_KEY;
@@ -66,7 +22,7 @@ function withoutGeminiKey(fn) {
 test('root qualifier fails closed instead of returning demo leads when LLM config is missing', async () => {
   await withoutGeminiKey(async () => {
     await assert.rejects(
-      () => qualifyLeads([createArticle()], createProfile()),
+      () => qualifyLeads([createRootArticle()], createRootProfile()),
       /LLM|GEMINI_API_KEY|lead qualification/i
     );
   });
@@ -80,7 +36,7 @@ test('root qualifier fails closed instead of returning demo leads when LLM analy
   };
 
   await assert.rejects(
-    () => qualifyLeads([createArticle()], createProfile(), { llm: failingLlm }),
+    () => qualifyLeads([createRootArticle()], createRootProfile(), { llm: failingLlm }),
     /model unavailable|lead qualification/i
   );
 });
@@ -110,7 +66,7 @@ test('LLM-qualified root leads carry explicit verified generation metadata', asy
     }
   };
 
-  const leads = await qualifyLeads([createArticle()], createProfile(), { llm });
+  const leads = await qualifyLeads([createRootArticle()], createRootProfile(), { llm });
 
   assert.equal(leads.length, 1);
   assert.equal(leads[0].generationMode, 'llm');

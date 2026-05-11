@@ -30,6 +30,22 @@ function stringOrEmpty(value) {
   return typeof value === 'string' ? value : '';
 }
 
+function firstNonEmptyText(...values) {
+  for (const value of values) {
+    const text = sanitizeLeadText(value, '');
+    if (text) return text;
+  }
+  return '';
+}
+
+function firstNonEmptyString(...values) {
+  for (const value of values) {
+    const text = stringOrEmpty(value);
+    if (text.trim()) return text;
+  }
+  return '';
+}
+
 function normalizeGenerationMode(value, fallback = 'llm') {
   const mode = sanitizeLeadText(value, '').toLowerCase();
   if (mode === 'llm' || mode === 'heuristic' || mode === 'demo') return mode;
@@ -211,12 +227,12 @@ function normalizePersistedLead(lead = {}, { profileId = '', source = '', rowId 
     status: sanitizeLeadText(lead.status, '') || 'NEW',
     reviewStatus: normalizeReviewStatus(lead.reviewStatus ?? lead.review_status),
     company: sanitizeLeadText(lead.company, ''),
-    summary: sanitizeLeadText(lead.summary ?? lead.signal, ''),
+    summary: firstNonEmptyText(lead.summary, lead.signal),
     product: sanitizeLeadText(lead.product, ''),
     score: toFiniteNumber(lead.score, 0),
     grade: sanitizeLeadText(lead.grade, '') || 'B',
     roi: stringOrEmpty(lead.roi),
-    salesPitch: stringOrEmpty(lead.salesPitch ?? lead.sales_pitch ?? lead.recommendedMessage ?? lead.recommended_message),
+    salesPitch: firstNonEmptyString(lead.salesPitch, lead.sales_pitch, lead.recommendedMessage, lead.recommended_message),
     globalContext: stringOrEmpty(lead.globalContext ?? lead.global_context),
     sources: normalizedSources,
     notes: stringOrEmpty(lead.notes),
@@ -230,7 +246,7 @@ function normalizePersistedLead(lead = {}, { profileId = '', source = '', rowId 
     buyingSignals: Array.isArray(lead.buyingSignals ?? lead.buying_signals) ? (lead.buyingSignals ?? lead.buying_signals) : [],
     scoreReason: stringOrEmpty(lead.scoreReason ?? lead.score_reason),
     urgency: stringOrEmpty(lead.urgency),
-    urgencyReason: stringOrEmpty(lead.urgencyReason ?? lead.urgency_reason ?? lead.whyNow ?? lead.why_now),
+    urgencyReason: firstNonEmptyString(lead.urgencyReason, lead.urgency_reason, lead.whyNow, lead.why_now),
     buyerRole: stringOrEmpty(lead.buyerRole ?? lead.buyer_role),
     evidence: Array.isArray(lead.evidence) ? lead.evidence : [],
     confidence: stringOrEmpty(lead.confidence),
