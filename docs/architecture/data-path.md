@@ -28,7 +28,7 @@ Key details:
 
 ```text
 POST /api/analyze
-  -> auth and rate limit in worker/index.js
+  -> auth and rate limit in worker/routes/api.js
   -> worker/self-service/orchestrator.js
   -> profile generation, news fetch, article body fetch, lead analysis
   -> response schema normalization

@@ -1,17 +1,17 @@
 # Worker Route Map
 
-`worker/index.js` is a hand-written router. The tables below map route ownership, auth boundaries, and major side effects. This is not an endpoint test record; it is a source map for maintainers.
+`worker/index.js` delegates requests to `worker/routes/dispatcher.js`. Route matching, static/page/API boundaries, response helpers, and route inventory live under `worker/routes/*`. The tables below map route ownership, auth boundaries, and major side effects. This is not an endpoint test record; it is a source map for maintainers.
 
 ## Auth Boundaries
 
 | Boundary | Source | Rule |
 | --- | --- | --- |
-| CORS preflight | `worker/lib/cors.js` | Any `OPTIONS` request returns from `handleOptions()` before API routing |
+| CORS preflight | `worker/routes/static.js`, `worker/lib/cors.js` | Any `OPTIONS` request returns from `handleOptions()` before API routing |
 | General API auth | `worker/lib/auth.js` via `verifyAuth()` | Bearer token must match `API_TOKEN`; if `API_TOKEN` is absent, `TRIGGER_PASSWORD` is the fallback token |
 | Internal API auth | `worker/lib/auth.js` via `verifyInternalApiAuth()` | Bearer token must match `API_TOKEN`; `TRIGGER_PASSWORD` is not accepted |
 | Trigger auth | `worker/lib/job-trigger.js` | Bearer-first; legacy body password is allowed only by `ALLOW_TRIGGER_BODY_PASSWORD` or when no `API_TOKEN` is configured |
 | Job event callback auth | `worker/lib/job-trigger.js` | `X-Job-Callback-Token` derived from callback secret and request id |
-| Self-service auth | `worker/index.js`, `worker/self-service/rate-limit.js` | `POST /api/analyze` requires general API auth unless `REQUIRE_SELF_SERVICE_AUTH=false`, then applies self-service rate limiting |
+| Self-service auth | `worker/routes/api.js`, `worker/self-service/rate-limit.js` | `POST /api/analyze` requires general API auth unless `REQUIRE_SELF_SERVICE_AUTH=false`, then applies self-service rate limiting |
 
 ## API Routes
 
@@ -55,10 +55,12 @@
 
 ## Route Ordering Notes
 
-- `/api/internal/*` is checked before general API routing and uses `API_TOKEN` only.
-- The general protected API list includes `/api/leads`, `/api/leads/batch-enrich`, `/api/ppt`, `/api/proposal`, `/api/cpa`, `/api/roleplay`, `/api/history`, `/api/dashboard`, `/api/export/csv`, `/api/leads/*`, and `GET /api/jobs/:requestId`.
+- `worker/routes/dispatcher.js` dispatches CORS/static routes, then API/job routes, then page routes.
+- `/api/internal/*` is matched inside API routing before the general API handlers and uses `API_TOKEN` only.
+- The general protected API list is represented by route metadata and API matchers for `/api/leads`, `/api/leads/batch-enrich`, `/api/ppt`, `/api/proposal`, `/api/cpa`, `/api/roleplay`, `/api/history`, `/api/dashboard`, `/api/export/csv`, `/api/leads/*`, and `GET /api/jobs/:requestId`.
 - `POST /api/jobs/:requestId/events` is not protected by general Bearer auth; it is protected by the callback token inside `handleJobEvent()`.
-- `/api/references` performs its own `verifyAuth()` checks in each route block rather than using the shared `apiPaths` list.
+- `/api/references` performs its own `verifyAuth()` checks in each route handler.
+- Unknown `/api/*` paths return JSON `404`; unsupported methods on known static/API routes return JSON `405` with `Allow` when route metadata knows the allowed methods.
 - HTML page shells are mostly public at the router level. Sensitive data requests are expected to go through protected APIs, except `/leads/:id`, which authenticates before server-side D1 reads.
 - `GET /api/leads` and `GET /api/history` can have a D1 write side effect for managed profiles because they cache GitHub report artifacts when D1 is empty.
 
@@ -78,5 +80,6 @@ When adding or changing a route:
 - Add or update the route row above.
 - State the auth boundary explicitly.
 - State whether the route reads D1, writes D1, calls external services, or mutates GitHub artifacts.
+- Update `worker/routes/metadata.js` when adding or changing route boundaries.
 - Add or update the smallest matching test in `worker/tests/` or `tests/`.
 - Re-run at least `npm run test:worker` for Worker route changes; run `npm test` when the route changes cross root/Worker contracts.

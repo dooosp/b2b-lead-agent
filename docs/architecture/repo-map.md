@@ -20,7 +20,7 @@ When runtime behavior changes, update this map from source files, tests, and wor
 | Root pipeline | `main.js`, `orchestrator/news-orchestrator.js`, `lead-qualifier.js`, `lead-report-publisher.js`, `profile-registry.js` | Batch news collection, lead qualification, canonical report artifact publishing, optional email |
 | Profiles | `profiles/*.js`, `profile-registry.js` | Managed seller profiles and search/product context |
 | Published artifacts | `reports/<profile>/latest-leads.json`, `reports/<profile>/lead-history.json`, `reports/<profile>/lead-report-YYYY-MM-DD.md` | Canonical managed lead snapshots consumed by the Worker fallback paths |
-| Worker API | `worker/index.js`, `worker/api/*.js` | HTTP routing, authenticated APIs, trigger/job ledger, internal report contract |
+| Worker API | `worker/index.js`, `worker/routes/*.js`, `worker/api/*.js` | Route dispatch, route metadata, authenticated APIs, trigger/job ledger, internal report contract |
 | Worker D1 layer | `worker/db/*.js`, `worker/schema.sql` | Lazy D1 schema creation, lead/job/reference persistence, row transforms |
 | Worker self-service | `worker/self-service/*.js` | Authenticated ad hoc company/industry analysis and self-service D1 persistence |
 | Worker UI pages | `worker/pages/*.js` | Browser page shells for leads, dashboard, proposal/PPT helpers, roleplay, CPA |
@@ -34,7 +34,10 @@ When runtime behavior changes, update this map from source files, tests, and wor
 | `start` | `node main.js --profile danfoss` | Local/default managed batch run for the Danfoss profile |
 | `email` | `node main.js --profile danfoss --email` | Managed batch run plus email send path |
 | `check:naming` | `node scripts/check-naming.js` | Canonical path and artifact naming guard |
+| `check:schema` | `node scripts/check-d1-schema-consistency.js` | Local D1 schema drift guard for `worker/schema.sql` and `worker/db/schema.js` |
+| `evidence:packet` | `node scripts/generate-release-evidence-packet.js` | Local-only release evidence packet generator |
 | `e2e` | `node e2e-test.mjs` | Browser/end-to-end smoke surface when explicitly needed |
+| `test:evidence` | `node --test tests/release-evidence-redaction.test.js tests/release-evidence-packet.test.js` | Release evidence packet and redaction coverage |
 | `test:root` | `node --test tests/*.test.js` | Root pipeline and root/Worker contract fixtures |
 | `test:runtime` | `npm run test:root` | Alias for root runtime tests |
 | `test:unit` | `find worker/tests -maxdepth 1 -name '*.test.mjs' ! -name 'job-trigger.test.mjs' ! -name 'trigger-handler.test.mjs' ! -name 'workflow-contract.test.mjs' -print0 | xargs -0 node --test` | Worker unit tests excluding trigger/workflow contract suites |
@@ -52,7 +55,7 @@ When runtime behavior changes, update this map from source files, tests, and wor
 
 ## Worker Shape
 
-`worker/index.js` is the router. It imports handlers from `worker/api/*`, D1 helpers from `worker/db/*`, self-service orchestration from `worker/self-service/*`, and HTML page renderers from `worker/pages/*`.
+`worker/index.js` is a small fetch delegate. Route matching and boundary behavior live in `worker/routes/dispatcher.js`, `worker/routes/api.js`, `worker/routes/static.js`, `worker/routes/pages.js`, `worker/routes/responses.js`, and `worker/routes/metadata.js`. Those route modules import handlers from `worker/api/*`, D1 helpers from `worker/db/*`, self-service orchestration from `worker/self-service/*`, and HTML page renderers from `worker/pages/*`.
 
 Key bindings in `worker/wrangler.toml`:
 
@@ -83,7 +86,7 @@ Key bindings in `worker/wrangler.toml`:
 
 | Workflow or doc | Trigger | What it proves |
 | --- | --- | --- |
-| `.github/workflows/ci.yml` | Pull request and push to `master` or `main` | `npm test` passes after dependency install |
+| `.github/workflows/ci.yml` | Pull request and push to `master` or `main` | `npm run check:schema` and `npm test` pass after dependency install |
 | `.github/workflows/validate-naming.yml` | Pull request and push | `npm run check:naming` and `npm run test:worker` pass |
 | `.github/workflows/generate-report.yml` | `repository_dispatch` event type `generate-report` | Validates managed profile, marks job ledger callbacks, runs `node main.js --profile "$PROFILE" --email`, commits report artifacts, and pushes them |
 | `docs/exec-plans/d1-lazy-migration-observation-plan.md` | Human-approved future operation | Planning checklist for production deploy, lazy D1 DDL observation, safe write approval, rollback owner, and evidence template |
@@ -104,7 +107,7 @@ Known non-goals:
 
 ## Maintenance Notes
 
-- Update `docs/architecture/worker-routes.md` whenever `worker/index.js` changes route matching, auth boundaries, or handler ownership.
+- Update `docs/architecture/worker-routes.md` whenever `worker/routes/*` or `worker/index.js` changes route matching, auth boundaries, or handler ownership.
 - Update `docs/architecture/data-path.md` whenever `worker/db/schema.js`, `worker/schema.sql`, `lead-report-publisher.js`, or self-service persistence changes.
 - Treat `worker/db/schema.js` as the runtime D1 schema source because it contains lazy DDL beyond the baseline `worker/schema.sql`.
 - Keep product boundary language aligned with `AGENTS.md`, `HARDENING_PLAN.md`, and the D1 observation plan.
