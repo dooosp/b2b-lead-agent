@@ -254,6 +254,19 @@ test('lead list page exposes review queue filters for current LeadBrief fields',
   assert.match(listHtml, /필터 결과가 없습니다/);
 });
 
+test('lead list page exposes evidence and data-gap review slices', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /function buildReviewEvidenceSlices\(leads\)/);
+  assert.match(listHtml, /function renderReviewEvidenceSlices\(leads\)/);
+  assert.match(listHtml, /review-slice-band/);
+  assert.match(listHtml, /검토 리스크/);
+  assert.match(listHtml, /근거 누락/);
+  assert.match(listHtml, /데이터 공백 리드/);
+  assert.match(listHtml, /검토 가능/);
+  assert.match(listHtml, /does not approve outreach/);
+});
+
 test('lead detail script is isolated for list-to-detail document replacement', () => {
   const detailHtml = getLeadDetailPage({
     id: 'lead-1',
