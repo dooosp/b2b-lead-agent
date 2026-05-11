@@ -143,6 +143,16 @@ test('PATCH /api/leads/:id updates reviewStatus without changing pipeline status
   assert.equal(response.status, 200);
   assert.equal(payload.lead.reviewStatus, 'APPROVED');
   assert.equal(payload.lead.status, 'NEW');
+  assert.equal(payload.lead.generationMode, 'llm');
+  assert.equal(payload.lead.verificationStatus, 'verified');
+  assert.deepEqual(payload.lead.evidence, [
+    { field: 'summary', quote: '데이터센터 증설 착공', sourceUrl: 'https://example.com/dl' }
+  ]);
+  assert.equal(payload.lead.confidence, 'MEDIUM');
+  assert.equal(payload.lead.confidenceReason, '공개 기사 출처와 제목 근거가 확인되었습니다.');
+  assert.deepEqual(payload.lead.assumptions, ['현장 냉각 부하 데이터는 미확인입니다.']);
+  assert.deepEqual(payload.lead.dataGaps, ['상세 발주 일정 미확인']);
+  assert.equal(payload.lead.eventType, '착공');
   assert.deepEqual(payload.changedFields, ['reviewStatus']);
   assert.equal(db.row.review_status, 'APPROVED');
   assert.equal(db.row.status, 'NEW');

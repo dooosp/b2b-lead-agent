@@ -49,6 +49,15 @@ class FakeLeadDb {
   }
 }
 
+function createGithubResponse(body) {
+  return {
+    ok: true,
+    async json() {
+      return body;
+    }
+  };
+}
+
 function createStoredRow(overrides = {}) {
   return {
     id: 'lead-1',
@@ -132,6 +141,24 @@ test('LeadBrief v1 normalization defaults conservatively when evidence or source
   assert.ok(brief.dataGaps.includes('Why-now rationale missing'));
 });
 
+test('LeadBrief v1 normalization defaults complete LLM leads to review-needed trust metadata', () => {
+  const brief = toLeadBriefV1({
+    company: 'LG전자',
+    summary: '스마트팩토리 증설 프로젝트',
+    salesPitch: '현장 자동화 기준선 정립을 제안합니다.',
+    urgencyReason: '증설 직후 제어 표준 확정 전 검토가 필요합니다.',
+    sources: [{ title: 'LG전자 증설 계획 발표', url: 'https://example.com/lg' }],
+    evidence: [{ field: 'summary', quote: '스마트팩토리 증설', sourceUrl: 'https://example.com/lg' }],
+    confidence: 'MEDIUM'
+  });
+
+  assert.equal(brief.reviewStatus, 'NEEDS_REVIEW');
+  assert.equal(brief.generationMode, 'llm');
+  assert.equal(brief.verificationStatus, 'needs_review');
+  assert.deepEqual(brief.assumptions, []);
+  assert.deepEqual(brief.dataGaps, []);
+});
+
 test('D1 row roundtrip preserves reviewStatus separately from sales pipeline status', () => {
   const row = createStoredRow();
   const lead = rowToLead(row);
@@ -163,6 +190,61 @@ test('/api/leads exposes LeadBrief v1 canonical fields from D1 rows', async () =
   assert.equal(payload.leads[0].recommendedMessage, 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.');
   assert.equal(payload.leads[0].reviewStatus, 'APPROVED');
   assert.equal(payload.leads[0].status, 'CONTACTED');
+  assert.equal(payload.leads[0].generationMode, 'llm');
+  assert.equal(payload.leads[0].verificationStatus, 'verified');
+  assert.deepEqual(payload.leads[0].evidence, [
+    { field: 'summary', quote: '데이터센터 증설 착공', sourceUrl: 'https://example.com/dl' }
+  ]);
+  assert.equal(payload.leads[0].confidence, 'MEDIUM');
+  assert.equal(payload.leads[0].confidenceReason, '공개 기사 출처와 제목 근거가 확인되었습니다.');
+  assert.deepEqual(payload.leads[0].assumptions, ['현장 냉각 부하 데이터는 미확인입니다.']);
+  assert.deepEqual(payload.leads[0].dataGaps, ['상세 발주 일정 미확인']);
+  assert.equal(payload.leads[0].eventType, '착공');
+});
+
+test('/api/leads applies LeadBrief defaults to GitHub published records before serialization', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => createGithubResponse([
+    {
+      id: 'github-lead-1',
+      company: 'LG전자',
+      summary: '스마트팩토리 증설 프로젝트',
+      product: 'VLT AutomationDrive',
+      score: 82,
+      grade: 'A',
+      salesPitch: '현장 자동화 기준선 정립을 제안합니다.',
+      urgencyReason: '증설 직후 제어 표준 확정 전 검토가 필요합니다.',
+      sources: [{ title: 'LG전자 증설 계획 발표', url: 'https://example.com/lg' }],
+      evidence: [{ field: 'summary', quote: '스마트팩토리 증설', sourceUrl: 'https://example.com/lg' }],
+      confidence: 'MEDIUM',
+      confidenceReason: '공개 기사 출처가 확인되었습니다.',
+      eventType: '증설'
+    }
+  ]);
+
+  try {
+    const response = await fetchLeads({
+      GITHUB_REPO: 'dooosp/b2b-lead-agent',
+      PROFILES: JSON.stringify([{ id: 'danfoss', name: 'Danfoss' }])
+    }, 'danfoss');
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.source, 'github');
+    assert.equal(payload.leads[0].reviewStatus, 'NEEDS_REVIEW');
+    assert.equal(payload.leads[0].generationMode, 'llm');
+    assert.equal(payload.leads[0].verificationStatus, 'needs_review');
+    assert.deepEqual(payload.leads[0].assumptions, []);
+    assert.deepEqual(payload.leads[0].dataGaps, []);
+    assert.deepEqual(payload.leads[0].evidence, [
+      { field: 'summary', quote: '스마트팩토리 증설', sourceUrl: 'https://example.com/lg' }
+    ]);
+    assert.equal(payload.leads[0].confidence, 'MEDIUM');
+    assert.equal(payload.leads[0].confidenceReason, '공개 기사 출처가 확인되었습니다.');
+    assert.equal(payload.leads[0].eventType, '증설');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('CSV export includes reviewStatus and trust metadata without dropping pipeline status', async () => {
