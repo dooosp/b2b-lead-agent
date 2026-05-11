@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
-> Status: current hardening source of truth for `master` as of 2026-05-05.
-> Audited against first-parent `master` history through `5776d4a` and current GitHub PR state through PR #27.
+> Status: current hardening source of truth for `master` as of 2026-05-11.
+> Audited against first-parent `master` history through `a3f44df` (`Merge pull request #51 from dooosp/codex/post-train-integration-v1`) and current GitHub PR state after stale PR #1-#9 closure.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -14,6 +14,8 @@
 | 4 | 2026-04-07 | #18 | `1e2d4e6` | `codex/w3-queue-semantics-review` | Wave 3 safe shipping artifact on top of updated `master` |
 | 5 | 2026-05-05 | #25 | `95c9d54` | `p0/trust-boundary-and-fallback-publish-guard` | P0 trust-boundary and fallback-publication guard baseline |
 | 6 | 2026-05-05 | #27 | `5776d4a` | `feat/leadbrief-v1-review-contract` | LeadBrief v1 contract and minimum human-review baseline |
+| 7 | 2026-05-11 | #36-#43 | `22672f8` | May 11 hardening/doc train | Worker routes, LeadBrief data path, test helpers, schema guard, review UX, evidence tooling, architecture docs, and naming cleanup |
+| 8 | 2026-05-11 | #51 | `a3f44df` | `codex/post-train-integration-v1` | Integration of PRs #44-#49: Workbench, local E2E, auth/error hardening, lead-quality evaluation, old PR #23 replacement, and roadmap synthesis |
 
 ## Wave Summary
 
@@ -90,6 +92,24 @@
 - Production deploy was not performed as part of PR #27 landing.
 - Production DB writes were not performed as part of PR #27 landing.
 
+### May 11 Post-LeadBrief Train
+
+- PRs #36-#43 shipped the route/data/schema/test/docs cleanup baseline:
+  - `worker/index.js` delegates to `worker/routes/*`.
+  - `npm run check:schema` guards D1 schema drift in CI and locally.
+  - shared Worker/root test helpers are the preferred testing surface.
+  - local release evidence packet tooling remains local-only and does not prove production observation.
+  - canonical module paths and artifact names are guarded by `npm run check:naming`.
+- PR #51 then integrated PRs #44-#49:
+  - Opportunity Workbench v1 for LeadBrief review.
+  - local-only Worker E2E harness with loopback and non-loopback fetch guards.
+  - Worker auth and error-boundary hardening, including `INTERNAL_API_TOKEN` preference for internal APIs.
+  - synthetic lead-quality evaluation harness.
+  - current-master replacement for old dashboard unauthorized UX PR #23.
+  - roadmap synthesis for old PR disposition and product boundaries.
+- Stale PRs #1-#9 were audited after PR #51, received disposition comments, and were closed without merge or branch deletion. Their useful ideas remain concept inventory to recut from current `master`.
+- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#51 or the stale PR cleanup.
+
 ## Findings Closed On `master`
 
 - `source canonical URL laundering / traceability drift`
@@ -137,21 +157,33 @@
 - `D1 trust metadata persistence gap`
   - shipped by PR #25
   - current evidence: `worker/db/schema.js`, `worker/db/transform.js`, `worker/schema.sql`, `worker/tests/data-contract.test.mjs`
+- `route dispatch and route-boundary drift`
+  - shipped by PR #36
+  - current evidence: `worker/index.js`, `worker/routes/*`, `worker/tests/route-dispatch.test.mjs`, `worker/tests/route-boundaries.test.mjs`
+- `D1 schema source drift`
+  - shipped by PR #39
+  - current evidence: `scripts/check-d1-schema-consistency.js`, `tests/d1-schema-consistency.test.js`, `.github/workflows/ci.yml`
+- `Worker auth/error disclosure follow-up`
+  - shipped by PR #46 through PR #51
+  - current evidence: `worker/lib/auth.js`, `worker/routes/api.js`, `worker/tests/security-hardening.test.mjs`
 
 ## Remaining Open Items
 
 - No new unresolved Wave 1 to Wave 3 runtime or worker blocker was verified during this docs refresh.
 - No new unresolved PR #25 P0 trust-boundary blocker was verified during this docs refresh.
 - No new unresolved PR #27 LeadBrief v1 blocker was verified during this docs refresh.
-- Operator cleanup only:
-  - PR #10 (`Harden source traceability for qualified leads`) is still open and is superseded by merged PR #11. Do not merge PR #10 directly.
-  - PR #22 (`[codex] Harden internal latest-published auth`) is still open and is superseded by merged PR #25. Do not merge PR #22 directly unless it is re-scoped on top of current `master`.
+- No new unresolved PR #36-#51 route/data/schema/auth/evidence blocker was verified during this docs refresh.
+- Operator cleanup status:
+  - PRs #1-#9 are closed without merge after current-`master` disposition comments. Do not merge or reopen those old branches as-is.
+  - PR #10 is closed without merge and superseded by PR #11.
+  - PR #22 is closed without merge and superseded by PR #25.
+  - PR #23 is closed without merge and superseded by PR #48 through PR #51.
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
-  - Remote `origin/hardening/*` branches remain as historical raw lanes. Because shipping used cherry-picked integration artifacts, those raw branch heads are not direct ancestors of `master`; prune them only after confirming no active work depends on them.
+  - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
-  - Recommended next mega goal: `Production Readiness: D1 Lazy Migration Observation Plan`.
-  - Rationale: PR #27 adds the lazy `review_status` D1 column while PR #25 already had lazy trust columns; no production deploy or production write was performed during PR #27 landing.
-  - Do not implement Review Inbox v1 or external/internal contract expansion until the D1 observation plan is written and accepted or explicitly deprioritized.
+  - Recommended next non-production goal: recut deterministic next-review-action guidance from old PR #5 on top of current LeadBrief/Opportunity Workbench data.
+  - Rationale: Workbench, local E2E, and synthetic lead-quality evaluation are now shipped, so advisory next-action guidance can be implemented without reviving the old stacked branch or expanding CRM ownership.
+  - Keep production proof, platform migration, storage migration, and production observation work behind separate approval gates.
 
 ## Current Operating Sequence
 

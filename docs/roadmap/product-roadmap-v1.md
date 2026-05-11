@@ -4,7 +4,7 @@ This roadmap turns the current PR train, old branch archaeology, Issue #34 proof
 
 Current baseline:
 
-- `master` includes PRs #36-#43 at `22672f8d0bb363e5d02f085a5d98e3b463113e68`.
+- `master` includes PRs #36-#43 and PR #51's integration of #44-#49 at `a3f44df58bb231b060ff42fa13b17ad573b1cc1a`.
 - The canonical product unit is a LeadBrief-style lead with source, trust, confidence, assumptions, data gaps, and human `reviewStatus`.
 - The product is a B2B lead discovery, briefing, and human-review aid.
 - It is not a CRM replacement, automatic salesperson, proposal generator source of truth, or PPT-first product.
@@ -24,36 +24,30 @@ The near-term product spine:
 
 ## Immediate Merge Queue
 
-1. [#46](https://github.com/dooosp/b2b-lead-agent/pull/46) Worker auth and error boundaries.
-2. [#48](https://github.com/dooosp/b2b-lead-agent/pull/48) Current-master dashboard unauthorized UX replacement for #23.
-3. [#45](https://github.com/dooosp/b2b-lead-agent/pull/45) Local Worker E2E harness.
-4. [#47](https://github.com/dooosp/b2b-lead-agent/pull/47) Synthetic lead quality evaluation harness.
-5. [#44](https://github.com/dooosp/b2b-lead-agent/pull/44) Opportunity Workbench v1.
+No open PRs remain after PR #51 and stale PR #1-#9 disposition. New work should start from current `master`, not from old stacked branches.
 
-Each PR should rerun `npm run check:naming`, `git diff --check`, and `npm test` before it exits draft or merges. If package scripts or route/auth behavior changed earlier in the queue, rebase and rerun the full gate.
+Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm test` before it exits draft or merges. If package scripts or route/auth behavior change, also run the focused command for that surface.
 
 ## Next Product Features
 
 | Priority | Feature | Source | Scope |
 | --- | --- | --- | --- |
-| P0 | Opportunity Workbench v1 | #44 plus #40 | Review-focused lead detail surface using existing LeadBrief fields only. No schema, CRM, or production contract expansion. |
-| P0 | Local E2E smoke for review flows | #45 | Local-only route/page smoke coverage for `/leads`, `/leads/:id`, dashboard auth recovery, and Workbench render paths. |
-| P1 | Lead quality score and hold reasons | #47 | Synthetic-only evaluator first; later use as PR/release quality gate without production input ingestion. |
-| P1 | Deterministic next review action | Old #5 concept, recut | Suggest human-reviewed actions from evidence gaps, confidence, status, and review state. Keep it advisory. |
+| P0 | Deterministic next review action | Old #5 concept, recut | Suggest human-reviewed actions from evidence gaps, confidence, status, and review state. Keep it advisory. |
 | P1 | Solution translation summary | Old #2 concept, recut | Explain "why this solution" and "why now" inside LeadBrief/Workbench, sourced from existing profile/product context and evidence. |
+| P1 | Review queue filters | Current LeadBrief baseline plus Workbench | Filter by `reviewStatus`, `verificationStatus`, generation mode, data gaps, and confidence. Avoid full CRM ownership concepts. |
+| P2 | Product context and signal fusion | Old #1 concept, recut | Add bounded product/signal context only where it improves LeadBrief review quality. Avoid broad schema expansion until scoped. |
 | P2 | Stakeholder-specific prep | Old #6 concept, recut | Roleplay/helper guidance for economic buyer, technical evaluator, operator, procurement, sponsor, and champion. Not approval automation. |
-| P2 | Review queue filters | Current LeadBrief baseline | Filter by `reviewStatus`, `verificationStatus`, generation mode, data gaps, and confidence. Avoid full CRM ownership concepts. |
 
 ## Hardening Backlog
 
 | Priority | Item | Why |
 | --- | --- | --- |
-| P0 | Land #46 after careful review | Auth and error disclosure boundaries must lead product expansion. |
+| P0 | Preserve PR #46 auth/error boundaries | Auth and error disclosure boundaries must continue to lead product expansion. |
 | P0 | Keep `npm run check:schema` in CI and local release gates | It guards drift between `worker/schema.sql`, `worker/db/schema.js`, and expected D1 lead columns. |
 | P0 | Use route inventory for every route change | PR #36 made route metadata the source for route boundary reasoning. |
-| P1 | Land #45 local E2E harness | It gives future UX changes a local route/page safety net without production endpoint calls. |
+| P1 | Use #45 local E2E harness in review-flow PRs | It gives future UX changes a local route/page safety net without production endpoint calls. |
 | P1 | Use #47 synthetic quality evaluator in product PRs | Quality checks should catch evidence gaps before UX makes weak leads look authoritative. |
-| P1 | Close or supersede old open PRs | #23 should close after #48. #2/#5/#6/#7/#8/#9 should be closed or relabeled as concept inventory after owner review. |
+| P1 | Keep old closed PRs as concept inventory only | #1-#9 and #23 are closed; recut useful ideas from current `master` instead of reopening old branches. |
 | P2 | Refresh root source-of-truth docs after major merges | `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md` should track shipped reality. |
 
 ## Production Approval Backlog
@@ -62,7 +56,7 @@ None of these are implementation tasks. They are approval-gated operational task
 
 | Priority | Item | Required before action |
 | --- | --- | --- |
-| P0 | Refresh Issue #34 approval baseline for current `master` | Current `master` moved from Issue #34's approved SHA `12d44374a24a9958de179fae5f9311621606ad24` to `22672f8d0bb363e5d02f085a5d98e3b463113e68`. |
+| P0 | Refresh Issue #34 approval baseline for current `master` | Current `master` moved from Issue #34's approved SHA `12d44374a24a9958de179fae5f9311621606ad24` to `a3f44df58bb231b060ff42fa13b17ad573b1cc1a`. |
 | P0 | Confirm deploy owner, DB owner, rollback owner, observation owner | GitHub repo ownership is not production ownership. |
 | P0 | Confirm evidence storage and redaction policy | Production evidence must not include secrets, auth headers, cookies, private URLs, customer payloads, PII, or unredacted production payloads. |
 | P1 | Approve one D1-backed read/schema proof | Requires explicit production DB access/lazy-DDL approval if the path may invoke `ensureD1Schema()`. |
@@ -71,7 +65,7 @@ None of these are implementation tasks. They are approval-gated operational task
 
 ## Drop Or Deprioritize
 
-- Directly merging old stacked March PRs #2, #5, and #6.
+- Directly merging old stacked March PRs #1-#6.
 - Reopening #7 as a merge candidate; #43 already established canonical module cleanup.
 - Treating #8/#9 GCP migration as near-term roadmap work. Reopen only with explicit platform migration approval and validation resources.
 - Building CRM ownership, assignments, comments, notifications, forecasting, or account hierarchy before review quality is proven.
