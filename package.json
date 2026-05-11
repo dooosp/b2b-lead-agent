@@ -7,6 +7,7 @@
     "start": "node main.js --profile danfoss",
     "email": "node main.js --profile danfoss --email",
     "check:naming": "node scripts/check-naming.js",
+    "check:schema": "node scripts/check-d1-schema-consistency.js",
     "evidence:packet": "node scripts/generate-release-evidence-packet.js",
     "e2e": "node e2e-test.mjs",
     "test:evidence": "node --test tests/release-evidence-redaction.test.js tests/release-evidence-packet.test.js",

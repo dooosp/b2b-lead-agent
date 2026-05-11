@@ -22,5 +22,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Run D1 schema consistency check
+        run: npm run check:schema
+
       - name: Run unit and contract tests
         run: npm test
