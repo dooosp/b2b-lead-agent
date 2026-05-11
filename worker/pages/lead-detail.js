@@ -1,4 +1,5 @@
 import { getCommonStyles } from './common-styles.js';
+import { buildOpportunityWorkbenchModel, getOpportunityWorkbenchStyles, renderOpportunityWorkbench } from './opportunity-workbench.js';
 import { getEscScript, getSafeUrlScript, getStoredTokenScript } from './script-snippets.js';
 
 export function getLeadDetailPage(lead, statusLogs) {
@@ -6,6 +7,8 @@ export function getLeadDetailPage(lead, statusLogs) {
   const statusColorsJS = JSON.stringify({ NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' });
   const transitionsJS = JSON.stringify({ NEW: ['CONTACTED'], CONTACTED: ['MEETING'], MEETING: ['PROPOSAL'], PROPOSAL: ['NEGOTIATION'], NEGOTIATION: ['WON','LOST'], LOST: ['NEW'], WON: [] });
   const reviewStatusLabelsJS = JSON.stringify({ NEW: '새 검토', NEEDS_REVIEW: '검토 필요', APPROVED: '승인', REJECTED: '반려', DEFERRED: '보류' });
+  const opportunityWorkbenchHtml = renderOpportunityWorkbench(buildOpportunityWorkbenchModel(lead));
+  const opportunityWorkbenchHtmlJS = JSON.stringify(opportunityWorkbenchHtml).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   const leadJSON = JSON.stringify(lead).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   const logsJSON = JSON.stringify(statusLogs || []).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   return `<!DOCTYPE html>
@@ -16,7 +19,7 @@ export function getLeadDetailPage(lead, statusLogs) {
   <title>${(lead.company || '리드').replace(/[<>"'&]/g, '')} - 리드 상세</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e94560">
-  <style>${getCommonStyles()}
+  <style>${getCommonStyles()}${getOpportunityWorkbenchStyles()}
     .detail-section { background: #1e2a3a; border-radius: 12px; padding: 20px; margin: 16px 0; text-align: left; }
     .detail-section h3 { color: #e94560; font-size: 16px; margin: 0 0 14px 0; }
     .detail-row { display: flex; gap: 8px; margin: 8px 0; font-size: 14px; line-height: 1.6; }
@@ -85,6 +88,7 @@ export function getLeadDetailPage(lead, statusLogs) {
     const transitions = ${transitionsJS};
     const reviewStatusLabels = ${reviewStatusLabelsJS};
     const reviewStatuses = Object.keys(reviewStatusLabels);
+    const opportunityWorkbenchHtml = ${opportunityWorkbenchHtmlJS};
     const verificationStatusLabels = { verified: '검증됨', needs_review: '검증 필요', draft: '초안', unverified: '미검증' };
     const generationModeLabels = { llm: 'LLM 생성', heuristic: '휴리스틱 생성', demo: '데모', unavailable: '생성 불가' };
     const confidenceLabels = { HIGH: '신뢰도 HIGH', MEDIUM: '신뢰도 MEDIUM', LOW: '신뢰도 LOW' };
@@ -208,6 +212,8 @@ export function getLeadDetailPage(lead, statusLogs) {
       const statusOpts = [currentStatus, ...allowed].map(s =>
         '<option value="' + s + '"' + (s === currentStatus ? ' selected' : '') + '>' + esc(statusLabels[s] || s) + '</option>'
       ).join('');
+
+      html += opportunityWorkbenchHtml;
 
       html += '<div class="detail-section">';
       html += '<h3>기본 정보</h3>';
