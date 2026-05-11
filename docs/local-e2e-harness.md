@@ -8,6 +8,12 @@ Run:
 npm run test:e2e:local
 ```
 
+The legacy Playwright smoke script is also local by default now:
+
+```bash
+E2E_BASE_URL=http://127.0.0.1:8787 API_TOKEN=local-token npm run e2e
+```
+
 ## What It Uses
 
 - `worker/e2e/local-e2e.test.mjs`: Node test entrypoint with Playwright browser smoke.
@@ -27,7 +33,7 @@ The harness does not:
 - deploy
 - use the production Worker URL as its base URL
 
-The legacy `npm run e2e` script is still the production smoke script and should only be used when a separate production-smoke workflow is explicitly approved. The default local validation path for PRs is `npm run test:e2e:local`.
+The legacy `npm run e2e` script defaults to `http://127.0.0.1:8787` through `e2e-config.mjs`. Set `E2E_BASE_URL` for a different local or staging target. URLs under `*.workers.dev` are refused unless `ALLOW_PRODUCTION_E2E=yes` is set for a separately approved production-smoke workflow. The default local validation path for PRs is `npm run test:e2e:local`.
 
 ## Covered Smoke Surface
 
