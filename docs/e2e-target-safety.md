@@ -1,7 +1,7 @@
-# Local E2E Harness
+# E2E Target Safety
 
 The Playwright harness in `e2e-test.mjs` is intended for local or explicitly
-approved non-production validation.
+approved non-production validation by default.
 
 ## Configuration
 
