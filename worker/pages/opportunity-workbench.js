@@ -279,6 +279,66 @@ function buildSolutionTranslation({ brief, reviewStatus, verificationStatus, con
   };
 }
 
+function pickBriefText(brief, keys, fallback = '') {
+  for (const key of keys) {
+    const text = cleanText(brief[key]);
+    if (text) return text;
+  }
+  return fallback;
+}
+
+function pickBriefArray(brief, keys) {
+  for (const key of keys) {
+    const items = normalizeStringArray(brief[key]);
+    if (items.length > 0) return items;
+  }
+  return [];
+}
+
+function addPrefixedSignals(signals, prefix, items, limit = 2) {
+  for (const item of items.slice(0, limit)) {
+    addUnique(signals, `${prefix}: ${item}`);
+  }
+}
+
+function buildProductContext({ brief, confidence, evidence, dataGaps }) {
+  const productFallback = '제품 맥락 확인 필요';
+  const eventFallback = '신호 유형 미확인';
+  const buyerFallback = '구매자 맥락 확인 필요';
+  const product = pickBriefText(brief, ['product', 'recommendedProduct', 'recommended_product', 'productName'], productFallback);
+  const eventType = pickBriefText(brief, ['eventType', 'event_type'], eventFallback);
+  const buyerContext = pickBriefText(brief, ['buyerRole', 'buyer_role'], buyerFallback);
+  const buyingSignals = pickBriefArray(brief, ['buyingSignals', 'buying_signals']);
+  const painPoints = pickBriefArray(brief, ['painPoints', 'pain_points']);
+  const keyFigures = pickBriefArray(brief, ['keyFigures', 'key_figures']);
+  const fusionSignals = [];
+
+  addPrefixedSignals(fusionSignals, 'Buying signal', buyingSignals);
+  addPrefixedSignals(fusionSignals, 'Pain point', painPoints);
+  addPrefixedSignals(fusionSignals, 'Key figure', keyFigures);
+  if (fusionSignals.length === 0) {
+    addUnique(fusionSignals, `Primary signal: ${cleanText(brief.signal || brief.summary, '리드 신호 확인 필요')}`);
+  }
+
+  const hasStrongContext = product !== productFallback
+    && eventType !== eventFallback
+    && buyerContext !== buyerFallback
+    && confidence.value === 'HIGH'
+    && evidence.count > 0
+    && dataGaps.count === 0;
+  const reviewGuidance = hasStrongContext
+    ? 'Use these fused signals to personalize the reviewed message; they are context for a human reviewer, not automatic approval.'
+    : 'Treat this context as tentative until product fit, buyer role, and evidence are confirmed.';
+
+  return {
+    product,
+    eventType,
+    buyerContext,
+    fusionSignals,
+    reviewGuidance,
+  };
+}
+
 export function buildOpportunityWorkbenchModel(lead = {}) {
   const brief = toLeadBriefV1(lead);
   const reviewStatus = buildStatus(normalizeReviewStatus(brief.reviewStatus), REVIEW_STATUS_LABELS, 'NEEDS_REVIEW');
@@ -309,6 +369,12 @@ export function buildOpportunityWorkbenchModel(lead = {}) {
     evidence,
     dataGaps,
   });
+  const productContext = buildProductContext({
+    brief,
+    confidence,
+    evidence,
+    dataGaps,
+  });
 
   return {
     id: cleanText(brief.id),
@@ -329,6 +395,7 @@ export function buildOpportunityWorkbenchModel(lead = {}) {
     assumptions,
     nextAction,
     solutionTranslation,
+    productContext,
   };
 }
 
@@ -350,7 +417,7 @@ function renderTextItems(items, emptyLabel) {
 }
 
 export function renderOpportunityWorkbench(model) {
-  const workbench = model && model.nextAction && model.solutionTranslation ? model : buildOpportunityWorkbenchModel(model);
+  const workbench = model && model.nextAction && model.solutionTranslation && model.productContext ? model : buildOpportunityWorkbenchModel(model);
   const scoreLabel = workbench.score === null ? '점수 미확인' : `${workbench.score}점`;
   const gradeLabel = workbench.grade ? `${workbench.grade}등급` : '등급 미확인';
   const dataGapTitle = workbench.dataGaps.count > 0 ? `데이터 공백 ${workbench.dataGaps.count}건` : '데이터 공백 없음';
@@ -391,6 +458,27 @@ export function renderOpportunityWorkbench(model) {
               </div>
             </div>
             <p class="opportunity-workbench-caveat">${escapeHtml(workbench.solutionTranslation.reviewCaveat)}</p>
+          </div>
+          <div class="opportunity-workbench-panel opportunity-workbench-wide opportunity-workbench-context">
+            <span class="panel-label">제품/신호 맥락</span>
+            <div class="opportunity-workbench-context-grid">
+              <div>
+                <strong>제품 맥락</strong>
+                <p>${escapeHtml(workbench.productContext.product)}</p>
+              </div>
+              <div>
+                <strong>신호 유형</strong>
+                <p>${escapeHtml(workbench.productContext.eventType)}</p>
+              </div>
+              <div>
+                <strong>구매자 맥락</strong>
+                <p>${escapeHtml(workbench.productContext.buyerContext)}</p>
+              </div>
+            </div>
+            <ul class="opportunity-workbench-list opportunity-workbench-context-list">
+              ${renderTextItems(workbench.productContext.fusionSignals, '결합된 신호 없음')}
+            </ul>
+            <p class="opportunity-workbench-caveat">${escapeHtml(workbench.productContext.reviewGuidance)}</p>
           </div>
           <div class="opportunity-workbench-panel">
             <span class="panel-label">검토 상태</span>
@@ -465,6 +553,10 @@ export function getOpportunityWorkbenchStyles() {
     .opportunity-workbench-solution-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
     .opportunity-workbench-solution-grid div { border:1px solid #223447; border-radius:8px; padding:10px; background:#101925; min-width:0; }
     .opportunity-workbench-solution-grid strong { color:#a8efc0; display:block; font-size:12px; margin-bottom:5px; }
+    .opportunity-workbench-context-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:10px; }
+    .opportunity-workbench-context-grid div { border:1px solid #223447; border-radius:8px; padding:10px; background:#101925; min-width:0; }
+    .opportunity-workbench-context-grid strong { color:#a8efc0; display:block; font-size:12px; margin-bottom:5px; }
+    .opportunity-workbench-context-list { border:1px solid #223447; border-radius:8px; background:#101925; padding:10px !important; }
     .opportunity-workbench-caveat { border-top:1px solid #223447; color:#9fb0c0 !important; margin-top:10px !important; padding-top:10px; }
     .opportunity-workbench-pill-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
     .opportunity-workbench-pill { border:1px solid #3a5575; border-radius:999px; color:#dbeafe; display:inline-flex; font-size:11px; font-weight:700; line-height:1; padding:5px 8px; }
@@ -487,6 +579,7 @@ export function getOpportunityWorkbenchStyles() {
       .opportunity-workbench-action { min-width:0; width:100%; }
       .opportunity-workbench-grid { grid-template-columns:1fr; }
       .opportunity-workbench-solution-grid { grid-template-columns:1fr; }
+      .opportunity-workbench-context-grid { grid-template-columns:1fr; }
       .opportunity-workbench-wide { grid-column:auto; }
       .opportunity-workbench-evidence-list { max-height: none; }
     }

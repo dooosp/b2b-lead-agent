@@ -3,7 +3,7 @@
 ## 현재 기준 상태
 
 - 기준 브랜치: `master`
-- 마지막 검증된 post-PR #55 `origin/master` HEAD: `01c7ef94c0d71ac0c60f13fe207e6ce485220bcd` (`Merge pull request #55 from dooosp/codex/solution-translation-summary-v1`)
+- 마지막 검증된 post-PR #56 `origin/master` HEAD: `84ea44ba29e266f2e1aad6a2dd58276e21c5112f` (`Merge pull request #56 from dooosp/codex/post-pr55-doc-sync-v1`)
 - 다음 세션도 반드시 `git fetch origin master`와 `git rev-parse origin/master`로 실제 최신 HEAD를 다시 기록한다.
 - hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`, `docs/architecture/*.md`, `NEXT_SESSION_PROMPT.md`
 - LeadBrief v1 merge baseline: `5776d4a` (`[Product] Freeze LeadBrief v1 review contract (#27)`)
@@ -47,6 +47,8 @@
   - #53 added advisory next-review-action reasons and checklist items to Opportunity Workbench.
   - #54 added `/leads` review queue filters for review status, verification status, generation mode, confidence, and data-gap presence.
   - #55 added "why this solution" and "why now" Solution Translation Summary guidance inside Opportunity Workbench without schema, API, CRM ownership, proposal source-of-truth, or production behavior changes.
+  - #56 synced source-of-truth docs after PR #55.
+- The current Product Context / Signal Fusion follow-up recuts old PR #1's useful idea inside Opportunity Workbench using only existing product, event, buyer, buying-signal, pain-point, key-figure, evidence, and review fields.
 - Stale PRs #1-#9 received disposition comments and are closed without merge or branch deletion. Treat their ideas as concept inventory only.
 
 ## Production boundary
@@ -77,5 +79,5 @@
 ## 바로 붙여 넣을 프롬프트
 
 ```text
-You are working on dooosp/b2b-lead-agent after the May 11, 2026 PR train, PR #51 integration, and post-PR51 review-quality follow-ups. Start from a fresh `origin/master` sync and prove the repo root, branch, HEAD SHA, default branch, dirty state, and available validation commands before changing code. Read `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md` first. Treat current `master` as the source of truth: Worker routing is split into `worker/routes/*`, LeadBrief data-path defaults are hardened, D1 schema drift has `npm run check:schema`, release evidence packet tooling is local-only, architecture docs were refreshed, cleanup/naming guards landed, Opportunity Workbench v1 is shipped, review queue filters are shipped, Solution Translation Summary is shipped, the local-only Worker E2E harness is shipped, auth/error hardening is shipped, and the synthetic lead-quality evaluator is shipped. Old PRs #1-#9 and #23 are closed concept inventory; do not reopen or merge them as-is. Do not reopen shipped findings unless you can show a current-master regression. Do not deploy, call production Worker endpoints, access or write production D1, run Wrangler deploy/D1 commands, or claim production observation without a separate human-approved production prompt.
+You are working on dooosp/b2b-lead-agent after the May 11, 2026 PR train, PR #51 integration, and post-PR51 review-quality follow-ups. Start from a fresh `origin/master` sync and prove the repo root, branch, HEAD SHA, default branch, dirty state, and available validation commands before changing code. Read `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md` first. Treat current `master` as the source of truth: Worker routing is split into `worker/routes/*`, LeadBrief data-path defaults are hardened, D1 schema drift has `npm run check:schema`, release evidence packet tooling is local-only, architecture docs were refreshed, cleanup/naming guards landed, Opportunity Workbench v1 is shipped, review queue filters are shipped, Solution Translation Summary is shipped, Product Context / Signal Fusion is shipped if this follow-up has merged, the local-only Worker E2E harness is shipped, auth/error hardening is shipped, and the synthetic lead-quality evaluator is shipped. Old PRs #1-#9 and #23 are closed concept inventory; do not reopen or merge them as-is. Do not reopen shipped findings unless you can show a current-master regression. Do not deploy, call production Worker endpoints, access or write production D1, run Wrangler deploy/D1 commands, or claim production observation without a separate human-approved production prompt.
 ```
