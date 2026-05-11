@@ -14,7 +14,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 
 ## Current Shipped Baseline
 
-- `master` includes the April 7, 2026 hardening cycle, the PR #25 P0 trust-boundary baseline, the PR #27 LeadBrief v1 review contract baseline, the May 11 route/data/schema/evidence/docs cleanup train, and PR #51's post-train integration through `a3f44df`.
+- `master` includes the April 7, 2026 hardening cycle, the PR #25 P0 trust-boundary baseline, the PR #27 LeadBrief v1 review contract baseline, the May 11 route/data/schema/evidence/docs cleanup train, PR #51's post-train integration, the PR #52/#53 review-roadmap follow-ups, and PR #54 review queue filters through `b6607a8`.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -24,7 +24,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - PR #51 integrated PRs #44-#49: Opportunity Workbench v1, local-only Worker E2E harness, Worker auth/error hardening, synthetic lead-quality evaluation, old PR #23 replacement, and roadmap synthesis.
 - Do not reopen those findings unless you can point to a current-`master` regression or a newly verified gap.
 - Treat closed PRs #1-#9, #10, #22, and #23 as stale/superseded concept inventory unless explicitly re-scoped on top of current `master`.
-- Recommended next non-production product goal: recut deterministic next-review-action guidance from old PR #5 on top of current LeadBrief/Opportunity Workbench data, keeping it advisory and human-reviewed.
+- Recommended next non-production product goal after the Solution Translation Summary lands: recut bounded product context and signal-fusion guidance from old PR #1 on top of current LeadBrief/Opportunity Workbench data, keeping it advisory and human-reviewed.
 
 ## Repo Layout
 
