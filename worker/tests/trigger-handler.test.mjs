@@ -3,35 +3,8 @@ import assert from 'node:assert/strict';
 
 import worker from '../index.js';
 import { createJobCallbackToken } from '../lib/job-trigger.js';
-import { FakeD1Database } from './helpers/fake-d1.mjs';
-
-function createEnv(overrides = {}) {
-  return {
-    API_TOKEN: 'api-secret',
-    TRIGGER_PASSWORD: 'legacy-secret',
-    GITHUB_TOKEN: 'github-secret',
-    GITHUB_REPO: 'dooosp/b2b-lead-agent',
-    DB: new FakeD1Database(),
-    PROFILES: JSON.stringify([
-      { id: 'danfoss', name: 'Danfoss' },
-      { id: 'ls-electric', name: 'LS Electric' }
-    ]),
-    WORKER_ORIGIN: 'https://b2b-lead-trigger.example.workers.dev',
-    ...overrides
-  };
-}
-
-function createRequest(path, { method = 'GET', headers = {}, body } = {}) {
-  return new Request(`https://b2b-lead-trigger.example.workers.dev${path}`, {
-    method,
-    headers,
-    body
-  });
-}
-
-async function readJson(response) {
-  return response.json();
-}
+import { createWorkerEnv } from './helpers/fixtures.mjs';
+import { createWorkerRequest, readJson } from './helpers/http.mjs';
 
 async function callbackHeaders(env, requestId, extra = {}) {
   return {
@@ -42,7 +15,7 @@ async function callbackHeaders(env, requestId, extra = {}) {
 }
 
 test('POST /trigger returns 202 and dispatches requestId correlation metadata', async () => {
-  const env = createEnv();
+  const env = createWorkerEnv();
   const originalFetch = globalThis.fetch;
   const fetchCalls = [];
   globalThis.fetch = async (url, init) => {
@@ -51,7 +24,7 @@ test('POST /trigger returns 202 and dispatches requestId correlation metadata', 
   };
 
   try {
-    const response = await worker.fetch(createRequest('/trigger', {
+    const response = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -84,7 +57,7 @@ test('POST /trigger returns 202 and dispatches requestId correlation metadata', 
 });
 
 test('duplicate active /trigger requests coalesce to the existing requestId', async () => {
-  const env = createEnv();
+  const env = createWorkerEnv();
   const originalFetch = globalThis.fetch;
   let dispatchCount = 0;
   globalThis.fetch = async () => {
@@ -93,7 +66,7 @@ test('duplicate active /trigger requests coalesce to the existing requestId', as
   };
 
   try {
-    const first = await worker.fetch(createRequest('/trigger', {
+    const first = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -103,7 +76,7 @@ test('duplicate active /trigger requests coalesce to the existing requestId', as
     }), env, {});
     const firstPayload = await readJson(first);
 
-    const second = await worker.fetch(createRequest('/trigger', {
+    const second = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -124,7 +97,7 @@ test('duplicate active /trigger requests coalesce to the existing requestId', as
 });
 
 test('stale active runs are retired so a no-callback profile can recover', async () => {
-  const env = createEnv({ ACTIVE_RUN_TTL_SEC: '0' });
+  const env = createWorkerEnv({ ACTIVE_RUN_TTL_SEC: '0' });
   const originalFetch = globalThis.fetch;
   let dispatchCount = 0;
   globalThis.fetch = async () => {
@@ -133,7 +106,7 @@ test('stale active runs are retired so a no-callback profile can recover', async
   };
 
   try {
-    const first = await worker.fetch(createRequest('/trigger', {
+    const first = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -143,7 +116,7 @@ test('stale active runs are retired so a no-callback profile can recover', async
     }), env, {});
     const firstPayload = await readJson(first);
 
-    const second = await worker.fetch(createRequest('/trigger', {
+    const second = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -159,7 +132,7 @@ test('stale active runs are retired so a no-callback profile can recover', async
     assert.equal(secondPayload.deduplicated, false);
     assert.equal(dispatchCount, 2);
 
-    const staleStatus = await worker.fetch(createRequest(`/api/jobs/${firstPayload.requestId}`, {
+    const staleStatus = await worker.fetch(createWorkerRequest(`/api/jobs/${firstPayload.requestId}`, {
       headers: { 'Authorization': 'Bearer api-secret' }
     }), env, {});
     const stalePayload = await readJson(staleStatus);
@@ -171,12 +144,12 @@ test('stale active runs are retired so a no-callback profile can recover', async
 });
 
 test('status endpoint shows honest accepted -> running -> succeeded transitions', async () => {
-  const env = createEnv();
+  const env = createWorkerEnv();
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(null, { status: 204 });
 
   try {
-    const trigger = await worker.fetch(createRequest('/trigger', {
+    const trigger = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -186,14 +159,14 @@ test('status endpoint shows honest accepted -> running -> succeeded transitions'
     }), env, {});
     const triggerPayload = await readJson(trigger);
 
-    const accepted = await worker.fetch(createRequest(`/api/jobs/${triggerPayload.requestId}`, {
+    const accepted = await worker.fetch(createWorkerRequest(`/api/jobs/${triggerPayload.requestId}`, {
       headers: { 'Authorization': 'Bearer api-secret' }
     }), env, {});
     const acceptedPayload = await readJson(accepted);
     assert.equal(acceptedPayload.job.state, 'accepted');
     assert.equal(acceptedPayload.job.startedAt, null);
 
-    const running = await worker.fetch(createRequest(`/api/jobs/${triggerPayload.requestId}/events`, {
+    const running = await worker.fetch(createWorkerRequest(`/api/jobs/${triggerPayload.requestId}/events`, {
       method: 'POST',
       headers: await callbackHeaders(env, triggerPayload.requestId),
       body: JSON.stringify({
@@ -210,7 +183,7 @@ test('status endpoint shows honest accepted -> running -> succeeded transitions'
     assert.equal(runningPayload.job.run.id, 101);
     assert.ok(runningPayload.job.startedAt);
 
-    const forged = await worker.fetch(createRequest(`/api/jobs/${triggerPayload.requestId}/events`, {
+    const forged = await worker.fetch(createWorkerRequest(`/api/jobs/${triggerPayload.requestId}/events`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -220,7 +193,7 @@ test('status endpoint shows honest accepted -> running -> succeeded transitions'
     }), env, {});
     assert.equal(forged.status, 401);
 
-    const succeeded = await worker.fetch(createRequest(`/api/jobs/${triggerPayload.requestId}/events`, {
+    const succeeded = await worker.fetch(createWorkerRequest(`/api/jobs/${triggerPayload.requestId}/events`, {
       method: 'POST',
       headers: await callbackHeaders(env, triggerPayload.requestId),
       body: JSON.stringify({ state: 'succeeded' })
@@ -238,15 +211,15 @@ test('trigger auth is bearer-first and only allows body password fallback when e
   globalThis.fetch = async () => new Response(null, { status: 204 });
 
   try {
-    const strictEnv = createEnv({ ALLOW_TRIGGER_BODY_PASSWORD: 'false' });
-    const strictResponse = await worker.fetch(createRequest('/trigger', {
+    const strictEnv = createWorkerEnv({ ALLOW_TRIGGER_BODY_PASSWORD: 'false' });
+    const strictResponse = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profile: 'danfoss', password: 'legacy-secret' })
     }), strictEnv, {});
     assert.equal(strictResponse.status, 401);
 
-    const legacyBearerResponse = await worker.fetch(createRequest('/trigger', {
+    const legacyBearerResponse = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -256,11 +229,11 @@ test('trigger auth is bearer-first and only allows body password fallback when e
     }), strictEnv, {});
     assert.equal(legacyBearerResponse.status, 202);
 
-    const fallbackEnv = createEnv({
+    const fallbackEnv = createWorkerEnv({
       API_TOKEN: '',
       ALLOW_TRIGGER_BODY_PASSWORD: 'true'
     });
-    const fallbackResponse = await worker.fetch(createRequest('/trigger', {
+    const fallbackResponse = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profile: 'danfoss', password: 'legacy-secret' })
@@ -277,12 +250,12 @@ test('trigger auth is bearer-first and only allows body password fallback when e
 });
 
 test('late running callbacks do not move a completed job backward', async () => {
-  const env = createEnv();
+  const env = createWorkerEnv();
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(null, { status: 204 });
 
   try {
-    const trigger = await worker.fetch(createRequest('/trigger', {
+    const trigger = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -292,13 +265,13 @@ test('late running callbacks do not move a completed job backward', async () => 
     }), env, {});
     const { requestId } = await readJson(trigger);
 
-    await worker.fetch(createRequest(`/api/jobs/${requestId}/events`, {
+    await worker.fetch(createWorkerRequest(`/api/jobs/${requestId}/events`, {
       method: 'POST',
       headers: await callbackHeaders(env, requestId),
       body: JSON.stringify({ state: 'succeeded' })
     }), env, {});
 
-    const stale = await worker.fetch(createRequest(`/api/jobs/${requestId}/events`, {
+    const stale = await worker.fetch(createWorkerRequest(`/api/jobs/${requestId}/events`, {
       method: 'POST',
       headers: await callbackHeaders(env, requestId),
       body: JSON.stringify({ state: 'running', githubRunId: 777 })
@@ -314,12 +287,12 @@ test('late running callbacks do not move a completed job backward', async () => 
 });
 
 test('dispatch failure returns 502 and persists failed job status', async () => {
-  const env = createEnv();
+  const env = createWorkerEnv();
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(null, { status: 503 });
 
   try {
-    const trigger = await worker.fetch(createRequest('/trigger', {
+    const trigger = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -334,7 +307,7 @@ test('dispatch failure returns 502 and persists failed job status', async () => 
     assert.match(triggerPayload.requestId, /^req_/);
     assert.equal('status' in triggerPayload, false);
 
-    const statusResponse = await worker.fetch(createRequest(`/api/jobs/${triggerPayload.requestId}`, {
+    const statusResponse = await worker.fetch(createWorkerRequest(`/api/jobs/${triggerPayload.requestId}`, {
       headers: { 'Authorization': 'Bearer api-secret' }
     }), env, {});
     const statusPayload = await readJson(statusResponse);
@@ -348,12 +321,12 @@ test('dispatch failure returns 502 and persists failed job status', async () => 
 });
 
 test('job event endpoint accepts failed and cancelled terminal states', async () => {
-  const env = createEnv();
+  const env = createWorkerEnv();
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(null, { status: 204 });
 
   try {
-    const failedTrigger = await worker.fetch(createRequest('/trigger', {
+    const failedTrigger = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -362,7 +335,7 @@ test('job event endpoint accepts failed and cancelled terminal states', async ()
       body: JSON.stringify({ profile: 'danfoss' })
     }), env, {});
     const failedJob = await readJson(failedTrigger);
-    const failedEvent = await worker.fetch(createRequest(`/api/jobs/${failedJob.requestId}/events`, {
+    const failedEvent = await worker.fetch(createWorkerRequest(`/api/jobs/${failedJob.requestId}/events`, {
       method: 'POST',
       headers: await callbackHeaders(env, failedJob.requestId),
       body: JSON.stringify({ state: 'failed', lastError: 'GitHub job failed.' })
@@ -371,7 +344,7 @@ test('job event endpoint accepts failed and cancelled terminal states', async ()
     assert.equal(failedPayload.job.state, 'failed');
     assert.equal(failedPayload.job.lastError, 'GitHub job failed.');
 
-    const cancelledTrigger = await worker.fetch(createRequest('/trigger', {
+    const cancelledTrigger = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -380,7 +353,7 @@ test('job event endpoint accepts failed and cancelled terminal states', async ()
       body: JSON.stringify({ profile: 'ls-electric' })
     }), env, {});
     const cancelledJob = await readJson(cancelledTrigger);
-    const cancelledEvent = await worker.fetch(createRequest(`/api/jobs/${cancelledJob.requestId}/events`, {
+    const cancelledEvent = await worker.fetch(createWorkerRequest(`/api/jobs/${cancelledJob.requestId}/events`, {
       method: 'POST',
       headers: await callbackHeaders(env, cancelledJob.requestId),
       body: JSON.stringify({ state: 'cancelled', lastError: 'GitHub job was cancelled.' })
@@ -394,12 +367,12 @@ test('job event endpoint accepts failed and cancelled terminal states', async ()
 });
 
 test('job events reject foreign-target metadata', async () => {
-  const env = createEnv();
+  const env = createWorkerEnv();
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(null, { status: 204 });
 
   try {
-    const trigger = await worker.fetch(createRequest('/trigger', {
+    const trigger = await worker.fetch(createWorkerRequest('/trigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -409,7 +382,7 @@ test('job events reject foreign-target metadata', async () => {
     }), env, {});
     const { requestId } = await readJson(trigger);
 
-    const response = await worker.fetch(createRequest(`/api/jobs/${requestId}/events`, {
+    const response = await worker.fetch(createWorkerRequest(`/api/jobs/${requestId}/events`, {
       method: 'POST',
       headers: await callbackHeaders(env, requestId),
       body: JSON.stringify({ state: 'running', cloudRunOperation: 'operations/123' })
