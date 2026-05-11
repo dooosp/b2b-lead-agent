@@ -215,7 +215,7 @@ export async function generateProposal(request, env) {
     }
 
     return jsonResponse(responsePayload);
-  } catch (error) {
-    return buildProposalErrorResponse('AI 분석 중 오류: ' + error.message, 500, estimation);
+  } catch {
+    return buildProposalErrorResponse('AI 분석 중 오류가 발생했습니다.', 500, estimation);
   }
 }

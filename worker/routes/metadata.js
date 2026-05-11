@@ -234,7 +234,7 @@ export const ROUTE_INVENTORY = Object.freeze([
     pattern: '/api/internal/profiles/:profileId/latest-published',
     methods: ['GET'],
     classifications: [ROUTE_CLASS.API, ROUTE_CLASS.D1_READ],
-    auth: 'internal API bearer token',
+    auth: 'INTERNAL_API_TOKEN bearer; API_TOKEN compatibility fallback when unset',
     dbAccess: 'conditional read',
     writes: false,
     notes: 'Reads canonical GitHub published artifact first; checks D1 active-job readiness only when the artifact is absent.'

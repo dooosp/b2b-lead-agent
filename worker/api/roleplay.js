@@ -45,7 +45,7 @@ ${userMessage || '안녕하세요. 귀사의 프로젝트에 대해 제안드리
   try {
     const result = await callGemini(prompt, env);
     return jsonResponse({ success: true, content: result });
-  } catch (e) {
-    return jsonResponse({ success: false, message: 'AI 분석 중 오류가 발생했습니다:' + e.message }, 500);
+  } catch {
+    return jsonResponse({ success: false, message: 'AI 분석 중 오류가 발생했습니다.' }, 500);
   }
 }

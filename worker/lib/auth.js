@@ -21,7 +21,7 @@ export async function verifyAuth(request, env) {
 }
 
 export async function verifyInternalApiAuth(request, env) {
-  return verifyExpectedToken(request, env.API_TOKEN || '');
+  return verifyExpectedToken(request, env.INTERNAL_API_TOKEN || env.API_TOKEN || '');
 }
 
 export async function timingSafeCompare(a, b) {

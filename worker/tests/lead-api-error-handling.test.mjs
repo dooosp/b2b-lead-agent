@@ -16,6 +16,8 @@ test('fetchLeads returns a bounded JSON error when the D1 lead lookup fails', as
   const payload = await response.json();
 
   assert.equal(response.status, 500);
+  assert.equal(payload.success, false);
   assert.deepEqual(payload.leads, []);
-  assert.match(payload.message, /fake D1 forced failure/);
+  assert.match(payload.message, /리드 데이터를 불러오는 중 오류/);
+  assert.doesNotMatch(JSON.stringify(payload), /fake D1 forced failure/);
 });

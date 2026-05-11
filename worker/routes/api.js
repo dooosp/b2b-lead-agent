@@ -24,7 +24,7 @@ import { handleRoleplay } from '../api/roleplay.js';
 import { handleTrigger } from '../api/trigger.js';
 import { checkSelfServiceRateLimit } from '../self-service/rate-limit.js';
 import { handleSelfServiceAnalyze } from '../self-service/orchestrator.js';
-import { isAllowedMethod, jsonNotFoundResponse, methodNotAllowedResponse } from './responses.js';
+import { isAllowedMethod, jsonInternalErrorResponse, jsonNotFoundResponse, methodNotAllowedResponse } from './responses.js';
 
 const AUTH = Object.freeze({
   NONE: 'none',
@@ -252,6 +252,14 @@ function allowedMethodsFor(matches) {
   return [...new Set(matches.flatMap((match) => match.route.methods))];
 }
 
+function methodBoundaryAuth(matches) {
+  const authOrder = [AUTH.INTERNAL, AUTH.SELF_SERVICE, AUTH.API];
+  for (const auth of authOrder) {
+    if (matches.some((match) => match.route.auth === auth)) return auth;
+  }
+  return AUTH.NONE;
+}
+
 async function authorize(route, request, env) {
   if (route.auth === AUTH.API) return verifyAuth(request, env);
   if (route.auth === AUTH.INTERNAL) return verifyInternalApiAuth(request, env);
@@ -284,7 +292,10 @@ function isKnownProtectedApiBoundary(pathname) {
     '/api/roleplay',
     '/api/history',
     '/api/dashboard',
-    '/api/export/csv'
+    '/api/export/csv',
+    '/api/analyze',
+    '/api/jobs',
+    '/api/jobs/'
   ].some((prefix) => pathname === prefix || (prefix.endsWith('/') && pathname.startsWith(prefix)));
 }
 
@@ -301,32 +312,39 @@ async function authorizeUnknownApiBoundary(pathname, request, env) {
 export async function handleApiRoute(request, env, ctx) {
   const url = new URL(request.url);
   const origin = request.headers.get('Origin');
-  const matches = apiRouteMatches(url.pathname);
+  try {
+    const matches = apiRouteMatches(url.pathname);
 
-  if (matches.length > 0) {
-    const methodMatch = matches.find((match) => isAllowedMethod(request.method, match.route.methods));
-    if (!methodMatch) {
-      return withBoundaryCors(methodNotAllowedResponse(allowedMethodsFor(matches)), matches, origin, env);
+    if (matches.length > 0) {
+      const methodMatch = matches.find((match) => isAllowedMethod(request.method, match.route.methods));
+      if (!methodMatch) {
+        const boundaryAuth = methodBoundaryAuth(matches);
+        const authErr = await authorize({ auth: boundaryAuth }, request, env);
+        if (authErr) return withBoundaryCors(authErr, matches, origin, env);
+        return withBoundaryCors(methodNotAllowedResponse(allowedMethodsFor(matches)), matches, origin, env);
+      }
+
+      const authErr = await authorize(methodMatch.route, request, env);
+      if (authErr) return withRouteCors(authErr, methodMatch.route, origin, env);
+
+      const response = await methodMatch.route.handle({
+        request,
+        env,
+        ctx,
+        url,
+        params: methodMatch.params
+      });
+      return withRouteCors(response, methodMatch.route, origin, env);
     }
 
-    const authErr = await authorize(methodMatch.route, request, env);
-    if (authErr) return withRouteCors(authErr, methodMatch.route, origin, env);
+    if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
+      const authErr = await authorizeUnknownApiBoundary(url.pathname, request, env);
+      if (authErr) return addCorsHeaders(authErr, origin, env);
+      return addCorsHeaders(jsonNotFoundResponse(), origin, env);
+    }
 
-    const response = await methodMatch.route.handle({
-      request,
-      env,
-      ctx,
-      url,
-      params: methodMatch.params
-    });
-    return withRouteCors(response, methodMatch.route, origin, env);
+    return null;
+  } catch {
+    return addCorsHeaders(jsonInternalErrorResponse(), origin, env);
   }
-
-  if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
-    const authErr = await authorizeUnknownApiBoundary(url.pathname, request, env);
-    if (authErr) return addCorsHeaders(authErr, origin, env);
-    return addCorsHeaders(jsonNotFoundResponse(), origin, env);
-  }
-
-  return null;
 }
