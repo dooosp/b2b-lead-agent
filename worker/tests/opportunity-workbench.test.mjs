@@ -267,6 +267,89 @@ test('opportunity workbench keeps product context conservative when signals are 
   assert.match(html, /Treat this context as tentative/);
 });
 
+test('opportunity workbench prepares stakeholder-specific review guidance from current fields', () => {
+  const model = buildOpportunityWorkbenchModel({
+    id: 'lead-stakeholder-prep',
+    company: 'Stakeholder Prep Co',
+    reviewStatus: 'APPROVED',
+    verificationStatus: 'verified',
+    generationMode: 'llm',
+    signal: 'Chiller retrofit program entered vendor shortlist',
+    whyNow: 'Shortlist closes this quarter.',
+    recommendedMessage: 'Follow up with operations director about a compressor retrofit pilot.',
+    product: 'Turbocor compressor',
+    buyerRole: 'Operations Director',
+    eventType: 'vendor_shortlist',
+    buyingSignals: ['Vendor shortlist', 'Energy cost pressure'],
+    painPoints: ['Cooling energy cost'],
+    keyFigures: ['18-24% cooling energy reduction range'],
+    actionItems: ['Send retrofit pilot one-pager'],
+    roi: 'Estimated cooling energy reduction 18-24%',
+    competitive: {
+      currentVendor: 'Legacy Cooling Co',
+      switchBarrier: 'Shutdown window coordination',
+      ourAdvantage: 'Magnetic bearing compressor efficiency',
+    },
+    confidence: 'HIGH',
+    evidence: [
+      { field: 'summary', quote: 'vendor shortlist', sourceUrl: 'https://example.com/stakeholder-prep' },
+    ],
+    sources: [{ title: 'Stakeholder source', url: 'https://example.com/stakeholder-prep' }],
+    dataGaps: [],
+  });
+  const html = renderOpportunityWorkbench(model);
+  const roleNames = model.stakeholderPrep.roles.map((role) => role.role);
+
+  assert.equal(model.stakeholderPrep.primaryRole, 'Operations Director');
+  assert.deepEqual(roleNames, [
+    'Economic buyer',
+    'Technical evaluator',
+    'Operator',
+    'Procurement',
+    'Sponsor / champion',
+  ]);
+  assert.match(model.stakeholderPrep.roles[0].focus, /18-24%/);
+  assert.match(model.stakeholderPrep.roles[1].focus, /18-24% cooling energy reduction range/);
+  assert.match(model.stakeholderPrep.roles[2].focus, /Cooling energy cost/);
+  assert.match(model.stakeholderPrep.roles[3].focus, /Shutdown window coordination/);
+  assert.match(model.stakeholderPrep.roles[4].focus, /Vendor shortlist/);
+  assert.equal(
+    model.stakeholderPrep.reviewGuidance,
+    'Use stakeholder prep to tailor the human-reviewed message; it does not approve outreach by itself.'
+  );
+  assert.match(html, /이해관계자 준비/);
+  assert.match(html, /Primary role: Operations Director/);
+  assert.match(html, /Economic buyer/);
+  assert.match(html, /Technical evaluator/);
+  assert.match(html, /Procurement/);
+  assert.match(html, /not approve outreach by itself/);
+});
+
+test('opportunity workbench keeps stakeholder prep conservative for weak evidence', () => {
+  const model = buildOpportunityWorkbenchModel({
+    id: 'lead-weak-stakeholder',
+    company: 'Weak Stakeholder Co',
+    reviewStatus: 'NEEDS_REVIEW',
+    verificationStatus: 'needs_review',
+    generationMode: 'heuristic',
+    signal: 'Expansion rumor needs confirmation',
+    confidence: 'LOW',
+    evidence: [],
+    sources: [],
+    dataGaps: ['Buyer not confirmed'],
+  });
+  const html = renderOpportunityWorkbench(model);
+
+  assert.equal(model.stakeholderPrep.primaryRole, 'Stakeholder role confirmation needed');
+  assert.equal(
+    model.stakeholderPrep.reviewGuidance,
+    'Use this prep only after stakeholder role, evidence, and data gaps are resolved.'
+  );
+  assert.ok(model.stakeholderPrep.roles.every((role) => role.prep.includes('Confirm')));
+  assert.match(html, /Stakeholder role confirmation needed/);
+  assert.match(html, /Use this prep only after stakeholder role/);
+});
+
 test('opportunity workbench turns missing evidence into explicit data-gap review items', () => {
   const model = buildOpportunityWorkbenchModel({
     id: 'lead-missing',
@@ -297,8 +380,10 @@ test('opportunity workbench exposes a mobile single-column layout fallback', () 
   const css = getOpportunityWorkbenchStyles();
 
   assert.match(css, /\.opportunity-workbench-grid/);
+  assert.match(css, /\.opportunity-workbench-stakeholder-grid/);
   assert.match(css, /@media \(max-width: 720px\)/);
   assert.match(css, /\.opportunity-workbench-grid \{ grid-template-columns:1fr; \}/);
+  assert.match(css, /\.opportunity-workbench-stakeholder-grid \{ grid-template-columns:1fr; \}/);
   assert.match(css, /\.opportunity-workbench-evidence-list \{ max-height: none; \}/);
 });
 
