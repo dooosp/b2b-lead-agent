@@ -97,7 +97,7 @@ The trigger path is intake-only. A `202 accepted` response means the job was acc
 
 ```text
 GET /api/internal/profiles/:profileId/latest-published
-  -> API_TOKEN-only auth
+  -> INTERNAL_API_TOKEN auth when configured, with API_TOKEN compatibility fallback
   -> loadPublishedLatestSnapshot()
   -> map frozen crm.published-report.v1 response
   -> if no snapshot, inspect D1 active job ledger for queued readiness

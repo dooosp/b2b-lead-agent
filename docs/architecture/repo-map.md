@@ -23,8 +23,8 @@ When runtime behavior changes, update this map from source files, tests, and wor
 | Worker API | `worker/index.js`, `worker/routes/*.js`, `worker/api/*.js` | Route dispatch, route metadata, authenticated APIs, trigger/job ledger, internal report contract |
 | Worker D1 layer | `worker/db/*.js`, `worker/schema.sql` | Lazy D1 schema creation, lead/job/reference persistence, row transforms |
 | Worker self-service | `worker/self-service/*.js` | Authenticated ad hoc company/industry analysis and self-service D1 persistence |
-| Worker UI pages | `worker/pages/*.js` | Browser page shells for leads, dashboard, proposal/PPT helpers, roleplay, CPA |
-| Tests | `tests/*.test.js`, `worker/tests/*.test.mjs` | Root and Worker contract coverage |
+| Worker UI pages | `worker/pages/*.js` | Browser page shells for leads, dashboard, Opportunity Workbench, proposal/PPT helpers, roleplay, CPA |
+| Tests | `tests/*.test.js`, `worker/tests/*.test.mjs`, `worker/e2e/*.test.mjs` | Root, Worker, local E2E, and contract coverage |
 | Release workflows | `.github/workflows/*.yml`, `docs/exec-plans/d1-lazy-migration-observation-plan.md` | CI gates, report-generation dispatch, production observation planning |
 
 ## Root Scripts
@@ -36,7 +36,9 @@ When runtime behavior changes, update this map from source files, tests, and wor
 | `check:naming` | `node scripts/check-naming.js` | Canonical path and artifact naming guard |
 | `check:schema` | `node scripts/check-d1-schema-consistency.js` | Local D1 schema drift guard for `worker/schema.sql` and `worker/db/schema.js` |
 | `evidence:packet` | `node scripts/generate-release-evidence-packet.js` | Local-only release evidence packet generator |
+| `eval:lead-quality` | `node scripts/evaluate-lead-quality.js --fixtures` | Synthetic-only lead quality evaluator for evidence, confidence, assumptions, gaps, verification, and review readiness |
 | `e2e` | `node e2e-test.mjs` | Browser/end-to-end smoke surface when explicitly needed |
+| `test:e2e:local` | `node --test worker/e2e/local-e2e.test.mjs` | Local-only Worker smoke harness using fake D1 and loopback browser rendering |
 | `test:evidence` | `node --test tests/release-evidence-redaction.test.js tests/release-evidence-packet.test.js` | Release evidence packet and redaction coverage |
 | `test:root` | `node --test tests/*.test.js` | Root pipeline and root/Worker contract fixtures |
 | `test:runtime` | `npm run test:root` | Alias for root runtime tests |
@@ -76,9 +78,11 @@ Key bindings in `worker/wrangler.toml`:
 | Root runtime | `tests/main.runtime.test.js` | Runtime completion is emitted only after real summary evidence |
 | Root trust and publishing | `tests/source-traceability.test.js`, `tests/company-name-accuracy.test.js`, `tests/root-identity-trust.test.js`, `tests/fallback-publication-guard.test.js`, `tests/leadbrief-publication-contract.test.js` | Source traceability, company-name hardening, stable identity, fallback/demo publication guards, LeadBrief artifact fields |
 | Internal report contract | `tests/internal-published-report-api.test.js` | `/api/internal/profiles/:profileId/latest-published` auth/readiness/frozen contract behavior |
+| Lead quality evaluator | `tests/lead-quality-evaluator.test.js`, `eval/fixtures/synthetic-leads.js` | Synthetic fixture quality scoring, local-only input guards, and review-readiness outcomes |
 | Worker data contracts | `worker/tests/data-contract.test.mjs`, `worker/tests/leadbrief-v1-contract.test.mjs`, `worker/tests/lead-review-status.test.mjs`, `worker/tests/lead-patch-atomicity.test.mjs` | D1 row roundtrip, LeadBrief v1, review status, pipeline status, atomic PATCH behavior |
 | Worker trigger/job contracts | `worker/tests/job-trigger.test.mjs`, `worker/tests/trigger-handler.test.mjs`, `worker/tests/workflow-contract.test.mjs` | Intake-only trigger acceptance, job ledger transitions, workflow callback contract |
 | Worker security | `worker/tests/security-hardening.test.mjs` | Bearer-only surfaces, query-token rejection, self-service auth/rate limit defaults |
+| Worker local E2E and review UI | `tests/e2e-config.test.js`, `worker/e2e/local-e2e.test.mjs`, `worker/tests/opportunity-workbench.test.mjs`, `worker/tests/dashboard-401-ux.test.mjs` | Local-only target guard, fake-D1 route/page smoke, Opportunity Workbench render coverage, and dashboard auth recovery UX |
 | Worker self-service | `worker/tests/self-service-*.test.mjs`, `worker/tests/home-page-self-service-trust.test.mjs` | Self-service model schema, fallback trust metadata, profile generation, UI/download preservation |
 | Worker helpers | `worker/tests/enrichment.test.mjs`, `worker/tests/w2-api-canonicalization.test.mjs`, `worker/tests/cpa-estimator.test.mjs`, `worker/tests/proposal-*.test.mjs` | Enrichment trust, product canonicalization, CPA/proposal helpers |
 

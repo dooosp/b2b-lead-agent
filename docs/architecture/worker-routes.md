@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | CORS preflight | `worker/routes/static.js`, `worker/lib/cors.js` | Any `OPTIONS` request returns from `handleOptions()` before API routing |
 | General API auth | `worker/lib/auth.js` via `verifyAuth()` | Bearer token must match `API_TOKEN`; if `API_TOKEN` is absent, `TRIGGER_PASSWORD` is the fallback token |
-| Internal API auth | `worker/lib/auth.js` via `verifyInternalApiAuth()` | Bearer token must match `API_TOKEN`; `TRIGGER_PASSWORD` is not accepted |
+| Internal API auth | `worker/lib/auth.js` via `verifyInternalApiAuth()` | Bearer token must match `INTERNAL_API_TOKEN` when configured; otherwise `API_TOKEN` is the compatibility fallback. `TRIGGER_PASSWORD` is not accepted |
 | Trigger auth | `worker/lib/job-trigger.js` | Bearer-first; legacy body password is allowed only by `ALLOW_TRIGGER_BODY_PASSWORD` or when no `API_TOKEN` is configured |
 | Job event callback auth | `worker/lib/job-trigger.js` | `X-Job-Callback-Token` derived from callback secret and request id |
 | Self-service auth | `worker/routes/api.js`, `worker/self-service/rate-limit.js` | `POST /api/analyze` requires general API auth unless `REQUIRE_SELF_SERVICE_AUTH=false`, then applies self-service rate limiting |
@@ -28,7 +28,7 @@
 | `POST` | `/api/leads/batch-enrich` | `worker/api/enrichment.js` | General API auth | D1 lead rows | Updates enrichment fields for selected leads |
 | `GET` | `/api/dashboard` | `worker/api/dashboard.js` | General API auth | D1 dashboard metrics | None |
 | `GET` | `/api/export/csv` | `worker/api/leads.js` | General API auth | D1 leads | Returns CSV including review/trust metadata |
-| `GET` | `/api/internal/profiles/:profileId/latest-published` | `worker/api/internal-reports.js` | Internal API auth only | GitHub published latest snapshot, D1 active job ledger for readiness | None; frozen `crm.published-report.v1` response contract |
+| `GET` | `/api/internal/profiles/:profileId/latest-published` | `worker/api/internal-reports.js` | Internal API auth; `INTERNAL_API_TOKEN` preferred with `API_TOKEN` fallback | GitHub published latest snapshot, D1 active job ledger for readiness | None; frozen `crm.published-report.v1` response contract |
 | `GET` | `/api/references` | `worker/api/references.js` | General API auth checked inside route block | D1 `reference_library` | None beyond schema readiness |
 | `POST` | `/api/references` | `worker/api/references.js` | General API auth checked inside route block | None | Inserts reference row into D1 |
 | `DELETE` | `/api/references/:id` | `worker/api/references.js` | General API auth checked inside route block | None | Deletes reference row from D1 |
@@ -56,7 +56,7 @@
 ## Route Ordering Notes
 
 - `worker/routes/dispatcher.js` dispatches CORS/static routes, then API/job routes, then page routes.
-- `/api/internal/*` is matched inside API routing before the general API handlers and uses `API_TOKEN` only.
+- `/api/internal/*` is matched inside API routing before the general API handlers and uses `INTERNAL_API_TOKEN` when configured, otherwise `API_TOKEN`.
 - The general protected API list is represented by route metadata and API matchers for `/api/leads`, `/api/leads/batch-enrich`, `/api/ppt`, `/api/proposal`, `/api/cpa`, `/api/roleplay`, `/api/history`, `/api/dashboard`, `/api/export/csv`, `/api/leads/*`, and `GET /api/jobs/:requestId`.
 - `POST /api/jobs/:requestId/events` is not protected by general Bearer auth; it is protected by the callback token inside `handleJobEvent()`.
 - `/api/references` performs its own `verifyAuth()` checks in each route handler.
