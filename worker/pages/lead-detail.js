@@ -39,6 +39,26 @@ export function getLeadDetailPage(lead, statusLogs) {
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     .badge-a { background: #e94560; color: #fff; }
     .badge-b { background: #f39c12; color: #fff; }
+    .badge-review { background:#243547; color:#dbeafe; border:1px solid #36506c; }
+    .badge-review.needs_review { background:#4a3a12; color:#ffe58a; border-color:#806718; }
+    .badge-review.approved { background:#17462a; color:#a8efc0; border-color:#2e7d4f; }
+    .badge-review.rejected { background:#4a1f1f; color:#ffc4c4; border-color:#8a3b3b; }
+    .badge-review.deferred { background:#2f3542; color:#d7dee8; border-color:#566273; }
+    .badge-verification { background:#27364a; color:#d8e8ff; border:1px solid #3a5575; }
+    .badge-verification.verified { background:#17462a; color:#a8efc0; border-color:#2e7d4f; }
+    .badge-verification.needs_review, .badge-verification.unverified { background:#4a3a12; color:#ffe58a; border-color:#806718; }
+    .badge-verification.draft { background:#2f3542; color:#d7dee8; border-color:#566273; }
+    .badge-generation { background:#203345; color:#cde7ff; border:1px solid #38536c; }
+    .badge-generation.heuristic, .badge-generation.unavailable { background:#3e2f16; color:#ffdca3; border-color:#6f5525; }
+    .badge-generation.demo { background:#3a294b; color:#e4c8ff; border-color:#6b4a88; }
+    .badge-confidence { background:#29384a; color:#dbeafe; border:1px solid #3b536d; }
+    .badge-confidence.high { background:#17462a; color:#a8efc0; border-color:#2e7d4f; }
+    .badge-confidence.medium { background:#4a3a12; color:#ffe58a; border-color:#806718; }
+    .badge-confidence.low { background:#4a1f1f; color:#ffc4c4; border-color:#8a3b3b; }
+    .badge-evidence { background:#223142; color:#d4deea; border:1px solid #344b63; }
+    .badge-evidence.missing_evidence { background:#4a1f1f; color:#ffc4c4; border-color:#8a3b3b; }
+    .review-meta-row { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin:6px 0; }
+    .muted-value { color:#8fa4b8; }
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
   </style>
 </head>
@@ -57,6 +77,7 @@ export function getLeadDetailPage(lead, statusLogs) {
   </main>
 
   <script>
+    (() => {
     const lead = ${leadJSON};
     const statusLogs = ${logsJSON};
     const statusLabels = ${statusLabelsJS};
@@ -64,11 +85,113 @@ export function getLeadDetailPage(lead, statusLogs) {
     const transitions = ${transitionsJS};
     const reviewStatusLabels = ${reviewStatusLabelsJS};
     const reviewStatuses = Object.keys(reviewStatusLabels);
+    const verificationStatusLabels = { verified: '검증됨', needs_review: '검증 필요', draft: '초안', unverified: '미검증' };
+    const generationModeLabels = { llm: 'LLM 생성', heuristic: '휴리스틱 생성', demo: '데모', unavailable: '생성 불가' };
+    const confidenceLabels = { HIGH: '신뢰도 HIGH', MEDIUM: '신뢰도 MEDIUM', LOW: '신뢰도 LOW' };
 
     ${getEscScript()}
     ${getSafeUrlScript()}
     ${getStoredTokenScript()}
     function getProfile() { return lead.profileId || 'danfoss'; }
+
+    function normalizeReviewStatus(value) {
+      const status = String(value || '').toUpperCase();
+      return reviewStatuses.includes(status) ? status : 'NEEDS_REVIEW';
+    }
+
+    function getReviewStatus(lead) {
+      return normalizeReviewStatus(lead.reviewStatus || lead.review_status);
+    }
+
+    function normalizeVerificationStatus(value) {
+      const status = String(value || '').toLowerCase();
+      return verificationStatusLabels[status] ? status : 'needs_review';
+    }
+
+    function getVerificationStatus(lead) {
+      return normalizeVerificationStatus(lead.verificationStatus || lead.verification_status);
+    }
+
+    function normalizeGenerationMode(value) {
+      const mode = String(value || '').toLowerCase();
+      return generationModeLabels[mode] ? mode : 'llm';
+    }
+
+    function getGenerationMode(lead) {
+      return normalizeGenerationMode(lead.generationMode || lead.generation_mode);
+    }
+
+    function getConfidence(lead) {
+      const confidence = String(lead.confidence || '').toUpperCase();
+      return confidenceLabels[confidence] ? confidence : 'LOW';
+    }
+
+    function getArrayField(lead, camelKey, snakeKey) {
+      const value = lead[camelKey];
+      if (Array.isArray(value)) return value.filter(Boolean);
+      const legacyValue = lead[snakeKey];
+      if (Array.isArray(legacyValue)) return legacyValue.filter(Boolean);
+      return [];
+    }
+
+    function getDataGaps(lead) {
+      return getArrayField(lead, 'dataGaps', 'data_gaps');
+    }
+
+    function getEvidenceItems(lead) {
+      return getArrayField(lead, 'evidence', 'evidence');
+    }
+
+    function getSources(lead) {
+      return getArrayField(lead, 'sources', 'sources');
+    }
+
+    function renderReviewBadge(lead) {
+      const current = getReviewStatus(lead);
+      return '<span class="badge badge-review ' + current.toLowerCase() + '">검토 ' + esc(reviewStatusLabels[current]) + '</span>';
+    }
+
+    function renderVerificationBadge(lead) {
+      const status = getVerificationStatus(lead);
+      return '<span class="badge badge-verification ' + status + '">' + esc(verificationStatusLabels[status]) + '</span>';
+    }
+
+    function renderGenerationBadge(lead) {
+      const mode = getGenerationMode(lead);
+      return '<span class="badge badge-generation ' + mode + '">' + esc(generationModeLabels[mode]) + '</span>';
+    }
+
+    function renderConfidenceBadge(lead) {
+      const confidence = getConfidence(lead);
+      return '<span class="badge badge-confidence ' + confidence.toLowerCase() + '">' + esc(confidenceLabels[confidence]) + '</span>';
+    }
+
+    function renderEvidenceSummary(lead) {
+      const evidenceCount = getEvidenceItems(lead).length;
+      const sourceCount = getSources(lead).length;
+      const label = evidenceCount > 0 ? '근거 ' + evidenceCount + '개' : '직접 인용 없음';
+      const evidenceClass = evidenceCount > 0 ? 'has_evidence' : 'missing_evidence';
+      return '<span class="badge badge-evidence ' + evidenceClass + '">' + esc(label) + ' / 출처 ' + sourceCount + '개</span>';
+    }
+
+    function renderReviewTrustBadges(lead) {
+      return '<span class="review-meta-row">' +
+        renderVerificationBadge(lead) +
+        renderGenerationBadge(lead) +
+        renderConfidenceBadge(lead) +
+        renderEvidenceSummary(lead) +
+        '</span>';
+    }
+
+    function renderDataGapSummary(lead) {
+      const gaps = getDataGaps(lead);
+      if (gaps.length === 0) {
+        return '<div class="detail-row"><span class="label">데이터 공백</span><span class="value muted-value">확인된 데이터 공백 없음</span></div>';
+      }
+      const shown = gaps.slice(0, 3).map((gap) => esc(gap)).join('<br>');
+      const extra = gaps.length > 3 ? '<br>외 ' + (gaps.length - 3) + '건' : '';
+      return '<div class="detail-row"><span class="label">데이터 공백</span><span class="value">' + shown + extra + '</span></div>';
+    }
 
     // Back link에 프로필 쿼리 추가
     document.getElementById('backLink').href = '/leads?profile=' + encodeURIComponent(getProfile());
@@ -99,7 +222,7 @@ export function getLeadDetailPage(lead, statusLogs) {
       if (lead.scoreReason) html += '<div class="detail-row"><span class="label">등급 근거</span><span class="value">' + esc(lead.scoreReason) + '</span></div>';
       if (lead.urgencyReason) html += '<div class="detail-row"><span class="label">긴급도 근거</span><span class="value">' + esc(lead.urgencyReason) + '</span></div>';
       if (lead.buyerRole) html += '<div class="detail-row"><span class="label">예상 키맨</span><span class="value">' + esc(lead.buyerRole) + '</span></div>';
-      if (lead.confidence) html += '<div class="detail-row"><span class="label">신뢰도</span><span class="value"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;color:#fff;background:' + (lead.confidence === 'HIGH' ? '#27ae60' : lead.confidence === 'MEDIUM' ? '#f39c12' : '#e74c3c') + ';">' + esc(lead.confidence) + '</span>' + (lead.confidenceReason ? ' <span style="color:#aaa;font-size:11px;">' + esc(lead.confidenceReason) + '</span>' : '') + '</span></div>';
+      html += '<div class="detail-row"><span class="label">신뢰도</span><span class="value">' + renderConfidenceBadge(lead) + (lead.confidenceReason ? ' <span style="color:#aaa;font-size:11px;">' + esc(lead.confidenceReason) + '</span>' : '') + '</span></div>';
       if (lead.eventType) html += '<div class="detail-row"><span class="label">이벤트 유형</span><span class="value">' + esc(lead.eventType) + '</span></div>';
       html += '<div class="detail-row"><span class="label">신호</span><span class="value">' + esc(lead.signal || lead.summary || '-') + '</span></div>';
       if (lead.whyNow) html += '<div class="detail-row"><span class="label">왜 지금</span><span class="value">' + esc(lead.whyNow) + '</span></div>';
@@ -111,16 +234,22 @@ export function getLeadDetailPage(lead, statusLogs) {
       html += '<div class="detail-row"><span class="label">생성일</span><span class="value">' + esc((lead.createdAt || '').split('T')[0]) + '</span></div>';
       html += '</div>';
 
-      const currentReviewStatus = reviewStatuses.includes(String(lead.reviewStatus || '').toUpperCase()) ? String(lead.reviewStatus).toUpperCase() : 'NEEDS_REVIEW';
+      const currentReviewStatus = getReviewStatus(lead);
       const reviewOpts = reviewStatuses.map(s =>
         '<option value="' + s + '"' + (s === currentReviewStatus ? ' selected' : '') + '>' + esc(reviewStatusLabels[s]) + '</option>'
       ).join('');
       html += '<div class="detail-section">';
       html += '<h3>사람 검토</h3>';
-      html += '<div class="detail-row"><span class="label">검토 상태</span><span class="value"><select class="review-select-lg" aria-label="검토 상태" onchange="updateField(\\'reviewStatus\\', this.value)">' + reviewOpts + '</select></span></div>';
-      html += '<div class="detail-row"><span class="label">판정 기준</span><span class="value">' + esc((lead.confidence || 'LOW') + (lead.verificationStatus ? ' / ' + lead.verificationStatus : '')) + '</span></div>';
+      html += '<div class="detail-row"><span class="label">검토 상태</span><span class="value"><span class="review-meta-row">' + renderReviewBadge(lead) + '<select class="review-select-lg" aria-label="검토 상태" onchange="updateField(\\'reviewStatus\\', this.value)">' + reviewOpts + '</select></span></span></div>';
+      html += '<div class="detail-row"><span class="label">검증/생성</span><span class="value">' + renderReviewTrustBadges(lead) + '</span></div>';
+      html += renderDataGapSummary(lead);
+      const evidenceItems = getEvidenceItems(lead);
+      if (evidenceItems.length) {
+        html += '<div class="detail-row"><span class="label">근거 인용</span><span class="value">' + evidenceItems.slice(0, 3).map(e => '<strong style="color:#a8efc0;">[' + esc(e.field || 'evidence') + ']</strong> "' + esc(e.quote || '') + '"').join('<br>') + '</span></div>';
+      } else {
+        html += '<div class="detail-row"><span class="label">근거 인용</span><span class="value muted-value">직접 인용 없음</span></div>';
+      }
       if (lead.assumptions && lead.assumptions.length) html += '<div class="detail-row"><span class="label">가정</span><span class="value">' + esc(lead.assumptions.join(', ')) + '</span></div>';
-      if (lead.dataGaps && lead.dataGaps.length) html += '<div class="detail-row"><span class="label">데이터 공백</span><span class="value">' + esc(lead.dataGaps.join(', ')) + '</span></div>';
       html += '<span class="save-indicator" id="reviewSaveIndicator">저장됨</span>';
       html += '</div>';
 
@@ -285,7 +414,10 @@ export function getLeadDetailPage(lead, statusLogs) {
       });
     }
 
+    window.updateField = updateField;
+    window.scheduleNoteSave = scheduleNoteSave;
     renderDetail();
+    })();
   </script>
 </body>
 </html>`;

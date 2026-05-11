@@ -122,10 +122,18 @@ test('D1 row roundtrip preserves reviewStatus separately from sales pipeline sta
   assert.equal(lead.reviewStatus, 'APPROVED');
   assert.equal(lead.signal, '데이터센터 냉각 설비 증설 착공');
   assert.equal(lead.recommendedMessage, 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.');
+  assert.equal(lead.generationMode, 'llm');
+  assert.equal(lead.verificationStatus, 'verified');
+  assert.deepEqual(lead.dataGaps, ['상세 발주 일정 미확인']);
+  assert.deepEqual(lead.evidence, [{ field: 'summary', quote: '데이터센터 증설 착공', sourceUrl: 'https://example.com/dl' }]);
 
   const nextRow = leadToRow({ ...lead, status: 'MEETING', reviewStatus: 'DEFERRED' }, 'danfoss', 'managed');
   assert.equal(nextRow.status, 'MEETING');
   assert.equal(nextRow.review_status, 'DEFERRED');
+  assert.equal(nextRow.generation_mode, 'llm');
+  assert.equal(nextRow.verification_status, 'verified');
+  assert.equal(nextRow.data_gaps, JSON.stringify(['상세 발주 일정 미확인']));
+  assert.equal(nextRow.evidence, JSON.stringify([{ field: 'summary', quote: '데이터센터 증설 착공', sourceUrl: 'https://example.com/dl' }]));
 });
 
 test('/api/leads exposes LeadBrief v1 canonical fields from D1 rows', async () => {
