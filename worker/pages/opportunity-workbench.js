@@ -112,12 +112,90 @@ function buildStatus(value, labels, fallback) {
   };
 }
 
+function addUnique(items, value) {
+  const text = cleanText(value);
+  if (text && !items.includes(text)) items.push(text);
+}
+
+function addDataGapChecklist(checklist, dataGaps) {
+  for (const gap of dataGaps.items.slice(0, 2)) {
+    addUnique(checklist, `데이터 공백 확인: ${gap}`);
+  }
+}
+
+function buildActionDetails({ reviewStatus, verificationStatus, generationMode, confidence, evidence, sources, dataGaps }) {
+  const reasons = [];
+  const checklist = [];
+
+  if (reviewStatus.value === 'APPROVED') addUnique(reasons, '사람 검토 승인');
+  if (reviewStatus.value === 'REJECTED') addUnique(reasons, '사람 검토 반려');
+  if (reviewStatus.value === 'DEFERRED') addUnique(reasons, '보류 상태');
+  addUnique(reasons, verificationStatus.value === 'verified' ? '검증됨' : '검증 필요');
+  addUnique(reasons, `신뢰도 ${confidence.value}`);
+  if (generationMode.value !== 'llm') addUnique(reasons, generationMode.label);
+  if (evidence.count === 0 || sources.count === 0) addUnique(reasons, '직접 근거 부족');
+  if (dataGaps.count > 0) addUnique(reasons, `데이터 공백 ${dataGaps.count}건`);
+
+  if (reviewStatus.value === 'REJECTED') {
+    addUnique(checklist, '반려 사유를 메모로 남기세요.');
+    addUnique(checklist, '새 공개 근거가 생기기 전까지 접촉을 만들지 마세요.');
+    return { reasons, checklist };
+  }
+
+  if (confidence.value === 'LOW' || generationMode.value === 'heuristic' || generationMode.value === 'unavailable') {
+    addUnique(checklist, '직접 인용과 출처를 보강하세요.');
+    addDataGapChecklist(checklist, dataGaps);
+    addUnique(checklist, '신뢰도 근거를 다시 확인하세요.');
+    return { reasons, checklist };
+  }
+
+  if (evidence.count === 0 || sources.count === 0 || dataGaps.count > 0) {
+    addUnique(checklist, '직접 인용과 출처를 보강하세요.');
+    addDataGapChecklist(checklist, dataGaps);
+    addUnique(checklist, '보강 후 승인, 반려, 보류 중 하나로 검토 상태를 결정하세요.');
+    return { reasons, checklist };
+  }
+
+  if (reviewStatus.value === 'DEFERRED') {
+    addUnique(checklist, '보류 사유와 재검토 조건을 메모로 남기세요.');
+    addUnique(checklist, '재검토 날짜나 필요한 추가 근거를 정하세요.');
+    return { reasons, checklist };
+  }
+
+  if (reviewStatus.value === 'APPROVED') {
+    addUnique(checklist, '추천 메시지를 사람 검토 후 개인화하세요.');
+    addUnique(checklist, '후속 조치일과 담당 메모를 남기세요.');
+    return { reasons, checklist };
+  }
+
+  if (verificationStatus.value !== 'verified') {
+    addUnique(checklist, '검증 상태를 확인하고 reviewStatus를 결정하세요.');
+    addUnique(checklist, '승인 전 직접 근거와 출처를 다시 대조하세요.');
+    return { reasons, checklist };
+  }
+
+  addUnique(checklist, '핵심 근거를 확인하고 검토 상태를 결정하세요.');
+  addUnique(checklist, '필요하면 추천 메시지를 사람 검토 후 다듬으세요.');
+  return { reasons, checklist };
+}
+
 function buildNextAction({ reviewStatus, verificationStatus, generationMode, confidence, evidence, sources, dataGaps }) {
+  const details = buildActionDetails({
+    reviewStatus,
+    verificationStatus,
+    generationMode,
+    confidence,
+    evidence,
+    sources,
+    dataGaps,
+  });
+
   if (reviewStatus.value === 'REJECTED') {
     return {
       tone: 'blocked',
       label: '우선순위 제외',
       summary: '반려된 리드입니다. 새 공개 근거가 들어오기 전에는 영업 액션을 만들지 않습니다.',
+      ...details,
     };
   }
 
@@ -126,6 +204,7 @@ function buildNextAction({ reviewStatus, verificationStatus, generationMode, con
       tone: 'warning',
       label: '데이터 보강 후 재검토',
       summary: '신뢰도나 생성 방식이 보수적입니다. 직접 인용, 출처, 의사결정 맥락을 먼저 보강하세요.',
+      ...details,
     };
   }
 
@@ -134,6 +213,7 @@ function buildNextAction({ reviewStatus, verificationStatus, generationMode, con
       tone: 'review',
       label: '근거 보강 후 재검토',
       summary: '검토 결정을 내리기 전에 누락된 근거와 데이터 공백을 정리하세요.',
+      ...details,
     };
   }
 
@@ -142,6 +222,7 @@ function buildNextAction({ reviewStatus, verificationStatus, generationMode, con
       tone: 'hold',
       label: '보류 사유 확인',
       summary: '보류 상태입니다. 재검토 조건이나 후속 확인 항목을 먼저 정리하세요.',
+      ...details,
     };
   }
 
@@ -150,6 +231,7 @@ function buildNextAction({ reviewStatus, verificationStatus, generationMode, con
       tone: 'ready',
       label: '영업 액션 준비',
       summary: '근거와 신뢰도가 충분합니다. 추천 메시지를 바탕으로 첫 접촉 준비가 가능합니다.',
+      ...details,
     };
   }
 
@@ -158,6 +240,7 @@ function buildNextAction({ reviewStatus, verificationStatus, generationMode, con
       tone: 'review',
       label: '검증 상태 확인',
       summary: '리드 자체는 검토 가능하지만 검증 상태가 확정되지 않았습니다.',
+      ...details,
     };
   }
 
@@ -165,6 +248,7 @@ function buildNextAction({ reviewStatus, verificationStatus, generationMode, con
     tone: 'ready',
     label: '검토 상태 결정',
     summary: '핵심 근거를 확인하고 승인, 반려, 보류 중 하나로 검토 상태를 결정하세요.',
+    ...details,
   };
 }
 
@@ -282,6 +366,12 @@ export function renderOpportunityWorkbench(model) {
             <span class="panel-label">${escapeHtml(dataGapTitle)}</span>
             <ul class="opportunity-workbench-list">
               ${renderTextItems(workbench.dataGaps.items, '확인된 데이터 공백 없음')}
+            </ul>
+          </div>
+          <div class="opportunity-workbench-panel opportunity-workbench-wide">
+            <span class="panel-label">검토 체크리스트</span>
+            <ul class="opportunity-workbench-list">
+              ${renderTextItems(workbench.nextAction.checklist, '검토 체크리스트 없음')}
             </ul>
           </div>
           <div class="opportunity-workbench-panel opportunity-workbench-wide">
