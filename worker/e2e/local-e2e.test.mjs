@@ -166,6 +166,10 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '제품/신호 맥락',
     'Vendor shortlist',
     'Cooling energy cost',
+    '이해관계자 준비',
+    'Primary role: Operations Director',
+    'Economic buyer',
+    'Technical evaluator',
     'Local evidence quote',
     'Follow up with operations director',
   ]);

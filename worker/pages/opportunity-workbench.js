@@ -295,10 +295,49 @@ function pickBriefArray(brief, keys) {
   return [];
 }
 
+function pickBriefObject(brief, keys) {
+  for (const key of keys) {
+    const value = brief[key];
+    if (value && typeof value === 'object' && !Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+      } catch {
+        // Fall through to the next candidate field.
+      }
+    }
+  }
+  return {};
+}
+
 function addPrefixedSignals(signals, prefix, items, limit = 2) {
   for (const item of items.slice(0, limit)) {
     addUnique(signals, `${prefix}: ${item}`);
   }
+}
+
+function firstAvailable(candidates, fallback) {
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      const text = cleanText(candidate[0]);
+      if (text) return text;
+      continue;
+    }
+    const text = cleanText(candidate);
+    if (text) return text;
+  }
+  return fallback;
+}
+
+function competitiveFocus(competitive, assumptions) {
+  return firstAvailable([
+    competitive.switchBarrier,
+    competitive.ourAdvantage,
+    competitive.currentVendor,
+    Array.isArray(competitive.competitors) ? competitive.competitors[0] : competitive.competitors,
+    assumptions[0],
+  ], 'Commercial and switching path needs confirmation');
 }
 
 function buildProductContext({ brief, confidence, evidence, dataGaps }) {
@@ -339,6 +378,90 @@ function buildProductContext({ brief, confidence, evidence, dataGaps }) {
   };
 }
 
+function buildStakeholderPrep({ brief, confidence, evidence, dataGaps, assumptions }) {
+  const roleFallback = 'Stakeholder role confirmation needed';
+  const primaryRole = pickBriefText(brief, ['buyerRole', 'buyer_role'], roleFallback);
+  const roi = pickBriefText(brief, ['roi', 'estimatedRoi', 'estimated_roi']);
+  const keyFigures = pickBriefArray(brief, ['keyFigures', 'key_figures']);
+  const painPoints = pickBriefArray(brief, ['painPoints', 'pain_points']);
+  const actionItems = pickBriefArray(brief, ['actionItems', 'action_items']);
+  const buyingSignals = pickBriefArray(brief, ['buyingSignals', 'buying_signals']);
+  const competitive = pickBriefObject(brief, ['competitive']);
+  const evidenceQuote = evidence.items.length > 0 ? evidence.items[0].quote : '';
+  const whyNow = cleanText(brief.whyNow);
+  const recommendedMessage = cleanText(brief.recommendedMessage);
+
+  const roles = [
+    {
+      role: 'Economic buyer',
+      focus: firstAvailable([
+        roi && `ROI/value: ${roi}`,
+        keyFigures,
+        buyingSignals,
+      ], 'Value case needs confirmation'),
+      prep: firstAvailable([
+        keyFigures[0] && `Tie budget value to ${keyFigures[0]}.`,
+        buyingSignals[0] && `Connect business value to ${buyingSignals[0]}.`,
+      ], 'Confirm business value, budget owner, and timing before outreach.'),
+    },
+    {
+      role: 'Technical evaluator',
+      focus: firstAvailable([
+        keyFigures[0] && `Proof point: ${keyFigures[0]}`,
+        evidenceQuote && `Evidence quote: ${evidenceQuote}`,
+      ], 'Technical proof needs confirmation'),
+      prep: firstAvailable([
+        actionItems[0] && `Prepare technical next step: ${actionItems[0]}.`,
+        evidenceQuote && 'Map the cited evidence to the technical requirement before outreach.',
+      ], 'Confirm technical requirements, proof, and implementation constraints before outreach.'),
+    },
+    {
+      role: 'Operator',
+      focus: firstAvailable([
+        painPoints[0] && `Operating pain: ${painPoints[0]}`,
+        cleanText(brief.signal),
+      ], 'Operating pain needs confirmation'),
+      prep: firstAvailable([
+        actionItems[0] && `Anchor the conversation on ${actionItems[0]}.`,
+        painPoints[0] && `Confirm daily impact around ${painPoints[0]}.`,
+      ], 'Confirm operating pain, owner, and workflow impact before outreach.'),
+    },
+    {
+      role: 'Procurement',
+      focus: `Procurement risk: ${competitiveFocus(competitive, assumptions)}`,
+      prep: firstAvailable([
+        competitive.switchBarrier && `Prepare a switching-risk answer for ${competitive.switchBarrier}.`,
+        competitive.currentVendor && `Clarify incumbent context around ${competitive.currentVendor}.`,
+      ], 'Confirm vendor, switching, and commercial constraints before outreach.'),
+    },
+    {
+      role: 'Sponsor / champion',
+      focus: firstAvailable([
+        buyingSignals[0] && `Momentum: ${buyingSignals[0]}`,
+        whyNow,
+      ], 'Champion momentum needs confirmation'),
+      prep: firstAvailable([
+        recommendedMessage && `Adapt the reviewed message: ${recommendedMessage}`,
+        whyNow && `Confirm sponsor timing around ${whyNow}.`,
+      ], 'Confirm sponsor, champion path, and timing before outreach.'),
+    },
+  ];
+
+  const hasReviewReadyPrep = primaryRole !== roleFallback
+    && confidence.value === 'HIGH'
+    && evidence.count > 0
+    && dataGaps.count === 0;
+  const reviewGuidance = hasReviewReadyPrep
+    ? 'Use stakeholder prep to tailor the human-reviewed message; it does not approve outreach by itself.'
+    : 'Use this prep only after stakeholder role, evidence, and data gaps are resolved.';
+
+  return {
+    primaryRole,
+    roles,
+    reviewGuidance,
+  };
+}
+
 export function buildOpportunityWorkbenchModel(lead = {}) {
   const brief = toLeadBriefV1(lead);
   const reviewStatus = buildStatus(normalizeReviewStatus(brief.reviewStatus), REVIEW_STATUS_LABELS, 'NEEDS_REVIEW');
@@ -375,6 +498,13 @@ export function buildOpportunityWorkbenchModel(lead = {}) {
     evidence,
     dataGaps,
   });
+  const stakeholderPrep = buildStakeholderPrep({
+    brief,
+    confidence,
+    evidence,
+    dataGaps,
+    assumptions,
+  });
 
   return {
     id: cleanText(brief.id),
@@ -396,6 +526,7 @@ export function buildOpportunityWorkbenchModel(lead = {}) {
     nextAction,
     solutionTranslation,
     productContext,
+    stakeholderPrep,
   };
 }
 
@@ -416,8 +547,19 @@ function renderTextItems(items, emptyLabel) {
   return items.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
 }
 
+function renderStakeholderRole(role) {
+  return `
+              <article class="opportunity-workbench-stakeholder-card">
+                <strong>${escapeHtml(role.role)}</strong>
+                <p>${escapeHtml(role.focus)}</p>
+                <span>${escapeHtml(role.prep)}</span>
+              </article>`;
+}
+
 export function renderOpportunityWorkbench(model) {
-  const workbench = model && model.nextAction && model.solutionTranslation && model.productContext ? model : buildOpportunityWorkbenchModel(model);
+  const workbench = model && model.nextAction && model.solutionTranslation && model.productContext && model.stakeholderPrep
+    ? model
+    : buildOpportunityWorkbenchModel(model);
   const scoreLabel = workbench.score === null ? '점수 미확인' : `${workbench.score}점`;
   const gradeLabel = workbench.grade ? `${workbench.grade}등급` : '등급 미확인';
   const dataGapTitle = workbench.dataGaps.count > 0 ? `데이터 공백 ${workbench.dataGaps.count}건` : '데이터 공백 없음';
@@ -479,6 +621,14 @@ export function renderOpportunityWorkbench(model) {
               ${renderTextItems(workbench.productContext.fusionSignals, '결합된 신호 없음')}
             </ul>
             <p class="opportunity-workbench-caveat">${escapeHtml(workbench.productContext.reviewGuidance)}</p>
+          </div>
+          <div class="opportunity-workbench-panel opportunity-workbench-wide opportunity-workbench-stakeholders">
+            <span class="panel-label">이해관계자 준비</span>
+            <p class="opportunity-workbench-stakeholder-primary">Primary role: ${escapeHtml(workbench.stakeholderPrep.primaryRole)}</p>
+            <div class="opportunity-workbench-stakeholder-grid">
+              ${workbench.stakeholderPrep.roles.map(renderStakeholderRole).join('')}
+            </div>
+            <p class="opportunity-workbench-caveat">${escapeHtml(workbench.stakeholderPrep.reviewGuidance)}</p>
           </div>
           <div class="opportunity-workbench-panel">
             <span class="panel-label">검토 상태</span>
@@ -557,6 +707,11 @@ export function getOpportunityWorkbenchStyles() {
     .opportunity-workbench-context-grid div { border:1px solid #223447; border-radius:8px; padding:10px; background:#101925; min-width:0; }
     .opportunity-workbench-context-grid strong { color:#a8efc0; display:block; font-size:12px; margin-bottom:5px; }
     .opportunity-workbench-context-list { border:1px solid #223447; border-radius:8px; background:#101925; padding:10px !important; }
+    .opportunity-workbench-stakeholder-primary { border:1px solid #223447; border-radius:8px; background:#101925; margin-bottom:10px !important; padding:10px; }
+    .opportunity-workbench-stakeholder-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .opportunity-workbench-stakeholder-card { border:1px solid #223447; border-radius:8px; background:#101925; display:grid; gap:6px; min-width:0; padding:10px; }
+    .opportunity-workbench-stakeholder-card strong { color:#a8efc0; display:block; font-size:12px; line-height:1.4; }
+    .opportunity-workbench-stakeholder-card span { color:#9fb0c0; display:block; font-size:12px; line-height:1.5; }
     .opportunity-workbench-caveat { border-top:1px solid #223447; color:#9fb0c0 !important; margin-top:10px !important; padding-top:10px; }
     .opportunity-workbench-pill-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
     .opportunity-workbench-pill { border:1px solid #3a5575; border-radius:999px; color:#dbeafe; display:inline-flex; font-size:11px; font-weight:700; line-height:1; padding:5px 8px; }
@@ -580,6 +735,7 @@ export function getOpportunityWorkbenchStyles() {
       .opportunity-workbench-grid { grid-template-columns:1fr; }
       .opportunity-workbench-solution-grid { grid-template-columns:1fr; }
       .opportunity-workbench-context-grid { grid-template-columns:1fr; }
+      .opportunity-workbench-stakeholder-grid { grid-template-columns:1fr; }
       .opportunity-workbench-wide { grid-column:auto; }
       .opportunity-workbench-evidence-list { max-height: none; }
     }
