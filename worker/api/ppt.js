@@ -29,7 +29,7 @@ export async function generatePPT(request, env) {
   try {
     const result = await callGemini(prompt, env);
     return jsonResponse({ success: true, content: result });
-  } catch (e) {
-    return jsonResponse({ success: false, message: 'AI 분석 중 오류가 발생했습니다:' + e.message }, 500);
+  } catch {
+    return jsonResponse({ success: false, message: 'AI 분석 중 오류가 발생했습니다.' }, 500);
   }
 }

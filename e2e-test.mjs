@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
+import { resolveE2EConfig } from './e2e-config.mjs';
 
-const BASE = 'https://b2b-lead-trigger.jangho1383.workers.dev';
-const TOKEN = process.env.B2B_TOKEN || process.env.API_TOKEN || process.env.TRIGGER_PASSWORD || '';
+const { baseUrl: BASE, token: TOKEN } = resolveE2EConfig();
 let browser, page;
 let passed = 0, failed = 0;
 const results = [];

@@ -235,8 +235,8 @@ export async function handleEnrichLead(request, env, leadId) {
 
     const updated = await getLeadById(env.DB, leadId);
     return jsonResponse({ success: true, lead: updated, hadArticle: hasArticleBody(articleBody) });
-  } catch (e) {
-    return jsonResponse({ success: false, message: '심층 분석 실패: ' + (e?.message || 'unknown error') }, 502);
+  } catch {
+    return jsonResponse({ success: false, message: '심층 분석 중 오류가 발생했습니다.' }, 502);
   }
 }
 
@@ -275,7 +275,7 @@ export async function handleBatchEnrich(request, env) {
   const enrichedResults = settled.map((result, i) => {
     if (result.status === 'fulfilled') return result.value;
     const lead = rowToLead(results[i]);
-    return { id: lead.id, company: lead.company, success: false, error: result.reason?.message || 'unknown' };
+    return { id: lead.id, company: lead.company, success: false, error: '심층 분석 중 오류가 발생했습니다.' };
   });
 
   const { results: remainingRows } = await env.DB.prepare(
