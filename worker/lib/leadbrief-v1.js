@@ -47,6 +47,16 @@ function normalizeGenerationMode(value) {
     : 'llm';
 }
 
+function normalizeVerificationStatus(value, generationMode) {
+  const status = cleanText(value).toLowerCase();
+  if (status === 'verified' || status === 'needs_review' || status === 'draft' || status === 'unverified') {
+    return status;
+  }
+  if (generationMode === 'demo') return 'draft';
+  if (generationMode === 'unavailable') return 'unverified';
+  return 'needs_review';
+}
+
 function normalizeSources(sources) {
   return (Array.isArray(sources) ? sources : [])
     .map((source) => {
@@ -128,7 +138,7 @@ export function toLeadBriefV1(lead = {}) {
     dataGaps,
     reviewStatus: normalizeReviewStatus(record.reviewStatus ?? record.review_status),
     generationMode,
-    verificationStatus: cleanText(record.verificationStatus ?? record.verification_status),
+    verificationStatus: normalizeVerificationStatus(record.verificationStatus ?? record.verification_status, generationMode),
     evidence
   };
 }

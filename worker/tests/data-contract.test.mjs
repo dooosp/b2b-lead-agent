@@ -93,7 +93,7 @@ class FakeD1Database {
         updatedAt,
       ] = params;
 
-      this.leads.set(id, {
+      const incomingRow = {
         id,
         identity_key: identityKey,
         profile_id: profileId,
@@ -124,7 +124,38 @@ class FakeD1Database {
         event_type: eventType,
         created_at: createdAt,
         updated_at: updatedAt,
-      });
+      };
+
+      const existingRow = this.leads.get(id);
+      if (existingRow) {
+        this.leads.set(id, {
+          ...existingRow,
+          identity_key: incomingRow.identity_key,
+          summary: incomingRow.summary,
+          product: incomingRow.product,
+          score: incomingRow.score,
+          grade: incomingRow.grade,
+          roi: incomingRow.roi,
+          sales_pitch: incomingRow.sales_pitch,
+          global_context: incomingRow.global_context,
+          sources: incomingRow.sources,
+          score_reason: incomingRow.score_reason,
+          urgency: incomingRow.urgency,
+          urgency_reason: incomingRow.urgency_reason,
+          buyer_role: incomingRow.buyer_role,
+          evidence: incomingRow.evidence,
+          confidence: incomingRow.confidence,
+          confidence_reason: incomingRow.confidence_reason,
+          assumptions: incomingRow.assumptions,
+          generation_mode: incomingRow.generation_mode,
+          verification_status: incomingRow.verification_status,
+          data_gaps: incomingRow.data_gaps,
+          event_type: incomingRow.event_type,
+          updated_at: incomingRow.updated_at,
+        });
+      } else {
+        this.leads.set(id, incomingRow);
+      }
 
       return { meta: { changes: 1 } };
     }
@@ -157,6 +188,107 @@ function makeLead(overrides = {}) {
     ...overrides,
   };
 }
+
+test('lead trust fields serialize into D1 row payload and deserialize unchanged', () => {
+  const lead = makeLead({
+    reviewStatus: 'APPROVED',
+    evidence: [{ field: 'summary', quote: '스마트팩토리 증설 추진', sourceUrl: 'https://example.com/news/lg-smart-factory?id=100' }],
+    confidence: 'HIGH',
+    confidenceReason: '본문 출처와 프로젝트 신호가 확인되었습니다.',
+    assumptions: ['현장 자동화 설비 투자 예산은 기존 CAPEX 안에서 검토됩니다.'],
+    generationMode: 'llm',
+    verificationStatus: 'verified',
+    dataGaps: ['최종 의사결정자 미확인'],
+    eventType: '증설',
+  });
+
+  const row = leadToRow(lead, 'fixture-profile', 'managed');
+  const roundTripped = rowToLead(row);
+
+  assert.equal(row.review_status, 'APPROVED');
+  assert.equal(row.generation_mode, 'llm');
+  assert.equal(row.verification_status, 'verified');
+  assert.equal(row.confidence, 'HIGH');
+  assert.equal(row.confidence_reason, '본문 출처와 프로젝트 신호가 확인되었습니다.');
+  assert.deepEqual(JSON.parse(row.evidence), lead.evidence);
+  assert.deepEqual(JSON.parse(row.assumptions), lead.assumptions);
+  assert.deepEqual(JSON.parse(row.data_gaps), lead.dataGaps);
+  assert.equal(row.event_type, '증설');
+
+  assert.equal(roundTripped.reviewStatus, 'APPROVED');
+  assert.equal(roundTripped.generationMode, 'llm');
+  assert.equal(roundTripped.verificationStatus, 'verified');
+  assert.deepEqual(roundTripped.evidence, lead.evidence);
+  assert.equal(roundTripped.confidence, 'HIGH');
+  assert.equal(roundTripped.confidenceReason, '본문 출처와 프로젝트 신호가 확인되었습니다.');
+  assert.deepEqual(roundTripped.assumptions, lead.assumptions);
+  assert.deepEqual(roundTripped.dataGaps, lead.dataGaps);
+  assert.equal(roundTripped.eventType, '증설');
+});
+
+test('leadToRow applies conservative D1 defaults without adding data gaps when evidence is complete', () => {
+  const row = leadToRow(makeLead({
+    reviewStatus: undefined,
+    evidence: [{ field: 'summary', quote: '스마트팩토리 증설 추진', sourceUrl: 'https://example.com/news/lg-smart-factory?id=100' }],
+    confidence: 'MEDIUM',
+    confidenceReason: '',
+    assumptions: undefined,
+    generationMode: undefined,
+    verificationStatus: undefined,
+    dataGaps: undefined,
+    eventType: '',
+  }), 'fixture-profile', 'managed');
+
+  assert.equal(row.review_status, 'NEEDS_REVIEW');
+  assert.equal(row.generation_mode, 'llm');
+  assert.equal(row.verification_status, 'needs_review');
+  assert.equal(row.confidence, 'MEDIUM');
+  assert.equal(row.assumptions, '[]');
+  assert.equal(row.data_gaps, '[]');
+  assert.equal(row.event_type, '');
+});
+
+test('saveLeadsBatch persists trust columns and preserves existing review_status on refresh', async () => {
+  const db = new FakeD1Database();
+
+  await saveLeadsBatch(db, [makeLead({
+    reviewStatus: 'APPROVED',
+    evidence: [{ field: 'summary', quote: '스마트팩토리 증설 추진', sourceUrl: 'https://example.com/news/lg-smart-factory?id=100' }],
+    confidence: 'MEDIUM',
+    confidenceReason: '초기 검토 승인 후 저장된 행입니다.',
+    assumptions: ['기존 승인 상태는 사람이 설정했습니다.'],
+    generationMode: 'llm',
+    verificationStatus: 'verified',
+    dataGaps: ['예산 미확인'],
+    eventType: '증설',
+  })], 'fixture-profile', 'managed');
+
+  await saveLeadsBatch(db, [makeLead({
+    reviewStatus: 'NEEDS_REVIEW',
+    evidence: [{ field: 'summary', quote: '증설 일정 업데이트', sourceUrl: 'https://example.com/news/lg-smart-factory?id=100' }],
+    confidence: 'HIGH',
+    confidenceReason: '업데이트된 출처가 확인되었습니다.',
+    assumptions: ['기존 설비와 신규 설비가 병행 운영됩니다.'],
+    generationMode: 'llm',
+    verificationStatus: 'verified',
+    dataGaps: ['구체 발주 일정 미확인'],
+    eventType: '증설',
+  })], 'fixture-profile', 'managed');
+
+  assert.equal(db.leads.size, 1);
+  const [storedRow] = [...db.leads.values()];
+  assert.equal(storedRow.review_status, 'APPROVED');
+  assert.equal(storedRow.confidence, 'HIGH');
+  assert.equal(storedRow.confidence_reason, '업데이트된 출처가 확인되었습니다.');
+  assert.deepEqual(JSON.parse(storedRow.evidence), [
+    { field: 'summary', quote: '증설 일정 업데이트', sourceUrl: 'https://example.com/news/lg-smart-factory?id=100' }
+  ]);
+  assert.deepEqual(JSON.parse(storedRow.assumptions), ['기존 설비와 신규 설비가 병행 운영됩니다.']);
+  assert.deepEqual(JSON.parse(storedRow.data_gaps), ['구체 발주 일정 미확인']);
+  assert.equal(storedRow.generation_mode, 'llm');
+  assert.equal(storedRow.verification_status, 'verified');
+  assert.equal(storedRow.event_type, '증설');
+});
 
 test('source-order changes preserve the same persisted id and identity_key', async () => {
   const db = new FakeD1Database();
