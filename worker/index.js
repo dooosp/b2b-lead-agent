@@ -167,6 +167,9 @@ export default {
       if (authErr) return addCorsHeaders(authErr, origin, env);
       return addCorsHeaders(await removeReference(env, Number(refDeleteMatch[1])), origin, env);
     }
+    if (url.pathname.startsWith('/api/')) {
+      return addCorsHeaders(jsonResponse({ success: false, message: 'API route not found' }, 404), origin, env);
+    }
     // PWA
     if (url.pathname === '/manifest.json') {
       return new Response(JSON.stringify(getPWAManifest(env)), {

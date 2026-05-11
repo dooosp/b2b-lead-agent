@@ -4,57 +4,12 @@ import assert from 'node:assert/strict';
 import { fetchLeads, handleExportCSV } from '../api/leads.js';
 import { leadToRow, rowToLead } from '../db/transform.js';
 import { normalizeReviewStatus, toLeadBriefV1 } from '../lib/leadbrief-v1.js';
-
-class FakeStatement {
-  constructor(db, sql, params = []) {
-    this.db = db;
-    this.sql = sql;
-    this.params = params;
-  }
-
-  bind(...params) {
-    return new FakeStatement(this.db, this.sql, params);
-  }
-
-  async run() {
-    return { meta: { changes: 0 } };
-  }
-
-  async all() {
-    const normalized = this.sql.replace(/\s+/g, ' ').trim();
-    if (normalized === 'SELECT * FROM leads WHERE profile_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?') {
-      const [profileId, limit, offset] = this.params;
-      return {
-        results: this.db.rows
-          .filter((row) => row.profile_id === profileId)
-          .slice(offset, offset + limit)
-          .map((row) => ({ ...row }))
-      };
-    }
-    return { results: [] };
-  }
-}
-
-class FakeLeadDb {
-  constructor(rows = []) {
-    this.rows = rows;
-  }
-
-  prepare(sql) {
-    return new FakeStatement(this, sql);
-  }
-
-  async batch(statements) {
-    return Promise.all(statements.map((statement) => statement.run()));
-  }
-}
+import { FakeD1Database } from './helpers/fake-d1.mjs';
+import { createLeadRow, createWorkerEnv } from './helpers/fixtures.mjs';
+import { createWorkerRequest } from './helpers/http.mjs';
 
 function createStoredRow(overrides = {}) {
-  return {
-    id: 'lead-1',
-    identity_key: 'identity-1',
-    profile_id: 'danfoss',
-    source: 'managed',
+  return createLeadRow({
     status: 'CONTACTED',
     review_status: 'APPROVED',
     company: 'DL이앤씨',
@@ -84,8 +39,8 @@ function createStoredRow(overrides = {}) {
     estimated_value: 0,
     created_at: '2026-05-05T00:00:00.000Z',
     updated_at: '2026-05-05T00:00:00.000Z',
-    ...overrides
-  };
+    ...overrides,
+  });
 }
 
 test('LeadBrief v1 normalization maps legacy lead fields without conflating pipeline status', () => {
@@ -147,11 +102,7 @@ test('D1 row roundtrip preserves reviewStatus separately from sales pipeline sta
 });
 
 test('/api/leads exposes LeadBrief v1 canonical fields from D1 rows', async () => {
-  const env = {
-    DB: new FakeLeadDb([createStoredRow()]),
-    GITHUB_REPO: 'dooosp/b2b-lead-agent',
-    PROFILES: JSON.stringify([{ id: 'danfoss', name: 'Danfoss' }])
-  };
+  const env = createWorkerEnv({ DB: new FakeD1Database({ leads: [createStoredRow()] }) });
 
   const response = await fetchLeads(env, 'danfoss');
   const payload = await response.json();
@@ -166,11 +117,8 @@ test('/api/leads exposes LeadBrief v1 canonical fields from D1 rows', async () =
 });
 
 test('CSV export includes reviewStatus and trust metadata without dropping pipeline status', async () => {
-  const env = {
-    DB: new FakeLeadDb([createStoredRow()]),
-    PROFILES: JSON.stringify([{ id: 'danfoss', name: 'Danfoss' }])
-  };
-  const request = new Request('https://example.com/api/export/csv?profile=danfoss');
+  const env = createWorkerEnv({ DB: new FakeD1Database({ leads: [createStoredRow()] }) });
+  const request = createWorkerRequest('/api/export/csv?profile=danfoss');
 
   const response = await handleExportCSV(request, env);
   const csv = await response.text();

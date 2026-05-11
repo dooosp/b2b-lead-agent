@@ -1,6 +1,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const contractFixture = require('../docs/exec-plans/internal-api-contract-freeze.fixture.json');
+const {
+  createRootLeadRow,
+  createWorkerApiEnv,
+  createWorkerApiRequest,
+  jsonFixtureResponse,
+} = require('./helpers/root-fixtures');
 
 const workerModulePromise = import('../worker/index.js');
 
@@ -95,70 +101,11 @@ class ThrowingJobRunDb extends FakeInternalReportDb {
   }
 }
 
-function createEnv(overrides = {}) {
-  return {
-    API_TOKEN: 'api-secret',
-    TRIGGER_PASSWORD: 'legacy-secret',
-    GITHUB_REPO: 'dooosp/b2b-lead-agent',
-    PROFILES: JSON.stringify([
-      { id: 'danfoss', name: 'Danfoss' },
-      { id: 'ls-electric', name: 'LS Electric' }
-    ]),
-    ...overrides
-  };
-}
-
-function createRequest(path, { headers = {}, method = 'GET' } = {}) {
-  return new Request(`https://b2b-lead-trigger.example.workers.dev${path}`, {
-    method,
-    headers
-  });
-}
-
-function jsonFixtureResponse(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json; charset=utf-8' }
-  });
-}
-
-function createLeadRow(overrides = {}) {
-  return {
-    id: 'lead-db-1',
-    identity_key: 'identity-1',
-    profile_id: 'danfoss',
-    source: 'managed',
-    status: 'CONTACTED',
-    company: 'Mutable DB Lead',
-    summary: 'Mutable cache row',
-    product: 'Turbocor 컴프레서',
-    score: 20,
-    grade: 'B',
-    roi: 'Mutable ROI',
-    sales_pitch: 'Mutable pitch',
-    global_context: 'Mutable context',
-    sources: JSON.stringify([{ title: 'DB Source', url: 'https://example.com/db-source' }]),
-    notes: 'mutated',
-    score_reason: '',
-    urgency: '',
-    urgency_reason: '',
-    buyer_role: '',
-    evidence: '[]',
-    confidence: '',
-    confidence_reason: '',
-    assumptions: '[]',
-    event_type: '',
-    created_at: '2026-04-07T12:34:56.000Z',
-    updated_at: '2026-04-08T12:34:56.000Z',
-    ...overrides
-  };
-}
-
 test('internal published-report route requires explicit header auth', async () => {
   const { default: worker } = await workerModulePromise;
   const response = await worker.fetch(
-    createRequest('/api/internal/profiles/danfoss/latest-published'),
-    createEnv(),
+    createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published'),
+    createWorkerApiEnv(),
     {}
   );
   const payload = await response.json();
@@ -171,8 +118,8 @@ test('internal published-report route requires explicit header auth', async () =
 test('internal published-report route rejects query-string token auth', async () => {
   const { default: worker } = await workerModulePromise;
   const response = await worker.fetch(
-    createRequest('/api/internal/profiles/danfoss/latest-published?token=api-secret'),
-    createEnv(),
+    createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published?token=api-secret'),
+    createWorkerApiEnv(),
     {}
   );
   const payload = await response.json();
@@ -185,10 +132,10 @@ test('internal published-report route rejects query-string token auth', async ()
 test('internal published-report route does not fall back to TRIGGER_PASSWORD when API_TOKEN is unset', async () => {
   const { default: worker } = await workerModulePromise;
   const response = await worker.fetch(
-    createRequest('/api/internal/profiles/danfoss/latest-published', {
+    createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
       headers: { Authorization: 'Bearer legacy-secret' }
     }),
-    createEnv({ API_TOKEN: '' }),
+    createWorkerApiEnv({ API_TOKEN: '' }),
     {}
   );
   const payload = await response.json();
@@ -201,10 +148,10 @@ test('internal published-report route does not fall back to TRIGGER_PASSWORD whe
 test('internal published-report route rejects TRIGGER_PASSWORD when API_TOKEN is different', async () => {
   const { default: worker } = await workerModulePromise;
   const response = await worker.fetch(
-    createRequest('/api/internal/profiles/danfoss/latest-published', {
+    createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
       headers: { Authorization: 'Bearer legacy-secret' }
     }),
-    createEnv({ API_TOKEN: 'api-secret', TRIGGER_PASSWORD: 'legacy-secret' }),
+    createWorkerApiEnv({ API_TOKEN: 'api-secret', TRIGGER_PASSWORD: 'legacy-secret' }),
     {}
   );
   const payload = await response.json();
@@ -225,12 +172,12 @@ test('GET /api/internal/profiles/:profileId/latest-published uses the GitHub pub
 
   try {
     const response = await worker.fetch(
-      createRequest('/api/internal/profiles/danfoss/latest-published', {
+      createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
         headers: { Authorization: 'Bearer api-secret' }
       }),
-      createEnv({
+      createWorkerApiEnv({
         DB: new FakeInternalReportDb({
-          leadRows: [createLeadRow()]
+          leadRows: [createRootLeadRow()]
         })
       }),
       {}
@@ -252,10 +199,10 @@ test('GET /api/internal/profiles/:profileId/latest-published returns 409 queued 
 
   try {
     const response = await worker.fetch(
-      createRequest('/api/internal/profiles/danfoss/latest-published', {
+      createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
         headers: { Authorization: 'Bearer api-secret' }
       }),
-      createEnv({
+      createWorkerApiEnv({
         DB: new FakeInternalReportDb({
           jobRuns: [
             {
@@ -289,10 +236,10 @@ test('GET /api/internal/profiles/:profileId/latest-published returns 404 for a k
 
   try {
     const response = await worker.fetch(
-      createRequest('/api/internal/profiles/danfoss/latest-published', {
+      createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
         headers: { Authorization: 'Bearer api-secret' }
       }),
-      createEnv({
+      createWorkerApiEnv({
         DB: new FakeInternalReportDb()
       }),
       {}
@@ -315,10 +262,10 @@ test('GET /api/internal/profiles/:profileId/latest-published returns 503 when qu
 
   try {
     const response = await worker.fetch(
-      createRequest('/api/internal/profiles/danfoss/latest-published', {
+      createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
         headers: { Authorization: 'Bearer api-secret' }
       }),
-      createEnv({
+      createWorkerApiEnv({
         DB: new ThrowingJobRunDb()
       }),
       {}
@@ -342,10 +289,10 @@ test('GET /api/internal/profiles/:profileId/latest-published returns 503 when th
 
   try {
     const response = await worker.fetch(
-      createRequest('/api/internal/profiles/danfoss/latest-published', {
+      createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
         headers: { Authorization: 'Bearer api-secret' }
       }),
-      createEnv({ DB: undefined }),
+      createWorkerApiEnv({ DB: undefined }),
       {}
     );
     const payload = await response.json();
@@ -371,10 +318,10 @@ test('GET /api/internal/profiles/:profileId/latest-published does not fall back 
 
   try {
     const response = await worker.fetch(
-      createRequest('/api/internal/profiles/not-a-real-profile/latest-published', {
+      createWorkerApiRequest('/api/internal/profiles/not-a-real-profile/latest-published', {
         headers: { Authorization: 'Bearer api-secret' }
       }),
-      createEnv(),
+      createWorkerApiEnv(),
       {}
     );
     const payload = await response.json();
@@ -394,10 +341,10 @@ test('GET /api/internal/profiles/:profileId/latest-published returns 409 not_fin
 
   try {
     const response = await worker.fetch(
-      createRequest('/api/internal/profiles/danfoss/latest-published', {
+      createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
         headers: { Authorization: 'Bearer api-secret' }
       }),
-      createEnv(),
+      createWorkerApiEnv(),
       {}
     );
     const payload = await response.json();
@@ -437,10 +384,10 @@ test('GET /api/internal/profiles/:profileId/latest-published returns 409 not_fin
 
   try {
     const response = await worker.fetch(
-      createRequest('/api/internal/profiles/danfoss/latest-published', {
+      createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
         headers: { Authorization: 'Bearer api-secret' }
       }),
-      createEnv(),
+      createWorkerApiEnv(),
       {}
     );
     const payload = await response.json();

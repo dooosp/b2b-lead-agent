@@ -9,132 +9,11 @@ import {
   leadToRow,
   rowToLead,
 } from '../db/transform.js';
-
-function normalizeSql(sql) {
-  return sql.replace(/\s+/g, ' ').trim().toLowerCase();
-}
-
-class FakeStatement {
-  constructor(db, sql, params = []) {
-    this.db = db;
-    this.sql = sql;
-    this.params = params;
-  }
-
-  bind(...params) {
-    return new FakeStatement(this.db, this.sql, params);
-  }
-
-  async run() {
-    return this.db.execute(this.sql, this.params);
-  }
-}
-
-class FakeD1Database {
-  constructor() {
-    this.leads = new Map();
-  }
-
-  prepare(sql) {
-    return new FakeStatement(this, sql);
-  }
-
-  async batch(statements) {
-    const results = [];
-    for (const statement of statements) {
-      results.push(await statement.run());
-    }
-    return results;
-  }
-
-  async execute(sql, params) {
-    const normalized = normalizeSql(sql);
-
-    if (
-      normalized.startsWith('create table') ||
-      normalized.startsWith('create index') ||
-      normalized.startsWith('create unique index') ||
-      normalized.startsWith('alter table')
-    ) {
-      return { meta: { changes: 0 } };
-    }
-
-    if (normalized.startsWith('insert into leads ')) {
-      const [
-        id,
-        identityKey,
-        profileId,
-        source,
-        status,
-        reviewStatus,
-        company,
-        summary,
-        product,
-        score,
-        grade,
-        roi,
-        salesPitch,
-        globalContext,
-        sources,
-        notes,
-        scoreReason,
-        urgency,
-        urgencyReason,
-        buyerRole,
-        evidence,
-        confidence,
-        confidenceReason,
-        assumptions,
-        generationMode,
-        verificationStatus,
-        dataGaps,
-        eventType,
-        createdAt,
-        updatedAt,
-      ] = params;
-
-      this.leads.set(id, {
-        id,
-        identity_key: identityKey,
-        profile_id: profileId,
-        source,
-        status,
-        review_status: reviewStatus,
-        company,
-        summary,
-        product,
-        score,
-        grade,
-        roi,
-        sales_pitch: salesPitch,
-        global_context: globalContext,
-        sources,
-        notes,
-        score_reason: scoreReason,
-        urgency,
-        urgency_reason: urgencyReason,
-        buyer_role: buyerRole,
-        evidence,
-        confidence,
-        confidence_reason: confidenceReason,
-        assumptions,
-        generation_mode: generationMode,
-        verification_status: verificationStatus,
-        data_gaps: dataGaps,
-        event_type: eventType,
-        created_at: createdAt,
-        updated_at: updatedAt,
-      });
-
-      return { meta: { changes: 1 } };
-    }
-
-    throw new Error(`Unsupported fake D1 SQL: ${sql}`);
-  }
-}
+import { FakeD1Database } from './helpers/fake-d1.mjs';
+import { createLead } from './helpers/fixtures.mjs';
 
 function makeLead(overrides = {}) {
-  return {
+  return createLead({
     company: 'LG전자',
     summary: '스마트팩토리 증설 프로젝트',
     product: 'A-Controller',
@@ -155,7 +34,7 @@ function makeLead(overrides = {}) {
     ],
     eventType: '증설',
     ...overrides,
-  };
+  });
 }
 
 test('source-order changes preserve the same persisted id and identity_key', async () => {
@@ -233,6 +112,73 @@ test('lead -> row -> lead round-trip keeps canonical contract fields stable', ()
   assert.equal(roundTrippedRow.sources, initialRow.sources);
   assert.equal(roundTrippedRow.company, initialRow.company);
   assert.equal(roundTrippedRow.event_type, initialRow.event_type);
+});
+
+test('lead serialization maps canonical LeadBrief aliases into persisted row fields', () => {
+  const row = leadToRow(makeLead({
+    summary: '',
+    signal: 'Warehouse automation retrofit',
+    salesPitch: '',
+    recommendedMessage: 'Open with baseline automation risk.',
+    urgencyReason: '',
+    whyNow: 'Budget is being finalized this quarter.',
+    reviewStatus: 'APPROVED',
+    confidence: 'HIGH',
+    assumptions: ['Site footprint is based on public plans.'],
+    dataGaps: ['Decision owner unconfirmed'],
+  }), 'fixture-profile', 'managed');
+  const lead = rowToLead(row);
+
+  assert.equal(row.summary, 'Warehouse automation retrofit');
+  assert.equal(row.sales_pitch, 'Open with baseline automation risk.');
+  assert.equal(row.urgency_reason, 'Budget is being finalized this quarter.');
+  assert.equal(row.review_status, 'APPROVED');
+  assert.equal(row.confidence, 'HIGH');
+  assert.deepEqual(JSON.parse(row.assumptions), ['Site footprint is based on public plans.']);
+  assert.ok(JSON.parse(row.data_gaps).includes('Decision owner unconfirmed'));
+  assert.equal(lead.signal, 'Warehouse automation retrofit');
+  assert.equal(lead.recommendedMessage, 'Open with baseline automation risk.');
+  assert.equal(lead.whyNow, 'Budget is being finalized this quarter.');
+});
+
+test('legacy row serialization is conservative when JSON fields are malformed', () => {
+  const lead = rowToLead({
+    id: 'legacy-bad-json',
+    profile_id: 'fixture-profile',
+    source: 'managed',
+    status: 'CONTACTED',
+    review_status: '',
+    company: 'Legacy Corp',
+    summary: 'Legacy signal',
+    product: 'Controller',
+    score: 75,
+    grade: 'B',
+    roi: '',
+    sales_pitch: '',
+    global_context: '',
+    sources: '{not-json',
+    notes: '',
+    evidence: '{not-json',
+    confidence: '',
+    confidence_reason: '',
+    assumptions: '{not-json',
+    generation_mode: 'unknown',
+    verification_status: '',
+    data_gaps: '{not-json',
+    event_type: '',
+    created_at: '2026-04-07T00:00:00.000Z',
+    updated_at: '2026-04-07T00:00:00.000Z',
+  });
+
+  assert.deepEqual(lead.sources, []);
+  assert.deepEqual(lead.evidence, []);
+  assert.deepEqual(lead.assumptions, []);
+  assert.equal(lead.reviewStatus, 'NEEDS_REVIEW');
+  assert.equal(lead.confidence, 'LOW');
+  assert.equal(lead.generationMode, 'llm');
+  assert.equal(lead.verificationStatus, 'needs_review');
+  assert.ok(lead.dataGaps.includes('Published source evidence missing'));
+  assert.ok(lead.dataGaps.includes('Direct evidence quote missing'));
 });
 
 test('legacy rows without identity_key still deserialize safely and backfill deterministically', () => {
