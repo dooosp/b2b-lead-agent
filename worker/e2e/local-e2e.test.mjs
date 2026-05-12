@@ -176,6 +176,8 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.equal(await page.locator('#leadsList .lead-card').count(), 2);
   await page.getByText('칸반 보드').click();
   assert.equal(await page.locator('#kanbanView .kanban-card').count(), 2);
+  assert.equal(await page.locator('#kanbanView .k-gate.gate-ready').count(), 1);
+  assert.equal(await page.locator('#kanbanView .k-gate.gate-review').count(), 1);
   await assertRenderedText(page, ['Local Factory Automation', '목록 게이트 통과', '목록 게이트 보강 필요']);
 
   await page.goto(`${harness.origin}/roleplay?profile=danfoss&lead=0`, { waitUntil: 'domcontentloaded' });
