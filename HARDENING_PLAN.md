@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-05-12.
-> Audited against first-parent `master` history through `1dca7aa` (`Merge pull request #68 from dooosp/codex/post-pr67-doc-sync-v1`) and current GitHub PR state after stale PR #1-#9 closure.
+> Audited against first-parent `master` history through `dd6ae06` (`Merge pull request #72 from dooosp/codex/opportunity-review-gate-v1`) and current GitHub PR state after stale PR #1-#9 closure and post-PR51 follow-ups #69-#72.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -16,6 +16,7 @@
 | 6 | 2026-05-05 | #27 | `5776d4a` | `feat/leadbrief-v1-review-contract` | LeadBrief v1 contract and minimum human-review baseline |
 | 7 | 2026-05-11 | #36-#43 | `22672f8` | May 11 hardening/doc train | Worker routes, LeadBrief data path, test helpers, schema guard, review UX, evidence tooling, architecture docs, and naming cleanup |
 | 8 | 2026-05-11 | #51 | `a3f44df` | `codex/post-train-integration-v1` | Integration of PRs #44-#49: Workbench, local E2E, auth/error hardening, lead-quality evaluation, old PR #23 replacement, and roadmap synthesis |
+| 9 | 2026-05-12 | #52-#72 | `dd6ae06` | Post-PR51 review-quality and CI follow-ups | Workbench review helpers, review queue filters, advisory roleplay context, deterministic CI installs, lead-quality and local E2E CI gates, and the Workbench review gate |
 
 ## Wave Summary
 
@@ -107,7 +108,7 @@
   - synthetic lead-quality evaluation harness.
   - current-master replacement for old dashboard unauthorized UX PR #23.
   - roadmap synthesis for old PR disposition and product boundaries.
-- PRs #52-#68 then refreshed repo state and shipped bounded review-quality follow-ups:
+- PRs #52-#72 then refreshed repo state and shipped bounded review-quality follow-ups:
   - advisory next-review-action reasons and checklist items.
   - deterministic Workbench review gate from current LeadBrief fields.
   - cached `/leads` review queue filters.
@@ -119,11 +120,13 @@
   - advisory selected-LeadBrief stakeholder context for roleplay practice.
   - Validate Naming workflow action maintenance.
   - lockfile-backed `npm ci` installs in non-production check workflows.
+  - production-boundary source-of-truth doc refresh after PR #68.
+  - synthetic lead-quality evaluator coverage in CI.
   - local-only Worker E2E smoke coverage in CI.
-  - source-of-truth doc sync through PR #68.
+  - source-of-truth doc sync through PR #72.
 - PR #59 recut the useful old PR #6 idea as deterministic role-specific review prep using existing LeadBrief/enrichment fields only. It does not approve outreach, change schema/API/storage, or expand CRM ownership.
 - Stale PRs #1-#9 were audited after PR #51, received disposition comments, and were closed without merge or branch deletion. Their useful ideas remain concept inventory to recut from current `master`.
-- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#68 or the stale PR cleanup.
+- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#72 or the stale PR cleanup.
 
 ## Findings Closed On `master`
 

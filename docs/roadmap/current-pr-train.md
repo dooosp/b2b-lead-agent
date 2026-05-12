@@ -5,14 +5,14 @@ This document summarizes the May 2026 PR train, stale PR disposition, and next w
 Evidence baseline:
 
 - Repo default branch: `master`
-- Latest audited pre-refresh `origin/master`: `1dca7aa8df19aa8595135cdf243a030629435b95` (PR #68)
+- Latest audited pre-refresh `origin/master`: `dd6ae06f67741c5e59cd6d18afb745f0180914ff` (PR #72)
 - Evidence collected from GitHub PR/issue metadata, PR bodies, current `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md`
 - Scope: documentation synthesis only
 - Production actions performed for this synthesis: none
 
 ## May 11 PR Train
 
-PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs #44 through #49. PRs #52 through #68 refreshed repo state and shipped the first review-quality follow-ups. Together they established the current post-LeadBrief baseline: Worker routes are split into `worker/routes/*`, LeadBrief trust data is preserved across the data path, schema drift has a local/CI guard, release evidence tooling is local-only, architecture docs are refreshed, stale module alias wrappers are removed, Opportunity Workbench v1 is shipped with deterministic review-gate guidance, advisory next-review guidance is available, `/leads` review queue filters and evidence/data-gap slices are shipped, Solution Translation Summary is shipped, Product Context / Signal Fusion is shipped, Stakeholder Prep is available as Workbench-only advisory guidance, roleplay can consume advisory stakeholder context, Validate Naming uses Node 24-compatible GitHub Actions versions, non-production check workflows use lockfile-backed `npm ci`, local-only Worker E2E is available as a local and CI smoke gate, Worker auth/error boundaries are hardened, and synthetic lead-quality evaluation is available as a local and CI quality gate.
+PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs #44 through #49. PRs #52 through #72 refreshed repo state and shipped the first review-quality follow-ups. Together they established the current post-LeadBrief baseline: Worker routes are split into `worker/routes/*`, LeadBrief trust data is preserved across the data path, schema drift has a local/CI guard, release evidence tooling is local-only, architecture docs are refreshed, stale module alias wrappers are removed, Opportunity Workbench v1 is shipped with deterministic review-gate guidance, advisory next-review guidance is available, `/leads` review queue filters and evidence/data-gap slices are shipped, Solution Translation Summary is shipped, Product Context / Signal Fusion is shipped, Stakeholder Prep is available as Workbench-only advisory guidance, roleplay can consume advisory stakeholder context, Validate Naming uses Node 24-compatible GitHub Actions versions, non-production check workflows use lockfile-backed `npm ci`, local-only Worker E2E is available as a local and CI smoke gate, Worker auth/error boundaries are hardened, synthetic lead-quality evaluation is available as a local and CI quality gate, and the Workbench review gate summarizes readiness/blockers from existing LeadBrief fields only.
 
 | Actual merge order | PR | Merged at UTC | Role | Roadmap implication |
 | --- | --- | --- | --- | --- |
@@ -47,10 +47,14 @@ PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs
 | [#66](https://github.com/dooosp/b2b-lead-agent/pull/66) | Post-PR65 doc sync | Source-of-truth docs were synced after Validate Naming workflow maintenance landed. |
 | [#67](https://github.com/dooosp/b2b-lead-agent/pull/67) | Check workflow deterministic installs | CI and Validate Naming now use lockfile-backed `npm ci`, with workflow contract tests covering the check-workflow install policy. |
 | [#68](https://github.com/dooosp/b2b-lead-agent/pull/68) | Post-PR67 doc sync | Source-of-truth docs were synced after deterministic check-workflow installs landed. |
+| [#69](https://github.com/dooosp/b2b-lead-agent/pull/69) | Production-boundary doc refresh | Source-of-truth docs were refreshed after PR #68 while retaining the no-production-action boundary. |
+| [#70](https://github.com/dooosp/b2b-lead-agent/pull/70) | Lead-quality CI gate | The synthetic lead-quality evaluator now runs in CI as local-only quality evidence. |
+| [#71](https://github.com/dooosp/b2b-lead-agent/pull/71) | Local E2E CI gate | The fake-D1, loopback-only Worker E2E smoke now runs in CI with deterministic Playwright Chromium setup. |
+| [#72](https://github.com/dooosp/b2b-lead-agent/pull/72) | Workbench review gate | Opportunity Workbench now renders deterministic review-gate readiness from existing LeadBrief review, verification, confidence, evidence, source, and data-gap fields. |
 
 ## Immediate Merge Queue
 
-No open PRs remain after PR #68. PRs #44-#49 are merged through #51, PRs #52-#68 are merged into `master`, and old PRs #1-#9 are closed without merge after disposition comments.
+No open PRs remain after PR #72. PRs #44-#49 are merged through #51, PRs #52-#72 are merged into `master`, and old PRs #1-#9 are closed without merge after disposition comments.
 
 ## Old PR Disposition
 
