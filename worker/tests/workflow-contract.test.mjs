@@ -59,5 +59,7 @@ test('CI workflow runs the local-only Worker E2E smoke after full tests', async 
   const workflow = await readFile(ciWorkflowPath, 'utf8');
 
   assert.match(workflow, /name:\s+Run local-only Worker E2E smoke\s+run:\s+npm run test:e2e:local/);
+  assert.match(workflow, /name:\s+Install Playwright Chromium\s+run:\s+npx playwright install --with-deps chromium/);
   assert.match(workflow, /run:\s+npm test[\s\S]*run:\s+npm run test:e2e:local/);
+  assert.match(workflow, /run:\s+npx playwright install --with-deps chromium[\s\S]*run:\s+npm run test:e2e:local/);
 });
