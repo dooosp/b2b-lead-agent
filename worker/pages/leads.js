@@ -202,6 +202,15 @@ export function getLeadsPage() {
           <option value="LOW">LOW</option>
         </select>
       </label>
+      <label>게이트 상태
+        <select data-filter-key="gateStatus" onchange="setReviewQueueFilter(this)">
+          <option value="all">전체</option>
+          <option value="ready">게이트 통과</option>
+          <option value="review">보강 필요</option>
+          <option value="blocked">차단</option>
+          <option value="hold">보류</option>
+        </select>
+      </label>
       <label>데이터 공백
         <select data-filter-key="dataGaps" onchange="setReviewQueueFilter(this)">
           <option value="all">전체</option>
@@ -252,6 +261,7 @@ export function getLeadsPage() {
       verificationStatus: 'all',
       generationMode: 'all',
       confidence: 'all',
+      gateStatus: 'all',
       dataGaps: 'all'
     };
 
@@ -478,6 +488,7 @@ export function getLeadsPage() {
         if (reviewQueueFilters.verificationStatus !== 'all' && getVerificationStatus(lead) !== reviewQueueFilters.verificationStatus) return false;
         if (reviewQueueFilters.generationMode !== 'all' && getGenerationMode(lead) !== reviewQueueFilters.generationMode) return false;
         if (reviewQueueFilters.confidence !== 'all' && getConfidence(lead) !== reviewQueueFilters.confidence) return false;
+        if (reviewQueueFilters.gateStatus !== 'all' && buildLeadListReviewGate(lead).state !== reviewQueueFilters.gateStatus) return false;
         const gapCount = getDataGaps(lead).length;
         if (reviewQueueFilters.dataGaps === 'has' && gapCount === 0) return false;
         if (reviewQueueFilters.dataGaps === 'none' && gapCount > 0) return false;
