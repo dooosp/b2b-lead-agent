@@ -4,7 +4,7 @@ This document records the production-proof boundary after Issue #34 and the May 
 
 Audited repo baseline for this snapshot:
 
-- Latest audited source-of-truth `origin/master`: `debcd4a30067caaec2f7980bc21b98524a77485f` (PR #77)
+- Latest audited source-of-truth `origin/master`: `1c6f5fb6c75b8ecd0686634055df36a8740905f8` (PR #81)
 - Issue #34 current state: open, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -28,7 +28,7 @@ Accepted Issue #34 records:
 | Runtime manifest proof | One approved raw `GET /manifest.json` returned HTTP 200 JSON redacted evidence | Did not access D1, read rows, write rows, call API routes, load browser pages, call service worker path, or prove D1-backed runtime behavior. |
 | Final no-op closeout | Schema remediation and manifest proof complete within narrow scope | Production observation claim remains forbidden; future proof needs separate approval. |
 
-Important freshness rule: Issue #34's accepted execution/proof scope was tied to SHA `12d44374a24a9958de179fae5f9311621606ad24`. The latest audited source-of-truth `master` baseline is `debcd4a30067caaec2f7980bc21b98524a77485f` after PR #77 synced docs on top of the PR #51 and PR #52-#76 review-quality train. Any new production action must refresh the actual current `origin/master` SHA, CI metadata, owners, and approval records before execution.
+Important freshness rule: Issue #34's accepted execution/proof scope was tied to SHA `12d44374a24a9958de179fae5f9311621606ad24`. The latest audited source-of-truth `master` baseline is `1c6f5fb6c75b8ecd0686634055df36a8740905f8` after PR #81 shipped Kanban gate-state chips on top of the PR #51 and PR #52-#80 review-quality train. Any new production action must refresh the actual current `origin/master` SHA, CI metadata, owners, and approval records before execution.
 
 ## Current Proof Status
 
