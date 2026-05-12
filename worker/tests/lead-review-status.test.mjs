@@ -295,6 +295,13 @@ test('lead list page exposes deterministic review gate summary counts', () => {
   assert.match(listHtml, /This summary does not approve outreach/);
 });
 
+test('lead list kanban cards expose deterministic review gate labels', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /function renderKanban\(leads\)/);
+  assert.match(listHtml, /buildLeadListReviewGate\(l\)\.label/);
+});
+
 test('lead detail script is isolated for list-to-detail document replacement', () => {
   const detailHtml = getLeadDetailPage({
     id: 'lead-1',

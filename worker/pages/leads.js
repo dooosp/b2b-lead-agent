@@ -131,6 +131,7 @@ export function getLeadsPage() {
     .kanban-card .k-score { color: #e94560; font-weight: bold; }
     .kanban-card .k-followup { color: #aaa; font-size: 10px; }
     .kanban-card .k-review { color:#b7c6d8; font-size:10px; margin-top:6px; line-height:1.4; }
+    .kanban-card .k-gate { color:#ffe58a; font-size:10px; font-weight:700; margin-top:4px; line-height:1.4; }
     .kanban-card.followup-warn { border-left-color: #e74c3c; }
     .kanban-card.followup-warn .k-followup { color: #e74c3c; font-weight: bold; }
     .kanban-card .k-value { color: #27ae60; font-size: 11px; }
@@ -827,6 +828,7 @@ export function getLeadsPage() {
             html += '<div class="k-followup">' + (isWarn ? '⚠ ' : '') + esc(fu) + '</div>';
           }
           html += '<div class="k-review">' + esc(reviewStatusLabels[getReviewStatus(l)]) + ' / ' + esc(verificationStatusLabels[getVerificationStatus(l)]) + '</div>';
+          html += '<div class="k-gate">' + esc(buildLeadListReviewGate(l).label) + '</div>';
           html += '</div>';
         });
         if (cards.length === 0) html += '<p style="color:#555;font-size:11px;text-align:center;padding:20px 0;">없음</p>';
