@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-05-12.
-> Audited against first-parent `master` history through `debcd4a` (`Merge pull request #77 from dooosp/codex/post-pr76-doc-sync-v1`) and current GitHub PR state after stale PR #1-#9 closure and post-PR51 follow-ups #69-#77.
+> Audited against first-parent `master` history through `1c6f5fb` (`Merge pull request #81 from dooosp/codex/lead-kanban-gate-chip-v1`) and current GitHub PR state after stale PR #1-#9 closure and post-PR51 follow-ups #69-#81.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -16,7 +16,7 @@
 | 6 | 2026-05-05 | #27 | `5776d4a` | `feat/leadbrief-v1-review-contract` | LeadBrief v1 contract and minimum human-review baseline |
 | 7 | 2026-05-11 | #36-#43 | `22672f8` | May 11 hardening/doc train | Worker routes, LeadBrief data path, test helpers, schema guard, review UX, evidence tooling, architecture docs, and naming cleanup |
 | 8 | 2026-05-11 | #51 | `a3f44df` | `codex/post-train-integration-v1` | Integration of PRs #44-#49: Workbench, local E2E, auth/error hardening, lead-quality evaluation, old PR #23 replacement, and roadmap synthesis |
-| 9 | 2026-05-12 | #52-#77 | `debcd4a` | Post-PR51 review-quality, CI, and docs follow-ups | Workbench review helpers, review queue filters, advisory roleplay context, deterministic CI installs, lead-quality and local E2E CI gates, Workbench/list review gates and filtering, and source-of-truth docs |
+| 9 | 2026-05-12 | #52-#81 | `1c6f5fb` | Post-PR51 review-quality, CI, and docs follow-ups | Workbench review helpers, review queue filters, advisory roleplay context, deterministic CI installs, lead-quality and local E2E CI gates, Workbench/list review gates and filtering, source-of-truth docs, list gate counts, and Kanban gate labels/chips |
 
 ## Wave Summary
 
@@ -108,7 +108,7 @@
   - synthetic lead-quality evaluation harness.
   - current-master replacement for old dashboard unauthorized UX PR #23.
   - roadmap synthesis for old PR disposition and product boundaries.
-- PRs #52-#77 then refreshed repo state and shipped bounded review-quality follow-ups:
+- PRs #52-#81 then refreshed repo state and shipped bounded review-quality follow-ups:
   - advisory next-review-action reasons and checklist items.
   - deterministic Workbench review gate from current LeadBrief fields.
   - cached `/leads` review queue filters.
@@ -125,10 +125,12 @@
   - local-only Worker E2E smoke coverage in CI.
   - deterministic list-level review-gate summaries on `/leads` cards.
   - deterministic list-level review-gate state filtering on `/leads`.
+  - deterministic gate-state counts for the current filtered `/leads` queue.
+  - Kanban gate labels and state-specific chips derived from the same list-level review gate.
   - source-of-truth doc sync through PR #77.
 - PR #59 recut the useful old PR #6 idea as deterministic role-specific review prep using existing LeadBrief/enrichment fields only. It does not approve outreach, change schema/API/storage, or expand CRM ownership.
 - Stale PRs #1-#9 were audited after PR #51, received disposition comments, and were closed without merge or branch deletion. Their useful ideas remain concept inventory to recut from current `master`.
-- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#77 or the stale PR cleanup.
+- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#81 or the stale PR cleanup.
 
 ## Findings Closed On `master`
 
@@ -202,7 +204,7 @@
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
   - Recommended next non-production goal: start from a fresh current-`master` audit and choose the next small review-quality, local-evidence, or CI-maintenance slice with explicit non-production boundaries.
-  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay local/test/CI oriented unless a separate human-approved production prompt opens operational work.
+  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay local/test/CI oriented unless a separate human-approved production prompt opens operational work.
   - Keep production proof, platform migration, storage migration, and production observation work behind separate approval gates.
 
 ## Current Operating Sequence
