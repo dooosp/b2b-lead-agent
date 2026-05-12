@@ -4,11 +4,11 @@ This roadmap turns the current PR train, old branch archaeology, Issue #34 proof
 
 Current baseline:
 
-- `master` includes PRs #36-#43, PR #51's integration of #44-#49, and review-quality follow-ups plus CI maintenance through PR #74 at audited pre-refresh baseline `f6d6b83fa4a99798440fc08ffdca6ec0fa42be11`.
+- `master` includes PRs #36-#43, PR #51's integration of #44-#49, and review-quality follow-ups plus CI maintenance through PR #75 at audited docs-sync baseline `53cebf11d6b0a34747c374ca888d07f2f98cc300`.
 - The canonical product unit is a LeadBrief-style lead with source, trust, confidence, assumptions, data gaps, and human `reviewStatus`.
 - Opportunity Workbench includes deterministic, advisory next-review-action reasons, a review gate, a human review checklist, a Solution Translation Summary, Product Context / Signal Fusion, and Stakeholder Prep guidance derived from existing product, event, buyer, evidence, enrichment, and review fields.
 - `/roleplay` can consume selected LeadBrief stakeholder context as conversation-practice guidance without approving outreach or becoming the canonical source of truth.
-- The `/leads` review queue can filter cached LeadBriefs by review status, verification status, generation mode, confidence, and data-gap presence, can summarize evidence/data-gap review slices, and can surface deterministic list-level review-gate states without adding CRM ownership or production query behavior.
+- The `/leads` review queue can filter cached LeadBriefs by review status, verification status, generation mode, confidence, data-gap presence, and list-level review-gate state, can summarize evidence/data-gap review slices, and can surface deterministic list-level review-gate states without adding CRM ownership or production query behavior.
 - The product is a B2B lead discovery, briefing, and human-review aid.
 - It is not a CRM replacement, automatic salesperson, proposal generator source of truth, or PPT-first product.
 - Production deploy, production D1 access, production D1 writes, Worker endpoint calls, and production observation claims remain separate human-approved operations.
@@ -27,7 +27,7 @@ The near-term product spine:
 
 ## Immediate Merge Queue
 
-No open PRs remain after PR #74 and stale PR #1-#9 disposition. New work should start from current `master`, not from old stacked branches.
+No open PRs remain after PR #75 and stale PR #1-#9 disposition. New work should start from current `master`, not from old stacked branches.
 
 Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm test` before it exits draft or merges. Product/review-quality changes should also run `npm run eval:lead-quality`, and review-flow changes should run `npm run test:e2e:local`; CI runs both as local-only gates.
 
@@ -36,7 +36,7 @@ Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm te
 | Priority | Feature | Source | Scope |
 | --- | --- | --- | --- |
 | Shipped | Review gate | Current LeadBrief baseline plus Workbench | Summarize readiness and blockers in Workbench and `/leads` cards from existing review, verification, confidence, evidence, source, and data-gap fields without approving outreach. |
-| Shipped | Review queue filters | Current LeadBrief baseline plus Workbench | Filter cached `/leads` rows by `reviewStatus`, `verificationStatus`, generation mode, data gaps, and confidence. Avoid full CRM ownership concepts. |
+| Shipped | Review queue filters | Current LeadBrief baseline plus Workbench | Filter cached `/leads` rows by `reviewStatus`, `verificationStatus`, generation mode, data gaps, confidence, and deterministic list-level review-gate state. Avoid full CRM ownership concepts. |
 | Shipped | Solution translation summary | Old #2 concept, recut | Explain "why this solution" and "why now" inside LeadBrief/Workbench, sourced from existing product, signal, why-now, evidence, and review state. |
 | Shipped | Product context and signal fusion | Old #1 concept, recut | Fuse existing product, event type, buyer role, buying signals, pain points, and key figures inside LeadBrief/Workbench. Avoid broad schema expansion. |
 | Shipped | Stakeholder-specific prep | Old #6 concept, recut | Workbench helper guidance for economic buyer, technical evaluator, operator, procurement, sponsor, and champion. Not approval automation. |

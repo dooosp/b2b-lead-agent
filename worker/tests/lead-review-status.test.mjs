@@ -248,6 +248,10 @@ test('lead list page exposes review queue filters for current LeadBrief fields',
   assert.match(listHtml, /data-filter-key="generationMode"/);
   assert.match(listHtml, /data-filter-key="confidence"/);
   assert.match(listHtml, /data-filter-key="dataGaps"/);
+  assert.match(listHtml, /data-filter-key="gateStatus"/);
+  assert.match(listHtml, /게이트 상태/);
+  assert.match(listHtml, /게이트 통과/);
+  assert.match(listHtml, /보강 필요/);
   assert.match(listHtml, /function applyReviewQueueFilters\(leads\)/);
   assert.match(listHtml, /function getFilteredLeads\(\)/);
   assert.match(listHtml, /function resetReviewQueueFilters\(\)/);

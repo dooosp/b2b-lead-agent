@@ -148,6 +148,18 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   ]);
 
   assert.equal(await page.locator('#leadsList .lead-card').count(), 2);
+  await page.locator('[data-filter-key="gateStatus"]').selectOption('ready');
+  assert.equal(await page.locator('#leadsList .lead-card').count(), 1);
+  await assertRenderedText(page, ['Local Factory Automation', '목록 게이트 통과', '전체 2건 중 표시']);
+  assert.equal(await page.getByRole('link', { name: 'Local Data Center Cooling' }).count(), 0);
+
+  await page.getByRole('button', { name: '초기화' }).click();
+  await page.locator('[data-filter-key="gateStatus"]').selectOption('review');
+  assert.equal(await page.locator('#leadsList .lead-card').count(), 1);
+  await assertRenderedText(page, ['Local Data Center Cooling', '목록 게이트 보강 필요']);
+  assert.equal(await page.getByRole('link', { name: 'Local Factory Automation' }).count(), 0);
+
+  await page.getByRole('button', { name: '초기화' }).click();
   await page.locator('[data-filter-key="reviewStatus"]').selectOption('NEEDS_REVIEW');
   assert.equal(await page.locator('#leadsList .lead-card').count(), 1);
   await assertRenderedText(page, ['Local Data Center Cooling', '전체 2건 중 표시']);
