@@ -299,7 +299,9 @@ test('lead list kanban cards expose deterministic review gate labels', () => {
   const listHtml = getLeadsPage();
 
   assert.match(listHtml, /function renderKanban\(leads\)/);
-  assert.match(listHtml, /buildLeadListReviewGate\(l\)\.label/);
+  assert.match(listHtml, /const gate = buildLeadListReviewGate\(l\)/);
+  assert.match(listHtml, /k-gate gate-/);
+  assert.match(listHtml, /esc\(gate\.label\)/);
 });
 
 test('lead detail script is isolated for list-to-detail document replacement', () => {
