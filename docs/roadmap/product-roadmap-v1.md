@@ -4,7 +4,7 @@ This roadmap turns the current PR train, old branch archaeology, Issue #34 proof
 
 Current baseline:
 
-- `master` includes PRs #36-#43, PR #51's integration of #44-#49, and review-quality follow-ups through PR #59 at `39f69fac7f9509ed657f504ee1d9a0c694a00852`.
+- `master` includes PRs #36-#43, PR #51's integration of #44-#49, and review-quality follow-ups through PR #61 at `5a13e2c2941853b6f7a799c432d5f03d349191af`.
 - The canonical product unit is a LeadBrief-style lead with source, trust, confidence, assumptions, data gaps, and human `reviewStatus`.
 - Opportunity Workbench includes deterministic, advisory next-review-action reasons, a human review checklist, a Solution Translation Summary, Product Context / Signal Fusion, and Stakeholder Prep guidance derived from existing product, event, buyer, evidence, enrichment, and review fields.
 - The `/leads` review queue can filter cached LeadBriefs by review status, verification status, generation mode, confidence, and data-gap presence, and can summarize evidence/data-gap review slices without adding CRM ownership or production query behavior.
@@ -26,7 +26,7 @@ The near-term product spine:
 
 ## Immediate Merge Queue
 
-No open PRs remain after PR #51 and stale PR #1-#9 disposition. New work should start from current `master`, not from old stacked branches.
+No open PRs remain after PR #61 and stale PR #1-#9 disposition. New work should start from current `master`, not from old stacked branches.
 
 Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm test` before it exits draft or merges. If package scripts or route/auth behavior change, also run the focused command for that surface.
 
@@ -59,7 +59,7 @@ None of these are implementation tasks. They are approval-gated operational task
 
 | Priority | Item | Required before action |
 | --- | --- | --- |
-| P0 | Refresh Issue #34 approval baseline for current `master` | Current `master` moved from Issue #34's approved SHA `12d44374a24a9958de179fae5f9311621606ad24` to `a3f44df58bb231b060ff42fa13b17ad573b1cc1a`. |
+| P0 | Refresh Issue #34 approval baseline for current `master` | Current `master` moved from Issue #34's approved SHA `12d44374a24a9958de179fae5f9311621606ad24` to `5a13e2c2941853b6f7a799c432d5f03d349191af`. |
 | P0 | Confirm deploy owner, DB owner, rollback owner, observation owner | GitHub repo ownership is not production ownership. |
 | P0 | Confirm evidence storage and redaction policy | Production evidence must not include secrets, auth headers, cookies, private URLs, customer payloads, PII, or unredacted production payloads. |
 | P1 | Approve one D1-backed read/schema proof | Requires explicit production DB access/lazy-DDL approval if the path may invoke `ensureD1Schema()`. |
