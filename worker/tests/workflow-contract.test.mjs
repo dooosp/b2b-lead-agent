@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const workflowPath = path.resolve(__dirname, '../../.github/workflows/generate-report.yml');
 const ciWorkflowPath = path.resolve(__dirname, '../../.github/workflows/ci.yml');
+const validateNamingWorkflowPath = path.resolve(__dirname, '../../.github/workflows/validate-naming.yml');
 
 test('generate-report workflow keeps requestId callback contract fields', async () => {
   const workflow = await readFile(workflowPath, 'utf8');
@@ -21,12 +22,13 @@ test('generate-report workflow keeps requestId callback contract fields', async 
 });
 
 test('workflows use Node 24 compatible GitHub Actions runtime versions', async () => {
-  const [generateWorkflow, ciWorkflow] = await Promise.all([
+  const [generateWorkflow, ciWorkflow, validateNamingWorkflow] = await Promise.all([
     readFile(workflowPath, 'utf8'),
-    readFile(ciWorkflowPath, 'utf8')
+    readFile(ciWorkflowPath, 'utf8'),
+    readFile(validateNamingWorkflowPath, 'utf8')
   ]);
 
-  for (const workflow of [generateWorkflow, ciWorkflow]) {
+  for (const workflow of [generateWorkflow, ciWorkflow, validateNamingWorkflow]) {
     assert.doesNotMatch(workflow, /actions\/checkout@v4/);
     assert.doesNotMatch(workflow, /actions\/setup-node@v4/);
     assert.match(workflow, /actions\/checkout@v5/);
