@@ -14,7 +14,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 
 ## Current Shipped Baseline
 
-- `master` includes the April 7, 2026 hardening cycle, the PR #25 P0 trust-boundary baseline, the PR #27 LeadBrief v1 review contract baseline, the May 11 route/data/schema/evidence/docs cleanup train, PR #51's post-train integration, PR #52/#53 review-roadmap follow-ups, PR #54 review queue filters, PR #55 Solution Translation Summary, PR #56 source-of-truth doc sync, PR #57 Product Context / Signal Fusion, PR #58 post-PR57 doc sync, PR #59 Workbench Stakeholder Prep, PR #60 source-of-truth doc sync, PR #61 evidence/data-gap review slices, PR #62 source-of-truth doc sync, PR #63 advisory roleplay stakeholder context, PR #64 source-of-truth doc sync, PR #65 Validate Naming workflow maintenance, PR #66 source-of-truth doc sync, PR #67 deterministic check-workflow installs, PR #68 source-of-truth doc sync, PR #69 production-boundary doc refresh, PR #70 lead-quality evaluator CI gate, PR #71 local-only Worker E2E CI gate, PR #72 Opportunity Workbench review gate, PR #73 source-of-truth doc sync, and PR #74 lead-list review gate through audited pre-refresh baseline `f6d6b83`.
+- `master` includes the April 7, 2026 hardening cycle, the PR #25 P0 trust-boundary baseline, the PR #27 LeadBrief v1 review contract baseline, the May 11 route/data/schema/evidence/docs cleanup train, PR #51's post-train integration, PR #52/#53 review-roadmap follow-ups, PR #54 review queue filters, PR #55 Solution Translation Summary, PR #56 source-of-truth doc sync, PR #57 Product Context / Signal Fusion, PR #58 post-PR57 doc sync, PR #59 Workbench Stakeholder Prep, PR #60 source-of-truth doc sync, PR #61 evidence/data-gap review slices, PR #62 source-of-truth doc sync, PR #63 advisory roleplay stakeholder context, PR #64 source-of-truth doc sync, PR #65 Validate Naming workflow maintenance, PR #66 source-of-truth doc sync, PR #67 deterministic check-workflow installs, PR #68 source-of-truth doc sync, PR #69 production-boundary doc refresh, PR #70 lead-quality evaluator CI gate, PR #71 local-only Worker E2E CI gate, PR #72 Opportunity Workbench review gate, PR #73 source-of-truth doc sync, PR #74 lead-list review gate, PR #75 source-of-truth doc sync, PR #76 lead-list gate-state filtering, and PR #77 source-of-truth doc sync through audited baseline `debcd4a`.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -34,6 +34,9 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - PR #72 added a deterministic Opportunity Workbench review gate that summarizes readiness/blockers from current LeadBrief fields only.
 - PR #73 synced source-of-truth docs after PR #72.
 - PR #74 added deterministic list-level review-gate summaries to `/leads` cards from current LeadBrief fields only.
+- PR #75 synced source-of-truth docs after PR #74.
+- PR #76 added deterministic list-level review-gate state filtering to `/leads` without API, schema, storage, CRM ownership, production query, or outreach-approval changes.
+- PR #77 synced source-of-truth docs after PR #76.
 - Do not reopen those findings unless you can point to a current-`master` regression or a newly verified gap.
 - Treat closed PRs #1-#9, #10, #22, and #23 as stale/superseded concept inventory unless explicitly re-scoped on top of current `master`.
 - Recommended next non-production goal: start from a fresh current-`master` audit and choose the next small review-quality, local-evidence, or CI-maintenance slice with explicit non-production boundaries.
@@ -72,7 +75,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - Managed/self-service upserts preserve existing `review_status` on conflict so refreshes do not erase human review decisions.
 - CSV, browser UI, self-service copy, and downloads must preserve review/trust metadata.
 - D1 trust and review columns are lazy-migration-compatible but not production-observed until the first post-deploy production write is confirmed.
-- Production deploy and production DB writes were not performed during PR #25, PR #26, PR #27, or the PR #36-#51 train.
+- Production deploy and production DB writes were not performed during PR #25, PR #26, PR #27, or the PR #36-#77 train.
 
 ## Canonical Repo Rules
 
