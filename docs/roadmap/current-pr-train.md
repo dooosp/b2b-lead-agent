@@ -40,6 +40,7 @@ PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs
 | [#59](https://github.com/dooosp/b2b-lead-agent/pull/59) | Stakeholder Prep | Old PR #6's useful stakeholder-prep idea was recut into Workbench guidance without roleplay API, schema, storage, production, or CRM expansion. |
 | [#60](https://github.com/dooosp/b2b-lead-agent/pull/60) | Post-PR59 doc sync | Source-of-truth docs were synced after Stakeholder Prep landed. |
 | [#61](https://github.com/dooosp/b2b-lead-agent/pull/61) | Evidence/data-gap review slices | Old PR #3's remaining dashboard-intelligence idea was recut into cached `/leads` review helper guidance without API, schema, storage, production, or CRM expansion. |
+| Current follow-up | Advisory roleplay stakeholder context | Old PR #6's remaining roleplay idea is recut into advisory prompt context from the selected LeadBrief without outreach approval, CRM ownership, schema, storage, or production expansion. |
 
 ## Immediate Merge Queue
 
@@ -56,7 +57,7 @@ These PRs are closed without merge. Treat them as concept inventory unless expli
 | [#3](https://github.com/dooosp/b2b-lead-agent/pull/3) Dashboard intelligence views | Closed, stacked | Useful review queue filtering concept was recut by PR #54, and the remaining evidence/data-gap review-slice concept was recut by PR #61 from current `master`. |
 | [#4](https://github.com/dooosp/b2b-lead-agent/pull/4) Win-loss learning foundation | Closed, stacked | Deprioritize until review quality is proven; avoid CRM-like lifecycle expansion for now. |
 | [#5](https://github.com/dooosp/b2b-lead-agent/pull/5) Next-best-action and deal risk signals | Closed, stacked | Useful next-review guidance concept was recut by PR #53. Do not merge the old stacked branch. |
-| [#6](https://github.com/dooosp/b2b-lead-agent/pull/6) Stakeholder persuasion flows | Closed, stacked | Useful stakeholder-prep concept was recut as Workbench advisory guidance. Keep any future roleplay extension clearly non-approval and human-reviewed. |
+| [#6](https://github.com/dooosp/b2b-lead-agent/pull/6) Stakeholder persuasion flows | Closed, stacked | Useful stakeholder-prep concept was recut as Workbench advisory guidance, and the roleplay context extension is being recut from current `master` as advisory practice only. |
 | [#7](https://github.com/dooosp/b2b-lead-agent/pull/7) Scout role modules | Closed, conflicted/obsolete | Abandon as a merge candidate. #43 already cleaned canonical module paths; revive only with a fresh modularization goal. |
 | [#8](https://github.com/dooosp/b2b-lead-agent/pull/8) Staged GCP runtime/storage migration | Closed, conflicted and approval-blocked | Hold as platform-migration concept inventory only. Requires explicit migration decision, secret readiness, and fresh validation. |
 | [#9](https://github.com/dooosp/b2b-lead-agent/pull/9) Local-first storage seam for GCP migration | Closed, conflicted | Hold as architecture archaeology only. Recut local-first/env-gated storage only with current artifact names and dependency justification. |

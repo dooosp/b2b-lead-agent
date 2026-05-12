@@ -23,6 +23,8 @@ export function getRoleplayPage() {
     .chat-input { display: flex; gap: 8px; margin-top: 12px; }
     .chat-input input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #1a1a2e; color: #fff; font-size: 14px; }
     .chat-input button { white-space: nowrap; }
+    .roleplay-boundary { background:#121a24; border:1px solid #26384c; border-radius:8px; color:#b8c7d8; font-size:13px; line-height:1.6; margin:0 0 14px; padding:12px; }
+    .roleplay-boundary strong { color:#f4f7fb; display:block; font-size:13px; margin-bottom:4px; }
     select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #1a1a2e; color: #fff; font-size: 14px; margin-bottom: 12px; }
   </style>
 </head>
@@ -31,6 +33,10 @@ export function getRoleplayPage() {
     <a id="leadsBackLink" href="/leads" class="back-link">← 리드 목록</a>
     <h1 style="font-size:22px;">영업 역량 시뮬레이션</h1>
     <p class="subtitle">까다로운 고객과 영업 연습을 해보세요</p>
+    <section class="roleplay-boundary" aria-label="역할극 안전 경계">
+      <strong>이해관계자 맥락은 연습 보조입니다</strong>
+      아웃리치 승인, CRM 배정, 자동 의사결정이 아니며 사람 검토를 대체하지 않습니다.
+    </section>
 
     <select id="leadSelect" aria-label="리드 선택"><option value="">리드 로딩 중...</option></select>
     <input type="password" id="password" placeholder="비밀번호 입력" aria-label="비밀번호 입력" class="input-field">

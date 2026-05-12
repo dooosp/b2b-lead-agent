@@ -157,6 +157,24 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   await page.getByRole('button', { name: '초기화' }).click();
   assert.equal(await page.locator('#leadsList .lead-card').count(), 2);
 
+  await page.goto(`${harness.origin}/roleplay?profile=danfoss&lead=0`, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => {
+    const select = document.querySelector('#leadSelect');
+    return !!select && !String(select.textContent || '').includes('로딩 중');
+  });
+  await assertRenderedText(page, [
+    '영업 역량 시뮬레이션',
+    '이해관계자 맥락은 연습 보조입니다',
+    '아웃리치 승인',
+    'CRM 배정',
+    'Local Factory Automation',
+  ]);
+
+  await page.goto(`${harness.origin}/leads?profile=danfoss`, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => {
+    const el = document.querySelector('#leadsList');
+    return !!el && !String(el.textContent || '').includes('로딩 중');
+  });
   await page.getByRole('link', { name: 'Local Factory Automation' }).click();
   await page.waitForSelector('#detailContent .detail-section');
   assert.match(page.url(), /\/leads\/local-lead-approved$/);

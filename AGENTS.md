@@ -26,7 +26,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - PR #61 recut old PR #3's remaining dashboard-intelligence idea as cached `/leads` evidence/data-gap review slices without API, schema, storage, production, or CRM expansion.
 - Do not reopen those findings unless you can point to a current-`master` regression or a newly verified gap.
 - Treat closed PRs #1-#9, #10, #22, and #23 as stale/superseded concept inventory unless explicitly re-scoped on top of current `master`.
-- Recommended next non-production product goal: extend roleplay with explicitly advisory stakeholder context from shipped Workbench prep, keeping it human-reviewed and outside CRM ownership.
+- Recommended next non-production product goal: land advisory roleplay stakeholder context from shipped Workbench prep, then sync source-of-truth docs, keeping it human-reviewed and outside CRM ownership.
 
 ## Repo Layout
 
