@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   buildLeadActionIntelligence,
+  buildLeadReviewSession,
   buildReviewerActionQueue,
 } from '../lib/lead-action-intelligence.js';
 
@@ -344,4 +345,132 @@ test('reviewer action queue accepts snake_case payloads and updates guidance aft
   assert.equal(after.nextReviewAction, 'reconcile_review_conflict');
   assert.equal(after.queueLane, 'risk_review');
   assert.equal(after.reviewStatus, 'APPROVED');
+});
+
+test('lead review session summarizes queue progress and next lead candidate', () => {
+  const leads = [
+    strongLead({
+      id: 'data-gap',
+      company: 'Data Gap Co',
+      reviewStatus: 'NEEDS_REVIEW',
+      confidence: 'MEDIUM',
+      dataGaps: ['Budget not published'],
+      updatedAt: '2026-05-04T00:00:00.000Z',
+    }),
+    strongLead({
+      id: 'approved-ready',
+      company: 'Approved Ready Co',
+      reviewStatus: 'APPROVED',
+      confidence: 'HIGH',
+      updatedAt: '2026-05-01T00:00:00.000Z',
+    }),
+    strongLead({
+      id: 'review-ready',
+      company: 'Review Ready Co',
+      reviewStatus: 'NEEDS_REVIEW',
+      confidence: 'HIGH',
+      updatedAt: '2026-05-09T00:00:00.000Z',
+    }),
+    strongLead({
+      id: 'risk-conflict',
+      company: 'Risk Conflict Co',
+      reviewStatus: 'APPROVED',
+      verificationStatus: 'needs_review',
+      confidence: 'MEDIUM',
+      conflicts: [{ field: 'timeline' }],
+      updatedAt: '2026-05-08T00:00:00.000Z',
+    }),
+    strongLead({
+      id: 'rejected',
+      company: 'Rejected Co',
+      reviewStatus: 'REJECTED',
+      updatedAt: '2026-05-10T00:00:00.000Z',
+    }),
+  ];
+
+  const session = buildLeadReviewSession(leads, { now: evaluationNow });
+
+  assert.equal(session.totalLeads, 5);
+  assert.equal(session.visibleLeads, 5);
+  assert.deepEqual(session.remainingByLane, {
+    approval_candidates: 2,
+    needs_evidence: 1,
+    risk_review: 1,
+    low_priority: 1,
+  });
+  assert.equal(session.approvedCount, 2);
+  assert.equal(session.needsReviewCount, 2);
+  assert.equal(session.reviewStatusCounts.REJECTED, 1);
+  assert.deepEqual(session.filterContext, {});
+  assert.equal(session.nextLead.leadId, 'approved-ready');
+  assert.equal(session.nextLead.nextReviewAction, 'prepare_human_follow_up');
+  assert.equal(session.nextLead.queueLane, 'approval_candidates');
+});
+
+test('lead review session applies filters and keeps snake_case review statuses in counts', () => {
+  const leads = [
+    strongLead({
+      id: 'legacy-needs-evidence',
+      company: 'Legacy Evidence Co',
+      reviewStatus: undefined,
+      review_status: 'needs_review',
+      verificationStatus: 'verified',
+      evidence: [],
+      sources: [],
+      dataGaps: [],
+      updated_at: '2026-05-07T00:00:00.000Z',
+    }),
+    strongLead({
+      id: 'legacy-approved',
+      company: 'Legacy Approved Co',
+      reviewStatus: undefined,
+      review_status: 'approved',
+      updated_at: '2026-05-06T00:00:00.000Z',
+    }),
+  ];
+
+  const session = buildLeadReviewSession(leads, {
+    now: evaluationNow,
+    filters: { queueLane: 'needs_evidence', reviewPriority: 'medium' },
+  });
+
+  assert.equal(session.totalLeads, 2);
+  assert.equal(session.visibleLeads, 1);
+  assert.deepEqual(session.filterContext, {
+    queueLane: 'needs_evidence',
+    reviewPriority: 'medium',
+  });
+  assert.equal(session.approvedCount, 0);
+  assert.equal(session.needsReviewCount, 1);
+  assert.equal(session.remainingByLane.needs_evidence, 1);
+  assert.equal(session.remainingByLane.approval_candidates, 0);
+  assert.equal(session.nextLead.leadId, 'legacy-needs-evidence');
+  assert.equal(session.nextLead.nextReviewAction, 'verify_evidence');
+});
+
+test('lead review session reflects queue membership after review status mutation', () => {
+  const lead = strongLead({
+    id: 'review-ready',
+    company: 'Review Ready Co',
+    reviewStatus: 'NEEDS_REVIEW',
+    verificationStatus: 'verified',
+    confidence: 'HIGH',
+  });
+
+  const before = buildLeadReviewSession([lead], { now: evaluationNow });
+  const after = buildLeadReviewSession([
+    {
+      ...lead,
+      reviewStatus: 'APPROVED',
+      verificationStatus: 'needs_review',
+    },
+  ], { now: evaluationNow });
+
+  assert.equal(before.nextLead.nextReviewAction, 'decide_review_status');
+  assert.equal(before.nextLead.queueLane, 'approval_candidates');
+  assert.equal(before.needsReviewCount, 1);
+  assert.equal(after.nextLead.nextReviewAction, 'reconcile_review_conflict');
+  assert.equal(after.nextLead.queueLane, 'risk_review');
+  assert.equal(after.approvedCount, 1);
+  assert.equal(after.needsReviewCount, 0);
 });

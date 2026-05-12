@@ -5,14 +5,14 @@ This document summarizes the May 2026 PR train, stale PR disposition, and next w
 Evidence baseline:
 
 - Repo default branch: `master`
-- Latest audited source-of-truth `origin/master`: `2d0bf6875461eeffd90b6cb3c5f388405fb815e9` (PR #84)
+- Latest audited source-of-truth `origin/master`: `8bbbd811d2ecb77a09a991279f6d09f5516e1e68` (PR #88)
 - Evidence collected from GitHub PR/issue metadata, PR bodies, current `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md`
 - Scope: documentation synthesis only
 - Production actions performed for this synthesis: none
 
 ## May 11 PR Train
 
-PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs #44 through #49. PRs #52 through #84 refreshed repo state and shipped the first review-quality follow-ups. Together they established the current post-LeadBrief baseline: Worker routes are split into `worker/routes/*`, LeadBrief trust data is preserved across the data path, schema drift has a local/CI guard, release evidence tooling is local-only, architecture docs are refreshed, stale module alias wrappers are removed, Opportunity Workbench v1 is shipped with deterministic review-gate guidance, advisory next-review guidance is available, `/leads` review queue filters, evidence/data-gap slices, gate-state counts, Kanban gate chips, and filter empty-state recovery are shipped, Solution Translation Summary is shipped, Product Context / Signal Fusion is shipped, Stakeholder Prep is available as Workbench-only advisory guidance, roleplay can consume advisory stakeholder context, Validate Naming uses Node 24-compatible GitHub Actions versions, non-production check workflows use lockfile-backed `npm ci`, local-only Worker E2E is available as a local and CI smoke gate, Worker auth/error boundaries are hardened, synthetic lead-quality evaluation is available as a local and CI quality gate, and Workbench plus list-level review gates summarize/filter readiness and blockers from existing LeadBrief fields only.
+PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs #44 through #49. PRs #52 through #84 refreshed repo state and shipped the first review-quality follow-ups. PR #87 added Lead Action Intelligence v1, and PR #88 added Reviewer Action Queue v1.1. Together they established the current post-LeadBrief baseline: Worker routes are split into `worker/routes/*`, LeadBrief trust data is preserved across the data path, schema drift has a local/CI guard, release evidence tooling is local-only, architecture docs are refreshed, stale module alias wrappers are removed, Opportunity Workbench v1 is shipped with deterministic review-gate guidance, advisory next-review guidance is available, `/leads` review queue filters, evidence/data-gap slices, gate-state counts, Kanban gate chips, Reviewer Action Queue lanes, queue filters, compact action summaries, and filter empty-state recovery are shipped, Solution Translation Summary is shipped, Product Context / Signal Fusion is shipped, Stakeholder Prep is available as Workbench-only advisory guidance, roleplay can consume advisory stakeholder context, Validate Naming uses Node 24-compatible GitHub Actions versions, non-production check workflows use lockfile-backed `npm ci`, local-only Worker E2E is available as a local and CI smoke gate, Worker auth/error boundaries are hardened, synthetic lead-quality evaluation is available as a local and CI quality gate, and Workbench plus list-level review gates summarize/filter readiness and blockers from existing LeadBrief fields only.
 
 | Actual merge order | PR | Merged at UTC | Role | Roadmap implication |
 | --- | --- | --- | --- | --- |
@@ -63,10 +63,12 @@ PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs
 | [#82](https://github.com/dooosp/b2b-lead-agent/pull/82) | Post-PR81 doc sync | Source-of-truth docs were synced after the Kanban gate-state chip landed. |
 | [#83](https://github.com/dooosp/b2b-lead-agent/pull/83) | Kanban filter empty state | Kanban now shows a visible zero-result filter empty state instead of only empty columns. |
 | [#84](https://github.com/dooosp/b2b-lead-agent/pull/84) | Filter empty-state reset | List and Kanban filter empty states now include an in-place reset action. |
+| [#87](https://github.com/dooosp/b2b-lead-agent/pull/87) | Lead Action Intelligence v1 | Deterministic next-review guidance, risk flags, missing-info prompts, stakeholder angle, suggested follow-up draft, review priority, and action confidence are derived from existing LeadBrief fields only. |
+| [#88](https://github.com/dooosp/b2b-lead-agent/pull/88) | Reviewer Action Queue v1.1 | `/api/leads` includes additive queue metadata; `/leads` renders deterministic action lanes, filters, sorting, compact summaries, Kanban action labels, and local fake-D1 E2E coverage. |
 
 ## Immediate Merge Queue
 
-No open PRs remain after PR #84. PRs #44-#49 are merged through #51, PRs #52-#84 are merged into `master`, and old PRs #1-#9 are closed without merge after disposition comments.
+No open PRs remain after PR #88. PRs #44-#49 are merged through #51, PRs #52-#84 and #87-#88 are merged into `master`, and old PRs #1-#9 are closed without merge after disposition comments.
 
 ## Old PR Disposition
 

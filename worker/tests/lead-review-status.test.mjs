@@ -281,6 +281,25 @@ test('lead list page exposes grouped reviewer action queue lanes', () => {
   assert.match(listHtml, /Missing info/);
 });
 
+test('lead list page exposes lead review session progress and quick actions', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /Lead Review Session/);
+  assert.match(listHtml, /function renderLeadReviewSession\(leads\)/);
+  assert.match(listHtml, /function getSessionState\(leads\)/);
+  assert.match(listHtml, /function scrollToNextReviewLead\(leadId\)/);
+  assert.match(listHtml, /data-session-action="focus-next"/);
+  assert.match(listHtml, /data-session-action="review-status"/);
+  assert.match(listHtml, /data-review-status="APPROVED"/);
+  assert.match(listHtml, /data-review-status="NEEDS_REVIEW"/);
+  assert.match(listHtml, /다음 검토 리드/);
+  assert.match(listHtml, /현재 필터 기준/);
+  assert.match(listHtml, /reviewSessionStatus/);
+  assert.match(listHtml, /검토 상태만/);
+  assert.match(listHtml, /영업 상태는/);
+  assert.match(listHtml, /검토 상태를 저장하지 못했습니다/);
+});
+
 test('lead list page exposes evidence and data-gap review slices', () => {
   const listHtml = getLeadsPage();
 

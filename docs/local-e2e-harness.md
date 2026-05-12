@@ -43,8 +43,10 @@ The legacy `npm run e2e` script defaults to `http://127.0.0.1:8787` through `e2e
 - lead detail server rendering and browser navigation
 - review metadata display
 - Lead Action Intelligence display in Opportunity Workbench, list cards, Kanban cards, and Reviewer Action Queue lanes
+- Lead Review Session display on `/leads`, including current filtered queue size, lane progress, active filter context, deterministic next-lead candidate, and next-lead focus
 - Reviewer Action Queue action, risk-flag, missing-info, lane, and reset filter behavior
-- review-status mutation updates the visible local queue membership and guidance
+- queue-aware quick review actions update only `reviewStatus`, preserve sales `status`, refresh visible local queue membership and guidance, and keep filters usable
+- bounded review-update failure UI that does not expose fake-D1/internal failure details
 - `GET /api/export/csv?profile=all`
 - `GET /api/dashboard?profile=all`
 - dashboard browser rendering
