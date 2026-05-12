@@ -4,7 +4,7 @@ This roadmap turns the current PR train, old branch archaeology, Issue #34 proof
 
 Current baseline:
 
-- `master` includes PRs #36-#43, PR #51's integration of #44-#49, and review-quality follow-ups plus CI maintenance through PR #75 at audited docs-sync baseline `53cebf11d6b0a34747c374ca888d07f2f98cc300`.
+- `master` includes PRs #36-#43, PR #51's integration of #44-#49, and review-quality follow-ups plus CI maintenance through PR #76 at audited review-flow baseline `f0613a5767cd40345da046108556ea680f199238`.
 - The canonical product unit is a LeadBrief-style lead with source, trust, confidence, assumptions, data gaps, and human `reviewStatus`.
 - Opportunity Workbench includes deterministic, advisory next-review-action reasons, a review gate, a human review checklist, a Solution Translation Summary, Product Context / Signal Fusion, and Stakeholder Prep guidance derived from existing product, event, buyer, evidence, enrichment, and review fields.
 - `/roleplay` can consume selected LeadBrief stakeholder context as conversation-practice guidance without approving outreach or becoming the canonical source of truth.
@@ -27,7 +27,7 @@ The near-term product spine:
 
 ## Immediate Merge Queue
 
-No open PRs remain after PR #75 and stale PR #1-#9 disposition. New work should start from current `master`, not from old stacked branches.
+No open PRs remain after PR #76 and stale PR #1-#9 disposition. New work should start from current `master`, not from old stacked branches.
 
 Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm test` before it exits draft or merges. Product/review-quality changes should also run `npm run eval:lead-quality`, and review-flow changes should run `npm run test:e2e:local`; CI runs both as local-only gates.
 
