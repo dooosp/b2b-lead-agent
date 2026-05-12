@@ -25,5 +25,8 @@ jobs:
       - name: Run D1 schema consistency check
         run: npm run check:schema
 
+      - name: Run synthetic lead-quality evaluation
+        run: npm run eval:lead-quality
+
       - name: Run unit and contract tests
         run: npm test

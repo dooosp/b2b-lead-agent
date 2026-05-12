@@ -45,7 +45,7 @@ When runtime behavior changes, update this map from source files, tests, and wor
 | `test:unit` | `find worker/tests -maxdepth 1 -name '*.test.mjs' ! -name 'job-trigger.test.mjs' ! -name 'trigger-handler.test.mjs' ! -name 'workflow-contract.test.mjs' -print0 | xargs -0 node --test` | Worker unit tests excluding trigger/workflow contract suites |
 | `test:contract` | `node --test worker/tests/job-trigger.test.mjs worker/tests/trigger-handler.test.mjs worker/tests/workflow-contract.test.mjs` | Trigger/job/workflow contract tests |
 | `test:worker` | `npm run test:unit && npm run test:contract` | Combined Worker gate |
-| `test` | `npm run test:root && npm run test:worker` | Full local gate used by CI |
+| `test` | `npm run test:root && npm run test:worker` | Full local test gate used by CI after schema and synthetic lead-quality checks |
 
 ## Root Pipeline Flow
 
@@ -90,7 +90,7 @@ Key bindings in `worker/wrangler.toml`:
 
 | Workflow or doc | Trigger | What it proves |
 | --- | --- | --- |
-| `.github/workflows/ci.yml` | Pull request and push to `master` or `main` | `npm run check:schema` and `npm test` pass after dependency install |
+| `.github/workflows/ci.yml` | Pull request and push to `master` or `main` | `npm run check:schema`, `npm run eval:lead-quality`, and `npm test` pass after dependency install |
 | `.github/workflows/validate-naming.yml` | Pull request and push | `npm run check:naming` and `npm run test:worker` pass |
 | `.github/workflows/generate-report.yml` | `repository_dispatch` event type `generate-report` | Validates managed profile, marks job ledger callbacks, runs `node main.js --profile "$PROFILE" --email`, commits report artifacts, and pushes them |
 | `docs/exec-plans/d1-lazy-migration-observation-plan.md` | Human-approved future operation | Planning checklist for production deploy, lazy D1 DDL observation, safe write approval, rollback owner, and evidence template |

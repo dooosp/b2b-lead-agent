@@ -47,3 +47,10 @@ test('non-production check workflows use lockfile-backed npm ci installs', async
     assert.doesNotMatch(workflow, /run:\s+npm install/);
   }
 });
+
+test('CI workflow runs the synthetic lead-quality evaluator before full tests', async () => {
+  const workflow = await readFile(ciWorkflowPath, 'utf8');
+
+  assert.match(workflow, /name:\s+Run synthetic lead-quality evaluation\s+run:\s+npm run eval:lead-quality/);
+  assert.match(workflow, /run:\s+npm run check:schema[\s\S]*run:\s+npm run eval:lead-quality[\s\S]*run:\s+npm test/);
+});

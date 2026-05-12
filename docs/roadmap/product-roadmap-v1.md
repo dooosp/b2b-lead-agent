@@ -29,7 +29,7 @@ The near-term product spine:
 
 No open PRs remain after PR #68 and stale PR #1-#9 disposition. New work should start from current `master`, not from old stacked branches.
 
-Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm test` before it exits draft or merges. If package scripts or route/auth behavior change, also run the focused command for that surface.
+Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm test` before it exits draft or merges. Product/review-quality changes should also run `npm run eval:lead-quality`; CI runs it as a synthetic-only quality gate.
 
 ## Next Product Features
 
@@ -50,7 +50,7 @@ Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm te
 | P0 | Keep `npm run check:schema` in CI and local release gates | It guards drift between `worker/schema.sql`, `worker/db/schema.js`, and expected D1 lead columns. |
 | P0 | Use route inventory for every route change | PR #36 made route metadata the source for route boundary reasoning. |
 | P1 | Use #45 local E2E harness in review-flow PRs | It gives future UX changes a local route/page safety net without production endpoint calls. |
-| P1 | Use #47 synthetic quality evaluator in product PRs | Quality checks should catch evidence gaps before UX makes weak leads look authoritative. |
+| P1 | Keep #47 synthetic quality evaluator in CI and product PRs | Quality checks should catch evidence gaps before UX makes weak leads look authoritative. |
 | P1 | Keep old closed PRs as concept inventory only | #1-#9 and #23 are closed; recut useful ideas from current `master` instead of reopening old branches. |
 | P2 | Refresh root source-of-truth docs after major merges | `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md` should track shipped reality. |
 
