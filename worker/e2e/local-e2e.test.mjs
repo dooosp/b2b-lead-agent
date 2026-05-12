@@ -187,6 +187,27 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   await page.locator('#kanbanView .filter-empty-state button').click();
   assert.equal(await page.locator('#kanbanView .kanban-card').count(), 2);
 
+  await page.getByText('리스트').click();
+  const reviewLeadCard = page.locator('#leadsList .lead-card').filter({ hasText: 'Local Data Center Cooling' });
+  await reviewLeadCard.getByLabel('검토 상태').selectOption('APPROVED');
+  await page.waitForFunction(() => {
+    const cards = [...document.querySelectorAll('#leadsList .lead-card')];
+    const card = cards.find((candidate) => String(candidate.textContent || '').includes('Local Data Center Cooling'));
+    return !!card && String(card.textContent || '').includes('검토 승인');
+  });
+
+  const updatedLeadsResponse = await localFetch('/api/leads?profile=danfoss');
+  const updatedLeadsPayload = await readJson(updatedLeadsResponse);
+  const updatedReviewLead = updatedLeadsPayload.leads.find((lead) => lead.id === 'local-lead-review');
+  assert.equal(updatedReviewLead.reviewStatus, 'APPROVED');
+  assert.equal(updatedReviewLead.status, 'CONTACTED');
+
+  await page.locator('[data-filter-key="reviewStatus"]').selectOption('NEEDS_REVIEW');
+  assert.equal(await page.locator('#leadsList .lead-card').count(), 0);
+  await assertRenderedText(page, ['필터 결과가 없습니다']);
+  await page.locator('#leadsList .filter-empty-state button').click();
+  assert.equal(await page.locator('#leadsList .lead-card').count(), 2);
+
   await page.goto(`${harness.origin}/roleplay?profile=danfoss&lead=0`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => {
     const select = document.querySelector('#leadSelect');
