@@ -171,9 +171,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   await page.locator('[data-filter-key="confidence"]').selectOption('LOW');
   await assertRenderedText(page, ['필터 결과가 없습니다']);
   assert.equal(await page.locator('#leadsList .lead-card').count(), 0);
-
-  await page.getByRole('button', { name: '초기화' }).click();
+  await page.locator('#leadsList .filter-empty-state button').click();
   assert.equal(await page.locator('#leadsList .lead-card').count(), 2);
+
   await page.getByText('칸반 보드').click();
   assert.equal(await page.locator('#kanbanView .kanban-card').count(), 2);
   assert.equal(await page.locator('#kanbanView .k-gate.gate-ready').count(), 1);
@@ -184,7 +184,8 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.equal(await page.locator('#kanbanView .kanban-card').count(), 0);
   await assertRenderedText(page, ['필터 결과가 없습니다']);
   assert.equal(await page.locator('#kanbanView .filter-empty-state').count(), 1);
-  await page.getByRole('button', { name: '초기화' }).click();
+  await page.locator('#kanbanView .filter-empty-state button').click();
+  assert.equal(await page.locator('#kanbanView .kanban-card').count(), 2);
 
   await page.goto(`${harness.origin}/roleplay?profile=danfoss&lead=0`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => {

@@ -303,6 +303,8 @@ test('lead list kanban cards expose deterministic review gate labels', () => {
   assert.match(listHtml, /k-gate gate-/);
   assert.match(listHtml, /esc\(gate\.label\)/);
   assert.match(listHtml, /kanban-empty-state/);
+  assert.match(listHtml, /function renderFilterEmptyState\(extraClass\)/);
+  assert.match(listHtml, /resetReviewQueueFilters\(\)/);
 });
 
 test('lead detail script is isolated for list-to-detail document replacement', () => {

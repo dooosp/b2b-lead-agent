@@ -91,6 +91,7 @@ export function getLeadsPage() {
     .review-filter-actions { align-self:end; display:flex; gap:8px; justify-content:flex-end; }
     .review-filter-actions button { min-height:33px; padding:6px 12px; white-space:nowrap; }
     .filter-empty-state { background:#121a24; border:1px dashed #566273; border-radius:10px; color:#9fb0c0; margin:14px 0; padding:18px; text-align:center; }
+    .filter-empty-state .btn { font-size:12px; margin-top:10px; padding:6px 12px; }
     .review-slice-band { background:#121a24; border:1px solid #26384c; border-radius:8px; display:grid; gap:10px; margin:0 0 16px; padding:12px; text-align:left; }
     .review-slice-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; }
     .review-slice-head strong { color:#f4f7fb; font-size:13px; line-height:1.4; }
@@ -547,6 +548,16 @@ export function getLeadsPage() {
       renderCurrentLeads();
     }
 
+    function renderFilterEmptyState(extraClass) {
+      const className = 'filter-empty-state' + (extraClass ? ' ' + extraClass : '');
+      return \`
+        <div class="\${className}">
+          <div>필터 결과가 없습니다. 필터를 초기화하거나 다른 조건을 선택하세요.</div>
+          <button class="btn btn-secondary" type="button" onclick="resetReviewQueueFilters()">필터 초기화</button>
+        </div>
+      \`;
+    }
+
     async function updateStatus(leadId, newStatus, fromStatus) {
       if (newStatus === fromStatus) return;
       try {
@@ -690,7 +701,7 @@ export function getLeadsPage() {
       if (currentView === 'kanban') renderKanban(filteredLeads);
 
       if (filteredLeads.length === 0) {
-        container.innerHTML = '<div class="filter-empty-state">필터 결과가 없습니다. 필터를 초기화하거나 다른 조건을 선택하세요.</div>';
+        container.innerHTML = renderFilterEmptyState();
         return;
       }
 
@@ -814,7 +825,7 @@ export function getLeadsPage() {
       const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
       let html = list.length === 0 && totalBeforeFilter > 0
-        ? '<div class="filter-empty-state kanban-empty-state">필터 결과가 없습니다. 필터를 초기화하거나 다른 조건을 선택하세요.</div>'
+        ? renderFilterEmptyState('kanban-empty-state')
         : '';
       html += '<div class="kanban-board" style="max-width:100%;overflow-x:auto;">';
       order.forEach(s => {
