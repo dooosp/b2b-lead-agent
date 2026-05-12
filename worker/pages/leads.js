@@ -96,11 +96,14 @@ export function getLeadsPage() {
     .review-slice-head strong { color:#f4f7fb; font-size:13px; line-height:1.4; }
     .review-slice-head span { color:#8fa4b8; font-size:11px; line-height:1.5; }
     .review-slice-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .review-gate-summary .review-slice-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
     .review-slice { border:1px solid #223447; border-radius:8px; background:#101925; min-width:0; padding:10px; }
     .review-slice strong { color:#f4f7fb; display:block; font-size:13px; line-height:1.4; }
     .review-slice span { color:#9fb0c0; display:block; font-size:11px; line-height:1.5; margin-top:4px; }
     .review-slice-risk strong { color:#ffe58a; }
     .review-slice-ready strong { color:#a8efc0; }
+    .review-slice-blocked strong { color:#ffc4c4; }
+    .review-slice-hold strong { color:#ffe58a; }
     .review-slice-caveat { border-top:1px solid #223447; color:#9fb0c0; font-size:12px; line-height:1.6; padding-top:10px; }
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
     .top-nav-links { display: flex; gap: 8px; }
@@ -135,7 +138,7 @@ export function getLeadsPage() {
       .lead-head { flex-direction:column; }
       .lead-badges { justify-content:flex-start; }
       .lead-metrics, .leads-summary { grid-template-columns:1fr; }
-      .review-slice-grid { grid-template-columns:1fr; }
+      .review-slice-grid, .review-gate-summary .review-slice-grid { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -432,6 +435,33 @@ export function getLeadsPage() {
       \`;
     }
 
+    function buildReviewGateSummary(leads) {
+      return (Array.isArray(leads) ? leads : []).reduce((summary, lead) => {
+        const state = buildLeadListReviewGate(lead).state;
+        if (Object.prototype.hasOwnProperty.call(summary, state)) summary[state] += 1;
+        return summary;
+      }, { ready: 0, review: 0, blocked: 0, hold: 0 });
+    }
+
+    function renderReviewGateSummary(leads) {
+      const summary = buildReviewGateSummary(leads);
+      return \`
+        <section class="review-slice-band review-gate-summary" aria-label="목록 게이트 요약">
+          <div class="review-slice-head">
+            <strong>목록 게이트 요약</strong>
+            <span>현재 필터 결과 기준</span>
+          </div>
+          <div class="review-slice-grid">
+            <div class="review-slice review-slice-ready"><strong>게이트 통과 \${summary.ready}건</strong><span>검토, 검증, 근거, 데이터 공백 기준 통과</span></div>
+            <div class="review-slice review-slice-risk"><strong>보강 필요 \${summary.review}건</strong><span>사람 검토 전 근거 또는 공백 확인 필요</span></div>
+            <div class="review-slice review-slice-blocked"><strong>차단 \${summary.blocked}건</strong><span>반려 상태로 목록 우선순위 제외</span></div>
+            <div class="review-slice review-slice-hold"><strong>보류 \${summary.hold}건</strong><span>추가 시점 또는 조건 대기</span></div>
+          </div>
+          <div class="review-slice-caveat">This summary does not approve outreach; it only prioritizes human review.</div>
+        </section>
+      \`;
+    }
+
     function renderReviewStatusSelect(lead) {
       const current = getReviewStatus(lead);
       const opts = reviewStatuses.map(s =>
@@ -652,7 +682,7 @@ export function getLeadsPage() {
       const container = document.getElementById('leadsList');
       const summaryContainer = document.getElementById('leadsSummary');
       const filteredLeads = getFilteredLeads();
-      summaryContainer.innerHTML = renderLeadsSummary(filteredLeads, cachedLeads.length) + renderReviewEvidenceSlices(filteredLeads);
+      summaryContainer.innerHTML = renderLeadsSummary(filteredLeads, cachedLeads.length) + renderReviewGateSummary(filteredLeads) + renderReviewEvidenceSlices(filteredLeads);
       if (currentView === 'kanban') renderKanban(filteredLeads);
 
       if (filteredLeads.length === 0) {

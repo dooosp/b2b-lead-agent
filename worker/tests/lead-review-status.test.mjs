@@ -282,6 +282,19 @@ test('lead list page exposes deterministic review gate summaries on cards', () =
   assert.match(listHtml, /This list gate does not approve outreach/);
 });
 
+test('lead list page exposes deterministic review gate summary counts', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /function buildReviewGateSummary\(leads\)/);
+  assert.match(listHtml, /function renderReviewGateSummary\(leads\)/);
+  assert.match(listHtml, /목록 게이트 요약/);
+  assert.match(listHtml, /게이트 통과/);
+  assert.match(listHtml, /보강 필요/);
+  assert.match(listHtml, /차단/);
+  assert.match(listHtml, /보류/);
+  assert.match(listHtml, /This summary does not approve outreach/);
+});
+
 test('lead detail script is isolated for list-to-detail document replacement', () => {
   const detailHtml = getLeadDetailPage({
     id: 'lead-1',
