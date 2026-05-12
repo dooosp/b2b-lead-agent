@@ -73,6 +73,18 @@ export function getLeadsPage() {
     .select-label { color:#8fa4b8; font-size:11px; font-weight:700; }
     .lead-block.data-gap-summary { border-color:#6f5525; background:#171d25; }
     .lead-block.data-gap-clear { border-color:#2e7d4f; background:#141f1b; }
+    .lead-review-gate { background:#101925; border:1px solid #223447; border-radius:10px; display:grid; gap:8px; padding:12px; text-align:left; }
+    .lead-review-gate .block-label { color:#8fa4b8; display:block; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; }
+    .lead-review-gate strong { color:#f4f7fb; font-size:14px; line-height:1.4; }
+    .lead-review-gate-items { display:flex; flex-wrap:wrap; gap:6px; }
+    .lead-review-gate-items span { background:#162338; border:1px solid #2e4157; border-radius:6px; color:#cbd8e6; font-size:11px; line-height:1.4; padding:4px 7px; }
+    .lead-review-gate p { color:#9fb0c0; font-size:11px; line-height:1.5; margin:0; }
+    .lead-review-gate.gate-ready { border-color:#2e7d4f; background:#101f1a; }
+    .lead-review-gate.gate-ready strong { color:#a8efc0; }
+    .lead-review-gate.gate-blocked { border-color:#8a3b3b; background:#211719; }
+    .lead-review-gate.gate-blocked strong { color:#ffc4c4; }
+    .lead-review-gate.gate-hold, .lead-review-gate.gate-review { border-color:#806718; background:#1f1c12; }
+    .lead-review-gate.gate-hold strong, .lead-review-gate.gate-review strong { color:#ffe58a; }
     .review-filter-bar { background:#121a24; border:1px solid #26384c; border-radius:10px; display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); margin:0 0 14px; padding:12px; text-align:left; }
     .review-filter-bar label { color:#8fa4b8; display:grid; gap:5px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0; }
     .review-filter-bar select { background:#16213e; border:1px solid #36506c; border-radius:7px; color:#f4f7fb; font-size:12px; padding:7px 8px; width:100%; }
@@ -355,6 +367,61 @@ export function getLeadsPage() {
       return \`<div class="lead-block data-gap-summary"><span class="block-label">데이터 공백 \${gaps.length}건</span><div class="block-value">\${shown}\${extra}</div></div>\`;
     }
 
+    function buildLeadListReviewGate(lead) {
+      const reviewStatus = getReviewStatus(lead);
+      const verificationStatus = getVerificationStatus(lead);
+      const confidence = getConfidence(lead);
+      const evidenceCount = getEvidenceItems(lead).length;
+      const sourceCount = getSources(lead).length;
+      const dataGapCount = getDataGaps(lead).length;
+      let state = 'review';
+      let label = '목록 게이트 보강 필요';
+
+      if (reviewStatus === 'REJECTED') {
+        state = 'blocked';
+        label = '목록 게이트 차단';
+      } else if (reviewStatus === 'DEFERRED') {
+        state = 'hold';
+        label = '목록 게이트 보류';
+      } else if (
+        reviewStatus === 'APPROVED'
+        && verificationStatus === 'verified'
+        && confidence !== 'LOW'
+        && evidenceCount > 0
+        && sourceCount > 0
+        && dataGapCount === 0
+      ) {
+        state = 'ready';
+        label = '목록 게이트 통과';
+      }
+
+      return {
+        state,
+        label,
+        items: [
+          '검토 ' + (reviewStatusLabels[reviewStatus] || reviewStatus),
+          verificationStatusLabels[verificationStatus] || verificationStatus,
+          confidenceLabels[confidence] || ('신뢰도 ' + confidence),
+          evidenceCount > 0 ? '근거 ' + evidenceCount + '개 / 출처 ' + sourceCount + '개' : '직접 인용 없음 / 출처 ' + sourceCount + '개',
+          dataGapCount === 0 ? '데이터 공백 없음' : '데이터 공백 ' + dataGapCount + '건',
+        ],
+      };
+    }
+
+    function renderLeadListReviewGate(lead) {
+      const gate = buildLeadListReviewGate(lead);
+      return \`
+        <div class="lead-review-gate gate-\${gate.state}" aria-label="목록 품질 게이트">
+          <span class="block-label">목록 품질 게이트</span>
+          <strong>\${esc(gate.label)}</strong>
+          <div class="lead-review-gate-items">
+            \${gate.items.map((item) => \`<span>\${esc(item)}</span>\`).join('')}
+          </div>
+          <p>This list gate does not approve outreach; it only prioritizes human review.</p>
+        </div>
+      \`;
+    }
+
     function renderReviewStatusSelect(lead) {
       const current = getReviewStatus(lead);
       const opts = reviewStatuses.map(s =>
@@ -615,6 +682,7 @@ export function getLeadsPage() {
               \${lead.whyNow ? \`<div class="lead-block"><span class="block-label">왜 지금</span><div class="block-value">\${esc(lead.whyNow)}</div></div>\` : ''}
               \${lead.urgencyReason ? \`<div class="lead-block"><span class="block-label">우선순위 근거</span><div class="block-value">\${esc(lead.urgencyReason)}</div></div>\` : ''}
               \${lead.confidenceReason ? \`<div class="lead-block"><span class="block-label">신뢰도 근거</span><div class="block-value">\${esc(lead.confidenceReason)}</div></div>\` : ''}
+              \${renderLeadListReviewGate(lead)}
               \${renderDataGapSummary(lead)}
               \${lead.assumptions && lead.assumptions.length > 0 ? \`<div class="lead-block"><span class="block-label">가정</span><div class="block-value">\${esc(lead.assumptions.join(', '))}</div></div>\` : ''}
               \${lead.scoreReason ? \`<div class="lead-block"><span class="block-label">점수 해설</span><div class="block-value">\${esc(lead.scoreReason)}</div></div>\` : ''}

@@ -267,6 +267,17 @@ test('lead list page exposes evidence and data-gap review slices', () => {
   assert.match(listHtml, /does not approve outreach/);
 });
 
+test('lead list page exposes deterministic review gate summaries on cards', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /function buildLeadListReviewGate\(lead\)/);
+  assert.match(listHtml, /function renderLeadListReviewGate\(lead\)/);
+  assert.match(listHtml, /목록 품질 게이트/);
+  assert.match(listHtml, /목록 게이트 통과/);
+  assert.match(listHtml, /목록 게이트 보강 필요/);
+  assert.match(listHtml, /This list gate does not approve outreach/);
+});
+
 test('lead detail script is isolated for list-to-detail document replacement', () => {
   const detailHtml = getLeadDetailPage({
     id: 'lead-1',
