@@ -803,16 +803,20 @@ export function getLeadsPage() {
       if (view === 'kanban') renderKanban(getFilteredLeads());
     }
 
-    function renderKanban(leads) {
+    function renderKanban(leads, totalBeforeFilter = cachedLeads.length) {
+      const list = Array.isArray(leads) ? leads : [];
       const order = ['NEW','CONTACTED','MEETING','PROPOSAL','NEGOTIATION','WON','LOST'];
       const groups = {};
       order.forEach(s => groups[s] = []);
-      leads.forEach(l => { const s = l.status || 'NEW'; if (groups[s]) groups[s].push(l); });
+      list.forEach(l => { const s = l.status || 'NEW'; if (groups[s]) groups[s].push(l); });
 
       const today = new Date().toISOString().split('T')[0];
       const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
-      let html = '<div class="kanban-board" style="max-width:100%;overflow-x:auto;">';
+      let html = list.length === 0 && totalBeforeFilter > 0
+        ? '<div class="filter-empty-state kanban-empty-state">필터 결과가 없습니다. 필터를 초기화하거나 다른 조건을 선택하세요.</div>'
+        : '';
+      html += '<div class="kanban-board" style="max-width:100%;overflow-x:auto;">';
       order.forEach(s => {
         const cards = groups[s];
         html += '<div class="kanban-col">';
