@@ -1,10 +1,21 @@
 import { jsonResponse } from '../lib/utils.js';
 import { canonicalizeLeadCollectionForProfile, resolveProfileId } from '../lib/profile.js';
+import { buildReviewerActionQueue } from '../lib/lead-action-intelligence.js';
 import { getLeadsByProfile, getAllLeads, getLeadById, saveLeadsBatch, updateLeadPatchAtomic } from '../db/leads.js';
 import { createLeadsCsvFilename, serializeLeadsCsv } from './serializers/lead-csv.js';
 
 function canonicalizeLeadPayload(profile, leads) {
   return canonicalizeLeadCollectionForProfile(profile, Array.isArray(leads) ? leads : []);
+}
+
+function buildLeadListPayload(canonicalized, source, extra = {}) {
+  return {
+    leads: canonicalized.leads,
+    profile: canonicalized.profileId,
+    source,
+    reviewerActionQueue: buildReviewerActionQueue(canonicalized.leads),
+    ...extra,
+  };
 }
 
 export async function fetchLeads(env, profile) {
@@ -14,12 +25,13 @@ export async function fetchLeads(env, profile) {
       const dbLeads = await getLeadsByProfile(env.DB, profile);
       if (dbLeads.length > 0) {
         const canonicalized = canonicalizeLeadPayload(profile, dbLeads);
-        return jsonResponse({ leads: canonicalized.leads, profile: canonicalized.profileId, source: 'd1' });
+        return jsonResponse(buildLeadListPayload(canonicalized, 'd1'));
       }
     }
 
     if (isSelfServiceProfile) {
-      return jsonResponse({ leads: [], profile, source: 'd1', message: '해당 셀프서비스 리드가 없습니다.' });
+      const canonicalized = canonicalizeLeadPayload(profile, []);
+      return jsonResponse(buildLeadListPayload(canonicalized, 'd1', { message: '해당 셀프서비스 리드가 없습니다.' }));
     }
 
     const response = await fetch(
@@ -34,7 +46,7 @@ export async function fetchLeads(env, profile) {
       try { await saveLeadsBatch(env.DB, canonicalized.leads, canonicalized.profileId, 'managed'); } catch { /* ignore migration errors */ }
     }
 
-    return jsonResponse({ leads: canonicalized.leads, profile: canonicalized.profileId, source: 'github' });
+    return jsonResponse(buildLeadListPayload(canonicalized, 'github'));
   } catch {
     return jsonResponse({ success: false, leads: [], message: '리드 데이터를 불러오는 중 오류가 발생했습니다.' }, 500);
   }

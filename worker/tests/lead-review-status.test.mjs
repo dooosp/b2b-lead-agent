@@ -249,6 +249,14 @@ test('lead list page exposes review queue filters for current LeadBrief fields',
   assert.match(listHtml, /data-filter-key="confidence"/);
   assert.match(listHtml, /data-filter-key="dataGaps"/);
   assert.match(listHtml, /data-filter-key="gateStatus"/);
+  assert.match(listHtml, /data-filter-key="queueLane"/);
+  assert.match(listHtml, /data-filter-key="nextReviewAction"/);
+  assert.match(listHtml, /data-filter-key="reviewPriority"/);
+  assert.match(listHtml, /data-filter-key="riskFlag"/);
+  assert.match(listHtml, /data-filter-key="missingInfo"/);
+  assert.match(listHtml, /다음 액션/);
+  assert.match(listHtml, /리스크 플래그/);
+  assert.match(listHtml, /누락 정보/);
   assert.match(listHtml, /게이트 상태/);
   assert.match(listHtml, /게이트 통과/);
   assert.match(listHtml, /보강 필요/);
@@ -256,6 +264,21 @@ test('lead list page exposes review queue filters for current LeadBrief fields',
   assert.match(listHtml, /function getFilteredLeads\(\)/);
   assert.match(listHtml, /function resetReviewQueueFilters\(\)/);
   assert.match(listHtml, /필터 결과가 없습니다/);
+});
+
+test('lead list page exposes grouped reviewer action queue lanes', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /function cacheReviewerActionQueue\(queue\)/);
+  assert.match(listHtml, /function getLeadQueueItem\(lead\)/);
+  assert.match(listHtml, /function renderReviewerActionQueue\(leads\)/);
+  assert.match(listHtml, /Reviewer Action Queue/);
+  assert.match(listHtml, /승인 후보/);
+  assert.match(listHtml, /보강 필요/);
+  assert.match(listHtml, /리스크 확인/);
+  assert.match(listHtml, /낮은 우선순위/);
+  assert.match(listHtml, /Risk flags/);
+  assert.match(listHtml, /Missing info/);
 });
 
 test('lead list page exposes evidence and data-gap review slices', () => {
@@ -300,8 +323,10 @@ test('lead list kanban cards expose deterministic review gate labels', () => {
 
   assert.match(listHtml, /function renderKanban\(leads, totalBeforeFilter = cachedLeads\.length\)/);
   assert.match(listHtml, /const gate = buildLeadListReviewGate\(l\)/);
+  assert.match(listHtml, /const action = getLeadQueueItem\(l\)/);
   assert.match(listHtml, /k-gate gate-/);
   assert.match(listHtml, /esc\(gate\.label\)/);
+  assert.match(listHtml, /esc\(action\.nextReviewActionLabel/);
   assert.match(listHtml, /kanban-empty-state/);
   assert.match(listHtml, /function renderFilterEmptyState\(extraClass\)/);
   assert.match(listHtml, /resetReviewQueueFilters\(\)/);

@@ -31,6 +31,49 @@ const RISK_LABELS = Object.freeze({
   conflicting_evidence: 'Conflicting evidence needs resolution',
 });
 
+const REVIEWER_QUEUE_LANES = Object.freeze([
+  {
+    id: 'approval_candidates',
+    label: '승인 후보',
+    description: 'Evidence-backed leads that are ready for approval decision or reviewed follow-up.',
+  },
+  {
+    id: 'needs_evidence',
+    label: '보강 필요',
+    description: 'Leads that need evidence, data-gap, enrichment, or freshness work before review can finish.',
+  },
+  {
+    id: 'risk_review',
+    label: '리스크 확인',
+    description: 'Leads with conflicts or review-state risk that should be reconciled before follow-up.',
+  },
+  {
+    id: 'low_priority',
+    label: '낮은 우선순위',
+    description: 'Rejected, deferred, or otherwise inactive leads that should not lead the review queue.',
+  },
+]);
+
+const REVIEW_PRIORITY_WEIGHT = Object.freeze({
+  high: 4,
+  medium: 3,
+  hold: 2,
+  low: 1,
+  blocked: 0,
+});
+
+const ACTION_CONFIDENCE_WEIGHT = Object.freeze({
+  high: 3,
+  medium: 2,
+  low: 1,
+});
+
+const LEAD_CONFIDENCE_WEIGHT = Object.freeze({
+  HIGH: 3,
+  MEDIUM: 2,
+  LOW: 1,
+});
+
 function cleanText(value, fallback = '') {
   const text = String(value ?? '').replace(/\s+/g, ' ').trim();
   return text || fallback;
@@ -71,6 +114,83 @@ function pickArray(record, keys) {
     if (items.length > 0) return items;
   }
   return [];
+}
+
+function truncateText(value, limit = 160) {
+  const text = cleanText(value);
+  if (text.length <= limit) return text;
+  return `${text.slice(0, Math.max(0, limit - 3)).trim()}...`;
+}
+
+function pickTimestamp(record) {
+  const raw = pickText(record, ['updatedAt', 'updated_at', 'createdAt', 'created_at', 'followUpDate', 'follow_up_date']);
+  if (!raw) return '';
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? raw : parsed.toISOString();
+}
+
+function queueLaneFor(intelligence) {
+  const action = intelligence.nextReviewAction;
+  if (action === 'keep_out_of_queue' || action === 'schedule_recheck') return REVIEWER_QUEUE_LANES[3];
+  if (action === 'reconcile_review_conflict' || action === 'refresh_signal') return REVIEWER_QUEUE_LANES[2];
+  if (action === 'verify_evidence' || action === 'resolve_data_gaps' || action === 'enrich_before_review') {
+    return REVIEWER_QUEUE_LANES[1];
+  }
+  if (action === 'prepare_human_follow_up' || action === 'decide_review_status') return REVIEWER_QUEUE_LANES[0];
+  return REVIEWER_QUEUE_LANES[1];
+}
+
+function weightFor(weights, value) {
+  return Object.prototype.hasOwnProperty.call(weights, value) ? weights[value] : -1;
+}
+
+function compareQueueItems(a, b) {
+  const priorityDelta = weightFor(REVIEW_PRIORITY_WEIGHT, b.reviewPriority) - weightFor(REVIEW_PRIORITY_WEIGHT, a.reviewPriority);
+  if (priorityDelta !== 0) return priorityDelta;
+
+  const actionConfidenceDelta = weightFor(ACTION_CONFIDENCE_WEIGHT, b.actionConfidence) - weightFor(ACTION_CONFIDENCE_WEIGHT, a.actionConfidence);
+  if (actionConfidenceDelta !== 0) return actionConfidenceDelta;
+
+  const leadConfidenceDelta = weightFor(LEAD_CONFIDENCE_WEIGHT, b.leadConfidence) - weightFor(LEAD_CONFIDENCE_WEIGHT, a.leadConfidence);
+  if (leadConfidenceDelta !== 0) return leadConfidenceDelta;
+
+  const bTime = Date.parse(b.timestamp || '');
+  const aTime = Date.parse(a.timestamp || '');
+  const timeDelta = (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
+  if (timeDelta !== 0) return timeDelta;
+
+  return `${a.company} ${a.leadId}`.localeCompare(`${b.company} ${b.leadId}`);
+}
+
+function normalizeFilterValue(value) {
+  return cleanText(value || 'all');
+}
+
+function matchesQueueFilters(item, filters = {}) {
+  const nextReviewAction = normalizeFilterValue(filters.nextReviewAction);
+  if (nextReviewAction !== 'all' && item.nextReviewAction !== nextReviewAction) return false;
+
+  const reviewPriority = normalizeFilterValue(filters.reviewPriority);
+  if (reviewPriority !== 'all' && item.reviewPriority !== reviewPriority) return false;
+
+  const actionConfidence = normalizeFilterValue(filters.actionConfidence);
+  if (actionConfidence !== 'all' && item.actionConfidence !== actionConfidence) return false;
+
+  const queueLane = normalizeFilterValue(filters.queueLane);
+  if (queueLane !== 'all' && item.queueLane !== queueLane) return false;
+
+  const riskFlag = normalizeFilterValue(filters.riskFlag);
+  if (riskFlag === 'has' && item.riskCount === 0) return false;
+  if (riskFlag === 'none' && item.riskCount > 0) return false;
+  if (riskFlag !== 'all' && riskFlag !== 'has' && riskFlag !== 'none' && !item.riskFlags.some((flag) => flag.code === riskFlag)) {
+    return false;
+  }
+
+  const missingInfo = normalizeFilterValue(filters.missingInfo);
+  if (missingInfo === 'has' && item.missingInfoCount === 0) return false;
+  if (missingInfo === 'none' && item.missingInfoCount > 0) return false;
+
+  return true;
 }
 
 function normalizeEvidenceItems(value) {
@@ -336,5 +456,72 @@ export function buildLeadActionIntelligence(lead = {}, options = {}) {
       verificationStatus,
       confidence,
     }),
+  };
+}
+
+export function buildReviewerActionQueue(leads = [], options = {}) {
+  const sourceLeads = Array.isArray(leads) ? leads : [];
+  const allItems = sourceLeads
+    .map((lead, index) => {
+      const brief = toLeadBriefV1(lead);
+      const intelligence = buildLeadActionIntelligence(lead, options);
+      const lane = queueLaneFor(intelligence);
+      const riskFlags = intelligence.riskFlags.map((flag) => ({
+        code: flag.code,
+        label: flag.label,
+        severity: flag.severity,
+        ...(flag.detail ? { detail: flag.detail } : {}),
+      }));
+      const missingInfoPrompts = [...intelligence.missingInfoPrompts];
+
+      return {
+        leadId: cleanText(brief.id || brief.leadId || brief.lead_id, `lead-${index + 1}`),
+        company: cleanText(brief.company, '리드'),
+        reviewStatus: brief.reviewStatus,
+        verificationStatus: brief.verificationStatus,
+        generationMode: brief.generationMode,
+        leadConfidence: brief.confidence,
+        nextReviewAction: intelligence.nextReviewAction,
+        nextReviewActionLabel: intelligence.nextReviewActionLabel,
+        reviewPriority: intelligence.reviewPriority,
+        actionConfidence: intelligence.actionConfidence,
+        queueLane: lane.id,
+        queueLaneLabel: lane.label,
+        reasonSnippet: truncateText(intelligence.nextReviewActionReason),
+        riskCount: riskFlags.length,
+        missingInfoCount: missingInfoPrompts.length,
+        riskFlags,
+        missingInfoPrompts,
+        timestamp: pickTimestamp(brief),
+      };
+    })
+    .sort(compareQueueItems);
+
+  const filters = options.filters && typeof options.filters === 'object' ? options.filters : {};
+  const items = allItems.filter((item) => matchesQueueFilters(item, filters));
+  const lanes = REVIEWER_QUEUE_LANES.map((lane) => {
+    const laneItems = items.filter((item) => item.queueLane === lane.id);
+    return {
+      id: lane.id,
+      label: lane.label,
+      description: lane.description,
+      count: laneItems.length,
+      items: laneItems,
+    };
+  });
+
+  return {
+    totalCount: allItems.length,
+    visibleCount: items.length,
+    items,
+    lanes,
+    summary: {
+      approvalCandidates: lanes.find((lane) => lane.id === 'approval_candidates')?.count || 0,
+      needsEvidence: lanes.find((lane) => lane.id === 'needs_evidence')?.count || 0,
+      riskReview: lanes.find((lane) => lane.id === 'risk_review')?.count || 0,
+      lowPriority: lanes.find((lane) => lane.id === 'low_priority')?.count || 0,
+      withRisks: items.filter((item) => item.riskCount > 0).length,
+      withMissingInfo: items.filter((item) => item.missingInfoCount > 0).length,
+    },
   };
 }

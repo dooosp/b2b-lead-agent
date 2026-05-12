@@ -159,6 +159,11 @@ test('/api/leads exposes LeadBrief v1 canonical fields from D1 rows', async () =
   assert.deepEqual(payload.leads[0].assumptions, ['현장 냉각 부하 데이터는 미확인입니다.']);
   assert.deepEqual(payload.leads[0].dataGaps, ['상세 발주 일정 미확인']);
   assert.equal(payload.leads[0].eventType, '착공');
+  assert.equal(payload.reviewerActionQueue.totalCount, 1);
+  assert.equal(payload.reviewerActionQueue.items[0].leadId, payload.leads[0].id);
+  assert.equal(payload.reviewerActionQueue.items[0].nextReviewAction, 'reconcile_review_conflict');
+  assert.equal(payload.reviewerActionQueue.items[0].queueLane, 'risk_review');
+  assert.equal(payload.reviewerActionQueue.summary.riskReview, 1);
 });
 
 test('/api/leads applies LeadBrief defaults to GitHub published records before serialization', async () => {

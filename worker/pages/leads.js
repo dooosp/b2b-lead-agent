@@ -94,6 +94,23 @@ export function getLeadsPage() {
     .lead-action-intelligence.priority-hold { border-color:#566273; background:#171d25; }
     .lead-action-intel-meta { color:#cbd8e6; display:flex; flex-wrap:wrap; gap:6px; font-size:11px; line-height:1.5; }
     .lead-action-intel-meta span { background:#162338; border:1px solid #2e4157; border-radius:6px; padding:3px 6px; }
+    .reviewer-action-queue { background:#121a24; border:1px solid #26384c; border-radius:8px; display:grid; gap:12px; margin:0 0 16px; padding:12px; text-align:left; }
+    .reviewer-action-queue-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; }
+    .reviewer-action-queue-head strong { color:#f4f7fb; font-size:13px; line-height:1.4; }
+    .reviewer-action-queue-head span { color:#8fa4b8; font-size:11px; line-height:1.5; }
+    .reviewer-action-lanes { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+    .reviewer-action-lane { background:#101925; border:1px solid #223447; border-radius:8px; min-width:0; padding:10px; }
+    .reviewer-action-lane strong { color:#f4f7fb; display:block; font-size:13px; line-height:1.4; }
+    .reviewer-action-lane > span { color:#9fb0c0; display:block; font-size:11px; line-height:1.5; margin-top:3px; }
+    .reviewer-action-lane.approval_candidates strong { color:#a8efc0; }
+    .reviewer-action-lane.needs_evidence strong, .reviewer-action-lane.risk_review strong { color:#ffe58a; }
+    .reviewer-action-lane.low_priority strong { color:#ffc4c4; }
+    .reviewer-action-lane ul { display:grid; gap:7px; list-style:none; margin:9px 0 0; padding:0; }
+    .reviewer-action-lane li { border-top:1px solid #223447; display:grid; gap:2px; padding-top:7px; }
+    .reviewer-action-lane li b { color:#dbe7f3; font-size:12px; line-height:1.35; }
+    .reviewer-action-lane li em { color:#cbd8e6; font-size:11px; font-style:normal; line-height:1.35; }
+    .reviewer-action-lane li small { color:#8fa4b8; font-size:10px; line-height:1.4; }
+    .reviewer-action-empty { color:#566273; font-size:11px; margin:9px 0 0; }
     .review-filter-bar { background:#121a24; border:1px solid #26384c; border-radius:10px; display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); margin:0 0 14px; padding:12px; text-align:left; }
     .review-filter-bar label { color:#8fa4b8; display:grid; gap:5px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0; }
     .review-filter-bar select { background:#16213e; border:1px solid #36506c; border-radius:7px; color:#f4f7fb; font-size:12px; padding:7px 8px; width:100%; }
@@ -156,7 +173,7 @@ export function getLeadsPage() {
       .lead-head { flex-direction:column; }
       .lead-badges { justify-content:flex-start; }
       .lead-metrics, .leads-summary { grid-template-columns:1fr; }
-      .review-slice-grid, .review-gate-summary .review-slice-grid { grid-template-columns:1fr; }
+      .review-slice-grid, .review-gate-summary .review-slice-grid, .reviewer-action-lanes { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -232,6 +249,58 @@ export function getLeadsPage() {
           <option value="hold">보류</option>
         </select>
       </label>
+      <label>액션 레인
+        <select data-filter-key="queueLane" onchange="setReviewQueueFilter(this)">
+          <option value="all">전체</option>
+          <option value="approval_candidates">승인 후보</option>
+          <option value="needs_evidence">보강 필요</option>
+          <option value="risk_review">리스크 확인</option>
+          <option value="low_priority">낮은 우선순위</option>
+        </select>
+      </label>
+      <label>다음 액션
+        <select data-filter-key="nextReviewAction" onchange="setReviewQueueFilter(this)">
+          <option value="all">전체</option>
+          <option value="prepare_human_follow_up">후속 준비</option>
+          <option value="decide_review_status">검토 결정</option>
+          <option value="verify_evidence">근거 확인</option>
+          <option value="resolve_data_gaps">데이터 공백 보강</option>
+          <option value="enrich_before_review">보강 후 검토</option>
+          <option value="refresh_signal">신호 갱신</option>
+          <option value="reconcile_review_conflict">리스크 조정</option>
+          <option value="schedule_recheck">재검토 예약</option>
+          <option value="keep_out_of_queue">우선순위 제외</option>
+        </select>
+      </label>
+      <label>검토 우선순위
+        <select data-filter-key="reviewPriority" onchange="setReviewQueueFilter(this)">
+          <option value="all">전체</option>
+          <option value="high">높음</option>
+          <option value="medium">중간</option>
+          <option value="hold">보류</option>
+          <option value="blocked">차단</option>
+        </select>
+      </label>
+      <label>리스크 플래그
+        <select data-filter-key="riskFlag" onchange="setReviewQueueFilter(this)">
+          <option value="all">전체</option>
+          <option value="has">리스크 있음</option>
+          <option value="none">리스크 없음</option>
+          <option value="missing_evidence">근거 누락</option>
+          <option value="data_gaps">데이터 공백</option>
+          <option value="low_confidence">낮은 신뢰도</option>
+          <option value="conflicting_evidence">충돌 근거</option>
+          <option value="approved_but_unverified">승인/검증 충돌</option>
+          <option value="stale_signal">오래된 신호</option>
+        </select>
+      </label>
+      <label>누락 정보
+        <select data-filter-key="missingInfo" onchange="setReviewQueueFilter(this)">
+          <option value="all">전체</option>
+          <option value="has">누락 있음</option>
+          <option value="none">누락 없음</option>
+        </select>
+      </label>
       <label>데이터 공백
         <select data-filter-key="dataGaps" onchange="setReviewQueueFilter(this)">
           <option value="all">전체</option>
@@ -277,12 +346,29 @@ export function getLeadsPage() {
     const verificationStatusLabels = { verified: '검증됨', needs_review: '검증 필요', draft: '초안', unverified: '미검증' };
     const generationModeLabels = { llm: 'LLM 생성', heuristic: '휴리스틱 생성', demo: '데모', unavailable: '생성 불가' };
     const confidenceLabels = { HIGH: '신뢰도 HIGH', MEDIUM: '신뢰도 MEDIUM', LOW: '신뢰도 LOW' };
+    const queueLaneLabels = {
+      approval_candidates: '승인 후보',
+      needs_evidence: '보강 필요',
+      risk_review: '리스크 확인',
+      low_priority: '낮은 우선순위'
+    };
+    const queueLaneDescriptions = {
+      approval_candidates: '검토 결정 또는 후속 준비 가능',
+      needs_evidence: '근거, 공백, 보강 확인 대상',
+      risk_review: '충돌 또는 검토 상태 리스크 확인',
+      low_priority: '반려, 보류, 재검토 대기'
+    };
     const reviewQueueFilters = {
       reviewStatus: 'all',
       verificationStatus: 'all',
       generationMode: 'all',
       confidence: 'all',
       gateStatus: 'all',
+      queueLane: 'all',
+      nextReviewAction: 'all',
+      reviewPriority: 'all',
+      riskFlag: 'all',
+      missingInfo: 'all',
       dataGaps: 'all'
     };
 
@@ -347,6 +433,62 @@ export function getLeadsPage() {
 
     function getSources(lead) {
       return getArrayField(lead, 'sources', 'sources');
+    }
+
+    function getLeadId(lead) {
+      return String((lead && (lead.id || lead.leadId || lead.lead_id)) || '');
+    }
+
+    function cacheReviewerActionQueue(queue) {
+      const items = Array.isArray(queue && queue.items) ? queue.items : [];
+      cachedReviewerQueue = queue && typeof queue === 'object' ? queue : { items: [], lanes: [] };
+      cachedQueueItemsByLeadId = {};
+      items.forEach((item, index) => {
+        const leadId = String(item && item.leadId || '');
+        if (!leadId) return;
+        cachedQueueItemsByLeadId[leadId] = { ...item, sortIndex: index };
+      });
+    }
+
+    function laneForFallbackAction(action) {
+      if (action === 'keep_out_of_queue' || action === 'schedule_recheck') return 'low_priority';
+      if (action === 'reconcile_review_conflict' || action === 'refresh_signal') return 'risk_review';
+      if (action === 'prepare_human_follow_up' || action === 'decide_review_status') return 'approval_candidates';
+      return 'needs_evidence';
+    }
+
+    function buildFallbackReviewerQueueItem(lead) {
+      const summary = buildLeadActionIntelligenceSummary(lead);
+      const dataGapCount = getDataGaps(lead).length;
+      const missingEvidence = getEvidenceItems(lead).length === 0 || getSources(lead).length === 0;
+      const missingInfoCount = dataGapCount + (missingEvidence ? 1 : 0) + (getVerificationStatus(lead) !== 'verified' ? 1 : 0);
+      const queueLane = laneForFallbackAction(summary.nextReviewAction);
+      return {
+        leadId: getLeadId(lead),
+        company: lead.company || '리드',
+        reviewStatus: getReviewStatus(lead),
+        verificationStatus: getVerificationStatus(lead),
+        generationMode: getGenerationMode(lead),
+        leadConfidence: getConfidence(lead),
+        nextReviewAction: summary.nextReviewAction,
+        nextReviewActionLabel: summary.action,
+        reviewPriority: summary.priority,
+        actionConfidence: summary.actionConfidence,
+        queueLane,
+        queueLaneLabel: queueLaneLabels[queueLane] || queueLane,
+        reasonSnippet: summary.reason,
+        riskCount: summary.risks.length,
+        missingInfoCount,
+        riskFlags: summary.risks.map((risk) => ({ code: risk })),
+        missingInfoPrompts: [],
+        sortIndex: 9999,
+      };
+    }
+
+    function getLeadQueueItem(lead) {
+      const leadId = getLeadId(lead);
+      if (leadId && cachedQueueItemsByLeadId[leadId]) return cachedQueueItemsByLeadId[leadId];
+      return buildFallbackReviewerQueueItem(lead);
     }
 
     function renderReviewBadge(lead) {
@@ -466,52 +608,62 @@ export function getLeadsPage() {
       const staleCount = countStaleSources(lead);
       const hasConflict = hasConflictingEvidence(lead);
       const missingEvidence = evidenceCount === 0 || sourceCount === 0;
+      let nextReviewAction = 'review_lead';
       let action = 'Review lead';
       let priority = 'medium';
       let actionConfidence = 'low';
       let reason = 'Inspect review, evidence, confidence, and gaps before deciding.';
 
       if (reviewStatus === 'REJECTED') {
+        nextReviewAction = 'keep_out_of_queue';
         action = 'Keep out of active queue';
         priority = 'blocked';
         actionConfidence = 'medium';
         reason = 'Rejected by human review.';
       } else if (reviewStatus === 'APPROVED' && (verificationStatus !== 'verified' || hasConflict || missingEvidence || dataGapCount > 0 || confidence === 'LOW')) {
+        nextReviewAction = 'reconcile_review_conflict';
         action = 'Reconcile review conflict';
         priority = 'high';
         actionConfidence = 'low';
         reason = 'Approval conflicts with verification, evidence, or open gaps.';
       } else if (staleCount > 0) {
+        nextReviewAction = 'refresh_signal';
         action = 'Refresh stale signal';
         priority = 'medium';
         actionConfidence = 'low';
         reason = 'Public source date is outside the freshness window.';
       } else if (confidence === 'LOW' || generationMode === 'heuristic' || generationMode === 'unavailable') {
+        nextReviewAction = 'enrich_before_review';
         action = 'Enrich before review';
         priority = 'medium';
         actionConfidence = 'low';
         reason = 'Confidence or generation mode needs stronger evidence.';
       } else if (missingEvidence) {
+        nextReviewAction = 'verify_evidence';
         action = 'Verify evidence first';
         priority = 'medium';
         actionConfidence = 'low';
         reason = 'Direct evidence or source coverage is incomplete.';
       } else if (dataGapCount > 0) {
+        nextReviewAction = 'resolve_data_gaps';
         action = 'Resolve data gaps';
         priority = 'medium';
         actionConfidence = 'low';
         reason = 'Open data gaps remain before approval or follow-up.';
       } else if (reviewStatus === 'DEFERRED') {
+        nextReviewAction = 'schedule_recheck';
         action = 'Schedule recheck';
         priority = 'hold';
         actionConfidence = 'medium';
         reason = 'Deferred until a condition or timing changes.';
       } else if (reviewStatus === 'APPROVED' && verificationStatus === 'verified') {
+        nextReviewAction = 'prepare_human_follow_up';
         action = 'Prepare reviewed follow-up';
         priority = 'high';
         actionConfidence = confidence === 'HIGH' ? 'high' : 'medium';
         reason = 'Approved, verified, evidence-backed lead.';
       } else if (verificationStatus === 'verified') {
+        nextReviewAction = 'decide_review_status';
         action = 'Decide review status';
         priority = 'high';
         actionConfidence = 'medium';
@@ -526,21 +678,21 @@ export function getLeadsPage() {
       if (hasConflict) risks.push('conflict');
       if (staleCount > 0) risks.push('stale signal');
 
-      return { action, priority, actionConfidence, reason, risks };
+      return { nextReviewAction, action, priority, actionConfidence, reason, risks };
     }
 
     function renderLeadActionIntelligenceSummary(lead) {
-      const intelligence = buildLeadActionIntelligenceSummary(lead);
-      const riskText = intelligence.risks.length > 0 ? intelligence.risks.slice(0, 3).join(', ') : 'no risk flags';
+      const action = getLeadQueueItem(lead);
       return \`
-        <div class="lead-action-intelligence priority-\${esc(intelligence.priority)}" aria-label="Lead Action Intelligence">
+        <div class="lead-action-intelligence priority-\${esc(action.reviewPriority)}" aria-label="Lead Action Intelligence">
           <span class="block-label">Lead Action Intelligence</span>
-          <strong>\${esc(intelligence.action)}</strong>
-          <p>\${esc(intelligence.reason)}</p>
+          <strong>\${esc(action.nextReviewActionLabel)}</strong>
+          <p>\${esc(action.reasonSnippet)}</p>
           <div class="lead-action-intel-meta">
-            <span>Priority \${esc(intelligence.priority)}</span>
-            <span>Confidence \${esc(intelligence.actionConfidence)}</span>
-            <span>Risk \${esc(riskText)}</span>
+            <span>Priority \${esc(action.reviewPriority)}</span>
+            <span>Confidence \${esc(action.actionConfidence)}</span>
+            <span>Risk flags \${Number(action.riskCount) || 0}</span>
+            <span>Missing info \${Number(action.missingInfoCount) || 0}</span>
           </div>
         </div>
       \`;
@@ -583,6 +735,43 @@ export function getLeadsPage() {
             <div class="review-slice review-slice-hold"><strong>보류 \${summary.hold}건</strong><span>추가 시점 또는 조건 대기</span></div>
           </div>
           <div class="review-slice-caveat">This summary does not approve outreach; it only prioritizes human review.</div>
+        </section>
+      \`;
+    }
+
+    function renderReviewerActionQueue(leads) {
+      const list = Array.isArray(leads) ? leads : [];
+      const items = list.map((lead) => getLeadQueueItem(lead)).filter(Boolean);
+      const laneOrder = ['approval_candidates', 'needs_evidence', 'risk_review', 'low_priority'];
+      const laneHtml = laneOrder.map((laneId) => {
+        const laneItems = items.filter((item) => item.queueLane === laneId);
+        const shown = laneItems.slice(0, 3).map((item) => \`
+          <li>
+            <b>\${esc(item.company || item.leadId || '리드')}</b>
+            <em>\${esc(item.nextReviewActionLabel || '-')}</em>
+            <small>Risk flags \${Number(item.riskCount) || 0} · Missing info \${Number(item.missingInfoCount) || 0}</small>
+          </li>
+        \`).join('');
+        const extra = laneItems.length > 3 ? \`<p class="reviewer-action-empty">외 \${laneItems.length - 3}건</p>\` : '';
+        return \`
+          <article class="reviewer-action-lane \${esc(laneId)}">
+            <strong>\${esc(queueLaneLabels[laneId])} \${laneItems.length}건</strong>
+            <span>\${esc(queueLaneDescriptions[laneId])}</span>
+            \${laneItems.length > 0 ? \`<ul>\${shown}</ul>\${extra}\` : '<p class="reviewer-action-empty">없음</p>'}
+          </article>
+        \`;
+      }).join('');
+
+      return \`
+        <section class="reviewer-action-queue" aria-label="Reviewer Action Queue">
+          <div class="reviewer-action-queue-head">
+            <strong>Reviewer Action Queue</strong>
+            <span>현재 필터 결과 기준 · 우선순위 정렬</span>
+          </div>
+          <div class="reviewer-action-lanes">
+            \${laneHtml}
+          </div>
+          <div class="review-slice-caveat">Deterministic reviewer guidance only; it does not approve outreach or send messages automatically.</div>
         </section>
       \`;
     }
@@ -639,15 +828,33 @@ export function getLeadsPage() {
 
     function applyReviewQueueFilters(leads) {
       return (Array.isArray(leads) ? leads : []).filter((lead) => {
+        const queueItem = getLeadQueueItem(lead);
         if (reviewQueueFilters.reviewStatus !== 'all' && getReviewStatus(lead) !== reviewQueueFilters.reviewStatus) return false;
         if (reviewQueueFilters.verificationStatus !== 'all' && getVerificationStatus(lead) !== reviewQueueFilters.verificationStatus) return false;
         if (reviewQueueFilters.generationMode !== 'all' && getGenerationMode(lead) !== reviewQueueFilters.generationMode) return false;
         if (reviewQueueFilters.confidence !== 'all' && getConfidence(lead) !== reviewQueueFilters.confidence) return false;
         if (reviewQueueFilters.gateStatus !== 'all' && buildLeadListReviewGate(lead).state !== reviewQueueFilters.gateStatus) return false;
+        if (reviewQueueFilters.queueLane !== 'all' && queueItem.queueLane !== reviewQueueFilters.queueLane) return false;
+        if (reviewQueueFilters.nextReviewAction !== 'all' && queueItem.nextReviewAction !== reviewQueueFilters.nextReviewAction) return false;
+        if (reviewQueueFilters.reviewPriority !== 'all' && queueItem.reviewPriority !== reviewQueueFilters.reviewPriority) return false;
+        if (reviewQueueFilters.riskFlag === 'has' && queueItem.riskCount === 0) return false;
+        if (reviewQueueFilters.riskFlag === 'none' && queueItem.riskCount > 0) return false;
+        if (
+          reviewQueueFilters.riskFlag !== 'all'
+          && reviewQueueFilters.riskFlag !== 'has'
+          && reviewQueueFilters.riskFlag !== 'none'
+          && !(queueItem.riskFlags || []).some((flag) => flag.code === reviewQueueFilters.riskFlag)
+        ) return false;
+        if (reviewQueueFilters.missingInfo === 'has' && queueItem.missingInfoCount === 0) return false;
+        if (reviewQueueFilters.missingInfo === 'none' && queueItem.missingInfoCount > 0) return false;
         const gapCount = getDataGaps(lead).length;
         if (reviewQueueFilters.dataGaps === 'has' && gapCount === 0) return false;
         if (reviewQueueFilters.dataGaps === 'none' && gapCount > 0) return false;
         return true;
+      }).sort((a, b) => {
+        const aOrder = Number(getLeadQueueItem(a).sortIndex);
+        const bOrder = Number(getLeadQueueItem(b).sortIndex);
+        return (Number.isFinite(aOrder) ? aOrder : 9999) - (Number.isFinite(bOrder) ? bOrder : 9999);
       });
     }
 
@@ -800,11 +1007,13 @@ export function getLeadsPage() {
           summaryContainer.innerHTML = '';
           container.innerHTML = '<p style="color:#aaa;">아직 생성된 리드가 없습니다. 메인 페이지에서 보고서를 먼저 생성하세요.</p>';
           cachedLeads = [];
+          cacheReviewerActionQueue(data.reviewerActionQueue);
           if (currentView === 'kanban') renderKanban([]);
           return;
         }
 
         cachedLeads = data.leads;
+        cacheReviewerActionQueue(data.reviewerActionQueue);
         renderCurrentLeads();
       } catch(e) {
         document.getElementById('leadsList').innerHTML = '<p style="color:#e74c3c;">데이터 로드 실패: ' + esc(e.message) + '</p>';
@@ -812,12 +1021,14 @@ export function getLeadsPage() {
     }
     let currentView = 'list';
     let cachedLeads = [];
+    let cachedReviewerQueue = { items: [], lanes: [] };
+    let cachedQueueItemsByLeadId = {};
 
     function renderCurrentLeads() {
       const container = document.getElementById('leadsList');
       const summaryContainer = document.getElementById('leadsSummary');
       const filteredLeads = getFilteredLeads();
-      summaryContainer.innerHTML = renderLeadsSummary(filteredLeads, cachedLeads.length) + renderReviewGateSummary(filteredLeads) + renderReviewEvidenceSlices(filteredLeads);
+      summaryContainer.innerHTML = renderLeadsSummary(filteredLeads, cachedLeads.length) + renderReviewerActionQueue(filteredLeads) + renderReviewGateSummary(filteredLeads) + renderReviewEvidenceSlices(filteredLeads);
       if (currentView === 'kanban') renderKanban(filteredLeads);
 
       if (filteredLeads.length === 0) {
@@ -955,7 +1166,7 @@ export function getLeadsPage() {
         html += '<div class="kanban-col-header" style="background:' + statusColors[s] + '">' + esc(statusLabels[s]) + '<span class="kanban-col-count">(' + cards.length + ')</span></div>';
         cards.forEach(l => {
           const gate = buildLeadListReviewGate(l);
-          const action = buildLeadActionIntelligenceSummary(l);
+          const action = getLeadQueueItem(l);
           const fu = l.followUpDate || '';
           const isWarn = fu && fu <= today;
           html += '<div class="kanban-card' + (isWarn ? ' followup-warn' : '') + '" onclick="openLeadDetail(\\'' + esc(l.id) + '\\', event)">';
@@ -970,7 +1181,7 @@ export function getLeadsPage() {
           }
           html += '<div class="k-review">' + esc(reviewStatusLabels[getReviewStatus(l)]) + ' / ' + esc(verificationStatusLabels[getVerificationStatus(l)]) + '</div>';
           html += '<div class="k-gate gate-' + esc(gate.state) + '">' + esc(gate.label) + '</div>';
-          html += '<div class="k-action priority-' + esc(action.priority) + '">Action: ' + esc(action.action) + '</div>';
+          html += '<div class="k-action priority-' + esc(action.reviewPriority) + '">Action: ' + esc(action.nextReviewActionLabel) + '</div>';
           html += '</div>';
         });
         if (cards.length === 0) html += '<p style="color:#555;font-size:11px;text-align:center;padding:20px 0;">없음</p>';
