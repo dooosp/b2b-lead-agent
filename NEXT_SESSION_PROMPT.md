@@ -3,7 +3,7 @@
 ## 현재 기준 상태
 
 - 기준 브랜치: `master`
-- 마지막 검증된 post-PR #63 `origin/master` HEAD: `09106e5514891ad4e496b772f4a6b0278e60f443` (`Add advisory roleplay stakeholder context`)
+- 마지막 검증된 post-PR #65 `origin/master` HEAD: `e3e34b6a118bf0cace0f431a1dd3fb06a53b7344` (`Update Validate Naming workflow actions`)
 - 다음 세션도 반드시 `git fetch origin master`와 `git rev-parse origin/master`로 실제 최신 HEAD를 다시 기록한다.
 - hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`, `docs/architecture/*.md`, `NEXT_SESSION_PROMPT.md`
 - LeadBrief v1 merge baseline: `5776d4a` (`[Product] Freeze LeadBrief v1 review contract (#27)`)
@@ -55,6 +55,8 @@
   - #61 added evidence/data-gap review slices, recutting old PR #3's remaining dashboard-intelligence idea as local `/leads` review helper guidance without API, schema, storage, production, or CRM expansion.
   - #62 synced source-of-truth docs after PR #61.
   - #63 added advisory roleplay stakeholder context, recutting old PR #6's remaining roleplay idea as selected-LeadBrief prompt context without outreach approval, CRM ownership, schema, storage, production, or source-of-truth expansion.
+  - #64 synced source-of-truth docs after PR #63.
+  - #65 updated Validate Naming to Node 24-compatible GitHub Actions versions and extended workflow contract coverage for that workflow.
 - Stale PRs #1-#9 received disposition comments and are closed without merge or branch deletion. Treat their ideas as concept inventory only.
 
 ## Production boundary
@@ -85,5 +87,5 @@
 ## 바로 붙여 넣을 프롬프트
 
 ```text
-You are working on dooosp/b2b-lead-agent after the May 11, 2026 PR train, PR #51 integration, and post-PR51 review-quality follow-ups through PR #63. Start from a fresh `origin/master` sync and prove the repo root, branch, HEAD SHA, default branch, dirty state, and available validation commands before changing code. Read `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md` first. Treat current `master` as the source of truth: Worker routing is split into `worker/routes/*`, LeadBrief data-path defaults are hardened, D1 schema drift has `npm run check:schema`, release evidence packet tooling is local-only, architecture docs were refreshed, cleanup/naming guards landed, Opportunity Workbench v1 is shipped, review queue filters are shipped, Solution Translation Summary is shipped, Product Context / Signal Fusion is shipped, Stakeholder Prep is a Workbench-only advisory helper, evidence/data-gap review slices are a local `/leads` helper, advisory roleplay stakeholder context is shipped, the local-only Worker E2E harness is shipped, auth/error hardening is shipped, and the synthetic lead-quality evaluator is shipped. Old PRs #1-#9 and #23 are closed concept inventory; do not reopen or merge them as-is. Do not reopen shipped findings unless you can show a current-master regression. Do not deploy, call production Worker endpoints, access or write production D1, run Wrangler deploy/D1 commands, or claim production observation without a separate human-approved production prompt.
+You are working on dooosp/b2b-lead-agent after the May 11, 2026 PR train, PR #51 integration, and post-PR51 review-quality follow-ups through PR #65. Start from a fresh `origin/master` sync and prove the repo root, branch, HEAD SHA, default branch, dirty state, and available validation commands before changing code. Read `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md` first. Treat current `master` as the source of truth: Worker routing is split into `worker/routes/*`, LeadBrief data-path defaults are hardened, D1 schema drift has `npm run check:schema`, release evidence packet tooling is local-only, architecture docs were refreshed, cleanup/naming guards landed, Opportunity Workbench v1 is shipped, review queue filters are shipped, Solution Translation Summary is shipped, Product Context / Signal Fusion is shipped, Stakeholder Prep is a Workbench-only advisory helper, evidence/data-gap review slices are a local `/leads` helper, advisory roleplay stakeholder context is shipped, Validate Naming uses Node 24-compatible GitHub Actions versions, the local-only Worker E2E harness is shipped, auth/error hardening is shipped, and the synthetic lead-quality evaluator is shipped. Old PRs #1-#9 and #23 are closed concept inventory; do not reopen or merge them as-is. Do not reopen shipped findings unless you can show a current-master regression. Do not deploy, call production Worker endpoints, access or write production D1, run Wrangler deploy/D1 commands, or claim production observation without a separate human-approved production prompt.
 ```
