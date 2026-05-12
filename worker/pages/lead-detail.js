@@ -400,8 +400,16 @@ export function getLeadDetailPage(lead, statusLogs) {
         // 로컬 lead 객체 업데이트
         if (data.lead) Object.assign(lead, data.lead);
         showSaved();
-        if (field === 'status') location.reload();
+        if (field === 'status' || field === 'reviewStatus') await refreshDetailPage();
       } catch(e) { alert('업데이트 실패: ' + e.message); }
+    }
+
+    async function refreshDetailPage() {
+      const res = await fetch(window.location.pathname + window.location.search, { headers: authHeaders() });
+      const html = await res.text();
+      document.open();
+      document.write(html);
+      document.close();
     }
 
     let noteTimer;

@@ -1,4 +1,5 @@
 import { toLeadBriefV1 } from '../lib/leadbrief-v1.js';
+import { buildLeadActionIntelligence } from '../lib/lead-action-intelligence.js';
 
 const REVIEW_STATUS_LABELS = Object.freeze({
   NEW: '새 검토',
@@ -554,6 +555,7 @@ export function buildOpportunityWorkbenchModel(lead = {}) {
     dataGaps,
     assumptions,
   });
+  const actionIntelligence = buildLeadActionIntelligence(brief);
 
   return {
     id: cleanText(brief.id),
@@ -574,6 +576,7 @@ export function buildOpportunityWorkbenchModel(lead = {}) {
     assumptions,
     nextAction,
     reviewGate,
+    actionIntelligence,
     solutionTranslation,
     productContext,
     stakeholderPrep,
@@ -607,13 +610,16 @@ function renderStakeholderRole(role) {
 }
 
 export function renderOpportunityWorkbench(model) {
-  const workbench = model && model.nextAction && model.reviewGate && model.solutionTranslation && model.productContext && model.stakeholderPrep
+  const workbench = model && model.nextAction && model.reviewGate && model.actionIntelligence && model.solutionTranslation && model.productContext && model.stakeholderPrep
     ? model
     : buildOpportunityWorkbenchModel(model);
   const scoreLabel = workbench.score === null ? '점수 미확인' : `${workbench.score}점`;
   const gradeLabel = workbench.grade ? `${workbench.grade}등급` : '등급 미확인';
   const dataGapTitle = workbench.dataGaps.count > 0 ? `데이터 공백 ${workbench.dataGaps.count}건` : '데이터 공백 없음';
   const evidenceTitle = workbench.evidence.count > 0 ? `직접 인용 ${workbench.evidence.count}개` : '직접 인용 없음';
+  const riskTitle = workbench.actionIntelligence.riskFlags.length > 0
+    ? `Risk flags ${workbench.actionIntelligence.riskFlags.length}`
+    : 'Risk flags 없음';
 
   return `
       <section id="opportunity-workbench" class="detail-section opportunity-workbench" aria-label="Opportunity Workbench">
@@ -639,6 +645,39 @@ export function renderOpportunityWorkbench(model) {
             <ul class="opportunity-workbench-list opportunity-workbench-gate-list">
               ${renderTextItems(workbench.reviewGate.items, '게이트 항목 없음')}
             </ul>
+          </div>
+          <div class="opportunity-workbench-panel opportunity-workbench-wide opportunity-workbench-intelligence priority-${escapeHtml(workbench.actionIntelligence.reviewPriority)}">
+            <span class="panel-label">Lead Action Intelligence</span>
+            <div class="opportunity-workbench-intelligence-head">
+              <strong>${escapeHtml(workbench.actionIntelligence.nextReviewActionLabel)}</strong>
+              <span>Priority ${escapeHtml(workbench.actionIntelligence.reviewPriority)} / Confidence ${escapeHtml(workbench.actionIntelligence.actionConfidence)}</span>
+            </div>
+            <p>${escapeHtml(workbench.actionIntelligence.nextReviewActionReason)}</p>
+            <dl class="opportunity-workbench-intelligence-grid">
+              <div>
+                <dt>Stakeholder angle</dt>
+                <dd>${escapeHtml(workbench.actionIntelligence.stakeholderAngle)}</dd>
+              </div>
+              <div>
+                <dt>Suggested follow-up</dt>
+                <dd>${escapeHtml(workbench.actionIntelligence.suggestedFollowUp)}</dd>
+              </div>
+            </dl>
+            <div class="opportunity-workbench-intelligence-columns">
+              <div>
+                <span class="panel-label">${escapeHtml(riskTitle)}</span>
+                <ul class="opportunity-workbench-list">
+                  ${renderTextItems(workbench.actionIntelligence.riskFlags.map((flag) => `${flag.label}${flag.detail ? `: ${flag.detail}` : ''}`), '감지된 risk flag 없음')}
+                </ul>
+              </div>
+              <div>
+                <span class="panel-label">Missing info prompts</span>
+                <ul class="opportunity-workbench-list">
+                  ${renderTextItems(workbench.actionIntelligence.missingInfoPrompts, '추가 확인 프롬프트 없음')}
+                </ul>
+              </div>
+            </div>
+            <p class="opportunity-workbench-caveat">Deterministic reviewer guidance only; it does not approve outreach or send messages automatically.</p>
           </div>
           <div class="opportunity-workbench-panel opportunity-workbench-wide opportunity-workbench-solution">
             <span class="panel-label">솔루션 번역</span>
@@ -765,6 +804,19 @@ export function getOpportunityWorkbenchStyles() {
     .opportunity-workbench-gate.gate-review { border-color:#806718; }
     .opportunity-workbench-gate.gate-hold { border-color:#566273; }
     .opportunity-workbench-gate.gate-blocked { border-color:#8a3b3b; }
+    .opportunity-workbench-intelligence { display:grid; gap:10px; }
+    .opportunity-workbench-intelligence.priority-high { border-color:#2e7d4f; }
+    .opportunity-workbench-intelligence.priority-medium { border-color:#806718; }
+    .opportunity-workbench-intelligence.priority-low, .opportunity-workbench-intelligence.priority-blocked { border-color:#8a3b3b; }
+    .opportunity-workbench-intelligence.priority-hold { border-color:#566273; }
+    .opportunity-workbench-intelligence-head { display:flex; gap:10px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; }
+    .opportunity-workbench-intelligence-head strong { color:#f4f7fb; font-size:14px; line-height:1.4; }
+    .opportunity-workbench-intelligence-head span { color:#9fb0c0; font-size:12px; line-height:1.5; }
+    .opportunity-workbench-intelligence-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:0; }
+    .opportunity-workbench-intelligence-grid div { border-top:1px solid #223447; padding-top:10px; min-width:0; }
+    .opportunity-workbench-intelligence-grid dt { color:#a8efc0; font-size:12px; font-weight:700; margin:0 0 5px; }
+    .opportunity-workbench-intelligence-grid dd { color:#cbd8e6; font-size:12px; line-height:1.55; margin:0; }
+    .opportunity-workbench-intelligence-columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
     .opportunity-workbench-solution-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
     .opportunity-workbench-solution-grid div { border:1px solid #223447; border-radius:8px; padding:10px; background:#101925; min-width:0; }
     .opportunity-workbench-solution-grid strong { color:#a8efc0; display:block; font-size:12px; margin-bottom:5px; }
@@ -799,6 +851,8 @@ export function getOpportunityWorkbenchStyles() {
       .opportunity-workbench-action { min-width:0; width:100%; }
       .opportunity-workbench-grid { grid-template-columns:1fr; }
       .opportunity-workbench-gate-list { grid-template-columns:1fr; }
+      .opportunity-workbench-intelligence-grid { grid-template-columns:1fr; }
+      .opportunity-workbench-intelligence-columns { grid-template-columns:1fr; }
       .opportunity-workbench-solution-grid { grid-template-columns:1fr; }
       .opportunity-workbench-context-grid { grid-template-columns:1fr; }
       .opportunity-workbench-stakeholder-grid { grid-template-columns:1fr; }
