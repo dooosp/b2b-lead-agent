@@ -85,6 +85,15 @@ export function getLeadsPage() {
     .lead-review-gate.gate-blocked strong { color:#ffc4c4; }
     .lead-review-gate.gate-hold, .lead-review-gate.gate-review { border-color:#806718; background:#1f1c12; }
     .lead-review-gate.gate-hold strong, .lead-review-gate.gate-review strong { color:#ffe58a; }
+    .lead-action-intelligence { background:#101925; border:1px solid #223447; border-radius:10px; display:grid; gap:7px; padding:12px; text-align:left; }
+    .lead-action-intelligence strong { color:#f4f7fb; font-size:14px; line-height:1.4; }
+    .lead-action-intelligence p { color:#9fb0c0; font-size:11px; line-height:1.5; margin:0; }
+    .lead-action-intelligence.priority-high { border-color:#2e7d4f; background:#101f1a; }
+    .lead-action-intelligence.priority-medium { border-color:#806718; background:#1f1c12; }
+    .lead-action-intelligence.priority-low, .lead-action-intelligence.priority-blocked { border-color:#8a3b3b; background:#211719; }
+    .lead-action-intelligence.priority-hold { border-color:#566273; background:#171d25; }
+    .lead-action-intel-meta { color:#cbd8e6; display:flex; flex-wrap:wrap; gap:6px; font-size:11px; line-height:1.5; }
+    .lead-action-intel-meta span { background:#162338; border:1px solid #2e4157; border-radius:6px; padding:3px 6px; }
     .review-filter-bar { background:#121a24; border:1px solid #26384c; border-radius:10px; display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); margin:0 0 14px; padding:12px; text-align:left; }
     .review-filter-bar label { color:#8fa4b8; display:grid; gap:5px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0; }
     .review-filter-bar select { background:#16213e; border:1px solid #36506c; border-radius:7px; color:#f4f7fb; font-size:12px; padding:7px 8px; width:100%; }
@@ -136,6 +145,10 @@ export function getLeadsPage() {
     .kanban-card .k-gate.gate-ready { background:#101f1a; border-color:#2e7d4f; color:#a8efc0; }
     .kanban-card .k-gate.gate-review, .kanban-card .k-gate.gate-hold { background:#1f1c12; border-color:#806718; color:#ffe58a; }
     .kanban-card .k-gate.gate-blocked { background:#211719; border-color:#8a3b3b; color:#ffc4c4; }
+    .kanban-card .k-action { color:#cbd8e6; font-size:10px; line-height:1.4; margin-top:6px; }
+    .kanban-card .k-action.priority-high { color:#a8efc0; }
+    .kanban-card .k-action.priority-medium, .kanban-card .k-action.priority-hold { color:#ffe58a; }
+    .kanban-card .k-action.priority-low, .kanban-card .k-action.priority-blocked { color:#ffc4c4; }
     .kanban-card.followup-warn { border-left-color: #e74c3c; }
     .kanban-card.followup-warn .k-followup { color: #e74c3c; font-weight: bold; }
     .kanban-card .k-value { color: #27ae60; font-size: 11px; }
@@ -424,6 +437,113 @@ export function getLeadsPage() {
           dataGapCount === 0 ? '데이터 공백 없음' : '데이터 공백 ' + dataGapCount + '건',
         ],
       };
+    }
+
+    function countStaleSources(lead) {
+      const staleAfterMs = 90 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      return getSources(lead).filter((source) => {
+        const raw = source && (source.publishedAt || source.published_at || source.publishedDate || source.published_date || source.date);
+        if (!raw) return false;
+        const parsed = new Date(raw);
+        return !Number.isNaN(parsed.getTime()) && now - parsed.getTime() > staleAfterMs;
+      }).length;
+    }
+
+    function hasConflictingEvidence(lead) {
+      if (Array.isArray(lead.conflicts) && lead.conflicts.length > 0) return true;
+      return getEvidenceItems(lead).some((item) => item && (item.contradicts || item.conflictsWith || item.conflict));
+    }
+
+    function buildLeadActionIntelligenceSummary(lead) {
+      const reviewStatus = getReviewStatus(lead);
+      const verificationStatus = getVerificationStatus(lead);
+      const generationMode = getGenerationMode(lead);
+      const confidence = getConfidence(lead);
+      const evidenceCount = getEvidenceItems(lead).length;
+      const sourceCount = getSources(lead).length;
+      const dataGapCount = getDataGaps(lead).length;
+      const staleCount = countStaleSources(lead);
+      const hasConflict = hasConflictingEvidence(lead);
+      const missingEvidence = evidenceCount === 0 || sourceCount === 0;
+      let action = 'Review lead';
+      let priority = 'medium';
+      let actionConfidence = 'low';
+      let reason = 'Inspect review, evidence, confidence, and gaps before deciding.';
+
+      if (reviewStatus === 'REJECTED') {
+        action = 'Keep out of active queue';
+        priority = 'blocked';
+        actionConfidence = 'medium';
+        reason = 'Rejected by human review.';
+      } else if (reviewStatus === 'APPROVED' && (verificationStatus !== 'verified' || hasConflict || missingEvidence || dataGapCount > 0 || confidence === 'LOW')) {
+        action = 'Reconcile review conflict';
+        priority = 'high';
+        actionConfidence = 'low';
+        reason = 'Approval conflicts with verification, evidence, or open gaps.';
+      } else if (staleCount > 0) {
+        action = 'Refresh stale signal';
+        priority = 'medium';
+        actionConfidence = 'low';
+        reason = 'Public source date is outside the freshness window.';
+      } else if (confidence === 'LOW' || generationMode === 'heuristic' || generationMode === 'unavailable') {
+        action = 'Enrich before review';
+        priority = 'medium';
+        actionConfidence = 'low';
+        reason = 'Confidence or generation mode needs stronger evidence.';
+      } else if (missingEvidence) {
+        action = 'Verify evidence first';
+        priority = 'medium';
+        actionConfidence = 'low';
+        reason = 'Direct evidence or source coverage is incomplete.';
+      } else if (dataGapCount > 0) {
+        action = 'Resolve data gaps';
+        priority = 'medium';
+        actionConfidence = 'low';
+        reason = 'Open data gaps remain before approval or follow-up.';
+      } else if (reviewStatus === 'DEFERRED') {
+        action = 'Schedule recheck';
+        priority = 'hold';
+        actionConfidence = 'medium';
+        reason = 'Deferred until a condition or timing changes.';
+      } else if (reviewStatus === 'APPROVED' && verificationStatus === 'verified') {
+        action = 'Prepare reviewed follow-up';
+        priority = 'high';
+        actionConfidence = confidence === 'HIGH' ? 'high' : 'medium';
+        reason = 'Approved, verified, evidence-backed lead.';
+      } else if (verificationStatus === 'verified') {
+        action = 'Decide review status';
+        priority = 'high';
+        actionConfidence = 'medium';
+        reason = 'Verified evidence is present; human review remains open.';
+      }
+
+      const risks = [];
+      if (verificationStatus !== 'verified') risks.push('verification');
+      if (missingEvidence) risks.push('evidence');
+      if (dataGapCount > 0) risks.push('data gaps ' + dataGapCount);
+      if (confidence === 'LOW') risks.push('low confidence');
+      if (hasConflict) risks.push('conflict');
+      if (staleCount > 0) risks.push('stale signal');
+
+      return { action, priority, actionConfidence, reason, risks };
+    }
+
+    function renderLeadActionIntelligenceSummary(lead) {
+      const intelligence = buildLeadActionIntelligenceSummary(lead);
+      const riskText = intelligence.risks.length > 0 ? intelligence.risks.slice(0, 3).join(', ') : 'no risk flags';
+      return \`
+        <div class="lead-action-intelligence priority-\${esc(intelligence.priority)}" aria-label="Lead Action Intelligence">
+          <span class="block-label">Lead Action Intelligence</span>
+          <strong>\${esc(intelligence.action)}</strong>
+          <p>\${esc(intelligence.reason)}</p>
+          <div class="lead-action-intel-meta">
+            <span>Priority \${esc(intelligence.priority)}</span>
+            <span>Confidence \${esc(intelligence.actionConfidence)}</span>
+            <span>Risk \${esc(riskText)}</span>
+          </div>
+        </div>
+      \`;
     }
 
     function renderLeadListReviewGate(lead) {
@@ -739,6 +859,7 @@ export function getLeadsPage() {
               \${lead.urgencyReason ? \`<div class="lead-block"><span class="block-label">우선순위 근거</span><div class="block-value">\${esc(lead.urgencyReason)}</div></div>\` : ''}
               \${lead.confidenceReason ? \`<div class="lead-block"><span class="block-label">신뢰도 근거</span><div class="block-value">\${esc(lead.confidenceReason)}</div></div>\` : ''}
               \${renderLeadListReviewGate(lead)}
+              \${renderLeadActionIntelligenceSummary(lead)}
               \${renderDataGapSummary(lead)}
               \${lead.assumptions && lead.assumptions.length > 0 ? \`<div class="lead-block"><span class="block-label">가정</span><div class="block-value">\${esc(lead.assumptions.join(', '))}</div></div>\` : ''}
               \${lead.scoreReason ? \`<div class="lead-block"><span class="block-label">점수 해설</span><div class="block-value">\${esc(lead.scoreReason)}</div></div>\` : ''}
@@ -834,6 +955,7 @@ export function getLeadsPage() {
         html += '<div class="kanban-col-header" style="background:' + statusColors[s] + '">' + esc(statusLabels[s]) + '<span class="kanban-col-count">(' + cards.length + ')</span></div>';
         cards.forEach(l => {
           const gate = buildLeadListReviewGate(l);
+          const action = buildLeadActionIntelligenceSummary(l);
           const fu = l.followUpDate || '';
           const isWarn = fu && fu <= today;
           html += '<div class="kanban-card' + (isWarn ? ' followup-warn' : '') + '" onclick="openLeadDetail(\\'' + esc(l.id) + '\\', event)">';
@@ -848,6 +970,7 @@ export function getLeadsPage() {
           }
           html += '<div class="k-review">' + esc(reviewStatusLabels[getReviewStatus(l)]) + ' / ' + esc(verificationStatusLabels[getVerificationStatus(l)]) + '</div>';
           html += '<div class="k-gate gate-' + esc(gate.state) + '">' + esc(gate.label) + '</div>';
+          html += '<div class="k-action priority-' + esc(action.priority) + '">Action: ' + esc(action.action) + '</div>';
           html += '</div>';
         });
         if (cards.length === 0) html += '<p style="color:#555;font-size:11px;text-align:center;padding:20px 0;">없음</p>';
