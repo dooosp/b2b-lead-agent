@@ -35,3 +35,15 @@ test('workflows use Node 24 compatible GitHub Actions runtime versions', async (
     assert.match(workflow, /actions\/setup-node@v5/);
   }
 });
+
+test('non-production check workflows use lockfile-backed npm ci installs', async () => {
+  const [ciWorkflow, validateNamingWorkflow] = await Promise.all([
+    readFile(ciWorkflowPath, 'utf8'),
+    readFile(validateNamingWorkflowPath, 'utf8')
+  ]);
+
+  for (const workflow of [ciWorkflow, validateNamingWorkflow]) {
+    assert.match(workflow, /run:\s+npm ci/);
+    assert.doesNotMatch(workflow, /run:\s+npm install/);
+  }
+});
