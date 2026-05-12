@@ -14,7 +14,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 
 ## Current Shipped Baseline
 
-- `master` includes the April 7, 2026 hardening cycle, the PR #25 P0 trust-boundary baseline, the PR #27 LeadBrief v1 review contract baseline, the May 11 route/data/schema/evidence/docs cleanup train, PR #51's post-train integration, PR #52/#53 review-roadmap follow-ups, PR #54 review queue filters, PR #55 Solution Translation Summary, PR #56 source-of-truth doc sync, PR #57 Product Context / Signal Fusion, PR #58 post-PR57 doc sync, PR #59 Workbench Stakeholder Prep, PR #60 source-of-truth doc sync, and PR #61 evidence/data-gap review slices through `5a13e2c`.
+- `master` includes the April 7, 2026 hardening cycle, the PR #25 P0 trust-boundary baseline, the PR #27 LeadBrief v1 review contract baseline, the May 11 route/data/schema/evidence/docs cleanup train, PR #51's post-train integration, PR #52/#53 review-roadmap follow-ups, PR #54 review queue filters, PR #55 Solution Translation Summary, PR #56 source-of-truth doc sync, PR #57 Product Context / Signal Fusion, PR #58 post-PR57 doc sync, PR #59 Workbench Stakeholder Prep, PR #60 source-of-truth doc sync, PR #61 evidence/data-gap review slices, PR #62 source-of-truth doc sync, and PR #63 advisory roleplay stakeholder context through `09106e5`.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -24,9 +24,10 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - PR #51 integrated PRs #44-#49: Opportunity Workbench v1, local-only Worker E2E harness, Worker auth/error hardening, synthetic lead-quality evaluation, old PR #23 replacement, and roadmap synthesis.
 - PR #59 recut old PR #6 as advisory role-specific Workbench helper guidance on top of existing LeadBrief/Opportunity Workbench data.
 - PR #61 recut old PR #3's remaining dashboard-intelligence idea as cached `/leads` evidence/data-gap review slices without API, schema, storage, production, or CRM expansion.
+- PR #63 recut old PR #6's remaining roleplay idea as advisory selected-LeadBrief stakeholder context without outreach approval, CRM ownership, schema, storage, production, or source-of-truth expansion.
 - Do not reopen those findings unless you can point to a current-`master` regression or a newly verified gap.
 - Treat closed PRs #1-#9, #10, #22, and #23 as stale/superseded concept inventory unless explicitly re-scoped on top of current `master`.
-- Recommended next non-production product goal: land advisory roleplay stakeholder context from shipped Workbench prep, then sync source-of-truth docs, keeping it human-reviewed and outside CRM ownership.
+- Recommended next non-production repo-maintenance goal: address the Validate Naming workflow's Node runtime deprecation annotation by aligning GitHub Actions versions, keeping the change CI-only and non-production.
 
 ## Repo Layout
 
