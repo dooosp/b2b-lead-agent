@@ -189,8 +189,8 @@
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
-  - Recommended next non-production goal: extend roleplay with advisory stakeholder context on top of the shipped Workbench model.
-  - Rationale: Workbench, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, and evidence/data-gap review slices are now shipped. The next increment should improve reviewed conversation prep without reviving old stacked branches or expanding CRM ownership.
+  - Recommended next non-production goal: land advisory roleplay stakeholder context on top of the shipped Workbench model, then sync source-of-truth docs.
+  - Rationale: Workbench, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, and evidence/data-gap review slices are now shipped. The active roleplay increment should improve reviewed conversation prep without reviving old stacked branches or expanding CRM ownership.
   - Keep production proof, platform migration, storage migration, and production observation work behind separate approval gates.
 
 ## Current Operating Sequence
