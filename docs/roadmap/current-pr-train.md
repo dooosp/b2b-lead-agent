@@ -5,14 +5,14 @@ This document summarizes the May 2026 PR train, stale PR disposition, and next w
 Evidence baseline:
 
 - Repo default branch: `master`
-- Current pinned `origin/master`: `39f69fac7f9509ed657f504ee1d9a0c694a00852`
+- Current pinned `origin/master`: `5a13e2c2941853b6f7a799c432d5f03d349191af`
 - Evidence collected from GitHub PR/issue metadata, PR bodies, current `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md`
 - Scope: documentation synthesis only
 - Production actions performed for this synthesis: none
 
 ## May 11 PR Train
 
-PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs #44 through #49. PRs #52 through #59 refreshed repo state and shipped the first review-quality follow-ups. Together they established the current post-LeadBrief baseline: Worker routes are split into `worker/routes/*`, LeadBrief trust data is preserved across the data path, schema drift has a local/CI guard, release evidence tooling is local-only, architecture docs are refreshed, stale module alias wrappers are removed, Opportunity Workbench v1 is shipped, advisory next-review guidance is available, `/leads` review queue filters are shipped, Solution Translation Summary is shipped, Product Context / Signal Fusion is shipped, Stakeholder Prep is available as Workbench-only advisory guidance, local-only Worker E2E is available, Worker auth/error boundaries are hardened, and synthetic lead-quality evaluation is available.
+PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs #44 through #49. PRs #52 through #61 refreshed repo state and shipped the first review-quality follow-ups. Together they established the current post-LeadBrief baseline: Worker routes are split into `worker/routes/*`, LeadBrief trust data is preserved across the data path, schema drift has a local/CI guard, release evidence tooling is local-only, architecture docs are refreshed, stale module alias wrappers are removed, Opportunity Workbench v1 is shipped, advisory next-review guidance is available, `/leads` review queue filters and evidence/data-gap slices are shipped, Solution Translation Summary is shipped, Product Context / Signal Fusion is shipped, Stakeholder Prep is available as Workbench-only advisory guidance, local-only Worker E2E is available, Worker auth/error boundaries are hardened, and synthetic lead-quality evaluation is available.
 
 | Actual merge order | PR | Merged at UTC | Role | Roadmap implication |
 | --- | --- | --- | --- | --- |
@@ -38,11 +38,12 @@ PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs
 | [#57](https://github.com/dooosp/b2b-lead-agent/pull/57) | Product Context / Signal Fusion | Old PR #1's useful context-fusion idea was recut into Workbench guidance without schema, API, storage, or CRM expansion. |
 | [#58](https://github.com/dooosp/b2b-lead-agent/pull/58) | Post-PR57 doc sync | Source-of-truth docs were synced after Product Context / Signal Fusion landed. |
 | [#59](https://github.com/dooosp/b2b-lead-agent/pull/59) | Stakeholder Prep | Old PR #6's useful stakeholder-prep idea was recut into Workbench guidance without roleplay API, schema, storage, production, or CRM expansion. |
-| Current follow-up | Evidence/data-gap review slices | Old PR #3's remaining dashboard-intelligence idea is recut into cached `/leads` review helper guidance without API, schema, storage, production, or CRM expansion. |
+| [#60](https://github.com/dooosp/b2b-lead-agent/pull/60) | Post-PR59 doc sync | Source-of-truth docs were synced after Stakeholder Prep landed. |
+| [#61](https://github.com/dooosp/b2b-lead-agent/pull/61) | Evidence/data-gap review slices | Old PR #3's remaining dashboard-intelligence idea was recut into cached `/leads` review helper guidance without API, schema, storage, production, or CRM expansion. |
 
 ## Immediate Merge Queue
 
-No open PRs remain after PR #59. PRs #44-#49 are merged through #51, PRs #52-#59 are merged into `master`, and old PRs #1-#9 are closed without merge after disposition comments.
+No open PRs remain after PR #61. PRs #44-#49 are merged through #51, PRs #52-#61 are merged into `master`, and old PRs #1-#9 are closed without merge after disposition comments.
 
 ## Old PR Disposition
 
@@ -52,7 +53,7 @@ These PRs are closed without merge. Treat them as concept inventory unless expli
 | --- | --- | --- |
 | [#1](https://github.com/dooosp/b2b-lead-agent/pull/1) Signal fusion and product knowledge foundation | Closed, conflicted | Useful product-context and signal-fusion concept was recut by PR #57. Do not merge the old branch. |
 | [#2](https://github.com/dooosp/b2b-lead-agent/pull/2) Solution translation outputs | Closed, stacked on #1 | Useful "why this solution" / "why now" concept was recut by PR #55. Do not merge the old branch because it predates the current LeadBrief, route, and trust baseline. |
-| [#3](https://github.com/dooosp/b2b-lead-agent/pull/3) Dashboard intelligence views | Closed, stacked | Useful review queue filtering concept was recut by PR #54. Remaining evidence/data-gap review-slice concept is recut in the current follow-up from current `master`. |
+| [#3](https://github.com/dooosp/b2b-lead-agent/pull/3) Dashboard intelligence views | Closed, stacked | Useful review queue filtering concept was recut by PR #54, and the remaining evidence/data-gap review-slice concept was recut by PR #61 from current `master`. |
 | [#4](https://github.com/dooosp/b2b-lead-agent/pull/4) Win-loss learning foundation | Closed, stacked | Deprioritize until review quality is proven; avoid CRM-like lifecycle expansion for now. |
 | [#5](https://github.com/dooosp/b2b-lead-agent/pull/5) Next-best-action and deal risk signals | Closed, stacked | Useful next-review guidance concept was recut by PR #53. Do not merge the old stacked branch. |
 | [#6](https://github.com/dooosp/b2b-lead-agent/pull/6) Stakeholder persuasion flows | Closed, stacked | Useful stakeholder-prep concept was recut as Workbench advisory guidance. Keep any future roleplay extension clearly non-approval and human-reviewed. |
