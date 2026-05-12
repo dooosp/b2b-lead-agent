@@ -54,3 +54,10 @@ test('CI workflow runs the synthetic lead-quality evaluator before full tests', 
   assert.match(workflow, /name:\s+Run synthetic lead-quality evaluation\s+run:\s+npm run eval:lead-quality/);
   assert.match(workflow, /run:\s+npm run check:schema[\s\S]*run:\s+npm run eval:lead-quality[\s\S]*run:\s+npm test/);
 });
+
+test('CI workflow runs the local-only Worker E2E smoke after full tests', async () => {
+  const workflow = await readFile(ciWorkflowPath, 'utf8');
+
+  assert.match(workflow, /name:\s+Run local-only Worker E2E smoke\s+run:\s+npm run test:e2e:local/);
+  assert.match(workflow, /run:\s+npm test[\s\S]*run:\s+npm run test:e2e:local/);
+});

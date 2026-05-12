@@ -30,3 +30,6 @@ jobs:
 
       - name: Run unit and contract tests
         run: npm test
+
+      - name: Run local-only Worker E2E smoke
+        run: npm run test:e2e:local
