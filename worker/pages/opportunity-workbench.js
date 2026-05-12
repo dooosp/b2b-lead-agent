@@ -252,6 +252,47 @@ function buildNextAction({ reviewStatus, verificationStatus, generationMode, con
   };
 }
 
+function buildReviewGate({ reviewStatus, verificationStatus, confidence, evidence, sources, dataGaps }) {
+  const items = [];
+
+  if (reviewStatus.value === 'APPROVED') {
+    addUnique(items, '사람 승인 완료');
+  } else if (reviewStatus.value === 'REJECTED') {
+    addUnique(items, '사람 검토 반려');
+  } else if (reviewStatus.value === 'DEFERRED') {
+    addUnique(items, '사람 검토 보류');
+  } else {
+    addUnique(items, `사람 검토 상태: ${reviewStatus.value}`);
+  }
+
+  addUnique(items, verificationStatus.value === 'verified' ? '검증 완료' : `검증 상태: ${verificationStatus.value}`);
+  addUnique(items, `신뢰도 ${confidence.value}`);
+  addUnique(items, evidence.count > 0 ? `직접 근거 ${evidence.count}개` : '직접 인용 없음');
+  addUnique(items, sources.count > 0 ? `출처 ${sources.count}개` : '출처 없음');
+  addUnique(items, dataGaps.count > 0 ? `데이터 공백 ${dataGaps.count}건` : '데이터 공백 없음');
+
+  const isReady = reviewStatus.value === 'APPROVED'
+    && verificationStatus.value === 'verified'
+    && confidence.value === 'HIGH'
+    && evidence.count > 0
+    && sources.count > 0
+    && dataGaps.count === 0;
+
+  if (isReady) {
+    return { state: 'ready', label: '품질 게이트 통과', items };
+  }
+
+  if (reviewStatus.value === 'REJECTED') {
+    return { state: 'blocked', label: '게이트 차단', items };
+  }
+
+  if (reviewStatus.value === 'DEFERRED') {
+    return { state: 'hold', label: '게이트 보류', items };
+  }
+
+  return { state: 'review', label: '게이트 보강 필요', items };
+}
+
 function buildSolutionTranslation({ brief, reviewStatus, verificationStatus, confidence, evidence, dataGaps }) {
   const solution = cleanText(
     brief.product || brief.solution || brief.recommendedProduct || brief.productName,
@@ -484,6 +525,14 @@ export function buildOpportunityWorkbenchModel(lead = {}) {
     sources,
     dataGaps,
   });
+  const reviewGate = buildReviewGate({
+    reviewStatus,
+    verificationStatus,
+    confidence,
+    evidence,
+    sources,
+    dataGaps,
+  });
   const solutionTranslation = buildSolutionTranslation({
     brief,
     reviewStatus,
@@ -524,6 +573,7 @@ export function buildOpportunityWorkbenchModel(lead = {}) {
     dataGaps,
     assumptions,
     nextAction,
+    reviewGate,
     solutionTranslation,
     productContext,
     stakeholderPrep,
@@ -557,7 +607,7 @@ function renderStakeholderRole(role) {
 }
 
 export function renderOpportunityWorkbench(model) {
-  const workbench = model && model.nextAction && model.solutionTranslation && model.productContext && model.stakeholderPrep
+  const workbench = model && model.nextAction && model.reviewGate && model.solutionTranslation && model.productContext && model.stakeholderPrep
     ? model
     : buildOpportunityWorkbenchModel(model);
   const scoreLabel = workbench.score === null ? '점수 미확인' : `${workbench.score}점`;
@@ -583,6 +633,13 @@ export function renderOpportunityWorkbench(model) {
           <span>${escapeHtml(workbench.whyNow)}</span>
         </div>
         <div class="opportunity-workbench-grid">
+          <div class="opportunity-workbench-panel opportunity-workbench-wide opportunity-workbench-gate gate-${escapeHtml(workbench.reviewGate.state)}">
+            <span class="panel-label">품질 게이트</span>
+            <strong>${escapeHtml(workbench.reviewGate.label)}</strong>
+            <ul class="opportunity-workbench-list opportunity-workbench-gate-list">
+              ${renderTextItems(workbench.reviewGate.items, '게이트 항목 없음')}
+            </ul>
+          </div>
           <div class="opportunity-workbench-panel opportunity-workbench-wide opportunity-workbench-solution">
             <span class="panel-label">솔루션 번역</span>
             <div class="opportunity-workbench-solution-grid">
@@ -700,6 +757,14 @@ export function getOpportunityWorkbenchStyles() {
     .opportunity-workbench-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
     .opportunity-workbench-panel { border:1px solid #26384c; border-radius:8px; padding:12px; background:#121a24; min-width:0; }
     .opportunity-workbench-wide { grid-column:span 2; }
+    .opportunity-workbench-gate { display:grid; gap:10px; }
+    .opportunity-workbench-gate strong { color:#f4f7fb; display:block; font-size:14px; line-height:1.4; }
+    .opportunity-workbench-gate-list { display:grid; gap:6px; grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .opportunity-workbench-gate-list li { border:1px solid #223447 !important; border-radius:8px; background:#101925; padding:8px !important; }
+    .opportunity-workbench-gate.gate-ready { border-color:#2e7d4f; }
+    .opportunity-workbench-gate.gate-review { border-color:#806718; }
+    .opportunity-workbench-gate.gate-hold { border-color:#566273; }
+    .opportunity-workbench-gate.gate-blocked { border-color:#8a3b3b; }
     .opportunity-workbench-solution-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
     .opportunity-workbench-solution-grid div { border:1px solid #223447; border-radius:8px; padding:10px; background:#101925; min-width:0; }
     .opportunity-workbench-solution-grid strong { color:#a8efc0; display:block; font-size:12px; margin-bottom:5px; }
@@ -733,6 +798,7 @@ export function getOpportunityWorkbenchStyles() {
       .opportunity-workbench-header { flex-direction:column; }
       .opportunity-workbench-action { min-width:0; width:100%; }
       .opportunity-workbench-grid { grid-template-columns:1fr; }
+      .opportunity-workbench-gate-list { grid-template-columns:1fr; }
       .opportunity-workbench-solution-grid { grid-template-columns:1fr; }
       .opportunity-workbench-context-grid { grid-template-columns:1fr; }
       .opportunity-workbench-stakeholder-grid { grid-template-columns:1fr; }

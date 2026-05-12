@@ -109,6 +109,7 @@
   - roadmap synthesis for old PR disposition and product boundaries.
 - PRs #52-#68 then refreshed repo state and shipped bounded review-quality follow-ups:
   - advisory next-review-action reasons and checklist items.
+  - deterministic Workbench review gate from current LeadBrief fields.
   - cached `/leads` review queue filters.
   - Workbench Solution Translation Summary guidance.
   - source-of-truth doc sync after the Solution Translation Summary landed.
@@ -196,7 +197,7 @@
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
   - Recommended next non-production goal: start from a fresh current-`master` audit and choose the next small review-quality, local-evidence, or CI-maintenance slice with explicit non-production boundaries.
-  - Rationale: Workbench, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay local/test/CI oriented unless a separate human-approved production prompt opens operational work.
+  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay local/test/CI oriented unless a separate human-approved production prompt opens operational work.
   - Keep production proof, platform migration, storage migration, and production observation work behind separate approval gates.
 
 ## Current Operating Sequence

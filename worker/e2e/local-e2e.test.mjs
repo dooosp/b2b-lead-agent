@@ -180,6 +180,8 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.match(page.url(), /\/leads\/local-lead-approved$/);
   await assertRenderedText(page, [
     '사람 검토',
+    '품질 게이트',
+    '품질 게이트 통과',
     '검토 승인',
     '신뢰도 HIGH',
     '솔루션 번역',
