@@ -129,11 +129,46 @@ test('opportunity workbench gives approved verified leads an advisory outreach c
   const html = renderOpportunityWorkbench(model);
 
   assert.equal(model.nextAction.label, '영업 액션 준비');
+  assert.equal(model.reviewGate.state, 'ready');
+  assert.equal(model.reviewGate.label, '품질 게이트 통과');
+  assert.ok(model.reviewGate.items.includes('사람 승인 완료'));
+  assert.ok(model.reviewGate.items.includes('검증 완료'));
+  assert.ok(model.reviewGate.items.includes('직접 근거 1개'));
+  assert.ok(model.reviewGate.items.includes('데이터 공백 없음'));
   assert.deepEqual(model.nextAction.reasons, ['사람 검토 승인', '검증됨', '신뢰도 HIGH']);
   assert.ok(model.nextAction.checklist.includes('추천 메시지를 사람 검토 후 개인화하세요.'));
   assert.ok(model.nextAction.checklist.includes('후속 조치일과 담당 메모를 남기세요.'));
+  assert.match(html, /품질 게이트/);
+  assert.match(html, /품질 게이트 통과/);
   assert.match(html, /추천 메시지를 사람 검토 후 개인화하세요\./);
   assert.match(html, /후속 조치일과 담당 메모를 남기세요\./);
+});
+
+test('opportunity workbench review gate summarizes blockers for weak leads', () => {
+  const model = buildOpportunityWorkbenchModel({
+    id: 'lead-gate-blockers',
+    company: 'Gate Blocker Co',
+    reviewStatus: 'NEEDS_REVIEW',
+    verificationStatus: 'needs_review',
+    generationMode: 'heuristic',
+    signal: 'Expansion rumor needs confirmation',
+    confidence: 'LOW',
+    evidence: [],
+    sources: [],
+    dataGaps: ['Buyer not confirmed', 'Budget not published'],
+  });
+  const html = renderOpportunityWorkbench(model);
+
+  assert.equal(model.reviewGate.state, 'review');
+  assert.equal(model.reviewGate.label, '게이트 보강 필요');
+  assert.ok(model.reviewGate.items.includes('사람 검토 상태: NEEDS_REVIEW'));
+  assert.ok(model.reviewGate.items.includes('검증 상태: needs_review'));
+  assert.ok(model.reviewGate.items.includes('신뢰도 LOW'));
+  assert.ok(model.reviewGate.items.includes('직접 인용 없음'));
+  assert.ok(model.reviewGate.items.includes(`데이터 공백 ${model.dataGaps.count}건`));
+  assert.match(html, /품질 게이트/);
+  assert.match(html, /게이트 보강 필요/);
+  assert.match(html, new RegExp(`데이터 공백 ${model.dataGaps.count}건`));
 });
 
 test('opportunity workbench translates solution fit from current LeadBrief fields', () => {

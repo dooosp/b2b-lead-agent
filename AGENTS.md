@@ -25,6 +25,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - PR #59 recut old PR #6 as advisory role-specific Workbench helper guidance on top of existing LeadBrief/Opportunity Workbench data.
 - PR #61 recut old PR #3's remaining dashboard-intelligence idea as cached `/leads` evidence/data-gap review slices without API, schema, storage, production, or CRM expansion.
 - PR #63 recut old PR #6's remaining roleplay idea as advisory selected-LeadBrief stakeholder context without outreach approval, CRM ownership, schema, storage, production, or source-of-truth expansion.
+- Opportunity Workbench includes a deterministic review gate that summarizes readiness/blockers from current LeadBrief fields only.
 - PR #65 aligned the Validate Naming workflow with Node 24-compatible GitHub Actions versions and extended workflow contract coverage for that workflow.
 - PR #67 switched non-production check workflows to lockfile-backed `npm ci` installs and added workflow contract coverage for that install policy.
 - PR #68 synced source-of-truth docs after PR #67 and confirmed the no-open-PR post-PR67 state.
