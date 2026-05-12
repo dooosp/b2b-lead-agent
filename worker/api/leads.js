@@ -1,6 +1,6 @@
 import { jsonResponse } from '../lib/utils.js';
 import { canonicalizeLeadCollectionForProfile, resolveProfileId } from '../lib/profile.js';
-import { buildReviewerActionQueue } from '../lib/lead-action-intelligence.js';
+import { buildLeadReviewSession, buildReviewerActionQueue } from '../lib/lead-action-intelligence.js';
 import { getLeadsByProfile, getAllLeads, getLeadById, saveLeadsBatch, updateLeadPatchAtomic } from '../db/leads.js';
 import { createLeadsCsvFilename, serializeLeadsCsv } from './serializers/lead-csv.js';
 
@@ -9,11 +9,13 @@ function canonicalizeLeadPayload(profile, leads) {
 }
 
 function buildLeadListPayload(canonicalized, source, extra = {}) {
+  const reviewerActionQueue = buildReviewerActionQueue(canonicalized.leads);
   return {
     leads: canonicalized.leads,
     profile: canonicalized.profileId,
     source,
-    reviewerActionQueue: buildReviewerActionQueue(canonicalized.leads),
+    reviewerActionQueue,
+    leadReviewSession: buildLeadReviewSession(canonicalized.leads, { queue: reviewerActionQueue }),
     ...extra,
   };
 }

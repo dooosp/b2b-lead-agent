@@ -74,6 +74,14 @@ const LEAD_CONFIDENCE_WEIGHT = Object.freeze({
   LOW: 1,
 });
 
+const REVIEW_STATUS_COUNT_KEYS = Object.freeze([
+  'NEW',
+  'NEEDS_REVIEW',
+  'APPROVED',
+  'REJECTED',
+  'DEFERRED',
+]);
+
 function cleanText(value, fallback = '') {
   const text = String(value ?? '').replace(/\s+/g, ' ').trim();
   return text || fallback;
@@ -191,6 +199,45 @@ function matchesQueueFilters(item, filters = {}) {
   if (missingInfo === 'none' && item.missingInfoCount > 0) return false;
 
   return true;
+}
+
+function normalizeSessionFilters(filters = {}) {
+  if (!filters || typeof filters !== 'object') return {};
+  return Object.fromEntries(
+    Object.entries(filters)
+      .map(([key, value]) => [key, normalizeFilterValue(value)])
+      .filter(([, value]) => value && value !== 'all')
+  );
+}
+
+function buildReviewStatusCounts(leads) {
+  const counts = Object.fromEntries(REVIEW_STATUS_COUNT_KEYS.map((status) => [status, 0]));
+  for (const lead of leads) {
+    const brief = toLeadBriefV1(lead);
+    if (Object.prototype.hasOwnProperty.call(counts, brief.reviewStatus)) counts[brief.reviewStatus] += 1;
+  }
+  return counts;
+}
+
+function summarizeNextLead(item) {
+  if (!item) return null;
+  return {
+    leadId: item.leadId,
+    company: item.company,
+    reviewStatus: item.reviewStatus,
+    verificationStatus: item.verificationStatus,
+    generationMode: item.generationMode,
+    leadConfidence: item.leadConfidence,
+    nextReviewAction: item.nextReviewAction,
+    nextReviewActionLabel: item.nextReviewActionLabel,
+    reviewPriority: item.reviewPriority,
+    actionConfidence: item.actionConfidence,
+    queueLane: item.queueLane,
+    queueLaneLabel: item.queueLaneLabel,
+    reasonSnippet: item.reasonSnippet,
+    riskCount: item.riskCount,
+    missingInfoCount: item.missingInfoCount,
+  };
 }
 
 function normalizeEvidenceItems(value) {
@@ -523,5 +570,35 @@ export function buildReviewerActionQueue(leads = [], options = {}) {
       withRisks: items.filter((item) => item.riskCount > 0).length,
       withMissingInfo: items.filter((item) => item.missingInfoCount > 0).length,
     },
+  };
+}
+
+export function buildLeadReviewSession(leads = [], options = {}) {
+  const sourceLeads = Array.isArray(leads) ? leads : [];
+  const queue = options.queue && typeof options.queue === 'object'
+    ? options.queue
+    : buildReviewerActionQueue(sourceLeads, options);
+  const lanes = Array.isArray(queue.lanes) ? queue.lanes : [];
+  const remainingByLane = Object.fromEntries(lanes.map((lane) => [lane.id, Number(lane.count) || 0]));
+  const laneSummaries = lanes.map((lane) => ({
+    id: lane.id,
+    label: lane.label,
+    description: lane.description,
+    remaining: Number(lane.count) || 0,
+  }));
+  const visibleItems = Array.isArray(queue.items) ? queue.items : [];
+  const reviewStatusCounts = buildReviewStatusCounts(visibleItems.map((item) => ({ reviewStatus: item.reviewStatus })));
+
+  return {
+    totalLeads: sourceLeads.length,
+    totalQueueCount: Number(queue.totalCount) || sourceLeads.length,
+    visibleLeads: Number(queue.visibleCount) || visibleItems.length,
+    filterContext: normalizeSessionFilters(options.filters),
+    remainingByLane,
+    laneSummaries,
+    reviewStatusCounts,
+    approvedCount: reviewStatusCounts.APPROVED,
+    needsReviewCount: reviewStatusCounts.NEEDS_REVIEW,
+    nextLead: summarizeNextLead(visibleItems[0]),
   };
 }

@@ -27,10 +27,12 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   const harness = await createLocalE2EHarness({ env });
   let browser;
   let failingHarness;
+  let reviewFailureHarness;
 
   t.after(async () => {
     if (browser) await browser.close();
     if (failingHarness) await failingHarness.close();
+    if (reviewFailureHarness) await reviewFailureHarness.close();
     await harness.close();
     fetchGuard.restore();
   });
@@ -62,6 +64,13 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   ]);
   assert.equal(leadsPayload.reviewerActionQueue.summary.approvalCandidates, 1);
   assert.equal(leadsPayload.reviewerActionQueue.summary.needsEvidence, 1);
+  assert.equal(leadsPayload.leadReviewSession.totalLeads, 2);
+  assert.equal(leadsPayload.leadReviewSession.visibleLeads, 2);
+  assert.equal(leadsPayload.leadReviewSession.approvedCount, 1);
+  assert.equal(leadsPayload.leadReviewSession.needsReviewCount, 1);
+  assert.equal(leadsPayload.leadReviewSession.remainingByLane.approval_candidates, 1);
+  assert.equal(leadsPayload.leadReviewSession.remainingByLane.needs_evidence, 1);
+  assert.equal(leadsPayload.leadReviewSession.nextLead.leadId, 'local-lead-approved');
   const approvedLead = leadsPayload.leads.find((lead) => lead.id === 'local-lead-approved');
   assert.equal(approvedLead.reviewStatus, 'APPROVED');
 
@@ -160,6 +169,11 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '낮은 우선순위 0건',
     'Risk flags 5',
     'Missing info 6',
+    'Lead Review Session',
+    '현재 큐',
+    '다음 검토 리드: Local Factory Automation',
+    '승인 / 검토 필요',
+    '영업 신규',
     '목록 게이트 요약',
     '게이트 통과 1건',
     '보강 필요 1건',
@@ -171,6 +185,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   ]);
 
   assert.equal(await page.locator('#leadsList .lead-card').count(), 2);
+  await page.getByRole('button', { name: '다음 검토 리드' }).click();
+  assert.equal(await page.locator('#leadsList .lead-card.review-session-focus').count(), 1);
+
   await page.locator('[data-filter-key="gateStatus"]').selectOption('ready');
   assert.equal(await page.locator('#leadsList .lead-card').count(), 1);
   await assertRenderedText(page, ['Local Factory Automation', '목록 게이트 통과', 'Prepare reviewed follow-up', '전체 2건 중 표시', '게이트 통과 1건', '보강 필요 0건']);
@@ -232,8 +249,14 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.equal(await page.locator('#kanbanView .kanban-card').count(), 2);
 
   await page.getByText('리스트').click();
-  const reviewLeadCard = page.locator('#leadsList .lead-card').filter({ hasText: 'Local Data Center Cooling' });
-  await reviewLeadCard.getByLabel('검토 상태').selectOption('APPROVED');
+  await page.locator('[data-filter-key="nextReviewAction"]').selectOption('enrich_before_review');
+  await page.getByRole('button', { name: '승인' }).click();
+  await page.waitForFunction(() => {
+    const status = document.querySelector('#reviewSessionStatus');
+    return !!status && String(status.textContent || '').includes('영업 상태는 접촉 완료 유지');
+  });
+  await assertRenderedText(page, ['검토 상태만 승인', '영업 상태는 접촉 완료 유지', '필터 결과가 없습니다']);
+  await page.locator('#leadsList .filter-empty-state button').click();
   await page.waitForFunction(() => {
     const cards = [...document.querySelectorAll('#leadsList .lead-card')];
     const card = cards.find((candidate) => String(candidate.textContent || '').includes('Local Data Center Cooling'));
@@ -315,6 +338,22 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '전환율',
     '활성 리드',
   ]);
+
+  const reviewFailureEnv = createLocalSmokeEnv();
+  reviewFailureEnv.DB.failOnSql = [/UPDATE leads SET/i];
+  reviewFailureHarness = await createLocalE2EHarness({ env: reviewFailureEnv });
+  await page.goto(`${reviewFailureHarness.origin}/leads?profile=danfoss`, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => {
+    const el = document.querySelector('#leadsList');
+    return !!el && !String(el.textContent || '').includes('로딩 중');
+  });
+  await page.locator('[data-filter-key="nextReviewAction"]').selectOption('enrich_before_review');
+  await page.getByRole('button', { name: '승인' }).click();
+  await page.waitForSelector('#reviewSessionStatus.is-error');
+  const reviewFailureText = await page.locator('#reviewSessionStatus').textContent();
+  assert.match(reviewFailureText || '', /검토 상태를 저장하지 못했습니다/);
+  assert.doesNotMatch(reviewFailureText || '', /fake D1 forced failure/);
+  await assertRenderedText(page, ['Local Data Center Cooling', '검토 필요', 'Enrich before review']);
 
   assert.deepEqual(fetchGuard.blockedUrls, []);
 });

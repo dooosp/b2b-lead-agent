@@ -111,6 +111,28 @@ export function getLeadsPage() {
     .reviewer-action-lane li em { color:#cbd8e6; font-size:11px; font-style:normal; line-height:1.35; }
     .reviewer-action-lane li small { color:#8fa4b8; font-size:10px; line-height:1.4; }
     .reviewer-action-empty { color:#566273; font-size:11px; margin:9px 0 0; }
+    .review-session-panel { background:#121a24; border:1px solid #31506c; border-radius:8px; display:grid; gap:12px; margin:0 0 16px; padding:12px; text-align:left; }
+    .review-session-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; }
+    .review-session-head strong { color:#f4f7fb; font-size:14px; line-height:1.4; }
+    .review-session-head span { color:#8fa4b8; font-size:11px; line-height:1.5; }
+    .review-session-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+    .review-session-stat { background:#101925; border:1px solid #223447; border-radius:8px; min-width:0; padding:10px; }
+    .review-session-stat span { color:#8fa4b8; display:block; font-size:11px; line-height:1.4; margin-bottom:4px; }
+    .review-session-stat strong { color:#f4f7fb; display:block; font-size:18px; line-height:1.25; }
+    .review-session-next { background:#101925; border:1px solid #223447; border-radius:8px; display:grid; gap:9px; padding:10px; }
+    .review-session-next strong { color:#f4f7fb; font-size:14px; line-height:1.4; }
+    .review-session-next p { color:#9fb0c0; font-size:12px; line-height:1.5; margin:0; }
+    .review-session-meta { display:flex; flex-wrap:wrap; gap:6px; }
+    .review-session-meta span, .review-session-filter-chip { background:#162338; border:1px solid #2e4157; border-radius:6px; color:#cbd8e6; font-size:11px; line-height:1.4; padding:4px 7px; }
+    .review-session-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .review-session-actions button { font-size:12px; padding:6px 10px; }
+    .review-session-actions button:disabled { cursor:not-allowed; opacity:0.55; }
+    .review-session-status { border-radius:8px; color:#9fb0c0; font-size:12px; line-height:1.5; min-height:18px; padding:8px 10px; }
+    .review-session-status.is-idle { padding:0; }
+    .review-session-status.is-pending { background:#172338; color:#cde7ff; }
+    .review-session-status.is-success { background:#101f1a; color:#a8efc0; }
+    .review-session-status.is-error { background:#211719; color:#ffc4c4; }
+    .lead-card.review-session-focus { outline:2px solid #8fbfe8; outline-offset:3px; }
     .review-filter-bar { background:#121a24; border:1px solid #26384c; border-radius:10px; display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); margin:0 0 14px; padding:12px; text-align:left; }
     .review-filter-bar label { color:#8fa4b8; display:grid; gap:5px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0; }
     .review-filter-bar select { background:#16213e; border:1px solid #36506c; border-radius:7px; color:#f4f7fb; font-size:12px; padding:7px 8px; width:100%; }
@@ -173,7 +195,7 @@ export function getLeadsPage() {
       .lead-head { flex-direction:column; }
       .lead-badges { justify-content:flex-start; }
       .lead-metrics, .leads-summary { grid-template-columns:1fr; }
-      .review-slice-grid, .review-gate-summary .review-slice-grid, .reviewer-action-lanes { grid-template-columns:1fr; }
+      .review-slice-grid, .review-gate-summary .review-slice-grid, .reviewer-action-lanes, .review-session-grid { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -739,6 +761,104 @@ export function getLeadsPage() {
       \`;
     }
 
+    function getActiveReviewFilterEntries() {
+      const entries = [];
+      document.querySelectorAll('#reviewQueueFilters [data-filter-key]').forEach((select) => {
+        if (!select || !select.dataset || (select.value || 'all') === 'all') return;
+        const label = select.closest('label') ? select.closest('label').childNodes[0].textContent.trim() : select.dataset.filterKey;
+        const option = select.options[select.selectedIndex];
+        entries.push({
+          key: select.dataset.filterKey,
+          label,
+          value: option ? option.textContent.trim() : select.value,
+        });
+      });
+      return entries;
+    }
+
+    function getSessionState(leads) {
+      const list = Array.isArray(leads) ? leads : [];
+      const laneOrder = ['approval_candidates', 'needs_evidence', 'risk_review', 'low_priority'];
+      const remainingByLane = laneOrder.reduce((summary, laneId) => ({ ...summary, [laneId]: 0 }), {});
+      const reviewStatusCounts = reviewStatuses.reduce((summary, status) => ({ ...summary, [status]: 0 }), {});
+      const queueItems = list.map((lead) => getLeadQueueItem(lead)).filter(Boolean);
+
+      list.forEach((lead) => {
+        const status = getReviewStatus(lead);
+        if (Object.prototype.hasOwnProperty.call(reviewStatusCounts, status)) reviewStatusCounts[status] += 1;
+      });
+      queueItems.forEach((item) => {
+        if (Object.prototype.hasOwnProperty.call(remainingByLane, item.queueLane)) remainingByLane[item.queueLane] += 1;
+      });
+
+      const nextItem = queueItems[0] || null;
+      const nextLead = nextItem
+        ? list.find((lead) => getLeadId(lead) === nextItem.leadId) || null
+        : null;
+
+      return {
+        total: list.length,
+        remainingByLane,
+        reviewStatusCounts,
+        activeFilters: getActiveReviewFilterEntries(),
+        nextItem,
+        nextLead,
+      };
+    }
+
+    function renderLeadReviewSession(leads) {
+      const session = getSessionState(leads);
+      const filters = session.activeFilters.length > 0
+        ? session.activeFilters.map((filter) => \`<span class="review-session-filter-chip">\${esc(filter.label)}: \${esc(filter.value)}</span>\`).join('')
+        : '<span class="review-session-filter-chip">필터: 전체</span>';
+      const nextLeadId = session.nextLead ? getLeadId(session.nextLead) : '';
+      const currentReviewStatus = session.nextLead ? getReviewStatus(session.nextLead) : '';
+      const currentSalesStatus = session.nextLead ? (session.nextLead.status || 'NEW') : '';
+      const nextBody = session.nextItem && session.nextLead
+        ? \`
+          <div class="review-session-next">
+            <strong>다음 검토 리드: \${esc(session.nextItem.company || session.nextLead.company || '리드')}</strong>
+            <p>\${esc(session.nextItem.nextReviewActionLabel || 'Review lead')} · \${esc(session.nextItem.reasonSnippet || '')}</p>
+            <div class="review-session-meta">
+              <span>\${esc(session.nextItem.queueLaneLabel || queueLaneLabels[session.nextItem.queueLane] || session.nextItem.queueLane)}</span>
+              <span>Priority \${esc(session.nextItem.reviewPriority)}</span>
+              <span>Risk flags \${Number(session.nextItem.riskCount) || 0}</span>
+              <span>Missing info \${Number(session.nextItem.missingInfoCount) || 0}</span>
+              <span>검토 \${esc(reviewStatusLabels[currentReviewStatus] || currentReviewStatus)}</span>
+              <span>영업 \${esc(statusLabels[currentSalesStatus] || currentSalesStatus)}</span>
+            </div>
+            <div class="review-session-actions" aria-label="빠른 검토 작업">
+              <button class="btn btn-secondary" type="button" data-session-action="focus-next" data-lead-id="\${esc(nextLeadId)}">다음 검토 리드</button>
+              <button class="btn" type="button" data-session-action="review-status" data-review-status="APPROVED" data-lead-id="\${esc(nextLeadId)}" \${currentReviewStatus === 'APPROVED' ? 'disabled' : ''} aria-label="다음 리드를 승인으로 변경">승인</button>
+              <button class="btn btn-secondary" type="button" data-session-action="review-status" data-review-status="NEEDS_REVIEW" data-lead-id="\${esc(nextLeadId)}" \${currentReviewStatus === 'NEEDS_REVIEW' ? 'disabled' : ''} aria-label="다음 리드를 검토 필요로 변경">검토 필요</button>
+            </div>
+          </div>
+        \`
+        : '<div class="review-session-next"><strong>다음 검토 리드 없음</strong><p>현재 필터 결과에 검토할 리드가 없습니다.</p></div>';
+      const noticeTone = reviewSessionNotice.tone || 'idle';
+      const noticeMessage = reviewSessionNotice.message || '';
+
+      return \`
+        <section class="review-session-panel" aria-label="Lead Review Session">
+          <div class="review-session-head">
+            <strong>Lead Review Session</strong>
+            <span>현재 필터 기준 · reviewStatus만 빠르게 변경</span>
+          </div>
+          <div class="review-session-grid">
+            <div class="review-session-stat"><span>현재 큐</span><strong>\${session.total}</strong></div>
+            <div class="review-session-stat"><span>승인 후보</span><strong>\${session.remainingByLane.approval_candidates}</strong></div>
+            <div class="review-session-stat"><span>보강/리스크</span><strong>\${session.remainingByLane.needs_evidence + session.remainingByLane.risk_review}</strong></div>
+            <div class="review-session-stat"><span>승인 / 검토 필요</span><strong>\${session.reviewStatusCounts.APPROVED} / \${session.reviewStatusCounts.NEEDS_REVIEW}</strong></div>
+          </div>
+          <div class="review-session-meta" aria-label="현재 필터">
+            \${filters}
+          </div>
+          \${nextBody}
+          <div id="reviewSessionStatus" class="review-session-status is-\${esc(noticeTone)}" role="status" aria-live="polite">\${esc(noticeMessage)}</div>
+        </section>
+      \`;
+    }
+
     function renderReviewerActionQueue(leads) {
       const list = Array.isArray(leads) ? leads : [];
       const items = list.map((lead) => getLeadQueueItem(lead)).filter(Boolean);
@@ -875,6 +995,43 @@ export function getLeadsPage() {
       renderCurrentLeads();
     }
 
+    function setReviewSessionStatus(message, tone = 'idle') {
+      reviewSessionNotice = { message: message || '', tone };
+      const el = document.getElementById('reviewSessionStatus');
+      if (!el) return;
+      el.className = 'review-session-status is-' + tone;
+      el.textContent = message || '';
+    }
+
+    function findCachedLead(leadId) {
+      return cachedLeads.find((lead) => getLeadId(lead) === String(leadId || '')) || null;
+    }
+
+    function findLeadCard(leadId) {
+      return [...document.querySelectorAll('#leadsList .lead-card')]
+        .find((card) => card.dataset.leadId === String(leadId || '')) || null;
+    }
+
+    function scrollToNextReviewLead(leadId) {
+      const targetLeadId = leadId || (getSessionState(getFilteredLeads()).nextItem || {}).leadId;
+      if (!targetLeadId) {
+        setReviewSessionStatus('현재 필터에서 이동할 다음 검토 리드가 없습니다.', 'error');
+        return;
+      }
+      if (currentView !== 'list') switchView('list');
+      const card = findLeadCard(targetLeadId);
+      if (!card) {
+        setReviewSessionStatus('다음 검토 리드가 현재 필터 결과에 없습니다.', 'error');
+        return;
+      }
+      document.querySelectorAll('.lead-card.review-session-focus').forEach((item) => item.classList.remove('review-session-focus'));
+      card.classList.add('review-session-focus');
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      card.focus({ preventScroll: true });
+      const lead = findCachedLead(targetLeadId);
+      setReviewSessionStatus((lead && lead.company ? lead.company : '다음 리드') + ' 카드로 이동했습니다.', 'success');
+    }
+
     function renderFilterEmptyState(extraClass) {
       const className = 'filter-empty-state' + (extraClass ? ' ' + extraClass : '');
       return \`
@@ -899,18 +1056,32 @@ export function getLeadsPage() {
       } catch(e) { alert('상태 변경 실패: ' + e.message); }
     }
 
-    async function updateReviewStatus(leadId, newStatus, fromStatus) {
+    async function updateReviewStatus(leadId, newStatus, fromStatus, options = {}) {
       if (newStatus === fromStatus) return;
+      const lead = findCachedLead(leadId);
+      const originalSalesStatus = lead ? (lead.status || 'NEW') : '';
+      const label = reviewStatusLabels[newStatus] || newStatus;
+      setReviewSessionStatus('검토 상태 저장 중: ' + label, 'pending');
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({ reviewStatus: newStatus })
         });
-        const data = await res.json();
-        if (!data.success) { alert(data.message); loadLeads(); return; }
-        loadLeads();
-      } catch(e) { alert('검토 상태 변경 실패: ' + e.message); }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          setReviewSessionStatus('검토 상태를 저장하지 못했습니다. 필터와 리드는 그대로 유지됩니다.', 'error');
+          renderCurrentLeads();
+          return;
+        }
+        const returnedSalesStatus = data.lead ? (data.lead.status || 'NEW') : originalSalesStatus;
+        const salesStatusLabel = statusLabels[returnedSalesStatus] || returnedSalesStatus || '유지';
+        setReviewSessionStatus('검토 상태만 ' + label + '(으)로 저장했습니다. 영업 상태는 ' + salesStatusLabel + ' 유지.', 'success');
+        await loadLeads({ focusLeadId: options.focusLeadId || leadId });
+      } catch(e) {
+        setReviewSessionStatus('검토 상태를 저장하지 못했습니다. 네트워크 또는 로컬 저장소를 확인한 뒤 다시 시도하세요.', 'error');
+        renderCurrentLeads();
+      }
     }
 
     let saveTimers = {};
@@ -996,7 +1167,7 @@ export function getLeadsPage() {
       btn.textContent = '일괄 상세 분석';
     }
 
-    async function loadLeads() {
+    async function loadLeads(options = {}) {
       try {
         const res = await fetch('/api/leads?profile=' + getProfile(), {headers:authHeaders()});
         const data = await res.json();
@@ -1015,6 +1186,15 @@ export function getLeadsPage() {
         cachedLeads = data.leads;
         cacheReviewerActionQueue(data.reviewerActionQueue);
         renderCurrentLeads();
+        if (options.focusLeadId) {
+          requestAnimationFrame(() => {
+            const card = findLeadCard(options.focusLeadId);
+            if (card) {
+              card.classList.add('review-session-focus');
+              card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          });
+        }
       } catch(e) {
         document.getElementById('leadsList').innerHTML = '<p style="color:#e74c3c;">데이터 로드 실패: ' + esc(e.message) + '</p>';
       }
@@ -1023,12 +1203,13 @@ export function getLeadsPage() {
     let cachedLeads = [];
     let cachedReviewerQueue = { items: [], lanes: [] };
     let cachedQueueItemsByLeadId = {};
+    let reviewSessionNotice = { message: '', tone: 'idle' };
 
     function renderCurrentLeads() {
       const container = document.getElementById('leadsList');
       const summaryContainer = document.getElementById('leadsSummary');
       const filteredLeads = getFilteredLeads();
-      summaryContainer.innerHTML = renderLeadsSummary(filteredLeads, cachedLeads.length) + renderReviewerActionQueue(filteredLeads) + renderReviewGateSummary(filteredLeads) + renderReviewEvidenceSlices(filteredLeads);
+      summaryContainer.innerHTML = renderLeadsSummary(filteredLeads, cachedLeads.length) + renderLeadReviewSession(filteredLeads) + renderReviewerActionQueue(filteredLeads) + renderReviewGateSummary(filteredLeads) + renderReviewEvidenceSlices(filteredLeads);
       if (currentView === 'kanban') renderKanban(filteredLeads);
 
       if (filteredLeads.length === 0) {
@@ -1037,7 +1218,7 @@ export function getLeadsPage() {
       }
 
       container.innerHTML = filteredLeads.map((lead, i) => \`
-          <div class="lead-card \${lead.grade === 'A' ? 'grade-a' : lead.grade === 'B' ? 'grade-b' : ''}">
+          <div class="lead-card \${lead.grade === 'A' ? 'grade-a' : lead.grade === 'B' ? 'grade-b' : ''}" data-lead-id="\${esc(getLeadId(lead))}" tabindex="-1">
             <div class="lead-head">
               <div class="lead-title">
                 <h3>\${lead.id ? \`<a href="\${detailLink(lead.id)}" onclick="openLeadDetail('\${esc(lead.id)}', event)" style="color:inherit;text-decoration:none;">\${esc(lead.company)}</a>\` : esc(lead.company)}</h3>
@@ -1214,8 +1395,28 @@ export function getLeadsPage() {
 
     document.getElementById('historyLink').href = '/history?profile=' + encodeURIComponent(getProfile());
     if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-session-action]');
+      if (!button || button.disabled) return;
+      const action = button.dataset.sessionAction;
+      const leadId = button.dataset.leadId || '';
+      if (action === 'focus-next') {
+        scrollToNextReviewLead(leadId);
+        return;
+      }
+      if (action === 'review-status') {
+        const nextStatus = button.dataset.reviewStatus || '';
+        const lead = findCachedLead(leadId);
+        if (!lead || !reviewStatuses.includes(nextStatus)) {
+          setReviewSessionStatus('빠른 검토 작업을 실행할 리드를 찾지 못했습니다.', 'error');
+          return;
+        }
+        updateReviewStatus(leadId, nextStatus, getReviewStatus(lead), { focusLeadId: leadId });
+      }
+    });
     window.setReviewQueueFilter = setReviewQueueFilter;
     window.resetReviewQueueFilters = resetReviewQueueFilters;
+    window.scrollToNextReviewLead = scrollToNextReviewLead;
 
     loadLeads();
   </script>

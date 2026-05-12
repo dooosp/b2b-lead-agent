@@ -91,11 +91,27 @@ The first matching blocker decides the next action:
 ## Product Surfaces
 
 - Opportunity Workbench renders the full Lead Action Intelligence panel with action, reason, risk flags, missing-info prompts, stakeholder angle, and follow-up draft.
-- `/api/leads` includes additive `reviewerActionQueue` metadata built from the canonical helper after normal LeadBrief canonicalization. This does not change stored lead rows or require schema migration.
-- `/leads` renders Reviewer Action Queue lanes, action/priority/risk/missing-info filters, and compact card summaries from the queue metadata.
+- `/api/leads` includes additive `reviewerActionQueue` and `leadReviewSession` metadata built from the canonical helper after normal LeadBrief canonicalization. This does not change stored lead rows or require schema migration.
+- `/leads` renders Reviewer Action Queue lanes, action/priority/risk/missing-info filters, compact card summaries, and a Lead Review Session panel from the queue metadata.
 - Kanban cards render the compact next action below the gate chip.
 
 The list/Kanban UI keeps a conservative browser fallback for older payloads, but the canonical queue model is the Worker helper and the additive `/api/leads` queue metadata.
+
+## Lead Review Session V1
+
+Lead Review Session v1 is a local/test-safe review workflow layered on top of Reviewer Action Queue v1.1.
+
+It derives:
+
+- current queue size for the active browser filter context
+- remaining counts by queue lane
+- approved and needs-review review-status counts
+- active filter chips
+- the deterministic next lead candidate from the current queue order
+
+The `/leads` panel exposes a `다음 검토 리드` action that scrolls and focuses the next card. Quick actions are intentionally narrow: they use the existing PATCH flow and existing frozen review statuses (`APPROVED` and `NEEDS_REVIEW`) and send only `reviewStatus`. The sales pipeline `status` remains a separate control and is not changed by session quick actions.
+
+After a review-status mutation, `/leads` reloads the local queue metadata so lane counts, card guidance, and Workbench/detail guidance remain consistent with the updated row. If the update fails, the UI shows a bounded Korean failure message, does not expose SQL/provider/internal details, and keeps the current filter context usable.
 
 ## Boundaries
 
@@ -115,6 +131,7 @@ The list/Kanban UI keeps a conservative browser fallback for older payloads, but
 Coverage is local/test-only:
 
 - `worker/tests/lead-action-intelligence.test.mjs` covers strong, review-ready, missing-evidence, data-gap, low-confidence, stale, conflicting, and snake_case fallback leads.
-- `worker/tests/lead-action-intelligence.test.mjs` also covers Reviewer Action Queue grouping, sorting, filters, compact counts, snake_case fallback, and mutation-style reclassification.
+- `worker/tests/lead-action-intelligence.test.mjs` also covers Reviewer Action Queue grouping, sorting, filters, compact counts, Lead Review Session summary counts, next-lead candidate selection, snake_case fallback, and mutation-style reclassification.
 - `worker/tests/opportunity-workbench.test.mjs` covers Workbench rendering of the new guidance.
-- `worker/e2e/local-e2e.test.mjs` covers local fake-D1 rendering, Reviewer Action Queue lanes, action/risk/missing-info filters, list/Kanban summaries, review-status mutation updating queue guidance, zero-result reset flows, and the non-loopback fetch guard.
+- `worker/tests/lead-review-status.test.mjs` covers the `/leads` session panel, next-lead control, quick review actions, bounded failure messaging, and status-separation copy.
+- `worker/e2e/local-e2e.test.mjs` covers local fake-D1 rendering, Reviewer Action Queue lanes, Lead Review Session summary/next-lead navigation, quick review action success and failure paths, action/risk/missing-info filters, list/Kanban summaries, review-status mutation updating queue guidance, zero-result reset flows, sales-status preservation, and the non-loopback fetch guard.
