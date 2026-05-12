@@ -5,14 +5,14 @@ This document summarizes the May 2026 PR train, stale PR disposition, and next w
 Evidence baseline:
 
 - Repo default branch: `master`
-- Current pinned `origin/master`: `badfb497398ece549241f5dfbae76071e4ff6492`
+- Latest audited pre-refresh `origin/master`: `1dca7aa8df19aa8595135cdf243a030629435b95` (PR #68)
 - Evidence collected from GitHub PR/issue metadata, PR bodies, current `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md`
 - Scope: documentation synthesis only
 - Production actions performed for this synthesis: none
 
 ## May 11 PR Train
 
-PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs #44 through #49. PRs #52 through #67 refreshed repo state and shipped the first review-quality follow-ups. Together they established the current post-LeadBrief baseline: Worker routes are split into `worker/routes/*`, LeadBrief trust data is preserved across the data path, schema drift has a local/CI guard, release evidence tooling is local-only, architecture docs are refreshed, stale module alias wrappers are removed, Opportunity Workbench v1 is shipped, advisory next-review guidance is available, `/leads` review queue filters and evidence/data-gap slices are shipped, Solution Translation Summary is shipped, Product Context / Signal Fusion is shipped, Stakeholder Prep is available as Workbench-only advisory guidance, roleplay can consume advisory stakeholder context, Validate Naming uses Node 24-compatible GitHub Actions versions, non-production check workflows use lockfile-backed `npm ci`, local-only Worker E2E is available, Worker auth/error boundaries are hardened, and synthetic lead-quality evaluation is available.
+PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs #44 through #49. PRs #52 through #68 refreshed repo state and shipped the first review-quality follow-ups. Together they established the current post-LeadBrief baseline: Worker routes are split into `worker/routes/*`, LeadBrief trust data is preserved across the data path, schema drift has a local/CI guard, release evidence tooling is local-only, architecture docs are refreshed, stale module alias wrappers are removed, Opportunity Workbench v1 is shipped, advisory next-review guidance is available, `/leads` review queue filters and evidence/data-gap slices are shipped, Solution Translation Summary is shipped, Product Context / Signal Fusion is shipped, Stakeholder Prep is available as Workbench-only advisory guidance, roleplay can consume advisory stakeholder context, Validate Naming uses Node 24-compatible GitHub Actions versions, non-production check workflows use lockfile-backed `npm ci`, local-only Worker E2E is available, Worker auth/error boundaries are hardened, and synthetic lead-quality evaluation is available.
 
 | Actual merge order | PR | Merged at UTC | Role | Roadmap implication |
 | --- | --- | --- | --- | --- |
@@ -46,10 +46,11 @@ PRs #36 through #43 are already merged into `master`. PR #51 then integrated PRs
 | [#65](https://github.com/dooosp/b2b-lead-agent/pull/65) | Validate Naming workflow maintenance | Validate Naming now uses Node 24-compatible GitHub Actions versions, and workflow contract tests cover that workflow. |
 | [#66](https://github.com/dooosp/b2b-lead-agent/pull/66) | Post-PR65 doc sync | Source-of-truth docs were synced after Validate Naming workflow maintenance landed. |
 | [#67](https://github.com/dooosp/b2b-lead-agent/pull/67) | Check workflow deterministic installs | CI and Validate Naming now use lockfile-backed `npm ci`, with workflow contract tests covering the check-workflow install policy. |
+| [#68](https://github.com/dooosp/b2b-lead-agent/pull/68) | Post-PR67 doc sync | Source-of-truth docs were synced after deterministic check-workflow installs landed. |
 
 ## Immediate Merge Queue
 
-No open PRs remain after PR #67. PRs #44-#49 are merged through #51, PRs #52-#67 are merged into `master`, and old PRs #1-#9 are closed without merge after disposition comments.
+No open PRs remain after PR #68. PRs #44-#49 are merged through #51, PRs #52-#68 are merged into `master`, and old PRs #1-#9 are closed without merge after disposition comments.
 
 ## Old PR Disposition
 

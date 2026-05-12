@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
-> Status: current hardening source of truth for `master` as of 2026-05-11.
-> Audited against first-parent `master` history through `39f69fa` (`Merge pull request #59 from dooosp/codex/stakeholder-prep-v1`) and current GitHub PR state after stale PR #1-#9 closure.
+> Status: current hardening source of truth for `master` as of 2026-05-12.
+> Audited against first-parent `master` history through `1dca7aa` (`Merge pull request #68 from dooosp/codex/post-pr67-doc-sync-v1`) and current GitHub PR state after stale PR #1-#9 closure.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -107,16 +107,21 @@
   - synthetic lead-quality evaluation harness.
   - current-master replacement for old dashboard unauthorized UX PR #23.
   - roadmap synthesis for old PR disposition and product boundaries.
-- PRs #52-#59 then refreshed repo state and shipped bounded review-quality follow-ups:
+- PRs #52-#68 then refreshed repo state and shipped bounded review-quality follow-ups:
   - advisory next-review-action reasons and checklist items.
   - cached `/leads` review queue filters.
   - Workbench Solution Translation Summary guidance.
   - source-of-truth doc sync after the Solution Translation Summary landed.
   - Workbench Product Context / Signal Fusion guidance.
-- Workbench Stakeholder Prep guidance for economic buyer, technical evaluator, operator, procurement, and sponsor/champion contexts.
+  - Workbench Stakeholder Prep guidance for economic buyer, technical evaluator, operator, procurement, and sponsor/champion contexts.
+  - evidence/data-gap review slices on cached `/leads` rows.
+  - advisory selected-LeadBrief stakeholder context for roleplay practice.
+  - Validate Naming workflow action maintenance.
+  - lockfile-backed `npm ci` installs in non-production check workflows.
+  - source-of-truth doc sync through PR #68.
 - PR #59 recut the useful old PR #6 idea as deterministic role-specific review prep using existing LeadBrief/enrichment fields only. It does not approve outreach, change schema/API/storage, or expand CRM ownership.
 - Stale PRs #1-#9 were audited after PR #51, received disposition comments, and were closed without merge or branch deletion. Their useful ideas remain concept inventory to recut from current `master`.
-- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#59 or the stale PR cleanup.
+- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#68 or the stale PR cleanup.
 
 ## Findings Closed On `master`
 
