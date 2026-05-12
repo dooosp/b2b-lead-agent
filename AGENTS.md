@@ -93,4 +93,5 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - `npm run test:unit` for worker unit coverage only
 - `npm run test:contract` for worker trigger and contract coverage only
 - `npm run test:worker` for the combined worker gate (`test:unit` + `test:contract`)
+- `npm run eval:lead-quality` for synthetic-only LeadBrief quality and review-readiness checks
 - `npm test` for the root gate plus the combined worker gate

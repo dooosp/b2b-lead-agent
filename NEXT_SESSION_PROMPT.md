@@ -23,7 +23,7 @@
   - Route-boundary and schema/default/error tests were consolidated around those helpers.
 - PR #39 landed D1 schema drift hardening:
   - `npm run check:schema` verifies consistency between `worker/schema.sql` and `worker/db/schema.js`.
-  - CI runs the schema check before `npm test`.
+  - CI runs the schema check and synthetic lead-quality evaluation before `npm test`.
 - PR #40 landed lead review UX metadata improvements:
   - Lead list/detail pages show review, verification, generation, confidence, evidence, and data-gap metadata more explicitly.
 - PR #41 landed local release evidence toolkit:
@@ -73,6 +73,7 @@
 
 - `npm run check:naming` = canonical path/naming guard
 - `npm run check:schema` = local D1 schema drift guard
+- `npm run eval:lead-quality` = synthetic-only LeadBrief quality and review-readiness evaluator
 - `npm run test:evidence` = release evidence toolkit tests
 - `npm run test:unit` = Worker unit coverage
 - `npm run test:contract` = Worker contract and trigger coverage
