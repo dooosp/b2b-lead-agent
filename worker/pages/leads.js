@@ -130,16 +130,34 @@ export function getLeadsPage() {
     .review-note-suggestion { border-top:1px solid #223447; display:grid; gap:8px; padding-top:10px; }
     .review-note-suggestion strong { color:#f4f7fb; font-size:13px; line-height:1.4; }
     .review-note-suggestion pre, .review-note-variant pre { background:#0d1520; border:1px solid #223447; border-radius:6px; color:#d7e5f3; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; line-height:1.55; margin:0; max-height:210px; overflow:auto; padding:10px; white-space:pre-wrap; word-break:break-word; }
+    .review-note-copy-head { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; flex-wrap:wrap; }
+    .review-note-copy-actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+    .review-note-copy-actions button { font-size:11px; padding:5px 8px; }
+    .review-note-copy-target.is-manual-copy { outline:2px solid #8fbfe8; outline-offset:2px; }
     .review-note-helper { color:#9fb0c0; font-size:11px; line-height:1.5; margin:0; }
     .review-note-variants { display:grid; gap:7px; }
     .review-note-variant { border-top:1px solid #223447; padding-top:7px; }
     .review-note-variant summary { color:#a8efc0; cursor:pointer; font-size:12px; font-weight:700; line-height:1.4; }
+    .review-note-variant .review-note-copy-actions { margin-top:6px; }
+    .review-productivity-toolkit { background:#101925; border:1px solid #223447; border-radius:8px; display:grid; gap:10px; padding:10px; }
+    .review-productivity-head { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; flex-wrap:wrap; }
+    .review-productivity-head strong { color:#f4f7fb; font-size:13px; line-height:1.4; }
+    .review-productivity-head span { color:#8fa4b8; display:block; font-size:11px; line-height:1.5; margin-top:2px; }
+    .review-productivity-head button { font-size:11px; padding:5px 9px; }
+    .review-productivity-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+    .review-productivity-grid span { background:#162338; border:1px solid #2e4157; border-radius:6px; color:#cbd8e6; font-size:11px; line-height:1.4; padding:6px 7px; }
+    .review-productivity-last { color:#9fb0c0; font-size:11px; line-height:1.5; margin:0; }
+    .review-shortcut-help { background:#0d1520; border:1px solid #2e4157; border-radius:8px; color:#cbd8e6; display:grid; gap:5px; font-size:11px; line-height:1.5; padding:9px; }
+    .review-shortcut-help.is-hidden { display:none; }
+    .review-shortcut-help kbd { background:#223447; border:1px solid #36506c; border-radius:4px; color:#f4f7fb; display:inline-block; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:10px; margin-right:4px; padding:1px 5px; }
+    .review-shortcut-help p { margin:0; }
     .review-session-status { border-radius:8px; color:#9fb0c0; font-size:12px; line-height:1.5; min-height:18px; padding:8px 10px; }
     .review-session-status.is-idle { padding:0; }
     .review-session-status.is-pending { background:#172338; color:#cde7ff; }
     .review-session-status.is-success { background:#101f1a; color:#a8efc0; }
     .review-session-status.is-error { background:#211719; color:#ffc4c4; }
     .lead-card.review-session-focus { outline:2px solid #8fbfe8; outline-offset:3px; }
+    .reviewer-action-queue:focus { outline:2px solid #8fbfe8; outline-offset:3px; }
     .review-filter-bar { background:#121a24; border:1px solid #26384c; border-radius:10px; display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); margin:0 0 14px; padding:12px; text-align:left; }
     .review-filter-bar label { color:#8fa4b8; display:grid; gap:5px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0; }
     .review-filter-bar select { background:#16213e; border:1px solid #36506c; border-radius:7px; color:#f4f7fb; font-size:12px; padding:7px 8px; width:100%; }
@@ -202,7 +220,7 @@ export function getLeadsPage() {
       .lead-head { flex-direction:column; }
       .lead-badges { justify-content:flex-start; }
       .lead-metrics, .leads-summary { grid-template-columns:1fr; }
-      .review-slice-grid, .review-gate-summary .review-slice-grid, .reviewer-action-lanes, .review-session-grid { grid-template-columns:1fr; }
+      .review-slice-grid, .review-gate-summary .review-slice-grid, .reviewer-action-lanes, .review-session-grid, .review-productivity-grid { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -822,14 +840,22 @@ export function getLeadsPage() {
       const variants = templates.map((template) => \`
         <details class="review-note-variant"\${template.state === current.state ? ' open' : ''}>
           <summary>\${esc(template.label || template.state)}</summary>
-          <pre>\${esc(template.text || 'Review note suggestion unavailable.')}</pre>
+          <pre class="review-note-copy-target" data-review-note-text tabindex="0">\${esc(template.text || 'Review note suggestion unavailable.')}</pre>
+          <div class="review-note-copy-actions">
+            <button class="btn btn-secondary" type="button" data-note-copy-action="copy-variant-note" aria-label="\${esc(template.label || template.state)} 복사">복사</button>
+          </div>
         </details>
       \`).join('');
       return \`
         <div class="review-note-suggestion \${options.compact ? 'is-compact' : ''}" aria-label="리뷰 노트 제안">
           <span class="block-label">리뷰 노트 제안</span>
-          <strong>\${esc(current.label || '검토 필요 노트')}</strong>
-          <pre>\${esc(current.text || 'Review note suggestion unavailable. Confirm company, evidence, verification status, and data gaps before writing a review note.')}</pre>
+          <div class="review-note-copy-head">
+            <strong>\${esc(current.label || '검토 필요 노트')}</strong>
+            <div class="review-note-copy-actions">
+              <button class="btn btn-secondary" type="button" data-note-copy-action="copy-current-note" aria-label="현재 노트 복사">현재 노트 복사</button>
+            </div>
+          </div>
+          <pre class="review-note-copy-target" data-review-note-text tabindex="0">\${esc(current.text || 'Review note suggestion unavailable. Confirm company, evidence, verification status, and data gaps before writing a review note.')}</pre>
           <p class="review-note-helper">read-only reviewer note suggestion; it does not save or send notes.</p>
           <div class="review-note-variants" aria-label="review note variants">
             \${variants}
@@ -941,6 +967,37 @@ export function getLeadsPage() {
       };
     }
 
+    function renderSessionActivitySummary() {
+      const lastAction = sessionActivity.lastAction || '세션 활동 없음';
+      const helpHidden = shortcutHelpOpen ? '' : ' hidden';
+      const helpClass = shortcutHelpOpen ? '' : ' is-hidden';
+      return \`
+        <section id="reviewProductivityToolkit" class="review-productivity-toolkit" aria-label="Reviewer Productivity Toolkit">
+          <div class="review-productivity-head">
+            <div>
+              <strong>Reviewer Productivity Toolkit</strong>
+              <span>복사, 포커스, 명시적 검토 변경만 현재 브라우저 세션에서 집계</span>
+            </div>
+            <button class="btn btn-secondary" type="button" data-shortcut-action="toggle-help" aria-expanded="\${shortcutHelpOpen ? 'true' : 'false'}">단축키 도움말</button>
+          </div>
+          <div id="reviewProductivityCounts" class="review-productivity-grid">
+            <span>노트 복사 \${sessionActivity.copiedNotes}건</span>
+            <span>상태 변경 \${sessionActivity.reviewUpdates}건</span>
+            <span>포커스 이동 \${sessionActivity.focusMoves}건</span>
+            <span>필터 초기화 \${sessionActivity.filterResets}건</span>
+          </div>
+          <p id="reviewProductivityLastAction" class="review-productivity-last">마지막 작업: \${esc(lastAction)}</p>
+          <div id="reviewShortcutHelp" class="review-shortcut-help\${helpClass}"\${helpHidden} aria-label="단축키 도움말">
+            <p><kbd>n</kbd>/<kbd>j</kbd> 다음 검토 리드로 포커스</p>
+            <p><kbd>q</kbd> Reviewer Action Queue로 포커스</p>
+            <p><kbd>c</kbd> 보이는 리뷰 노트 복사</p>
+            <p><kbd>?</kbd> 단축키 도움말 열기/닫기</p>
+            <p>Shortcut keys do not change reviewStatus. 승인/검토 필요 변경은 버튼 또는 선택 상자에서만 실행됩니다.</p>
+          </div>
+        </section>
+      \`;
+    }
+
     function renderLeadReviewSession(leads) {
       const session = getSessionState(leads);
       const filters = session.activeFilters.length > 0
@@ -989,6 +1046,7 @@ export function getLeadsPage() {
           <div class="review-session-meta" aria-label="현재 필터">
             \${filters}
           </div>
+          \${renderSessionActivitySummary()}
           \${nextBody}
           <div id="reviewSessionStatus" class="review-session-status is-\${esc(noticeTone)}" role="status" aria-live="polite">\${esc(noticeMessage)}</div>
         </section>
@@ -1019,7 +1077,7 @@ export function getLeadsPage() {
       }).join('');
 
       return \`
-        <section class="reviewer-action-queue" aria-label="Reviewer Action Queue">
+        <section id="reviewerActionQueue" class="reviewer-action-queue" aria-label="Reviewer Action Queue" tabindex="-1">
           <div class="reviewer-action-queue-head">
             <strong>Reviewer Action Queue</strong>
             <span>현재 필터 결과 기준 · 우선순위 정렬</span>
@@ -1128,6 +1186,7 @@ export function getLeadsPage() {
     function resetReviewQueueFilters() {
       Object.keys(reviewQueueFilters).forEach((key) => { reviewQueueFilters[key] = 'all'; });
       document.querySelectorAll('#reviewQueueFilters [data-filter-key]').forEach((select) => { select.value = 'all'; });
+      recordSessionActivity('filterReset', '필터를 초기화했습니다.');
       renderCurrentLeads();
     }
 
@@ -1137,6 +1196,29 @@ export function getLeadsPage() {
       if (!el) return;
       el.className = 'review-session-status is-' + tone;
       el.textContent = message || '';
+    }
+
+    function updateSessionActivitySummary() {
+      const counts = document.getElementById('reviewProductivityCounts');
+      if (counts) {
+        counts.innerHTML = [
+          '<span>노트 복사 ' + sessionActivity.copiedNotes + '건</span>',
+          '<span>상태 변경 ' + sessionActivity.reviewUpdates + '건</span>',
+          '<span>포커스 이동 ' + sessionActivity.focusMoves + '건</span>',
+          '<span>필터 초기화 ' + sessionActivity.filterResets + '건</span>'
+        ].join('');
+      }
+      const last = document.getElementById('reviewProductivityLastAction');
+      if (last) last.textContent = '마지막 작업: ' + (sessionActivity.lastAction || '세션 활동 없음');
+    }
+
+    function recordSessionActivity(type, message) {
+      if (type === 'noteCopied') sessionActivity.copiedNotes += 1;
+      if (type === 'reviewUpdateSucceeded') sessionActivity.reviewUpdates += 1;
+      if (type === 'focusNextLead' || type === 'focusQueue') sessionActivity.focusMoves += 1;
+      if (type === 'filterReset') sessionActivity.filterResets += 1;
+      sessionActivity.lastAction = message || '세션 활동 업데이트';
+      updateSessionActivitySummary();
     }
 
     function findCachedLead(leadId) {
@@ -1152,12 +1234,14 @@ export function getLeadsPage() {
       const targetLeadId = leadId || (getSessionState(getFilteredLeads()).nextItem || {}).leadId;
       if (!targetLeadId) {
         setReviewSessionStatus('현재 필터에서 이동할 다음 검토 리드가 없습니다.', 'error');
+        recordSessionActivity('shortcutUnavailable', '다음 검토 리드가 없습니다.');
         return;
       }
       if (currentView !== 'list') switchView('list');
       const card = findLeadCard(targetLeadId);
       if (!card) {
         setReviewSessionStatus('다음 검토 리드가 현재 필터 결과에 없습니다.', 'error');
+        recordSessionActivity('shortcutUnavailable', '다음 검토 리드를 찾지 못했습니다.');
         return;
       }
       document.querySelectorAll('.lead-card.review-session-focus').forEach((item) => item.classList.remove('review-session-focus'));
@@ -1165,7 +1249,154 @@ export function getLeadsPage() {
       card.scrollIntoView({ behavior: 'smooth', block: 'start' });
       card.focus({ preventScroll: true });
       const lead = findCachedLead(targetLeadId);
-      setReviewSessionStatus((lead && lead.company ? lead.company : '다음 리드') + ' 카드로 이동했습니다.', 'success');
+      const message = (lead && lead.company ? lead.company : '다음 리드') + ' 카드로 이동했습니다.';
+      recordSessionActivity('focusNextLead', message);
+      setReviewSessionStatus(message, 'success');
+    }
+
+    function focusReviewerActionQueue() {
+      const queue = document.getElementById('reviewerActionQueue');
+      if (!queue) {
+        setReviewSessionStatus('Reviewer Action Queue를 찾지 못했습니다.', 'error');
+        recordSessionActivity('shortcutUnavailable', 'Reviewer Action Queue를 찾지 못했습니다.');
+        return;
+      }
+      queue.focus({ preventScroll: true });
+      queue.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      recordSessionActivity('focusQueue', 'Reviewer Action Queue로 이동했습니다.');
+      setReviewSessionStatus('Reviewer Action Queue로 이동했습니다.', 'success');
+    }
+
+    function getReviewNoteTextElement(source) {
+      const root = source && source.closest
+        ? source.closest('.review-note-variant, .review-note-suggestion') || document
+        : document;
+      return root.querySelector('[data-review-note-text]');
+    }
+
+    function getActiveReviewNoteTextElement() {
+      const active = document.activeElement;
+      const activeNote = active && active.closest
+        ? active.closest('.review-note-variant, .review-note-suggestion')
+        : null;
+      if (activeNote) {
+        const activeText = activeNote.querySelector('[data-review-note-text]');
+        if (activeText) return activeText;
+      }
+      return document.querySelector('.review-session-panel [data-review-note-text]');
+    }
+
+    function selectTextForManualCopy(target) {
+      if (!target || !window.getSelection || !document.createRange) return false;
+      document.querySelectorAll('.review-note-copy-target.is-manual-copy').forEach((item) => item.classList.remove('is-manual-copy'));
+      const range = document.createRange();
+      range.selectNodeContents(target);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      target.classList.add('is-manual-copy');
+      target.focus({ preventScroll: true });
+      return true;
+    }
+
+    function showCopyButtonFeedback(button, label) {
+      if (!button) return;
+      const original = button.dataset.originalLabel || button.textContent;
+      button.dataset.originalLabel = original;
+      button.textContent = label;
+      clearTimeout(button._copyFeedbackTimer);
+      button._copyFeedbackTimer = setTimeout(() => {
+        button.textContent = button.dataset.originalLabel || original;
+      }, 1600);
+    }
+
+    async function copyReviewNote(source) {
+      const button = source && source.closest ? source.closest('[data-note-copy-action]') : null;
+      const target = getReviewNoteTextElement(button || source) || getActiveReviewNoteTextElement();
+      const text = target ? String(target.textContent || '').trim() : '';
+      if (!text) {
+        recordSessionActivity('copyUnavailable', '복사할 리뷰 노트를 찾지 못했습니다.');
+        setReviewSessionStatus('복사할 리뷰 노트를 찾지 못했습니다.', 'error');
+        return false;
+      }
+
+      try {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          await navigator.clipboard.writeText(text);
+          recordSessionActivity('noteCopied', '리뷰 노트를 클립보드에 복사했습니다.');
+          setReviewSessionStatus('리뷰 노트를 복사했습니다. 저장하거나 전송하지 않았습니다.', 'success');
+          showCopyButtonFeedback(button, '복사됨');
+          return true;
+        }
+      } catch {
+        // Fall through to the manual-copy state below.
+      }
+
+      if (selectTextForManualCopy(target)) {
+        recordSessionActivity('manualCopyReady', 'Clipboard API를 사용할 수 없어 수동 복사 상태로 전환했습니다.');
+        setReviewSessionStatus('Clipboard API를 사용할 수 없어 노트 텍스트를 선택했습니다. 직접 복사하세요.', 'pending');
+        showCopyButtonFeedback(button, '직접 복사');
+        return false;
+      }
+
+      recordSessionActivity('copyFailed', '리뷰 노트를 복사하지 못했습니다.');
+      setReviewSessionStatus('리뷰 노트를 복사하지 못했습니다. 노트 텍스트를 직접 선택해 복사하세요.', 'error');
+      return false;
+    }
+
+    function copyActiveReviewNote() {
+      return copyReviewNote(getActiveReviewNoteTextElement());
+    }
+
+    function updateShortcutHelpVisibility() {
+      const help = document.getElementById('reviewShortcutHelp');
+      if (help) {
+        help.hidden = !shortcutHelpOpen;
+        help.classList.toggle('is-hidden', !shortcutHelpOpen);
+      }
+      document.querySelectorAll('[data-shortcut-action="toggle-help"]').forEach((button) => {
+        button.setAttribute('aria-expanded', shortcutHelpOpen ? 'true' : 'false');
+      });
+    }
+
+    function toggleShortcutHelp() {
+      shortcutHelpOpen = !shortcutHelpOpen;
+      updateShortcutHelpVisibility();
+      recordSessionActivity('shortcutHelp', shortcutHelpOpen ? '단축키 도움말을 열었습니다.' : '단축키 도움말을 닫았습니다.');
+      setReviewSessionStatus(shortcutHelpOpen ? '단축키 도움말을 열었습니다.' : '단축키 도움말을 닫았습니다.', 'success');
+    }
+
+    function shouldIgnoreReviewerShortcut(event) {
+      if (!event || event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return true;
+      const target = event.target;
+      if (!target) return false;
+      const tagName = String(target.tagName || '').toLowerCase();
+      if (tagName === 'input' || tagName === 'select' || tagName === 'textarea') return true;
+      return !!(target.isContentEditable || (target.closest && target.closest('[contenteditable="true"]')));
+    }
+
+    function handleReviewerShortcut(event) {
+      if (shouldIgnoreReviewerShortcut(event)) return;
+      const key = String(event.key || '').toLowerCase();
+      if (key === '?' || (event.shiftKey && event.key === '/')) {
+        event.preventDefault();
+        toggleShortcutHelp();
+        return;
+      }
+      if (key === 'n' || key === 'j') {
+        event.preventDefault();
+        scrollToNextReviewLead();
+        return;
+      }
+      if (key === 'q') {
+        event.preventDefault();
+        focusReviewerActionQueue();
+        return;
+      }
+      if (key === 'c') {
+        event.preventDefault();
+        copyActiveReviewNote();
+      }
     }
 
     function renderFilterEmptyState(extraClass) {
@@ -1207,15 +1438,19 @@ export function getLeadsPage() {
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.success) {
           setReviewSessionStatus('검토 상태를 저장하지 못했습니다. 필터와 리드는 그대로 유지됩니다.', 'error');
+          recordSessionActivity('reviewUpdateFailed', '검토 상태 변경 실패');
           renderCurrentLeads();
           return;
         }
         const returnedSalesStatus = data.lead ? (data.lead.status || 'NEW') : originalSalesStatus;
         const salesStatusLabel = statusLabels[returnedSalesStatus] || returnedSalesStatus || '유지';
-        setReviewSessionStatus('검토 상태만 ' + label + '(으)로 저장했습니다. 영업 상태는 ' + salesStatusLabel + ' 유지.', 'success');
+        const message = '검토 상태만 ' + label + '(으)로 저장했습니다. 영업 상태는 ' + salesStatusLabel + ' 유지.';
+        recordSessionActivity('reviewUpdateSucceeded', '검토 상태 변경: ' + label);
+        setReviewSessionStatus(message, 'success');
         await loadLeads({ focusLeadId: options.focusLeadId || leadId });
       } catch(e) {
         setReviewSessionStatus('검토 상태를 저장하지 못했습니다. 네트워크 또는 로컬 저장소를 확인한 뒤 다시 시도하세요.', 'error');
+        recordSessionActivity('reviewUpdateFailed', '검토 상태 변경 실패');
         renderCurrentLeads();
       }
     }
@@ -1340,6 +1575,14 @@ export function getLeadsPage() {
     let cachedReviewerQueue = { items: [], lanes: [] };
     let cachedQueueItemsByLeadId = {};
     let reviewSessionNotice = { message: '', tone: 'idle' };
+    let shortcutHelpOpen = false;
+    let sessionActivity = {
+      copiedNotes: 0,
+      reviewUpdates: 0,
+      focusMoves: 0,
+      filterResets: 0,
+      lastAction: '세션 시작됨'
+    };
 
     function renderCurrentLeads() {
       const container = document.getElementById('leadsList');
@@ -1532,6 +1775,18 @@ export function getLeadsPage() {
     document.getElementById('historyLink').href = '/history?profile=' + encodeURIComponent(getProfile());
     if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
     document.addEventListener('click', (event) => {
+      const copyButton = event.target.closest('[data-note-copy-action]');
+      if (copyButton) {
+        event.preventDefault();
+        copyReviewNote(copyButton);
+        return;
+      }
+      const shortcutButton = event.target.closest('[data-shortcut-action="toggle-help"]');
+      if (shortcutButton) {
+        event.preventDefault();
+        toggleShortcutHelp();
+        return;
+      }
       const button = event.target.closest('[data-session-action]');
       if (!button || button.disabled) return;
       const action = button.dataset.sessionAction;
@@ -1550,9 +1805,12 @@ export function getLeadsPage() {
         updateReviewStatus(leadId, nextStatus, getReviewStatus(lead), { focusLeadId: leadId });
       }
     });
+    document.addEventListener('keydown', handleReviewerShortcut);
     window.setReviewQueueFilter = setReviewQueueFilter;
     window.resetReviewQueueFilters = resetReviewQueueFilters;
     window.scrollToNextReviewLead = scrollToNextReviewLead;
+    window.copyReviewNote = copyReviewNote;
+    window.handleReviewerShortcut = handleReviewerShortcut;
 
     loadLeads();
   </script>

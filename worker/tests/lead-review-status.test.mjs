@@ -315,6 +315,26 @@ test('lead list page exposes lead review session progress and quick actions', ()
   assert.match(listHtml, /검토 상태를 저장하지 못했습니다/);
 });
 
+test('lead list page exposes reviewer productivity toolkit without keyboard review mutations', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /Reviewer Productivity Toolkit/);
+  assert.match(listHtml, /function copyReviewNote/);
+  assert.match(listHtml, /function selectTextForManualCopy/);
+  assert.match(listHtml, /function handleReviewerShortcut/);
+  assert.match(listHtml, /function shouldIgnoreReviewerShortcut/);
+  assert.match(listHtml, /function recordSessionActivity/);
+  assert.match(listHtml, /data-review-note-text/);
+  assert.match(listHtml, /data-note-copy-action="copy-current-note"/);
+  assert.match(listHtml, /data-note-copy-action="copy-variant-note"/);
+  assert.match(listHtml, /data-shortcut-action="toggle-help"/);
+  assert.match(listHtml, /copiedNotes: 0/);
+  assert.match(listHtml, /reviewUpdates: 0/);
+  assert.match(listHtml, /focusMoves: 0/);
+  assert.match(listHtml, /Shortcut keys do not change reviewStatus/);
+  assert.doesNotMatch(listHtml, /data-shortcut-action="review-status"/);
+});
+
 test('lead list page exposes evidence and data-gap review slices', () => {
   const listHtml = getLeadsPage();
 

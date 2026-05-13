@@ -142,6 +142,15 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   const context = await browser.newContext();
   await context.addInitScript((token) => {
     window.sessionStorage.setItem('b2b_token', token);
+    window.__copiedReviewNotes = [];
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (text) => {
+          window.__copiedReviewNotes.push(String(text));
+        },
+      },
+    });
   }, LOCAL_E2E_TOKEN);
   const page = await context.newPage();
 
@@ -192,9 +201,69 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '근거 누락 1건',
     '데이터 공백 리드 1건',
     '검토 가능 1건',
+    'Reviewer Productivity Toolkit',
+    '노트 복사 0건',
+    '상태 변경 0건',
+    '포커스 이동 0건',
   ]);
 
   assert.equal(await page.locator('#leadsList .lead-card').count(), 2);
+  await page.getByRole('button', { name: '현재 노트 복사' }).click();
+  await page.waitForFunction(() => {
+    const status = document.querySelector('#reviewSessionStatus');
+    return !!status && String(status.textContent || '').includes('노트를 복사했습니다');
+  });
+  assert.deepEqual(await page.evaluate(() => window.__copiedReviewNotes), [
+    await page.locator('.review-session-panel [data-review-note-text]').first().innerText(),
+  ]);
+  await assertRenderedText(page, ['노트 복사 1건', '마지막 작업']);
+
+  await page.keyboard.press('Shift+/');
+  await assertRenderedText(page, ['단축키 도움말', 'n', 'j', 'q', 'c', 'Shortcut keys do not change reviewStatus']);
+  await page.keyboard.press('j');
+  await page.waitForFunction(() => document.querySelectorAll('#leadsList .lead-card.review-session-focus').length === 1);
+  await assertRenderedText(page, ['포커스 이동 1건']);
+
+  await page.keyboard.press('q');
+  await page.waitForFunction(() => document.activeElement && document.activeElement.id === 'reviewerActionQueue');
+  await assertRenderedText(page, ['Reviewer Action Queue', '포커스 이동 2건']);
+
+  await page.keyboard.press('c');
+  await page.waitForFunction(() => {
+    const status = document.querySelector('#reviewSessionStatus');
+    return !!status && String(status.textContent || '').includes('노트를 복사했습니다');
+  });
+  assert.equal(await page.evaluate(() => window.__copiedReviewNotes.length), 2);
+  await assertRenderedText(page, ['노트 복사 2건']);
+
+  await page.locator('.notes-section details').first().click();
+  await page.locator('.notes-textarea').first().focus();
+  await page.keyboard.press('j');
+  await page.keyboard.press('c');
+  assert.equal(await page.evaluate(() => window.__copiedReviewNotes.length), 2);
+  await assertRenderedText(page, ['포커스 이동 2건', '노트 복사 2건']);
+
+  const shortcutLeadsResponse = await localFetch('/api/leads?profile=danfoss');
+  const shortcutLeadsPayload = await readJson(shortcutLeadsResponse);
+  assert.equal(shortcutLeadsPayload.leads.find((lead) => lead.id === 'local-lead-approved').reviewStatus, 'APPROVED');
+  assert.equal(shortcutLeadsPayload.leads.find((lead) => lead.id === 'local-lead-review').reviewStatus, 'NEEDS_REVIEW');
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => {
+    const el = document.querySelector('#leadsList');
+    return !!el && !String(el.textContent || '').includes('로딩 중');
+  });
+  await assertRenderedText(page, ['노트 복사 0건', '상태 변경 0건', '포커스 이동 0건']);
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
+  });
+  await page.getByRole('button', { name: '현재 노트 복사' }).click();
+  await page.waitForFunction(() => {
+    const status = document.querySelector('#reviewSessionStatus');
+    return !!status && String(status.textContent || '').includes('직접 복사');
+  });
+  await assertRenderedText(page, ['Clipboard API를 사용할 수 없어', '노트 복사 0건']);
+
   await page.getByRole('button', { name: '다음 검토 리드' }).click();
   assert.equal(await page.locator('#leadsList .lead-card.review-session-focus').count(), 1);
 
