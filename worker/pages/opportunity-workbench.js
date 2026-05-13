@@ -600,6 +600,45 @@ function renderTextItems(items, emptyLabel) {
   return items.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
 }
 
+function normalizeReviewerNoteSuggestion(intelligence = {}) {
+  const suggestion = intelligence.reviewNoteSuggestion && typeof intelligence.reviewNoteSuggestion === 'object'
+    ? intelligence.reviewNoteSuggestion
+    : {};
+  return {
+    state: cleanText(suggestion.state, 'NEEDS_REVIEW'),
+    label: cleanText(suggestion.label, '검토 필요 노트'),
+    text: cleanText(
+      suggestion.text,
+      'Review note suggestion unavailable. Confirm company, evidence, verification status, and data gaps before writing a review note.'
+    ),
+  };
+}
+
+function renderReviewerNoteTemplates(intelligence = {}) {
+  const current = normalizeReviewerNoteSuggestion(intelligence);
+  const templates = Array.isArray(intelligence.reviewerNoteTemplates?.templates)
+    ? intelligence.reviewerNoteTemplates.templates
+    : [];
+  const variants = templates.length > 0
+    ? templates.map((template) => `
+              <details class="opportunity-workbench-note-variant"${template.state === current.state ? ' open' : ''}>
+                <summary>${escapeHtml(template.label || template.state)}</summary>
+                <pre>${escapeHtml(template.text)}</pre>
+              </details>`).join('')
+    : '<p class="opportunity-workbench-caveat">No alternate reviewer note templates are available.</p>';
+
+  return `
+            <div class="opportunity-workbench-review-note" aria-label="리뷰 노트 제안">
+              <span class="panel-label">리뷰 노트 제안</span>
+              <strong>${escapeHtml(current.label)}</strong>
+              <pre>${escapeHtml(current.text)}</pre>
+              <p class="opportunity-workbench-caveat">read-only reviewer note suggestion; it does not save or send notes.</p>
+              <div class="opportunity-workbench-note-variants">
+                ${variants}
+              </div>
+            </div>`;
+}
+
 function renderStakeholderRole(role) {
   return `
               <article class="opportunity-workbench-stakeholder-card">
@@ -677,6 +716,7 @@ export function renderOpportunityWorkbench(model) {
                 </ul>
               </div>
             </div>
+            ${renderReviewerNoteTemplates(workbench.actionIntelligence)}
             <p class="opportunity-workbench-caveat">Deterministic reviewer guidance only; it does not approve outreach or send messages automatically.</p>
           </div>
           <div class="opportunity-workbench-panel opportunity-workbench-wide opportunity-workbench-solution">
@@ -817,6 +857,12 @@ export function getOpportunityWorkbenchStyles() {
     .opportunity-workbench-intelligence-grid dt { color:#a8efc0; font-size:12px; font-weight:700; margin:0 0 5px; }
     .opportunity-workbench-intelligence-grid dd { color:#cbd8e6; font-size:12px; line-height:1.55; margin:0; }
     .opportunity-workbench-intelligence-columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .opportunity-workbench-review-note { border-top:1px solid #223447; display:grid; gap:8px; padding-top:10px; }
+    .opportunity-workbench-review-note strong { color:#f4f7fb; font-size:13px; line-height:1.4; }
+    .opportunity-workbench-review-note pre, .opportunity-workbench-note-variant pre { background:#0d1520; border:1px solid #223447; border-radius:6px; color:#d7e5f3; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; line-height:1.55; margin:0; overflow:auto; padding:10px; white-space:pre-wrap; word-break:break-word; }
+    .opportunity-workbench-note-variants { display:grid; gap:7px; }
+    .opportunity-workbench-note-variant { border-top:1px solid #223447; padding-top:7px; }
+    .opportunity-workbench-note-variant summary { color:#a8efc0; cursor:pointer; font-size:12px; font-weight:700; line-height:1.4; }
     .opportunity-workbench-solution-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
     .opportunity-workbench-solution-grid div { border:1px solid #223447; border-radius:8px; padding:10px; background:#101925; min-width:0; }
     .opportunity-workbench-solution-grid strong { color:#a8efc0; display:block; font-size:12px; margin-bottom:5px; }

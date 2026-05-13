@@ -29,10 +29,14 @@ The helper returns:
 - `missingInfoPrompts`
 - `stakeholderAngle`
 - `suggestedFollowUp`
+- `reviewerNoteTemplates`
+- `reviewNoteSuggestion`
 - `reviewPriority`
 - `actionConfidence`
 
 These are advisory review outputs. `suggestedFollowUp` is a human-review draft only; it does not approve or send outreach.
+
+`reviewerNoteTemplates` is Reviewer Notes Template v1. It returns deterministic, copy-friendly note variants for `APPROVED` / `승인 노트`, `NEEDS_REVIEW` / `검토 필요 노트`, and a `RISK_CHECK` or `DATA_GAP` follow-up note. `reviewNoteSuggestion` is the currently selected note for the lead's present review/action state. It changes when existing review metadata changes, but it is not stored, sent, or written back to D1.
 
 ## Reviewer Action Queue V1.1
 
@@ -48,6 +52,7 @@ Queue items include:
 - compact reason snippet
 - risk-flag count
 - missing-info count
+- current reviewer note suggestion and note variants
 - normalized review, verification, generation, and confidence state
 
 The queue groups items into four reviewer lanes:
@@ -90,9 +95,9 @@ The first matching blocker decides the next action:
 
 ## Product Surfaces
 
-- Opportunity Workbench renders the full Lead Action Intelligence panel with action, reason, risk flags, missing-info prompts, stakeholder angle, and follow-up draft.
-- `/api/leads` includes additive `reviewerActionQueue` and `leadReviewSession` metadata built from the canonical helper after normal LeadBrief canonicalization. This does not change stored lead rows or require schema migration.
-- `/leads` renders Reviewer Action Queue lanes, action/priority/risk/missing-info filters, compact card summaries, and a Lead Review Session panel from the queue metadata.
+- Opportunity Workbench renders the full Lead Action Intelligence panel with action, reason, risk flags, missing-info prompts, stakeholder angle, follow-up draft, and read-only reviewer note suggestions.
+- `/api/leads` includes additive `reviewerActionQueue` and `leadReviewSession` metadata built from the canonical helper after normal LeadBrief canonicalization, including current reviewer note suggestions for queue/session items. This does not change stored lead rows or require schema migration.
+- `/leads` renders Reviewer Action Queue lanes, action/priority/risk/missing-info filters, compact card summaries, and a Lead Review Session panel from the queue metadata. The session panel shows a copy-friendly reviewer note suggestion near quick `APPROVED` / `NEEDS_REVIEW` actions.
 - Kanban cards render the compact next action below the gate chip.
 
 The list/Kanban UI keeps a conservative browser fallback for older payloads, but the canonical queue model is the Worker helper and the additive `/api/leads` queue metadata.
@@ -113,6 +118,17 @@ The `/leads` panel exposes a `다음 검토 리드` action that scrolls and focu
 
 After a review-status mutation, `/leads` reloads the local queue metadata so lane counts, card guidance, and Workbench/detail guidance remain consistent with the updated row. If the update fails, the UI shows a bounded Korean failure message, does not expose SQL/provider/internal details, and keeps the current filter context usable.
 
+## Reviewer Notes Template V1
+
+Reviewer Notes Template v1 turns the current LeadBrief plus Lead Action Intelligence outputs into deterministic review-note suggestions. It is intentionally narrow:
+
+- It reuses `toLeadBriefV1()`, normalized evidence/source/data-gap fields, next-review action, risk flags, and missing-info prompts.
+- It generates a current note plus three variants: approved, needs-review, and risk/data-gap follow-up.
+- It supports camelCase and snake_case input through the existing LeadBrief normalization path.
+- It keeps sales `status` separate from human `reviewStatus`; notes explain the review state but never mutate either state.
+- It includes bounded fallback text when a copy-friendly note cannot be generated from available fields.
+- It does not persist generated notes, call an LLM, call an external service, send outreach, create CRM records, or change D1 schema.
+
 ## Boundaries
 
 - No production deploy.
@@ -130,8 +146,8 @@ After a review-status mutation, `/leads` reloads the local queue metadata so lan
 
 Coverage is local/test-only:
 
-- `worker/tests/lead-action-intelligence.test.mjs` covers strong, review-ready, missing-evidence, data-gap, low-confidence, stale, conflicting, and snake_case fallback leads.
-- `worker/tests/lead-action-intelligence.test.mjs` also covers Reviewer Action Queue grouping, sorting, filters, compact counts, Lead Review Session summary counts, next-lead candidate selection, snake_case fallback, and mutation-style reclassification.
-- `worker/tests/opportunity-workbench.test.mjs` covers Workbench rendering of the new guidance.
-- `worker/tests/lead-review-status.test.mjs` covers the `/leads` session panel, next-lead control, quick review actions, bounded failure messaging, and status-separation copy.
-- `worker/e2e/local-e2e.test.mjs` covers local fake-D1 rendering, Reviewer Action Queue lanes, Lead Review Session summary/next-lead navigation, quick review action success and failure paths, action/risk/missing-info filters, list/Kanban summaries, review-status mutation updating queue guidance, zero-result reset flows, sales-status preservation, and the non-loopback fetch guard.
+- `worker/tests/lead-action-intelligence.test.mjs` covers strong, review-ready, missing-evidence, data-gap, low-confidence, stale, conflicting, snake_case fallback leads, and approved/needs-review/risk-check/data-gap reviewer note templates.
+- `worker/tests/lead-action-intelligence.test.mjs` also covers Reviewer Action Queue grouping, sorting, filters, compact counts, Lead Review Session summary counts, next-lead candidate selection, snake_case fallback, note suggestions, and mutation-style reclassification.
+- `worker/tests/opportunity-workbench.test.mjs` covers Workbench rendering of the new guidance and read-only reviewer note suggestions.
+- `worker/tests/lead-review-status.test.mjs` covers the `/leads` session panel, next-lead control, quick review actions, bounded failure messaging, status-separation copy, and copy-friendly note suggestion rendering near quick actions.
+- `worker/e2e/local-e2e.test.mjs` covers local fake-D1 rendering, Reviewer Action Queue lanes, Lead Review Session summary/next-lead navigation, reviewer note suggestions, quick review action success and failure paths, action/risk/missing-info filters, list/Kanban summaries, review-status mutation updating queue guidance and note text, zero-result reset flows, sales-status preservation, and the non-loopback fetch guard.
