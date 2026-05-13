@@ -99,6 +99,7 @@ The first matching blocker decides the next action:
 - `/api/leads` includes additive `reviewerActionQueue` and `leadReviewSession` metadata built from the canonical helper after normal LeadBrief canonicalization, including current reviewer note suggestions for queue/session items. This does not change stored lead rows or require schema migration.
 - `/leads` renders Reviewer Action Queue lanes, action/priority/risk/missing-info filters, compact card summaries, and a Lead Review Session panel from the queue metadata. The session panel shows a copy-friendly reviewer note suggestion near quick `APPROVED` / `NEEDS_REVIEW` actions.
 - Kanban cards render the compact next action below the gate chip.
+- Reviewer Productivity Toolkit v1 layers local-only productivity controls onto `/leads`: visible copy buttons for deterministic session note templates, safe manual-copy fallback when the Clipboard API is unavailable, optional non-mutating keyboard shortcuts, shortcut help, and an in-memory session activity summary. The activity summary resets on page reload and is not written to D1, localStorage, analytics, APIs, or logs.
 
 The list/Kanban UI keeps a conservative browser fallback for older payloads, but the canonical queue model is the Worker helper and the additive `/api/leads` queue metadata.
 
@@ -129,6 +130,17 @@ Reviewer Notes Template v1 turns the current LeadBrief plus Lead Action Intellig
 - It includes bounded fallback text when a copy-friendly note cannot be generated from available fields.
 - It does not persist generated notes, call an LLM, call an external service, send outreach, create CRM records, or change D1 schema.
 
+## Reviewer Productivity Toolkit V1
+
+Reviewer Productivity Toolkit v1 is a browser-only helper for the existing `/leads` review session:
+
+- Copy buttons copy only the visible deterministic reviewer note text.
+- If `navigator.clipboard.writeText()` is unavailable or fails, the UI selects the note text and shows a bounded manual-copy message.
+- Keyboard shortcuts are discoverable and non-mutating: `n`/`j` focuses the next review lead, `q` focuses Reviewer Action Queue, `c` copies the visible session note, and `?` toggles shortcut help.
+- Shortcuts are ignored while the reviewer is typing in `input`, `select`, `textarea`, or `contenteditable` controls.
+- Session activity tracks note-copy count, explicit review-status update count, focus count, filter reset count, and last action in browser memory only.
+- `reviewStatus` changes remain explicit button/select actions. Shortcuts never send PATCH requests or mutate review state.
+
 ## Boundaries
 
 - No production deploy.
@@ -141,6 +153,8 @@ Reviewer Notes Template v1 turns the current LeadBrief plus Lead Action Intellig
 - No production row roundtrip or production observation claim.
 - No CRM assignment, notification, forecasting, or ownership workflow.
 - No automatic sales sending.
+- No note/session activity persistence, browser localStorage, analytics, or network call beyond existing explicit review-status PATCH actions.
+- No keyboard-triggered reviewStatus mutation.
 
 ## Validation
 
@@ -149,5 +163,5 @@ Coverage is local/test-only:
 - `worker/tests/lead-action-intelligence.test.mjs` covers strong, review-ready, missing-evidence, data-gap, low-confidence, stale, conflicting, snake_case fallback leads, and approved/needs-review/risk-check/data-gap reviewer note templates.
 - `worker/tests/lead-action-intelligence.test.mjs` also covers Reviewer Action Queue grouping, sorting, filters, compact counts, Lead Review Session summary counts, next-lead candidate selection, snake_case fallback, note suggestions, and mutation-style reclassification.
 - `worker/tests/opportunity-workbench.test.mjs` covers Workbench rendering of the new guidance and read-only reviewer note suggestions.
-- `worker/tests/lead-review-status.test.mjs` covers the `/leads` session panel, next-lead control, quick review actions, bounded failure messaging, status-separation copy, and copy-friendly note suggestion rendering near quick actions.
-- `worker/e2e/local-e2e.test.mjs` covers local fake-D1 rendering, Reviewer Action Queue lanes, Lead Review Session summary/next-lead navigation, reviewer note suggestions, quick review action success and failure paths, action/risk/missing-info filters, list/Kanban summaries, review-status mutation updating queue guidance and note text, zero-result reset flows, sales-status preservation, and the non-loopback fetch guard.
+- `worker/tests/lead-review-status.test.mjs` covers the `/leads` session panel, next-lead control, quick review actions, bounded failure messaging, status-separation copy, copy-friendly note suggestion rendering near quick actions, copy/manual-copy hooks, shortcut guards, and in-memory activity state.
+- `worker/e2e/local-e2e.test.mjs` covers local fake-D1 rendering, Reviewer Action Queue lanes, Lead Review Session summary/next-lead navigation, reviewer note suggestions, copy success, manual-copy fallback, non-mutating shortcuts, ignored shortcuts while typing, in-memory activity reset on reload, quick review action success and failure paths, action/risk/missing-info filters, list/Kanban summaries, review-status mutation updating queue guidance and note text, zero-result reset flows, sales-status preservation, and the non-loopback fetch guard.
