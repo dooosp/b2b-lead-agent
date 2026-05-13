@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   buildLeadActionIntelligence,
   buildLeadReviewSession,
+  buildReviewerNoteTemplates,
   buildReviewerActionQueue,
 } from '../lib/lead-action-intelligence.js';
 
@@ -50,6 +51,26 @@ test('lead action intelligence prepares reviewed follow-up for complete high-qua
   assert.match(intelligence.stakeholderAngle, /Operations Director/);
   assert.match(intelligence.suggestedFollowUp, /Human-review draft/);
   assert.match(intelligence.suggestedFollowUp, /Turbocor compressor/);
+  assert.equal(intelligence.reviewNoteSuggestion.state, 'APPROVED');
+  assert.match(intelligence.reviewNoteSuggestion.text, /Decision: APPROVED/);
+});
+
+test('reviewer note templates include approved, needs-review, and follow-up variants for strong leads', () => {
+  const notes = buildReviewerNoteTemplates(strongLead(), { now: evaluationNow });
+
+  assert.equal(notes.current.state, 'APPROVED');
+  assert.equal(notes.current.label, '승인 노트');
+  assert.deepEqual(notes.templates.map((template) => template.state), [
+    'APPROVED',
+    'NEEDS_REVIEW',
+    'RISK_CHECK',
+  ]);
+  assert.match(notes.current.text, /Decision: APPROVED/);
+  assert.match(notes.current.text, /Ready Co/);
+  assert.match(notes.current.text, /vendor shortlist/);
+  assert.match(notes.current.text, /verification=verified/);
+  assert.match(notes.templates.find((template) => template.state === 'NEEDS_REVIEW').text, /Decision: NEEDS_REVIEW/);
+  assert.match(notes.templates.find((template) => template.state === 'RISK_CHECK').text, /Follow-up check/);
 });
 
 test('lead action intelligence asks reviewers to decide status for review-ready leads', () => {
@@ -60,6 +81,25 @@ test('lead action intelligence asks reviewers to decide status for review-ready 
   assert.equal(intelligence.actionConfidence, 'medium');
   assert.deepEqual(intelligence.riskFlags.map((flag) => flag.code), ['human_review_pending']);
   assert.match(intelligence.nextReviewActionReason, /verified evidence is present/i);
+  assert.equal(intelligence.reviewNoteSuggestion.state, 'NEEDS_REVIEW');
+  assert.match(intelligence.reviewNoteSuggestion.text, /Decision: NEEDS_REVIEW/);
+});
+
+test('reviewer note templates select a data-gap follow-up note for missing review inputs', () => {
+  const notes = buildReviewerNoteTemplates(strongLead({
+    reviewStatus: 'NEEDS_REVIEW',
+    confidence: 'MEDIUM',
+    dataGaps: ['Decision owner unknown', 'Budget not published'],
+  }), { now: evaluationNow });
+
+  const followUp = notes.templates.find((template) => template.state === 'DATA_GAP');
+
+  assert.equal(notes.current.state, 'DATA_GAP');
+  assert.equal(followUp.label, '데이터 공백 확인 노트');
+  assert.match(followUp.text, /Follow-up check: DATA_GAP/);
+  assert.match(followUp.text, /Decision owner unknown/);
+  assert.match(followUp.text, /Budget not published/);
+  assert.match(notes.current.text, /Resolve data gaps/);
 });
 
 test('lead action intelligence blocks missing evidence even when confidence is overstated', () => {
@@ -143,6 +183,9 @@ test('lead action intelligence reconciles conflicting verification and review st
   assert.ok(intelligence.riskFlags.some((flag) => flag.code === 'approved_but_unverified'));
   assert.ok(intelligence.riskFlags.some((flag) => flag.code === 'conflicting_evidence'));
   assert.match(intelligence.nextReviewActionReason, /approved review state conflicts/i);
+  assert.equal(intelligence.reviewNoteSuggestion.state, 'RISK_CHECK');
+  assert.match(intelligence.reviewNoteSuggestion.text, /Follow-up check: RISK_CHECK/);
+  assert.match(intelligence.reviewNoteSuggestion.text, /Approved review state conflicts/);
 });
 
 test('lead action intelligence accepts snake_case fallback payloads', () => {
@@ -169,6 +212,8 @@ test('lead action intelligence accepts snake_case fallback payloads', () => {
   assert.equal(intelligence.reviewPriority, 'medium');
   assert.match(intelligence.stakeholderAngle, /Plant Manager/);
   assert.match(intelligence.suggestedFollowUp, /Drive retrofit/);
+  assert.equal(intelligence.reviewNoteSuggestion.state, 'DATA_GAP');
+  assert.match(intelligence.reviewNoteSuggestion.text, /Legacy Co/);
   assert.ok(intelligence.missingInfoPrompts.includes('Resolve data gap: Tender date unknown'));
 });
 
@@ -236,6 +281,8 @@ test('reviewer action queue groups compact action summaries and sorts highest pr
   assert.equal(ready.queueLane, 'approval_candidates');
   assert.equal(ready.riskCount, 0);
   assert.equal(ready.missingInfoCount, 0);
+  assert.equal(ready.reviewNoteSuggestion.state, 'APPROVED');
+  assert.equal(ready.reviewNoteTemplates.length, 3);
   assert.match(ready.reasonSnippet, /approved/i);
   assert.ok(ready.reasonSnippet.length <= 160);
 });
@@ -405,6 +452,8 @@ test('lead review session summarizes queue progress and next lead candidate', ()
   assert.equal(session.nextLead.leadId, 'approved-ready');
   assert.equal(session.nextLead.nextReviewAction, 'prepare_human_follow_up');
   assert.equal(session.nextLead.queueLane, 'approval_candidates');
+  assert.equal(session.nextLead.reviewNoteSuggestion.state, 'APPROVED');
+  assert.match(session.nextLead.reviewNoteSuggestion.text, /Decision: APPROVED/);
 });
 
 test('lead review session applies filters and keeps snake_case review statuses in counts', () => {
@@ -468,9 +517,11 @@ test('lead review session reflects queue membership after review status mutation
 
   assert.equal(before.nextLead.nextReviewAction, 'decide_review_status');
   assert.equal(before.nextLead.queueLane, 'approval_candidates');
+  assert.equal(before.nextLead.reviewNoteSuggestion.state, 'NEEDS_REVIEW');
   assert.equal(before.needsReviewCount, 1);
   assert.equal(after.nextLead.nextReviewAction, 'reconcile_review_conflict');
   assert.equal(after.nextLead.queueLane, 'risk_review');
+  assert.equal(after.nextLead.reviewNoteSuggestion.state, 'RISK_CHECK');
   assert.equal(after.approvedCount, 1);
   assert.equal(after.needsReviewCount, 0);
 });

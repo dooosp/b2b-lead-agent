@@ -266,6 +266,21 @@ test('lead list page exposes review queue filters for current LeadBrief fields',
   assert.match(listHtml, /필터 결과가 없습니다/);
 });
 
+test('lead list page exposes copy-friendly reviewer note suggestions near session quick actions', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /function renderReviewNoteSuggestion\(lead/);
+  assert.match(listHtml, /review-note-suggestion/);
+  assert.match(listHtml, /리뷰 노트 제안/);
+  assert.match(listHtml, /승인 노트/);
+  assert.match(listHtml, /검토 필요 노트/);
+  assert.match(listHtml, /데이터 공백 확인 노트/);
+  assert.match(listHtml, /리스크 확인 노트/);
+  assert.match(listHtml, /read-only reviewer note suggestion/);
+  assert.match(listHtml, /renderReviewNoteSuggestion\(session\.nextLead/);
+  assert.match(listHtml, /does not save or send notes/);
+});
+
 test('lead list page exposes grouped reviewer action queue lanes', () => {
   const listHtml = getLeadsPage();
 

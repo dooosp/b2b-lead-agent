@@ -82,6 +82,15 @@ const REVIEW_STATUS_COUNT_KEYS = Object.freeze([
   'DEFERRED',
 ]);
 
+const REVIEW_NOTE_LABELS = Object.freeze({
+  APPROVED: '승인 노트',
+  NEEDS_REVIEW: '검토 필요 노트',
+  RISK_CHECK: '리스크 확인 노트',
+  DATA_GAP: '데이터 공백 확인 노트',
+});
+
+const REVIEW_NOTE_FALLBACK_TEXT = 'Review note suggestion unavailable. Confirm company, evidence, verification status, and data gaps before writing a review note.';
+
 function cleanText(value, fallback = '') {
   const text = String(value ?? '').replace(/\s+/g, ' ').trim();
   return text || fallback;
@@ -237,6 +246,8 @@ function summarizeNextLead(item) {
     reasonSnippet: item.reasonSnippet,
     riskCount: item.riskCount,
     missingInfoCount: item.missingInfoCount,
+    reviewNoteSuggestion: item.reviewNoteSuggestion,
+    reviewNoteTemplates: item.reviewNoteTemplates,
   };
 }
 
@@ -336,6 +347,156 @@ function chooseSuggestedFollowUp({ brief, evidence, dataGaps }) {
     ? ' Keep this as an internal draft until the listed gaps are resolved.'
     : ' Personalize and send only after human approval.';
   return `Human-review draft for ${company}: ${ask}${proof} ${caveat}`;
+}
+
+function summarizeList(items, fallback, limit = 3) {
+  const normalized = normalizeStringArray(items);
+  const shown = normalized.slice(0, limit);
+  if (shown.length === 0) return fallback;
+  const extra = normalized.length > limit ? `; +${normalized.length - limit} more` : '';
+  return `${shown.join('; ')}${extra}`;
+}
+
+function summarizeEvidenceForNote(evidence, sources) {
+  const primaryEvidence = evidence[0];
+  if (primaryEvidence) {
+    const quote = truncateText(primaryEvidence.quote, 110);
+    const source = cleanText(primaryEvidence.sourceUrl) || cleanText(sources[0]?.url) || cleanText(sources[0]?.title);
+    return source ? `"${quote}" (${source})` : `"${quote}"`;
+  }
+
+  const primarySource = sources[0];
+  if (primarySource) {
+    const sourceLabel = cleanText(primarySource.title || primarySource.url, 'published source');
+    const sourceUrl = cleanText(primarySource.url);
+    return sourceUrl ? `Source to review: ${sourceLabel} (${sourceUrl})` : `Source to review: ${sourceLabel}`;
+  }
+
+  return 'No direct evidence quote or published source is available.';
+}
+
+function summarizeRisksForNote(riskFlags) {
+  const labels = (Array.isArray(riskFlags) ? riskFlags : [])
+    .map((flag) => cleanText(flag?.detail) ? `${flag.label}: ${flag.detail}` : flag?.label)
+    .filter(Boolean);
+  return summarizeList(labels, 'No risk flags in current LeadBrief.');
+}
+
+function buildNoteContext({ brief, evidence, sources, dataGaps, intelligence }) {
+  const company = cleanText(brief.company, '리드');
+  const product = pickText(brief, ['product', 'recommendedProduct', 'recommended_product', 'productName'], 'recommended solution');
+  const why = cleanText(brief.whyNow || brief.signal || brief.summary || brief.confidenceReason || brief.confidence_reason, 'Lead context needs review.');
+  const evidenceSummary = summarizeEvidenceForNote(evidence, sources);
+  const dataGapSummary = summarizeList(dataGaps, 'No open data gaps in current LeadBrief.');
+  const missingSummary = summarizeList(intelligence.missingInfoPrompts, 'No missing-info prompts in current LeadBrief.');
+  const riskSummary = summarizeRisksForNote(intelligence.riskFlags);
+  const action = cleanText(intelligence.nextReviewActionLabel, 'Review lead');
+  const reason = truncateText(intelligence.nextReviewActionReason, 220);
+
+  return {
+    company,
+    product,
+    why,
+    evidenceSummary,
+    dataGapSummary,
+    missingSummary,
+    riskSummary,
+    action,
+    reason,
+    reviewStatus: brief.reviewStatus,
+    verificationStatus: brief.verificationStatus,
+    generationMode: brief.generationMode,
+    confidence: brief.confidence,
+  };
+}
+
+function makeReviewNoteTemplate(state, text, extra = {}) {
+  return {
+    state,
+    label: REVIEW_NOTE_LABELS[state] || state,
+    text: cleanText(text, REVIEW_NOTE_FALLBACK_TEXT),
+    ...extra,
+  };
+}
+
+function chooseFollowUpState(dataGaps, intelligence) {
+  if (dataGaps.length > 0 || intelligence.nextReviewAction === 'resolve_data_gaps') return 'DATA_GAP';
+  if (intelligence.missingInfoPrompts.some((prompt) => /data gap/i.test(prompt))) return 'DATA_GAP';
+  return 'RISK_CHECK';
+}
+
+function chooseCurrentNoteState({ brief, dataGaps, intelligence, followUpState }) {
+  const hasHighRisk = intelligence.riskFlags.some((flag) => flag.severity === 'high');
+  const needsFollowUp = [
+    'reconcile_review_conflict',
+    'verify_evidence',
+    'refresh_signal',
+    'enrich_before_review',
+  ].includes(intelligence.nextReviewAction);
+
+  if (intelligence.nextReviewAction === 'prepare_human_follow_up') return 'APPROVED';
+  if (dataGaps.length > 0 || intelligence.nextReviewAction === 'resolve_data_gaps') return 'DATA_GAP';
+  if (hasHighRisk || needsFollowUp) return followUpState;
+  if (brief.reviewStatus === 'APPROVED') return 'APPROVED';
+  if (brief.reviewStatus === 'NEEDS_REVIEW' || brief.reviewStatus === 'NEW') return 'NEEDS_REVIEW';
+  return followUpState;
+}
+
+function buildReviewerNoteTemplatesFromContext({ brief, evidence, sources, dataGaps, intelligence }) {
+  const noteContext = buildNoteContext({ brief, evidence, sources, dataGaps, intelligence });
+  const followUpState = chooseFollowUpState(dataGaps, intelligence);
+  const fallbackUsed = !cleanText(brief.company)
+    && !cleanText(brief.signal || brief.summary)
+    && evidence.length === 0
+    && sources.length === 0;
+
+  const approved = makeReviewNoteTemplate(
+    'APPROVED',
+    [
+      'Decision: APPROVED',
+      `Lead: ${noteContext.company} | Product: ${noteContext.product}`,
+      `Why: ${noteContext.why}`,
+      `Evidence: ${noteContext.evidenceSummary}`,
+      `Review basis: verification=${noteContext.verificationStatus}; confidence=${noteContext.confidence}; action=${noteContext.action}.`,
+      `Missing/risk check: ${dataGaps.length > 0 ? noteContext.dataGapSummary : noteContext.riskSummary}`,
+      'Next: use as an internal review note and personalize before any CRM log or outreach.',
+    ].join('\n')
+  );
+  const needsReview = makeReviewNoteTemplate(
+    'NEEDS_REVIEW',
+    [
+      'Decision: NEEDS_REVIEW',
+      `Lead: ${noteContext.company} | Product: ${noteContext.product}`,
+      `Reason: ${noteContext.action} - ${noteContext.reason}`,
+      `Evidence status: ${noteContext.evidenceSummary}`,
+      `Missing: ${noteContext.missingSummary}`,
+      `Current state: reviewStatus=${noteContext.reviewStatus}; verification=${noteContext.verificationStatus}; confidence=${noteContext.confidence}.`,
+      'Next: keep reviewStatus=NEEDS_REVIEW until evidence, gaps, and reviewer decision are resolved.',
+    ].join('\n')
+  );
+  const followUp = makeReviewNoteTemplate(
+    followUpState,
+    [
+      `Follow-up check: ${followUpState}`,
+      `Lead: ${noteContext.company} | Product: ${noteContext.product}`,
+      `Reason: ${noteContext.action} - ${noteContext.reason}`,
+      `Evidence status: ${noteContext.evidenceSummary}`,
+      `Open items: ${followUpState === 'DATA_GAP' ? noteContext.dataGapSummary : noteContext.riskSummary}`,
+      `Missing prompts: ${noteContext.missingSummary}`,
+      'Next: resolve this check before approval or follow-up; this does not save or send notes.',
+    ].join('\n')
+  );
+  const templates = [approved, needsReview, followUp];
+  const selectedState = chooseCurrentNoteState({ brief, dataGaps, intelligence, followUpState });
+  const current = templates.find((template) => template.state === selectedState) || needsReview;
+
+  return {
+    version: 'reviewer-notes-template-v1',
+    selectedState: current.state,
+    current: fallbackUsed ? makeReviewNoteTemplate('NEEDS_REVIEW', REVIEW_NOTE_FALLBACK_TEXT, { fallback: true }) : current,
+    templates,
+    fallbackUsed,
+  };
 }
 
 function priorityFor({ action, reviewStatus, hasConflicts }) {
@@ -487,7 +648,7 @@ export function buildLeadActionIntelligence(lead = {}, options = {}) {
   if (stale.length > 0) addUnique(missingInfoPrompts, 'Refresh stale public sources or revalidate the signal date.');
   if (hasConflicts) addUnique(missingInfoPrompts, `Resolve conflicting evidence: ${conflictFields.join(', ') || 'conflict'}.`);
 
-  return {
+  const intelligence = {
     nextReviewAction,
     nextReviewActionLabel: ACTION_LABELS[nextReviewAction] || ACTION_LABELS.review_lead,
     nextReviewActionReason: reasonFor(nextReviewAction, context),
@@ -504,6 +665,41 @@ export function buildLeadActionIntelligence(lead = {}, options = {}) {
       confidence,
     }),
   };
+
+  if (options.includeReviewerNotes === false) return intelligence;
+
+  const reviewerNoteTemplates = buildReviewerNoteTemplatesFromContext({
+    brief,
+    evidence,
+    sources,
+    dataGaps,
+    intelligence,
+  });
+
+  return {
+    ...intelligence,
+    reviewerNoteTemplates,
+    reviewNoteSuggestion: reviewerNoteTemplates.current,
+  };
+}
+
+export function buildReviewerNoteTemplates(lead = {}, options = {}) {
+  const brief = toLeadBriefV1(lead);
+  const evidence = normalizeEvidenceItems(brief.evidence);
+  const sources = normalizeSources(brief.sources);
+  const dataGaps = normalizeStringArray(brief.dataGaps);
+  const intelligence = buildLeadActionIntelligence(lead, {
+    ...options,
+    includeReviewerNotes: false,
+  });
+
+  return buildReviewerNoteTemplatesFromContext({
+    brief,
+    evidence,
+    sources,
+    dataGaps,
+    intelligence,
+  });
 }
 
 export function buildReviewerActionQueue(leads = [], options = {}) {
@@ -539,6 +735,8 @@ export function buildReviewerActionQueue(leads = [], options = {}) {
         missingInfoCount: missingInfoPrompts.length,
         riskFlags,
         missingInfoPrompts,
+        reviewNoteSuggestion: intelligence.reviewNoteSuggestion,
+        reviewNoteTemplates: intelligence.reviewerNoteTemplates?.templates || [],
         timestamp: pickTimestamp(brief),
       };
     })

@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-05-12.
-> Audited against first-parent `master` history through `2d0bf68` (`Merge pull request #84 from dooosp/codex/lead-filter-empty-reset-v1`) and current GitHub PR state after stale PR #1-#9 closure and post-PR51 follow-ups #69-#84.
+> Audited against first-parent `master` history through `6433116` (`Merge pull request #89 from dooosp/codex/lead-review-session-v1`) and current GitHub PR state after stale PR #1-#9 closure and post-PR51 follow-ups #69-#84 plus PRs #87-#89.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -17,6 +17,7 @@
 | 7 | 2026-05-11 | #36-#43 | `22672f8` | May 11 hardening/doc train | Worker routes, LeadBrief data path, test helpers, schema guard, review UX, evidence tooling, architecture docs, and naming cleanup |
 | 8 | 2026-05-11 | #51 | `a3f44df` | `codex/post-train-integration-v1` | Integration of PRs #44-#49: Workbench, local E2E, auth/error hardening, lead-quality evaluation, old PR #23 replacement, and roadmap synthesis |
 | 9 | 2026-05-12 | #52-#84 | `2d0bf68` | Post-PR51 review-quality, CI, and docs follow-ups | Workbench review helpers, review queue filters, advisory roleplay context, deterministic CI installs, lead-quality and local E2E CI gates, Workbench/list review gates and filtering, source-of-truth docs, list gate counts, Kanban gate labels/chips, and filter empty-state recovery |
+| 10 | 2026-05-12 | #87-#89 | `6433116` | Lead Action Intelligence, Reviewer Action Queue, and Lead Review Session | Deterministic action guidance, queue metadata/lanes/filters/sorting, current-filter session progress, next-lead focus, quick `APPROVED` / `NEEDS_REVIEW` actions, bounded failure UI, queue refresh after mutation, and local fake-D1 E2E coverage |
 
 ## Wave Summary
 
@@ -129,9 +130,13 @@
   - Kanban gate labels and state-specific chips derived from the same list-level review gate.
   - visible zero-result filter empty states and in-place reset recovery for list/Kanban review queues.
   - source-of-truth doc sync through PR #82.
+- PRs #87-#89 then shipped the Lead Action Intelligence and review-session layer:
+  - deterministic next-review action, risk flags, missing-info prompts, stakeholder angle, suggested follow-up draft, review priority, and action confidence.
+  - deterministic Reviewer Action Queue metadata, lanes, filters, sorting, compact action summaries, and local fake-D1 E2E coverage.
+  - deterministic Lead Review Session current-filter progress, remaining lane counts, next-lead focus, quick review-status actions, bounded failure UI, queue refresh after mutation, and sales-status preservation.
 - PR #59 recut the useful old PR #6 idea as deterministic role-specific review prep using existing LeadBrief/enrichment fields only. It does not approve outreach, change schema/API/storage, or expand CRM ownership.
 - Stale PRs #1-#9 were audited after PR #51, received disposition comments, and were closed without merge or branch deletion. Their useful ideas remain concept inventory to recut from current `master`.
-- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84 or the stale PR cleanup.
+- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#89, or the stale PR cleanup.
 
 ## Findings Closed On `master`
 

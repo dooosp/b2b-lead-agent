@@ -71,6 +71,10 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.equal(leadsPayload.leadReviewSession.remainingByLane.approval_candidates, 1);
   assert.equal(leadsPayload.leadReviewSession.remainingByLane.needs_evidence, 1);
   assert.equal(leadsPayload.leadReviewSession.nextLead.leadId, 'local-lead-approved');
+  assert.equal(leadsPayload.leadReviewSession.nextLead.reviewNoteSuggestion.state, 'APPROVED');
+  assert.match(leadsPayload.leadReviewSession.nextLead.reviewNoteSuggestion.text, /Decision: APPROVED/);
+  assert.equal(leadsPayload.reviewerActionQueue.items[0].reviewNoteSuggestion.state, 'APPROVED');
+  assert.equal(leadsPayload.reviewerActionQueue.items[0].reviewNoteTemplates.length, 3);
   const approvedLead = leadsPayload.leads.find((lead) => lead.id === 'local-lead-approved');
   assert.equal(approvedLead.reviewStatus, 'APPROVED');
 
@@ -170,6 +174,12 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     'Risk flags 5',
     'Missing info 6',
     'Lead Review Session',
+    '리뷰 노트 제안',
+    '승인 노트',
+    'Decision: APPROVED',
+    '검토 필요 노트',
+    '리스크 확인 노트',
+    'read-only reviewer note suggestion',
     '현재 큐',
     '다음 검토 리드: Local Factory Automation',
     '승인 / 검토 필요',
@@ -274,6 +284,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   const updatedReviewQueueItem = updatedLeadsPayload.reviewerActionQueue.items.find((item) => item.leadId === 'local-lead-review');
   assert.equal(updatedReviewQueueItem.nextReviewAction, 'reconcile_review_conflict');
   assert.equal(updatedReviewQueueItem.queueLane, 'risk_review');
+  assert.equal(updatedReviewQueueItem.reviewNoteSuggestion.state, 'DATA_GAP');
+  assert.match(updatedReviewQueueItem.reviewNoteSuggestion.text, /Follow-up check: DATA_GAP/);
+  assert.match(updatedReviewQueueItem.reviewNoteSuggestion.text, /Reconcile review conflict/);
 
   await page.locator('[data-filter-key="reviewStatus"]').selectOption('NEEDS_REVIEW');
   assert.equal(await page.locator('#leadsList .lead-card').count(), 0);
@@ -309,6 +322,10 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     'LEAD ACTION INTELLIGENCE',
     'Prepare reviewed follow-up',
     'Priority high / Confidence high',
+    '리뷰 노트 제안',
+    'Decision: APPROVED',
+    '승인 노트',
+    '검토 필요 노트',
     'Suggested follow-up',
     '검토 승인',
     '신뢰도 HIGH',

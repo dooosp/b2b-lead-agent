@@ -127,6 +127,13 @@ export function getLeadsPage() {
     .review-session-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
     .review-session-actions button { font-size:12px; padding:6px 10px; }
     .review-session-actions button:disabled { cursor:not-allowed; opacity:0.55; }
+    .review-note-suggestion { border-top:1px solid #223447; display:grid; gap:8px; padding-top:10px; }
+    .review-note-suggestion strong { color:#f4f7fb; font-size:13px; line-height:1.4; }
+    .review-note-suggestion pre, .review-note-variant pre { background:#0d1520; border:1px solid #223447; border-radius:6px; color:#d7e5f3; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; line-height:1.55; margin:0; max-height:210px; overflow:auto; padding:10px; white-space:pre-wrap; word-break:break-word; }
+    .review-note-helper { color:#9fb0c0; font-size:11px; line-height:1.5; margin:0; }
+    .review-note-variants { display:grid; gap:7px; }
+    .review-note-variant { border-top:1px solid #223447; padding-top:7px; }
+    .review-note-variant summary { color:#a8efc0; cursor:pointer; font-size:12px; font-weight:700; line-height:1.4; }
     .review-session-status { border-radius:8px; color:#9fb0c0; font-size:12px; line-height:1.5; min-height:18px; padding:8px 10px; }
     .review-session-status.is-idle { padding:0; }
     .review-session-status.is-pending { background:#172338; color:#cde7ff; }
@@ -485,6 +492,7 @@ export function getLeadsPage() {
       const missingEvidence = getEvidenceItems(lead).length === 0 || getSources(lead).length === 0;
       const missingInfoCount = dataGapCount + (missingEvidence ? 1 : 0) + (getVerificationStatus(lead) !== 'verified' ? 1 : 0);
       const queueLane = laneForFallbackAction(summary.nextReviewAction);
+      const reviewNotes = buildFallbackReviewNoteTemplates(lead, summary);
       return {
         leadId: getLeadId(lead),
         company: lead.company || '리드',
@@ -503,6 +511,8 @@ export function getLeadsPage() {
         missingInfoCount,
         riskFlags: summary.risks.map((risk) => ({ code: risk })),
         missingInfoPrompts: [],
+        reviewNoteSuggestion: reviewNotes.current,
+        reviewNoteTemplates: reviewNotes.templates,
         sortIndex: 9999,
       };
     }
@@ -703,6 +713,131 @@ export function getLeadsPage() {
       return { nextReviewAction, action, priority, actionConfidence, reason, risks };
     }
 
+    function summarizeReviewNoteEvidence(lead) {
+      const evidence = getEvidenceItems(lead);
+      const sources = getSources(lead);
+      if (evidence.length > 0) {
+        const quote = String(evidence[0].quote || '').trim() || 'direct evidence';
+        const source = String(evidence[0].sourceUrl || evidence[0].source_url || (sources[0] && sources[0].url) || '').trim();
+        return source ? '"' + quote + '" (' + source + ')' : '"' + quote + '"';
+      }
+      if (sources.length > 0) {
+        return 'Source to review: ' + (sources[0].title || sources[0].url || 'published source');
+      }
+      return 'No direct evidence quote or published source is available.';
+    }
+
+    function summarizeReviewNoteList(items, fallback) {
+      const normalized = (Array.isArray(items) ? items : []).map((item) => String(item || '').trim()).filter(Boolean);
+      return normalized.length > 0 ? normalized.slice(0, 3).join('; ') : fallback;
+    }
+
+    function buildFallbackReviewNoteTemplates(lead, summary = buildLeadActionIntelligenceSummary(lead)) {
+      const company = lead.company || '리드';
+      const product = lead.product || lead.recommendedProduct || lead.recommended_product || 'recommended solution';
+      const why = lead.whyNow || lead.why_now || lead.signal || lead.summary || 'Lead context needs review.';
+      const evidence = summarizeReviewNoteEvidence(lead);
+      const gaps = summarizeReviewNoteList(getDataGaps(lead), 'No open data gaps in current LeadBrief.');
+      const risks = summarizeReviewNoteList(summary.risks, 'No risk flags in current LeadBrief.');
+      const missing = getDataGaps(lead).length > 0 ? gaps : risks;
+      const followUpState = getDataGaps(lead).length > 0 ? 'DATA_GAP' : 'RISK_CHECK';
+      const followUpLabel = followUpState === 'DATA_GAP' ? '데이터 공백 확인 노트' : '리스크 확인 노트';
+      const labels = {
+        APPROVED: '승인 노트',
+        NEEDS_REVIEW: '검토 필요 노트',
+        DATA_GAP: '데이터 공백 확인 노트',
+        RISK_CHECK: '리스크 확인 노트'
+      };
+      const approved = {
+        state: 'APPROVED',
+        label: labels.APPROVED,
+        text: [
+          'Decision: APPROVED',
+          'Lead: ' + company + ' | Product: ' + product,
+          'Why: ' + why,
+          'Evidence: ' + evidence,
+          'Review basis: verification=' + getVerificationStatus(lead) + '; confidence=' + getConfidence(lead) + '; action=' + summary.action + '.',
+          'Missing/risk check: ' + missing,
+          'Next: use as an internal review note and personalize before any CRM log or outreach.'
+        ].join('\\n')
+      };
+      const needsReview = {
+        state: 'NEEDS_REVIEW',
+        label: labels.NEEDS_REVIEW,
+        text: [
+          'Decision: NEEDS_REVIEW',
+          'Lead: ' + company + ' | Product: ' + product,
+          'Reason: ' + summary.action + ' - ' + summary.reason,
+          'Evidence status: ' + evidence,
+          'Missing: ' + missing,
+          'Current state: reviewStatus=' + getReviewStatus(lead) + '; verification=' + getVerificationStatus(lead) + '; confidence=' + getConfidence(lead) + '.',
+          'Next: keep reviewStatus=NEEDS_REVIEW until evidence, gaps, and reviewer decision are resolved.'
+        ].join('\\n')
+      };
+      const followUp = {
+        state: followUpState,
+        label: followUpLabel,
+        text: [
+          'Follow-up check: ' + followUpState,
+          'Lead: ' + company + ' | Product: ' + product,
+          'Reason: ' + summary.action + ' - ' + summary.reason,
+          'Evidence status: ' + evidence,
+          'Open items: ' + (followUpState === 'DATA_GAP' ? gaps : risks),
+          'Missing prompts: ' + missing,
+          'Next: resolve this check before approval or follow-up; this does not save or send notes.'
+        ].join('\\n')
+      };
+      const templates = [approved, needsReview, followUp];
+      const currentState = summary.nextReviewAction === 'prepare_human_follow_up'
+        ? 'APPROVED'
+        : followUpState === 'DATA_GAP' || summary.risks.length > 0
+          ? followUpState
+          : getReviewStatus(lead) === 'APPROVED'
+            ? 'APPROVED'
+            : 'NEEDS_REVIEW';
+
+      return {
+        current: templates.find((template) => template.state === currentState) || needsReview,
+        templates,
+        labels
+      };
+    }
+
+    function normalizeReviewNoteData(lead) {
+      const item = getLeadQueueItem(lead);
+      const fallback = buildFallbackReviewNoteTemplates(lead);
+      const current = item.reviewNoteSuggestion && item.reviewNoteSuggestion.text
+        ? item.reviewNoteSuggestion
+        : fallback.current;
+      const templates = Array.isArray(item.reviewNoteTemplates) && item.reviewNoteTemplates.length > 0
+        ? item.reviewNoteTemplates
+        : fallback.templates;
+      return { current, templates };
+    }
+
+    function renderReviewNoteSuggestion(lead, options = {}) {
+      const noteData = normalizeReviewNoteData(lead || {});
+      const current = noteData.current || {};
+      const templates = noteData.templates || [];
+      const variants = templates.map((template) => \`
+        <details class="review-note-variant"\${template.state === current.state ? ' open' : ''}>
+          <summary>\${esc(template.label || template.state)}</summary>
+          <pre>\${esc(template.text || 'Review note suggestion unavailable.')}</pre>
+        </details>
+      \`).join('');
+      return \`
+        <div class="review-note-suggestion \${options.compact ? 'is-compact' : ''}" aria-label="리뷰 노트 제안">
+          <span class="block-label">리뷰 노트 제안</span>
+          <strong>\${esc(current.label || '검토 필요 노트')}</strong>
+          <pre>\${esc(current.text || 'Review note suggestion unavailable. Confirm company, evidence, verification status, and data gaps before writing a review note.')}</pre>
+          <p class="review-note-helper">read-only reviewer note suggestion; it does not save or send notes.</p>
+          <div class="review-note-variants" aria-label="review note variants">
+            \${variants}
+          </div>
+        </div>
+      \`;
+    }
+
     function renderLeadActionIntelligenceSummary(lead) {
       const action = getLeadQueueItem(lead);
       return \`
@@ -827,6 +962,7 @@ export function getLeadsPage() {
               <span>검토 \${esc(reviewStatusLabels[currentReviewStatus] || currentReviewStatus)}</span>
               <span>영업 \${esc(statusLabels[currentSalesStatus] || currentSalesStatus)}</span>
             </div>
+            \${renderReviewNoteSuggestion(session.nextLead, { compact: true })}
             <div class="review-session-actions" aria-label="빠른 검토 작업">
               <button class="btn btn-secondary" type="button" data-session-action="focus-next" data-lead-id="\${esc(nextLeadId)}">다음 검토 리드</button>
               <button class="btn" type="button" data-session-action="review-status" data-review-status="APPROVED" data-lead-id="\${esc(nextLeadId)}" \${currentReviewStatus === 'APPROVED' ? 'disabled' : ''} aria-label="다음 리드를 승인으로 변경">승인</button>
