@@ -61,6 +61,37 @@ test('opportunity workbench renders review status, verification, evidence, data 
   assert.match(html, /근거 보강 후 재검토/);
 });
 
+test('opportunity workbench exposes copy controls for deterministic reviewer notes', () => {
+  const model = buildOpportunityWorkbenchModel({
+    id: 'lead-note-copy',
+    company: 'Copy Ready Co',
+    reviewStatus: 'APPROVED',
+    verificationStatus: 'verified',
+    generationMode: 'llm',
+    signal: 'Chiller retrofit program entered vendor shortlist',
+    whyNow: 'Shortlist closes this quarter.',
+    recommendedMessage: 'Follow up with operations director about a compressor retrofit pilot.',
+    product: 'Turbocor compressor',
+    confidence: 'HIGH',
+    evidence: [
+      { field: 'summary', quote: 'vendor shortlist', sourceUrl: 'https://example.com/copy-ready' },
+    ],
+    sources: [{ title: 'Copy source', url: 'https://example.com/copy-ready' }],
+    dataGaps: [],
+  });
+  const html = renderOpportunityWorkbench(model);
+
+  assert.match(html, /data-workbench-note-copy-action="copy-current-note"/);
+  assert.match(html, /data-workbench-note-copy-action="copy-variant-note"/);
+  assert.match(html, /data-workbench-note-text/);
+  assert.match(html, /class="opportunity-workbench-note-copy-target"/);
+  assert.match(html, /aria-label="현재 Workbench 리뷰 노트 복사"/);
+  assert.match(html, /현재 노트 복사/);
+  assert.match(html, /Decision: APPROVED/);
+  assert.doesNotMatch(html, /localStorage/);
+  assert.doesNotMatch(html, /fetch\(/);
+});
+
 test('opportunity workbench accepts legacy snake_case review payloads conservatively', () => {
   const model = buildOpportunityWorkbenchModel({
     id: 'lead-legacy',
@@ -469,6 +500,7 @@ test('lead detail page embeds the opportunity workbench as the first review surf
   assert.match(html, /리뷰 노트 제안/);
   assert.match(html, /async function refreshDetailPage/);
   assert.match(html, /headers: authHeaders\(\)/);
-  assert.match(html, /field === 'status' \|\| field === 'reviewStatus'\) await refreshDetailPage/);
+  assert.match(html, /if \(field === 'status' \|\| field === 'reviewStatus'\)/);
+  assert.match(html, /await refreshDetailPage\(\)/);
   assert.ok(html.indexOf('opportunityWorkbenchHtml') < html.indexOf('기본 정보'));
 });

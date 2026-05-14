@@ -48,6 +48,7 @@ The legacy `npm run e2e` script defaults to `http://127.0.0.1:8787` through `e2e
 - Reviewer Action Queue action, risk-flag, missing-info, lane, and reset filter behavior
 - queue-aware quick review actions update only `reviewStatus`, preserve sales `status`, refresh visible local queue membership, guidance, and reviewer note text, and keep filters usable
 - Reviewer Productivity Toolkit v1 behavior on `/leads`: copy-current-note success via a stubbed Clipboard API, manual-copy fallback when Clipboard API is unavailable, optional shortcut help, non-mutating `j`/`q`/`c` shortcuts, ignored shortcuts while typing in a textarea, browser-memory activity counts, activity reset after reload, and confirmation that shortcuts do not mutate `reviewStatus`
+- Lead Detail Workbench Productivity Parity v1 behavior: Workbench note copy success copies only the visible deterministic note, unavailable Clipboard API triggers bounded manual-copy fallback, `w` focuses Opportunity Workbench, `j`/`n` focuses the next meaningful detail section, `c` copies the visible Workbench note, `?` toggles shortcut help, shortcuts are ignored while typing in detail notes, browser-memory activity resets after reload, and detail shortcuts do not mutate `reviewStatus`
 - bounded review-update failure UI that does not expose fake-D1/internal failure details
 - `GET /api/export/csv?profile=all`
 - `GET /api/dashboard?profile=all`

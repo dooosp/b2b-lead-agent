@@ -412,6 +412,71 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     'Follow up with operations director',
   ]);
 
+  await page.evaluate(() => {
+    window.__copiedReviewNotes = [];
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (text) => {
+          window.__copiedReviewNotes.push(String(text));
+        },
+      },
+    });
+  });
+  const visibleDetailNote = await page.locator('#opportunity-workbench [data-workbench-note-text]').first().innerText();
+  await page.getByRole('button', { name: '현재 Workbench 리뷰 노트 복사' }).click();
+  await page.waitForFunction(() => {
+    const status = document.querySelector('#detailProductivityStatus');
+    return !!status && String(status.textContent || '').includes('노트를 복사했습니다');
+  });
+  assert.deepEqual(await page.evaluate(() => window.__copiedReviewNotes), [visibleDetailNote]);
+  await assertRenderedText(page, ['Workbench Productivity Toolkit', '노트 복사 1건', '수동 복사 0건']);
+
+  await page.keyboard.press('Shift+/');
+  await assertRenderedText(page, ['단축키 도움말', 'w', 'n', 'j', 'c', 'Shortcut keys do not change reviewStatus']);
+  await page.keyboard.press('w');
+  await page.waitForFunction(() => document.activeElement && document.activeElement.id === 'opportunity-workbench');
+  await assertRenderedText(page, ['포커스 이동 1건']);
+
+  await page.keyboard.press('j');
+  await page.waitForFunction(() => {
+    const active = document.activeElement;
+    return !!active && active.classList.contains('detail-section') && active.id !== 'opportunity-workbench';
+  });
+  await assertRenderedText(page, ['포커스 이동 2건']);
+
+  await page.keyboard.press('c');
+  await page.waitForFunction(() => {
+    const status = document.querySelector('#detailProductivityStatus');
+    return !!status && String(status.textContent || '').includes('노트를 복사했습니다');
+  });
+  assert.equal(await page.evaluate(() => window.__copiedReviewNotes.length), 2);
+  await assertRenderedText(page, ['노트 복사 2건']);
+
+  await page.locator('#notesArea').focus();
+  await page.keyboard.press('j');
+  await page.keyboard.press('c');
+  assert.equal(await page.evaluate(() => window.__copiedReviewNotes.length), 2);
+  await assertRenderedText(page, ['포커스 이동 2건', '노트 복사 2건']);
+
+  const detailShortcutLeadsResponse = await localFetch('/api/leads?profile=danfoss');
+  const detailShortcutLeadsPayload = await readJson(detailShortcutLeadsResponse);
+  assert.equal(detailShortcutLeadsPayload.leads.find((lead) => lead.id === 'local-lead-approved').reviewStatus, 'APPROVED');
+
+  await page.setExtraHTTPHeaders(authHeaders());
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('#detailContent .detail-section');
+  await assertRenderedText(page, ['노트 복사 0건', '수동 복사 0건', '포커스 이동 0건']);
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
+  });
+  await page.getByRole('button', { name: '현재 Workbench 리뷰 노트 복사' }).click();
+  await page.waitForFunction(() => {
+    const status = document.querySelector('#detailProductivityStatus');
+    return !!status && String(status.textContent || '').includes('직접 복사');
+  });
+  await assertRenderedText(page, ['수동 복사 1건', '노트 복사 0건']);
+
   await page.goto(`${harness.origin}/dashboard?profile=all`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => {
     const el = document.querySelector('#dashContent');
