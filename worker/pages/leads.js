@@ -188,10 +188,10 @@ export function getLeadsPage() {
     .notes-saved { color: #27ae60; font-size: 11px; margin-left: 8px; opacity: 0; transition: opacity 0.3s; }
     .notes-saved.show { opacity: 1; }
     .csv-btn { margin-left: auto; }
-    .view-tabs { display: flex; gap: 0; margin-bottom: 16px; }
+    .view-tabs { display: flex; flex-direction: column; gap: 0; margin-bottom: 16px; }
     .view-tab { flex: 1; min-width:0; padding: 10px; text-align: center; font-size: 13px; font-weight: bold; color: #aaa; background: #1e2a3a; border: 1px solid #2a3a4a; cursor: pointer; transition: all 0.2s; }
-    .view-tab:first-child { border-radius: 8px 0 0 8px; }
-    .view-tab:last-child { border-radius: 0 8px 8px 0; }
+    .view-tab:first-child { border-radius: 8px 8px 0 0; }
+    .view-tab:last-child { border-radius: 0 0 8px 8px; margin-top:-1px; }
     .view-tab.active { color: #fff; background: #e94560; border-color: #e94560; }
     .kanban-board { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 12px; min-height: 300px; }
     .kanban-col { min-width: 180px; flex: 1; background: #1a2332; border-radius: 10px; padding: 10px; }
@@ -243,9 +243,9 @@ export function getLeadsPage() {
     <h1 style="font-size:22px;">리드 상세 보기</h1>
     <p class="subtitle">최근 분석된 영업 기회 목록</p>
 
-    <div class="view-tabs" role="tablist" aria-label="리드 보기 전환">
-      <button id="listViewTab" class="view-tab active" type="button" role="tab" aria-selected="true" aria-controls="leadsList" onclick="switchView('list')">리스트</button>
-      <button id="kanbanViewTab" class="view-tab" type="button" role="tab" aria-selected="false" aria-controls="kanbanView" onclick="switchView('kanban')">칸반 보드</button>
+    <div class="view-tabs" role="tablist" aria-label="리드 보기 전환" aria-orientation="vertical">
+      <button id="listViewTab" class="view-tab active" type="button" role="tab" aria-selected="true" aria-controls="leadsList" tabindex="0" data-view-target="list" onclick="switchView('list')">리스트</button>
+      <button id="kanbanViewTab" class="view-tab" type="button" role="tab" aria-selected="false" aria-controls="kanbanView" tabindex="-1" data-view-target="kanban" onclick="switchView('kanban')">칸반 보드</button>
     </div>
 
     <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;margin-bottom:12px;" onclick="window.print()">PDF 인쇄</button>
@@ -366,8 +366,8 @@ export function getLeadsPage() {
       </div>
     </div>
     <div id="leadsSummary"></div>
-    <div id="leadsList"><p style="color:#aaa;">로딩 중...</p></div>
-    <div id="kanbanView" style="display:none;"></div>
+    <div id="leadsList" role="tabpanel" aria-labelledby="listViewTab"><p style="color:#aaa;">로딩 중...</p></div>
+    <div id="kanbanView" role="tabpanel" aria-labelledby="kanbanViewTab" style="display:none;" hidden></div>
   </main>
 
   <script>
@@ -1708,18 +1708,101 @@ export function getLeadsPage() {
         \`).join('');
     }
 
+    function getViewTabs() {
+      return [...document.querySelectorAll('.view-tab[role="tab"]')];
+    }
+
+    function setRovingViewTab(tab) {
+      getViewTabs().forEach((item) => {
+        item.tabIndex = item === tab ? 0 : -1;
+      });
+    }
+
+    function syncViewPanels(view) {
+      const listPanel = document.getElementById('leadsList');
+      const kanbanPanel = document.getElementById('kanbanView');
+      if (listPanel) {
+        listPanel.hidden = view !== 'list';
+        listPanel.style.display = view === 'list' ? '' : 'none';
+      }
+      if (kanbanPanel) {
+        kanbanPanel.hidden = view !== 'kanban';
+        kanbanPanel.style.display = view === 'kanban' ? '' : 'none';
+      }
+    }
+
     function switchView(view) {
-      currentView = view;
-      document.querySelectorAll('.view-tab').forEach((t, i) => {
-        const active = (i === 0 && view === 'list') || (i === 1 && view === 'kanban');
+      const nextView = view === 'kanban' ? 'kanban' : 'list';
+      currentView = nextView;
+      document.querySelectorAll('.view-tab').forEach((t) => {
+        const active = t.dataset.viewTarget === nextView;
         t.classList.toggle('active', active);
         t.setAttribute('aria-selected', active ? 'true' : 'false');
+        t.tabIndex = active ? 0 : -1;
       });
-      document.getElementById('leadsList').style.display = view === 'list' ? '' : 'none';
-      document.getElementById('kanbanView').style.display = view === 'kanban' ? '' : 'none';
+      syncViewPanels(nextView);
       const container = document.querySelector('.container');
-      container.style.maxWidth = view === 'kanban' ? '1400px' : '700px';
-      if (view === 'kanban') renderKanban(getFilteredLeads());
+      container.style.maxWidth = nextView === 'kanban' ? '1400px' : '700px';
+      if (nextView === 'kanban') renderKanban(getFilteredLeads());
+    }
+
+    function isRovingTextEntryTarget(target) {
+      if (!target) return false;
+      const tagName = String(target.tagName || '').toLowerCase();
+      if (['input', 'select', 'textarea'].includes(tagName)) return true;
+      return !!(target.isContentEditable || (target.closest && target.closest('[contenteditable="true"]')));
+    }
+
+    function shouldIgnoreRovingTabKey(event) {
+      if (!event || event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return true;
+      if (isRovingTextEntryTarget(event.target)) return true;
+      return !event.target?.closest?.('[role="tablist"]');
+    }
+
+    function moveViewTabFocus(tab) {
+      if (!tab) return;
+      setRovingViewTab(tab);
+      tab.focus({ preventScroll: true });
+    }
+
+    function activateFocusedViewTab(tab = document.activeElement) {
+      const viewTab = tab && tab.closest ? tab.closest('.view-tab[role="tab"]') : null;
+      const view = viewTab ? viewTab.dataset.viewTarget : '';
+      if (!view) return;
+      switchView(view);
+    }
+
+    function handleViewTabRovingKeydown(event) {
+      if (shouldIgnoreRovingTabKey(event)) return;
+      const tabs = getViewTabs();
+      if (tabs.length === 0) return;
+      const currentTab = event.target?.closest?.('.view-tab[role="tab"]') || document.activeElement?.closest?.('.view-tab[role="tab"]');
+      const currentIndex = Math.max(0, tabs.indexOf(currentTab));
+      const lastIndex = tabs.length - 1;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        moveViewTabFocus(tabs[(currentIndex + 1) % tabs.length]);
+        return;
+      }
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        moveViewTabFocus(tabs[(currentIndex - 1 + tabs.length) % tabs.length]);
+        return;
+      }
+      if (event.key === 'Home') {
+        event.preventDefault();
+        moveViewTabFocus(tabs[0]);
+        return;
+      }
+      if (event.key === 'End') {
+        event.preventDefault();
+        moveViewTabFocus(tabs[lastIndex]);
+        return;
+      }
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        activateFocusedViewTab(currentTab || document.activeElement);
+      }
     }
 
     function renderKanban(leads, totalBeforeFilter = cachedLeads.length) {
@@ -1821,12 +1904,15 @@ export function getLeadsPage() {
         updateReviewStatus(leadId, nextStatus, getReviewStatus(lead), { focusLeadId: leadId });
       }
     });
+    const viewTabList = document.querySelector('[role="tablist"][aria-label="리드 보기 전환"]');
+    if (viewTabList) viewTabList.addEventListener('keydown', handleViewTabRovingKeydown);
     document.addEventListener('keydown', handleReviewerShortcut);
     window.setReviewQueueFilter = setReviewQueueFilter;
     window.resetReviewQueueFilters = resetReviewQueueFilters;
     window.scrollToNextReviewLead = scrollToNextReviewLead;
     window.copyReviewNote = copyReviewNote;
     window.handleReviewerShortcut = handleReviewerShortcut;
+    window.handleViewTabRovingKeydown = handleViewTabRovingKeydown;
 
     loadLeads();
   </script>

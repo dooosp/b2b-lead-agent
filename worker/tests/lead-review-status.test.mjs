@@ -334,7 +334,7 @@ test('lead list page exposes reviewer productivity toolkit without keyboard revi
   assert.match(listHtml, /data-shortcut-action="toggle-help"/);
   assert.match(listHtml, /aria-controls="reviewShortcutHelp"/);
   assert.match(listHtml, /role="region" aria-label="단축키 도움말"/);
-  assert.match(listHtml, /role="tablist" aria-label="리드 보기 전환"/);
+  assert.match(listHtml, /role="tablist" aria-label="리드 보기 전환" aria-orientation="vertical"/);
   assert.match(listHtml, /role="tab" aria-selected="true" aria-controls="leadsList"/);
   assert.match(listHtml, /role="tab" aria-selected="false" aria-controls="kanbanView"/);
   assert.match(listHtml, /aria-label="\$\{leadAccessibleName\(lead\)\} 검토 상태 변경"/);
@@ -345,6 +345,29 @@ test('lead list page exposes reviewer productivity toolkit without keyboard revi
   assert.match(listHtml, /focusMoves: 0/);
   assert.match(listHtml, /Shortcut keys do not change reviewStatus/);
   assert.doesNotMatch(listHtml, /data-shortcut-action="review-status"/);
+});
+
+test('lead list view tabs expose roving keyboard and tabpanel semantics', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /role="tablist" aria-label="리드 보기 전환" aria-orientation="vertical"/);
+  assert.match(listHtml, /id="listViewTab"[^>]+role="tab"[^>]+aria-selected="true"[^>]+aria-controls="leadsList"[^>]+tabindex="0"/);
+  assert.match(listHtml, /id="kanbanViewTab"[^>]+role="tab"[^>]+aria-selected="false"[^>]+aria-controls="kanbanView"[^>]+tabindex="-1"/);
+  assert.match(listHtml, /id="leadsList"[^>]+role="tabpanel"[^>]+aria-labelledby="listViewTab"/);
+  assert.match(listHtml, /id="kanbanView"[^>]+role="tabpanel"[^>]+aria-labelledby="kanbanViewTab"[^>]+hidden/);
+  assert.match(listHtml, /function handleViewTabRovingKeydown/);
+  assert.match(listHtml, /function moveViewTabFocus/);
+  assert.match(listHtml, /function activateFocusedViewTab/);
+  assert.match(listHtml, /function shouldIgnoreRovingTabKey/);
+  assert.match(listHtml, /ArrowRight/);
+  assert.match(listHtml, /ArrowDown/);
+  assert.match(listHtml, /ArrowLeft/);
+  assert.match(listHtml, /ArrowUp/);
+  assert.match(listHtml, /Home/);
+  assert.match(listHtml, /End/);
+  assert.match(listHtml, /event\.key === 'Enter'/);
+  assert.match(listHtml, /event\.key === ' '/);
+  assert.doesNotMatch(listHtml, /data-view-tab-action="review-status"/);
 });
 
 test('lead list page exposes evidence and data-gap review slices', () => {

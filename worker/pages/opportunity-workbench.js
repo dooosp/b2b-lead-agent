@@ -669,7 +669,7 @@ export function renderOpportunityWorkbench(model) {
     : 'Risk flags 없음';
 
   return `
-      <section id="opportunity-workbench" class="detail-section opportunity-workbench" aria-label="Opportunity Workbench">
+      <section id="opportunity-workbench" class="detail-section opportunity-workbench" aria-label="Opportunity Workbench" tabindex="-1">
         <div class="opportunity-workbench-header">
           <div>
             <div class="opportunity-workbench-kicker">Opportunity Workbench</div>
