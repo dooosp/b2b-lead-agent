@@ -101,6 +101,7 @@ The first matching blocker decides the next action:
 - Kanban cards render the compact next action below the gate chip.
 - Reviewer Productivity Toolkit v1 layers local-only productivity controls onto `/leads`: visible copy buttons for deterministic session note templates, safe manual-copy fallback when the Clipboard API is unavailable, optional non-mutating keyboard shortcuts, shortcut help, and an in-memory session activity summary. The activity summary resets on page reload and is not written to D1, localStorage, analytics, APIs, or logs.
 - Lead Detail Workbench Productivity Parity v1 mirrors the same safe reviewer affordances into lead detail: visible Workbench note copy controls copy only deterministic note text, manual fallback selects the visible note when the Clipboard API is unavailable, `c`/`w`/`n`/`j`/`?` shortcuts are ignored in form controls and never mutate `reviewStatus`, and current-page activity counts live only in browser memory.
+- Reviewer Workflow QA & Accessibility Hardening v1 tightens those shipped affordances without expanding product scope: list/detail copy targets and status controls have clearer accessible names, shortcut help/status feedback is bounded and live-region friendly, list view switching is keyboard-reachable, shortcuts are ignored on interactive controls as well as text-entry fields, and local E2E includes mobile viewport overflow smoke for reviewer blocks.
 
 The list/Kanban UI keeps a conservative browser fallback for older payloads, but the canonical queue model is the Worker helper and the additive `/api/leads` queue metadata.
 
@@ -139,7 +140,7 @@ Reviewer Productivity Toolkit v1 is a browser-only helper for the existing `/lea
 - If `navigator.clipboard.writeText()` is unavailable or fails, the UI selects the note text and shows a bounded manual-copy message.
 - Keyboard shortcuts are discoverable and non-mutating: `n`/`j` focuses the next review lead, `q` focuses Reviewer Action Queue, `c` copies the visible session note, and `?` toggles shortcut help.
 - Detail shortcuts are also discoverable and non-mutating: `c` copies the visible Workbench note, `w` focuses Opportunity Workbench, `n`/`j` focuses the next meaningful detail section, and `?` toggles shortcut help.
-- Shortcuts are ignored while the reviewer is typing in `input`, `select`, `textarea`, or `contenteditable` controls.
+- Shortcuts are ignored while the reviewer is typing in `input`, `select`, `textarea`, or `contenteditable` controls, and while focus is on interactive controls such as buttons, links, summaries, tabs, or menu-like roles.
 - Session activity tracks note-copy count, explicit review-status update count, focus count, filter reset count, and last action in browser memory only.
 - Detail activity tracks Workbench note-copy count, manual-copy fallback count, Workbench focus count, section focus count, explicit status/review-status update success/failure count, and last action in browser memory only. It resets on reload and is not stored in `localStorage` or `sessionStorage`.
 - `reviewStatus` changes remain explicit button/select actions. Shortcuts never send PATCH requests or mutate review state.

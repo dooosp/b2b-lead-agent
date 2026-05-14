@@ -623,7 +623,7 @@ function renderReviewerNoteTemplates(intelligence = {}) {
     ? templates.map((template) => `
               <details class="opportunity-workbench-note-variant"${template.state === current.state ? ' open' : ''}>
                 <summary>${escapeHtml(template.label || template.state)}</summary>
-                <pre class="opportunity-workbench-note-copy-target" data-workbench-note-text tabindex="0">${escapeHtml(template.text)}</pre>
+                <pre class="opportunity-workbench-note-copy-target" data-workbench-note-text tabindex="0" aria-label="${escapeHtml(template.label || template.state)} 텍스트">${escapeHtml(template.text)}</pre>
                 <div class="opportunity-workbench-note-copy-actions">
                   <button class="btn btn-secondary" type="button" data-workbench-note-copy-action="copy-variant-note" aria-label="${escapeHtml(template.label || template.state)} 복사">복사</button>
                 </div>
@@ -639,7 +639,7 @@ function renderReviewerNoteTemplates(intelligence = {}) {
                   <button class="btn btn-secondary" type="button" data-workbench-note-copy-action="copy-current-note" aria-label="현재 Workbench 리뷰 노트 복사">현재 노트 복사</button>
                 </div>
               </div>
-              <pre class="opportunity-workbench-note-copy-target" data-workbench-note-text tabindex="0">${escapeHtml(current.text)}</pre>
+              <pre class="opportunity-workbench-note-copy-target" data-workbench-note-text tabindex="0" aria-label="현재 Workbench 리뷰 노트 텍스트">${escapeHtml(current.text)}</pre>
               <p class="opportunity-workbench-caveat">read-only reviewer note suggestion; it does not save or send notes.</p>
               <div class="opportunity-workbench-note-variants">
                 ${variants}
@@ -916,6 +916,7 @@ export function getOpportunityWorkbenchStyles() {
       .opportunity-workbench-stakeholder-grid { grid-template-columns:1fr; }
       .opportunity-workbench-wide { grid-column:auto; }
       .opportunity-workbench-evidence-list { max-height: none; }
+      .opportunity-workbench-note-copy-actions button { flex:1 1 auto; min-width:0; }
     }
   `;
 }

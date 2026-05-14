@@ -206,6 +206,28 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '상태 변경 0건',
     '포커스 이동 0건',
   ]);
+  assert.equal(await page.getByRole('tab', { name: '리스트' }).getAttribute('aria-selected'), 'true');
+  assert.equal(await page.getByRole('tab', { name: '칸반 보드' }).getAttribute('aria-selected'), 'false');
+  await assertNoHorizontalOverflow(page, [
+    'main.container',
+    '#reviewQueueFilters',
+    '.review-session-panel',
+    '#reviewProductivityToolkit',
+    '#reviewerActionQueue',
+    '#leadsList .lead-card',
+  ]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await assertRenderedText(page, ['Reviewer Productivity Toolkit', 'Lead Review Session', 'Reviewer Action Queue']);
+  await assertNoHorizontalOverflow(page, [
+    'main.container',
+    '#reviewQueueFilters',
+    '.review-session-panel',
+    '#reviewProductivityToolkit',
+    '#reviewerActionQueue',
+    '#leadsList .lead-card',
+    '.review-note-suggestion',
+  ]);
+  await page.setViewportSize({ width: 1280, height: 720 });
 
   assert.equal(await page.locator('#leadsList .lead-card').count(), 2);
   await page.getByRole('button', { name: '현재 노트 복사' }).click();
@@ -218,6 +240,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   ]);
   await assertRenderedText(page, ['노트 복사 1건', '마지막 작업']);
 
+  await page.locator('#leadsList .lead-card').first().focus();
   await page.keyboard.press('Shift+/');
   await assertRenderedText(page, ['단축키 도움말', 'n', 'j', 'q', 'c', 'Shortcut keys do not change reviewStatus']);
   await page.keyboard.press('j');
@@ -235,6 +258,11 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   });
   assert.equal(await page.evaluate(() => window.__copiedReviewNotes.length), 2);
   await assertRenderedText(page, ['노트 복사 2건']);
+  await page.getByRole('button', { name: '단축키 도움말' }).focus();
+  await page.keyboard.press('j');
+  await page.keyboard.press('c');
+  assert.equal(await page.evaluate(() => window.__copiedReviewNotes.length), 2);
+  await assertRenderedText(page, ['포커스 이동 2건', '노트 복사 2건']);
 
   await page.locator('.notes-section details').first().click();
   await page.locator('.notes-textarea').first().focus();
@@ -314,7 +342,8 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   await page.locator('#leadsList .filter-empty-state button').click();
   assert.equal(await page.locator('#leadsList .lead-card').count(), 2);
 
-  await page.getByText('칸반 보드').click();
+  await page.getByRole('tab', { name: '칸반 보드' }).click();
+  assert.equal(await page.getByRole('tab', { name: '칸반 보드' }).getAttribute('aria-selected'), 'true');
   assert.equal(await page.locator('#kanbanView .kanban-card').count(), 2);
   assert.equal(await page.locator('#kanbanView .k-gate.gate-ready').count(), 1);
   assert.equal(await page.locator('#kanbanView .k-gate.gate-review').count(), 1);
@@ -327,7 +356,8 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   await page.locator('#kanbanView .filter-empty-state button').click();
   assert.equal(await page.locator('#kanbanView .kanban-card').count(), 2);
 
-  await page.getByText('리스트').click();
+  await page.getByRole('tab', { name: '리스트' }).click();
+  assert.equal(await page.getByRole('tab', { name: '리스트' }).getAttribute('aria-selected'), 'true');
   await page.locator('[data-filter-key="nextReviewAction"]').selectOption('enrich_before_review');
   await page.getByRole('button', { name: '승인' }).click();
   await page.waitForFunction(() => {
@@ -411,6 +441,17 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     'Local evidence quote',
     'Follow up with operations director',
   ]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await assertRenderedText(page, ['Workbench Productivity Toolkit', 'OPPORTUNITY WORKBENCH', '사람 검토']);
+  await assertNoHorizontalOverflow(page, [
+    'main.container',
+    '#opportunity-workbench',
+    '#detailProductivityToolkit',
+    '.opportunity-workbench-review-note',
+    '.opportunity-workbench-note-copy-head',
+    '.field-group',
+  ]);
+  await page.setViewportSize({ width: 1280, height: 720 });
 
   await page.evaluate(() => {
     window.__copiedReviewNotes = [];
@@ -432,6 +473,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.deepEqual(await page.evaluate(() => window.__copiedReviewNotes), [visibleDetailNote]);
   await assertRenderedText(page, ['Workbench Productivity Toolkit', '노트 복사 1건', '수동 복사 0건']);
 
+  await page.locator('#opportunity-workbench').focus();
   await page.keyboard.press('Shift+/');
   await assertRenderedText(page, ['단축키 도움말', 'w', 'n', 'j', 'c', 'Shortcut keys do not change reviewStatus']);
   await page.keyboard.press('w');
@@ -452,6 +494,11 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   });
   assert.equal(await page.evaluate(() => window.__copiedReviewNotes.length), 2);
   await assertRenderedText(page, ['노트 복사 2건']);
+  await page.getByRole('button', { name: '현재 Workbench 리뷰 노트 복사' }).focus();
+  await page.keyboard.press('c');
+  await page.keyboard.press('j');
+  assert.equal(await page.evaluate(() => window.__copiedReviewNotes.length), 2);
+  await assertRenderedText(page, ['포커스 이동 2건', '노트 복사 2건']);
 
   await page.locator('#notesArea').focus();
   await page.keyboard.press('j');
@@ -518,4 +565,18 @@ async function assertRenderedText(page, expectedTexts) {
 
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+async function assertNoHorizontalOverflow(page, selectors) {
+  const overflowing = await page.evaluate((items) => {
+    return items.flatMap((selector) => {
+      return [...document.querySelectorAll(selector)].map((element, index) => {
+        const overflow = element.scrollWidth - element.clientWidth;
+        return overflow > 1
+          ? { selector, index, scrollWidth: element.scrollWidth, clientWidth: element.clientWidth, overflow }
+          : null;
+      }).filter(Boolean);
+    });
+  }, selectors);
+  assert.deepEqual(overflowing, []);
 }

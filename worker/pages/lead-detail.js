@@ -63,6 +63,7 @@ export function getLeadDetailPage(lead, statusLogs) {
     .review-meta-row { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin:6px 0; }
     .muted-value { color:#8fa4b8; }
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+    .top-nav-links { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
     .detail-productivity-toolkit { border-color:#31506c; background:#101925; display:grid; gap:10px; }
     .detail-productivity-head { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; flex-wrap:wrap; }
     .detail-productivity-head strong { color:#f4f7fb; font-size:13px; line-height:1.4; }
@@ -80,15 +81,23 @@ export function getLeadDetailPage(lead, statusLogs) {
     .detail-productivity-status.is-pending { background:#172338; color:#cde7ff; }
     .detail-productivity-status.is-success { background:#101f1a; color:#a8efc0; }
     .detail-productivity-status.is-error { background:#211719; color:#ffc4c4; }
-    .detail-section:focus { outline:2px solid #8fbfe8; outline-offset:3px; }
-    @media (max-width: 720px) { .detail-productivity-grid { grid-template-columns:1fr; } }
+    .detail-section:focus, .detail-productivity-head button:focus-visible, .detail-productivity-status:focus-visible, .opportunity-workbench-note-copy-actions button:focus-visible, .status-select-lg:focus-visible, .review-select-lg:focus-visible, .field-group input:focus-visible, .notes-area:focus-visible { outline:2px solid #8fbfe8; outline-offset:3px; }
+    @media (max-width: 720px) {
+      .top-nav { align-items:flex-start; }
+      .top-nav-links { justify-content:flex-start; width:100%; }
+      .top-nav-links .btn { flex:1 1 auto; min-width:0; }
+      .field-group { grid-template-columns:1fr; }
+      .detail-row { align-items:flex-start; flex-direction:column; gap:4px; }
+      .detail-row .label { min-width:0; }
+      .detail-productivity-grid { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
   <main class="container" style="max-width:700px;">
     <nav class="top-nav" aria-label="상단 이동">
       <a href="/leads" class="back-link" id="backLink">← 리드 목록</a>
-      <div style="display:flex;gap:8px;">
+      <div class="top-nav-links">
         <a href="/dashboard" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">대시보드</a>
       </div>
     </nav>
@@ -249,7 +258,7 @@ export function getLeadDetailPage(lead, statusLogs) {
         '<div class="detail-productivity-head"><div>' +
         '<strong>Workbench Productivity Toolkit</strong>' +
         '<span>복사, 포커스, 명시적 상태 피드백만 현재 브라우저 세션에서 집계</span>' +
-        '</div><button class="btn btn-secondary" type="button" data-detail-shortcut-action="toggle-help" aria-expanded="' + (detailShortcutHelpOpen ? 'true' : 'false') + '">단축키 도움말</button></div>' +
+        '</div><button class="btn btn-secondary" type="button" data-detail-shortcut-action="toggle-help" aria-expanded="' + (detailShortcutHelpOpen ? 'true' : 'false') + '" aria-controls="detailShortcutHelp">단축키 도움말</button></div>' +
         '<div id="detailProductivityCounts" class="detail-productivity-grid">' +
         '<span>노트 복사 ' + detailActivity.copiedNotes + '건</span>' +
         '<span>수동 복사 ' + detailActivity.manualCopies + '건</span>' +
@@ -257,14 +266,14 @@ export function getLeadDetailPage(lead, statusLogs) {
         '<span>상태 피드백 ' + detailActivity.statusUpdates + '건</span>' +
         '</div>' +
         '<p id="detailProductivityLastAction" class="detail-productivity-last">마지막 작업: ' + esc(detailActivity.lastAction || '세션 활동 없음') + '</p>' +
-        '<div id="detailShortcutHelp" class="detail-shortcut-help' + helpClass + '"' + helpHidden + ' aria-label="단축키 도움말">' +
+        '<div id="detailShortcutHelp" class="detail-shortcut-help' + helpClass + '"' + helpHidden + ' role="region" aria-label="단축키 도움말">' +
         '<p><kbd>c</kbd> 보이는 Workbench 리뷰 노트 복사</p>' +
         '<p><kbd>w</kbd> Opportunity Workbench로 포커스</p>' +
         '<p><kbd>n</kbd>/<kbd>j</kbd> 다음 상세 섹션으로 포커스</p>' +
         '<p><kbd>?</kbd> 단축키 도움말 열기/닫기</p>' +
         '<p>Shortcut keys do not change reviewStatus. 승인/반려/보류 변경은 선택 상자에서만 실행됩니다.</p>' +
         '</div>' +
-        '<div id="detailProductivityStatus" class="detail-productivity-status is-' + esc(noticeTone) + '" role="status" aria-live="polite">' + esc(noticeMessage) + '</div>' +
+        '<div id="detailProductivityStatus" class="detail-productivity-status is-' + esc(noticeTone) + '" role="status" aria-live="polite" aria-atomic="true">' + esc(noticeMessage) + '</div>' +
         '</section>';
     }
 
@@ -443,13 +452,17 @@ export function getLeadDetailPage(lead, statusLogs) {
       setDetailProductivityStatus(detailShortcutHelpOpen ? '단축키 도움말을 열었습니다.' : '단축키 도움말을 닫았습니다.', 'success');
     }
 
-    function shouldIgnoreDetailShortcut(event) {
-      if (!event || event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return true;
-      const target = event.target;
+    function isInteractiveDetailShortcutTarget(target) {
       if (!target) return false;
       const tagName = String(target.tagName || '').toLowerCase();
-      if (tagName === 'input' || tagName === 'select' || tagName === 'textarea') return true;
-      return !!(target.isContentEditable || (target.closest && target.closest('[contenteditable="true"]')));
+      if (['input', 'select', 'textarea', 'button', 'a', 'summary'].includes(tagName)) return true;
+      if (target.isContentEditable || (target.closest && target.closest('[contenteditable="true"]'))) return true;
+      return !!(target.closest && target.closest('[role="button"], [role="tab"], [role="menuitem"]'));
+    }
+
+    function shouldIgnoreDetailShortcut(event) {
+      if (!event || event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return true;
+      return isInteractiveDetailShortcutTarget(event.target);
     }
 
     function handleDetailShortcut(event) {
@@ -494,7 +507,7 @@ export function getLeadDetailPage(lead, statusLogs) {
       html += '<h3>기본 정보</h3>';
       html += '<div class="detail-row"><span class="label">상태</span><span class="value">';
       if (allowed.length > 0) {
-        html += '<select class="status-select-lg" onchange="updateField(\\'status\\', this.value)">' + statusOpts + '</select>';
+        html += '<select class="status-select-lg" aria-label="영업 상태 변경" onchange="updateField(\\'status\\', this.value)">' + statusOpts + '</select>';
       } else {
         html += '<span style="color:' + (statusColors[currentStatus] || '#fff') + ';font-weight:bold;">' + esc(statusLabels[currentStatus]) + '</span>';
       }
@@ -521,7 +534,7 @@ export function getLeadDetailPage(lead, statusLogs) {
       ).join('');
       html += '<div class="detail-section">';
       html += '<h3>사람 검토</h3>';
-      html += '<div class="detail-row"><span class="label">검토 상태</span><span class="value"><span class="review-meta-row">' + renderReviewBadge(lead) + '<select class="review-select-lg" aria-label="검토 상태" onchange="updateField(\\'reviewStatus\\', this.value)">' + reviewOpts + '</select></span></span></div>';
+      html += '<div class="detail-row"><span class="label">검토 상태</span><span class="value"><span class="review-meta-row">' + renderReviewBadge(lead) + '<select class="review-select-lg" aria-label="사람 검토 상태 변경" onchange="updateField(\\'reviewStatus\\', this.value)">' + reviewOpts + '</select></span></span></div>';
       html += '<div class="detail-row"><span class="label">검증/생성</span><span class="value">' + renderReviewTrustBadges(lead) + '</span></div>';
       html += renderDataGapSummary(lead);
       const evidenceItems = getEvidenceItems(lead);
@@ -538,8 +551,8 @@ export function getLeadDetailPage(lead, statusLogs) {
       html += '<div class="detail-section">';
       html += '<h3>영업 관리</h3>';
       html += '<div class="field-group">';
-      html += '<div><label>다음 후속 조치일</label><input type="date" id="followUpDate" value="' + esc(lead.followUpDate || '') + '" onchange="updateField(\\'follow_up_date\\', this.value)"></div>';
-      html += '<div><label>예상 계약액 (만원)</label><input type="number" id="estimatedValue" value="' + (lead.estimatedValue || 0) + '" min="0" onchange="updateField(\\'estimated_value\\', parseInt(this.value)||0)"></div>';
+      html += '<div><label for="followUpDate">다음 후속 조치일</label><input type="date" id="followUpDate" aria-label="다음 후속 조치일" value="' + esc(lead.followUpDate || '') + '" onchange="updateField(\\'follow_up_date\\', this.value)"></div>';
+      html += '<div><label for="estimatedValue">예상 계약액 (만원)</label><input type="number" id="estimatedValue" aria-label="예상 계약액 만원" value="' + (lead.estimatedValue || 0) + '" min="0" onchange="updateField(\\'estimated_value\\', parseInt(this.value)||0)"></div>';
       html += '</div>';
       html += '<span class="save-indicator" id="saveIndicator">저장됨</span>';
       html += '</div>';
