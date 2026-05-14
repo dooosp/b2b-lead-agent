@@ -261,6 +261,8 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   await page.keyboard.press('ArrowRight');
   assert.equal(await page.evaluate(() => document.activeElement?.dataset?.filterKey), 'reviewStatus');
   assert.equal(await page.getByRole('tab', { name: '리스트' }).getAttribute('aria-selected'), 'true');
+  await page.locator('[data-filter-key="reviewStatus"]').selectOption('all');
+  await page.waitForFunction(() => document.querySelectorAll('#leadsList .lead-card').length === 2);
 
   const rovingLeadsResponse = await localFetch('/api/leads?profile=danfoss');
   const rovingLeadsPayload = await readJson(rovingLeadsResponse);
