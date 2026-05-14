@@ -4,7 +4,7 @@ This document records the production-proof boundary after Issue #34 and the May 
 
 Audited repo baseline for this snapshot:
 
-- Latest audited source-of-truth `origin/master`: `63d80fd15c5c1921b2fa272e0204cf9d52dae391` (PR #93)
+- Latest audited source-of-truth `origin/master`: `0d988454a6c5757aeefb0843a017d0ea61ffd87a` (PR #95)
 - Issue #34 current state: open, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -28,7 +28,7 @@ Accepted Issue #34 records:
 | Runtime manifest proof | One approved raw `GET /manifest.json` returned HTTP 200 JSON redacted evidence | Did not access D1, read rows, write rows, call API routes, load browser pages, call service worker path, or prove D1-backed runtime behavior. |
 | Final no-op closeout | Schema remediation and manifest proof complete within narrow scope | Production observation claim remains forbidden; future proof needs separate approval. |
 
-Important freshness rule: Issue #34's accepted execution/proof scope was tied to SHA `12d44374a24a9958de179fae5f9311621606ad24`. The latest audited source-of-truth `master` baseline is `63d80fd15c5c1921b2fa272e0204cf9d52dae391` after PR #93 hardened reviewer workflow QA/accessibility on top of the PR #51 and PR #52-#92 review-quality train. Any new production action must refresh the actual current `origin/master` SHA, CI metadata, owners, and approval records before execution.
+Important freshness rule: Issue #34's accepted execution/proof scope was tied to SHA `12d44374a24a9958de179fae5f9311621606ad24`. The latest audited source-of-truth `master` baseline is `0d988454a6c5757aeefb0843a017d0ea61ffd87a` after PR #94 shipped reviewer workflow roving keyboard/accessibility snapshot coverage and PR #95 added the Reviewer Workflow Final Audit & Demo Packet on top of the PR #51 and PR #52-#93 review-quality train. Any new production action must refresh the actual current `origin/master` SHA, CI metadata, owners, and approval records before execution.
 
 ## Current Proof Status
 
