@@ -41,6 +41,7 @@ test('opportunity workbench renders review status, verification, evidence, data 
   assert.ok(model.actionIntelligence.riskFlags.some((flag) => flag.code === 'data_gaps'));
   assert.equal(model.actionIntelligence.reviewNoteSuggestion.state, 'DATA_GAP');
   assert.match(html, /id="opportunity-workbench"/);
+  assert.match(html, /id="opportunity-workbench"[^>]+tabindex="-1"/);
   assert.match(html, /Opportunity Workbench/);
   assert.match(html, /Lead Action Intelligence/);
   assert.match(html, /리뷰 노트 제안/);

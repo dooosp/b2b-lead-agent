@@ -208,6 +208,67 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   ]);
   assert.equal(await page.getByRole('tab', { name: '리스트' }).getAttribute('aria-selected'), 'true');
   assert.equal(await page.getByRole('tab', { name: '칸반 보드' }).getAttribute('aria-selected'), 'false');
+  assert.deepEqual(await captureListReviewerSemanticSnapshot(page), {
+    tablist: {
+      label: '리드 보기 전환',
+      orientation: 'vertical',
+      tabs: [
+        { id: 'listViewTab', name: '리스트', controls: 'leadsList', selected: 'true', tabIndex: 0 },
+        { id: 'kanbanViewTab', name: '칸반 보드', controls: 'kanbanView', selected: 'false', tabIndex: -1 },
+      ],
+      panels: [
+        { id: 'leadsList', role: 'tabpanel', labelledBy: 'listViewTab', hidden: false },
+        { id: 'kanbanView', role: 'tabpanel', labelledBy: 'kanbanViewTab', hidden: true },
+      ],
+    },
+    regions: {
+      reviewerActionQueue: { label: 'Reviewer Action Queue', focusable: true },
+      leadReviewSession: { label: 'Lead Review Session' },
+      productivity: { label: 'Reviewer Productivity Toolkit' },
+      shortcutHelp: { role: 'region', label: '단축키 도움말', hidden: true },
+      liveStatus: { role: 'status', live: 'polite', atomic: 'true' },
+    },
+    copyControls: ['현재 노트 복사', '승인 노트 복사', '검토 필요 노트 복사', '리스크 확인 노트 복사'],
+  });
+
+  await page.getByRole('tab', { name: '리스트' }).focus();
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await page.evaluate(() => document.activeElement?.id), 'kanbanViewTab');
+  assert.equal(await page.getByRole('tab', { name: '칸반 보드' }).getAttribute('aria-selected'), 'false');
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() => !document.getElementById('kanbanView')?.hidden);
+  assert.equal(await page.getByRole('tab', { name: '칸반 보드' }).getAttribute('aria-selected'), 'true');
+  assert.equal(await page.getByRole('tab', { name: '칸반 보드' }).evaluate((element) => element.tabIndex), 0);
+  assert.equal(await page.locator('#kanbanView .kanban-card').count(), 2);
+
+  await page.keyboard.press('Home');
+  assert.equal(await page.evaluate(() => document.activeElement?.id), 'listViewTab');
+  await page.keyboard.press('End');
+  assert.equal(await page.evaluate(() => document.activeElement?.id), 'kanbanViewTab');
+  await page.keyboard.press('ArrowLeft');
+  assert.equal(await page.evaluate(() => document.activeElement?.id), 'listViewTab');
+  assert.equal(await page.getByRole('tab', { name: '리스트' }).getAttribute('aria-selected'), 'false');
+  await page.keyboard.press('Space');
+  await page.waitForFunction(() => !document.getElementById('leadsList')?.hidden);
+  assert.equal(await page.getByRole('tab', { name: '리스트' }).getAttribute('aria-selected'), 'true');
+
+  await page.getByRole('tab', { name: '리스트' }).focus();
+  await page.keyboard.press('ArrowDown');
+  assert.equal(await page.evaluate(() => document.activeElement?.id), 'kanbanViewTab');
+  await page.keyboard.press('ArrowUp');
+  assert.equal(await page.evaluate(() => document.activeElement?.id), 'listViewTab');
+  await page.locator('[data-filter-key="reviewStatus"]').focus();
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await page.evaluate(() => document.activeElement?.dataset?.filterKey), 'reviewStatus');
+  assert.equal(await page.getByRole('tab', { name: '리스트' }).getAttribute('aria-selected'), 'true');
+  await page.locator('[data-filter-key="reviewStatus"]').selectOption('all');
+  await page.waitForFunction(() => document.querySelectorAll('#leadsList .lead-card').length === 2);
+
+  const rovingLeadsResponse = await localFetch('/api/leads?profile=danfoss');
+  const rovingLeadsPayload = await readJson(rovingLeadsResponse);
+  assert.equal(rovingLeadsPayload.leads.find((lead) => lead.id === 'local-lead-approved').reviewStatus, 'APPROVED');
+  assert.equal(rovingLeadsPayload.leads.find((lead) => lead.id === 'local-lead-review').reviewStatus, 'NEEDS_REVIEW');
+
   await assertNoHorizontalOverflow(page, [
     'main.container',
     '#reviewQueueFilters',
@@ -339,6 +400,12 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   await page.locator('[data-filter-key="confidence"]').selectOption('LOW');
   await assertRenderedText(page, ['필터 결과가 없습니다']);
   assert.equal(await page.locator('#leadsList .lead-card').count(), 0);
+  assert.deepEqual(await captureZeroResultResetSnapshot(page, '#leadsList'), {
+    role: 'status',
+    live: 'polite',
+    atomic: 'true',
+    resetButtonName: '검토 필터 초기화',
+  });
   await page.locator('#leadsList .filter-empty-state button').click();
   assert.equal(await page.locator('#leadsList .lead-card').count(), 2);
 
@@ -353,6 +420,12 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.equal(await page.locator('#kanbanView .kanban-card').count(), 0);
   await assertRenderedText(page, ['필터 결과가 없습니다']);
   assert.equal(await page.locator('#kanbanView .filter-empty-state').count(), 1);
+  assert.deepEqual(await captureZeroResultResetSnapshot(page, '#kanbanView'), {
+    role: 'status',
+    live: 'polite',
+    atomic: 'true',
+    resetButtonName: '검토 필터 초기화',
+  });
   await page.locator('#kanbanView .filter-empty-state button').click();
   assert.equal(await page.locator('#kanbanView .kanban-card').count(), 2);
 
@@ -441,6 +514,14 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     'Local evidence quote',
     'Follow up with operations director',
   ]);
+  assert.deepEqual(await captureDetailWorkbenchSemanticSnapshot(page), {
+    workbench: { label: 'Opportunity Workbench', tabIndex: -1 },
+    productivity: { label: 'Workbench Productivity Toolkit' },
+    shortcutHelp: { role: 'region', label: '단축키 도움말', hidden: true },
+    liveStatus: { role: 'status', live: 'polite', atomic: 'true' },
+    copyControls: ['현재 Workbench 리뷰 노트 복사', '승인 노트 복사', '검토 필요 노트 복사', '리스크 확인 노트 복사'],
+    reviewControls: ['영업 상태 변경', '사람 검토 상태 변경'],
+  });
   await page.setViewportSize({ width: 390, height: 844 });
   await assertRenderedText(page, ['Workbench Productivity Toolkit', 'OPPORTUNITY WORKBENCH', '사람 검토']);
   await assertNoHorizontalOverflow(page, [
@@ -579,4 +660,114 @@ async function assertNoHorizontalOverflow(page, selectors) {
     });
   }, selectors);
   assert.deepEqual(overflowing, []);
+}
+
+async function captureListReviewerSemanticSnapshot(page) {
+  return page.evaluate(() => {
+    const attr = (element, name) => element?.getAttribute(name) || '';
+    const text = (element) => String(element?.textContent || '').replace(/\s+/g, ' ').trim();
+    const isHidden = (element) => !element || element.hidden || window.getComputedStyle(element).display === 'none';
+    const names = (selector) => [...document.querySelectorAll(selector)]
+      .map((element) => attr(element, 'aria-label') || text(element))
+      .filter(Boolean);
+    const semanticRegion = (selector) => {
+      const element = document.querySelector(selector);
+      return {
+        label: attr(element, 'aria-label'),
+        ...(element?.hasAttribute('tabindex') ? { focusable: element.tabIndex >= -1 } : {}),
+      };
+    };
+    const tablist = document.querySelector('[role="tablist"][aria-label="리드 보기 전환"]');
+    const tabs = [...document.querySelectorAll('[role="tab"]')].map((tab) => ({
+      id: tab.id,
+      name: text(tab),
+      controls: attr(tab, 'aria-controls'),
+      selected: attr(tab, 'aria-selected'),
+      tabIndex: tab.tabIndex,
+    }));
+
+    return {
+      tablist: {
+        label: attr(tablist, 'aria-label'),
+        orientation: attr(tablist, 'aria-orientation'),
+        tabs,
+        panels: ['leadsList', 'kanbanView'].map((id) => {
+          const panel = document.getElementById(id);
+          return {
+            id,
+            role: attr(panel, 'role'),
+            labelledBy: attr(panel, 'aria-labelledby'),
+            hidden: isHidden(panel),
+          };
+        }),
+      },
+      regions: {
+        reviewerActionQueue: semanticRegion('#reviewerActionQueue'),
+        leadReviewSession: semanticRegion('.review-session-panel'),
+        productivity: semanticRegion('#reviewProductivityToolkit'),
+        shortcutHelp: {
+          role: attr(document.getElementById('reviewShortcutHelp'), 'role'),
+          label: attr(document.getElementById('reviewShortcutHelp'), 'aria-label'),
+          hidden: isHidden(document.getElementById('reviewShortcutHelp')),
+        },
+        liveStatus: {
+          role: attr(document.getElementById('reviewSessionStatus'), 'role'),
+          live: attr(document.getElementById('reviewSessionStatus'), 'aria-live'),
+          atomic: attr(document.getElementById('reviewSessionStatus'), 'aria-atomic'),
+        },
+      },
+      copyControls: names('[data-note-copy-action]'),
+    };
+  });
+}
+
+async function captureZeroResultResetSnapshot(page, scopeSelector) {
+  return page.evaluate((selector) => {
+    const root = document.querySelector(selector);
+    const emptyState = root?.querySelector('.filter-empty-state');
+    const reset = emptyState?.querySelector('button');
+    return {
+      role: emptyState?.getAttribute('role') || '',
+      live: emptyState?.getAttribute('aria-live') || '',
+      atomic: emptyState?.getAttribute('aria-atomic') || '',
+      resetButtonName: reset?.getAttribute('aria-label') || String(reset?.textContent || '').replace(/\s+/g, ' ').trim(),
+    };
+  }, scopeSelector);
+}
+
+async function captureDetailWorkbenchSemanticSnapshot(page) {
+  return page.evaluate(() => {
+    const attr = (element, name) => element?.getAttribute(name) || '';
+    const text = (element) => String(element?.textContent || '').replace(/\s+/g, ' ').trim();
+    const isHidden = (element) => !element || element.hidden || window.getComputedStyle(element).display === 'none';
+    const names = (selector) => [...document.querySelectorAll(selector)]
+      .map((element) => attr(element, 'aria-label') || text(element))
+      .filter(Boolean);
+    const workbench = document.getElementById('opportunity-workbench');
+    const productivity = document.getElementById('detailProductivityToolkit');
+    const shortcutHelp = document.getElementById('detailShortcutHelp');
+    const liveStatus = document.getElementById('detailProductivityStatus');
+
+    return {
+      workbench: {
+        label: attr(workbench, 'aria-label'),
+        tabIndex: workbench?.tabIndex ?? null,
+      },
+      productivity: {
+        label: attr(productivity, 'aria-label'),
+      },
+      shortcutHelp: {
+        role: attr(shortcutHelp, 'role'),
+        label: attr(shortcutHelp, 'aria-label'),
+        hidden: isHidden(shortcutHelp),
+      },
+      liveStatus: {
+        role: attr(liveStatus, 'role'),
+        live: attr(liveStatus, 'aria-live'),
+        atomic: attr(liveStatus, 'aria-atomic'),
+      },
+      copyControls: names('[data-workbench-note-copy-action]'),
+      reviewControls: names('.review-select-lg, .status-select-lg'),
+    };
+  });
 }
