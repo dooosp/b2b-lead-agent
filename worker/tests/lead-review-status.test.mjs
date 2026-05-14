@@ -264,6 +264,8 @@ test('lead list page exposes review queue filters for current LeadBrief fields',
   assert.match(listHtml, /function getFilteredLeads\(\)/);
   assert.match(listHtml, /function resetReviewQueueFilters\(\)/);
   assert.match(listHtml, /필터 결과가 없습니다/);
+  assert.match(listHtml, /role="status" aria-live="polite" aria-atomic="true"/);
+  assert.match(listHtml, /aria-label="검토 필터 초기화"/);
 });
 
 test('lead list page exposes copy-friendly reviewer note suggestions near session quick actions', () => {
@@ -323,11 +325,21 @@ test('lead list page exposes reviewer productivity toolkit without keyboard revi
   assert.match(listHtml, /function selectTextForManualCopy/);
   assert.match(listHtml, /function handleReviewerShortcut/);
   assert.match(listHtml, /function shouldIgnoreReviewerShortcut/);
+  assert.match(listHtml, /function isInteractiveShortcutTarget/);
   assert.match(listHtml, /function recordSessionActivity/);
   assert.match(listHtml, /data-review-note-text/);
+  assert.match(listHtml, /aria-label="현재 리뷰 노트 텍스트"/);
   assert.match(listHtml, /data-note-copy-action="copy-current-note"/);
   assert.match(listHtml, /data-note-copy-action="copy-variant-note"/);
   assert.match(listHtml, /data-shortcut-action="toggle-help"/);
+  assert.match(listHtml, /aria-controls="reviewShortcutHelp"/);
+  assert.match(listHtml, /role="region" aria-label="단축키 도움말"/);
+  assert.match(listHtml, /role="tablist" aria-label="리드 보기 전환"/);
+  assert.match(listHtml, /role="tab" aria-selected="true" aria-controls="leadsList"/);
+  assert.match(listHtml, /role="tab" aria-selected="false" aria-controls="kanbanView"/);
+  assert.match(listHtml, /aria-label="\$\{leadAccessibleName\(lead\)\} 검토 상태 변경"/);
+  assert.match(listHtml, /aria-label="\$\{leadAccessibleName\(lead\)\} 영업 상태 변경"/);
+  assert.match(listHtml, /\['input', 'select', 'textarea', 'button', 'a', 'summary'\]\.includes\(tagName\)/);
   assert.match(listHtml, /copiedNotes: 0/);
   assert.match(listHtml, /reviewUpdates: 0/);
   assert.match(listHtml, /focusMoves: 0/);
@@ -442,14 +454,21 @@ test('lead detail page exposes Workbench productivity controls without shortcut 
   assert.match(detailHtml, /function selectWorkbenchNoteForManualCopy/);
   assert.match(detailHtml, /function handleDetailShortcut/);
   assert.match(detailHtml, /function shouldIgnoreDetailShortcut/);
+  assert.match(detailHtml, /function isInteractiveDetailShortcutTarget/);
   assert.match(detailHtml, /function focusOpportunityWorkbench/);
   assert.match(detailHtml, /function focusNextDetailSection/);
   assert.match(detailHtml, /function recordDetailActivity/);
-  assert.match(detailHtml, /tagName === 'input'/);
-  assert.match(detailHtml, /tagName === 'select'/);
-  assert.match(detailHtml, /tagName === 'textarea'/);
+  assert.match(detailHtml, /\['input', 'select', 'textarea', 'button', 'a', 'summary'\]\.includes\(tagName\)/);
   assert.match(detailHtml, /target\.isContentEditable/);
   assert.match(detailHtml, /contenteditable="true"/);
+  assert.match(detailHtml, /aria-controls="detailShortcutHelp"/);
+  assert.match(detailHtml, /role="region" aria-label="단축키 도움말"/);
+  assert.match(detailHtml, /aria-live="polite" aria-atomic="true"/);
+  assert.match(detailHtml, /aria-label=\\"현재 Workbench 리뷰 노트 텍스트\\"/);
+  assert.match(detailHtml, /aria-label="사람 검토 상태 변경"/);
+  assert.match(detailHtml, /aria-label="영업 상태 변경"/);
+  assert.match(detailHtml, /aria-label="다음 후속 조치일"/);
+  assert.match(detailHtml, /aria-label="예상 계약액 만원"/);
   assert.match(detailHtml, /copiedNotes: 0/);
   assert.match(detailHtml, /manualCopies: 0/);
   assert.match(detailHtml, /focusMoves: 0/);

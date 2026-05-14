@@ -16,7 +16,7 @@ export function getLeadsPage() {
     .summary-card .label { color:#8fa4b8; font-size:11px; display:block; margin-bottom:6px; }
     .summary-card .value { color:#f4f7fb; font-size:22px; font-weight:700; display:block; }
     .summary-card .meta { color:#9fb0c0; font-size:12px; margin-top:6px; }
-    .lead-card { background: linear-gradient(180deg, #182433 0%, #121b27 100%); border-radius: 14px; padding: 18px; margin: 16px 0; border: 1px solid #26384c; }
+    .lead-card { background: linear-gradient(180deg, #182433 0%, #121b27 100%); border-radius: 14px; padding: 18px; margin: 16px 0; border: 1px solid #26384c; min-width:0; }
     .lead-card.grade-a { box-shadow: 0 12px 28px rgba(233,69,96,0.14); border-color:#e94560; }
     .lead-card.grade-b { border-color: #f39c12; box-shadow: 0 10px 24px rgba(243,156,18,0.12); }
     .lead-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:12px; }
@@ -157,7 +157,7 @@ export function getLeadsPage() {
     .review-session-status.is-success { background:#101f1a; color:#a8efc0; }
     .review-session-status.is-error { background:#211719; color:#ffc4c4; }
     .lead-card.review-session-focus { outline:2px solid #8fbfe8; outline-offset:3px; }
-    .reviewer-action-queue:focus { outline:2px solid #8fbfe8; outline-offset:3px; }
+    .reviewer-action-queue:focus, .view-tab:focus-visible, .review-session-actions button:focus-visible, .review-note-copy-actions button:focus-visible, .review-filter-actions button:focus-visible, .review-productivity-head button:focus-visible, .status-select:focus-visible, .notes-textarea:focus-visible { outline:2px solid #8fbfe8; outline-offset:3px; }
     .review-filter-bar { background:#121a24; border:1px solid #26384c; border-radius:10px; display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); margin:0 0 14px; padding:12px; text-align:left; }
     .review-filter-bar label { color:#8fa4b8; display:grid; gap:5px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0; }
     .review-filter-bar select { background:#16213e; border:1px solid #36506c; border-radius:7px; color:#f4f7fb; font-size:12px; padding:7px 8px; width:100%; }
@@ -180,7 +180,7 @@ export function getLeadsPage() {
     .review-slice-hold strong { color:#ffe58a; }
     .review-slice-caveat { border-top:1px solid #223447; color:#9fb0c0; font-size:12px; line-height:1.6; padding-top:10px; }
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
-    .top-nav-links { display: flex; gap: 8px; }
+    .top-nav-links { display: flex; gap: 8px; flex-wrap:wrap; justify-content:flex-end; }
     .status-select { padding: 4px 8px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 12px; cursor: pointer; }
     .notes-section { margin-top: 10px; }
     .notes-section summary { color: #aaa; font-size: 13px; cursor: pointer; }
@@ -189,7 +189,7 @@ export function getLeadsPage() {
     .notes-saved.show { opacity: 1; }
     .csv-btn { margin-left: auto; }
     .view-tabs { display: flex; gap: 0; margin-bottom: 16px; }
-    .view-tab { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: bold; color: #aaa; background: #1e2a3a; border: 1px solid #2a3a4a; cursor: pointer; transition: all 0.2s; }
+    .view-tab { flex: 1; min-width:0; padding: 10px; text-align: center; font-size: 13px; font-weight: bold; color: #aaa; background: #1e2a3a; border: 1px solid #2a3a4a; cursor: pointer; transition: all 0.2s; }
     .view-tab:first-child { border-radius: 8px 0 0 8px; }
     .view-tab:last-child { border-radius: 0 8px 8px 0; }
     .view-tab.active { color: #fff; background: #e94560; border-color: #e94560; }
@@ -221,6 +221,12 @@ export function getLeadsPage() {
       .lead-badges { justify-content:flex-start; }
       .lead-metrics, .leads-summary { grid-template-columns:1fr; }
       .review-slice-grid, .review-gate-summary .review-slice-grid, .reviewer-action-lanes, .review-session-grid, .review-productivity-grid { grid-template-columns:1fr; }
+      .top-nav { align-items:flex-start; }
+      .top-nav-links { justify-content:flex-start; width:100%; }
+      .top-nav-links .btn, .top-nav-links button { flex:1 1 auto; min-width:0; }
+      .review-filter-actions { justify-content:stretch; }
+      .review-filter-actions button { width:100%; }
+      .review-session-actions button, .review-note-copy-actions button { flex:1 1 auto; min-width:0; }
     }
   </style>
 </head>
@@ -237,9 +243,9 @@ export function getLeadsPage() {
     <h1 style="font-size:22px;">리드 상세 보기</h1>
     <p class="subtitle">최근 분석된 영업 기회 목록</p>
 
-    <div class="view-tabs">
-      <div class="view-tab active" onclick="switchView('list')">리스트</div>
-      <div class="view-tab" onclick="switchView('kanban')">칸반 보드</div>
+    <div class="view-tabs" role="tablist" aria-label="리드 보기 전환">
+      <button id="listViewTab" class="view-tab active" type="button" role="tab" aria-selected="true" aria-controls="leadsList" onclick="switchView('list')">리스트</button>
+      <button id="kanbanViewTab" class="view-tab" type="button" role="tab" aria-selected="false" aria-controls="kanbanView" onclick="switchView('kanban')">칸반 보드</button>
     </div>
 
     <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;margin-bottom:12px;" onclick="window.print()">PDF 인쇄</button>
@@ -419,6 +425,10 @@ export function getLeadsPage() {
       dataGaps: 'all'
     };
 
+    function leadAccessibleName(lead) {
+      return esc((lead && (lead.company || lead.id)) || '리드');
+    }
+
     function renderStatusSelect(lead) {
       if (!lead.id) return '';
       const current = lead.status || 'NEW';
@@ -427,7 +437,7 @@ export function getLeadsPage() {
       const opts = [current, ...allowed].map(s =>
         \`<option value="\${s}" \${s === current ? 'selected' : ''}>\${esc(statusLabels[s] || s)}</option>\`
       ).join('');
-      return \`<select class="status-select" onchange="updateStatus('\${esc(lead.id)}', this.value, '\${current}')">\${opts}</select>\`;
+      return \`<select class="status-select" aria-label="\${leadAccessibleName(lead)} 영업 상태 변경" onchange="updateStatus('\${esc(lead.id)}', this.value, '\${current}')">\${opts}</select>\`;
     }
 
     function normalizeReviewStatus(value) {
@@ -840,7 +850,7 @@ export function getLeadsPage() {
       const variants = templates.map((template) => \`
         <details class="review-note-variant"\${template.state === current.state ? ' open' : ''}>
           <summary>\${esc(template.label || template.state)}</summary>
-          <pre class="review-note-copy-target" data-review-note-text tabindex="0">\${esc(template.text || 'Review note suggestion unavailable.')}</pre>
+          <pre class="review-note-copy-target" data-review-note-text tabindex="0" aria-label="\${esc(template.label || template.state)} 텍스트">\${esc(template.text || 'Review note suggestion unavailable.')}</pre>
           <div class="review-note-copy-actions">
             <button class="btn btn-secondary" type="button" data-note-copy-action="copy-variant-note" aria-label="\${esc(template.label || template.state)} 복사">복사</button>
           </div>
@@ -855,7 +865,7 @@ export function getLeadsPage() {
               <button class="btn btn-secondary" type="button" data-note-copy-action="copy-current-note" aria-label="현재 노트 복사">현재 노트 복사</button>
             </div>
           </div>
-          <pre class="review-note-copy-target" data-review-note-text tabindex="0">\${esc(current.text || 'Review note suggestion unavailable. Confirm company, evidence, verification status, and data gaps before writing a review note.')}</pre>
+          <pre class="review-note-copy-target" data-review-note-text tabindex="0" aria-label="현재 리뷰 노트 텍스트">\${esc(current.text || 'Review note suggestion unavailable. Confirm company, evidence, verification status, and data gaps before writing a review note.')}</pre>
           <p class="review-note-helper">read-only reviewer note suggestion; it does not save or send notes.</p>
           <div class="review-note-variants" aria-label="review note variants">
             \${variants}
@@ -978,7 +988,7 @@ export function getLeadsPage() {
               <strong>Reviewer Productivity Toolkit</strong>
               <span>복사, 포커스, 명시적 검토 변경만 현재 브라우저 세션에서 집계</span>
             </div>
-            <button class="btn btn-secondary" type="button" data-shortcut-action="toggle-help" aria-expanded="\${shortcutHelpOpen ? 'true' : 'false'}">단축키 도움말</button>
+            <button class="btn btn-secondary" type="button" data-shortcut-action="toggle-help" aria-expanded="\${shortcutHelpOpen ? 'true' : 'false'}" aria-controls="reviewShortcutHelp">단축키 도움말</button>
           </div>
           <div id="reviewProductivityCounts" class="review-productivity-grid">
             <span>노트 복사 \${sessionActivity.copiedNotes}건</span>
@@ -987,7 +997,7 @@ export function getLeadsPage() {
             <span>필터 초기화 \${sessionActivity.filterResets}건</span>
           </div>
           <p id="reviewProductivityLastAction" class="review-productivity-last">마지막 작업: \${esc(lastAction)}</p>
-          <div id="reviewShortcutHelp" class="review-shortcut-help\${helpClass}"\${helpHidden} aria-label="단축키 도움말">
+          <div id="reviewShortcutHelp" class="review-shortcut-help\${helpClass}"\${helpHidden} role="region" aria-label="단축키 도움말">
             <p><kbd>n</kbd>/<kbd>j</kbd> 다음 검토 리드로 포커스</p>
             <p><kbd>q</kbd> Reviewer Action Queue로 포커스</p>
             <p><kbd>c</kbd> 보이는 리뷰 노트 복사</p>
@@ -1048,7 +1058,7 @@ export function getLeadsPage() {
           </div>
           \${renderSessionActivitySummary()}
           \${nextBody}
-          <div id="reviewSessionStatus" class="review-session-status is-\${esc(noticeTone)}" role="status" aria-live="polite">\${esc(noticeMessage)}</div>
+          <div id="reviewSessionStatus" class="review-session-status is-\${esc(noticeTone)}" role="status" aria-live="polite" aria-atomic="true">\${esc(noticeMessage)}</div>
         </section>
       \`;
     }
@@ -1096,7 +1106,7 @@ export function getLeadsPage() {
         \`<option value="\${s}" \${s === current ? 'selected' : ''}>\${esc(reviewStatusLabels[s])}</option>\`
       ).join('');
       if (!lead.id) return \`<span class="badge badge-review \${current.toLowerCase()}">\${esc(reviewStatusLabels[current])}</span>\`;
-      return \`<select class="status-select" aria-label="검토 상태" onchange="updateReviewStatus('\${esc(lead.id)}', this.value, '\${current}')">\${opts}</select>\`;
+      return \`<select class="status-select" aria-label="\${leadAccessibleName(lead)} 검토 상태 변경" onchange="updateReviewStatus('\${esc(lead.id)}', this.value, '\${current}')">\${opts}</select>\`;
     }
 
     function buildReviewEvidenceSlices(leads) {
@@ -1366,13 +1376,17 @@ export function getLeadsPage() {
       setReviewSessionStatus(shortcutHelpOpen ? '단축키 도움말을 열었습니다.' : '단축키 도움말을 닫았습니다.', 'success');
     }
 
-    function shouldIgnoreReviewerShortcut(event) {
-      if (!event || event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return true;
-      const target = event.target;
+    function isInteractiveShortcutTarget(target) {
       if (!target) return false;
       const tagName = String(target.tagName || '').toLowerCase();
-      if (tagName === 'input' || tagName === 'select' || tagName === 'textarea') return true;
-      return !!(target.isContentEditable || (target.closest && target.closest('[contenteditable="true"]')));
+      if (['input', 'select', 'textarea', 'button', 'a', 'summary'].includes(tagName)) return true;
+      if (target.isContentEditable || (target.closest && target.closest('[contenteditable="true"]'))) return true;
+      return !!(target.closest && target.closest('[role="button"], [role="tab"], [role="menuitem"]'));
+    }
+
+    function shouldIgnoreReviewerShortcut(event) {
+      if (!event || event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return true;
+      return isInteractiveShortcutTarget(event.target);
     }
 
     function handleReviewerShortcut(event) {
@@ -1402,9 +1416,9 @@ export function getLeadsPage() {
     function renderFilterEmptyState(extraClass) {
       const className = 'filter-empty-state' + (extraClass ? ' ' + extraClass : '');
       return \`
-        <div class="\${className}">
+        <div class="\${className}" role="status" aria-live="polite" aria-atomic="true">
           <div>필터 결과가 없습니다. 필터를 초기화하거나 다른 조건을 선택하세요.</div>
-          <button class="btn btn-secondary" type="button" onclick="resetReviewQueueFilters()">필터 초기화</button>
+          <button class="btn btn-secondary" type="button" aria-label="검토 필터 초기화" onclick="resetReviewQueueFilters()">필터 초기화</button>
         </div>
       \`;
     }
@@ -1697,7 +1711,9 @@ export function getLeadsPage() {
     function switchView(view) {
       currentView = view;
       document.querySelectorAll('.view-tab').forEach((t, i) => {
-        t.classList.toggle('active', (i === 0 && view === 'list') || (i === 1 && view === 'kanban'));
+        const active = (i === 0 && view === 'list') || (i === 1 && view === 'kanban');
+        t.classList.toggle('active', active);
+        t.setAttribute('aria-selected', active ? 'true' : 'false');
       });
       document.getElementById('leadsList').style.display = view === 'list' ? '' : 'none';
       document.getElementById('kanbanView').style.display = view === 'kanban' ? '' : 'none';
