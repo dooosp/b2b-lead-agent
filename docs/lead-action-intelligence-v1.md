@@ -95,11 +95,12 @@ The first matching blocker decides the next action:
 
 ## Product Surfaces
 
-- Opportunity Workbench renders the full Lead Action Intelligence panel with action, reason, risk flags, missing-info prompts, stakeholder angle, follow-up draft, and read-only reviewer note suggestions.
+- Opportunity Workbench renders the full Lead Action Intelligence panel with action, reason, risk flags, missing-info prompts, stakeholder angle, follow-up draft, and read-only reviewer note suggestions. The lead-detail Workbench also exposes copy-friendly note controls, manual-copy fallback, non-mutating shortcuts, shortcut help, and browser-memory activity feedback for the current page session.
 - `/api/leads` includes additive `reviewerActionQueue` and `leadReviewSession` metadata built from the canonical helper after normal LeadBrief canonicalization, including current reviewer note suggestions for queue/session items. This does not change stored lead rows or require schema migration.
 - `/leads` renders Reviewer Action Queue lanes, action/priority/risk/missing-info filters, compact card summaries, and a Lead Review Session panel from the queue metadata. The session panel shows a copy-friendly reviewer note suggestion near quick `APPROVED` / `NEEDS_REVIEW` actions.
 - Kanban cards render the compact next action below the gate chip.
 - Reviewer Productivity Toolkit v1 layers local-only productivity controls onto `/leads`: visible copy buttons for deterministic session note templates, safe manual-copy fallback when the Clipboard API is unavailable, optional non-mutating keyboard shortcuts, shortcut help, and an in-memory session activity summary. The activity summary resets on page reload and is not written to D1, localStorage, analytics, APIs, or logs.
+- Lead Detail Workbench Productivity Parity v1 mirrors the same safe reviewer affordances into lead detail: visible Workbench note copy controls copy only deterministic note text, manual fallback selects the visible note when the Clipboard API is unavailable, `c`/`w`/`n`/`j`/`?` shortcuts are ignored in form controls and never mutate `reviewStatus`, and current-page activity counts live only in browser memory.
 
 The list/Kanban UI keeps a conservative browser fallback for older payloads, but the canonical queue model is the Worker helper and the additive `/api/leads` queue metadata.
 
@@ -132,14 +133,18 @@ Reviewer Notes Template v1 turns the current LeadBrief plus Lead Action Intellig
 
 ## Reviewer Productivity Toolkit V1
 
-Reviewer Productivity Toolkit v1 is a browser-only helper for the existing `/leads` review session:
+Reviewer Productivity Toolkit v1 is a browser-only helper for the existing `/leads` review session and the lead-detail Opportunity Workbench:
 
-- Copy buttons copy only the visible deterministic reviewer note text.
+- Copy buttons copy only the visible deterministic reviewer note text from the active session note or Workbench note.
 - If `navigator.clipboard.writeText()` is unavailable or fails, the UI selects the note text and shows a bounded manual-copy message.
 - Keyboard shortcuts are discoverable and non-mutating: `n`/`j` focuses the next review lead, `q` focuses Reviewer Action Queue, `c` copies the visible session note, and `?` toggles shortcut help.
+- Detail shortcuts are also discoverable and non-mutating: `c` copies the visible Workbench note, `w` focuses Opportunity Workbench, `n`/`j` focuses the next meaningful detail section, and `?` toggles shortcut help.
 - Shortcuts are ignored while the reviewer is typing in `input`, `select`, `textarea`, or `contenteditable` controls.
 - Session activity tracks note-copy count, explicit review-status update count, focus count, filter reset count, and last action in browser memory only.
+- Detail activity tracks Workbench note-copy count, manual-copy fallback count, Workbench focus count, section focus count, explicit status/review-status update success/failure count, and last action in browser memory only. It resets on reload and is not stored in `localStorage` or `sessionStorage`.
 - `reviewStatus` changes remain explicit button/select actions. Shortcuts never send PATCH requests or mutate review state.
+
+The detail implementation keeps a scoped browser helper because the `/leads` helper is coupled to queue/session filters, quick actions, and list-card navigation. The shared product contract is the deterministic Workbench note markup and safe copy/fallback behavior; no API, schema, or storage contract is expanded.
 
 ## Boundaries
 
@@ -162,6 +167,6 @@ Coverage is local/test-only:
 
 - `worker/tests/lead-action-intelligence.test.mjs` covers strong, review-ready, missing-evidence, data-gap, low-confidence, stale, conflicting, snake_case fallback leads, and approved/needs-review/risk-check/data-gap reviewer note templates.
 - `worker/tests/lead-action-intelligence.test.mjs` also covers Reviewer Action Queue grouping, sorting, filters, compact counts, Lead Review Session summary counts, next-lead candidate selection, snake_case fallback, note suggestions, and mutation-style reclassification.
-- `worker/tests/opportunity-workbench.test.mjs` covers Workbench rendering of the new guidance and read-only reviewer note suggestions.
-- `worker/tests/lead-review-status.test.mjs` covers the `/leads` session panel, next-lead control, quick review actions, bounded failure messaging, status-separation copy, copy-friendly note suggestion rendering near quick actions, copy/manual-copy hooks, shortcut guards, and in-memory activity state.
-- `worker/e2e/local-e2e.test.mjs` covers local fake-D1 rendering, Reviewer Action Queue lanes, Lead Review Session summary/next-lead navigation, reviewer note suggestions, copy success, manual-copy fallback, non-mutating shortcuts, ignored shortcuts while typing, in-memory activity reset on reload, quick review action success and failure paths, action/risk/missing-info filters, list/Kanban summaries, review-status mutation updating queue guidance and note text, zero-result reset flows, sales-status preservation, and the non-loopback fetch guard.
+- `worker/tests/opportunity-workbench.test.mjs` covers Workbench rendering of the new guidance, read-only reviewer note suggestions, and deterministic note copy-control markup.
+- `worker/tests/lead-review-status.test.mjs` covers the `/leads` session panel, next-lead control, quick review actions, bounded failure messaging, status-separation copy, copy-friendly note suggestion rendering near quick actions, copy/manual-copy hooks, shortcut guards, in-memory activity state, and lead-detail Workbench productivity controls that do not introduce shortcut review mutations.
+- `worker/e2e/local-e2e.test.mjs` covers local fake-D1 rendering, Reviewer Action Queue lanes, Lead Review Session summary/next-lead navigation, reviewer note suggestions, copy success, manual-copy fallback, non-mutating shortcuts, ignored shortcuts while typing, in-memory activity reset on reload, detail Workbench copy/manual fallback/focus/help behavior, quick review action success and failure paths, action/risk/missing-info filters, list/Kanban summaries, review-status mutation updating queue guidance and note text, zero-result reset flows, sales-status preservation, and the non-loopback fetch guard.

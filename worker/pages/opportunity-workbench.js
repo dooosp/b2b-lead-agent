@@ -623,15 +623,23 @@ function renderReviewerNoteTemplates(intelligence = {}) {
     ? templates.map((template) => `
               <details class="opportunity-workbench-note-variant"${template.state === current.state ? ' open' : ''}>
                 <summary>${escapeHtml(template.label || template.state)}</summary>
-                <pre>${escapeHtml(template.text)}</pre>
+                <pre class="opportunity-workbench-note-copy-target" data-workbench-note-text tabindex="0">${escapeHtml(template.text)}</pre>
+                <div class="opportunity-workbench-note-copy-actions">
+                  <button class="btn btn-secondary" type="button" data-workbench-note-copy-action="copy-variant-note" aria-label="${escapeHtml(template.label || template.state)} 복사">복사</button>
+                </div>
               </details>`).join('')
     : '<p class="opportunity-workbench-caveat">No alternate reviewer note templates are available.</p>';
 
   return `
             <div class="opportunity-workbench-review-note" aria-label="리뷰 노트 제안">
               <span class="panel-label">리뷰 노트 제안</span>
-              <strong>${escapeHtml(current.label)}</strong>
-              <pre>${escapeHtml(current.text)}</pre>
+              <div class="opportunity-workbench-note-copy-head">
+                <strong>${escapeHtml(current.label)}</strong>
+                <div class="opportunity-workbench-note-copy-actions">
+                  <button class="btn btn-secondary" type="button" data-workbench-note-copy-action="copy-current-note" aria-label="현재 Workbench 리뷰 노트 복사">현재 노트 복사</button>
+                </div>
+              </div>
+              <pre class="opportunity-workbench-note-copy-target" data-workbench-note-text tabindex="0">${escapeHtml(current.text)}</pre>
               <p class="opportunity-workbench-caveat">read-only reviewer note suggestion; it does not save or send notes.</p>
               <div class="opportunity-workbench-note-variants">
                 ${variants}
@@ -859,7 +867,11 @@ export function getOpportunityWorkbenchStyles() {
     .opportunity-workbench-intelligence-columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
     .opportunity-workbench-review-note { border-top:1px solid #223447; display:grid; gap:8px; padding-top:10px; }
     .opportunity-workbench-review-note strong { color:#f4f7fb; font-size:13px; line-height:1.4; }
+    .opportunity-workbench-note-copy-head { align-items:flex-start; display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between; }
+    .opportunity-workbench-note-copy-actions { align-items:center; display:flex; flex-wrap:wrap; gap:6px; }
+    .opportunity-workbench-note-copy-actions button { font-size:11px; padding:5px 8px; }
     .opportunity-workbench-review-note pre, .opportunity-workbench-note-variant pre { background:#0d1520; border:1px solid #223447; border-radius:6px; color:#d7e5f3; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; line-height:1.55; margin:0; overflow:auto; padding:10px; white-space:pre-wrap; word-break:break-word; }
+    .opportunity-workbench-note-copy-target.is-manual-copy { outline:2px solid #8fbfe8; outline-offset:2px; }
     .opportunity-workbench-note-variants { display:grid; gap:7px; }
     .opportunity-workbench-note-variant { border-top:1px solid #223447; padding-top:7px; }
     .opportunity-workbench-note-variant summary { color:#a8efc0; cursor:pointer; font-size:12px; font-weight:700; line-height:1.4; }

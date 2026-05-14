@@ -63,6 +63,25 @@ export function getLeadDetailPage(lead, statusLogs) {
     .review-meta-row { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin:6px 0; }
     .muted-value { color:#8fa4b8; }
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+    .detail-productivity-toolkit { border-color:#31506c; background:#101925; display:grid; gap:10px; }
+    .detail-productivity-head { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; flex-wrap:wrap; }
+    .detail-productivity-head strong { color:#f4f7fb; font-size:13px; line-height:1.4; }
+    .detail-productivity-head span { color:#8fa4b8; display:block; font-size:11px; line-height:1.5; margin-top:2px; }
+    .detail-productivity-head button { font-size:11px; padding:5px 9px; }
+    .detail-productivity-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+    .detail-productivity-grid span { background:#162338; border:1px solid #2e4157; border-radius:6px; color:#cbd8e6; font-size:11px; line-height:1.4; padding:6px 7px; }
+    .detail-productivity-last { color:#9fb0c0; font-size:11px; line-height:1.5; margin:0; }
+    .detail-shortcut-help { background:#0d1520; border:1px solid #2e4157; border-radius:8px; color:#cbd8e6; display:grid; gap:5px; font-size:11px; line-height:1.5; padding:9px; }
+    .detail-shortcut-help.is-hidden { display:none; }
+    .detail-shortcut-help kbd { background:#223447; border:1px solid #36506c; border-radius:4px; color:#f4f7fb; display:inline-block; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:10px; margin-right:4px; padding:1px 5px; }
+    .detail-shortcut-help p { margin:0; }
+    .detail-productivity-status { border-radius:8px; color:#9fb0c0; font-size:12px; line-height:1.5; min-height:18px; padding:8px 10px; }
+    .detail-productivity-status.is-idle { padding:0; }
+    .detail-productivity-status.is-pending { background:#172338; color:#cde7ff; }
+    .detail-productivity-status.is-success { background:#101f1a; color:#a8efc0; }
+    .detail-productivity-status.is-error { background:#211719; color:#ffc4c4; }
+    .detail-section:focus { outline:2px solid #8fbfe8; outline-offset:3px; }
+    @media (max-width: 720px) { .detail-productivity-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -97,6 +116,25 @@ export function getLeadDetailPage(lead, statusLogs) {
     ${getSafeUrlScript()}
     ${getStoredTokenScript()}
     function getProfile() { return lead.profileId || 'danfoss'; }
+    const detailActivityDefaults = {
+      copiedNotes: 0,
+      manualCopies: 0,
+      focusMoves: 0,
+      statusUpdates: 0,
+      lastAction: '세션 시작됨'
+    };
+    const detailActivity = window.__detailProductivityActivity && typeof window.__detailProductivityActivity === 'object'
+      ? window.__detailProductivityActivity
+      : { ...detailActivityDefaults };
+    Object.keys(detailActivityDefaults).forEach((key) => {
+      if (typeof detailActivity[key] === 'undefined') detailActivity[key] = detailActivityDefaults[key];
+    });
+    window.__detailProductivityActivity = detailActivity;
+    let detailShortcutHelpOpen = Boolean(window.__detailShortcutHelpOpen);
+    let detailProductivityNotice = window.__detailProductivityNotice && typeof window.__detailProductivityNotice === 'object'
+      ? window.__detailProductivityNotice
+      : { message: '', tone: 'idle' };
+    window.__detailProductivityNotice = detailProductivityNotice;
 
     function normalizeReviewStatus(value) {
       const status = String(value || '').toUpperCase();
@@ -202,6 +240,242 @@ export function getLeadDetailPage(lead, statusLogs) {
     document.getElementById('leadCompany').textContent = lead.company || '리드 상세';
     document.getElementById('leadSummary').textContent = lead.summary || '';
 
+    function renderDetailProductivityToolkit() {
+      const helpHidden = detailShortcutHelpOpen ? '' : ' hidden';
+      const helpClass = detailShortcutHelpOpen ? '' : ' is-hidden';
+      const noticeTone = detailProductivityNotice.tone || 'idle';
+      const noticeMessage = detailProductivityNotice.message || '';
+      return '<section id="detailProductivityToolkit" class="detail-section detail-productivity-toolkit" aria-label="Workbench Productivity Toolkit">' +
+        '<div class="detail-productivity-head"><div>' +
+        '<strong>Workbench Productivity Toolkit</strong>' +
+        '<span>복사, 포커스, 명시적 상태 피드백만 현재 브라우저 세션에서 집계</span>' +
+        '</div><button class="btn btn-secondary" type="button" data-detail-shortcut-action="toggle-help" aria-expanded="' + (detailShortcutHelpOpen ? 'true' : 'false') + '">단축키 도움말</button></div>' +
+        '<div id="detailProductivityCounts" class="detail-productivity-grid">' +
+        '<span>노트 복사 ' + detailActivity.copiedNotes + '건</span>' +
+        '<span>수동 복사 ' + detailActivity.manualCopies + '건</span>' +
+        '<span>포커스 이동 ' + detailActivity.focusMoves + '건</span>' +
+        '<span>상태 피드백 ' + detailActivity.statusUpdates + '건</span>' +
+        '</div>' +
+        '<p id="detailProductivityLastAction" class="detail-productivity-last">마지막 작업: ' + esc(detailActivity.lastAction || '세션 활동 없음') + '</p>' +
+        '<div id="detailShortcutHelp" class="detail-shortcut-help' + helpClass + '"' + helpHidden + ' aria-label="단축키 도움말">' +
+        '<p><kbd>c</kbd> 보이는 Workbench 리뷰 노트 복사</p>' +
+        '<p><kbd>w</kbd> Opportunity Workbench로 포커스</p>' +
+        '<p><kbd>n</kbd>/<kbd>j</kbd> 다음 상세 섹션으로 포커스</p>' +
+        '<p><kbd>?</kbd> 단축키 도움말 열기/닫기</p>' +
+        '<p>Shortcut keys do not change reviewStatus. 승인/반려/보류 변경은 선택 상자에서만 실행됩니다.</p>' +
+        '</div>' +
+        '<div id="detailProductivityStatus" class="detail-productivity-status is-' + esc(noticeTone) + '" role="status" aria-live="polite">' + esc(noticeMessage) + '</div>' +
+        '</section>';
+    }
+
+    function updateDetailActivitySummary() {
+      const counts = document.getElementById('detailProductivityCounts');
+      if (counts) {
+        counts.innerHTML = [
+          '<span>노트 복사 ' + detailActivity.copiedNotes + '건</span>',
+          '<span>수동 복사 ' + detailActivity.manualCopies + '건</span>',
+          '<span>포커스 이동 ' + detailActivity.focusMoves + '건</span>',
+          '<span>상태 피드백 ' + detailActivity.statusUpdates + '건</span>'
+        ].join('');
+      }
+      const last = document.getElementById('detailProductivityLastAction');
+      if (last) last.textContent = '마지막 작업: ' + (detailActivity.lastAction || '세션 활동 없음');
+    }
+
+    function setDetailProductivityStatus(message, tone = 'idle') {
+      detailProductivityNotice = { message: message || '', tone };
+      window.__detailProductivityNotice = detailProductivityNotice;
+      const el = document.getElementById('detailProductivityStatus');
+      if (!el) return;
+      el.className = 'detail-productivity-status is-' + tone;
+      el.textContent = message || '';
+    }
+
+    function recordDetailActivity(type, message) {
+      if (type === 'noteCopied') detailActivity.copiedNotes += 1;
+      if (type === 'manualCopyReady') detailActivity.manualCopies += 1;
+      if (type === 'workbenchFocused' || type === 'sectionFocused') detailActivity.focusMoves += 1;
+      if (type === 'statusUpdateSucceeded' || type === 'statusUpdateFailed') detailActivity.statusUpdates += 1;
+      detailActivity.lastAction = message || '세션 활동 업데이트';
+      window.__detailProductivityActivity = detailActivity;
+      updateDetailActivitySummary();
+    }
+
+    function getWorkbenchNoteTextElement(source) {
+      const root = source && source.closest
+        ? source.closest('.opportunity-workbench-note-variant, .opportunity-workbench-review-note') || document
+        : document;
+      return root.querySelector('[data-workbench-note-text]');
+    }
+
+    function getActiveWorkbenchNoteTextElement() {
+      const active = document.activeElement;
+      const activeNote = active && active.closest
+        ? active.closest('.opportunity-workbench-note-variant, .opportunity-workbench-review-note')
+        : null;
+      if (activeNote) {
+        const activeText = activeNote.querySelector('[data-workbench-note-text]');
+        if (activeText) return activeText;
+      }
+      return document.querySelector('#opportunity-workbench .opportunity-workbench-review-note [data-workbench-note-text]');
+    }
+
+    function selectWorkbenchNoteForManualCopy(target) {
+      if (!target || !window.getSelection || !document.createRange) return false;
+      document.querySelectorAll('.opportunity-workbench-note-copy-target.is-manual-copy').forEach((item) => item.classList.remove('is-manual-copy'));
+      const range = document.createRange();
+      range.selectNodeContents(target);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      target.classList.add('is-manual-copy');
+      target.focus({ preventScroll: true });
+      return true;
+    }
+
+    function showWorkbenchCopyButtonFeedback(button, label) {
+      if (!button) return;
+      const original = button.dataset.originalLabel || button.textContent;
+      button.dataset.originalLabel = original;
+      button.textContent = label;
+      clearTimeout(button._copyFeedbackTimer);
+      button._copyFeedbackTimer = setTimeout(() => {
+        button.textContent = button.dataset.originalLabel || original;
+      }, 1600);
+    }
+
+    async function copyWorkbenchReviewNote(source) {
+      const button = source && source.closest ? source.closest('[data-workbench-note-copy-action]') : null;
+      const target = getWorkbenchNoteTextElement(button || source) || getActiveWorkbenchNoteTextElement();
+      const text = target ? String(target.textContent || '').trim() : '';
+      if (!text) {
+        recordDetailActivity('copyUnavailable', '복사할 Workbench 리뷰 노트를 찾지 못했습니다.');
+        setDetailProductivityStatus('복사할 Workbench 리뷰 노트를 찾지 못했습니다.', 'error');
+        return false;
+      }
+
+      try {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          await navigator.clipboard.writeText(text);
+          recordDetailActivity('noteCopied', 'Workbench 리뷰 노트를 클립보드에 복사했습니다.');
+          setDetailProductivityStatus('Workbench 리뷰 노트를 복사했습니다. 저장하거나 전송하지 않았습니다.', 'success');
+          showWorkbenchCopyButtonFeedback(button, '복사됨');
+          return true;
+        }
+      } catch {
+        // Fall through to manual copy selection.
+      }
+
+      if (selectWorkbenchNoteForManualCopy(target)) {
+        recordDetailActivity('manualCopyReady', 'Clipboard API를 사용할 수 없어 수동 복사 상태로 전환했습니다.');
+        setDetailProductivityStatus('Clipboard API를 사용할 수 없어 노트 텍스트를 선택했습니다. 직접 복사하세요.', 'pending');
+        showWorkbenchCopyButtonFeedback(button, '직접 복사');
+        return false;
+      }
+
+      recordDetailActivity('copyFailed', 'Workbench 리뷰 노트를 복사하지 못했습니다.');
+      setDetailProductivityStatus('Workbench 리뷰 노트를 복사하지 못했습니다. 노트 텍스트를 직접 선택해 복사하세요.', 'error');
+      return false;
+    }
+
+    function copyActiveWorkbenchReviewNote() {
+      return copyWorkbenchReviewNote(getActiveWorkbenchNoteTextElement());
+    }
+
+    function getDetailFocusableSections() {
+      return [...document.querySelectorAll('#detailContent > .detail-section')].filter((section) => section.offsetParent !== null);
+    }
+
+    function prepareDetailSectionNavigation() {
+      getDetailFocusableSections().forEach((section) => {
+        if (!section.hasAttribute('tabindex')) section.tabIndex = -1;
+      });
+    }
+
+    function focusOpportunityWorkbench() {
+      const workbench = document.getElementById('opportunity-workbench');
+      if (!workbench) {
+        recordDetailActivity('focusUnavailable', 'Opportunity Workbench를 찾지 못했습니다.');
+        setDetailProductivityStatus('Opportunity Workbench를 찾지 못했습니다.', 'error');
+        return;
+      }
+      workbench.focus({ preventScroll: true });
+      workbench.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      recordDetailActivity('workbenchFocused', 'Opportunity Workbench로 이동했습니다.');
+      setDetailProductivityStatus('Opportunity Workbench로 이동했습니다.', 'success');
+    }
+
+    function focusNextDetailSection() {
+      const sections = getDetailFocusableSections();
+      if (sections.length === 0) {
+        recordDetailActivity('focusUnavailable', '이동할 상세 섹션이 없습니다.');
+        setDetailProductivityStatus('이동할 상세 섹션이 없습니다.', 'error');
+        return;
+      }
+      const active = document.activeElement;
+      const currentSection = active && active.closest ? active.closest('#detailContent > .detail-section') : null;
+      const currentIndex = currentSection ? sections.indexOf(currentSection) : -1;
+      const next = sections[(currentIndex + 1) % sections.length];
+      next.focus({ preventScroll: true });
+      next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const heading = next.querySelector('h3, strong');
+      const label = heading ? String(heading.textContent || '').trim() : '다음 상세 섹션';
+      recordDetailActivity('sectionFocused', label + ' 섹션으로 이동했습니다.');
+      setDetailProductivityStatus(label + ' 섹션으로 이동했습니다.', 'success');
+    }
+
+    function updateDetailShortcutHelpVisibility() {
+      window.__detailShortcutHelpOpen = detailShortcutHelpOpen;
+      const help = document.getElementById('detailShortcutHelp');
+      if (help) {
+        help.hidden = !detailShortcutHelpOpen;
+        help.classList.toggle('is-hidden', !detailShortcutHelpOpen);
+      }
+      document.querySelectorAll('[data-detail-shortcut-action="toggle-help"]').forEach((button) => {
+        button.setAttribute('aria-expanded', detailShortcutHelpOpen ? 'true' : 'false');
+      });
+    }
+
+    function toggleDetailShortcutHelp() {
+      detailShortcutHelpOpen = !detailShortcutHelpOpen;
+      updateDetailShortcutHelpVisibility();
+      recordDetailActivity('shortcutHelp', detailShortcutHelpOpen ? '단축키 도움말을 열었습니다.' : '단축키 도움말을 닫았습니다.');
+      setDetailProductivityStatus(detailShortcutHelpOpen ? '단축키 도움말을 열었습니다.' : '단축키 도움말을 닫았습니다.', 'success');
+    }
+
+    function shouldIgnoreDetailShortcut(event) {
+      if (!event || event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return true;
+      const target = event.target;
+      if (!target) return false;
+      const tagName = String(target.tagName || '').toLowerCase();
+      if (tagName === 'input' || tagName === 'select' || tagName === 'textarea') return true;
+      return !!(target.isContentEditable || (target.closest && target.closest('[contenteditable="true"]')));
+    }
+
+    function handleDetailShortcut(event) {
+      if (shouldIgnoreDetailShortcut(event)) return;
+      const key = String(event.key || '').toLowerCase();
+      if (key === '?' || (event.shiftKey && event.key === '/')) {
+        event.preventDefault();
+        toggleDetailShortcutHelp();
+        return;
+      }
+      if (key === 'c') {
+        event.preventDefault();
+        copyActiveWorkbenchReviewNote();
+        return;
+      }
+      if (key === 'w') {
+        event.preventDefault();
+        focusOpportunityWorkbench();
+        return;
+      }
+      if (key === 'n' || key === 'j') {
+        event.preventDefault();
+        focusNextDetailSection();
+      }
+    }
+
     function renderDetail() {
       const c = document.getElementById('detailContent');
       let html = '';
@@ -214,6 +488,7 @@ export function getLeadDetailPage(lead, statusLogs) {
       ).join('');
 
       html += opportunityWorkbenchHtml;
+      html += renderDetailProductivityToolkit();
 
       html += '<div class="detail-section">';
       html += '<h3>기본 정보</h3>';
@@ -383,6 +658,9 @@ export function getLeadDetailPage(lead, statusLogs) {
       html += '</div>';
 
       c.innerHTML = html;
+      prepareDetailSectionNavigation();
+      updateDetailActivitySummary();
+      updateDetailShortcutHelpVisibility();
     }
 
     async function updateField(field, value) {
@@ -396,12 +674,40 @@ export function getLeadDetailPage(lead, statusLogs) {
           body: JSON.stringify(body)
         });
         const data = await res.json();
-        if (!data.success) { alert(data.message); if (field === 'status') renderDetail(); return; }
+        if (!data.success) {
+          if (field === 'reviewStatus' || field === 'status') {
+            const label = field === 'reviewStatus' ? '검토 상태' : '영업 상태';
+            recordDetailActivity('statusUpdateFailed', label + ' 업데이트 실패');
+            setDetailProductivityStatus(label + '를 저장하지 못했습니다. 선택 상태를 확인한 뒤 다시 시도하세요.', 'error');
+            renderDetail();
+            return;
+          }
+          alert(data.message);
+          if (field === 'status') renderDetail();
+          return;
+        }
         // 로컬 lead 객체 업데이트
         if (data.lead) Object.assign(lead, data.lead);
         showSaved();
-        if (field === 'status' || field === 'reviewStatus') await refreshDetailPage();
-      } catch(e) { alert('업데이트 실패: ' + e.message); }
+        if (field === 'status' || field === 'reviewStatus') {
+          const label = field === 'reviewStatus' ? '검토 상태' : '영업 상태';
+          const nextLabel = field === 'reviewStatus'
+            ? (reviewStatusLabels[getReviewStatus(lead)] || getReviewStatus(lead))
+            : (statusLabels[lead.status || 'NEW'] || lead.status || 'NEW');
+          recordDetailActivity('statusUpdateSucceeded', label + ' 업데이트: ' + nextLabel);
+          setDetailProductivityStatus(label + '를 ' + nextLabel + '(으)로 저장했습니다. 명시적 UI 작업만 반영했습니다.', 'success');
+          await refreshDetailPage();
+        }
+      } catch(e) {
+        if (field === 'reviewStatus' || field === 'status') {
+          const label = field === 'reviewStatus' ? '검토 상태' : '영업 상태';
+          recordDetailActivity('statusUpdateFailed', label + ' 업데이트 실패');
+          setDetailProductivityStatus(label + '를 저장하지 못했습니다. 네트워크 또는 로컬 저장소를 확인한 뒤 다시 시도하세요.', 'error');
+          renderDetail();
+          return;
+        }
+        alert('업데이트 실패: ' + e.message);
+      }
     }
 
     async function refreshDetailPage() {
@@ -430,6 +736,24 @@ export function getLeadDetailPage(lead, statusLogs) {
 
     window.updateField = updateField;
     window.scheduleNoteSave = scheduleNoteSave;
+    window.copyWorkbenchReviewNote = copyWorkbenchReviewNote;
+    window.handleDetailShortcut = handleDetailShortcut;
+    window.focusOpportunityWorkbench = focusOpportunityWorkbench;
+    window.focusNextDetailSection = focusNextDetailSection;
+    document.addEventListener('click', (event) => {
+      const copyButton = event.target.closest('[data-workbench-note-copy-action]');
+      if (copyButton) {
+        event.preventDefault();
+        copyWorkbenchReviewNote(copyButton);
+        return;
+      }
+      const shortcutButton = event.target.closest('[data-detail-shortcut-action="toggle-help"]');
+      if (shortcutButton) {
+        event.preventDefault();
+        toggleDetailShortcutHelp();
+      }
+    });
+    document.addEventListener('keydown', handleDetailShortcut);
     renderDetail();
     })();
   </script>

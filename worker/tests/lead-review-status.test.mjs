@@ -409,3 +409,51 @@ test('lead detail script is isolated for list-to-detail document replacement', (
   assert.match(detailHtml, /window\.updateField = updateField/);
   assert.match(detailHtml, /window\.scheduleNoteSave = scheduleNoteSave/);
 });
+
+test('lead detail page exposes Workbench productivity controls without shortcut review mutations', () => {
+  const detailHtml = getLeadDetailPage({
+    id: 'lead-1',
+    profileId: 'danfoss',
+    status: 'NEW',
+    reviewStatus: 'APPROVED',
+    verificationStatus: 'verified',
+    generationMode: 'llm',
+    company: 'Ready Detail Co',
+    signal: 'Vendor shortlist opened',
+    whyNow: 'Shortlist closes this quarter.',
+    recommendedMessage: 'Follow up with operations director.',
+    confidence: 'HIGH',
+    evidence: [{ field: 'summary', quote: 'vendor shortlist', sourceUrl: 'https://example.com/ready-detail' }],
+    sources: [{ title: 'Ready detail source', url: 'https://example.com/ready-detail' }],
+    dataGaps: [],
+    product: 'Turbocor 컴프레서',
+    score: 91,
+    grade: 'A'
+  }, []);
+
+  assert.match(detailHtml, /Workbench Productivity Toolkit/);
+  assert.match(detailHtml, /id="detailProductivityCounts"/);
+  assert.match(detailHtml, /id="detailShortcutHelp"/);
+  assert.match(detailHtml, /id="detailProductivityStatus"/);
+  assert.match(detailHtml, /data-detail-shortcut-action="toggle-help"/);
+  assert.match(detailHtml, /data-workbench-note-copy-action=\\"copy-current-note\\"/);
+  assert.match(detailHtml, /data-workbench-note-text/);
+  assert.match(detailHtml, /function copyWorkbenchReviewNote/);
+  assert.match(detailHtml, /function selectWorkbenchNoteForManualCopy/);
+  assert.match(detailHtml, /function handleDetailShortcut/);
+  assert.match(detailHtml, /function shouldIgnoreDetailShortcut/);
+  assert.match(detailHtml, /function focusOpportunityWorkbench/);
+  assert.match(detailHtml, /function focusNextDetailSection/);
+  assert.match(detailHtml, /function recordDetailActivity/);
+  assert.match(detailHtml, /tagName === 'input'/);
+  assert.match(detailHtml, /tagName === 'select'/);
+  assert.match(detailHtml, /tagName === 'textarea'/);
+  assert.match(detailHtml, /target\.isContentEditable/);
+  assert.match(detailHtml, /contenteditable="true"/);
+  assert.match(detailHtml, /copiedNotes: 0/);
+  assert.match(detailHtml, /manualCopies: 0/);
+  assert.match(detailHtml, /focusMoves: 0/);
+  assert.match(detailHtml, /Shortcut keys do not change reviewStatus/);
+  assert.doesNotMatch(detailHtml, /data-detail-shortcut-action="review-status"/);
+  assert.doesNotMatch(detailHtml, /localStorage/);
+});
