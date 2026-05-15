@@ -4,7 +4,7 @@ This document records the production-proof boundary after Issue #34 and the May 
 
 Audited repo baseline for this snapshot:
 
-- Latest audited source-of-truth `origin/master`: `115a440bbafb215e0c754959acf1f22ad1f066c4` (PR #96)
+- Latest audited source-of-truth `origin/master`: `747b77a657a1af626e0a50d2804baf4ce566e1e5` (PR #102)
 - Issue #34 current state: open, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -28,7 +28,7 @@ Accepted Issue #34 records:
 | Runtime manifest proof | One approved raw `GET /manifest.json` returned HTTP 200 JSON redacted evidence | Did not access D1, read rows, write rows, call API routes, load browser pages, call service worker path, or prove D1-backed runtime behavior. |
 | Final no-op closeout | Schema remediation and manifest proof complete within narrow scope | Production observation claim remains forbidden; future proof needs separate approval. |
 
-Important freshness rule: Issue #34's accepted execution/proof scope was tied to SHA `12d44374a24a9958de179fae5f9311621606ad24`. The latest audited source-of-truth `master` baseline is `115a440bbafb215e0c754959acf1f22ad1f066c4` after PR #94 shipped reviewer workflow roving keyboard/accessibility snapshot coverage, PR #95 added the Reviewer Workflow Final Audit & Demo Packet, and PR #96 synced roadmap/current-train source-of-truth docs on top of the PR #51 and PR #52-#94 review-quality train. Any new production action must refresh the actual current `origin/master` SHA, CI metadata, owners, and approval records before execution.
+Important freshness rule: Issue #34's accepted execution/proof scope was tied to SHA `12d44374a24a9958de179fae5f9311621606ad24`. The latest audited source-of-truth `master` baseline is `747b77a657a1af626e0a50d2804baf4ce566e1e5` after PR #94 shipped reviewer workflow roving keyboard/accessibility snapshot coverage, PR #95 added the Reviewer Workflow Final Audit & Demo Packet, PR #96 and PR #97 synced source-of-truth docs, PR #98 clarified final audit/demo rehearsal on newer heads, PR #99 added the Human UX Review Packet, and PR #101/#102 closed out Issue #100's recorded local/test-safe UX findings. Any new production action must refresh the actual current `origin/master` SHA, CI metadata, owners, and approval records before execution.
 
 ## Current Proof Status
 
