@@ -85,6 +85,9 @@ test('opportunity workbench exposes copy controls for deterministic reviewer not
   assert.match(html, /data-workbench-note-copy-action="copy-current-note"/);
   assert.match(html, /data-workbench-note-copy-action="copy-variant-note"/);
   assert.match(html, /data-workbench-note-text/);
+  assert.match(html, /opportunity-workbench-note-summary/);
+  assert.match(html, /리뷰 노트 요약/);
+  assert.match(html, /전체 노트는 복사 전용이며 저장하거나 전송하지 않습니다/);
   assert.match(html, /class="opportunity-workbench-note-copy-target"/);
   assert.match(html, /aria-label="현재 Workbench 리뷰 노트 복사"/);
   assert.match(html, /aria-label="현재 Workbench 리뷰 노트 텍스트"/);

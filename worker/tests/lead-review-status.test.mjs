@@ -281,11 +281,32 @@ test('lead list page exposes review queue filters for current LeadBrief fields',
   assert.match(listHtml, /aria-label="검토 필터 초기화"/);
 });
 
+test('lead list page places a compact next review strip before filters', () => {
+  const listHtml = getLeadsPage();
+  const stripIndex = listHtml.indexOf('id="nextReviewStrip"');
+  const filterIndex = listHtml.indexOf('id="reviewQueueFilters"');
+
+  assert.ok(stripIndex > -1);
+  assert.ok(filterIndex > -1);
+  assert.ok(stripIndex < filterIndex);
+  assert.match(listHtml, /function renderNextReviewStrip\(leads\)/);
+  assert.match(listHtml, /다음 리뷰/);
+  assert.match(listHtml, /현재 필터에서 다음 리뷰 리드가 없습니다\./);
+  assert.match(listHtml, /data-session-action="focus-next"/);
+  assert.match(listHtml, /data-session-action="focus-session"/);
+  assert.match(listHtml, /function focusLeadReviewSession\(\)/);
+  assert.match(listHtml, /id="leadReviewSession"[^>]+class="review-session-panel"/);
+});
+
 test('lead list page exposes copy-friendly reviewer note suggestions near session quick actions', () => {
   const listHtml = getLeadsPage();
 
   assert.match(listHtml, /function renderReviewNoteSuggestion\(lead/);
   assert.match(listHtml, /review-note-suggestion/);
+  assert.match(listHtml, /function renderReviewNoteSummary\(note/);
+  assert.match(listHtml, /review-note-summary/);
+  assert.match(listHtml, /리뷰 노트 요약/);
+  assert.match(listHtml, /전체 노트는 복사 전용이며 저장하거나 전송하지 않습니다/);
   assert.match(listHtml, /리뷰 노트 제안/);
   assert.match(listHtml, /승인 노트/);
   assert.match(listHtml, /검토 필요 노트/);
