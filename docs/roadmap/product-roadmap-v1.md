@@ -4,7 +4,7 @@ This roadmap turns the current PR train, old branch archaeology, Issue #34 proof
 
 Current baseline:
 
-- `master` includes PRs #36-#43, PR #51's integration of #44-#49, review-quality follow-ups plus CI maintenance through PR #84, Lead Action Intelligence v1 through PR #87, Reviewer Action Queue v1.1 through PR #88, Lead Review Session v1 through PR #89, Reviewer Notes Template v1 through PR #90, Reviewer Productivity Toolkit v1 through PR #91, Lead Detail Workbench Productivity Parity v1 through PR #92, Reviewer Workflow QA & Accessibility Hardening v1 through PR #93, Reviewer Workflow Roving Keyboard & Accessibility Snapshot Gate v1 through PR #94, and the Reviewer Workflow Final Audit & Demo Packet through PR #95 at baseline `0d988454a6c5757aeefb0843a017d0ea61ffd87a`.
+- `master` includes PRs #36-#43, PR #51's integration of #44-#49, review-quality follow-ups plus CI maintenance through PR #84, Lead Action Intelligence v1 through PR #87, Reviewer Action Queue v1.1 through PR #88, Lead Review Session v1 through PR #89, Reviewer Notes Template v1 through PR #90, Reviewer Productivity Toolkit v1 through PR #91, Lead Detail Workbench Productivity Parity v1 through PR #92, Reviewer Workflow QA & Accessibility Hardening v1 through PR #93, Reviewer Workflow Roving Keyboard & Accessibility Snapshot Gate v1 through PR #94, the Reviewer Workflow Final Audit & Demo Packet through PR #95, and roadmap/current-train source-of-truth sync through PR #96 at baseline `115a440bbafb215e0c754959acf1f22ad1f066c4`.
 - The canonical product unit is a LeadBrief-style lead with source, trust, confidence, assumptions, data gaps, and human `reviewStatus`.
 - Opportunity Workbench includes deterministic, advisory next-review-action reasons, a review gate, a human review checklist, reviewer note suggestions, a Solution Translation Summary, Product Context / Signal Fusion, and Stakeholder Prep guidance derived from existing product, event, buyer, evidence, enrichment, and review fields.
 - Lead Action Intelligence v1 adds deterministic reviewer guidance for next action, reason, risk flags, missing-info prompts, stakeholder angle, suggested follow-up draft, reviewer note templates, priority, and confidence from existing LeadBrief fields only. Reviewer Action Queue v1.1 turns those outputs into deterministic queue lanes, filters, sorting, compact review summaries, and note suggestions.
@@ -29,7 +29,7 @@ The near-term product spine:
 
 ## Immediate Merge Queue
 
-No open PRs were present at preflight after PR #95 and stale PR #1-#9 disposition. New work should start from current `master`, not from old stacked branches. There is no current branch candidate in the merge queue, and production proof, saved notes persistence, manager dashboards, outcome learning, schema migration, and persistence work should not begin unless separately selected and scoped.
+No open PRs were present at preflight after PR #96 and stale PR #1-#9 disposition. New work should start from current `master`, not from old stacked branches. There is no current branch candidate in the merge queue, and production proof, saved notes persistence, manager dashboards, outcome learning, schema migration, and persistence work should not begin unless separately selected and scoped.
 
 Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm test` before it exits draft or merges. Product/review-quality changes should also run `npm run eval:lead-quality`, and review-flow changes should run `npm run test:e2e:local`; CI runs both as local-only gates.
 
@@ -72,7 +72,7 @@ None of these are implementation tasks. They are approval-gated operational task
 
 | Priority | Item | Required before action |
 | --- | --- | --- |
-| P0 | Refresh Issue #34 approval baseline for current `master` | The audited pre-refresh `master` baseline moved from Issue #34's approved SHA `12d44374a24a9958de179fae5f9311621606ad24` to `0d988454a6c5757aeefb0843a017d0ea61ffd87a`; refresh the actual current SHA before any production request. |
+| P0 | Refresh Issue #34 approval baseline for current `master` | The audited pre-refresh `master` baseline moved from Issue #34's approved SHA `12d44374a24a9958de179fae5f9311621606ad24` to `115a440bbafb215e0c754959acf1f22ad1f066c4`; refresh the actual current SHA before any production request. |
 | P0 | Confirm deploy owner, DB owner, rollback owner, observation owner | GitHub repo ownership is not production ownership. |
 | P0 | Confirm evidence storage and redaction policy | Production evidence must not include secrets, auth headers, cookies, private URLs, customer payloads, PII, or unredacted production payloads. |
 | P1 | Approve one D1-backed read/schema proof | Requires explicit production DB access/lazy-DDL approval if the path may invoke `ensureD1Schema()`. |
