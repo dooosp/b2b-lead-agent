@@ -161,8 +161,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   });
 
   await assertRenderedText(page, [
+    '리드 리뷰 큐',
     'Local Factory Automation',
-    '검토 승인',
+    '사람 검토: 승인',
     '신뢰도 HIGH',
     '검증됨',
     '근거 1개',
@@ -206,6 +207,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '상태 변경 0건',
     '포커스 이동 0건',
   ]);
+  assert.doesNotMatch(await page.locator('body').innerText(), /검토 검토 필요/);
   assert.equal(await page.getByRole('tab', { name: '리스트' }).getAttribute('aria-selected'), 'true');
   assert.equal(await page.getByRole('tab', { name: '칸반 보드' }).getAttribute('aria-selected'), 'false');
   assert.deepEqual(await captureListReviewerSemanticSnapshot(page), {
@@ -443,7 +445,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     const cards = [...document.querySelectorAll('#leadsList .lead-card')];
     const card = cards.find((candidate) => String(candidate.textContent || '').includes('Local Data Center Cooling'));
     return !!card
-      && String(card.textContent || '').includes('검토 승인')
+      && String(card.textContent || '').includes('사람 검토: 승인')
       && String(card.textContent || '').includes('Reconcile review conflict');
   });
   await assertRenderedText(page, ['리스크 확인 1건', '보강 필요 0건', 'Risk flags', 'Missing info']);

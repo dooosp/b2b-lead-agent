@@ -7,7 +7,7 @@ export function getLeadsPage() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>리드 상세 보기</title>
+  <title>리드 리뷰 큐</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
@@ -240,7 +240,7 @@ export function getLeadsPage() {
         <button class="btn btn-secondary csv-btn" style="font-size:12px;padding:6px 12px;" onclick="downloadCSV()">CSV 내보내기</button>
       </div>
     </nav>
-    <h1 style="font-size:22px;">리드 상세 보기</h1>
+    <h1 style="font-size:22px;">리드 리뷰 큐</h1>
     <p class="subtitle">최근 분석된 영업 기회 목록</p>
 
     <div class="view-tabs" role="tablist" aria-label="리드 보기 전환" aria-orientation="vertical">
@@ -449,6 +449,12 @@ export function getLeadsPage() {
       return normalizeReviewStatus(lead.reviewStatus || lead.review_status);
     }
 
+    function humanReviewStatusLabel(status) {
+      const current = normalizeReviewStatus(status);
+      if (current === 'NEEDS_REVIEW') return '사람 검토: 필요';
+      return '사람 검토: ' + (reviewStatusLabels[current] || current);
+    }
+
     function normalizeVerificationStatus(value) {
       const status = String(value || '').toLowerCase();
       return verificationStatusLabels[status] ? status : 'needs_review';
@@ -553,7 +559,7 @@ export function getLeadsPage() {
 
     function renderReviewBadge(lead) {
       const current = getReviewStatus(lead);
-      return \`<span class="badge badge-review \${current.toLowerCase()}">검토 \${esc(reviewStatusLabels[current])}</span>\`;
+      return \`<span class="badge badge-review \${current.toLowerCase()}">\${esc(humanReviewStatusLabel(current))}</span>\`;
     }
 
     function renderVerificationBadge(lead) {
@@ -632,7 +638,7 @@ export function getLeadsPage() {
         state,
         label,
         items: [
-          '검토 ' + (reviewStatusLabels[reviewStatus] || reviewStatus),
+          humanReviewStatusLabel(reviewStatus),
           verificationStatusLabels[verificationStatus] || verificationStatus,
           confidenceLabels[confidence] || ('신뢰도 ' + confidence),
           evidenceCount > 0 ? '근거 ' + evidenceCount + '개 / 출처 ' + sourceCount + '개' : '직접 인용 없음 / 출처 ' + sourceCount + '개',
@@ -1026,7 +1032,7 @@ export function getLeadsPage() {
               <span>Priority \${esc(session.nextItem.reviewPriority)}</span>
               <span>Risk flags \${Number(session.nextItem.riskCount) || 0}</span>
               <span>Missing info \${Number(session.nextItem.missingInfoCount) || 0}</span>
-              <span>검토 \${esc(reviewStatusLabels[currentReviewStatus] || currentReviewStatus)}</span>
+              <span>\${esc(humanReviewStatusLabel(currentReviewStatus))}</span>
               <span>영업 \${esc(statusLabels[currentSalesStatus] || currentSalesStatus)}</span>
             </div>
             \${renderReviewNoteSuggestion(session.nextLead, { compact: true })}
@@ -1105,7 +1111,7 @@ export function getLeadsPage() {
       const opts = reviewStatuses.map(s =>
         \`<option value="\${s}" \${s === current ? 'selected' : ''}>\${esc(reviewStatusLabels[s])}</option>\`
       ).join('');
-      if (!lead.id) return \`<span class="badge badge-review \${current.toLowerCase()}">\${esc(reviewStatusLabels[current])}</span>\`;
+      if (!lead.id) return \`<span class="badge badge-review \${current.toLowerCase()}">\${esc(humanReviewStatusLabel(current))}</span>\`;
       return \`<select class="status-select" aria-label="\${leadAccessibleName(lead)} 검토 상태 변경" onchange="updateReviewStatus('\${esc(lead.id)}', this.value, '\${current}')">\${opts}</select>\`;
     }
 
@@ -1838,7 +1844,7 @@ export function getLeadsPage() {
           if (fu) {
             html += '<div class="k-followup">' + (isWarn ? '⚠ ' : '') + esc(fu) + '</div>';
           }
-          html += '<div class="k-review">' + esc(reviewStatusLabels[getReviewStatus(l)]) + ' / ' + esc(verificationStatusLabels[getVerificationStatus(l)]) + '</div>';
+          html += '<div class="k-review">' + esc(humanReviewStatusLabel(getReviewStatus(l))) + ' / ' + esc(verificationStatusLabels[getVerificationStatus(l)]) + '</div>';
           html += '<div class="k-gate gate-' + esc(gate.state) + '">' + esc(gate.label) + '</div>';
           html += '<div class="k-action priority-' + esc(action.reviewPriority) + '">Action: ' + esc(action.nextReviewActionLabel) + '</div>';
           html += '</div>';
