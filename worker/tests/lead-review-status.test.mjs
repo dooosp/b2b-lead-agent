@@ -201,6 +201,19 @@ test('lead list and detail pages render reviewStatus controls and trust metadata
   assert.match(detailHtml, /출처/);
 });
 
+test('lead list page uses reviewer queue heading and non-repetitive human review copy', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /<title>리드 리뷰 큐<\/title>/);
+  assert.match(listHtml, /<h1[^>]*>리드 리뷰 큐<\/h1>/);
+  assert.doesNotMatch(listHtml, /리드 상세 보기/);
+  assert.match(listHtml, /사람 검토: /);
+  assert.match(listHtml, /영업 /);
+  assert.doesNotMatch(listHtml, /검토\s+\$\{esc\(reviewStatusLabels\[current\]\)\}/);
+  assert.doesNotMatch(listHtml, /'검토 ' \+ \(reviewStatusLabels\[reviewStatus\] \|\| reviewStatus\)/);
+  assert.doesNotMatch(listHtml, /<span>검토 \$\{esc\(reviewStatusLabels\[currentReviewStatus\] \|\| currentReviewStatus\)\}<\/span>/);
+});
+
 test('lead review pages expose clear trust metadata display helpers', () => {
   const listHtml = getLeadsPage();
   const detailHtml = getLeadDetailPage({
