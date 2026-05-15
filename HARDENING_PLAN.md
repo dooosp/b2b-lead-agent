@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-05-15.
-> Audited against first-parent `master` history through `2028898da8987b04a45d312caa47039ad700fc9b` (`Harden reviewer workflow keyboard accessibility (#94)`) and current GitHub PR state after stale PR #1-#9 closure and post-PR51 follow-ups #69-#84 plus PRs #87-#94.
+> Audited against first-parent `master` history through `115a440bbafb215e0c754959acf1f22ad1f066c4` (`Sync roadmap after reviewer workflow audit (#96)`) and current GitHub PR state after stale PR #1-#9 closure and post-PR51 follow-ups #69-#84 plus PRs #87-#96.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -21,6 +21,8 @@
 | 11 | 2026-05-13 | #90-#92 | `0d67eeb` | Reviewer Notes Template and Productivity Parity | Deterministic reviewer note templates, `/leads` copy/manual-copy controls, non-mutating shortcuts, browser-memory session activity, and lead-detail Opportunity Workbench productivity parity without persistence, schema, production, external calls, analytics, or keyboard-triggered review mutation |
 | 12 | 2026-05-14 | #93 | `63d80fd` | Reviewer Workflow QA & Accessibility Hardening | Accessible tab semantics, clearer copy/status labels, bounded live-region feedback, interactive-control shortcut guards, focus-visible/mobile wrapping improvements, zero-result reset preservation, reviewStatus/status separation coverage, and local E2E mobile overflow smoke |
 | 13 | 2026-05-14 | #94 | `2028898` | Reviewer Workflow Roving Keyboard & Accessibility Snapshot Gate | Roving list/Kanban tab focus, tabpanel semantics, and local semantic snapshots for reviewer regions without production, schema, persistence, external-call, analytics, or keyboard-triggered review mutation scope |
+| 14 | 2026-05-14 | #95 | `0d98845` | Reviewer Workflow Final Audit & Demo Packet | Canonical local/test-safe reviewer workflow audit packet, demo flow, validation commands, allowed/forbidden claims, note-persistence wording, and production evidence boundary |
+| 15 | 2026-05-14 | #96 | `115a440` | Roadmap/current-train source-of-truth sync | Synced roadmap/current-train and production-proof boundary docs after the final audit packet without production action |
 
 ## Wave Summary
 
@@ -143,9 +145,11 @@
   - lead-detail Opportunity Workbench parity for copy/manual-copy, non-mutating detail shortcuts, shortcut help, and current-page activity feedback.
   - reviewer workflow QA/accessibility hardening for accessible list view tab semantics, clearer copy/status labels, bounded live-region feedback, interactive-control shortcut guards, focus-visible/mobile wrapping, zero-result reset preservation, reviewStatus/status separation, and local E2E mobile overflow smoke.
   - roving list/Kanban tab keyboard behavior and local semantic snapshots for reviewer regions, copy controls, shortcut help, live status feedback, zero-result reset controls, and lead-detail Opportunity Workbench markers.
+- PR #95 then added `docs/reviewer-workflow-final-audit.md` as the canonical local/test-safe reviewer workflow audit/demo packet.
+- PR #96 then synced roadmap/current-train and production-proof boundary docs after the final audit packet.
 - PR #59 recut the useful old PR #6 idea as deterministic role-specific review prep using existing LeadBrief/enrichment fields only. It does not approve outreach, change schema/API/storage, or expand CRM ownership.
 - Stale PRs #1-#9 were audited after PR #51, received disposition comments, and were closed without merge or branch deletion. Their useful ideas remain concept inventory to recut from current `master`.
-- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#94, or the stale PR cleanup.
+- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#96, or the stale PR cleanup.
 
 ## Findings Closed On `master`
 
@@ -218,8 +222,8 @@
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
-  - Recommended next non-production goal: use `docs/reviewer-workflow-final-audit.md` as the completed local/test-safe reviewer workflow handoff baseline before starting another small review-quality, local-evidence, docs, or CI-maintenance slice.
-  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay local/test/CI oriented unless a separate human-approved production prompt opens operational work.
+  - Recommended next non-production goal: keep `docs/reviewer-workflow-final-audit.md` as the completed local/test-safe reviewer workflow handoff baseline before starting another small review-quality, local-evidence, docs, or CI-maintenance slice.
+  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, roadmap/current-train source-of-truth sync, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay local/test/CI oriented unless a separate human-approved production prompt opens operational work.
   - Keep production proof, platform migration, storage migration, and production observation work behind separate approval gates.
 
 ## Current Operating Sequence
