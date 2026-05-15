@@ -12,6 +12,8 @@ This packet makes the shipped reviewer workflow reviewable, demoable, and bounda
 - Open PRs at preflight: none
 - Production actions for this packet: none
 
+The audited SHA above is the original reviewer-workflow audit baseline from PR #95. When rehearsing this packet after later source-of-truth sync PRs, keep that audit scope intact, then report the current checkout branch, HEAD SHA, open-PR state, and validation results separately. A post-sync local rehearsal can validate the same demo path on a newer `master` head, but it still remains local/test evidence only and must not be described as production observation.
+
 ## Product Summary
 
 B2B Lead Agent is a local/test-safe reviewer workflow app for prioritized lead review. It helps a human reviewer decide which leads to inspect, what evidence/risk/data-gap issues exist, and what review note text can be copied into the human review process.
