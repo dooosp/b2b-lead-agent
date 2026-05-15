@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-05-15.
-> Audited against first-parent `master` history through `115a440bbafb215e0c754959acf1f22ad1f066c4` (`Sync roadmap after reviewer workflow audit (#96)`) and current GitHub PR state after stale PR #1-#9 closure and post-PR51 follow-ups #69-#84 plus PRs #87-#96.
+> Audited against first-parent `master` history through `747b77a657a1af626e0a50d2804baf4ce566e1e5` (`Merge pull request #102 from dooosp/fix/reviewer-workflow-next-review-summary`) and current GitHub PR state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, and PRs #101-#102.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -23,6 +23,8 @@
 | 13 | 2026-05-14 | #94 | `2028898` | Reviewer Workflow Roving Keyboard & Accessibility Snapshot Gate | Roving list/Kanban tab focus, tabpanel semantics, and local semantic snapshots for reviewer regions without production, schema, persistence, external-call, analytics, or keyboard-triggered review mutation scope |
 | 14 | 2026-05-14 | #95 | `0d98845` | Reviewer Workflow Final Audit & Demo Packet | Canonical local/test-safe reviewer workflow audit packet, demo flow, validation commands, allowed/forbidden claims, note-persistence wording, and production evidence boundary |
 | 15 | 2026-05-14 | #96 | `115a440` | Roadmap/current-train source-of-truth sync | Synced roadmap/current-train and production-proof boundary docs after the final audit packet without production action |
+| 16 | 2026-05-15 | #97-#99 | `0360f7c` | Source-of-truth sync, demo rehearsal clarification, and Human UX Review Packet | Synced post-PR96 docs, clarified final audit/demo rehearsal on newer heads, and added the local/test-safe Human UX Review Checklist and Feedback Intake Packet |
+| 17 | 2026-05-15 | #101-#102 | `747b77a` | Issue #100 reviewer workflow UX closeout | Addressed all four recorded local/test-safe UX findings: `/leads` heading, human review labels, compact top `다음 리뷰` strip, and short reviewer-note summaries while preserving full deterministic copy payloads |
 
 ## Wave Summary
 
@@ -147,9 +149,16 @@
   - roving list/Kanban tab keyboard behavior and local semantic snapshots for reviewer regions, copy controls, shortcut help, live status feedback, zero-result reset controls, and lead-detail Opportunity Workbench markers.
 - PR #95 then added `docs/reviewer-workflow-final-audit.md` as the canonical local/test-safe reviewer workflow audit/demo packet.
 - PR #96 then synced roadmap/current-train and production-proof boundary docs after the final audit packet.
+- PR #97 then synced source-of-truth docs after PR #96.
+- PR #98 clarified how later local rehearsals should report current branch, HEAD, open-PR state, and validation while preserving the original PR #95 audit baseline.
+- PR #99 then added `docs/reviewer-workflow-human-ux-review.md` as the local/test-safe Human UX Review Checklist and Feedback Intake Packet.
+- Issue #100 collected four real local/test-safe human UX findings for the reviewer workflow.
+- PR #101 addressed UX-100-002 and UX-100-003 by changing the `/leads` heading to `리드 리뷰 큐` and replacing duplicated human review wording with non-duplicated `사람 검토: ...` labels.
+- PR #102 addressed UX-100-001 and UX-100-004 by adding the compact top `다음 리뷰` strip above filters and short reviewer-note summaries above the full deterministic copy payload in Lead Review Session and Opportunity Workbench.
+- Issue #100 was closed as completed after final closeout confirmed all four recorded findings were addressed and no new open UX finding remained.
 - PR #59 recut the useful old PR #6 idea as deterministic role-specific review prep using existing LeadBrief/enrichment fields only. It does not approve outreach, change schema/API/storage, or expand CRM ownership.
 - Stale PRs #1-#9 were audited after PR #51, received disposition comments, and were closed without merge or branch deletion. Their useful ideas remain concept inventory to recut from current `master`.
-- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#96, or the stale PR cleanup.
+- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#99, PRs #101-#102, Issue #100 closeout, or the stale PR cleanup.
 
 ## Findings Closed On `master`
 
@@ -208,6 +217,22 @@
   - shipped by PR #46 through PR #51
   - current evidence: `worker/lib/auth.js`, `worker/routes/api.js`, `worker/tests/security-hardening.test.mjs`
 
+## Issue #100 Human UX Findings Closed On `master`
+
+- UX-100-001 first-viewport density:
+  - shipped by PR #102
+  - current evidence: compact top `다음 리뷰` strip above filters on `/leads`
+- UX-100-002 `/leads` header clarity:
+  - shipped by PR #101
+  - current evidence: `/leads` heading `리드 리뷰 큐`
+- UX-100-003 duplicate human review wording:
+  - shipped by PR #101
+  - current evidence: non-duplicated `사람 검토: ...` labels
+- UX-100-004 reviewer-note preview density:
+  - shipped by PR #102
+  - current evidence: short note summaries above the full deterministic copy payload in Lead Review Session and Opportunity Workbench
+- Issue #100 is closed as completed for the recorded local/test-safe UX findings. Future UX feedback should use a new issue or a separately scoped record.
+
 ## Remaining Open Items
 
 - No new unresolved Wave 1 to Wave 3 runtime or worker blocker was verified during this docs refresh.
@@ -222,8 +247,8 @@
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
-  - Recommended next non-production goal: keep `docs/reviewer-workflow-final-audit.md` as the completed local/test-safe reviewer workflow handoff baseline before starting another small review-quality, local-evidence, docs, or CI-maintenance slice.
-  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, roadmap/current-train source-of-truth sync, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay local/test/CI oriented unless a separate human-approved production prompt opens operational work.
+  - Recommended next non-production goal: keep `docs/reviewer-workflow-final-audit.md` and `docs/reviewer-workflow-human-ux-review.md` as the completed local/test-safe reviewer workflow handoff and review-intake baseline before starting another small review-quality, local-evidence, docs, or CI-maintenance slice.
+  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, the Human UX Review Packet, Issue #100 closeout, the compact `다음 리뷰` strip, reviewer-note summaries, roadmap/current-train source-of-truth sync, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay local/test/CI oriented unless a separate human-approved production prompt opens operational work.
   - Keep production proof, platform migration, storage migration, and production observation work behind separate approval gates.
 
 ## Current Operating Sequence
