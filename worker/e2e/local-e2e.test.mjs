@@ -183,8 +183,13 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '낮은 우선순위 0건',
     'Risk flags 5',
     'Missing info 6',
+    '다음 리뷰',
+    'Local Factory Automation',
+    '세션 보기',
     'Lead Review Session',
     '리뷰 노트 제안',
+    '리뷰 노트 요약',
+    '전체 노트는 복사 전용이며 저장하거나 전송하지 않습니다',
     '승인 노트',
     'Decision: APPROVED',
     '검토 필요 노트',
@@ -208,6 +213,17 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '포커스 이동 0건',
   ]);
   assert.doesNotMatch(await page.locator('body').innerText(), /검토 검토 필요/);
+  assert.equal(await page.evaluate(() => {
+    const strip = document.querySelector('#nextReviewStrip');
+    const filters = document.querySelector('#reviewQueueFilters');
+    return !!strip && !!filters && !!(strip.compareDocumentPosition(filters) & Node.DOCUMENT_POSITION_FOLLOWING);
+  }), true);
+  assert.equal(await page.evaluate(() => {
+    const root = document.querySelector('.review-session-panel .review-note-suggestion');
+    const summary = root?.querySelector('.review-note-summary');
+    const payload = root?.querySelector('[data-review-note-text]');
+    return !!summary && !!payload && !!(summary.compareDocumentPosition(payload) & Node.DOCUMENT_POSITION_FOLLOWING);
+  }), true);
   assert.equal(await page.getByRole('tab', { name: '리스트' }).getAttribute('aria-selected'), 'true');
   assert.equal(await page.getByRole('tab', { name: '칸반 보드' }).getAttribute('aria-selected'), 'false');
   assert.deepEqual(await captureListReviewerSemanticSnapshot(page), {
@@ -224,8 +240,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
       ],
     },
     regions: {
+      nextReviewStrip: { label: '다음 리뷰' },
       reviewerActionQueue: { label: 'Reviewer Action Queue', focusable: true },
-      leadReviewSession: { label: 'Lead Review Session' },
+      leadReviewSession: { label: 'Lead Review Session', focusable: true },
       productivity: { label: 'Reviewer Productivity Toolkit' },
       shortcutHelp: { role: 'region', label: '단축키 도움말', hidden: true },
       liveStatus: { role: 'status', live: 'polite', atomic: 'true' },
@@ -274,6 +291,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   await assertNoHorizontalOverflow(page, [
     'main.container',
     '#reviewQueueFilters',
+    '#nextReviewStrip',
     '.review-session-panel',
     '#reviewProductivityToolkit',
     '#reviewerActionQueue',
@@ -284,6 +302,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   await assertNoHorizontalOverflow(page, [
     'main.container',
     '#reviewQueueFilters',
+    '#nextReviewStrip',
     '.review-session-panel',
     '#reviewProductivityToolkit',
     '#reviewerActionQueue',
@@ -301,6 +320,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.deepEqual(await page.evaluate(() => window.__copiedReviewNotes), [
     await page.locator('.review-session-panel [data-review-note-text]').first().innerText(),
   ]);
+  assert.doesNotMatch((await page.evaluate(() => window.__copiedReviewNotes[0])) || '', /리뷰 노트 요약|전체 노트는 복사 전용/);
   await assertRenderedText(page, ['노트 복사 1건', '마지막 작업']);
 
   await page.locator('#leadsList .lead-card').first().focus();
@@ -497,6 +517,8 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     'Prepare reviewed follow-up',
     'Priority high / Confidence high',
     '리뷰 노트 제안',
+    '리뷰 노트 요약',
+    '전체 노트는 복사 전용이며 저장하거나 전송하지 않습니다',
     'Decision: APPROVED',
     '승인 노트',
     '검토 필요 노트',
@@ -524,6 +546,12 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     copyControls: ['현재 Workbench 리뷰 노트 복사', '승인 노트 복사', '검토 필요 노트 복사', '리스크 확인 노트 복사'],
     reviewControls: ['영업 상태 변경', '사람 검토 상태 변경'],
   });
+  assert.equal(await page.evaluate(() => {
+    const root = document.querySelector('#opportunity-workbench .opportunity-workbench-review-note');
+    const summary = root?.querySelector('.opportunity-workbench-note-summary');
+    const payload = root?.querySelector('[data-workbench-note-text]');
+    return !!summary && !!payload && !!(summary.compareDocumentPosition(payload) & Node.DOCUMENT_POSITION_FOLLOWING);
+  }), true);
   await page.setViewportSize({ width: 390, height: 844 });
   await assertRenderedText(page, ['Workbench Productivity Toolkit', 'OPPORTUNITY WORKBENCH', '사람 검토']);
   await assertNoHorizontalOverflow(page, [
@@ -531,6 +559,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '#opportunity-workbench',
     '#detailProductivityToolkit',
     '.opportunity-workbench-review-note',
+    '.opportunity-workbench-note-summary',
     '.opportunity-workbench-note-copy-head',
     '.field-group',
   ]);
@@ -554,6 +583,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     return !!status && String(status.textContent || '').includes('노트를 복사했습니다');
   });
   assert.deepEqual(await page.evaluate(() => window.__copiedReviewNotes), [visibleDetailNote]);
+  assert.doesNotMatch((await page.evaluate(() => window.__copiedReviewNotes[0])) || '', /리뷰 노트 요약|전체 노트는 복사 전용/);
   await assertRenderedText(page, ['Workbench Productivity Toolkit', '노트 복사 1건', '수동 복사 0건']);
 
   await page.locator('#opportunity-workbench').focus();
@@ -704,6 +734,7 @@ async function captureListReviewerSemanticSnapshot(page) {
         }),
       },
       regions: {
+        nextReviewStrip: semanticRegion('#nextReviewStrip'),
         reviewerActionQueue: semanticRegion('#reviewerActionQueue'),
         leadReviewSession: semanticRegion('.review-session-panel'),
         productivity: semanticRegion('#reviewProductivityToolkit'),

@@ -111,6 +111,15 @@ export function getLeadsPage() {
     .reviewer-action-lane li em { color:#cbd8e6; font-size:11px; font-style:normal; line-height:1.35; }
     .reviewer-action-lane li small { color:#8fa4b8; font-size:10px; line-height:1.4; }
     .reviewer-action-empty { color:#566273; font-size:11px; margin:9px 0 0; }
+    .next-review-strip { background:#101925; border:1px solid #31506c; border-radius:8px; display:grid; gap:8px; margin:0 0 14px; min-width:0; padding:12px; text-align:left; }
+    .next-review-strip-head { align-items:flex-start; display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; }
+    .next-review-strip-head span { color:#8fa4b8; display:block; font-size:11px; font-weight:700; line-height:1.4; margin-bottom:3px; }
+    .next-review-strip-head strong { color:#f4f7fb; display:block; font-size:15px; line-height:1.35; }
+    .next-review-strip-head p { color:#9fb0c0; font-size:12px; line-height:1.5; margin:4px 0 0; }
+    .next-review-strip-actions { align-items:center; display:flex; flex-wrap:wrap; gap:6px; }
+    .next-review-strip-actions button { font-size:11px; padding:5px 9px; }
+    .next-review-strip-meta { display:flex; flex-wrap:wrap; gap:6px; }
+    .next-review-strip-meta span { background:#162338; border:1px solid #2e4157; border-radius:6px; color:#cbd8e6; font-size:11px; line-height:1.4; padding:4px 7px; }
     .review-session-panel { background:#121a24; border:1px solid #31506c; border-radius:8px; display:grid; gap:12px; margin:0 0 16px; padding:12px; text-align:left; }
     .review-session-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; }
     .review-session-head strong { color:#f4f7fb; font-size:14px; line-height:1.4; }
@@ -134,6 +143,11 @@ export function getLeadsPage() {
     .review-note-copy-actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
     .review-note-copy-actions button { font-size:11px; padding:5px 8px; }
     .review-note-copy-target.is-manual-copy { outline:2px solid #8fbfe8; outline-offset:2px; }
+    .review-note-summary { background:#101925; border:1px solid #223447; border-radius:8px; display:grid; gap:7px; padding:9px; }
+    .review-note-summary strong { color:#f4f7fb; font-size:12px; line-height:1.4; }
+    .review-note-summary-items { display:flex; flex-wrap:wrap; gap:6px; }
+    .review-note-summary-items span { background:#162338; border:1px solid #2e4157; border-radius:6px; color:#cbd8e6; font-size:11px; line-height:1.4; padding:4px 7px; }
+    .review-note-summary p { color:#9fb0c0; font-size:11px; line-height:1.5; margin:0; }
     .review-note-helper { color:#9fb0c0; font-size:11px; line-height:1.5; margin:0; }
     .review-note-variants { display:grid; gap:7px; }
     .review-note-variant { border-top:1px solid #223447; padding-top:7px; }
@@ -157,7 +171,7 @@ export function getLeadsPage() {
     .review-session-status.is-success { background:#101f1a; color:#a8efc0; }
     .review-session-status.is-error { background:#211719; color:#ffc4c4; }
     .lead-card.review-session-focus { outline:2px solid #8fbfe8; outline-offset:3px; }
-    .reviewer-action-queue:focus, .view-tab:focus-visible, .review-session-actions button:focus-visible, .review-note-copy-actions button:focus-visible, .review-filter-actions button:focus-visible, .review-productivity-head button:focus-visible, .status-select:focus-visible, .notes-textarea:focus-visible { outline:2px solid #8fbfe8; outline-offset:3px; }
+    .reviewer-action-queue:focus, .review-session-panel:focus, .view-tab:focus-visible, .next-review-strip-actions button:focus-visible, .review-session-actions button:focus-visible, .review-note-copy-actions button:focus-visible, .review-filter-actions button:focus-visible, .review-productivity-head button:focus-visible, .status-select:focus-visible, .notes-textarea:focus-visible { outline:2px solid #8fbfe8; outline-offset:3px; }
     .review-filter-bar { background:#121a24; border:1px solid #26384c; border-radius:10px; display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); margin:0 0 14px; padding:12px; text-align:left; }
     .review-filter-bar label { color:#8fa4b8; display:grid; gap:5px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0; }
     .review-filter-bar select { background:#16213e; border:1px solid #36506c; border-radius:7px; color:#f4f7fb; font-size:12px; padding:7px 8px; width:100%; }
@@ -226,7 +240,7 @@ export function getLeadsPage() {
       .top-nav-links .btn, .top-nav-links button { flex:1 1 auto; min-width:0; }
       .review-filter-actions { justify-content:stretch; }
       .review-filter-actions button { width:100%; }
-      .review-session-actions button, .review-note-copy-actions button { flex:1 1 auto; min-width:0; }
+      .next-review-strip-actions button, .review-session-actions button, .review-note-copy-actions button { flex:1 1 auto; min-width:0; }
     }
   </style>
 </head>
@@ -255,6 +269,15 @@ export function getLeadsPage() {
       <button class="btn-enrich" onclick="batchEnrich(this)">일괄 상세 분석</button>
     </div>
     <div id="batchStatus" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div>
+
+    <section id="nextReviewStrip" class="next-review-strip" aria-label="다음 리뷰">
+      <div class="next-review-strip-head">
+        <div>
+          <span>다음 리뷰</span>
+          <strong>리드 큐를 불러오는 중입니다.</strong>
+        </div>
+      </div>
+    </section>
 
     <div id="reviewQueueFilters" class="review-filter-bar" aria-label="리드 검토 필터">
       <label>검토 상태
@@ -849,6 +872,45 @@ export function getLeadsPage() {
       return { current, templates };
     }
 
+    function normalizeSummaryText(value, fallback = '') {
+      const text = String(value || '').replace(/\\s+/g, ' ').trim();
+      return text || fallback;
+    }
+
+    function truncateSummaryText(value, limit = 120) {
+      const text = normalizeSummaryText(value);
+      if (text.length <= limit) return text;
+      return text.slice(0, Math.max(0, limit - 3)).trim() + '...';
+    }
+
+    function findReviewNoteLine(text, prefixes) {
+      const lines = String(text || '').split(/\\n+/).map((line) => normalizeSummaryText(line)).filter(Boolean);
+      return lines.find((line) => prefixes.some((prefix) => line.toLowerCase().startsWith(prefix.toLowerCase()))) || '';
+    }
+
+    function renderReviewNoteSummary(note = {}) {
+      const text = note.text || '';
+      const decision = findReviewNoteLine(text, ['Decision:', 'Follow-up check:']) || note.label || note.state || '검토 필요 노트';
+      const lead = findReviewNoteLine(text, ['Lead:']);
+      const reason = findReviewNoteLine(text, ['Reason:', 'Review basis:']);
+      const evidence = findReviewNoteLine(text, ['Evidence status:', 'Evidence:']);
+      const risk = findReviewNoteLine(text, ['Missing/risk check:', 'Open items:', 'Missing:', 'Missing prompts:']);
+      const items = [decision, lead, reason, evidence || risk]
+        .map((item) => truncateSummaryText(item, 96))
+        .filter(Boolean)
+        .slice(0, 4);
+      const itemHtml = items.length > 0
+        ? items.map((item) => \`<span>\${esc(item)}</span>\`).join('')
+        : '<span>리뷰 노트 내용을 확인하세요.</span>';
+      return \`
+        <div class="review-note-summary" aria-label="리뷰 노트 요약">
+          <strong>리뷰 노트 요약</strong>
+          <div class="review-note-summary-items">\${itemHtml}</div>
+          <p>전체 노트는 복사 전용이며 저장하거나 전송하지 않습니다.</p>
+        </div>
+      \`;
+    }
+
     function renderReviewNoteSuggestion(lead, options = {}) {
       const noteData = normalizeReviewNoteData(lead || {});
       const current = noteData.current || {};
@@ -856,6 +918,7 @@ export function getLeadsPage() {
       const variants = templates.map((template) => \`
         <details class="review-note-variant"\${template.state === current.state ? ' open' : ''}>
           <summary>\${esc(template.label || template.state)}</summary>
+          \${renderReviewNoteSummary(template)}
           <pre class="review-note-copy-target" data-review-note-text tabindex="0" aria-label="\${esc(template.label || template.state)} 텍스트">\${esc(template.text || 'Review note suggestion unavailable.')}</pre>
           <div class="review-note-copy-actions">
             <button class="btn btn-secondary" type="button" data-note-copy-action="copy-variant-note" aria-label="\${esc(template.label || template.state)} 복사">복사</button>
@@ -871,6 +934,7 @@ export function getLeadsPage() {
               <button class="btn btn-secondary" type="button" data-note-copy-action="copy-current-note" aria-label="현재 노트 복사">현재 노트 복사</button>
             </div>
           </div>
+          \${renderReviewNoteSummary(current)}
           <pre class="review-note-copy-target" data-review-note-text tabindex="0" aria-label="현재 리뷰 노트 텍스트">\${esc(current.text || 'Review note suggestion unavailable. Confirm company, evidence, verification status, and data gaps before writing a review note.')}</pre>
           <p class="review-note-helper">read-only reviewer note suggestion; it does not save or send notes.</p>
           <div class="review-note-variants" aria-label="review note variants">
@@ -983,6 +1047,48 @@ export function getLeadsPage() {
       };
     }
 
+    function renderNextReviewStrip(leads) {
+      const session = getSessionState(leads);
+      if (!session.nextItem || !session.nextLead) {
+        return \`
+          <div class="next-review-strip-head">
+            <div>
+              <span>다음 리뷰</span>
+              <strong>현재 필터에서 다음 리뷰 리드가 없습니다.</strong>
+              <p>필터를 조정하거나 초기화하면 리뷰 후보가 다시 표시됩니다.</p>
+            </div>
+            <div class="next-review-strip-actions">
+              <button class="btn btn-secondary" type="button" data-session-action="focus-session">세션 보기</button>
+            </div>
+          </div>
+        \`;
+      }
+
+      const nextLeadId = getLeadId(session.nextLead);
+      const currentReviewStatus = getReviewStatus(session.nextLead);
+      const currentSalesStatus = session.nextLead.status || 'NEW';
+      return \`
+        <div class="next-review-strip-head">
+          <div>
+            <span>다음 리뷰</span>
+            <strong>\${esc(session.nextItem.company || session.nextLead.company || '리드')}</strong>
+            <p>\${esc(session.nextItem.nextReviewActionLabel || 'Review lead')} · \${esc(session.nextItem.reasonSnippet || '')}</p>
+          </div>
+          <div class="next-review-strip-actions">
+            <button class="btn btn-secondary" type="button" data-session-action="focus-next" data-lead-id="\${esc(nextLeadId)}">다음 리드 보기</button>
+            <button class="btn btn-secondary" type="button" data-session-action="focus-session">세션 보기</button>
+          </div>
+        </div>
+        <div class="next-review-strip-meta">
+          <span>\${esc(session.nextItem.queueLaneLabel || queueLaneLabels[session.nextItem.queueLane] || session.nextItem.queueLane)}</span>
+          <span>Priority \${esc(session.nextItem.reviewPriority)}</span>
+          <span>\${esc(session.nextItem.nextReviewActionLabel || 'Review lead')}</span>
+          <span>\${esc(humanReviewStatusLabel(currentReviewStatus))}</span>
+          <span>영업 \${esc(statusLabels[currentSalesStatus] || currentSalesStatus)}</span>
+        </div>
+      \`;
+    }
+
     function renderSessionActivitySummary() {
       const lastAction = sessionActivity.lastAction || '세션 활동 없음';
       const helpHidden = shortcutHelpOpen ? '' : ' hidden';
@@ -1048,7 +1154,7 @@ export function getLeadsPage() {
       const noticeMessage = reviewSessionNotice.message || '';
 
       return \`
-        <section class="review-session-panel" aria-label="Lead Review Session">
+        <section id="leadReviewSession" class="review-session-panel" aria-label="Lead Review Session" tabindex="-1">
           <div class="review-session-head">
             <strong>Lead Review Session</strong>
             <span>현재 필터 기준 · reviewStatus만 빠르게 변경</span>
@@ -1231,7 +1337,7 @@ export function getLeadsPage() {
     function recordSessionActivity(type, message) {
       if (type === 'noteCopied') sessionActivity.copiedNotes += 1;
       if (type === 'reviewUpdateSucceeded') sessionActivity.reviewUpdates += 1;
-      if (type === 'focusNextLead' || type === 'focusQueue') sessionActivity.focusMoves += 1;
+      if (type === 'focusNextLead' || type === 'focusQueue' || type === 'focusSession') sessionActivity.focusMoves += 1;
       if (type === 'filterReset') sessionActivity.filterResets += 1;
       sessionActivity.lastAction = message || '세션 활동 업데이트';
       updateSessionActivitySummary();
@@ -1281,6 +1387,19 @@ export function getLeadsPage() {
       queue.scrollIntoView({ behavior: 'smooth', block: 'start' });
       recordSessionActivity('focusQueue', 'Reviewer Action Queue로 이동했습니다.');
       setReviewSessionStatus('Reviewer Action Queue로 이동했습니다.', 'success');
+    }
+
+    function focusLeadReviewSession() {
+      const session = document.getElementById('leadReviewSession');
+      if (!session) {
+        setReviewSessionStatus('Lead Review Session을 찾지 못했습니다.', 'error');
+        recordSessionActivity('shortcutUnavailable', 'Lead Review Session을 찾지 못했습니다.');
+        return;
+      }
+      session.focus({ preventScroll: true });
+      session.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      recordSessionActivity('focusSession', 'Lead Review Session으로 이동했습니다.');
+      setReviewSessionStatus('Lead Review Session으로 이동했습니다.', 'success');
     }
 
     function getReviewNoteTextElement(source) {
@@ -1567,6 +1686,8 @@ export function getLeadsPage() {
 
         if (!data.leads || data.leads.length === 0) {
           summaryContainer.innerHTML = '';
+          const nextReviewStrip = document.getElementById('nextReviewStrip');
+          if (nextReviewStrip) nextReviewStrip.innerHTML = renderNextReviewStrip([]);
           container.innerHTML = '<p style="color:#aaa;">아직 생성된 리드가 없습니다. 메인 페이지에서 보고서를 먼저 생성하세요.</p>';
           cachedLeads = [];
           cacheReviewerActionQueue(data.reviewerActionQueue);
@@ -1607,7 +1728,9 @@ export function getLeadsPage() {
     function renderCurrentLeads() {
       const container = document.getElementById('leadsList');
       const summaryContainer = document.getElementById('leadsSummary');
+      const nextReviewStrip = document.getElementById('nextReviewStrip');
       const filteredLeads = getFilteredLeads();
+      if (nextReviewStrip) nextReviewStrip.innerHTML = renderNextReviewStrip(filteredLeads);
       summaryContainer.innerHTML = renderLeadsSummary(filteredLeads, cachedLeads.length) + renderLeadReviewSession(filteredLeads) + renderReviewerActionQueue(filteredLeads) + renderReviewGateSummary(filteredLeads) + renderReviewEvidenceSlices(filteredLeads);
       if (currentView === 'kanban') renderKanban(filteredLeads);
 
@@ -1898,6 +2021,10 @@ export function getLeadsPage() {
       const leadId = button.dataset.leadId || '';
       if (action === 'focus-next') {
         scrollToNextReviewLead(leadId);
+        return;
+      }
+      if (action === 'focus-session') {
+        focusLeadReviewSession();
         return;
       }
       if (action === 'review-status') {

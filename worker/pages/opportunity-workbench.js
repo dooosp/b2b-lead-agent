@@ -614,6 +614,72 @@ function normalizeReviewerNoteSuggestion(intelligence = {}) {
   };
 }
 
+function truncateSummaryText(value, limit = 120) {
+  const text = cleanText(value);
+  if (text.length <= limit) return text;
+  return `${text.slice(0, Math.max(0, limit - 3)).trim()}...`;
+}
+
+function findReviewNoteSegment(text, prefixes) {
+  const raw = String(text || '');
+  const lines = raw.split(/\n+/).map((line) => cleanText(line)).filter(Boolean);
+  const fromLines = lines.find((line) => prefixes.some((prefix) => line.toLowerCase().startsWith(prefix.toLowerCase())));
+  if (fromLines) return fromLines;
+
+  const normalized = cleanText(raw);
+  const markers = [
+    'Decision:',
+    'Follow-up check:',
+    'Lead:',
+    'Why:',
+    'Reason:',
+    'Evidence status:',
+    'Evidence:',
+    'Review basis:',
+    'Missing/risk check:',
+    'Open items:',
+    'Missing prompts:',
+    'Missing:',
+    'Current state:',
+    'Next:',
+  ];
+  const lower = normalized.toLowerCase();
+  for (const prefix of prefixes) {
+    const start = lower.indexOf(prefix.toLowerCase());
+    if (start === -1) continue;
+    const afterPrefix = start + prefix.length;
+    const next = markers
+      .map((marker) => lower.indexOf(marker.toLowerCase(), afterPrefix))
+      .filter((index) => index > start)
+      .sort((a, b) => a - b)[0];
+    return normalized.slice(start, next || normalized.length).trim();
+  }
+  return '';
+}
+
+function renderReviewerNoteSummary(note = {}) {
+  const text = note.text || '';
+  const decision = findReviewNoteSegment(text, ['Decision:', 'Follow-up check:']) || note.label || note.state || '검토 필요 노트';
+  const lead = findReviewNoteSegment(text, ['Lead:']);
+  const reason = findReviewNoteSegment(text, ['Reason:', 'Review basis:']);
+  const evidence = findReviewNoteSegment(text, ['Evidence status:', 'Evidence:']);
+  const risk = findReviewNoteSegment(text, ['Missing/risk check:', 'Open items:', 'Missing:', 'Missing prompts:']);
+  const items = [decision, lead, reason, evidence || risk]
+    .map((item) => truncateSummaryText(item, 96))
+    .filter(Boolean)
+    .slice(0, 4);
+  const itemHtml = items.length > 0
+    ? items.map((item) => `<span>${escapeHtml(item)}</span>`).join('')
+    : '<span>리뷰 노트 내용을 확인하세요.</span>';
+
+  return `
+              <div class="opportunity-workbench-note-summary" aria-label="리뷰 노트 요약">
+                <strong>리뷰 노트 요약</strong>
+                <div class="opportunity-workbench-note-summary-items">${itemHtml}</div>
+                <p>전체 노트는 복사 전용이며 저장하거나 전송하지 않습니다.</p>
+              </div>`;
+}
+
 function renderReviewerNoteTemplates(intelligence = {}) {
   const current = normalizeReviewerNoteSuggestion(intelligence);
   const templates = Array.isArray(intelligence.reviewerNoteTemplates?.templates)
@@ -623,6 +689,7 @@ function renderReviewerNoteTemplates(intelligence = {}) {
     ? templates.map((template) => `
               <details class="opportunity-workbench-note-variant"${template.state === current.state ? ' open' : ''}>
                 <summary>${escapeHtml(template.label || template.state)}</summary>
+                ${renderReviewerNoteSummary(template)}
                 <pre class="opportunity-workbench-note-copy-target" data-workbench-note-text tabindex="0" aria-label="${escapeHtml(template.label || template.state)} 텍스트">${escapeHtml(template.text)}</pre>
                 <div class="opportunity-workbench-note-copy-actions">
                   <button class="btn btn-secondary" type="button" data-workbench-note-copy-action="copy-variant-note" aria-label="${escapeHtml(template.label || template.state)} 복사">복사</button>
@@ -639,6 +706,7 @@ function renderReviewerNoteTemplates(intelligence = {}) {
                   <button class="btn btn-secondary" type="button" data-workbench-note-copy-action="copy-current-note" aria-label="현재 Workbench 리뷰 노트 복사">현재 노트 복사</button>
                 </div>
               </div>
+              ${renderReviewerNoteSummary(current)}
               <pre class="opportunity-workbench-note-copy-target" data-workbench-note-text tabindex="0" aria-label="현재 Workbench 리뷰 노트 텍스트">${escapeHtml(current.text)}</pre>
               <p class="opportunity-workbench-caveat">read-only reviewer note suggestion; it does not save or send notes.</p>
               <div class="opportunity-workbench-note-variants">
@@ -870,6 +938,11 @@ export function getOpportunityWorkbenchStyles() {
     .opportunity-workbench-note-copy-head { align-items:flex-start; display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between; }
     .opportunity-workbench-note-copy-actions { align-items:center; display:flex; flex-wrap:wrap; gap:6px; }
     .opportunity-workbench-note-copy-actions button { font-size:11px; padding:5px 8px; }
+    .opportunity-workbench-note-summary { background:#101925; border:1px solid #223447; border-radius:8px; display:grid; gap:7px; padding:9px; }
+    .opportunity-workbench-note-summary strong { color:#f4f7fb; font-size:12px; line-height:1.4; }
+    .opportunity-workbench-note-summary-items { display:flex; flex-wrap:wrap; gap:6px; }
+    .opportunity-workbench-note-summary-items span { background:#162338; border:1px solid #2e4157; border-radius:6px; color:#cbd8e6; font-size:11px; line-height:1.4; padding:4px 7px; }
+    .opportunity-workbench-note-summary p { color:#9fb0c0; font-size:11px; line-height:1.5; margin:0; }
     .opportunity-workbench-review-note pre, .opportunity-workbench-note-variant pre { background:#0d1520; border:1px solid #223447; border-radius:6px; color:#d7e5f3; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; line-height:1.55; margin:0; overflow:auto; padding:10px; white-space:pre-wrap; word-break:break-word; }
     .opportunity-workbench-note-copy-target.is-manual-copy { outline:2px solid #8fbfe8; outline-offset:2px; }
     .opportunity-workbench-note-variants { display:grid; gap:7px; }
