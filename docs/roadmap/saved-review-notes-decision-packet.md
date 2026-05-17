@@ -1,18 +1,21 @@
 # Saved Review Notes Decision Packet
 
 This packet defines product and data boundaries for saved review notes before
-any persistence, schema, API, UI, storage, or production implementation work.
+any persistence, schema, API, storage, or production implementation work.
 
 ## 1. Document Status
 
-- Status: planning and decision packet only.
-- Implementation performed: none.
+- Status: planning packet plus the recorded Option E selection.
+- Saved notes implementation performed: none.
+- Local/test-safe copy clarification under Option E: labels, docs, and tests
+  only.
 - Schema or persistence change performed: none.
-- API or runtime behavior change performed: none.
+- API or runtime behavior change beyond wording/helper text performed: none.
 - Production action performed: none.
 
-This packet is not approval to implement saved notes. It records the decisions
-that must be made first.
+This packet is not approval to implement saved notes. Issue #113 selected
+Option E, so generated suggestions remain copy-only helper text unless a
+separate future decision and implementation says otherwise.
 
 ## 2. Current Baseline
 
@@ -26,6 +29,8 @@ that must be made first.
 - PR #110 synced source-of-truth docs after PR #109.
 - Issue #111, Manager / Reviewer Summary v0 UX Findings Intake, is closed as
   completed.
+- PR #112 added this decision packet, and Issue #113 recorded
+  `HUMAN_SAVED_NOTES_DECISION: OPTION_E`.
 - Reviewer note suggestions currently exist as deterministic, copy-friendly
   helper text. They are not saved, auto-sent, or persisted.
 - Existing manual note surfaces are separate from generated suggestions. The
@@ -55,7 +60,7 @@ display helpers.
 | B. Save an edited note derived from a generated suggestion, marked human-edited | Gives reviewers a fast starting point while requiring human adoption. | Authorship may be ambiguous if the edit is small. | Human owns the final text, but provenance must record generated origin. | Retain edited text with generated-source provenance and privacy warnings. | Likely needs provenance fields or a separate note record before implementation. | Tests for human-edited labeling, provenance rendering, and no unchanged auto-save. | Yes. Define when generated text becomes human-authored. |
 | C. Save a generated suggestion snapshot, clearly marked generated and not human-authored | Preserves exact helper text visible at decision time. | Highest authorship and audit risk; generated text may look like a human rationale. | System owns the generated snapshot; reviewer ownership is not implied. | Decide whether generated text should be retained at all and whether it needs redaction. | Likely needs new schema/API fields for generated provenance and template version. | Tests for generated labels, read-only display, retention boundary, and no human-authored claims. | Yes. This should not be default without explicit approval. |
 | D. Save review decision rationale separately from note text | Captures why a review status changed without making helper copy canonical. | May duplicate or conflict with manual notes if boundaries are unclear. | Reviewer owns rationale if entered by a human. | Rationale may include sensitive or PII-like details and needs policy. | Likely requires a separate data contract from generic note text. | Tests for status/rationale separation and stale-status behavior. | Yes. Define whether rationale is required, optional, or forbidden. |
-| E. Do not persist notes yet; keep copy-only suggestions | Lowest data risk and preserves current shipped behavior. | Reviewers may lose context between sessions. | No new saved data owner. | No new retention burden for generated suggestions. | No schema/API changes. | Copy-label/docs tests only if UI copy changes later. | Yes. Confirm persistence risk remains higher than product value. |
+| E. Do not persist notes yet; keep copy-only suggestions | Lowest data risk and preserves current shipped behavior. | Reviewers may lose context between sessions. | No new saved data owner. | No new retention burden for generated suggestions. | No schema/API changes. | Copy-label/docs tests only if UI copy changes later. | Selected in Issue #113. |
 
 The possible saved objects are:
 
@@ -67,6 +72,19 @@ The possible saved objects are:
 
 Any selected option must distinguish generated helper text from human-entered
 or human-adopted note text.
+
+## 4A. Selected Option E Boundary
+
+Issue #113 selected Option E. Under this selection:
+
+- Generated reviewer note suggestions are deterministic helper text.
+- Generated suggestions are copy-only.
+- Generated suggestions are not persisted as saved notes.
+- Generated suggestions are not sent automatically.
+- Generated suggestions are not human-authored notes unless a human copies,
+  edits, and uses them elsewhere.
+- Saved notes persistence remains unimplemented and requires a separate future
+  decision and implementation track.
 
 ## 5. Authorship And Provenance Model
 

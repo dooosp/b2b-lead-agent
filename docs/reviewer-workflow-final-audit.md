@@ -148,13 +148,14 @@ This packet keeps these boundaries:
 
 ## Note Persistence Correction
 
-Reviewer Notes Template suggestions are deterministic, read-only, and copy-friendly. They do not auto-save, auto-send, write D1, call an LLM, call an external provider, create CRM records, or change schema.
+Reviewer Notes Template suggestions are deterministic, read-only, and copy-friendly. Under the Issue #113 Option E selection, generated suggestions remain copy-only helper text. They do not auto-save, auto-send, write D1, call an LLM, call an external provider, create CRM records, or change schema.
 
 Do not say "all notes are non-persistent." The repo has an existing manual notes path: lead PATCH accepts `notes`, truncates operator-entered text to the allowed size, and persists it to the D1 `notes` column in normal lead updates. That manual notes field is separate from generated review note suggestions.
 
 Use this wording:
 
-- Correct: "Reviewer note suggestions are not persisted or sent."
+- Correct: "Generated reviewer note suggestions are copy-only and are not persisted or sent."
+- Correct: "Generated reviewer note suggestions are not human-authored saved notes."
 - Correct: "Session/current-page activity counts are browser-memory only."
 - Correct: "Manual operator notes can persist through the existing notes field."
 - Incorrect: "All notes are non-persistent."

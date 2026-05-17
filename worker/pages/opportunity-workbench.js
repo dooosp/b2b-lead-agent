@@ -673,10 +673,10 @@ function renderReviewerNoteSummary(note = {}) {
     : '<span>리뷰 노트 내용을 확인하세요.</span>';
 
   return `
-              <div class="opportunity-workbench-note-summary" aria-label="리뷰 노트 요약">
-                <strong>리뷰 노트 요약</strong>
+              <div class="opportunity-workbench-note-summary" aria-label="검토 메모 제안 요약">
+                <strong>검토 메모 제안 요약</strong>
                 <div class="opportunity-workbench-note-summary-items">${itemHtml}</div>
-                <p>전체 노트는 복사 전용이며 저장하거나 전송하지 않습니다.</p>
+                <p>생성된 제안은 복사 전용이며 자동 저장/전송되지 않습니다.</p>
               </div>`;
 }
 
@@ -698,8 +698,8 @@ function renderReviewerNoteTemplates(intelligence = {}) {
     : '<p class="opportunity-workbench-caveat">No alternate reviewer note templates are available.</p>';
 
   return `
-            <div class="opportunity-workbench-review-note" aria-label="리뷰 노트 제안">
-              <span class="panel-label">리뷰 노트 제안</span>
+            <div class="opportunity-workbench-review-note" aria-label="생성된 검토 메모 제안">
+              <span class="panel-label">생성된 검토 메모 제안</span>
               <div class="opportunity-workbench-note-copy-head">
                 <strong>${escapeHtml(current.label)}</strong>
                 <div class="opportunity-workbench-note-copy-actions">
@@ -708,7 +708,7 @@ function renderReviewerNoteTemplates(intelligence = {}) {
               </div>
               ${renderReviewerNoteSummary(current)}
               <pre class="opportunity-workbench-note-copy-target" data-workbench-note-text tabindex="0" aria-label="현재 Workbench 리뷰 노트 텍스트">${escapeHtml(current.text)}</pre>
-              <p class="opportunity-workbench-caveat">read-only reviewer note suggestion; it does not save or send notes.</p>
+              <p class="opportunity-workbench-caveat">사람이 저장한 메모가 아닙니다. 복사 후 사람이 직접 검토해 사용하세요.</p>
               <div class="opportunity-workbench-note-variants">
                 ${variants}
               </div>

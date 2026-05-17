@@ -44,7 +44,7 @@ test('opportunity workbench renders review status, verification, evidence, data 
   assert.match(html, /id="opportunity-workbench"[^>]+tabindex="-1"/);
   assert.match(html, /Opportunity Workbench/);
   assert.match(html, /Lead Action Intelligence/);
-  assert.match(html, /리뷰 노트 제안/);
+  assert.match(html, /생성된 검토 메모 제안/);
   assert.match(html, /데이터 공백 확인 노트/);
   assert.match(html, /승인 노트/);
   assert.match(html, /검토 필요 노트/);
@@ -86,8 +86,11 @@ test('opportunity workbench exposes copy controls for deterministic reviewer not
   assert.match(html, /data-workbench-note-copy-action="copy-variant-note"/);
   assert.match(html, /data-workbench-note-text/);
   assert.match(html, /opportunity-workbench-note-summary/);
-  assert.match(html, /리뷰 노트 요약/);
-  assert.match(html, /전체 노트는 복사 전용이며 저장하거나 전송하지 않습니다/);
+  assert.match(html, /검토 메모 제안 요약/);
+  assert.match(html, /생성된 제안은 복사 전용이며 자동 저장\/전송되지 않습니다/);
+  assert.match(html, /생성된 검토 메모 제안/);
+  assert.match(html, /사람이 저장한 메모가 아닙니다/);
+  assert.match(html, /복사 후 사람이 직접 검토해 사용하세요/);
   assert.match(html, /class="opportunity-workbench-note-copy-target"/);
   assert.match(html, /aria-label="현재 Workbench 리뷰 노트 복사"/);
   assert.match(html, /aria-label="현재 Workbench 리뷰 노트 텍스트"/);
@@ -503,7 +506,7 @@ test('lead detail page embeds the opportunity workbench as the first review surf
   assert.match(html, /Opportunity Workbench/);
   assert.match(html, /opportunityWorkbenchHtml/);
   assert.match(html, /opportunity-workbench-grid/);
-  assert.match(html, /리뷰 노트 제안/);
+  assert.match(html, /생성된 검토 메모 제안/);
   assert.match(html, /async function refreshDetailPage/);
   assert.match(html, /headers: authHeaders\(\)/);
   assert.match(html, /if \(field === 'status' \|\| field === 'reviewStatus'\)/);
