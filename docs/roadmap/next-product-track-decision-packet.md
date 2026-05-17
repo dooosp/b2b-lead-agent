@@ -9,13 +9,16 @@ production, or make a human business decision.
 
 - Repository: `dooosp/b2b-lead-agent`
 - Default branch: `master`
-- Current source-of-truth `origin/master`: `e4c6c409e3274f5d09d3b7f2e8a8c5ac3fc0370e` (PR #109)
+- Current source-of-truth `origin/master`: `dfde1b0a45bdd7930950cc5057f17c420ed58a43` (PR #110)
 - Standing approval policy: `docs/standing-approval-policy.md`
 - Reviewer workflow baseline: `docs/reviewer-workflow-final-audit.md`
 - Human UX intake baseline: `docs/reviewer-workflow-human-ux-review.md`
 - Manager / Reviewer Summary v0: shipped by PR #109 as the `/leads`
   `리뷰 요약` panel from existing filtered leads, Reviewer Action Queue / Lead
   Review Session metadata, and LeadBrief fields only.
+- PR #110: synced source-of-truth docs after PR #109.
+- Issue #111: Manager / Reviewer Summary v0 UX Findings Intake is closed as
+  completed.
 - Issue #100: closed as completed for the recorded local/test-safe reviewer
   workflow UX findings.
 - Issue #34: closed as completed after GitHub-only closeout; future production
@@ -43,8 +46,8 @@ Use these criteria before selecting the next product track:
 
 | Track | Product value | Ready for implementation? | Primary risks | Safe first slice |
 | --- | --- | --- | --- | --- |
-| Manager/reviewer summary | High. Turns the shipped reviewer workflow into a quick queue-health and handoff view. | Shipped through PR #109 for v0. | Could drift into manager dashboard, assignments, forecasting, or new API/storage if v1 scope is not bounded. | Collect human UX findings for the shipped `/leads` `리뷰 요약` panel before v1 changes; no schema, persistence, production query, CRM ownership, or outreach. |
-| Saved review notes | High, but changes the product contract around what is saved and by whom. | Not yet for persistence. | Requires data model, retention, privacy, edit history, conflict, and UX decisions. Generated note suggestions must remain distinct from manual operator notes. | Create a persistence design packet first, or add only clearer docs/copy around existing manual notes and non-persisted suggestions. |
+| Manager/reviewer summary | High. Turns the shipped reviewer workflow into a quick queue-health and handoff view. | Shipped through PR #109 for v0; Issue #111 completed the v0 UX intake. | Could drift into manager dashboard, assignments, forecasting, or new API/storage if v1 scope is not bounded. | Do not expand to summary v1 until a new scoped UX finding or product decision is recorded. |
+| Saved review notes | High, but changes the product contract around what is saved and by whom. | Not yet for persistence. | Requires data model, retention, privacy, edit history, conflict, and UX decisions. Generated note suggestions must remain distinct from manual operator notes. | Use `docs/roadmap/saved-review-notes-decision-packet.md` for human selection before any schema/API/storage/UI implementation. |
 | Outcome learning | Medium to high long term. Could improve prioritization after real review outcomes exist. | Not yet. | Needs outcome definitions, labels, ownership, data source, and guardrails against CRM-like lifecycle expansion. | Document outcome taxonomy candidates using local fixtures only; do not implement learning or feedback loops. |
 | Production observation | Operational confidence, not a product feature. | No, unless separately approved. | Requires production owners, exact commands, evidence policy, redaction, rollback, and explicit approval. | Keep Issue #34 closed; prepare only a new approval packet if a human requests production proof. |
 
@@ -72,14 +75,17 @@ panel showing current filtered view count, review-status distribution,
 Reviewer Action Queue lane counts, top blockers, next review focus, readiness
 summary, and advisory boundary text.
 
-The next safe step is a Manager / Reviewer Summary v0 UX findings intake. Do
-not implement saved notes, persistence, manager-dashboard expansion, outcome
-learning, production observation, or summary v1 behavior from this packet alone.
+Issue #111 completed the Manager / Reviewer Summary v0 UX findings intake. The
+next safe product-planning step is the Saved Review Notes Decision Packet at
+`docs/roadmap/saved-review-notes-decision-packet.md`. Do not implement saved
+notes, persistence, manager-dashboard expansion, outcome learning, production
+observation, or summary v1 behavior from this packet alone.
 
 ## Tracks Not Ready Without Separate Decision
 
 Saved generated reviewer-note persistence is not ready without a product/data
-decision. A future packet should answer:
+decision. The Saved Review Notes Decision Packet now records the questions that
+must be answered before implementation:
 
 - What exactly is persisted: generated suggestion, edited reviewer note,
   manual note, or review decision rationale?
