@@ -10,6 +10,33 @@ Audited repo baseline for this snapshot:
 - Production action performed for this roadmap synthesis: none
 - Current non-production readiness refresh packet: `docs/exec-plans/production-proof-readiness-packet.md`
 
+Post-PR106 operating update:
+
+- Current source-of-truth `origin/master` for the standing-approval-policy
+  update: `512b537797fc67d974acf1f1e690bd638de4919b` (PR #106).
+- Issue #34 is closed as completed after a GitHub-only closeout approval and
+  closeout record.
+- Standing approval policy: `docs/standing-approval-policy.md`.
+- The standing policy reduces unnecessary `HOLD` states for routine repo,
+  GitHub, documentation, local validation, fake-D1, loopback-only, and
+  non-production work.
+- The standing policy does not authorize production deploy, Wrangler,
+  production D1 access, production Worker endpoint calls, production
+  logs/secrets, production smoke tests, row reads/writes, row roundtrip, or new
+  production observation claims.
+
+## Standing Approval Policy
+
+`docs/standing-approval-policy.md` is the default approval boundary for routine
+future work. Use it to continue local/non-production work after preflight when
+the task does not require production resources, secrets, destructive git,
+unrelated dirty-file cleanup, or unresolved production-risk closure.
+
+Production-proof work remains separate. Any production approval must still name
+the exact repo, branch, SHA, command list, gate matrix, owners, evidence path,
+rollback path, stop conditions, redaction rules, execution window, and automatic
+continuation decision.
+
 ## Issue #34 Learnings
 
 Issue #34 established the approval pattern for production proof work:

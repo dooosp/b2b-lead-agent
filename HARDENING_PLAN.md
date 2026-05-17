@@ -261,6 +261,11 @@
 6. Mark old plans and status files as archival context instead of deleting them.
 7. Refresh these root source-of-truth docs whenever merged reality changes.
 8. Do not claim production D1 trust/review-column migration until a post-deploy production write has been observed.
+9. Use `docs/standing-approval-policy.md` to avoid unnecessary `HOLD` states
+   for routine repo/GitHub/local-only work; keep production deploy, Wrangler,
+   production D1, production endpoints, production logs/secrets, smoke tests,
+   row roundtrips, and production observation claims behind separate explicit
+   human approval.
 
 ## Archival Guidance
 

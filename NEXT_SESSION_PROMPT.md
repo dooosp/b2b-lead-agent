@@ -97,6 +97,10 @@
 
 ## Production boundary
 
+- Standing approval policy: `docs/standing-approval-policy.md`. Routine repo,
+  GitHub, documentation, local validation, fake-D1, loopback-only, and
+  non-production work may proceed after repo preflight when the policy's default
+  approved conditions are met.
 - Issue #34 production proof work is closed out. Do not continue production proof work unless a new human-approved production prompt explicitly opens it.
 - CI, docs, source inspection, local fake-D1 tests, and release evidence packets are not production D1 evidence.
 - Production deploy, Wrangler deploy, Wrangler D1 execute, production Worker endpoint calls, production DB access, and production writes remain separate human-approved operations.

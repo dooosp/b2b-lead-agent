@@ -86,6 +86,10 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 
 ## Trust Boundary Rules
 
+- Routine repo, GitHub, documentation, local validation, and non-production
+  work follows `docs/standing-approval-policy.md`. That policy reduces
+  unnecessary `HOLD` states only for verified local/non-production work and does
+  not authorize production execution.
 - `/api/internal/*` must use `INTERNAL_API_TOKEN` when configured, with `API_TOKEN` compatibility fallback only; `TRIGGER_PASSWORD` is not internal API auth.
 - Latest-published readiness lookup failures must fail closed with HTTP `503` and `error.code = "readiness_unavailable"`.
 - Managed/root runs must fail closed when the LLM is missing or fails unless explicit demo mode is enabled.
@@ -115,6 +119,10 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 ## Working Model
 
 - Treat `master` plus merged PR history as the only shipped source of truth.
+- Use `docs/standing-approval-policy.md` as the default approval boundary for
+  routine repo/GitHub/local-only work. Production deploy, Wrangler, production
+  D1, production endpoint, production logs/secrets, production smoke tests, and
+  production observation claims still require separate explicit human approval.
 - Keep integration and control in one thread rooted on updated `master`.
 - Do implementation in owned worktrees with narrow scope and explicit ownership.
 - When multiple lanes exist, ship through one integration artifact branch or PR on top of current `master`; raw task branches are not automatically merge-safe once `master` has moved.
