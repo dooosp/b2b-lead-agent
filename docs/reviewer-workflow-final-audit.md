@@ -184,6 +184,6 @@ The following remain outside this run and outside this packet:
 
 ## Next Safe Follow-Up
 
-If validation is green, the next safe follow-up is documentation-only source-of-truth maintenance: keep `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and any roadmap docs pointed at this packet as the reviewer-workflow local/test-safe baseline.
+If validation is green, the next safe follow-up is documentation-only source-of-truth maintenance: keep `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and any roadmap docs pointed at this packet as the reviewer-workflow local/test-safe baseline. UX feedback on the PR #114 copy-only generated reviewer note suggestion wording should go to Issue #115, Copy-only Reviewer Note Suggestions UX Findings Intake.
 
 Do not auto-continue from this packet into production proof, saved notes persistence, manager dashboards, outcome learning, schema migration, or new product behavior.
