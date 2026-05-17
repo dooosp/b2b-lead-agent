@@ -21,8 +21,8 @@ separate future decision and implementation says otherwise.
 
 - Repository: `dooosp/b2b-lead-agent`
 - Default branch: `master`
-- Current source-of-truth `origin/master` at packet creation:
-  `dfde1b0a45bdd7930950cc5057f17c420ed58a43` (PR #110)
+- Current source-of-truth `origin/master` after Option E copy clarification:
+  `c928f910f307a783f934842d777df666b9267a86` (PR #114)
 - PR #109 shipped Manager / Reviewer Summary v0 as a local/test-safe `/leads`
   `리뷰 요약` panel from existing filtered leads, Reviewer Action Queue / Lead
   Review Session metadata, and LeadBrief fields only.
@@ -31,8 +31,12 @@ separate future decision and implementation says otherwise.
   completed.
 - PR #112 added this decision packet, and Issue #113 recorded
   `HUMAN_SAVED_NOTES_DECISION: OPTION_E`.
+- PR #114 implemented only the Option E wording clarification for generated
+  reviewer note suggestions on `/leads`, Opportunity Workbench, tests, and
+  related docs.
 - Reviewer note suggestions currently exist as deterministic, copy-friendly
-  helper text. They are not saved, auto-sent, or persisted.
+  helper text. They are copy-only, not saved, not auto-sent, not persisted, and
+  not human-authored saved notes.
 - Existing manual note surfaces are separate from generated suggestions. The
   normal lead PATCH path accepts `notes`, truncates operator-entered text to the
   allowed size, and can persist it to the existing D1 `notes` column in normal
@@ -193,17 +197,15 @@ These tracks remain out of scope until the product/data decision is recorded.
 
 ## 11. Recommended Next Step
 
-First, a human must select what can be saved.
-
-Safest defaults:
-
-- Option A if the product needs persistence soon: save only human-entered
-  manual notes.
-- Option E if persistence risk is still unclear: keep generated suggestions
-  copy-only and improve labeling or docs.
+Issue #113 selected Option E, PR #114 shipped the copy-only wording
+clarification, and Issue #115 is open for non-production UX findings on
+whether reviewers understand that generated suggestions are helper text only:
+copy-only, not saved, not sent, and not human-authored saved notes.
 
 Do not implement schema, API, persistence, storage, UI edit/delete behavior, or
-generated note auto-save until the selected option is recorded.
+generated note auto-save from the UX intake. Options A, B, C, and D remain
+unselected and require a separate future product/data decision before any
+persistence work.
 
 ## 12. Validation Expectations
 

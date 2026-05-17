@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-05-17.
-> Audited against first-parent `master` history through `dfde1b0a45bdd7930950cc5057f17c420ed58a43` (`Merge pull request #110 from dooosp/docs/post-pr109-source-of-truth-sync`) and current GitHub PR state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, Issue #100 closeout, Issue #111 closeout, and Issue #34 GitHub-only closeout.
+> Audited against first-parent `master` history through `c928f910f307a783f934842d777df666b9267a86` (`Merge pull request #114 from dooosp/fix/copy-only-review-note-boundary`) and current GitHub PR state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, and Issue #34 GitHub-only closeout.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -28,6 +28,8 @@
 | 18 | 2026-05-15 to 2026-05-17 | #103-#107 | `db2a69a` | Source-of-truth, production-proof planning, Issue #34 closeout, and standing approval policy | Synced docs after Issue #100 closeout, added non-production production-proof readiness/planning/precheck records, closed Issue #34 through GitHub-only closeout, and added `docs/standing-approval-policy.md` for routine repo/GitHub/docs/local-only work without authorizing production action |
 | 19 | 2026-05-17 | #109 | `e4c6c40` | Manager / Reviewer Summary v0 | Added the `/leads` `리뷰 요약` panel from existing filtered leads, Reviewer Action Queue / Lead Review Session metadata, and LeadBrief fields only; no schema, persistence, production access/query, CRM ownership, outreach, analytics, LLM, or endpoint expansion |
 | 20 | 2026-05-17 | #110 | `dfde1b0` | Post-PR109 source-of-truth sync | Synced source-of-truth docs after Manager / Reviewer Summary v0 without production action |
+| 21 | 2026-05-17 | #112 | `f1ac45c` | Saved Review Notes Decision Packet | Added a docs-only product/data decision packet before any saved-notes implementation, schema/API/runtime change, D1 persistence, production action, CRM/outreach, analytics, LLM, or outcome-learning scope |
+| 22 | 2026-05-17 | #114 | `c928f91` | Copy-only reviewer note suggestion clarification | Implemented the Issue #113 Option E wording boundary for generated reviewer note suggestions as helper text that is copy-only, not saved, not sent, and not human-authored saved notes; no saved-notes persistence, schema, API, D1, production, CRM, outreach, analytics, or LLM behavior was added |
 
 ## Wave Summary
 
@@ -161,7 +163,9 @@
 - Issue #100 was closed as completed after final closeout confirmed all four recorded findings were addressed and no new open UX finding remained.
 - PR #59 recut the useful old PR #6 idea as deterministic role-specific review prep using existing LeadBrief/enrichment fields only. It does not approve outreach, change schema/API/storage, or expand CRM ownership.
 - Stale PRs #1-#9 were audited after PR #51, received disposition comments, and were closed without merge or branch deletion. Their useful ideas remain concept inventory to recut from current `master`.
-- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, Issue #100 closeout, Issue #111 closeout, Issue #34 GitHub-only closeout, or the stale PR cleanup.
+- PR #112 added the Saved Review Notes Decision Packet. Issue #113 selected `OPTION_E` and is closed as completed.
+- PR #114 implemented only local/test-safe copy/docs/test clarification for Option E: generated reviewer note suggestions are generated helper text, copy-only, not saved, not sent, and not human-authored saved notes. Saved notes persistence remains unimplemented.
+- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #34 GitHub-only closeout, or the stale PR cleanup.
 
 ## Findings Closed On `master`
 
@@ -263,13 +267,23 @@
   queries, CRM ownership, outreach, analytics, LLM calls, or endpoint
   expansion.
 - PR #110 synced source-of-truth docs after PR #109 without production action.
+- PR #112 added `docs/roadmap/saved-review-notes-decision-packet.md` before
+  any saved-notes implementation.
+- Issue #113 selected `OPTION_E` and is closed as completed.
+- PR #114 shipped the Option E copy-only generated reviewer note suggestion
+  clarification for `/leads`, Opportunity Workbench, tests, and related docs.
+  Generated suggestions remain helper text only: copy-only, not saved, not sent,
+  and not human-authored saved notes.
+- Saved notes persistence remains unimplemented. Schema/API/D1/persistence,
+  production, CRM, outreach, analytics, LLM, outcome learning, and manager
+  dashboard expansion remain separately scoped.
 - Issue #111 is closed as completed for the Manager / Reviewer Summary v0 UX
   Findings Intake.
 - `docs/roadmap/next-product-track-decision-packet.md` remains the
   post-PR107 decision packet that explains why manager/reviewer summary v0 was
-  selected before PR #109. After PR #110 and Issue #111, use
+  selected before PR #109. After PR #114 and Issue #113, use
   `docs/roadmap/saved-review-notes-decision-packet.md` for the next saved-notes
-  product/data decision before any persistence or v1 expansion.
+  product/data boundary before any persistence or v1 expansion.
 
 ## Remaining Open Items
 
@@ -285,8 +299,8 @@
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
-  - Recommended next non-production goal: have a human choose among the saved review notes options in `docs/roadmap/saved-review-notes-decision-packet.md`, with Option A (human-entered manual notes only) or Option E (keep generated suggestions copy-only) as the safest defaults.
-  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, the Human UX Review Packet, Issue #100 closeout, the compact `다음 리뷰` strip, reviewer-note summaries, roadmap/current-train source-of-truth sync, production-proof planning records, Issue #34 closeout, standing approval policy, Manager / Reviewer Summary v0, PR #110 source-of-truth sync, Issue #111 UX intake closeout, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay local/test/CI oriented unless a separate human-approved production prompt opens operational work.
+  - Recommended next non-production goal: collect UX findings for the shipped copy-only generated reviewer note suggestion wording before any further saved-notes work.
+  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, the Human UX Review Packet, Issue #100 closeout, the compact `다음 리뷰` strip, reviewer-note summaries, roadmap/current-train source-of-truth sync, production-proof planning records, Issue #34 closeout, standing approval policy, Manager / Reviewer Summary v0, PR #110 source-of-truth sync, Issue #111 UX intake closeout, the Saved Review Notes Decision Packet, Issue #113 Option E completion, PR #114 copy-only clarification, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay local/test/CI oriented unless a separate human-approved production prompt opens operational work.
   - Keep production proof, platform migration, storage migration, and production observation work behind separate approval gates.
 
 ## Current Operating Sequence
