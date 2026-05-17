@@ -351,6 +351,27 @@ test('lead list page exposes lead review session progress and quick actions', ()
   assert.match(listHtml, /검토 상태를 저장하지 못했습니다/);
 });
 
+test('lead list page exposes compact manager reviewer summary boundaries', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /function buildManagerReviewerSummary\(leads\)/);
+  assert.match(listHtml, /function renderManagerReviewerSummary\(leads\)/);
+  assert.match(listHtml, /id="managerReviewerSummary"/);
+  assert.match(listHtml, /aria-label="리뷰 요약"/);
+  assert.match(listHtml, /리뷰 요약/);
+  assert.match(listHtml, /현재 필터 기준/);
+  assert.match(listHtml, /큐 상태/);
+  assert.match(listHtml, /주요 병목/);
+  assert.match(listHtml, /다음 리뷰 포커스/);
+  assert.match(listHtml, /주의: 이 요약은 리뷰 보조용이며 CRM 할당\/아웃리치 승인이 아닙니다\./);
+  assert.match(listHtml, /프로덕션 관측 근거가 아닙니다/);
+  assert.match(listHtml, /getSessionState\(leads\)/);
+  assert.match(listHtml, /getLeadQueueItem\(lead\)/);
+  assert.match(listHtml, /renderManagerReviewerSummary\(filteredLeads\)/);
+  assert.doesNotMatch(listHtml, /forecast/i);
+  assert.doesNotMatch(listHtml, /managerDashboard/);
+});
+
 test('lead list page exposes reviewer productivity toolkit without keyboard review mutations', () => {
   const listHtml = getLeadsPage();
 

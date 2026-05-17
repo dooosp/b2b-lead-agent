@@ -199,6 +199,15 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '다음 검토 리드: Local Factory Automation',
     '승인 / 검토 필요',
     '영업 신규',
+    '리뷰 요약',
+    '현재 필터 기준',
+    '큐 상태',
+    '주요 병목',
+    '다음 리뷰 포커스',
+    '승인 1건 / 검토 필요 1건 / 대기 0건',
+    '준비 1건 / 보강 필요 1건',
+    '주의: 이 요약은 리뷰 보조용이며 CRM 할당/아웃리치 승인이 아닙니다.',
+    '프로덕션 관측 근거가 아닙니다',
     '목록 게이트 요약',
     '게이트 통과 1건',
     '보강 필요 1건',
@@ -241,6 +250,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     },
     regions: {
       nextReviewStrip: { label: '다음 리뷰' },
+      managerReviewerSummary: { label: '리뷰 요약' },
       reviewerActionQueue: { label: 'Reviewer Action Queue', focusable: true },
       leadReviewSession: { label: 'Lead Review Session', focusable: true },
       productivity: { label: 'Reviewer Productivity Toolkit' },
@@ -294,17 +304,19 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '#nextReviewStrip',
     '.review-session-panel',
     '#reviewProductivityToolkit',
+    '#managerReviewerSummary',
     '#reviewerActionQueue',
     '#leadsList .lead-card',
   ]);
   await page.setViewportSize({ width: 390, height: 844 });
-  await assertRenderedText(page, ['Reviewer Productivity Toolkit', 'Lead Review Session', 'Reviewer Action Queue']);
+  await assertRenderedText(page, ['Reviewer Productivity Toolkit', 'Lead Review Session', 'Reviewer Action Queue', '리뷰 요약']);
   await assertNoHorizontalOverflow(page, [
     'main.container',
     '#reviewQueueFilters',
     '#nextReviewStrip',
     '.review-session-panel',
     '#reviewProductivityToolkit',
+    '#managerReviewerSummary',
     '#reviewerActionQueue',
     '#leadsList .lead-card',
     '.review-note-suggestion',
@@ -380,7 +392,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
 
   await page.locator('[data-filter-key="gateStatus"]').selectOption('ready');
   assert.equal(await page.locator('#leadsList .lead-card').count(), 1);
-  await assertRenderedText(page, ['Local Factory Automation', '목록 게이트 통과', 'Prepare reviewed follow-up', '전체 2건 중 표시', '게이트 통과 1건', '보강 필요 0건']);
+  await assertRenderedText(page, ['Local Factory Automation', '목록 게이트 통과', 'Prepare reviewed follow-up', '전체 2건 중 표시', '게이트 통과 1건', '보강 필요 0건', '승인 1건 / 검토 필요 0건 / 대기 0건', '준비 1건 / 보강 필요 0건']);
   assert.equal(await page.getByRole('link', { name: 'Local Data Center Cooling' }).count(), 0);
 
   await page.getByRole('button', { name: '초기화' }).click();
@@ -735,6 +747,7 @@ async function captureListReviewerSemanticSnapshot(page) {
       },
       regions: {
         nextReviewStrip: semanticRegion('#nextReviewStrip'),
+        managerReviewerSummary: semanticRegion('#managerReviewerSummary'),
         reviewerActionQueue: semanticRegion('#reviewerActionQueue'),
         leadReviewSession: semanticRegion('.review-session-panel'),
         productivity: semanticRegion('#reviewProductivityToolkit'),

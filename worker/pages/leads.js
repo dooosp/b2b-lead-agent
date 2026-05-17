@@ -185,6 +185,7 @@ export function getLeadsPage() {
     .review-slice-head span { color:#8fa4b8; font-size:11px; line-height:1.5; }
     .review-slice-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
     .review-gate-summary .review-slice-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
+    .manager-reviewer-summary .review-slice-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
     .review-slice { border:1px solid #223447; border-radius:8px; background:#101925; min-width:0; padding:10px; }
     .review-slice strong { color:#f4f7fb; display:block; font-size:13px; line-height:1.4; }
     .review-slice span { color:#9fb0c0; display:block; font-size:11px; line-height:1.5; margin-top:4px; }
@@ -234,7 +235,7 @@ export function getLeadsPage() {
       .lead-head { flex-direction:column; }
       .lead-badges { justify-content:flex-start; }
       .lead-metrics, .leads-summary { grid-template-columns:1fr; }
-      .review-slice-grid, .review-gate-summary .review-slice-grid, .reviewer-action-lanes, .review-session-grid, .review-productivity-grid { grid-template-columns:1fr; }
+      .review-slice-grid, .review-gate-summary .review-slice-grid, .manager-reviewer-summary .review-slice-grid, .reviewer-action-lanes, .review-session-grid, .review-productivity-grid { grid-template-columns:1fr; }
       .top-nav { align-items:flex-start; }
       .top-nav-links { justify-content:flex-start; width:100%; }
       .top-nav-links .btn, .top-nav-links button { flex:1 1 auto; min-width:0; }
@@ -1002,6 +1003,102 @@ export function getLeadsPage() {
       \`;
     }
 
+    function buildManagerReviewerSummary(leads) {
+      const list = Array.isArray(leads) ? leads : [];
+      const session = getSessionState(leads);
+      const queueItems = list
+        .map((lead) => ({ lead, item: getLeadQueueItem(lead) }))
+        .filter(({ item }) => item);
+      const blockers = {
+        evidenceMissing: 0,
+        dataGaps: 0,
+        riskFlags: 0,
+        lowConfidence: 0,
+      };
+      let readyForReviewOrAction = 0;
+      let needsEvidenceOrGaps = 0;
+
+      queueItems.forEach(({ lead, item }) => {
+        const riskCodes = Array.isArray(item.riskFlags)
+          ? item.riskFlags.map((flag) => String(flag && flag.code || '')).filter(Boolean)
+          : [];
+        const missingEvidence = getEvidenceItems(lead).length === 0
+          || getSources(lead).length === 0
+          || riskCodes.includes('missing_evidence')
+          || riskCodes.includes('verified_without_evidence');
+        const hasDataGaps = getDataGaps(lead).length > 0 || riskCodes.includes('data_gaps');
+        const hasRiskFlags = (Number(item.riskCount) || 0) > 0;
+        const lowConfidence = getConfidence(lead) === 'LOW' || riskCodes.includes('low_confidence');
+
+        if (missingEvidence) blockers.evidenceMissing += 1;
+        if (hasDataGaps) blockers.dataGaps += 1;
+        if (hasRiskFlags) blockers.riskFlags += 1;
+        if (lowConfidence) blockers.lowConfidence += 1;
+        if (missingEvidence || hasDataGaps) needsEvidenceOrGaps += 1;
+        if (
+          item.queueLane === 'approval_candidates'
+          && !hasRiskFlags
+          && (Number(item.missingInfoCount) || 0) === 0
+        ) {
+          readyForReviewOrAction += 1;
+        }
+      });
+
+      const nextFocus = session.nextItem && session.nextLead
+        ? [
+          session.nextItem.company || session.nextLead.company || '리드',
+          session.nextItem.queueLaneLabel || queueLaneLabels[session.nextItem.queueLane] || session.nextItem.queueLane,
+          session.nextItem.nextReviewActionLabel || 'Review lead',
+        ].filter(Boolean).join(' · ')
+        : '현재 필터 결과에 다음 리뷰 후보 없음';
+
+      return {
+        total: list.length,
+        reviewStatusCounts: session.reviewStatusCounts,
+        laneCounts: session.remainingByLane,
+        blockers,
+        readyForReviewOrAction,
+        needsEvidenceOrGaps,
+        nextFocus,
+      };
+    }
+
+    function renderManagerReviewerSummary(leads) {
+      const summary = buildManagerReviewerSummary(leads);
+      const counts = summary.reviewStatusCounts;
+      const lanes = summary.laneCounts;
+      const blockers = summary.blockers;
+
+      return \`
+        <section id="managerReviewerSummary" class="review-slice-band manager-reviewer-summary" aria-label="리뷰 요약">
+          <div class="review-slice-head">
+            <strong>리뷰 요약</strong>
+            <span>현재 필터 기준 · \${summary.total}건</span>
+          </div>
+          <div class="review-slice-grid">
+            <div class="review-slice">
+              <strong>현재 필터 \${summary.total}건</strong>
+              <span>승인 \${counts.APPROVED || 0}건 / 검토 필요 \${counts.NEEDS_REVIEW || 0}건 / 대기 \${counts.NEW || 0}건</span>
+            </div>
+            <div class="review-slice">
+              <strong>큐 상태</strong>
+              <span>승인 후보 \${lanes.approval_candidates || 0}건 · 보강 필요 \${lanes.needs_evidence || 0}건 · 리스크 확인 \${lanes.risk_review || 0}건 · 낮은 우선순위 \${lanes.low_priority || 0}건</span>
+            </div>
+            <div class="review-slice review-slice-risk">
+              <strong>주요 병목</strong>
+              <span>근거 누락 \${blockers.evidenceMissing}건 · 데이터 공백 \${blockers.dataGaps}건 · 리스크 플래그 \${blockers.riskFlags}건 · 낮은 신뢰도 \${blockers.lowConfidence}건</span>
+            </div>
+            <div class="review-slice review-slice-ready">
+              <strong>준비 \${summary.readyForReviewOrAction}건 / 보강 필요 \${summary.needsEvidenceOrGaps}건</strong>
+              <span>리뷰 또는 수동 액션 준비도</span>
+            </div>
+          </div>
+          <div class="review-slice-caveat"><strong>다음 리뷰 포커스</strong>: \${esc(summary.nextFocus)}</div>
+          <div class="review-slice-caveat">Advisory only · 주의: 이 요약은 리뷰 보조용이며 CRM 할당/아웃리치 승인이 아닙니다. 프로덕션 관측 근거가 아닙니다.</div>
+        </section>
+      \`;
+    }
+
     function getActiveReviewFilterEntries() {
       const entries = [];
       document.querySelectorAll('#reviewQueueFilters [data-filter-key]').forEach((select) => {
@@ -1731,7 +1828,7 @@ export function getLeadsPage() {
       const nextReviewStrip = document.getElementById('nextReviewStrip');
       const filteredLeads = getFilteredLeads();
       if (nextReviewStrip) nextReviewStrip.innerHTML = renderNextReviewStrip(filteredLeads);
-      summaryContainer.innerHTML = renderLeadsSummary(filteredLeads, cachedLeads.length) + renderLeadReviewSession(filteredLeads) + renderReviewerActionQueue(filteredLeads) + renderReviewGateSummary(filteredLeads) + renderReviewEvidenceSlices(filteredLeads);
+      summaryContainer.innerHTML = renderLeadsSummary(filteredLeads, cachedLeads.length) + renderManagerReviewerSummary(filteredLeads) + renderLeadReviewSession(filteredLeads) + renderReviewerActionQueue(filteredLeads) + renderReviewGateSummary(filteredLeads) + renderReviewEvidenceSlices(filteredLeads);
       if (currentView === 'kanban') renderKanban(filteredLeads);
 
       if (filteredLeads.length === 0) {
