@@ -904,10 +904,10 @@ export function getLeadsPage() {
         ? items.map((item) => \`<span>\${esc(item)}</span>\`).join('')
         : '<span>리뷰 노트 내용을 확인하세요.</span>';
       return \`
-        <div class="review-note-summary" aria-label="리뷰 노트 요약">
-          <strong>리뷰 노트 요약</strong>
+        <div class="review-note-summary" aria-label="검토 메모 제안 요약">
+          <strong>검토 메모 제안 요약</strong>
           <div class="review-note-summary-items">\${itemHtml}</div>
-          <p>전체 노트는 복사 전용이며 저장하거나 전송하지 않습니다.</p>
+          <p>생성된 제안은 복사 전용이며 자동 저장/전송되지 않습니다.</p>
         </div>
       \`;
     }
@@ -927,8 +927,8 @@ export function getLeadsPage() {
         </details>
       \`).join('');
       return \`
-        <div class="review-note-suggestion \${options.compact ? 'is-compact' : ''}" aria-label="리뷰 노트 제안">
-          <span class="block-label">리뷰 노트 제안</span>
+        <div class="review-note-suggestion \${options.compact ? 'is-compact' : ''}" aria-label="생성된 검토 메모 제안">
+          <span class="block-label">생성된 검토 메모 제안</span>
           <div class="review-note-copy-head">
             <strong>\${esc(current.label || '검토 필요 노트')}</strong>
             <div class="review-note-copy-actions">
@@ -937,7 +937,7 @@ export function getLeadsPage() {
           </div>
           \${renderReviewNoteSummary(current)}
           <pre class="review-note-copy-target" data-review-note-text tabindex="0" aria-label="현재 리뷰 노트 텍스트">\${esc(current.text || 'Review note suggestion unavailable. Confirm company, evidence, verification status, and data gaps before writing a review note.')}</pre>
-          <p class="review-note-helper">read-only reviewer note suggestion; it does not save or send notes.</p>
+          <p class="review-note-helper">사람이 저장한 메모가 아닙니다. 복사 후 사람이 직접 검토해 사용하세요.</p>
           <div class="review-note-variants" aria-label="review note variants">
             \${variants}
           </div>

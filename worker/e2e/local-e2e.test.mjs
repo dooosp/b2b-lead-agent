@@ -187,14 +187,15 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     'Local Factory Automation',
     '세션 보기',
     'Lead Review Session',
-    '리뷰 노트 제안',
-    '리뷰 노트 요약',
-    '전체 노트는 복사 전용이며 저장하거나 전송하지 않습니다',
+    '생성된 검토 메모 제안',
+    '검토 메모 제안 요약',
+    '생성된 제안은 복사 전용이며 자동 저장/전송되지 않습니다',
+    '사람이 저장한 메모가 아닙니다',
+    '복사 후 사람이 직접 검토해 사용하세요',
     '승인 노트',
     'Decision: APPROVED',
     '검토 필요 노트',
     '리스크 확인 노트',
-    'read-only reviewer note suggestion',
     '현재 큐',
     '다음 검토 리드: Local Factory Automation',
     '승인 / 검토 필요',
@@ -332,7 +333,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.deepEqual(await page.evaluate(() => window.__copiedReviewNotes), [
     await page.locator('.review-session-panel [data-review-note-text]').first().innerText(),
   ]);
-  assert.doesNotMatch((await page.evaluate(() => window.__copiedReviewNotes[0])) || '', /리뷰 노트 요약|전체 노트는 복사 전용/);
+  assert.doesNotMatch((await page.evaluate(() => window.__copiedReviewNotes[0])) || '', /검토 메모 제안 요약|생성된 제안은 복사 전용/);
   await assertRenderedText(page, ['노트 복사 1건', '마지막 작업']);
 
   await page.locator('#leadsList .lead-card').first().focus();
@@ -528,9 +529,11 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     'LEAD ACTION INTELLIGENCE',
     'Prepare reviewed follow-up',
     'Priority high / Confidence high',
-    '리뷰 노트 제안',
-    '리뷰 노트 요약',
-    '전체 노트는 복사 전용이며 저장하거나 전송하지 않습니다',
+    '생성된 검토 메모 제안',
+    '검토 메모 제안 요약',
+    '생성된 제안은 복사 전용이며 자동 저장/전송되지 않습니다',
+    '사람이 저장한 메모가 아닙니다',
+    '복사 후 사람이 직접 검토해 사용하세요',
     'Decision: APPROVED',
     '승인 노트',
     '검토 필요 노트',
@@ -595,7 +598,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     return !!status && String(status.textContent || '').includes('노트를 복사했습니다');
   });
   assert.deepEqual(await page.evaluate(() => window.__copiedReviewNotes), [visibleDetailNote]);
-  assert.doesNotMatch((await page.evaluate(() => window.__copiedReviewNotes[0])) || '', /리뷰 노트 요약|전체 노트는 복사 전용/);
+  assert.doesNotMatch((await page.evaluate(() => window.__copiedReviewNotes[0])) || '', /검토 메모 제안 요약|생성된 제안은 복사 전용/);
   await assertRenderedText(page, ['Workbench Productivity Toolkit', '노트 복사 1건', '수동 복사 0건']);
 
   await page.locator('#opportunity-workbench').focus();

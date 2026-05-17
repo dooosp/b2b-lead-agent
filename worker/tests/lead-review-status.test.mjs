@@ -305,16 +305,16 @@ test('lead list page exposes copy-friendly reviewer note suggestions near sessio
   assert.match(listHtml, /review-note-suggestion/);
   assert.match(listHtml, /function renderReviewNoteSummary\(note/);
   assert.match(listHtml, /review-note-summary/);
-  assert.match(listHtml, /리뷰 노트 요약/);
-  assert.match(listHtml, /전체 노트는 복사 전용이며 저장하거나 전송하지 않습니다/);
-  assert.match(listHtml, /리뷰 노트 제안/);
+  assert.match(listHtml, /검토 메모 제안 요약/);
+  assert.match(listHtml, /생성된 제안은 복사 전용이며 자동 저장\/전송되지 않습니다/);
+  assert.match(listHtml, /생성된 검토 메모 제안/);
+  assert.match(listHtml, /사람이 저장한 메모가 아닙니다/);
+  assert.match(listHtml, /복사 후 사람이 직접 검토해 사용하세요/);
   assert.match(listHtml, /승인 노트/);
   assert.match(listHtml, /검토 필요 노트/);
   assert.match(listHtml, /데이터 공백 확인 노트/);
   assert.match(listHtml, /리스크 확인 노트/);
-  assert.match(listHtml, /read-only reviewer note suggestion/);
   assert.match(listHtml, /renderReviewNoteSuggestion\(session\.nextLead/);
-  assert.match(listHtml, /does not save or send notes/);
 });
 
 test('lead list page exposes grouped reviewer action queue lanes', () => {
