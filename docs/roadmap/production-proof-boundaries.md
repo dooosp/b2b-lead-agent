@@ -4,16 +4,17 @@ This document records the production-proof boundary after Issue #34 and the May 
 
 Audited repo baseline for this snapshot:
 
-- Latest audited source-of-truth `origin/master`: `f157b4c51af37d840f36d3680120e7d74b526c03` (PR #103)
-- Issue #34 current state: open, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
+- Previous audited production-proof planning baseline: `f157b4c51af37d840f36d3680120e7d74b526c03` (PR #103)
+- Current source-of-truth `origin/master`: `db2a69a7b92502bec3183b94bf0d728e1312a121` (PR #107)
+- Issue #34 current state: closed as completed after GitHub-only closeout, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
 - Current non-production readiness refresh packet: `docs/exec-plans/production-proof-readiness-packet.md`
 
-Post-PR106 operating update:
+Post-PR107 operating update:
 
 - Current source-of-truth `origin/master` for the standing-approval-policy
-  update: `512b537797fc67d974acf1f1e690bd638de4919b` (PR #106).
+  update: `db2a69a7b92502bec3183b94bf0d728e1312a121` (PR #107).
 - Issue #34 is closed as completed after a GitHub-only closeout approval and
   closeout record.
 - Standing approval policy: `docs/standing-approval-policy.md`.
@@ -54,16 +55,24 @@ Accepted Issue #34 records:
 | Schema remediation result | DDL-only remediation accepted; full target `leads` schema was reported present after postcheck for the approved SHA | Did not prove row serialization, Worker runtime behavior, or product observation. |
 | Schema remediation closeout | Schema remediation complete only | Did not run new production commands or make observation claims. |
 | Runtime manifest proof | One approved raw `GET /manifest.json` returned HTTP 200 JSON redacted evidence | Did not access D1, read rows, write rows, call API routes, load browser pages, call service worker path, or prove D1-backed runtime behavior. |
+| Schema-proof-only read-only result | Existing Issue #34 record reports an approved schema metadata read for the PR #106 baseline | Does not prove production behavior, endpoint health, row persistence, row roundtrip, smoke-test success, or current `master` runtime behavior. |
 | Final no-op closeout | Schema remediation and manifest proof complete within narrow scope | Production observation claim remains forbidden; future proof needs separate approval. |
 
-Important freshness rule: Issue #34's accepted execution/proof scope was tied to SHA `12d44374a24a9958de179fae5f9311621606ad24`. The latest audited source-of-truth `master` baseline is `f157b4c51af37d840f36d3680120e7d74b526c03` after PR #94 shipped reviewer workflow roving keyboard/accessibility snapshot coverage, PR #95 added the Reviewer Workflow Final Audit & Demo Packet, PR #96 and PR #97 synced source-of-truth docs, PR #98 clarified final audit/demo rehearsal on newer heads, PR #99 added the Human UX Review Packet, PR #101/#102 closed out Issue #100's recorded local/test-safe UX findings, and PR #103 synced source-of-truth docs after Issue #100 closeout. Any new production action must refresh the actual current `origin/master` SHA, CI metadata, owners, and approval records before execution.
+Important freshness rule: Issue #34's accepted execution/proof scopes were tied
+to earlier approved SHAs, including the final read-only schema-proof baseline at
+`512b537797fc67d974acf1f1e690bd638de4919b` (PR #106). The latest audited
+source-of-truth `master` baseline is `db2a69a7b92502bec3183b94bf0d728e1312a121`
+after PR #107 added the standing approval policy. Any new production action
+must refresh the actual current `origin/master` SHA, CI metadata, owners, and
+approval records before execution. Issue #34 closeout does not authorize further
+production proof work.
 
 ## Current Proof Status
 
 | Surface | Status | Notes |
 | --- | --- | --- |
 | Local schema consistency | Proved locally by repo files and `npm run check:schema` | Local evidence only. Does not inspect production D1. |
-| Production D1 schema remediation | Accepted in Issue #34 for the prior approved SHA | Do not extend this approval to current `master` without refresh. |
+| Production D1 schema remediation and schema metadata proof | Accepted in Issue #34 for prior approved SHAs only | Do not extend these approvals to current `master` without a new explicit production approval. |
 | Static Worker runtime route | One raw `/manifest.json` proof accepted | Proves only the public manifest route response in that approved scope. |
 | D1-backed Worker routes | Unproven in production after current train | Requires separate approval for any endpoint or D1 access. |
 | Row serialization and roundtrip | Unproven in production | Requires safe real row/action and explicit production write approval. |

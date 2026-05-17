@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
-> Status: current hardening source of truth for `master` as of 2026-05-15.
-> Audited against first-parent `master` history through `747b77a657a1af626e0a50d2804baf4ce566e1e5` (`Merge pull request #102 from dooosp/fix/reviewer-workflow-next-review-summary`) and current GitHub PR state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, and PRs #101-#102.
+> Status: current hardening source of truth for `master` as of 2026-05-17.
+> Audited against first-parent `master` history through `db2a69a7b92502bec3183b94bf0d728e1312a121` (`Merge pull request #107 from dooosp/docs/standing-approval-policy-v1`) and current GitHub PR state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, Issue #100 closeout, and Issue #34 GitHub-only closeout.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -25,6 +25,7 @@
 | 15 | 2026-05-14 | #96 | `115a440` | Roadmap/current-train source-of-truth sync | Synced roadmap/current-train and production-proof boundary docs after the final audit packet without production action |
 | 16 | 2026-05-15 | #97-#99 | `0360f7c` | Source-of-truth sync, demo rehearsal clarification, and Human UX Review Packet | Synced post-PR96 docs, clarified final audit/demo rehearsal on newer heads, and added the local/test-safe Human UX Review Checklist and Feedback Intake Packet |
 | 17 | 2026-05-15 | #101-#102 | `747b77a` | Issue #100 reviewer workflow UX closeout | Addressed all four recorded local/test-safe UX findings: `/leads` heading, human review labels, compact top `다음 리뷰` strip, and short reviewer-note summaries while preserving full deterministic copy payloads |
+| 18 | 2026-05-15 to 2026-05-17 | #103-#107 | `db2a69a` | Source-of-truth, production-proof planning, Issue #34 closeout, and standing approval policy | Synced docs after Issue #100 closeout, added non-production production-proof readiness/planning/precheck records, closed Issue #34 through GitHub-only closeout, and added `docs/standing-approval-policy.md` for routine repo/GitHub/docs/local-only work without authorizing production action |
 
 ## Wave Summary
 
@@ -158,7 +159,7 @@
 - Issue #100 was closed as completed after final closeout confirmed all four recorded findings were addressed and no new open UX finding remained.
 - PR #59 recut the useful old PR #6 idea as deterministic role-specific review prep using existing LeadBrief/enrichment fields only. It does not approve outreach, change schema/API/storage, or expand CRM ownership.
 - Stale PRs #1-#9 were audited after PR #51, received disposition comments, and were closed without merge or branch deletion. Their useful ideas remain concept inventory to recut from current `master`.
-- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#99, PRs #101-#102, Issue #100 closeout, or the stale PR cleanup.
+- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#99, PRs #101-#107, Issue #100 closeout, Issue #34 GitHub-only closeout, or the stale PR cleanup.
 
 ## Findings Closed On `master`
 
@@ -233,6 +234,30 @@
   - current evidence: short note summaries above the full deterministic copy payload in Lead Review Session and Opportunity Workbench
 - Issue #100 is closed as completed for the recorded local/test-safe UX findings. Future UX feedback should use a new issue or a separately scoped record.
 
+## Post-PR102 Source-Of-Truth And Approval Boundary
+
+- PR #103 refreshed source-of-truth docs after Issue #100 closeout.
+- PR #104 added `docs/exec-plans/production-proof-readiness-packet.md` as
+  non-production readiness/planning evidence only.
+- PR #105 added `docs/exec-plans/read-only-production-proof-plan.md` as
+  planning only, not production execution approval.
+- PR #106 added
+  `docs/exec-plans/read-only-production-proof-execution-precheck.md` and
+  supported Issue #34 GitHub-only closeout records.
+- Issue #34 is closed as completed. Future production proof requires a new,
+  separate human-approved production prompt; the closeout does not authorize
+  additional production execution.
+- PR #107 added `docs/standing-approval-policy.md` as the standing boundary for
+  routine repo/GitHub/docs/local-only work. It reduces unnecessary `HOLD`
+  states only for verified non-production work and does not authorize
+  production deploy, Wrangler, production D1, production endpoints, production
+  logs/secrets, production smoke tests, row roundtrips, or production
+  observation claims.
+- `docs/roadmap/next-product-track-decision-packet.md` is the current
+  post-PR107 decision packet for choosing between manager/reviewer summary,
+  saved review notes, outcome learning, and production observation tracks
+  without implementing behavior or making a human business decision.
+
 ## Remaining Open Items
 
 - No new unresolved Wave 1 to Wave 3 runtime or worker blocker was verified during this docs refresh.
@@ -247,8 +272,8 @@
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
-  - Recommended next non-production goal: keep `docs/reviewer-workflow-final-audit.md` and `docs/reviewer-workflow-human-ux-review.md` as the completed local/test-safe reviewer workflow handoff and review-intake baseline before starting another small review-quality, local-evidence, docs, or CI-maintenance slice.
-  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, the Human UX Review Packet, Issue #100 closeout, the compact `다음 리뷰` strip, reviewer-note summaries, roadmap/current-train source-of-truth sync, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay local/test/CI oriented unless a separate human-approved production prompt opens operational work.
+  - Recommended next non-production goal: keep `docs/reviewer-workflow-final-audit.md` and `docs/reviewer-workflow-human-ux-review.md` as the completed local/test-safe reviewer workflow handoff and review-intake baseline, use `docs/roadmap/next-product-track-decision-packet.md` to pick the next product track, and start only a small review-quality, local-evidence, docs, or CI-maintenance slice.
+  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, the Human UX Review Packet, Issue #100 closeout, the compact `다음 리뷰` strip, reviewer-note summaries, roadmap/current-train source-of-truth sync, production-proof planning records, Issue #34 closeout, standing approval policy, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay local/test/CI oriented unless a separate human-approved production prompt opens operational work.
   - Keep production proof, platform migration, storage migration, and production observation work behind separate approval gates.
 
 ## Current Operating Sequence

@@ -4,13 +4,14 @@ This roadmap turns the current PR train, old branch archaeology, Issue #34 proof
 
 Current baseline:
 
-- `master` includes PRs #36-#43, PR #51's integration of #44-#49, review-quality follow-ups plus CI maintenance through PR #84, Lead Action Intelligence v1 through PR #87, Reviewer Action Queue v1.1 through PR #88, Lead Review Session v1 through PR #89, Reviewer Notes Template v1 through PR #90, Reviewer Productivity Toolkit v1 through PR #91, Lead Detail Workbench Productivity Parity v1 through PR #92, Reviewer Workflow QA & Accessibility Hardening v1 through PR #93, Reviewer Workflow Roving Keyboard & Accessibility Snapshot Gate v1 through PR #94, the Reviewer Workflow Final Audit & Demo Packet through PR #95, roadmap/current-train source-of-truth sync through PR #96 and PR #97, reviewer workflow demo rehearsal clarification through PR #98, Human UX Review Packet through PR #99, and Issue #100 reviewer workflow UX closeout through PR #101 and PR #102 at baseline `747b77a657a1af626e0a50d2804baf4ce566e1e5`.
+- `master` includes PRs #36-#43, PR #51's integration of #44-#49, review-quality follow-ups plus CI maintenance through PR #84, Lead Action Intelligence v1 through PR #87, Reviewer Action Queue v1.1 through PR #88, Lead Review Session v1 through PR #89, Reviewer Notes Template v1 through PR #90, Reviewer Productivity Toolkit v1 through PR #91, Lead Detail Workbench Productivity Parity v1 through PR #92, Reviewer Workflow QA & Accessibility Hardening v1 through PR #93, Reviewer Workflow Roving Keyboard & Accessibility Snapshot Gate v1 through PR #94, the Reviewer Workflow Final Audit & Demo Packet through PR #95, roadmap/current-train source-of-truth sync through PR #96 and PR #97, reviewer workflow demo rehearsal clarification through PR #98, Human UX Review Packet through PR #99, Issue #100 reviewer workflow UX closeout through PR #101 and PR #102, source-of-truth sync after Issue #100 closeout through PR #103, production-proof planning/precheck docs through PR #104-#106, and the standing approval policy through PR #107 at baseline `db2a69a7b92502bec3183b94bf0d728e1312a121`.
 - The canonical product unit is a LeadBrief-style lead with source, trust, confidence, assumptions, data gaps, and human `reviewStatus`.
 - Opportunity Workbench includes deterministic, advisory next-review-action reasons, a review gate, a human review checklist, reviewer note suggestions, a Solution Translation Summary, Product Context / Signal Fusion, and Stakeholder Prep guidance derived from existing product, event, buyer, evidence, enrichment, and review fields.
 - Lead Action Intelligence v1 adds deterministic reviewer guidance for next action, reason, risk flags, missing-info prompts, stakeholder angle, suggested follow-up draft, reviewer note templates, priority, and confidence from existing LeadBrief fields only. Reviewer Action Queue v1.1 turns those outputs into deterministic queue lanes, filters, sorting, compact review summaries, and note suggestions.
 - `/roleplay` can consume selected LeadBrief stakeholder context as conversation-practice guidance without approving outreach or becoming the canonical source of truth.
 - The `/leads` review queue can filter cached LeadBriefs by review status, verification status, generation mode, confidence, data-gap presence, list-level review-gate state, next action, review priority, action lane, risk flags, and missing-info presence; can summarize Reviewer Action Queue lanes, evidence/data-gap review slices, and gate-state counts; can surface deterministic list-level review-gate states plus Lead Action Intelligence summaries in list cards and Kanban chips; can run a Lead Review Session with current-filter progress, next-lead focus, queue-aware quick review actions, copy-friendly reviewer note templates, non-mutating keyboard shortcuts, browser-memory session activity, bounded failure recovery, accessible labels/live regions, roving tablist focus behavior, local semantic reviewer workflow snapshots, compact top `다음 리뷰` strip, non-duplicated `사람 검토: ...` labels, short reviewer-note summaries above full deterministic copy payloads, and mobile overflow smoke; and can recover from zero-result filters with in-place reset actions without adding CRM ownership, storage, schema, production query behavior, analytics, or outreach approval. Lead detail mirrors the same safe copy/manual-copy, shortcut-help, focus, browser-memory current-page activity, and short reviewer-note summary affordances inside Opportunity Workbench.
 - `docs/reviewer-workflow-final-audit.md` is the canonical local/test-safe reviewer workflow audit/demo packet. It documents the completed scoped demo path, validation commands, allowed and forbidden claims, note-persistence wording, and production evidence boundary.
+- `docs/roadmap/next-product-track-decision-packet.md` is the post-PR107 planning packet for choosing between manager/reviewer summary, saved review notes, outcome learning, and production observation tracks. It does not implement behavior or make a human business decision.
 - The product is a B2B lead discovery, briefing, and human-review aid.
 - It is not a CRM replacement, automatic salesperson, proposal generator source of truth, or PPT-first product.
 - Production deploy, production D1 access, production D1 writes, Worker endpoint calls, and production observation claims remain separate human-approved operations.
@@ -18,6 +19,12 @@ Current baseline:
 ## Product Direction
 
 The strongest next product path is a review-quality workbench around LeadBrief v1, not a broad CRM or platform migration. The system should help an operator decide whether a lead is credible, what evidence supports it, what is missing, and what the next reviewed action should be.
+
+Post-PR107, the safest next implementation candidate is a manager/reviewer
+summary v0 from existing local/test-safe lead and queue data, but only after it
+is selected as its own bounded goal. The decision packet records why saved note
+persistence, outcome learning, and production observation require separate
+product or production decisions.
 
 The near-term product spine:
 
@@ -29,7 +36,7 @@ The near-term product spine:
 
 ## Immediate Merge Queue
 
-No open PRs were present at preflight after PR #102 and Issue #100 closeout. Issue #100 is closed as completed for its recorded local/test-safe UX findings. New work should start from current `master`, not from old stacked branches. There is no current branch candidate in the merge queue, and production proof, saved notes persistence, manager dashboards, outcome learning, schema migration, and persistence work should not begin unless separately selected and scoped.
+No open PRs were present at preflight after PR #107. Issue #100 is closed as completed for its recorded local/test-safe UX findings. Issue #34 is closed as completed after GitHub-only closeout, with no further production execution approved. New work should start from current `master`, not from old stacked branches. There is no current branch candidate in the merge queue, and production proof, saved notes persistence, manager dashboards, outcome learning, schema migration, and persistence work should not begin unless separately selected and scoped. Use `docs/roadmap/next-product-track-decision-packet.md` before selecting one of those product tracks.
 
 Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm test` before it exits draft or merges. Product/review-quality changes should also run `npm run eval:lead-quality`, and review-flow changes should run `npm run test:e2e:local`; CI runs both as local-only gates.
 
@@ -56,6 +63,7 @@ Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm te
 | Shipped | Stakeholder-specific prep | Old #6 concept, recut | Workbench helper guidance for economic buyer, technical evaluator, operator, procurement, sponsor, and champion. Not approval automation. |
 | Shipped | Evidence/data-gap review slices | Old #3 remaining concept, recut | Summarize missing evidence, data-gap density, and review-ready leads on the cached `/leads` queue without creating CRM ownership, assignments, notifications, or production query changes. |
 | Shipped | Advisory roleplay stakeholder context | Old #6 remaining concept, recut | Let roleplay consume stakeholder prep context as human-reviewed conversation practice without approving outreach or changing the canonical LeadBrief source of truth. |
+| Planning | Next product track decision packet | Post-PR107 source-of-truth sync | Compares manager/reviewer summary, saved review notes, outcome learning, and production observation tracks; recommends manager/reviewer summary v0 as the safest next implementation candidate only after it is selected as its own scoped local/test-safe goal. |
 
 ## Hardening Backlog
 
@@ -75,7 +83,7 @@ None of these are implementation tasks. They are approval-gated operational task
 
 | Priority | Item | Required before action |
 | --- | --- | --- |
-| P0 | Refresh Issue #34 approval baseline for current `master` | The audited pre-refresh `master` baseline moved from Issue #34's approved SHA `12d44374a24a9958de179fae5f9311621606ad24` to `747b77a657a1af626e0a50d2804baf4ce566e1e5`; refresh the actual current SHA before any production request. |
+| P0 | Keep Issue #34 closeout boundary current | Issue #34 is closed as completed after GitHub-only closeout. Any future production proof requires a new explicit approval prompt with the actual current `master` SHA, CI status, owners, evidence policy, rollback path, stop conditions, and exact commands. |
 | P0 | Confirm deploy owner, DB owner, rollback owner, observation owner | GitHub repo ownership is not production ownership. |
 | P0 | Confirm evidence storage and redaction policy | Production evidence must not include secrets, auth headers, cookies, private URLs, customer payloads, PII, or unredacted production payloads. |
 | P1 | Approve one D1-backed read/schema proof | Requires explicit production DB access/lazy-DDL approval if the path may invoke `ensureD1Schema()`. |
