@@ -258,6 +258,38 @@ test('lead review pages expose explicit clear controls for saved manual review n
   assert.match(detailHtml, /updateField\('manualReviewNotes', ''\)/);
 });
 
+test('lead review pages explain saved and empty manual note state with lead-level update time only', () => {
+  const listHtml = getLeadsPage();
+  const detailHtml = getLeadDetailPage({
+    id: 'lead-1',
+    profileId: 'danfoss',
+    status: 'NEW',
+    reviewStatus: 'NEEDS_REVIEW',
+    company: 'DL이앤씨',
+    signal: '데이터센터 냉각 설비 증설 착공',
+    summary: '데이터센터 냉각 설비 증설 착공',
+    recommendedMessage: 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.',
+    manualReviewNotes: '사람이 입력한 검토 메모',
+    notes: '사람이 입력한 검토 메모',
+    updatedAt: '2026-05-18T11:55:40.000Z',
+    sources: [{ title: 'DL이앤씨 데이터센터 증설', url: 'https://example.com/dl' }],
+    product: 'Turbocor 컴프레서',
+    score: 84,
+    grade: 'A'
+  }, []);
+
+  assert.match(listHtml, /저장된 수동 리뷰 메모 있음/);
+  assert.match(listHtml, /저장된 수동 리뷰 메모 없음/);
+  assert.match(listHtml, /리드 마지막 업데이트/);
+  assert.match(listHtml, /메모 전용 시간 아님/);
+  assert.match(detailHtml, /저장된 수동 리뷰 메모 있음/);
+  assert.match(detailHtml, /저장된 수동 리뷰 메모 없음/);
+  assert.match(detailHtml, /리드 마지막 업데이트/);
+  assert.match(detailHtml, /메모 전용 시간 아님/);
+  assert.doesNotMatch(listHtml, /수동 리뷰 메모 마지막 저장|Manual note last saved|note-specific saved/);
+  assert.doesNotMatch(detailHtml, /수동 리뷰 메모 마지막 저장|Manual note last saved|note-specific saved/);
+});
+
 test('lead list page uses reviewer queue heading and non-repetitive human review copy', () => {
   const listHtml = getLeadsPage();
 

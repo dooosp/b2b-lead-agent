@@ -3,7 +3,7 @@
 ## 현재 기준 상태
 
 - 기준 브랜치: `master`
-- 마지막 검증된 post-PR #114 `origin/master` HEAD: `c928f910f307a783f934842d777df666b9267a86` (`Merge pull request #114 from dooosp/fix/copy-only-review-note-boundary`)
+- 마지막 검증된 post-PR #121 `origin/master` HEAD: `f9d96d05fe33a7e1c3e356b1814fb74ac8829fad` (`Merge pull request #121 from dooosp/feat/manual-review-notes-edit-clear`)
 - 다음 세션도 반드시 `git fetch origin master`와 `git rev-parse origin/master`로 실제 최신 HEAD를 다시 기록한다.
 - hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`, `docs/architecture/*.md`, `NEXT_SESSION_PROMPT.md`
 - LeadBrief v1 merge baseline: `5776d4a` (`[Product] Freeze LeadBrief v1 review contract (#27)`)
@@ -103,6 +103,7 @@
   - #114 shipped the Option E copy-only generated reviewer note suggestion wording clarification on `/leads`, Opportunity Workbench, tests, and related docs. Generated suggestions are helper text only: copy-only, not saved, not sent, and not human-authored saved notes.
   - #119 added the docs-only Option A manual review notes implementation plan.
   - #120 implemented local/test-safe Option A manual review notes for human-entered notes only: explicit `manualReviewNotes` saves/reads the existing `leads.notes` value with derived `human_entered` provenance while saved text exists; generated reviewer note suggestions remain copy-only and are rejected from persistence payloads.
+  - #121 implemented Manual Review Notes v0 edit/clear UX for human-entered notes only: edit means saving a changed explicit `manualReviewNotes` value, and clear/delete means confirmed clearing through `manualReviewNotes: ""`.
 - Reviewer Workflow Final Audit & Demo Packet lives at `docs/reviewer-workflow-final-audit.md` and is the canonical local/test-safe handoff baseline for completed reviewer workflow demo, validation, allowed/forbidden claims, note-persistence wording, and production evidence boundaries.
 - Issue #100 is closed as completed for the recorded local/test-safe Human UX Review findings. Future UX feedback should open a new issue or separately scoped record.
 - Issue #111 is closed as completed for the Manager / Reviewer Summary v0 UX Findings Intake.
@@ -110,7 +111,7 @@
 - Issue #34 is closed as completed after GitHub-only closeout. Future production proof requires a new explicit human-approved production prompt.
 - Next Product Track Decision Packet lives at `docs/roadmap/next-product-track-decision-packet.md`. It records the post-PR107 track comparison that selected manager/reviewer summary v0 as the safest local/test-safe slice; after PR #114 and Issue #113, saved review notes persistence, outcome learning, production observation, and any summary v1 dashboard expansion still require separate scoped decisions.
 - Saved Review Notes Decision Packet lives at `docs/roadmap/saved-review-notes-decision-packet.md`. It records the product/data choices required before saving generated suggestions, edited generated suggestions, manual notes, review rationales, or status-transition reasons; records Option E as selected for copy-only generated suggestions; and notes the later local/test-safe Option A human-entered manual note path.
-- Next saved-notes-adjacent work should stay inside Manual Review Notes v0 unless separately scoped: edit means saving a changed human-entered value, and clear/delete means confirmed clearing of that saved value. Do not implement generated suggestion persistence, note history, reviewer identity, production rollout, or retention/privacy policy from this path.
+- Current Manual Review Notes v0 state/timestamp clarity approval record: `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4483103871`. Next saved-notes-adjacent work should stay inside Manual Review Notes v0 unless separately scoped: show saved/empty state clearly, and if `updatedAt` / `updated_at` is displayed, label it only as lead-level last-update state, not manual-note-specific saved time. Do not implement generated suggestion persistence, note history, reviewer identity, production rollout, note-specific timestamp schema, or retention/privacy policy from this path.
 - Stale PRs #1-#9 received disposition comments and are closed without merge or branch deletion. Treat their ideas as concept inventory only.
 
 ## Production boundary
