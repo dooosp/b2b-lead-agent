@@ -35,6 +35,10 @@ export function getLeadDetailPage(lead, statusLogs) {
     .field-group label { color: #aaa; font-size: 12px; display: block; margin-bottom: 4px; }
     .field-group input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 14px; }
     .notes-area { width: 100%; min-height: 80px; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #ccc; font-size: 13px; resize: vertical; font-family: inherit; margin-top: 8px; }
+    .notes-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 6px; }
+    .notes-clear-btn { border: 1px solid #555; background: #1f2b3d; color: #d4deea; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+    .notes-clear-btn:hover:not(:disabled), .notes-clear-btn:focus-visible:not(:disabled) { background: #2b3a50; border-color: #8fbfe8; }
+    .notes-clear-btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .save-indicator { color: #27ae60; font-size: 11px; opacity: 0; transition: opacity 0.3s; margin-left: 8px; }
     .save-indicator.show { opacity: 1; }
     .status-select-lg { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 14px; cursor: pointer; }
@@ -651,6 +655,9 @@ export function getLeadDetailPage(lead, statusLogs) {
       html += '<div class="detail-section">';
       html += '<h3>수동 리뷰 메모</h3>';
       html += '<textarea class="notes-area" id="notesArea" aria-label="수동 리뷰 메모 입력" placeholder="수동 리뷰 메모를 입력하세요..." oninput="scheduleNoteSave()">' + esc(lead.manualReviewNotes || lead.notes || '') + '</textarea>';
+      html += '<div class="notes-actions">';
+      html += '<button type="button" class="notes-clear-btn" id="clearManualReviewNotesButton" aria-label="저장된 수동 리뷰 메모 지우기" onclick="clearManualReviewNotes()" ' + ((lead.manualReviewNotes || lead.notes) ? '' : 'disabled') + '>지우기</button>';
+      html += '</div>';
       html += '</div>';
 
       // 타임라인 섹션
@@ -696,11 +703,13 @@ export function getLeadDetailPage(lead, statusLogs) {
             return;
           }
           alert(data.message);
+          if (field === 'manualReviewNotes') renderDetail();
           if (field === 'status') renderDetail();
           return;
         }
         // 로컬 lead 객체 업데이트
         if (data.lead) Object.assign(lead, data.lead);
+        if (field === 'manualReviewNotes') syncManualNoteControls();
         showSaved();
         if (field === 'status' || field === 'reviewStatus') {
           const label = field === 'reviewStatus' ? '검토 상태' : '영업 상태';
@@ -719,6 +728,11 @@ export function getLeadDetailPage(lead, statusLogs) {
           renderDetail();
           return;
         }
+        if (field === 'manualReviewNotes') {
+          alert('업데이트 실패: ' + e.message);
+          renderDetail();
+          return;
+        }
         alert('업데이트 실패: ' + e.message);
       }
     }
@@ -733,11 +747,29 @@ export function getLeadDetailPage(lead, statusLogs) {
 
     let noteTimer;
     function scheduleNoteSave() {
+      syncManualNoteControls();
       clearTimeout(noteTimer);
       noteTimer = setTimeout(async () => {
         const val = document.getElementById('notesArea').value;
         await updateField('manualReviewNotes', val);
       }, 800);
+    }
+
+    function syncManualNoteControls() {
+      const textarea = document.getElementById('notesArea');
+      const clearButton = document.getElementById('clearManualReviewNotesButton');
+      if (textarea && clearButton) clearButton.disabled = !String(textarea.value || '').trim();
+    }
+
+    async function clearManualReviewNotes() {
+      const textarea = document.getElementById('notesArea');
+      if (!textarea || !String(textarea.value || '').trim()) return;
+      const confirmed = window.confirm('저장된 수동 리뷰 메모를 지울까요? 생성된 리뷰 노트 제안은 그대로 유지됩니다.');
+      if (!confirmed) return;
+      clearTimeout(noteTimer);
+      textarea.value = '';
+      syncManualNoteControls();
+      await updateField('manualReviewNotes', '');
     }
 
     function showSaved() {
@@ -749,6 +781,7 @@ export function getLeadDetailPage(lead, statusLogs) {
 
     window.updateField = updateField;
     window.scheduleNoteSave = scheduleNoteSave;
+    window.clearManualReviewNotes = clearManualReviewNotes;
     window.copyWorkbenchReviewNote = copyWorkbenchReviewNote;
     window.handleDetailShortcut = handleDetailShortcut;
     window.focusOpportunityWorkbench = focusOpportunityWorkbench;

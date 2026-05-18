@@ -50,7 +50,9 @@ helper text is not the same thing as a human-authored note. Persisting generated
 text can create authorship, retention, privacy, and audit concerns that do not
 exist when the text is copy-only.
 
-Human notes also need edit, delete, ownership, retention, and conflict rules.
+Human notes also need ownership, retention, and conflict rules. A later
+local/test-safe Option A approval narrowed v0 edit/delete semantics to saving a
+changed human-entered value and confirmed clearing of that saved value.
 The existing manual notes path must not be confused with deterministic
 reviewer-note suggestions. Persistence implies schema, API, storage, and
 production data questions, so it must remain separate from local/test-safe
@@ -60,7 +62,7 @@ display helpers.
 
 | Option | Product value | Risk | Data ownership implication | Retention/privacy implication | Schema/API implication | Testing needs | Human decision required |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| A. Save only human-entered manual notes | Preserves explicit operator intent and builds on the existing manual notes concept. | May not capture why a generated suggestion was useful unless the reviewer writes it. | Human reviewer owns the note content. | Treat as operator-entered business text that may include sensitive customer/company context. | May be possible through the existing `notes` field, but any new contract still needs scoping. | Existing PATCH behavior plus focused tests for labels and no generated auto-save. | Yes. Confirm manual-only persistence is sufficient. |
+| A. Save only human-entered manual notes | Preserves explicit operator intent and builds on the existing manual notes concept. | May not capture why a generated suggestion was useful unless the reviewer writes it. | Human reviewer owns the note content. | Treat as operator-entered business text that may include sensitive customer/company context. | Implemented locally through the existing `notes` field as `manualReviewNotes`; production use still needs separate approval. | Existing PATCH behavior plus focused tests for labels, edit/clear, and no generated auto-save. | Selected later in Issue #118 for local/test-safe human-entered manual notes only. |
 | B. Save an edited note derived from a generated suggestion, marked human-edited | Gives reviewers a fast starting point while requiring human adoption. | Authorship may be ambiguous if the edit is small. | Human owns the final text, but provenance must record generated origin. | Retain edited text with generated-source provenance and privacy warnings. | Likely needs provenance fields or a separate note record before implementation. | Tests for human-edited labeling, provenance rendering, and no unchanged auto-save. | Yes. Define when generated text becomes human-authored. |
 | C. Save a generated suggestion snapshot, clearly marked generated and not human-authored | Preserves exact helper text visible at decision time. | Highest authorship and audit risk; generated text may look like a human rationale. | System owns the generated snapshot; reviewer ownership is not implied. | Decide whether generated text should be retained at all and whether it needs redaction. | Likely needs new schema/API fields for generated provenance and template version. | Tests for generated labels, read-only display, retention boundary, and no human-authored claims. | Yes. This should not be default without explicit approval. |
 | D. Save review decision rationale separately from note text | Captures why a review status changed without making helper copy canonical. | May duplicate or conflict with manual notes if boundaries are unclear. | Reviewer owns rationale if entered by a human. | Rationale may include sensitive or PII-like details and needs policy. | Likely requires a separate data contract from generic note text. | Tests for status/rationale separation and stale-status behavior. | Yes. Define whether rationale is required, optional, or forbidden. |
@@ -87,8 +89,11 @@ Issue #113 selected Option E. Under this selection:
 - Generated suggestions are not sent automatically.
 - Generated suggestions are not human-authored notes unless a human copies,
   edits, and uses them elsewhere.
-- Saved notes persistence remains unimplemented and requires a separate future
-  decision and implementation track.
+- Generated suggestion and broader saved-note persistence remain unimplemented
+  and require a separate future decision and implementation track.
+- Subsequent Issue #118 records a separate local/test-safe Option A path for
+  human-entered manual notes only. That path does not change the Option E
+  generated-suggestion boundary.
 
 ## 5. Authorship And Provenance Model
 
@@ -125,8 +130,9 @@ Decision questions:
 - Does a new note replace an older one, append to history, or require a manual
   archive action?
 
-No edit, delete, versioning, or retention behavior is implemented by this
-packet.
+No edit, delete, versioning, or retention behavior was implemented by this
+packet. The later Manual Review Notes v0 local/test path implements only
+edit-by-resave and clear-by-empty-value for human-entered manual notes.
 
 ## 7. Retention And Privacy
 
@@ -184,7 +190,7 @@ Separate future scopes:
 
 - schema or D1 persistence
 - new API endpoints
-- edit/delete UI
+- edit/delete semantics beyond the v0 human-entered note clear control
 - retention or deletion jobs
 - production migration
 - production write proof
@@ -198,14 +204,14 @@ These tracks remain out of scope until the product/data decision is recorded.
 ## 11. Recommended Next Step
 
 Issue #113 selected Option E, PR #114 shipped the copy-only wording
-clarification, and Issue #115 is open for non-production UX findings on
-whether reviewers understand that generated suggestions are helper text only:
-copy-only, not saved, not sent, and not human-authored saved notes.
+clarification, Issue #115 closed its UX intake, and Issue #118 later selected
+local/test-safe Option A for human-entered manual notes only.
 
-Do not implement schema, API, persistence, storage, UI edit/delete behavior, or
-generated note auto-save from the UX intake. Options A, B, C, and D remain
+Do not implement generated note auto-save, generated suggestion persistence,
+new note schema/storage, retention jobs, reviewer identity, production rollout,
+or production data access from this packet. Options B, C, and D remain
 unselected and require a separate future product/data decision before any
-persistence work.
+generated or rationale persistence work.
 
 ## 12. Validation Expectations
 
