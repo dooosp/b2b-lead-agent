@@ -234,6 +234,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     const payload = root?.querySelector('[data-review-note-text]');
     return !!summary && !!payload && !!(summary.compareDocumentPosition(payload) & Node.DOCUMENT_POSITION_FOLLOWING);
   }), true);
+  assert.equal(await page.evaluate(() => (
+    document.querySelectorAll('.review-session-panel .review-note-variant[open]').length
+  )), 0);
   assert.equal(await page.getByRole('tab', { name: '리스트' }).getAttribute('aria-selected'), 'true');
   assert.equal(await page.getByRole('tab', { name: '칸반 보드' }).getAttribute('aria-selected'), 'false');
   assert.deepEqual(await captureListReviewerSemanticSnapshot(page), {
@@ -567,6 +570,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     const payload = root?.querySelector('[data-workbench-note-text]');
     return !!summary && !!payload && !!(summary.compareDocumentPosition(payload) & Node.DOCUMENT_POSITION_FOLLOWING);
   }), true);
+  assert.equal(await page.evaluate(() => (
+    document.querySelectorAll('#opportunity-workbench .opportunity-workbench-note-variant[open]').length
+  )), 0);
   await page.setViewportSize({ width: 390, height: 844 });
   await assertRenderedText(page, ['Workbench Productivity Toolkit', 'OPPORTUNITY WORKBENCH', '사람 검토']);
   await assertNoHorizontalOverflow(page, [

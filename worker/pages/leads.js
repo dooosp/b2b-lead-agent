@@ -917,7 +917,7 @@ export function getLeadsPage() {
       const current = noteData.current || {};
       const templates = noteData.templates || [];
       const variants = templates.map((template) => \`
-        <details class="review-note-variant"\${template.state === current.state ? ' open' : ''}>
+        <details class="review-note-variant">
           <summary>\${esc(template.label || template.state)}</summary>
           \${renderReviewNoteSummary(template)}
           <pre class="review-note-copy-target" data-review-note-text tabindex="0" aria-label="\${esc(template.label || template.state)} 텍스트">\${esc(template.text || 'Review note suggestion unavailable.')}</pre>
