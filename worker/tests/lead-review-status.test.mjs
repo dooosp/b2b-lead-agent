@@ -317,6 +317,17 @@ test('lead list page exposes copy-friendly reviewer note suggestions near sessio
   assert.match(listHtml, /renderReviewNoteSuggestion\(session\.nextLead/);
 });
 
+test('lead list note variants keep the active suggestion collapsed by default', () => {
+  const listHtml = getLeadsPage();
+
+  assert.match(listHtml, /<details class="review-note-variant">/);
+  assert.doesNotMatch(listHtml, /template\.state === current\.state \? ' open' : ''/);
+  assert.match(listHtml, /data-note-copy-action="copy-current-note"/);
+  assert.match(listHtml, /data-note-copy-action="copy-variant-note"/);
+  assert.match(listHtml, /사람이 저장한 메모가 아닙니다/);
+  assert.match(listHtml, /복사 후 사람이 직접 검토해 사용하세요/);
+});
+
 test('lead list page exposes grouped reviewer action queue lanes', () => {
   const listHtml = getLeadsPage();
 

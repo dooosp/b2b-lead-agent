@@ -95,6 +95,8 @@ test('opportunity workbench exposes copy controls for deterministic reviewer not
   assert.match(html, /aria-label="현재 Workbench 리뷰 노트 복사"/);
   assert.match(html, /aria-label="현재 Workbench 리뷰 노트 텍스트"/);
   assert.match(html, /aria-label="승인 노트 텍스트"/);
+  assert.doesNotMatch(html, /class="opportunity-workbench-note-variant" open/);
+  assert.equal(html.match(/data-workbench-note-copy-action=/g)?.length, 4);
   assert.match(html, /현재 노트 복사/);
   assert.match(html, /Decision: APPROVED/);
   assert.doesNotMatch(html, /localStorage/);

@@ -687,7 +687,7 @@ function renderReviewerNoteTemplates(intelligence = {}) {
     : [];
   const variants = templates.length > 0
     ? templates.map((template) => `
-              <details class="opportunity-workbench-note-variant"${template.state === current.state ? ' open' : ''}>
+              <details class="opportunity-workbench-note-variant">
                 <summary>${escapeHtml(template.label || template.state)}</summary>
                 ${renderReviewerNoteSummary(template)}
                 <pre class="opportunity-workbench-note-copy-target" data-workbench-note-text tabindex="0" aria-label="${escapeHtml(template.label || template.state)} 텍스트">${escapeHtml(template.text)}</pre>
