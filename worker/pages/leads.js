@@ -202,6 +202,13 @@ export function getLeadsPage() {
     .notes-textarea { width: 100%; min-height: 60px; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #ccc; font-size: 13px; resize: vertical; margin-top: 6px; font-family: inherit; }
     .notes-saved { color: #27ae60; font-size: 11px; margin-left: 8px; opacity: 0; transition: opacity 0.3s; }
     .notes-saved.show { opacity: 1; }
+    .notes-summary-state { color:#8fa4b8; font-size:11px; margin-left:6px; }
+    .notes-state { background:#101925; border:1px solid #223447; border-radius:8px; color:#9fb0c0; display:grid; gap:4px; font-size:11px; line-height:1.5; margin-top:8px; padding:8px; }
+    .notes-state strong { color:#d4deea; font-size:12px; line-height:1.4; }
+    .notes-state.is-saved { border-color:#2e7d4f; background:#101f1a; }
+    .notes-state.is-saved strong { color:#a8efc0; }
+    .notes-state.is-empty { border-color:#566273; background:#171d25; }
+    .notes-state-meta { color:#8fa4b8; }
     .notes-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 6px; }
     .notes-clear-btn { border: 1px solid #555; background: #1f2b3d; color: #d4deea; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
     .notes-clear-btn:hover:not(:disabled), .notes-clear-btn:focus-visible:not(:disabled) { background: #2b3a50; border-color: #8fbfe8; }
@@ -528,6 +535,42 @@ export function getLeadsPage() {
 
     function getLeadId(lead) {
       return String((lead && (lead.id || lead.leadId || lead.lead_id)) || '');
+    }
+
+    function getManualReviewNoteValue(lead) {
+      return String((lead && (lead.manualReviewNotes || lead.manual_review_notes || lead.notes)) || '').trim();
+    }
+
+    function getManualReviewNoteStateLabel(lead) {
+      return getManualReviewNoteValue(lead) ? '저장됨' : '비어 있음';
+    }
+
+    function formatLeadUpdatedAt(lead) {
+      const raw = lead && (lead.updatedAt || lead.updated_at);
+      if (!raw) return '';
+      const date = new Date(raw);
+      if (Number.isNaN(date.getTime())) return '';
+      return date.toLocaleString('ko-KR');
+    }
+
+    function renderManualReviewNoteState(lead) {
+      const hasSavedNote = Boolean(getManualReviewNoteValue(lead));
+      const updatedAt = formatLeadUpdatedAt(lead);
+      return \`
+        <div class="notes-state \${hasSavedNote ? 'is-saved' : 'is-empty'}" data-manual-note-state="\${hasSavedNote ? 'saved' : 'empty'}">
+          <strong>\${hasSavedNote ? '저장된 수동 리뷰 메모 있음' : '저장된 수동 리뷰 메모 없음'}</strong>
+          <span>\${hasSavedNote ? '사람이 입력한 수동 메모만 저장 상태로 표시됩니다.' : '비어 있음 상태입니다. 생성된 검토 메모 제안은 저장 상태가 아닙니다.'}</span>
+          \${updatedAt ? \`<span class="notes-state-meta">리드 마지막 업데이트: \${esc(updatedAt)} (메모 전용 시간 아님)</span>\` : ''}
+        </div>
+      \`;
+    }
+
+    function updateManualReviewNoteState(section, lead) {
+      if (!section || !lead) return;
+      const state = section.querySelector('[data-manual-note-state]');
+      if (state) state.outerHTML = renderManualReviewNoteState(lead);
+      const summaryState = section.querySelector('[data-manual-note-summary-state]');
+      if (summaryState) summaryState.textContent = getManualReviewNoteStateLabel(lead);
     }
 
     function cacheReviewerActionQueue(queue) {
@@ -1718,6 +1761,7 @@ export function getLeadsPage() {
 
     async function saveNotes(leadId, textarea, options = {}) {
       const indicator = textarea.parentElement.querySelector('.notes-saved');
+      const section = textarea ? textarea.closest('.notes-section') : null;
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
           method: 'PATCH',
@@ -1728,8 +1772,10 @@ export function getLeadsPage() {
         const lead = findCachedLead(leadId);
         if (data.success && data.lead && lead) Object.assign(lead, data.lead);
         if (data.success && indicator) {
-          showManualNoteIndicator(indicator, options.cleared ? '지워짐' : '저장됨');
+          const message = options.cleared || !String(textarea.value || '').trim() ? '지워짐' : '저장됨';
+          showManualNoteIndicator(indicator, message);
         }
+        if (data.success) updateManualReviewNoteState(section, lead);
         if (data.success) syncManualNoteControls(textarea);
       } catch { /* silent */ }
     }
@@ -1759,6 +1805,7 @@ export function getLeadsPage() {
         }
         if (data.lead && lead) Object.assign(lead, data.lead);
         showManualNoteIndicator(indicator, '지워짐');
+        updateManualReviewNoteState(section, lead);
         syncManualNoteControls(textarea);
       } catch {
         const lead = findCachedLead(leadId);
@@ -1972,7 +2019,8 @@ export function getLeadsPage() {
             \${lead.id ? \`
             <div class="notes-section">
               <details>
-                <summary>수동 리뷰 메모 \${(lead.manualReviewNotes || lead.notes) ? '(작성됨)' : ''}<span class="notes-saved">저장됨</span></summary>
+                <summary>수동 리뷰 메모 <span class="notes-summary-state" data-manual-note-summary-state>\${esc(getManualReviewNoteStateLabel(lead))}</span><span class="notes-saved">저장됨</span></summary>
+                \${renderManualReviewNoteState(lead)}
                 <textarea class="notes-textarea" aria-label="수동 리뷰 메모 입력" placeholder="수동 리뷰 메모를 입력하세요..."
                   oninput="scheduleNoteSave('\${esc(lead.id)}', this)"
                   onblur="saveNotes('\${esc(lead.id)}', this)">\${esc(lead.manualReviewNotes || lead.notes || '')}</textarea>

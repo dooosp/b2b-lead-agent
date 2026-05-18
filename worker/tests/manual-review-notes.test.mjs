@@ -50,6 +50,34 @@ test('manualReviewNotes PATCH edits an existing human-entered note', async () =>
   assert.equal(db.leads.get('lead-1').notes, 'Updated human review note after second pass.');
 });
 
+test('updatedAt is lead-level and can change without a manual note save', async () => {
+  const originalUpdatedAt = '2026-04-07T00:00:00.000Z';
+  const db = new FakeD1Database({
+    leads: [
+      createLeadRow({
+        notes: 'Existing human review note.',
+        review_status: 'NEEDS_REVIEW',
+        updated_at: originalUpdatedAt,
+      }),
+    ],
+  });
+
+  const response = await patchLead(db, {
+    reviewStatus: 'APPROVED',
+  });
+  const payload = await response.json();
+  const lead = await getLeadById(db, 'lead-1');
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.success, true);
+  assert.deepEqual(payload.changedFields, ['reviewStatus']);
+  assert.equal(payload.lead.manualReviewNotes, 'Existing human review note.');
+  assert.equal(payload.lead.manualReviewNotesProvenance, 'human_entered');
+  assert.notEqual(payload.lead.updatedAt, originalUpdatedAt);
+  assert.equal(lead.updatedAt, payload.lead.updatedAt);
+  assert.equal(db.leads.get('lead-1').notes, 'Existing human review note.');
+});
+
 test('manualReviewNotes PATCH clears an existing human-entered note', async () => {
   const db = new FakeD1Database({ leads: [createLeadRow({ notes: 'Saved note to clear.' })] });
 

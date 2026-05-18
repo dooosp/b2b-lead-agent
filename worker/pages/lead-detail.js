@@ -39,6 +39,12 @@ export function getLeadDetailPage(lead, statusLogs) {
     .notes-clear-btn { border: 1px solid #555; background: #1f2b3d; color: #d4deea; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
     .notes-clear-btn:hover:not(:disabled), .notes-clear-btn:focus-visible:not(:disabled) { background: #2b3a50; border-color: #8fbfe8; }
     .notes-clear-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .notes-state { background:#101925; border:1px solid #223447; border-radius:8px; color:#9fb0c0; display:grid; gap:4px; font-size:11px; line-height:1.5; margin-top:8px; padding:8px; }
+    .notes-state strong { color:#d4deea; font-size:12px; line-height:1.4; }
+    .notes-state.is-saved { border-color:#2e7d4f; background:#101f1a; }
+    .notes-state.is-saved strong { color:#a8efc0; }
+    .notes-state.is-empty { border-color:#566273; background:#171d25; }
+    .notes-state-meta { color:#8fa4b8; }
     .save-indicator { color: #27ae60; font-size: 11px; opacity: 0; transition: opacity 0.3s; margin-left: 8px; }
     .save-indicator.show { opacity: 1; }
     .status-select-lg { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 14px; cursor: pointer; }
@@ -199,6 +205,33 @@ export function getLeadDetailPage(lead, statusLogs) {
 
     function getSources(lead) {
       return getArrayField(lead, 'sources', 'sources');
+    }
+
+    function getManualReviewNoteValue(lead) {
+      return String((lead && (lead.manualReviewNotes || lead.manual_review_notes || lead.notes)) || '').trim();
+    }
+
+    function formatLeadUpdatedAt(lead) {
+      const raw = lead && (lead.updatedAt || lead.updated_at);
+      if (!raw) return '';
+      const date = new Date(raw);
+      if (Number.isNaN(date.getTime())) return '';
+      return date.toLocaleString('ko-KR');
+    }
+
+    function renderManualReviewNoteState(lead) {
+      const hasSavedNote = Boolean(getManualReviewNoteValue(lead));
+      const updatedAt = formatLeadUpdatedAt(lead);
+      return '<div id="manualReviewNoteState" class="notes-state ' + (hasSavedNote ? 'is-saved' : 'is-empty') + '" data-manual-note-state="' + (hasSavedNote ? 'saved' : 'empty') + '">' +
+        '<strong>' + (hasSavedNote ? '저장된 수동 리뷰 메모 있음' : '저장된 수동 리뷰 메모 없음') + '</strong>' +
+        '<span>' + (hasSavedNote ? '사람이 입력한 수동 메모만 저장 상태로 표시됩니다.' : '비어 있음 상태입니다. 생성된 검토 메모 제안은 저장 상태가 아닙니다.') + '</span>' +
+        (updatedAt ? '<span class="notes-state-meta">리드 마지막 업데이트: ' + esc(updatedAt) + ' (메모 전용 시간 아님)</span>' : '') +
+        '</div>';
+    }
+
+    function updateManualReviewNoteState() {
+      const state = document.getElementById('manualReviewNoteState');
+      if (state) state.outerHTML = renderManualReviewNoteState(lead);
     }
 
     function renderReviewBadge(lead) {
@@ -654,8 +687,10 @@ export function getLeadDetailPage(lead, statusLogs) {
       // 메모 섹션
       html += '<div class="detail-section">';
       html += '<h3>수동 리뷰 메모</h3>';
+      html += renderManualReviewNoteState(lead);
       html += '<textarea class="notes-area" id="notesArea" aria-label="수동 리뷰 메모 입력" placeholder="수동 리뷰 메모를 입력하세요..." oninput="scheduleNoteSave()">' + esc(lead.manualReviewNotes || lead.notes || '') + '</textarea>';
       html += '<div class="notes-actions">';
+      html += '<span class="save-indicator" id="manualNoteSaveIndicator">저장됨</span>';
       html += '<button type="button" class="notes-clear-btn" id="clearManualReviewNotesButton" aria-label="저장된 수동 리뷰 메모 지우기" onclick="clearManualReviewNotes()" ' + ((lead.manualReviewNotes || lead.notes) ? '' : 'disabled') + '>지우기</button>';
       html += '</div>';
       html += '</div>';
@@ -709,7 +744,10 @@ export function getLeadDetailPage(lead, statusLogs) {
         }
         // 로컬 lead 객체 업데이트
         if (data.lead) Object.assign(lead, data.lead);
-        if (field === 'manualReviewNotes') syncManualNoteControls();
+        if (field === 'manualReviewNotes') {
+          syncManualNoteControls();
+          showManualNoteIndicator(String(value || '').trim() ? '저장됨' : '지워짐');
+        }
         showSaved();
         if (field === 'status' || field === 'reviewStatus') {
           const label = field === 'reviewStatus' ? '검토 상태' : '영업 상태';
@@ -759,6 +797,16 @@ export function getLeadDetailPage(lead, statusLogs) {
       const textarea = document.getElementById('notesArea');
       const clearButton = document.getElementById('clearManualReviewNotesButton');
       if (textarea && clearButton) clearButton.disabled = !String(textarea.value || '').trim();
+      updateManualReviewNoteState();
+    }
+
+    function showManualNoteIndicator(message) {
+      const el = document.getElementById('manualNoteSaveIndicator');
+      if (!el) return;
+      el.textContent = message || '저장됨';
+      el.classList.add('show');
+      clearTimeout(el._hideTimer);
+      el._hideTimer = setTimeout(() => el.classList.remove('show'), 2000);
     }
 
     async function clearManualReviewNotes() {

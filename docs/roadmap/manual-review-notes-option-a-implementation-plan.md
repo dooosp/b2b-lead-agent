@@ -12,6 +12,11 @@
 > `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4477320711`
 > authorizes only local/test-safe Manual Review Notes v0 edit/clear UX
 > hardening for the same human-entered manual note contract.
+> The later approval record
+> `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4483103871`
+> authorizes only local/test-safe saved/empty state clarity and truthful
+> timestamp/update-state labeling. Existing `updated_at` is lead-level unless a
+> future schema/API decision adds a note-specific timestamp.
 
 **Goal:** Define the safe local/test-only implementation path for Option A:
 save only human-entered manual notes while generated reviewer note suggestions
@@ -35,11 +40,13 @@ local tests, Node test runner, local-only route/page smoke tests.
 - `SAVED_NOTES_PERSISTENCE_DECISION`: `OPTION_A_PLAN_ONLY`
 - `IMPLEMENTATION_DECISION`: `IMPLEMENT_OPTION_A_MANUAL_NOTES_LOCAL_TEST_ONLY`
 - `EDIT_CLEAR_UX_DECISION`: `IMPLEMENT_MANUAL_REVIEW_NOTES_V0_EDIT_CLEAR_UX_HARDENING_LOCAL_TEST_ONLY`
+- `STATE_TIMESTAMP_CLARITY_DECISION`: `IMPLEMENT_MANUAL_REVIEW_NOTES_V0_STATE_TIMESTAMP_CLARITY_LOCAL_TEST_ONLY`
 - `MANAGER_DASHBOARD_DECISION`: `HOLD`
 - `OUTCOME_LEARNING_DECISION`: `HOLD`
 - `PRODUCTION_PROOF_DECISION`: `HOLD`
 - Approval record: `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4477073009`
 - Edit/clear approval record: `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4477320711`
+- State/timestamp clarity approval record: `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4483103871`
 
 Decision meaning:
 
@@ -54,14 +61,19 @@ Decision meaning:
 - Manual Review Notes v0 edit/clear hardening is approved only for the same
   local/test-safe human-entered note surface. Production proof/deploy remains
   `HOLD`.
+- Manual Review Notes v0 state/timestamp clarity is approved only for truthful
+  saved/empty state display and lead-level update-state labeling. `updated_at`
+  must not be described as "manual note saved at" unless a future schema/API
+  decision creates a note-specific timestamp.
 
 ## Verified Baseline
 
 - Repository: `dooosp/b2b-lead-agent`
 - Default branch: `master`
-- Current baseline: `bbc01b4bfc1629ec671b64b8ea0d44b2c1f17e4c`
+- Current baseline: `f9d96d05fe33a7e1c3e356b1814fb74ac8829fad`
 - PR #117: merged as `fix: reduce duplicate reviewer note suggestion display`
 - PR #120: merged as `feat: add manual review notes option a`
+- PR #121: merged as `feat: harden manual review note edit clear ux`
 - Issue #115: closed as completed
 - Decision packet present: `docs/roadmap/saved-review-notes-decision-packet.md`
 - Standing approval policy present: `docs/standing-approval-policy.md`
@@ -92,10 +104,34 @@ the human-entered manual review notes contract:
 - generated suggestion boundary: generated reviewer note suggestion patch fields
   are rejected; queue/session suggestion objects remain response-only helper
   text and are not persisted to lead rows
+- state clarity: list and detail manual note controls should make saved vs empty
+  state obvious to reviewers
+- timestamp/update-state clarity: the only current update timestamp is the
+  lead-level `updatedAt` / `updated_at`; if displayed near manual notes, it
+  must be labeled as a lead-level last update and not as a note-specific saved
+  time
 
 No new D1 table, generated suggestion snapshot, production migration, Wrangler
 command, production endpoint, production DB, CRM/outreach/analytics, or LLM
 behavior is introduced by this implementation.
+
+## State And Timestamp Clarity
+
+Manual Review Notes v0 may show:
+
+- `저장된 수동 리뷰 메모 있음` when a human-entered manual note is present.
+- `저장된 수동 리뷰 메모 없음` when the saved manual note value is empty.
+- `리드 마지막 업데이트` from `updatedAt` / `updated_at` only as a lead-level
+  timestamp, with copy that clarifies it is not a manual-note-specific time.
+
+Manual Review Notes v0 must not show:
+
+- "manual note saved at" copy derived from `updatedAt` / `updated_at`.
+- a fabricated note timestamp.
+- generated reviewer note suggestions as saved, sent, or human-authored notes.
+
+If a future product decision needs true note save time, the next scope should
+design note-specific schema/API semantics before changing UI wording.
 
 ## Current Manual Notes Path
 
@@ -110,8 +146,10 @@ Current repository inspection shows the implemented human-entered note path:
   named field.
 - `worker/api/leads.js` routes `PATCH /api/leads/:id` through
   `handleUpdateLead()` and `updateLeadPatchAtomic()`.
-- `worker/db/leads.js` accepts `patch.notes` only when it is a string, truncates
-  it to 2000 characters, and writes it through the existing lead row update.
+- `worker/db/leads.js` accepts explicit `manualReviewNotes` / `manual_review_notes`
+  patch fields, keeps legacy `notes` compatibility only when consistent,
+  truncates the saved value to 2000 characters, and writes it through the
+  existing lead row update.
 - `worker/schema.sql` already has a `notes TEXT DEFAULT ''` column on `leads`.
 - `worker/db/transform.js` maps `notes` between D1 rows and lead domain objects.
 - Existing tests cover atomic behavior for valid notes updates and invalid mixed

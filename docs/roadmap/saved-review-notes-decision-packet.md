@@ -133,6 +133,10 @@ Decision questions:
 No edit, delete, versioning, or retention behavior was implemented by this
 packet. The later Manual Review Notes v0 local/test path implements only
 edit-by-resave and clear-by-empty-value for human-entered manual notes.
+The later state/timestamp clarity hardening only labels whether a human-entered
+manual note is saved or empty and may show lead-level `updatedAt` / `updated_at`
+as lead last-update state. It does not create note history, reviewer identity,
+retention semantics, or a note-specific saved timestamp.
 
 ## 7. Retention And Privacy
 
@@ -180,6 +184,9 @@ Safe first slices after a human selection:
 - Local-only UI affordance that labels generated suggestions clearly.
 - Fixture-backed design tests for note provenance rendering.
 - Mock or local fake-D1 design prototype only if explicitly selected later.
+- Manual Review Notes v0 saved/empty state copy and truthful lead-level
+  update-state labeling. This is allowed only when it does not imply
+  generated-suggestion persistence or a note-specific timestamp.
 
 These candidates must not use production D1 and must not imply persistence is
 shipped unless the selected scope implements and validates it.
@@ -205,11 +212,15 @@ These tracks remain out of scope until the product/data decision is recorded.
 
 Issue #113 selected Option E, PR #114 shipped the copy-only wording
 clarification, Issue #115 closed its UX intake, and Issue #118 later selected
-local/test-safe Option A for human-entered manual notes only.
+local/test-safe Option A for human-entered manual notes only. PR #120 shipped
+the initial save/read path, PR #121 shipped edit-by-resave and confirmed
+clear-by-empty-value behavior, and the later state/timestamp clarity record
+keeps timestamp display constrained to lead-level last-update semantics.
 
 Do not implement generated note auto-save, generated suggestion persistence,
 new note schema/storage, retention jobs, reviewer identity, production rollout,
-or production data access from this packet. Options B, C, and D remain
+or production data access from this packet. Do not label lead-level
+`updated_at` as manual-note-specific saved time. Options B, C, and D remain
 unselected and require a separate future product/data decision before any
 generated or rationale persistence work.
 
