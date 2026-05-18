@@ -14,7 +14,7 @@ function serializeLeadCsvRow(lead) {
     lead.grade,
     csvCell(lead.roi),
     lead.status,
-    csvCell(lead.notes),
+    csvCell(lead.manualReviewNotes || lead.notes),
     lead.createdAt?.split('T')[0] || '',
     lead.reviewStatus || 'NEEDS_REVIEW',
     lead.confidence || 'LOW',

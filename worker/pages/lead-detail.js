@@ -649,8 +649,8 @@ export function getLeadDetailPage(lead, statusLogs) {
 
       // 메모 섹션
       html += '<div class="detail-section">';
-      html += '<h3>메모</h3>';
-      html += '<textarea class="notes-area" id="notesArea" aria-label="메모를 입력하세요" placeholder="메모를 입력하세요..." oninput="scheduleNoteSave()">' + esc(lead.notes || '') + '</textarea>';
+      html += '<h3>수동 리뷰 메모</h3>';
+      html += '<textarea class="notes-area" id="notesArea" aria-label="수동 리뷰 메모 입력" placeholder="수동 리뷰 메모를 입력하세요..." oninput="scheduleNoteSave()">' + esc(lead.manualReviewNotes || lead.notes || '') + '</textarea>';
       html += '</div>';
 
       // 타임라인 섹션
@@ -736,7 +736,7 @@ export function getLeadDetailPage(lead, statusLogs) {
       clearTimeout(noteTimer);
       noteTimer = setTimeout(async () => {
         const val = document.getElementById('notesArea').value;
-        await updateField('notes', val);
+        await updateField('manualReviewNotes', val);
       }, 800);
     }
 

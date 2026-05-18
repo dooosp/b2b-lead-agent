@@ -201,6 +201,34 @@ test('lead list and detail pages render reviewStatus controls and trust metadata
   assert.match(detailHtml, /출처/);
 });
 
+test('lead review pages save explicit human-entered manual review notes only', () => {
+  const listHtml = getLeadsPage();
+  const detailHtml = getLeadDetailPage({
+    id: 'lead-1',
+    profileId: 'danfoss',
+    status: 'NEW',
+    reviewStatus: 'NEEDS_REVIEW',
+    company: 'DL이앤씨',
+    signal: '데이터센터 냉각 설비 증설 착공',
+    summary: '데이터센터 냉각 설비 증설 착공',
+    recommendedMessage: 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.',
+    manualReviewNotes: '사람이 입력한 검토 메모',
+    notes: '사람이 입력한 검토 메모',
+    sources: [{ title: 'DL이앤씨 데이터센터 증설', url: 'https://example.com/dl' }],
+    product: 'Turbocor 컴프레서',
+    score: 84,
+    grade: 'A'
+  }, []);
+
+  assert.match(listHtml, /수동 리뷰 메모/);
+  assert.match(listHtml, /aria-label="수동 리뷰 메모 입력"/);
+  assert.match(listHtml, /JSON\.stringify\(\{ manualReviewNotes: textarea\.value \}\)/);
+  assert.doesNotMatch(listHtml, /JSON\.stringify\(\{ notes: textarea\.value \}\)/);
+  assert.match(detailHtml, /수동 리뷰 메모/);
+  assert.match(detailHtml, /updateField\('manualReviewNotes', val\)/);
+  assert.match(detailHtml, /사람이 입력한 검토 메모/);
+});
+
 test('lead list page uses reviewer queue heading and non-repetitive human review copy', () => {
   const listHtml = getLeadsPage();
 

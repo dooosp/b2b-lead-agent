@@ -1,9 +1,13 @@
 # Manual Review Notes Option A Implementation Plan
 
-> **For agentic workers:** This is a plan-only decision artifact. Do not
-> implement it from this document alone. Future execution requires a separate
-> human approval that names the exact implementation scope, branch, files, and
-> validation commands.
+> **For agentic workers:** This document was originally added as a plan-only
+> decision artifact in PR #119. The later approval record
+> `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4477073009`
+> supersedes that plan-only HOLD only for the exact local/test-safe Option A
+> implementation: human-entered manual review notes only. Production proof,
+> production deploy, production D1, generated suggestion persistence, CRM,
+> outreach, analytics, LLM, outcome learning, and manager dashboard v1 remain
+> out of scope.
 
 **Goal:** Define the safe local/test-only implementation path for Option A:
 save only human-entered manual notes while generated reviewer note suggestions
@@ -23,9 +27,11 @@ local tests, Node test runner, local-only route/page smoke tests.
 
 - `NEXT_PRODUCT_TRACK_DECISION`: `SAVED_NOTES_OPTION_A_PLAN_ONLY`
 - `SAVED_NOTES_PERSISTENCE_DECISION`: `OPTION_A_PLAN_ONLY`
+- `IMPLEMENTATION_DECISION`: `IMPLEMENT_OPTION_A_MANUAL_NOTES_LOCAL_TEST_ONLY`
 - `MANAGER_DASHBOARD_DECISION`: `HOLD`
 - `OUTCOME_LEARNING_DECISION`: `HOLD`
 - `PRODUCTION_PROOF_DECISION`: `HOLD`
+- Approval record: `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4477073009`
 
 Decision meaning:
 
@@ -35,7 +41,8 @@ Decision meaning:
 - Generated suggestions must not be saved.
 - Generated suggestions must not be sent.
 - Generated suggestions must not be treated as human-authored saved notes.
-- No saved-notes implementation is approved by this plan.
+- The plan-only state is superseded only for local/test-safe Option A
+  implementation. Production proof/deploy remains `HOLD`.
 
 ## Verified Baseline
 
@@ -47,10 +54,31 @@ Decision meaning:
 - Decision packet present: `docs/roadmap/saved-review-notes-decision-packet.md`
 - Standing approval policy present: `docs/standing-approval-policy.md`
 
-This plan stays inside the standing non-production boundary. It does not
-approve production deploy, Wrangler, production D1, production endpoint calls,
-production logs or secrets, production smoke tests, or production observation
-claims.
+This implementation stays inside the standing non-production boundary. It does
+not approve production deploy, Wrangler, production D1, production endpoint
+calls, production logs or secrets, production smoke tests, or production
+observation claims.
+
+## Implementation Record
+
+Option A is implemented locally by formalizing the existing `notes` column as
+the human-entered manual review notes contract:
+
+- API write alias: `manualReviewNotes`
+- API read alias: `manualReviewNotes`
+- provenance field: `manualReviewNotesProvenance = "human_entered"` when saved
+  text is present
+- backing storage: existing `leads.notes`
+- UI surfaces: `/leads` lead cards and lead-detail manual note textareas
+- generated/cache batch inserts blank note-like fields so only explicit manual
+  note PATCH writes create saved notes
+- generated suggestion boundary: generated reviewer note suggestion patch fields
+  are rejected; queue/session suggestion objects remain response-only helper
+  text and are not persisted to lead rows
+
+No new D1 table, generated suggestion snapshot, production migration, Wrangler
+command, production endpoint, production DB, CRM/outreach/analytics, or LLM
+behavior is introduced by this implementation.
 
 ## Existing Manual Notes Path
 
@@ -72,9 +100,10 @@ Current repository inspection shows an existing operator note path:
 - Existing tests cover atomic behavior for valid notes updates and invalid mixed
   payloads that must not partially overwrite notes.
 
-Option A should build on this audited path only if a future implementation
-approval confirms that the existing `notes` field is the intended saved manual
-note contract. This plan does not make that approval.
+The implementation approval confirms that the existing `notes` field is the
+local/test-safe saved manual note contract for Option A. The public API/UI alias
+is `manualReviewNotes` so generated suggestions remain visibly separate from
+human-entered saved notes.
 
 ## Human-Entered Manual Notes Only
 
@@ -128,10 +157,11 @@ Option A's safest authorship model is simple:
 - Saved note provenance: manual entry only.
 - Generated suggestion provenance: copy-only helper, not saved.
 
-Do not introduce new provenance fields in this plan. If a future product
-decision wants edited generated suggestions, generated snapshots, note history,
-or reviewer identity, that is no longer plain Option A and must be separately
-approved.
+This implementation adds only derived provenance for the saved manual note
+value: `manualReviewNotesProvenance = "human_entered"` when note text exists.
+If a future product decision wants edited generated suggestions, generated
+snapshots, note history, or reviewer identity, that is no longer plain Option A
+and must be separately approved.
 
 Minimum provenance question for future Option A implementation:
 
@@ -196,91 +226,33 @@ Open conflict questions before implementation:
 Safe default for Option A: generated suggestions never overwrite manual notes,
 and lead refreshes should preserve existing manual notes.
 
-## Local/Test-Only Implementation Candidates
+## Implemented Local/Test Evidence
 
-These are candidate future slices only. They are not approved for execution by
-this document.
+The implemented local/test-safe slice covers:
 
-### Candidate 1: Existing Manual Note Contract Audit
+- `worker/db/transform.js`: exposes `manualReviewNotes` and
+  `manualReviewNotesProvenance` while keeping `notes` as the storage field.
+- `worker/db/leads.js`: accepts `manualReviewNotes`, keeps legacy `notes`
+  compatibility, rejects conflicting note payloads, and rejects generated
+  reviewer note suggestion persistence attempts.
+- `worker/pages/leads.js`: labels the list note control as manual review notes
+  and saves through `manualReviewNotes`.
+- `worker/pages/lead-detail.js`: labels the detail note control as manual
+  review notes and saves through `manualReviewNotes`.
+- `worker/api/serializers/lead-csv.js`: exports the same existing note value as
+  manual review notes.
+- `worker/tests/manual-review-notes.test.mjs`: proves manual save/read,
+  provenance, generated suggestion rejection, and lead-refresh preservation.
+- `worker/tests/lead-review-status.test.mjs`: proves the UI save contract uses
+  `manualReviewNotes`.
+- `worker/e2e/local-e2e.test.mjs`: proves the fake-D1 loopback route/page smoke
+  can save and read human-entered manual notes while generated suggestions
+  remain response helper text.
+- `docs/local-e2e-harness.md`: records the local-only coverage.
 
-Purpose: prove the current manual note path is the only save path.
+## Required Tests
 
-Files to inspect in a future implementation:
-
-- `worker/pages/lead-detail.js`
-- `worker/api/leads.js`
-- `worker/db/leads.js`
-- `worker/db/transform.js`
-- `worker/tests/lead-patch-atomicity.test.mjs`
-- `worker/tests/lead-review-status.test.mjs`
-- `worker/e2e/local-e2e.test.mjs`
-
-Expected local evidence:
-
-- Manual `notesArea` entry produces a `PATCH` body with `notes`.
-- Generated note copy controls do not produce a `PATCH` body with `notes`.
-- Invalid mixed payloads do not partially update notes.
-- Managed lead refresh does not overwrite existing manual notes.
-
-### Candidate 2: Manual-Only Label And Copy Boundary Tests
-
-Purpose: clarify UI wording without changing persistence behavior.
-
-Files to inspect in a future implementation:
-
-- `worker/pages/lead-detail.js`
-- `worker/pages/leads.js`
-- `worker/pages/opportunity-workbench.js`
-- `worker/tests/lead-review-status.test.mjs`
-- `worker/tests/opportunity-workbench.test.mjs`
-
-Expected local evidence:
-
-- Manual note input is labeled as human-entered manual notes.
-- Generated suggestions are labeled as generated copy-only suggestions.
-- Copy buttons copy text only.
-- Copy fallback selects visible generated text only.
-- No generated suggestion has save, send, CRM, analytics, or persistence copy.
-
-### Candidate 3: Fake-D1 Manual Note Persistence Tests
-
-Purpose: prove Option A behavior with local fake-D1 only.
-
-Files to inspect in a future implementation:
-
-- `worker/tests/helpers/fake-d1.mjs`
-- `worker/tests/helpers/fixtures.mjs`
-- `worker/tests/lead-patch-atomicity.test.mjs`
-- `worker/tests/lead-review-status.test.mjs`
-
-Expected local evidence:
-
-- A human-entered `notes` patch persists to fake-D1.
-- A generated suggestion copy action does not persist to fake-D1.
-- Notes remain unchanged when an invalid `reviewStatus` is submitted in the same
-  payload.
-- Notes remain unchanged when an invalid sales `status` transition is submitted.
-
-### Candidate 4: Local Route Smoke For No Generated Auto-Save
-
-Purpose: prove visible reviewer note suggestions remain copy-only in the local
-loopback harness.
-
-Files to inspect in a future implementation:
-
-- `worker/e2e/local-e2e.test.mjs`
-- `docs/local-e2e-harness.md`
-
-Expected local evidence:
-
-- Local fake-D1 route/page smoke renders generated suggestions.
-- Copying generated suggestions does not call note persistence.
-- Manual note entry remains the only save candidate.
-- Browser-memory activity reset remains browser-memory only.
-
-## Required Tests For A Future Implementation
-
-Any future Option A implementation should run at minimum:
+Option A local/test implementation should run at minimum:
 
 - `git diff --check`
 - `npm run check:naming`
@@ -288,7 +260,7 @@ Any future Option A implementation should run at minimum:
 - `npm run eval:lead-quality`
 - `npm test`
 
-Future UI behavior changes should also consider:
+UI behavior changes should also run:
 
 - `npm run test:e2e:local`
 
@@ -298,13 +270,12 @@ steps for Option A local/test-only work.
 
 ## Separate Schema, API, And Persistence Questions
 
-These questions remain separate from this plan-only record:
+These questions remain separate from this local/test implementation:
 
-- Is the existing `leads.notes` field the complete Option A persistence model?
-- Should Option A create a new note record model instead of reusing
-  `leads.notes`?
-- Is the current `PATCH /api/leads/:id` body shape enough, or does a future API
-  contract need explicit note-only operations?
+- Should a future production-ready note model create separate note records
+  instead of reusing `leads.notes`?
+- Does a future API contract need explicit note-only operations beyond
+  `manualReviewNotes` on `PATCH /api/leads/:id`?
 - Should note saves require concurrency tokens or updated-at checks?
 - Should notes have author identity, created-at, updated-at, or source fields?
 - Should note history exist?
@@ -312,21 +283,18 @@ These questions remain separate from this plan-only record:
 - Should production rollout require a migration or lazy DDL change?
 - What production approval record is required before production saved-note use?
 
-No schema, API, D1 persistence expansion, migration, production rollout, or
-production proof is approved here.
+No new schema/table, generated suggestion storage, migration, production
+rollout, or production proof is approved here.
 
 ## Explicit Non-Goals
 
-- No saved notes implementation.
-- No schema changes.
-- No D1 persistence changes.
-- No migrations.
-- No API contract changes.
-- No runtime UI behavior changes.
 - No generated note auto-save.
 - No generated suggestion persistence.
 - No generated suggestion send behavior.
 - No generated suggestion treatment as human-authored saved notes.
+- No generated suggestion snapshot table or field.
+- No new schema/table changes.
+- No migrations.
 - No edit/delete implementation.
 - No retention implementation.
 - No CRM, outreach, analytics, or LLM work.
@@ -345,15 +313,13 @@ production proof is approved here.
 
 ## Future Approval Gate
 
-Before any implementation begins, record a new human approval that includes:
+Before any follow-up beyond this exact local/test Option A slice begins, record
+a new human approval that includes:
 
-- exact selected Option A scope
-- exact branch and base SHA
-- exact files allowed to change
-- whether existing `leads.notes` is approved as the persistence contract
-- whether UI copy changes are allowed
-- whether tests only, docs only, or local runtime changes are allowed
+- exact selected follow-up scope
+- whether edit/delete, note history, reviewer identity, concurrency, or
+  production rollout is included
+- whether any schema or production D1 action is required
 - validation commands
-- explicit confirmation that production actions remain prohibited
-
-Absent that approval, stop at this plan.
+- explicit confirmation that production actions remain prohibited unless the
+  follow-up is a separately approved production operation
