@@ -377,10 +377,34 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.equal(manualNotesLead.manualReviewNotes, manualReviewNoteText);
   assert.equal(manualNotesLead.manualReviewNotesProvenance, 'human_entered');
   assert.equal(manualNotesLead.reviewNoteSuggestion, undefined);
+  await page.waitForFunction(() => !document.querySelector('.notes-saved.show'));
+  const editedManualReviewNoteText = 'Edited human-entered local E2E manual review note';
+  await page.locator('.notes-textarea').first().fill(editedManualReviewNoteText);
+  await page.waitForFunction(() => !!document.querySelector('.notes-saved.show'));
+  const editedManualNotesResponse = await localFetch('/api/leads?profile=danfoss');
+  const editedManualNotesPayload = await readJson(editedManualNotesResponse);
+  const editedManualNotesLead = editedManualNotesPayload.leads.find((lead) => lead.id === 'local-lead-approved');
+  assert.equal(editedManualNotesLead.manualReviewNotes, editedManualReviewNoteText);
+  assert.equal(editedManualNotesLead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(editedManualNotesLead.reviewNoteSuggestion, undefined);
   await page.keyboard.press('j');
   await page.keyboard.press('c');
   assert.equal(await page.evaluate(() => window.__copiedReviewNotes.length), 2);
   await assertRenderedText(page, ['포커스 이동 2건', '노트 복사 2건']);
+  await page.waitForFunction(() => !document.querySelector('.notes-saved.show'));
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.locator('.notes-clear-btn').first().click();
+  await page.waitForFunction(() => {
+    const textarea = document.querySelector('.notes-textarea');
+    const indicator = document.querySelector('.notes-saved.show');
+    return !!textarea && textarea.value === '' && !!indicator;
+  });
+  const clearedManualNotesResponse = await localFetch('/api/leads?profile=danfoss');
+  const clearedManualNotesPayload = await readJson(clearedManualNotesResponse);
+  const clearedManualNotesLead = clearedManualNotesPayload.leads.find((lead) => lead.id === 'local-lead-approved');
+  assert.equal(clearedManualNotesLead.manualReviewNotes, '');
+  assert.equal(clearedManualNotesLead.manualReviewNotesProvenance, '');
+  assert.equal(clearedManualNotesLead.reviewNoteSuggestion, undefined);
 
   const shortcutLeadsResponse = await localFetch('/api/leads?profile=danfoss');
   const shortcutLeadsPayload = await readJson(shortcutLeadsResponse);

@@ -32,6 +32,44 @@ test('manualReviewNotes PATCH persists human-entered notes with manual provenanc
   assert.equal(db.leads.get('lead-1').notes, 'Human-entered review note: confirm buyer before outreach.');
 });
 
+test('manualReviewNotes PATCH edits an existing human-entered note', async () => {
+  const db = new FakeD1Database({ leads: [createLeadRow({ notes: 'Initial human review note.' })] });
+
+  const response = await patchLead(db, {
+    manualReviewNotes: 'Updated human review note after second pass.',
+  });
+  const payload = await response.json();
+  const lead = await getLeadById(db, 'lead-1');
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.success, true);
+  assert.deepEqual(payload.changedFields, ['manualReviewNotes']);
+  assert.equal(payload.lead.manualReviewNotes, 'Updated human review note after second pass.');
+  assert.equal(payload.lead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(lead.manualReviewNotes, 'Updated human review note after second pass.');
+  assert.equal(db.leads.get('lead-1').notes, 'Updated human review note after second pass.');
+});
+
+test('manualReviewNotes PATCH clears an existing human-entered note', async () => {
+  const db = new FakeD1Database({ leads: [createLeadRow({ notes: 'Saved note to clear.' })] });
+
+  const response = await patchLead(db, {
+    manualReviewNotes: '',
+  });
+  const payload = await response.json();
+  const lead = await getLeadById(db, 'lead-1');
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.success, true);
+  assert.deepEqual(payload.changedFields, ['manualReviewNotes']);
+  assert.equal(payload.lead.manualReviewNotes, '');
+  assert.equal(payload.lead.notes, '');
+  assert.equal(payload.lead.manualReviewNotesProvenance, '');
+  assert.equal(lead.manualReviewNotes, '');
+  assert.equal(lead.manualReviewNotesProvenance, '');
+  assert.equal(db.leads.get('lead-1').notes, '');
+});
+
 test('manualReviewNotes is exposed on local read paths without saving generated suggestions', async () => {
   const db = new FakeD1Database({
     leads: [
@@ -96,6 +134,24 @@ test('generated reviewer note suggestion persistence attempts are rejected atomi
   assert.equal(templatesPayload.success, false);
   assert.match(templatesPayload.message, /copy-only/);
   assert.equal(db.leads.get('lead-1').notes, 'Keep human note');
+});
+
+test('generated suggestion persistence attempts cannot clear manual review notes', async () => {
+  const db = new FakeD1Database({ leads: [createLeadRow({ notes: 'Keep this human-entered note.' })] });
+
+  const response = await patchLead(db, {
+    manualReviewNotes: '',
+    generatedReviewerNoteSuggestion: 'Generated helper text cannot drive clearing.',
+  });
+  const payload = await response.json();
+  const lead = await getLeadById(db, 'lead-1');
+
+  assert.equal(response.status, 400);
+  assert.equal(payload.success, false);
+  assert.match(payload.message, /copy-only/);
+  assert.equal(lead.manualReviewNotes, 'Keep this human-entered note.');
+  assert.equal(lead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(db.leads.get('lead-1').notes, 'Keep this human-entered note.');
 });
 
 test('lead refresh preserves existing human-entered notes and ignores generated note fields', async () => {

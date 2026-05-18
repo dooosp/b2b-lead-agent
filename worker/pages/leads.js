@@ -202,6 +202,10 @@ export function getLeadsPage() {
     .notes-textarea { width: 100%; min-height: 60px; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #ccc; font-size: 13px; resize: vertical; margin-top: 6px; font-family: inherit; }
     .notes-saved { color: #27ae60; font-size: 11px; margin-left: 8px; opacity: 0; transition: opacity 0.3s; }
     .notes-saved.show { opacity: 1; }
+    .notes-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 6px; }
+    .notes-clear-btn { border: 1px solid #555; background: #1f2b3d; color: #d4deea; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+    .notes-clear-btn:hover:not(:disabled), .notes-clear-btn:focus-visible:not(:disabled) { background: #2b3a50; border-color: #8fbfe8; }
+    .notes-clear-btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .csv-btn { margin-left: auto; }
     .view-tabs { display: flex; flex-direction: column; gap: 0; margin-bottom: 16px; }
     .view-tab { flex: 1; min-width:0; padding: 10px; text-align: center; font-size: 13px; font-weight: bold; color: #aaa; background: #1e2a3a; border: 1px solid #2a3a4a; cursor: pointer; transition: all 0.2s; }
@@ -1693,11 +1697,26 @@ export function getLeadsPage() {
 
     let saveTimers = {};
     function scheduleNoteSave(leadId, textarea) {
+      syncManualNoteControls(textarea);
       clearTimeout(saveTimers[leadId]);
       saveTimers[leadId] = setTimeout(() => saveNotes(leadId, textarea), 800);
     }
 
-    async function saveNotes(leadId, textarea) {
+    function showManualNoteIndicator(indicator, message) {
+      if (!indicator) return;
+      indicator.textContent = message;
+      indicator.classList.add('show');
+      clearTimeout(indicator._hideTimer);
+      indicator._hideTimer = setTimeout(() => indicator.classList.remove('show'), 2000);
+    }
+
+    function syncManualNoteControls(textarea) {
+      const section = textarea ? textarea.closest('.notes-section') : null;
+      const clearButton = section ? section.querySelector('.notes-clear-btn') : null;
+      if (clearButton) clearButton.disabled = !String(textarea.value || '').trim();
+    }
+
+    async function saveNotes(leadId, textarea, options = {}) {
       const indicator = textarea.parentElement.querySelector('.notes-saved');
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
@@ -1709,10 +1728,43 @@ export function getLeadsPage() {
         const lead = findCachedLead(leadId);
         if (data.success && data.lead && lead) Object.assign(lead, data.lead);
         if (data.success && indicator) {
-          indicator.classList.add('show');
-          setTimeout(() => indicator.classList.remove('show'), 2000);
+          showManualNoteIndicator(indicator, options.cleared ? '지워짐' : '저장됨');
         }
+        if (data.success) syncManualNoteControls(textarea);
       } catch { /* silent */ }
+    }
+
+    async function clearManualReviewNotes(leadId, button) {
+      const section = button ? button.closest('.notes-section') : null;
+      const textarea = section ? section.querySelector('.notes-textarea') : null;
+      const indicator = section ? section.querySelector('.notes-saved') : null;
+      if (!textarea || !String(textarea.value || '').trim()) return;
+      const confirmed = window.confirm('저장된 수동 리뷰 메모를 지울까요? 생성된 리뷰 노트 제안은 그대로 유지됩니다.');
+      if (!confirmed) return;
+      clearTimeout(saveTimers[leadId]);
+      textarea.value = '';
+      button.disabled = true;
+      try {
+        const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ manualReviewNotes: '' })
+        });
+        const data = await res.json();
+        const lead = findCachedLead(leadId);
+        if (!res.ok || !data.success) {
+          if (lead) textarea.value = lead.manualReviewNotes || lead.notes || '';
+          syncManualNoteControls(textarea);
+          return;
+        }
+        if (data.lead && lead) Object.assign(lead, data.lead);
+        showManualNoteIndicator(indicator, '지워짐');
+        syncManualNoteControls(textarea);
+      } catch {
+        const lead = findCachedLead(leadId);
+        if (lead) textarea.value = lead.manualReviewNotes || lead.notes || '';
+        syncManualNoteControls(textarea);
+      }
     }
 
     async function downloadCSV() {
@@ -1924,6 +1976,10 @@ export function getLeadsPage() {
                 <textarea class="notes-textarea" aria-label="수동 리뷰 메모 입력" placeholder="수동 리뷰 메모를 입력하세요..."
                   oninput="scheduleNoteSave('\${esc(lead.id)}', this)"
                   onblur="saveNotes('\${esc(lead.id)}', this)">\${esc(lead.manualReviewNotes || lead.notes || '')}</textarea>
+                <div class="notes-actions">
+                  <button type="button" class="notes-clear-btn" aria-label="저장된 수동 리뷰 메모 지우기"
+                    onclick="clearManualReviewNotes('\${esc(lead.id)}', this)" \${(lead.manualReviewNotes || lead.notes) ? '' : 'disabled'}>지우기</button>
+                </div>
               </details>
             </div>\` : ''}
             <div class="lead-actions">

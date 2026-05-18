@@ -79,7 +79,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - Saved Review Notes Decision Packet: `docs/roadmap/saved-review-notes-decision-packet.md` records the product/data questions for generated suggestions, edited generated suggestions, manual notes, review rationales, and status-transition reasons, plus the selected Option E boundary. PR #119 added the Option A plan-only implementation packet; the current local/test-only implementation approval record is scoped to human-entered manual notes only.
 - Do not reopen those findings unless you can point to a current-`master` regression or a newly verified gap.
 - Treat closed PRs #1-#9, #10, #22, and #23 as stale/superseded concept inventory unless explicitly re-scoped on top of current `master`.
-- Current non-production implementation goal: ship the scoped Option A local/test-only manual review notes path for human-entered notes only. After that, keep edit/delete, note history, reviewer identity, production proof, outcome learning, CRM/outreach/analytics/LLM, and manager dashboard v1 separately scoped.
+- Current non-production implementation goal: harden the scoped Option A local/test-only manual review notes path for human-entered notes only. Manual Review Notes v0 edit means saving a changed human-entered value, and clear/delete means confirmed clearing of that saved value. Keep note history, reviewer identity, production proof, outcome learning, CRM/outreach/analytics/LLM, and manager dashboard v1 separately scoped.
 
 ## Repo Layout
 

@@ -8,15 +8,21 @@
 > production deploy, production D1, generated suggestion persistence, CRM,
 > outreach, analytics, LLM, outcome learning, and manager dashboard v1 remain
 > out of scope.
+> The later approval record
+> `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4477320711`
+> authorizes only local/test-safe Manual Review Notes v0 edit/clear UX
+> hardening for the same human-entered manual note contract.
 
 **Goal:** Define the safe local/test-only implementation path for Option A:
 save only human-entered manual notes while generated reviewer note suggestions
 remain copy-only helper text.
 
-**Architecture:** Treat existing manual notes and generated reviewer note
-suggestions as separate product concepts. The existing manual notes path can be
-audited as a candidate implementation surface, but any schema, API, storage,
-retention, edit/delete, or production data decision remains separately scoped.
+**Architecture:** Treat manual notes and generated reviewer note suggestions as
+separate product concepts. Manual Review Notes v0 uses the existing note value:
+edit/update means saving a changed human-entered value, and clear/delete means
+confirmed clearing of that saved value. Schema, note history, reviewer identity,
+retention, privacy policy, and production data decisions remain separately
+scoped.
 
 **Tech Stack:** Cloudflare Worker pages and APIs, D1-backed lead rows, fake-D1
 local tests, Node test runner, local-only route/page smoke tests.
@@ -28,10 +34,12 @@ local tests, Node test runner, local-only route/page smoke tests.
 - `NEXT_PRODUCT_TRACK_DECISION`: `SAVED_NOTES_OPTION_A_PLAN_ONLY`
 - `SAVED_NOTES_PERSISTENCE_DECISION`: `OPTION_A_PLAN_ONLY`
 - `IMPLEMENTATION_DECISION`: `IMPLEMENT_OPTION_A_MANUAL_NOTES_LOCAL_TEST_ONLY`
+- `EDIT_CLEAR_UX_DECISION`: `IMPLEMENT_MANUAL_REVIEW_NOTES_V0_EDIT_CLEAR_UX_HARDENING_LOCAL_TEST_ONLY`
 - `MANAGER_DASHBOARD_DECISION`: `HOLD`
 - `OUTCOME_LEARNING_DECISION`: `HOLD`
 - `PRODUCTION_PROOF_DECISION`: `HOLD`
 - Approval record: `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4477073009`
+- Edit/clear approval record: `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4477320711`
 
 Decision meaning:
 
@@ -43,13 +51,17 @@ Decision meaning:
 - Generated suggestions must not be treated as human-authored saved notes.
 - The plan-only state is superseded only for local/test-safe Option A
   implementation. Production proof/deploy remains `HOLD`.
+- Manual Review Notes v0 edit/clear hardening is approved only for the same
+  local/test-safe human-entered note surface. Production proof/deploy remains
+  `HOLD`.
 
 ## Verified Baseline
 
 - Repository: `dooosp/b2b-lead-agent`
 - Default branch: `master`
-- Current baseline: `c337310c56b89892b9be3092db635581175a99d3`
+- Current baseline: `bbc01b4bfc1629ec671b64b8ea0d44b2c1f17e4c`
 - PR #117: merged as `fix: reduce duplicate reviewer note suggestion display`
+- PR #120: merged as `feat: add manual review notes option a`
 - Issue #115: closed as completed
 - Decision packet present: `docs/roadmap/saved-review-notes-decision-packet.md`
 - Standing approval policy present: `docs/standing-approval-policy.md`
@@ -70,6 +82,11 @@ the human-entered manual review notes contract:
   text is present
 - backing storage: existing `leads.notes`
 - UI surfaces: `/leads` lead cards and lead-detail manual note textareas
+- edit/update UX: reviewers save a changed human-entered value through the same
+  explicit `manualReviewNotes` control
+- clear/delete UX: reviewers clear the saved human-entered value through an
+  explicit clear control with confirmation; this is value clearing, not note
+  history, retention, or hard-delete semantics
 - generated/cache batch inserts blank note-like fields so only explicit manual
   note PATCH writes create saved notes
 - generated suggestion boundary: generated reviewer note suggestion patch fields
@@ -80,15 +97,15 @@ No new D1 table, generated suggestion snapshot, production migration, Wrangler
 command, production endpoint, production DB, CRM/outreach/analytics, or LLM
 behavior is introduced by this implementation.
 
-## Existing Manual Notes Path
+## Current Manual Notes Path
 
-Current repository inspection shows an existing operator note path:
+Current repository inspection shows the implemented human-entered note path:
 
 - `worker/pages/lead-detail.js` renders a `textarea` named `notesArea` with
-  `aria-label="메모를 입력하세요"` and sends entered text through
+  `aria-label="수동 리뷰 메모 입력"` and sends entered text through
   `scheduleNoteSave()`.
 - `scheduleNoteSave()` reads only the current `notesArea` value and calls
-  `updateField('notes', val)` after a short debounce.
+  `updateField('manualReviewNotes', val)` after a short debounce.
 - `updateField()` sends `PATCH /api/leads/:id` with a JSON body containing the
   named field.
 - `worker/api/leads.js` routes `PATCH /api/leads/:id` through
@@ -99,6 +116,8 @@ Current repository inspection shows an existing operator note path:
 - `worker/db/transform.js` maps `notes` between D1 rows and lead domain objects.
 - Existing tests cover atomic behavior for valid notes updates and invalid mixed
   payloads that must not partially overwrite notes.
+- `/leads` and lead detail expose explicit clear controls that confirm before
+  sending `manualReviewNotes: ""`.
 
 The implementation approval confirms that the existing `notes` field is the
 local/test-safe saved manual note contract for Option A. The public API/UI alias
@@ -174,21 +193,31 @@ Minimum provenance question for future Option A implementation:
 - Is a timestamp already provided by `updated_at`, or does note-specific timing
   need a separate contract?
 
-## Edit And Delete Questions
+## V0 Edit And Clear Behavior
 
-Open product questions before implementation:
+Implemented local/test-safe behavior:
 
-- Is editing a manual note allowed after the first save?
-- Does editing replace the prior note, or does it need version history?
-- Is clearing the manual note field a delete action?
-- If clearing is delete, is it hard delete or soft delete?
+- Editing a manual note after the first save is allowed.
+- Editing replaces the prior single saved note value through
+  `manualReviewNotes`.
+- Clearing the manual note field is the v0 delete-equivalent action.
+- Clearing writes an empty `manualReviewNotes` value and removes derived
+  `human_entered` provenance because no saved note text remains.
+- Clear controls require confirmation before the empty value is sent.
+- Clear/delete does not affect generated reviewer note suggestions.
+- Clear/delete does not create generated suggestion persistence.
+
+Remaining separate product questions:
+
+- Does editing need version history?
+- If future delete semantics go beyond value clearing, is that hard delete or
+  soft delete?
 - Who is allowed to delete a manual note?
-- Does delete require a confirmation state?
 - Does changing `reviewStatus` affect existing manual notes?
 - Should the UI show that a note may be stale after the lead state changes?
 
-No edit, delete, versioning, stale-note labeling, or confirmation behavior is
-implemented or approved here.
+No versioning, stale-note labeling, reviewer identity, retention policy, or
+production delete semantics are implemented or approved here.
 
 ## Retention And Privacy Questions
 
@@ -236,18 +265,19 @@ The implemented local/test-safe slice covers:
   compatibility, rejects conflicting note payloads, and rejects generated
   reviewer note suggestion persistence attempts.
 - `worker/pages/leads.js`: labels the list note control as manual review notes
-  and saves through `manualReviewNotes`.
+  and saves/edits/clears through `manualReviewNotes`.
 - `worker/pages/lead-detail.js`: labels the detail note control as manual
-  review notes and saves through `manualReviewNotes`.
+  review notes and saves/edits/clears through `manualReviewNotes`.
 - `worker/api/serializers/lead-csv.js`: exports the same existing note value as
   manual review notes.
 - `worker/tests/manual-review-notes.test.mjs`: proves manual save/read,
-  provenance, generated suggestion rejection, and lead-refresh preservation.
+  edit/update, clear, provenance, generated suggestion rejection, and
+  lead-refresh preservation.
 - `worker/tests/lead-review-status.test.mjs`: proves the UI save contract uses
-  `manualReviewNotes`.
+  `manualReviewNotes` and exposes clear controls with confirmation.
 - `worker/e2e/local-e2e.test.mjs`: proves the fake-D1 loopback route/page smoke
-  can save and read human-entered manual notes while generated suggestions
-  remain response helper text.
+  can save, edit, clear, and read human-entered manual notes while generated
+  suggestions remain response helper text.
 - `docs/local-e2e-harness.md`: records the local-only coverage.
 
 ## Required Tests
@@ -295,7 +325,9 @@ rollout, or production proof is approved here.
 - No generated suggestion snapshot table or field.
 - No new schema/table changes.
 - No migrations.
-- No edit/delete implementation.
+- No note history/versioning.
+- No reviewer identity/auth ownership implementation.
+- No delete semantics beyond clearing the saved manual note value.
 - No retention implementation.
 - No CRM, outreach, analytics, or LLM work.
 - No manager dashboard expansion.
@@ -317,8 +349,8 @@ Before any follow-up beyond this exact local/test Option A slice begins, record
 a new human approval that includes:
 
 - exact selected follow-up scope
-- whether edit/delete, note history, reviewer identity, concurrency, or
-  production rollout is included
+- whether note history, reviewer identity, concurrency, delete semantics beyond
+  value clearing, or production rollout is included
 - whether any schema or production D1 action is required
 - validation commands
 - explicit confirmation that production actions remain prohibited unless the

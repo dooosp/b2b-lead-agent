@@ -83,9 +83,10 @@ summary, and advisory boundary text.
 
 Issue #111 completed the Manager / Reviewer Summary v0 UX findings intake. PR
 #112 added the Saved Review Notes Decision Packet, Issue #113 selected Option E,
-and PR #114 shipped copy-only wording clarification only. The next safe
-product-planning step is Issue #115, Copy-only Reviewer Note Suggestions UX
-Findings Intake. Do not implement saved notes, persistence, manager-dashboard expansion,
+PR #114 shipped copy-only wording clarification only, Issue #115 closed its UX
+intake, PR #119 added the Option A manual note plan, and PR #120 implemented
+local/test-safe human-entered manual notes. Do not implement generated
+suggestion persistence, new note schema/storage, manager-dashboard expansion,
 outcome learning, production observation, or summary v1 behavior from this
 packet alone.
 

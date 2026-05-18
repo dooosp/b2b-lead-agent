@@ -229,6 +229,35 @@ test('lead review pages save explicit human-entered manual review notes only', (
   assert.match(detailHtml, /사람이 입력한 검토 메모/);
 });
 
+test('lead review pages expose explicit clear controls for saved manual review notes', () => {
+  const listHtml = getLeadsPage();
+  const detailHtml = getLeadDetailPage({
+    id: 'lead-1',
+    profileId: 'danfoss',
+    status: 'NEW',
+    reviewStatus: 'NEEDS_REVIEW',
+    company: 'DL이앤씨',
+    signal: '데이터센터 냉각 설비 증설 착공',
+    summary: '데이터센터 냉각 설비 증설 착공',
+    recommendedMessage: 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.',
+    manualReviewNotes: '사람이 입력한 검토 메모',
+    notes: '사람이 입력한 검토 메모',
+    sources: [{ title: 'DL이앤씨 데이터센터 증설', url: 'https://example.com/dl' }],
+    product: 'Turbocor 컴프레서',
+    score: 84,
+    grade: 'A'
+  }, []);
+
+  assert.match(listHtml, /function clearManualReviewNotes\(leadId, button\)/);
+  assert.match(listHtml, /aria-label="저장된 수동 리뷰 메모 지우기"/);
+  assert.match(listHtml, /저장된 수동 리뷰 메모를 지울까요/);
+  assert.match(listHtml, /JSON\.stringify\(\{ manualReviewNotes: '' \}\)/);
+  assert.match(detailHtml, /function clearManualReviewNotes\(\)/);
+  assert.match(detailHtml, /aria-label="저장된 수동 리뷰 메모 지우기"/);
+  assert.match(detailHtml, /저장된 수동 리뷰 메모를 지울까요/);
+  assert.match(detailHtml, /updateField\('manualReviewNotes', ''\)/);
+});
+
 test('lead list page uses reviewer queue heading and non-repetitive human review copy', () => {
   const listHtml = getLeadsPage();
 
