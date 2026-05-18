@@ -11,6 +11,8 @@ export const VALID_TRANSITIONS = {
   WON: []
 };
 
+export const MANUAL_REVIEW_NOTE_PROVENANCE = 'human_entered';
+
 const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|mc_|ocid$|cmp$|cmpid$|ref$|ref_src$|guccounter$|igshid$|yclid$)/i;
 
 function parseJson(value, fallback) {
@@ -44,6 +46,10 @@ function firstNonEmptyString(...values) {
     if (text.trim()) return text;
   }
   return '';
+}
+
+function manualReviewNoteProvenance(notes) {
+  return stringOrEmpty(notes).trim() ? MANUAL_REVIEW_NOTE_PROVENANCE : '';
 }
 
 function normalizeGenerationMode(value, fallback = 'llm') {
@@ -218,6 +224,8 @@ function normalizePersistedLead(lead = {}, { profileId = '', source = '', rowId 
   const stableIdentityKey = sanitizeLeadText(lead.identityKey || lead.identity_key, '')
     || buildLeadIdentityKey(identityLead, { profileId });
 
+  const manualReviewNotes = stringOrEmpty(lead.manualReviewNotes ?? lead.manual_review_notes ?? lead.notes);
+
   const persistedLead = {
     id: sanitizeLeadText(rowId || lead.id, '')
       || computeStableLeadId(identityLead, { profileId, identityKey: stableIdentityKey }),
@@ -235,7 +243,9 @@ function normalizePersistedLead(lead = {}, { profileId = '', source = '', rowId 
     salesPitch: firstNonEmptyString(lead.salesPitch, lead.sales_pitch, lead.recommendedMessage, lead.recommended_message),
     globalContext: stringOrEmpty(lead.globalContext ?? lead.global_context),
     sources: normalizedSources,
-    notes: stringOrEmpty(lead.notes),
+    notes: manualReviewNotes,
+    manualReviewNotes,
+    manualReviewNotesProvenance: manualReviewNoteProvenance(manualReviewNotes),
     enriched: toFiniteNumber(lead.enriched, 0),
     articleBody: stringOrEmpty(lead.articleBody ?? lead.article_body),
     actionItems: Array.isArray(lead.actionItems ?? lead.action_items) ? (lead.actionItems ?? lead.action_items) : [],
@@ -288,6 +298,7 @@ export function rowToLead(row) {
     global_context: row.global_context,
     sources: parseJson(row.sources || '[]', []),
     notes: row.notes,
+    manual_review_notes: row.manual_review_notes,
     enriched: row.enriched,
     article_body: row.article_body,
     action_items: parseJson(row.action_items || '[]', []),
@@ -339,6 +350,8 @@ export function rowToLead(row) {
     whyNow: normalized.whyNow,
     sources: normalized.sources,
     notes: normalized.notes,
+    manualReviewNotes: normalized.manualReviewNotes,
+    manualReviewNotesProvenance: normalized.manualReviewNotesProvenance,
     enriched: normalized.enriched,
     articleBody: normalized.articleBody,
     actionItems: normalized.actionItems,

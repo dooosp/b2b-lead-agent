@@ -1703,9 +1703,11 @@ export function getLeadsPage() {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ notes: textarea.value })
+          body: JSON.stringify({ manualReviewNotes: textarea.value })
         });
         const data = await res.json();
+        const lead = findCachedLead(leadId);
+        if (data.success && data.lead && lead) Object.assign(lead, data.lead);
         if (data.success && indicator) {
           indicator.classList.add('show');
           setTimeout(() => indicator.classList.remove('show'), 2000);
@@ -1918,10 +1920,10 @@ export function getLeadsPage() {
             \${lead.id ? \`
             <div class="notes-section">
               <details>
-                <summary>메모 \${lead.notes ? '(작성됨)' : ''}<span class="notes-saved">저장됨</span></summary>
-                <textarea class="notes-textarea" placeholder="메모를 입력하세요..."
+                <summary>수동 리뷰 메모 \${(lead.manualReviewNotes || lead.notes) ? '(작성됨)' : ''}<span class="notes-saved">저장됨</span></summary>
+                <textarea class="notes-textarea" aria-label="수동 리뷰 메모 입력" placeholder="수동 리뷰 메모를 입력하세요..."
                   oninput="scheduleNoteSave('\${esc(lead.id)}', this)"
-                  onblur="saveNotes('\${esc(lead.id)}', this)">\${esc(lead.notes || '')}</textarea>
+                  onblur="saveNotes('\${esc(lead.id)}', this)">\${esc(lead.manualReviewNotes || lead.notes || '')}</textarea>
               </details>
             </div>\` : ''}
             <div class="lead-actions">

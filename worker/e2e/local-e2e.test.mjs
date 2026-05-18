@@ -77,6 +77,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.equal(leadsPayload.reviewerActionQueue.items[0].reviewNoteTemplates.length, 3);
   const approvedLead = leadsPayload.leads.find((lead) => lead.id === 'local-lead-approved');
   assert.equal(approvedLead.reviewStatus, 'APPROVED');
+  assert.equal(approvedLead.manualReviewNotes, 'Seeded local smoke note');
+  assert.equal(approvedLead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(approvedLead.reviewNoteSuggestion, undefined);
 
   const detailResponse = await localFetch('/leads/local-lead-approved');
   const detailHtml = await detailResponse.text();
@@ -365,6 +368,15 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
 
   await page.locator('.notes-section details').first().click();
   await page.locator('.notes-textarea').first().focus();
+  const manualReviewNoteText = 'Human-entered local E2E manual review note';
+  await page.locator('.notes-textarea').first().fill(manualReviewNoteText);
+  await page.waitForFunction(() => !!document.querySelector('.notes-saved.show'));
+  const manualNotesResponse = await localFetch('/api/leads?profile=danfoss');
+  const manualNotesPayload = await readJson(manualNotesResponse);
+  const manualNotesLead = manualNotesPayload.leads.find((lead) => lead.id === 'local-lead-approved');
+  assert.equal(manualNotesLead.manualReviewNotes, manualReviewNoteText);
+  assert.equal(manualNotesLead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(manualNotesLead.reviewNoteSuggestion, undefined);
   await page.keyboard.press('j');
   await page.keyboard.press('c');
   assert.equal(await page.evaluate(() => window.__copiedReviewNotes.length), 2);

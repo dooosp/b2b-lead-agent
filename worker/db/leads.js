@@ -2,6 +2,38 @@ import { ensureD1Schema } from './schema.js';
 import { VALID_TRANSITIONS, rowToLead, leadToRow } from './transform.js';
 import { REVIEW_STATUSES, normalizeReviewStatus } from '../lib/leadbrief-v1.js';
 
+const GENERATED_REVIEW_NOTE_PATCH_FIELDS = Object.freeze([
+  'reviewNoteSuggestion',
+  'review_note_suggestion',
+  'reviewerNoteSuggestion',
+  'reviewer_note_suggestion',
+  'reviewerNoteTemplates',
+  'reviewer_note_templates',
+  'reviewNoteTemplates',
+  'review_note_templates',
+  'generatedReviewerNoteSuggestion',
+  'generated_reviewer_note_suggestion',
+  'generatedReviewNoteSuggestion',
+  'generated_review_note_suggestion',
+  'generatedSuggestionSnapshot',
+  'generated_suggestion_snapshot',
+]);
+
+function hasOwn(object, key) {
+  return Object.prototype.hasOwnProperty.call(object, key);
+}
+
+function rejectGeneratedReviewNotePersistence(patch = {}) {
+  const attemptedField = GENERATED_REVIEW_NOTE_PATCH_FIELDS.find((field) => hasOwn(patch, field));
+  if (!attemptedField) return;
+  throw Object.assign(
+    new Error(
+      `Generated reviewer note suggestions are copy-only and cannot be saved through ${attemptedField}. Use manualReviewNotes for human-entered notes.`
+    ),
+    { status: 400 }
+  );
+}
+
 export async function saveLeadsBatch(db, leads, profileId, source) {
   if (!db || !leads || leads.length === 0) return;
   await ensureD1Schema(db);
@@ -24,6 +56,8 @@ export async function saveLeadsBatch(db, leads, profileId, source) {
   );
   const batch = leads.map(lead => {
     const r = leadToRow(lead, profileId, source);
+    // Batch saves are generated/cache refresh paths; manual notes are written by explicit patch helpers.
+    r.notes = '';
     return stmt.bind(r.id, r.identity_key, r.profile_id, r.source, r.status, r.review_status, r.company, r.summary, r.product, r.score, r.grade, r.roi, r.sales_pitch, r.global_context, r.sources, r.notes, r.score_reason, r.urgency, r.urgency_reason, r.buyer_role, r.evidence, r.confidence, r.confidence_reason, r.assumptions, r.generation_mode, r.verification_status, r.data_gaps, r.event_type, r.created_at, r.updated_at);
   });
   await db.batch(batch);
@@ -86,6 +120,8 @@ function normalizeLeadPatch(lead, patch) {
   const leadUpdates = {};
   let statusLogEntry = null;
 
+  rejectGeneratedReviewNotePersistence(patch);
+
   if (patch.status && patch.status !== lead.status) {
     const allowed = VALID_TRANSITIONS[lead.status] || [];
     if (!allowed.includes(patch.status)) {
@@ -97,10 +133,9 @@ function normalizeLeadPatch(lead, patch) {
     changedFields.push('status');
   }
 
-  const hasReviewStatus = Object.prototype.hasOwnProperty.call(patch, 'reviewStatus')
-    || Object.prototype.hasOwnProperty.call(patch, 'review_status');
+  const hasReviewStatus = hasOwn(patch, 'reviewStatus') || hasOwn(patch, 'review_status');
   if (hasReviewStatus) {
-    const rawReviewStatus = Object.prototype.hasOwnProperty.call(patch, 'reviewStatus')
+    const rawReviewStatus = hasOwn(patch, 'reviewStatus')
       ? patch.reviewStatus
       : patch.review_status;
     const reviewStatus = normalizeReviewStatus(rawReviewStatus, { fallback: '' });
@@ -113,11 +148,28 @@ function normalizeLeadPatch(lead, patch) {
     }
   }
 
-  if (typeof patch.notes === 'string') {
-    const notes = patch.notes.slice(0, 2000);
+  const hasManualReviewNotes = hasOwn(patch, 'manualReviewNotes') || hasOwn(patch, 'manual_review_notes');
+  const hasLegacyNotes = hasOwn(patch, 'notes');
+  if (hasManualReviewNotes || typeof patch.notes === 'string') {
+    const rawManualReviewNotes = hasOwn(patch, 'manualReviewNotes')
+      ? patch.manualReviewNotes
+      : patch.manual_review_notes;
+    if (hasManualReviewNotes && typeof rawManualReviewNotes !== 'string') {
+      throw Object.assign(new Error('manualReviewNotes must be a string.'), { status: 400 });
+    }
+    if (
+      hasManualReviewNotes
+      && hasLegacyNotes
+      && typeof patch.notes === 'string'
+      && patch.notes !== rawManualReviewNotes
+    ) {
+      throw Object.assign(new Error('manualReviewNotes and notes must match when both are provided.'), { status: 400 });
+    }
+
+    const notes = (hasManualReviewNotes ? rawManualReviewNotes : patch.notes).slice(0, 2000);
     if (notes !== (lead.notes || '')) {
       leadUpdates.notes = notes;
-      changedFields.push('notes');
+      changedFields.push(hasManualReviewNotes ? 'manualReviewNotes' : 'notes');
     }
   }
 
