@@ -1,13 +1,18 @@
 # Manual Review Notes V1 Note History / Versioning Decision Packet
 
-This packet prepares Manual Review Notes v1 note history and versioning
+This packet prepared Manual Review Notes v1 note history and versioning
 semantics after the local/test-safe current-value, note-specific timestamp, and
-generic author-label work. It is documentation only.
+generic author-label work. PR #127 was documentation only. A later
+non-production approval selected H2 metadata-only local/test history, and the
+implementation keeps old note text, generated suggestions, production proof,
+and audit-grade history out of scope.
 
 ## 1. Document Status
 
-- Document status: `DRAFT_NOT_APPROVED`.
-- Approval-intent record:
+- Document status: `APPROVED_LOCAL_TEST_ONLY_FOR_H2_METADATA_HISTORY`.
+- Approval record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487764655`.
+- Prior approval-intent record:
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487570553`.
 - Pull request:
   `https://github.com/dooosp/b2b-lead-agent/pull/127`.
@@ -15,28 +20,38 @@ generic author-label work. It is documentation only.
 - Default branch: `master`.
 - Post-PR126 baseline inspected:
   `b4b6fb37b6725851029109f63295977c782b9a74`.
-- Scope: note history/versioning decision packet for Manual Review Notes v1.
-- Runtime behavior changed by this packet: none.
-- UI behavior changed by this packet: none.
-- Schema/API behavior changed by this packet: none.
-- D1 migration performed by this packet: none.
+- Scope: H2 metadata-only local/test history for Manual Review Notes v1.
+- Runtime behavior changed after this packet: accepted human-entered manual
+  note create/edit/clear actions append metadata-only events.
+- UI behavior changed after this packet: manual note state may show only
+  last-change metadata plus a metadata event count.
+- Schema/API behavior changed after this packet: local/test D1 includes
+  `manual_review_note_events`; lead API payloads include metadata-only history
+  summary fields.
+- D1 migration performed by this packet: local/test-only metadata event table;
+  no old note text columns.
 - Production action performed by this packet: none.
 
-This packet does not approve note history implementation. It records options,
-risks, recommended defaults, retention/privacy implications, clear/delete
-semantics, generated-suggestion exclusions, and future approval gates before any
-old manual note value is retained.
+This packet does not approve old manual note value retention, generated
+suggestion history, full note history, audit-grade history, retention/privacy
+enforcement, production deploy, production D1 migration, production endpoint
+calls, production logs/secrets access, or production proof.
 
 ```yaml
-manual_review_notes_v1_note_history_packet:
-  document_status: DRAFT_NOT_APPROVED
-  approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487570553"
-  scope: DOCS_ONLY_DECISION_PACKET
-  post_pr126_baseline: "b4b6fb37b6725851029109f63295977c782b9a74"
-  implementation_approved: false
+manual_review_notes_v1_note_history:
+  document_status: APPROVED_LOCAL_TEST_ONLY
+  approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487764655"
+  prior_approval_intent_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487570553"
+  history_storage_decision: IMPLEMENT_H2_METADATA_ONLY_HISTORY_LOCAL_TEST_ONLY
+  history_content_decision: C1_METADATA_ONLY_EVENT_TYPE_TIMESTAMP_GENERIC_AUTHOR_LABEL
+  event_type_decision: E1_CREATE_EDIT_CLEAR_ONLY
+  clear_delete_semantics_decision: D1_CLEAR_CURRENT_VALUE_PRESERVE_METADATA_ONLY_HISTORY
+  history_ui_decision: U1_SHOW_LAST_CHANGE_METADATA_AND_OPTIONAL_METADATA_EVENT_COUNT_ONLY
+  retention_privacy_decision: NO_OLD_NOTE_TEXT_RETENTION_NO_REAL_PII_LOCAL_TEST_ONLY
+  implementation_approved: true
   production_approved: false
   old_note_value_retention_approved: false
-  note_history_implemented: false
+  note_history_implemented: METADATA_ONLY_LOCAL_TEST
   generated_suggestion_history: FORBIDDEN
 ```
 
@@ -68,16 +83,25 @@ manual_review_notes_v1_note_history_packet:
 - Current clear author/timestamp behavior: clear/delete conservatively clears
   the saved current note value, updates the note-specific timestamp, and sets
   the generic author label only for an accepted manual note change.
-- Current history behavior: no note history/versioning is implemented.
+- Current history behavior: H2 local/test-only metadata history is implemented
+  with `manual_review_note_events`. Events store only `lead_id`, `event_type`,
+  `changed_at`, and the fixed generic `author_label`.
+- API history summary fields: `manualReviewNotesHistoryEventCount`,
+  `manualReviewNotesHistoryLastEventType`,
+  `manualReviewNotesHistoryLastEventAt`, and
+  `manualReviewNotesHistoryLastAuthorLabel`.
+- Current history content behavior: no old manual note value, new manual note
+  value, generated suggestion text, redacted content, or summary content is
+  retained in history.
 - Generated reviewer note suggestions remain copy-only, unsaved,
   unsnapshotted, unattributed to a reviewer, not history entries, and not
   human-authored notes.
 - Current production status: production proof, production deploy, production D1
   access, production endpoint calls, production logs/secrets, CRM, outreach,
   analytics, LLM behavior, manager dashboard v1, outcome learning, real or
-  authenticated reviewer identity, note history implementation, and
-  retention/privacy enforcement remain out of scope unless explicitly approved
-  later.
+  authenticated reviewer identity, full note history, old note text retention,
+  and retention/privacy enforcement remain out of scope unless explicitly
+  approved later.
 
 ## 3. Problem Statement
 
@@ -174,7 +198,8 @@ content and can conflict with clear/delete expectations.
 
 ## 10. Implementation Prerequisites
 
-Before any note history/versioning implementation, record all of the following:
+Before any future note history/versioning expansion beyond the selected H2
+metadata-only local/test implementation, record all of the following:
 
 - Selected history storage model: H0, H1, H2, H3, or H4.
 - Selected history content option: C0, C1, C2, C3, or C4.
@@ -200,22 +225,24 @@ Before any note history/versioning implementation, record all of the following:
 
 ## 11. Explicit Non-Decisions
 
-This packet does not approve:
+This packet approves only H2 metadata-only local/test history. It does not
+approve:
 
-- implementation,
-- schema changes,
-- API contract changes,
-- runtime behavior changes,
-- UI behavior changes,
-- D1 migrations,
+- implementation beyond H2 metadata-only local/test history,
+- schema changes beyond `manual_review_note_events`,
+- API contract changes beyond metadata-only history summary fields,
+- runtime behavior changes beyond accepted human-entered manual note
+  create/edit/clear metadata events,
+- UI behavior changes beyond last-change metadata and metadata event count,
+- production D1 migrations,
 - production migration,
 - production deploy,
 - production proof,
 - production D1 access,
 - production endpoint calls,
 - production logs/secrets access,
-- note history implementation,
-- append-only log implementation,
+- note history implementation beyond local/test metadata-only events,
+- append-only log implementation with content retention or audit guarantees,
 - old note value retention,
 - full note text history,
 - redacted/summarized note history,
@@ -231,10 +258,12 @@ This packet does not approve:
 
 ## 12. Blocked Areas Until Later Approval
 
-- Any append-only note history table or event stream.
+- Any append-only note history table or event stream beyond the local/test-only
+  metadata-only `manual_review_note_events` table.
 - Any old manual note text retention.
 - Any generated suggestion snapshot/version/history.
-- Any history API response fields.
+- Any history API response fields beyond metadata-only summary count, last
+  event type, last event timestamp, and generic last author label.
 - Any full history viewer.
 - Any audit/admin viewer.
 - Any production saved-note history.
@@ -248,21 +277,21 @@ This packet does not approve:
 
 ```yaml
 manual_review_notes_v1_note_history:
-  document_status: DRAFT_NOT_APPROVED
-  approval_record: null
-  history_storage_decision: HOLD
-  history_content_decision: HOLD
-  event_type_decision: HOLD
-  clear_delete_semantics_decision: HOLD
-  history_ui_decision: HOLD
-  retention_privacy_decision: HOLD
+  document_status: APPROVED_LOCAL_TEST_ONLY
+  approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487764655"
+  history_storage_decision: IMPLEMENT_H2_METADATA_ONLY_HISTORY_LOCAL_TEST_ONLY
+  history_content_decision: C1_METADATA_ONLY_EVENT_TYPE_TIMESTAMP_GENERIC_AUTHOR_LABEL
+  event_type_decision: E1_CREATE_EDIT_CLEAR_ONLY
+  clear_delete_semantics_decision: D1_CLEAR_CURRENT_VALUE_PRESERVE_METADATA_ONLY_HISTORY
+  history_ui_decision: U1_SHOW_LAST_CHANGE_METADATA_AND_OPTIONAL_METADATA_EVENT_COUNT_ONLY
+  retention_privacy_decision: NO_OLD_NOTE_TEXT_RETENTION_NO_REAL_PII_LOCAL_TEST_ONLY
   production_proof_decision: HOLD
   generated_suggestion_history: FORBIDDEN
-  allowed_next_action: DECISION_ONLY
+  allowed_next_action: IMPLEMENT_METADATA_ONLY_HISTORY_LOCAL_TEST_ONLY
 ```
 
 ```yaml
-manual_review_notes_v1_note_history_candidate:
+manual_review_notes_v1_note_history_future_expansion_candidate:
   document_status: HUMAN_TO_FILL
   approval_record: null
   history_storage_decision:
@@ -310,12 +339,13 @@ manual_review_notes_v1_note_history_candidate:
   allowed_next_action: DECISION_ONLY
 ```
 
-## 14. Future Implementation Prompt Stub
+## 14. Future Expansion Prompt Stub
 
-Use only after a human fills an approval block with non-HOLD decisions:
+Use only after a human fills a future expansion approval block with non-HOLD
+decisions:
 
 ```text
-Implement the selected Manual Review Notes v1 note history/versioning semantics
+Implement the selected future Manual Review Notes v1 note history/versioning semantics
 from docs/roadmap/manual-review-notes-v1-note-history-versioning-decision-packet.md.
 Use approval_record: <URL>. Stay local/test-safe unless production proof is
 explicitly approved. Do not retain old note text unless the selected content,
@@ -328,12 +358,7 @@ focused tests and run the repo validation commands before opening a PR.
 
 ## 15. Validation Expectations
 
-For this docs-only packet:
-
-- `git diff --check`
-- `npm run check:naming`
-
-For a future local/test-safe metadata-history implementation:
+For this H2 local/test-safe metadata-history implementation:
 
 - `git diff --check`
 - `npm run check:naming`

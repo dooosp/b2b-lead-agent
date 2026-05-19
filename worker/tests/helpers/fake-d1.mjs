@@ -123,11 +123,15 @@ function isTerminalStatus(row) {
 }
 
 export class FakeD1Database {
-  constructor({ leads = [], jobRuns = [], statusLog = [], analytics = [], failOnSql } = {}) {
+  constructor({ leads = [], jobRuns = [], statusLog = [], analytics = [], manualReviewNoteEvents = [], failOnSql } = {}) {
     this.leads = new Map(leads.map((row) => [row.id, { ...row }]));
     this.jobRuns = new Map(jobRuns.map((row) => [row.request_id, { ...row }]));
     this.statusLog = statusLog.map((row, index) => ({ id: index + 1, ...row }));
     this.analytics = analytics.map((row) => ({ ...row }));
+    this.manualReviewNoteEvents = manualReviewNoteEvents.map((row, index) => ({
+      id: row.id || index + 1,
+      ...row,
+    }));
     this.schemaStatements = [];
     this.failOnSql = failOnSql;
   }
@@ -237,6 +241,17 @@ export class FakeD1Database {
         from_status: args[1],
         to_status: args[2],
         changed_at: args[3],
+      });
+      return { meta: { changes: 1 }, success: true };
+    }
+
+    if (normalized === 'insert into manual_review_note_events (lead_id, event_type, changed_at, author_label) values (?, ?, ?, ?)') {
+      this.manualReviewNoteEvents.push({
+        id: this.manualReviewNoteEvents.length + 1,
+        lead_id: args[0],
+        event_type: args[1],
+        changed_at: args[2],
+        author_label: args[3],
       });
       return { meta: { changes: 1 }, success: true };
     }
@@ -393,6 +408,28 @@ export class FakeD1Database {
 
     if (normalized === 'select * from leads where id = ?') {
       return clone(this.leads.get(args[0]) || null);
+    }
+
+    if (normalized === 'select count(*) as event_count from manual_review_note_events where lead_id = ?') {
+      return {
+        event_count: this.manualReviewNoteEvents.filter((row) => row.lead_id === args[0]).length,
+      };
+    }
+
+    if (normalized === 'select event_type, changed_at, author_label from manual_review_note_events where lead_id = ? order by changed_at desc, id desc limit 1') {
+      const row = this.manualReviewNoteEvents
+        .filter((event) => event.lead_id === args[0])
+        .sort((a, b) => {
+          const changedOrder = String(b.changed_at || '').localeCompare(String(a.changed_at || ''));
+          if (changedOrder !== 0) return changedOrder;
+          return Number(b.id || 0) - Number(a.id || 0);
+        })[0];
+      if (!row) return null;
+      return {
+        event_type: row.event_type,
+        changed_at: row.changed_at,
+        author_label: row.author_label,
+      };
     }
 
     if (normalized === 'select * from job_runs where request_id = ? limit 1') {

@@ -19,6 +19,8 @@ const GENERATED_REVIEW_NOTE_PATCH_FIELDS = Object.freeze([
   'generated_suggestion_snapshot',
 ]);
 
+const MANUAL_REVIEW_NOTE_EVENT_TYPES = Object.freeze(['create', 'edit', 'clear']);
+
 function hasOwn(object, key) {
   return Object.prototype.hasOwnProperty.call(object, key);
 }
@@ -32,6 +34,64 @@ function rejectGeneratedReviewNotePersistence(patch = {}) {
     ),
     { status: 400 }
   );
+}
+
+function emptyManualReviewNotesHistorySummary() {
+  return {
+    manualReviewNotesHistoryEventCount: 0,
+    manualReviewNotesHistoryLastEventType: '',
+    manualReviewNotesHistoryLastEventAt: null,
+    manualReviewNotesHistoryLastAuthorLabel: '',
+  };
+}
+
+function withManualReviewNotesHistorySummary(lead, summary = {}) {
+  if (!lead) return lead;
+  const eventCount = Number(summary.eventCount || 0);
+  const eventType = MANUAL_REVIEW_NOTE_EVENT_TYPES.includes(summary.lastEventType) ? summary.lastEventType : '';
+  const authorLabel = summary.lastAuthorLabel === MANUAL_REVIEW_NOTES_AUTHOR_LABEL
+    ? MANUAL_REVIEW_NOTES_AUTHOR_LABEL
+    : '';
+  return {
+    ...lead,
+    manualReviewNotesHistoryEventCount: Number.isFinite(eventCount) ? Math.max(0, eventCount) : 0,
+    manualReviewNotesHistoryLastEventType: eventType,
+    manualReviewNotesHistoryLastEventAt: summary.lastEventAt || null,
+    manualReviewNotesHistoryLastAuthorLabel: authorLabel,
+  };
+}
+
+function classifyManualReviewNoteEvent(previousNotes, nextNotes) {
+  const previousHasText = String(previousNotes || '').trim().length > 0;
+  const nextHasText = String(nextNotes || '').trim().length > 0;
+  if (!nextHasText) return 'clear';
+  return previousHasText ? 'edit' : 'create';
+}
+
+async function getManualReviewNotesHistorySummary(db, leadId) {
+  if (!db || !leadId) return emptyManualReviewNotesHistorySummary();
+  const countRow = await db.prepare(
+    'SELECT COUNT(*) as event_count FROM manual_review_note_events WHERE lead_id = ?'
+  ).bind(leadId).first();
+  const lastRow = await db.prepare(
+    'SELECT event_type, changed_at, author_label FROM manual_review_note_events WHERE lead_id = ? ORDER BY changed_at DESC, id DESC LIMIT 1'
+  ).bind(leadId).first();
+  return {
+    eventCount: Number(countRow?.event_count || 0),
+    lastEventType: lastRow?.event_type || '',
+    lastEventAt: lastRow?.changed_at || null,
+    lastAuthorLabel: lastRow?.author_label || '',
+  };
+}
+
+async function attachManualReviewNotesHistorySummaries(db, leads) {
+  const list = Array.isArray(leads) ? leads : [];
+  const decorated = [];
+  for (const lead of list) {
+    const summary = await getManualReviewNotesHistorySummary(db, lead?.id);
+    decorated.push(withManualReviewNotesHistorySummary(lead, summary));
+  }
+  return decorated;
 }
 
 export async function saveLeadsBatch(db, leads, profileId, source) {
@@ -73,7 +133,7 @@ export async function getLeadsByProfile(db, profileId, options = {}) {
   sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
   params.push(limit, offset);
   const { results } = await db.prepare(sql).bind(...params).all();
-  return (results || []).map(rowToLead);
+  return attachManualReviewNotesHistorySummaries(db, (results || []).map(rowToLead));
 }
 
 export async function getAllLeads(db, options = {}) {
@@ -86,14 +146,17 @@ export async function getAllLeads(db, options = {}) {
   sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
   params.push(limit, offset);
   const { results } = await db.prepare(sql).bind(...params).all();
-  return (results || []).map(rowToLead);
+  return attachManualReviewNotesHistorySummaries(db, (results || []).map(rowToLead));
 }
 
 export async function getLeadById(db, id) {
   if (!db) return null;
   await ensureD1Schema(db);
   const row = await db.prepare('SELECT * FROM leads WHERE id = ?').bind(id).first();
-  return rowToLead(row);
+  const lead = rowToLead(row);
+  if (!lead) return null;
+  const summary = await getManualReviewNotesHistorySummary(db, lead.id);
+  return withManualReviewNotesHistorySummary(lead, summary);
 }
 
 export async function updateLeadStatus(db, id, newStatus, fromStatus) {
@@ -111,9 +174,22 @@ export async function updateLeadNotes(db, id, notes) {
   if (!db) return false;
   await ensureD1Schema(db);
   const now = new Date().toISOString();
-  await db.prepare('UPDATE leads SET notes = ?, manual_review_notes_author_label = ?, manual_review_notes_updated_at = ?, updated_at = ? WHERE id = ?')
-    .bind(notes, MANUAL_REVIEW_NOTES_AUTHOR_LABEL, now, now, id)
-    .run();
+  const existingRow = await db.prepare('SELECT * FROM leads WHERE id = ?').bind(id).first();
+  const existingLead = rowToLead(existingRow);
+  const eventType = existingLead && notes !== (existingLead.notes || '')
+    ? classifyManualReviewNoteEvent(existingLead.notes, notes)
+    : null;
+  const statements = [
+    db.prepare('UPDATE leads SET notes = ?, manual_review_notes_author_label = ?, manual_review_notes_updated_at = ?, updated_at = ? WHERE id = ?')
+      .bind(notes, MANUAL_REVIEW_NOTES_AUTHOR_LABEL, now, now, id),
+  ];
+  if (eventType) {
+    statements.push(
+      db.prepare('INSERT INTO manual_review_note_events (lead_id, event_type, changed_at, author_label) VALUES (?, ?, ?, ?)')
+        .bind(id, eventType, now, MANUAL_REVIEW_NOTES_AUTHOR_LABEL)
+    );
+  }
+  await db.batch(statements);
   return true;
 }
 
@@ -218,6 +294,9 @@ export async function updateLeadPatchAtomic(db, lead, patch) {
     leadUpdates.manual_review_notes_author_label = MANUAL_REVIEW_NOTES_AUTHOR_LABEL;
     leadUpdates.manual_review_notes_updated_at = now;
   }
+  const manualReviewNoteEventType = manualReviewNotesChanged
+    ? classifyManualReviewNoteEvent(lead.notes, leadUpdates.notes)
+    : null;
   const updateFields = Object.keys(leadUpdates);
   const setClause = [
     ...updateFields.map((field) => `${field} = ?`),
@@ -237,6 +316,13 @@ export async function updateLeadPatchAtomic(db, lead, patch) {
     statements.push(
       db.prepare('INSERT INTO status_log (lead_id, from_status, to_status, changed_at) VALUES (?, ?, ?, ?)')
         .bind(lead.id, statusLogEntry.fromStatus, statusLogEntry.toStatus, now)
+    );
+  }
+
+  if (manualReviewNoteEventType) {
+    statements.push(
+      db.prepare('INSERT INTO manual_review_note_events (lead_id, event_type, changed_at, author_label) VALUES (?, ?, ?, ?)')
+        .bind(lead.id, manualReviewNoteEventType, now, MANUAL_REVIEW_NOTES_AUTHOR_LABEL)
     );
   }
 
