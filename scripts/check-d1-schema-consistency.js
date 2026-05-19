@@ -20,6 +20,7 @@ const EXPECTED_LEADS_COLUMNS = Object.freeze([
   'global_context',
   'sources',
   'notes',
+  'manual_review_notes_updated_at',
   'enriched',
   'article_body',
   'action_items',
@@ -50,6 +51,7 @@ const EXPECTED_LEADS_COLUMNS = Object.freeze([
 const EXPECTED_LEADS_LAZY_ALTER_COLUMNS = Object.freeze([
   'identity_key',
   'review_status',
+  'manual_review_notes_updated_at',
   'enriched',
   'article_body',
   'action_items',
@@ -77,6 +79,7 @@ const EXPECTED_LEADS_LAZY_ALTER_COLUMNS = Object.freeze([
 
 const DRIFT_CRITICAL_COLUMNS = Object.freeze([
   'review_status',
+  'manual_review_notes_updated_at',
   'generation_mode',
   'verification_status',
   'data_gaps',

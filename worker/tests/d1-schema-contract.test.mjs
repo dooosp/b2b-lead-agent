@@ -14,6 +14,7 @@ test('D1 schema defaults preserve conservative lead and job-run contracts', asyn
   assert.match(ddl, /status TEXT NOT NULL DEFAULT 'NEW'/);
   assert.match(ddl, /review_status TEXT NOT NULL DEFAULT 'NEEDS_REVIEW'/);
   assert.match(ddl, /sources TEXT DEFAULT '\[\]'/);
+  assert.match(ddl, /manual_review_notes_updated_at TEXT/);
   assert.match(ddl, /generation_mode TEXT DEFAULT 'llm'/);
   assert.match(ddl, /verification_status TEXT DEFAULT 'needs_review'/);
   assert.match(ddl, /data_gaps TEXT DEFAULT '\[\]'/);

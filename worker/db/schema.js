@@ -21,6 +21,7 @@ export async function ensureD1Schema(db) {
         global_context TEXT,
         sources TEXT DEFAULT '[]',
         notes TEXT DEFAULT '',
+        manual_review_notes_updated_at TEXT,
         enriched INTEGER DEFAULT 0,
         article_body TEXT DEFAULT '',
         action_items TEXT DEFAULT '[]',
@@ -100,6 +101,7 @@ export async function ensureD1Schema(db) {
       const alterCols = [
         "ALTER TABLE leads ADD COLUMN identity_key TEXT DEFAULT ''",
         "ALTER TABLE leads ADD COLUMN review_status TEXT NOT NULL DEFAULT 'NEEDS_REVIEW'",
+        "ALTER TABLE leads ADD COLUMN manual_review_notes_updated_at TEXT",
         "ALTER TABLE leads ADD COLUMN enriched INTEGER DEFAULT 0",
         "ALTER TABLE leads ADD COLUMN article_body TEXT DEFAULT ''",
         "ALTER TABLE leads ADD COLUMN action_items TEXT DEFAULT '[]'",
