@@ -211,6 +211,11 @@ export function getLeadDetailPage(lead, statusLogs) {
       return String((lead && (lead.manualReviewNotes || lead.manual_review_notes || lead.notes)) || '').trim();
     }
 
+    function getManualReviewNotesAuthorLabel(lead) {
+      const label = String((lead && (lead.manualReviewNotesAuthorLabel || lead.manual_review_notes_author_label)) || '').trim();
+      return label === 'manual_reviewer' ? '수동 리뷰어' : '';
+    }
+
     function formatTimestamp(raw) {
       if (!raw) return '';
       const date = new Date(raw);
@@ -230,13 +235,18 @@ export function getLeadDetailPage(lead, statusLogs) {
       const hasSavedNote = Boolean(getManualReviewNoteValue(lead));
       const noteUpdatedAt = formatManualReviewNotesUpdatedAt(lead);
       const leadUpdatedAt = formatLeadUpdatedAt(lead);
+      const authorLabel = getManualReviewNotesAuthorLabel(lead);
       const timestampMeta = noteUpdatedAt
         ? '<span class="notes-state-meta">' + (hasSavedNote ? '수동 리뷰 메모 마지막 변경' : '수동 리뷰 메모가 마지막으로 비워짐/변경됨') + ': ' + esc(noteUpdatedAt) + '</span>'
         : (leadUpdatedAt ? '<span class="notes-state-meta">리드 마지막 업데이트: ' + esc(leadUpdatedAt) + ' (메모 전용 시간 아님)</span>' : '');
+      const authorMeta = authorLabel
+        ? '<span class="notes-state-meta">최근 수동 변경: ' + esc(authorLabel) + ' (로컬/테스트 일반 라벨)</span>'
+        : '';
       return '<div id="manualReviewNoteState" class="notes-state ' + (hasSavedNote ? 'is-saved' : 'is-empty') + '" data-manual-note-state="' + (hasSavedNote ? 'saved' : 'empty') + '">' +
         '<strong>' + (hasSavedNote ? '저장된 수동 리뷰 메모 있음' : '저장된 수동 리뷰 메모 없음') + '</strong>' +
         '<span>' + (hasSavedNote ? '사람이 입력한 수동 메모만 저장 상태로 표시됩니다.' : '비어 있음 상태입니다. 생성된 검토 메모 제안은 저장 상태가 아닙니다.') + '</span>' +
         timestampMeta +
+        authorMeta +
         '</div>';
     }
 
