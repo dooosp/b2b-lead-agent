@@ -290,6 +290,35 @@ test('lead review pages expose explicit clear controls for saved manual review n
   assert.match(detailHtml, /updateField\('manualReviewNotes', ''\)/);
 });
 
+test('lead review pages render local test privacy warning for manual review notes', () => {
+  const listHtml = getLeadsPage();
+  const detailHtml = getLeadDetailPage({
+    id: 'lead-1',
+    profileId: 'danfoss',
+    status: 'NEW',
+    reviewStatus: 'NEEDS_REVIEW',
+    company: 'DL이앤씨',
+    signal: '데이터센터 냉각 설비 증설 착공',
+    summary: '데이터센터 냉각 설비 증설 착공',
+    recommendedMessage: 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.',
+    manualReviewNotes: '',
+    notes: '',
+    sources: [{ title: 'DL이앤씨 데이터센터 증설', url: 'https://example.com/dl' }],
+    product: 'Turbocor 컴프레서',
+    score: 84,
+    grade: 'A'
+  }, []);
+
+  assert.match(listHtml, /로컬\/테스트 개인정보 주의/);
+  assert.match(listHtml, /민감한 영업 맥락이나 PII/);
+  assert.match(listHtml, /자동 감지\/차단은 하지 않습니다/);
+  assert.match(detailHtml, /로컬\/테스트 개인정보 주의/);
+  assert.match(detailHtml, /지우기는 현재 저장된 메모 텍스트만 비웁니다/);
+  assert.match(detailHtml, /role="note"/);
+  assert.doesNotMatch(listHtml, /manualReviewNotesSensitiveContentDetected|manualReviewNotesRedacted|redaction/i);
+  assert.doesNotMatch(detailHtml, /manualReviewNotesSensitiveContentDetected|manualReviewNotesRedacted|redaction/i);
+});
+
 test('lead review pages render note-specific manual note timestamps when present', () => {
   const listHtml = getLeadsPage();
   const savedDetailHtml = getLeadDetailPage({

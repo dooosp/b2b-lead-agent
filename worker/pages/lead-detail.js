@@ -45,6 +45,8 @@ export function getLeadDetailPage(lead, statusLogs) {
     .notes-state.is-saved strong { color:#a8efc0; }
     .notes-state.is-empty { border-color:#566273; background:#171d25; }
     .notes-state-meta { color:#8fa4b8; }
+    .notes-privacy-warning { background:#1f1c12; border:1px solid #806718; border-radius:8px; color:#ffe58a; font-size:11px; line-height:1.5; margin:8px 0 0; padding:8px; }
+    .notes-privacy-warning strong { color:#fff0a8; }
     .save-indicator { color: #27ae60; font-size: 11px; opacity: 0; transition: opacity 0.3s; margin-left: 8px; }
     .save-indicator.show { opacity: 1; }
     .status-select-lg { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 14px; cursor: pointer; }
@@ -258,6 +260,10 @@ export function getLeadDetailPage(lead, statusLogs) {
         authorMeta +
         historyMeta +
         '</div>';
+    }
+
+    function renderManualReviewNotePrivacyWarning() {
+      return '<p class="notes-privacy-warning" role="note"><strong>로컬/테스트 개인정보 주의:</strong> 수동 메모에는 민감한 영업 맥락이나 PII가 포함될 수 있습니다. 실제 개인정보/비밀은 입력하지 마세요. 지우기는 현재 저장된 메모 텍스트만 비웁니다. 자동 감지/차단은 하지 않습니다.</p>';
     }
 
     function updateManualReviewNoteState() {
@@ -719,6 +725,7 @@ export function getLeadDetailPage(lead, statusLogs) {
       html += '<div class="detail-section">';
       html += '<h3>수동 리뷰 메모</h3>';
       html += renderManualReviewNoteState(lead);
+      html += renderManualReviewNotePrivacyWarning();
       html += '<textarea class="notes-area" id="notesArea" aria-label="수동 리뷰 메모 입력" placeholder="수동 리뷰 메모를 입력하세요..." oninput="scheduleNoteSave()">' + esc(lead.manualReviewNotes || lead.notes || '') + '</textarea>';
       html += '<div class="notes-actions">';
       html += '<span class="save-indicator" id="manualNoteSaveIndicator">저장됨</span>';
