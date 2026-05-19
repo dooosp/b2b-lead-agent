@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
-> Status: current hardening source of truth for `master` as of 2026-05-19.
-> Audited against first-parent `master` history through `b4b6fb37b6725851029109f63295977c782b9a74` (`Merge pull request #126 from dooosp/feat/manual-review-notes-generic-reviewer-label`) and current GitHub PR state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#126, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #118 completion, Issue #115 completion, and Issue #34 GitHub-only closeout.
+> Status: current hardening source of truth for `master` as of 2026-05-20.
+> Audited against first-parent `master` history through `4d743414a8f1ee8037beb166c769ed2bfb8c176c` (`Merge pull request #128 from dooosp/codex/manual-review-notes-h2-history`) and current GitHub PR state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#128, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #118 completion, Issue #115 completion, and Issue #34 GitHub-only closeout.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -37,6 +37,8 @@
 | 27 | 2026-05-19 | #124 | `9404001` | Manual Review Notes v1 T1 timestamp | Implemented local/test-safe `manualReviewNotesUpdatedAt` / `manual_review_notes_updated_at` for the last accepted human-entered manual note change/save/clear event only, without reviewer identity, note history, retention/privacy enforcement, generated suggestion persistence, or production proof |
 | 28 | 2026-05-19 | #125 | `aa4f989` | Manual Review Notes v1 reviewer identity packet | Added the docs-only reviewer identity / author attribution decision packet without approving real reviewer identity, authenticated identity, display-name fields, author audit trails, note history, retention/privacy enforcement, generated suggestion attribution, or production action |
 | 29 | 2026-05-19 | #126 | `b4b6fb3` | Manual Review Notes v1 generic reviewer label | Implemented local/test-only `manualReviewNotesAuthorLabel` / `manual_review_notes_author_label` with only the fixed non-PII `manual_reviewer` value for accepted manual note create/edit/clear events, without real reviewer identity, note history, generated suggestion attribution, retention/privacy enforcement, or production proof |
+| 30 | 2026-05-19 | #127 | `4f236c0` | Manual Review Notes v1 note history/versioning packet | Added the docs-only note history/versioning decision packet and kept old note value retention, generated suggestion history, full/audit-grade history, retention/privacy enforcement, and production action unapproved |
+| 31 | 2026-05-19 | #128 | `4d74341` | Manual Review Notes v1 H2 metadata-only history | Implemented local/test-only `manual_review_note_events` metadata for accepted manual note create/edit/clear events with lead id, event type, timestamp, and fixed generic author label only, without old/new note text, generated suggestion history, retention/privacy enforcement, or production proof |
 
 ## Wave Summary
 
@@ -179,12 +181,21 @@
 - PR #124 implemented local/test-safe T1 note-specific timestamp semantics: `manualReviewNotesUpdatedAt` / `manual_review_notes_updated_at` records the last accepted human-entered manual note change/save/clear event only.
 - PR #125 added the docs-only Manual Review Notes v1 reviewer identity / author attribution decision packet.
 - PR #126 implemented local/test-only generic author-label semantics: `manualReviewNotesAuthorLabel` / `manual_review_notes_author_label` uses only the fixed non-PII `manual_reviewer` value for accepted human-entered manual note create/edit/clear events.
-- `docs/roadmap/manual-review-notes-v1-note-history-versioning-decision-packet.md`
-  records the H2 local/test-only metadata history approval. Current history is
-  limited to `manual_review_note_events` rows with lead id, event type,
-  timestamp, and fixed generic author label only; no old/new note text or
+- PR #127 added the docs-only Manual Review Notes v1 note history/versioning
+  decision packet.
+- PR #128 implemented local/test-only H2 metadata-only history in
+  `manual_review_note_events`. Current history is limited to lead id, event
+  type, timestamp, and fixed generic author label only; no old/new note text or
   generated suggestion text is retained.
-- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#126, the local/test H2 metadata-history implementation, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #34 GitHub-only closeout, or the stale PR cleanup.
+- `docs/roadmap/manual-review-notes-v1-retention-privacy-policy-decision-packet.md`
+  records the docs-only retention/privacy policy decision packet. It keeps
+  production HOLD, recommends local/test current-value retention until explicit
+  clear/delete, preserves metadata-only local/test events without audit/legal
+  claims, and does not approve retention/privacy enforcement, purge/delete jobs,
+  redaction, automated PII detection, export/manager visibility expansion, old
+  note value retention, generated suggestion retention/history, or production
+  proof.
+- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#128, the local/test H2 metadata-history implementation, this docs-only retention/privacy packet, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #34 GitHub-only closeout, or the stale PR cleanup.
 
 ## Findings Closed On `master`
 
@@ -349,8 +360,8 @@
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
-  - Recommended next non-production goal: keep Manual Review Notes history beyond H2 metadata-only local/test events decision-ready only; do not implement old note value retention, full history, generated suggestion history, retention/privacy handling, or production history until a later approval selects those boundaries.
-  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, the Human UX Review Packet, Issue #100 closeout, the compact `다음 리뷰` strip, reviewer-note summaries, roadmap/current-train source-of-truth sync, production-proof planning records, Issue #34 closeout, standing approval policy, Manager / Reviewer Summary v0, PR #110 source-of-truth sync, Issue #111 UX intake closeout, the Saved Review Notes Decision Packet, Issue #113 Option E completion, PR #114 copy-only clarification, PR #119-#126 Manual Review Notes local/test-safe work, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay docs/local/test/CI oriented unless a separate human-approved production prompt opens operational work.
+  - Recommended next non-production goal: keep Manual Review Notes retention/privacy decision-ready only; do not implement retention/privacy enforcement, purge/delete jobs, redaction, automated PII detection, export/manager visibility expansion, old note value retention, full history, generated suggestion history, or production history until a later approval selects those boundaries.
+  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, the Human UX Review Packet, Issue #100 closeout, the compact `다음 리뷰` strip, reviewer-note summaries, roadmap/current-train source-of-truth sync, production-proof planning records, Issue #34 closeout, standing approval policy, Manager / Reviewer Summary v0, PR #110 source-of-truth sync, Issue #111 UX intake closeout, the Saved Review Notes Decision Packet, Issue #113 Option E completion, PR #114 copy-only clarification, PR #119-#128 Manual Review Notes local/test-safe work, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay docs/local/test/CI oriented unless a separate human-approved production prompt opens operational work.
   - Keep production proof, platform migration, storage migration, and production observation work behind separate approval gates.
 
 ## Current Operating Sequence

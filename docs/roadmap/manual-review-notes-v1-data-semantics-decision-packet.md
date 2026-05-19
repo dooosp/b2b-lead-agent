@@ -30,6 +30,10 @@ local/test-safe Manual Review Notes v0 work. It is documentation only.
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487570553`.
 - Follow-up note history/versioning packet:
   `docs/roadmap/manual-review-notes-v1-note-history-versioning-decision-packet.md`.
+- Follow-up retention/privacy policy decision-packet approval-intent record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4492814282`.
+- Follow-up retention/privacy policy packet:
+  `docs/roadmap/manual-review-notes-v1-retention-privacy-policy-decision-packet.md`.
 
 This packet does not approve v1 implementation. It records the remaining
 decisions needed before note-specific timestamps, reviewer identity, note
@@ -76,6 +80,16 @@ manual note value plus last-write metadata only. It does not approve
 append-only history, old note value retention, generated suggestion history,
 retention/privacy enforcement, schema/API/runtime/UI changes, D1 migrations, or
 production behavior.
+
+Follow-up update: retention/privacy policy was prepared as a decision packet in
+`docs/roadmap/manual-review-notes-v1-retention-privacy-policy-decision-packet.md`.
+That packet keeps production HOLD, recommends local/test current-value retention
+until explicit clear/delete, preserves metadata-only local/test events without
+audit/legal claims, and does not approve retention/privacy enforcement,
+purge/delete jobs, redaction, automated PII detection, export/manager
+visibility expansion, old note value retention, generated suggestion
+retention/history, schema/API/runtime/UI changes, D1 migrations, or production
+behavior.
 
 ## 2. Current State
 

@@ -31,11 +31,22 @@ and audit-grade history out of scope.
 - D1 migration performed by this packet: local/test-only metadata event table;
   no old note text columns.
 - Production action performed by this packet: none.
+- Follow-up retention/privacy policy decision-packet approval-intent record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4492814282`.
+- Follow-up retention/privacy policy packet:
+  `docs/roadmap/manual-review-notes-v1-retention-privacy-policy-decision-packet.md`.
 
 This packet does not approve old manual note value retention, generated
 suggestion history, full note history, audit-grade history, retention/privacy
 enforcement, production deploy, production D1 migration, production endpoint
 calls, production logs/secrets access, or production proof.
+
+Follow-up update: retention/privacy policy is prepared in
+`docs/roadmap/manual-review-notes-v1-retention-privacy-policy-decision-packet.md`.
+That packet remains docs-only and does not approve retention/privacy
+enforcement, purge/delete jobs, redaction, automated PII detection, export or
+manager visibility expansion, old note value retention, generated suggestion
+retention/history, or production action.
 
 ```yaml
 manual_review_notes_v1_note_history:
