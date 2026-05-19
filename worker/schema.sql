@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS leads (
   global_context TEXT,
   sources TEXT DEFAULT '[]',
   notes TEXT DEFAULT '',
+  manual_review_notes_author_label TEXT,
   manual_review_notes_updated_at TEXT,
   enriched INTEGER DEFAULT 0,
   article_body TEXT DEFAULT '',

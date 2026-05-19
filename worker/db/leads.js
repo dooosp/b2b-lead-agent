@@ -1,5 +1,5 @@
 import { ensureD1Schema } from './schema.js';
-import { VALID_TRANSITIONS, rowToLead, leadToRow } from './transform.js';
+import { MANUAL_REVIEW_NOTES_AUTHOR_LABEL, VALID_TRANSITIONS, rowToLead, leadToRow } from './transform.js';
 import { REVIEW_STATUSES, normalizeReviewStatus } from '../lib/leadbrief-v1.js';
 
 const GENERATED_REVIEW_NOTE_PATCH_FIELDS = Object.freeze([
@@ -111,7 +111,9 @@ export async function updateLeadNotes(db, id, notes) {
   if (!db) return false;
   await ensureD1Schema(db);
   const now = new Date().toISOString();
-  await db.prepare('UPDATE leads SET notes = ?, manual_review_notes_updated_at = ?, updated_at = ? WHERE id = ?').bind(notes, now, now, id).run();
+  await db.prepare('UPDATE leads SET notes = ?, manual_review_notes_author_label = ?, manual_review_notes_updated_at = ?, updated_at = ? WHERE id = ?')
+    .bind(notes, MANUAL_REVIEW_NOTES_AUTHOR_LABEL, now, now, id)
+    .run();
   return true;
 }
 
@@ -213,6 +215,7 @@ export async function updateLeadPatchAtomic(db, lead, patch) {
 
   const now = new Date().toISOString();
   if (manualReviewNotesChanged) {
+    leadUpdates.manual_review_notes_author_label = MANUAL_REVIEW_NOTES_AUTHOR_LABEL;
     leadUpdates.manual_review_notes_updated_at = now;
   }
   const updateFields = Object.keys(leadUpdates);

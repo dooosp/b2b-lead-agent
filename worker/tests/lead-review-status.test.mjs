@@ -213,6 +213,7 @@ test('lead review pages save explicit human-entered manual review notes only', (
     summary: '데이터센터 냉각 설비 증설 착공',
     recommendedMessage: 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.',
     manualReviewNotes: '사람이 입력한 검토 메모',
+    manualReviewNotesAuthorLabel: 'manual_reviewer',
     notes: '사람이 입력한 검토 메모',
     sources: [{ title: 'DL이앤씨 데이터센터 증설', url: 'https://example.com/dl' }],
     product: 'Turbocor 컴프레서',
@@ -225,8 +226,12 @@ test('lead review pages save explicit human-entered manual review notes only', (
   assert.match(listHtml, /JSON\.stringify\(\{ manualReviewNotes: textarea\.value \}\)/);
   assert.doesNotMatch(listHtml, /JSON\.stringify\(\{ notes: textarea\.value \}\)/);
   assert.match(detailHtml, /수동 리뷰 메모/);
+  assert.match(detailHtml, /최근 수동 변경/);
+  assert.match(detailHtml, /수동 리뷰어/);
+  assert.match(detailHtml, /로컬\/테스트 일반 라벨/);
   assert.match(detailHtml, /updateField\('manualReviewNotes', val\)/);
   assert.match(detailHtml, /사람이 입력한 검토 메모/);
+  assert.doesNotMatch(detailHtml, /인증된 리뷰어|authenticated reviewer|display name|manualReviewNotesAuthorEmail/i);
 });
 
 test('lead review pages expose explicit clear controls for saved manual review notes', () => {
@@ -241,6 +246,7 @@ test('lead review pages expose explicit clear controls for saved manual review n
     summary: '데이터센터 냉각 설비 증설 착공',
     recommendedMessage: 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.',
     manualReviewNotes: '사람이 입력한 검토 메모',
+    manualReviewNotesAuthorLabel: 'manual_reviewer',
     notes: '사람이 입력한 검토 메모',
     sources: [{ title: 'DL이앤씨 데이터센터 증설', url: 'https://example.com/dl' }],
     product: 'Turbocor 컴프레서',
@@ -270,6 +276,7 @@ test('lead review pages render note-specific manual note timestamps when present
     summary: '데이터센터 냉각 설비 증설 착공',
     recommendedMessage: 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.',
     manualReviewNotes: '사람이 입력한 검토 메모',
+    manualReviewNotesAuthorLabel: 'manual_reviewer',
     notes: '사람이 입력한 검토 메모',
     updatedAt: '2026-05-18T11:55:40.000Z',
     manualReviewNotesUpdatedAt: '2026-05-19T00:20:00.000Z',
@@ -299,9 +306,14 @@ test('lead review pages render note-specific manual note timestamps when present
 
   assert.match(listHtml, /저장된 수동 리뷰 메모 있음/);
   assert.match(listHtml, /저장된 수동 리뷰 메모 없음/);
+  assert.match(listHtml, /최근 수동 변경/);
+  assert.match(listHtml, /수동 리뷰어/);
+  assert.match(listHtml, /로컬\/테스트 일반 라벨/);
   assert.match(listHtml, /수동 리뷰 메모 마지막 변경/);
   assert.match(listHtml, /수동 리뷰 메모가 마지막으로 비워짐\/변경됨/);
   assert.match(savedDetailHtml, /저장된 수동 리뷰 메모 있음/);
+  assert.match(savedDetailHtml, /최근 수동 변경/);
+  assert.match(savedDetailHtml, /수동 리뷰어/);
   assert.match(savedDetailHtml, /수동 리뷰 메모 마지막 변경/);
   assert.match(clearedDetailHtml, /저장된 수동 리뷰 메모 없음/);
   assert.match(clearedDetailHtml, /수동 리뷰 메모가 마지막으로 비워짐\/변경됨/);

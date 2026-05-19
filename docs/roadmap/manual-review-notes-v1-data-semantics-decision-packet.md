@@ -24,6 +24,8 @@ local/test-safe Manual Review Notes v0 work. It is documentation only.
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4486274314`.
 - Follow-up reviewer identity packet:
   `docs/roadmap/manual-review-notes-v1-reviewer-identity-decision-packet.md`.
+- Follow-up generic label implementation approval record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487335178`.
 
 This packet does not approve v1 implementation. It records the remaining
 decisions needed before note-specific timestamps, reviewer identity, note
@@ -48,11 +50,20 @@ human-entered manual note change/save/clear event. It does not record reviewer
 identity, note history/versioning, retention/privacy proof, generated
 suggestion time, production proof, or production D1 evidence.
 
-Follow-up update: reviewer identity and author attribution remain decision-only
-in `docs/roadmap/manual-review-notes-v1-reviewer-identity-decision-packet.md`.
-No reviewer identity, authenticated identity, display-name field, author audit
-trail, generated suggestion attribution, retention/privacy enforcement, or
-production behavior is approved by that packet.
+Follow-up update: reviewer identity and author attribution were prepared as a
+decision packet in
+`docs/roadmap/manual-review-notes-v1-reviewer-identity-decision-packet.md`.
+That packet did not itself approve authenticated identity, display-name fields,
+author audit trails, generated suggestion attribution, retention/privacy
+enforcement, or production behavior.
+
+Post-reviewer-identity-packet update: the generic label implementation approval
+record authorizes only the local/test fixed value `manual_reviewer` in
+`manualReviewNotesAuthorLabel` / `manual_review_notes_author_label` on accepted
+human-entered manual note create/edit/clear events. It does not approve real
+reviewer identity, display names, email, authenticated actors, note history,
+retention/privacy enforcement, generated suggestion attribution, production
+D1 migration, production endpoint calls, or production proof.
 
 ## 2. Current State
 
@@ -197,7 +208,9 @@ Before any v1 implementation, record all of the following:
 
 ## 10. Explicit Non-Decisions
 
-This packet does not approve:
+This original packet did not itself approve the following. Later post-packet
+approvals are listed above and remain limited to T1 note-specific timestamp
+metadata plus the fixed generic local/test author label:
 
 - implementation,
 - schema changes,
@@ -211,7 +224,8 @@ This packet does not approve:
 - production D1 access,
 - production endpoint calls,
 - production logs/secrets access,
-- reviewer identity implementation,
+- real/authenticated reviewer identity implementation beyond the fixed generic
+  local/test label,
 - note-specific timestamp implementation,
 - note history/versioning implementation,
 - retention/privacy enforcement,

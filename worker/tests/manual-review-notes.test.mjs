@@ -33,11 +33,14 @@ test('manualReviewNotes PATCH persists human-entered notes with manual provenanc
   assert.equal(payload.lead.manualReviewNotes, 'Human-entered review note: confirm buyer before outreach.');
   assert.equal(payload.lead.notes, 'Human-entered review note: confirm buyer before outreach.');
   assert.equal(payload.lead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(payload.lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
   assertParseableIsoTimestamp(payload.lead.manualReviewNotesUpdatedAt);
   assert.equal(lead.manualReviewNotes, 'Human-entered review note: confirm buyer before outreach.');
   assert.equal(lead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
   assert.equal(lead.manualReviewNotesUpdatedAt, payload.lead.manualReviewNotesUpdatedAt);
   assert.equal(db.leads.get('lead-1').notes, 'Human-entered review note: confirm buyer before outreach.');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, payload.lead.manualReviewNotesUpdatedAt);
 });
 
@@ -47,6 +50,7 @@ test('manualReviewNotes PATCH edits an existing human-entered note', async () =>
     leads: [
       createLeadRow({
         notes: 'Initial human review note.',
+        manual_review_notes_author_label: 'manual_reviewer',
         manual_review_notes_updated_at: originalManualNoteUpdatedAt,
       }),
     ],
@@ -63,11 +67,14 @@ test('manualReviewNotes PATCH edits an existing human-entered note', async () =>
   assert.deepEqual(payload.changedFields, ['manualReviewNotes']);
   assert.equal(payload.lead.manualReviewNotes, 'Updated human review note after second pass.');
   assert.equal(payload.lead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(payload.lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
   assertParseableIsoTimestamp(payload.lead.manualReviewNotesUpdatedAt);
   assert.notEqual(payload.lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
   assert.equal(lead.manualReviewNotes, 'Updated human review note after second pass.');
+  assert.equal(lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
   assert.equal(lead.manualReviewNotesUpdatedAt, payload.lead.manualReviewNotesUpdatedAt);
   assert.equal(db.leads.get('lead-1').notes, 'Updated human review note after second pass.');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, payload.lead.manualReviewNotesUpdatedAt);
 });
 
@@ -78,6 +85,7 @@ test('updatedAt is lead-level and can change without a manual note save', async 
     leads: [
       createLeadRow({
         notes: 'Existing human review note.',
+        manual_review_notes_author_label: 'manual_reviewer',
         manual_review_notes_updated_at: originalManualNoteUpdatedAt,
         review_status: 'NEEDS_REVIEW',
         updated_at: originalUpdatedAt,
@@ -96,11 +104,14 @@ test('updatedAt is lead-level and can change without a manual note save', async 
   assert.deepEqual(payload.changedFields, ['reviewStatus']);
   assert.equal(payload.lead.manualReviewNotes, 'Existing human review note.');
   assert.equal(payload.lead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(payload.lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
   assert.notEqual(payload.lead.updatedAt, originalUpdatedAt);
   assert.equal(payload.lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
   assert.equal(lead.updatedAt, payload.lead.updatedAt);
+  assert.equal(lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
   assert.equal(lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
   assert.equal(db.leads.get('lead-1').notes, 'Existing human review note.');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
 });
 
@@ -127,12 +138,15 @@ test('manualReviewNotes PATCH clears an existing human-entered note', async () =
   assert.equal(payload.lead.manualReviewNotes, '');
   assert.equal(payload.lead.notes, '');
   assert.equal(payload.lead.manualReviewNotesProvenance, '');
+  assert.equal(payload.lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
   assertParseableIsoTimestamp(payload.lead.manualReviewNotesUpdatedAt);
   assert.notEqual(payload.lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
   assert.equal(lead.manualReviewNotes, '');
   assert.equal(lead.manualReviewNotesProvenance, '');
+  assert.equal(lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
   assert.equal(lead.manualReviewNotesUpdatedAt, payload.lead.manualReviewNotesUpdatedAt);
   assert.equal(db.leads.get('lead-1').notes, '');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, payload.lead.manualReviewNotesUpdatedAt);
 });
 
@@ -142,6 +156,7 @@ test('unchanged manualReviewNotes PATCH does not update note-specific timestamp'
     leads: [
       createLeadRow({
         notes: 'Existing human review note.',
+        manual_review_notes_author_label: 'manual_reviewer',
         manual_review_notes_updated_at: originalManualNoteUpdatedAt,
       }),
     ],
@@ -157,9 +172,38 @@ test('unchanged manualReviewNotes PATCH does not update note-specific timestamp'
   assert.equal(payload.success, true);
   assert.deepEqual(payload.changedFields, []);
   assert.equal(payload.lead.manualReviewNotes, 'Existing human review note.');
+  assert.equal(payload.lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
   assert.equal(payload.lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
+  assert.equal(lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
   assert.equal(lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
+  assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
+});
+
+test('unchanged manualReviewNotes PATCH does not invent a generic author label', async () => {
+  const originalManualNoteUpdatedAt = '2026-04-07T00:00:00.000Z';
+  const db = new FakeD1Database({
+    leads: [
+      createLeadRow({
+        notes: 'Existing human review note from before labels.',
+        manual_review_notes_updated_at: originalManualNoteUpdatedAt,
+      }),
+    ],
+  });
+
+  const response = await patchLead(db, {
+    manualReviewNotes: 'Existing human review note from before labels.',
+  });
+  const payload = await response.json();
+  const lead = await getLeadById(db, 'lead-1');
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.success, true);
+  assert.deepEqual(payload.changedFields, []);
+  assert.equal(payload.lead.manualReviewNotesAuthorLabel, '');
+  assert.equal(lead.manualReviewNotesAuthorLabel, '');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, undefined);
+  assert.equal(payload.lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
 });
 
 test('manualReviewNotes is exposed on local read paths without saving generated suggestions', async () => {
@@ -167,6 +211,7 @@ test('manualReviewNotes is exposed on local read paths without saving generated 
     leads: [
       createLeadRow({
         notes: 'Saved by a human reviewer.',
+        manual_review_notes_author_label: 'manual_reviewer',
         review_status: 'APPROVED',
         verification_status: 'verified',
         confidence: 'HIGH',
@@ -191,6 +236,7 @@ test('manualReviewNotes is exposed on local read paths without saving generated 
   assert.equal(payload.source, 'd1');
   assert.equal(payload.leads[0].manualReviewNotes, 'Saved by a human reviewer.');
   assert.equal(payload.leads[0].manualReviewNotesProvenance, 'human_entered');
+  assert.equal(payload.leads[0].manualReviewNotesAuthorLabel, 'manual_reviewer');
   assert.equal(payload.leads[0].manualReviewNotesUpdatedAt, null);
   assert.equal(payload.leads[0].reviewNoteSuggestion, undefined);
   assert.equal(payload.reviewerActionQueue.items[0].reviewNoteSuggestion.state, 'APPROVED');
@@ -204,6 +250,7 @@ test('generated reviewer note suggestion persistence attempts are rejected atomi
     leads: [
       createLeadRow({
         notes: 'Keep human note',
+        manual_review_notes_author_label: 'manual_reviewer',
         manual_review_notes_updated_at: originalManualNoteUpdatedAt,
       }),
     ],
@@ -222,8 +269,10 @@ test('generated reviewer note suggestion persistence attempts are rejected atomi
   assert.equal(payload.success, false);
   assert.match(payload.message, /copy-only/);
   assert.equal(lead.manualReviewNotes, 'Keep human note');
+  assert.equal(lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
   assert.equal(lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
   assert.equal(db.leads.get('lead-1').notes, 'Keep human note');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
 
   const templatesResponse = await patchLead(db, {
@@ -237,6 +286,7 @@ test('generated reviewer note suggestion persistence attempts are rejected atomi
   assert.equal(templatesPayload.success, false);
   assert.match(templatesPayload.message, /copy-only/);
   assert.equal(db.leads.get('lead-1').notes, 'Keep human note');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
 });
 
@@ -314,6 +364,8 @@ test('generated batch inserts do not create saved manual review notes', async ()
 
   assert.equal(db.leads.get('generated-lead-1').notes, '');
   assert.equal(lead.manualReviewNotesUpdatedAt, null);
+  assert.equal(lead.manualReviewNotesAuthorLabel, '');
+  assert.equal(db.leads.get('generated-lead-1').manual_review_notes_author_label, undefined);
   assert.equal(db.leads.get('generated-lead-1').manual_review_notes_updated_at, undefined);
   assert.equal(lead.manualReviewNotes, '');
   assert.equal(lead.manualReviewNotesProvenance, '');

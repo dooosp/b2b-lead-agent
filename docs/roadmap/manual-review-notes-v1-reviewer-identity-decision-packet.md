@@ -18,8 +18,13 @@ implementation. It is documentation only.
 - Runtime behavior changed by this packet: none.
 - Schema/API behavior changed by this packet: none.
 - Production action performed by this packet: none.
+- Post-packet generic label implementation approval record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487335178`.
+- Post-packet generic label implementation scope: local/test-only fixed generic
+  manual reviewer label for accepted human-entered manual note create/edit/clear
+  events.
 
-This packet does not approve reviewer identity implementation. It makes the
+This packet did not itself approve reviewer identity implementation. It makes the
 identity, display, author-update, privacy, and production-readiness decisions
 ready for a future human/product/privacy decision.
 
@@ -33,6 +38,28 @@ manual_review_notes_v1_reviewer_identity_packet:
   production_approved: false
   reviewer_identity_implemented: false
   generated_suggestion_attribution: FORBIDDEN
+```
+
+Post-packet update: the generic label implementation approval record authorizes
+only I1/D1/U1/P1 local/test behavior. The approved API field is
+`manualReviewNotesAuthorLabel`, backed by `manual_review_notes_author_label`.
+The only accepted value is the fixed non-PII label `manual_reviewer`, set only
+when an explicit human-entered manual note create/edit/clear changes the current
+manual note value. UI may render that value as `수동 리뷰어` with local/test copy.
+Existing rows are not backfilled on unchanged saves, generated reviewer note
+suggestions remain unattributed, and production proof remains HOLD.
+
+```yaml
+manual_review_notes_v1_reviewer_identity:
+  document_status: APPROVED_LOCAL_TEST_ONLY
+  approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487335178"
+  reviewer_identity_decision: IMPLEMENT_LOCAL_TEST_GENERIC_REVIEWER_LABEL_ONLY
+  author_display_decision: DISPLAY_GENERIC_MANUAL_REVIEWER_LABEL_ONLY
+  author_update_rule_decision: DERIVE_OR_SET_GENERIC_LAST_AUTHOR_LABEL_ON_ACCEPTED_MANUAL_NOTE_CREATE_EDIT_CLEAR
+  privacy_pii_decision: P1_GENERIC_LOCAL_LABEL_ONLY_NO_REAL_PII
+  production_proof_decision: HOLD
+  generated_suggestion_attribution: FORBIDDEN
+  allowed_next_action: IMPLEMENT_GENERIC_LABEL_LOCAL_TEST_ONLY
 ```
 
 ## 2. Current State
@@ -56,7 +83,11 @@ manual_review_notes_v1_reviewer_identity_packet:
   clears the saved current note value and updates the note-specific timestamp.
 - Generated suggestions are copy-only, unsaved, unsnapshotted, not attributed
   to a reviewer, and not human-authored notes.
-- Current reviewer identity: not implemented.
+- Current local/test author label: `manualReviewNotesAuthorLabel` /
+  `manual_review_notes_author_label` may contain only `manual_reviewer` after an
+  accepted manual note create/edit/clear event. It is a generic local/test label,
+  not a real reviewer identity, display name, email, authenticated actor, audit
+  trail, or production proof.
 - Current production status: production proof, production deploy, production D1
   access, production endpoint calls, production logs/secrets, CRM, outreach,
   analytics, LLM behavior, manager dashboard v1, outcome learning, note
@@ -168,7 +199,8 @@ of the following:
 
 ## 10. Explicit Non-Decisions
 
-This packet does not approve:
+This original packet did not itself approve the following. The post-packet
+generic label update above is the only local/test implementation exception:
 
 - implementation,
 - schema changes,
@@ -182,7 +214,8 @@ This packet does not approve:
 - production D1 access,
 - production endpoint calls,
 - production logs/secrets access,
-- reviewer identity implementation,
+- real/authenticated reviewer identity implementation beyond the fixed generic
+  local/test label,
 - authenticated reviewer identity implementation,
 - reviewer display-name implementation,
 - author audit trail implementation,
@@ -281,7 +314,8 @@ For this docs-only packet:
 - `git diff --check`
 - `npm run check:naming`
 
-For a future local/test-safe reviewer identity implementation:
+For a future local/test-safe reviewer identity implementation beyond the fixed
+generic label:
 
 - `git diff --check`
 - `npm run check:naming`
