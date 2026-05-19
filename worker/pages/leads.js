@@ -209,6 +209,8 @@ export function getLeadsPage() {
     .notes-state.is-saved strong { color:#a8efc0; }
     .notes-state.is-empty { border-color:#566273; background:#171d25; }
     .notes-state-meta { color:#8fa4b8; }
+    .notes-privacy-warning { background:#1f1c12; border:1px solid #806718; border-radius:8px; color:#ffe58a; font-size:11px; line-height:1.5; margin:8px 0 0; padding:8px; }
+    .notes-privacy-warning strong { color:#fff0a8; }
     .notes-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 6px; }
     .notes-clear-btn { border: 1px solid #555; background: #1f2b3d; color: #d4deea; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
     .notes-clear-btn:hover:not(:disabled), .notes-clear-btn:focus-visible:not(:disabled) { background: #2b3a50; border-color: #8fbfe8; }
@@ -593,6 +595,12 @@ export function getLeadsPage() {
           \${authorMeta}
           \${historyMeta}
         </div>
+      \`;
+    }
+
+    function renderManualReviewNotePrivacyWarning() {
+      return \`
+        <p class="notes-privacy-warning" role="note"><strong>로컬/테스트 개인정보 주의:</strong> 수동 메모에는 민감한 영업 맥락이나 PII가 포함될 수 있습니다. 실제 개인정보/비밀은 입력하지 마세요. 지우기는 현재 저장된 메모 텍스트만 비웁니다. 자동 감지/차단은 하지 않습니다.</p>
       \`;
     }
 
@@ -2052,6 +2060,7 @@ export function getLeadsPage() {
               <details>
                 <summary>수동 리뷰 메모 <span class="notes-summary-state" data-manual-note-summary-state>\${esc(getManualReviewNoteStateLabel(lead))}</span><span class="notes-saved">저장됨</span></summary>
                 \${renderManualReviewNoteState(lead)}
+                \${renderManualReviewNotePrivacyWarning()}
                 <textarea class="notes-textarea" aria-label="수동 리뷰 메모 입력" placeholder="수동 리뷰 메모를 입력하세요..."
                   oninput="scheduleNoteSave('\${esc(lead.id)}', this)"
                   onblur="saveNotes('\${esc(lead.id)}', this)">\${esc(lead.manualReviewNotes || lead.notes || '')}</textarea>

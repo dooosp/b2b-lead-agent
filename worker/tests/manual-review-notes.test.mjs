@@ -205,6 +205,26 @@ test('manualReviewNotes PATCH clears an existing human-entered note', async () =
   assertManualNoteHistoryDoesNotRetainText(db, 'Saved note to clear.');
 });
 
+test('manualReviewNotes PATCH remains warning-only for sensitive-looking local test text', async () => {
+  const db = new FakeD1Database({ leads: [createLeadRow()] });
+  const sensitiveLookingLocalTestNote = 'Local test note: buyer@example.test, 010-0000-0000, internal deal context.';
+
+  const response = await patchLead(db, {
+    manualReviewNotes: sensitiveLookingLocalTestNote,
+  });
+  const payload = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.success, true);
+  assert.equal(payload.lead.manualReviewNotes, sensitiveLookingLocalTestNote);
+  assert.equal(payload.lead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(db.leads.get('lead-1').notes, sensitiveLookingLocalTestNote);
+  assert.equal(Object.hasOwn(payload.lead, 'manualReviewNotesSensitiveContentWarning'), false);
+  assert.equal(Object.hasOwn(payload.lead, 'manualReviewNotesSensitiveContentDetected'), false);
+  assert.equal(Object.hasOwn(payload.lead, 'manualReviewNotesRedacted'), false);
+  assertManualNoteHistoryDoesNotRetainText(db, sensitiveLookingLocalTestNote);
+});
+
 test('unchanged manualReviewNotes PATCH does not update note-specific timestamp', async () => {
   const originalManualNoteUpdatedAt = '2026-04-07T00:00:00.000Z';
   const db = new FakeD1Database({

@@ -317,9 +317,31 @@ manual_review_notes_v1_retention_privacy_candidate:
   allowed_next_action: DECISION_ONLY
 ```
 
+After PR #129, a non-production implementation comment selected only the
+lightweight P1 local/test reviewer-facing warning. This selection does not
+approve production saved-note use, retention enforcement, automated detection,
+redaction, purge/delete jobs, exports, manager visibility, old/new note text
+history, or generated suggestion retention.
+
+```yaml
+manual_review_notes_v1_retention_privacy:
+  document_status: APPROVED_LOCAL_TEST_ONLY
+  approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4493106549"
+  current_note_retention_decision: KEEP_LOCAL_TEST_CURRENT_VALUE_UNTIL_EXPLICIT_CLEAR
+  metadata_history_retention_decision: KEEP_LOCAL_TEST_METADATA_ONLY_HISTORY
+  clear_delete_semantics_decision: CLEAR_CURRENT_VALUE_PRESERVE_METADATA_ONLY_CLEAR_EVENT
+  pii_sensitive_content_decision: IMPLEMENT_LOCAL_MANUAL_NOTES_PRIVACY_WARNING_ONLY
+  export_visibility_decision: NO_NEW_EXPORT_OR_MANAGER_VISIBILITY
+  production_readiness_decision: HOLD
+  generated_suggestion_retention: FORBIDDEN
+  old_new_note_text_history: FORBIDDEN
+  allowed_next_action: IMPLEMENT_LOCAL_PRIVACY_WARNING_ONLY
+```
+
 ## 15. Future Implementation Prompt Stub
 
-Use only after a human fills an approval block with non-HOLD decisions:
+Use only after a human fills an approval block with non-HOLD decisions beyond
+the local/test P1 warning selected above:
 
 ```text
 Implement the selected Manual Review Notes v1 retention/privacy policy
