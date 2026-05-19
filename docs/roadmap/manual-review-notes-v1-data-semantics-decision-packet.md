@@ -20,6 +20,10 @@ local/test-safe Manual Review Notes v0 work. It is documentation only.
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4483448642`.
 - Post-packet T1 implementation scope: local/test-safe note-specific timestamp
   semantics only.
+- Follow-up reviewer identity decision-packet approval-intent record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4486274314`.
+- Follow-up reviewer identity packet:
+  `docs/roadmap/manual-review-notes-v1-reviewer-identity-decision-packet.md`.
 
 This packet does not approve v1 implementation. It records the remaining
 decisions needed before note-specific timestamps, reviewer identity, note
@@ -43,6 +47,12 @@ backed by `manual_review_notes_updated_at`. It records the last accepted
 human-entered manual note change/save/clear event. It does not record reviewer
 identity, note history/versioning, retention/privacy proof, generated
 suggestion time, production proof, or production D1 evidence.
+
+Follow-up update: reviewer identity and author attribution remain decision-only
+in `docs/roadmap/manual-review-notes-v1-reviewer-identity-decision-packet.md`.
+No reviewer identity, authenticated identity, display-name field, author audit
+trail, generated suggestion attribution, retention/privacy enforcement, or
+production behavior is approved by that packet.
 
 ## 2. Current State
 
