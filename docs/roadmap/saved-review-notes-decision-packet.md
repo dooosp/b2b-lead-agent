@@ -214,8 +214,12 @@ Issue #113 selected Option E, PR #114 shipped the copy-only wording
 clarification, Issue #115 closed its UX intake, and Issue #118 later selected
 local/test-safe Option A for human-entered manual notes only. PR #120 shipped
 the initial save/read path, PR #121 shipped edit-by-resave and confirmed
-clear-by-empty-value behavior, and the later state/timestamp clarity record
-keeps timestamp display constrained to lead-level last-update semantics.
+clear-by-empty-value behavior, and PR #122 shipped saved/empty state clarity
+while keeping timestamp display constrained to lead-level last-update
+semantics. `docs/roadmap/manual-review-notes-v1-data-semantics-decision-packet.md`
+is the next decision-only packet for note-specific timestamp, reviewer
+identity, history/versioning, retention/privacy, and production-readiness
+gates.
 
 Do not implement generated note auto-save, generated suggestion persistence,
 new note schema/storage, retention jobs, reviewer identity, production rollout,
