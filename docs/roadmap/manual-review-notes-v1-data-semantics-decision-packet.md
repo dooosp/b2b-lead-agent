@@ -26,6 +26,10 @@ local/test-safe Manual Review Notes v0 work. It is documentation only.
   `docs/roadmap/manual-review-notes-v1-reviewer-identity-decision-packet.md`.
 - Follow-up generic label implementation approval record:
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487335178`.
+- Follow-up note history/versioning decision-packet approval-intent record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487570553`.
+- Follow-up note history/versioning packet:
+  `docs/roadmap/manual-review-notes-v1-note-history-versioning-decision-packet.md`.
 
 This packet does not approve v1 implementation. It records the remaining
 decisions needed before note-specific timestamps, reviewer identity, note
@@ -64,6 +68,14 @@ human-entered manual note create/edit/clear events. It does not approve real
 reviewer identity, display names, email, authenticated actors, note history,
 retention/privacy enforcement, generated suggestion attribution, production
 D1 migration, production endpoint calls, or production proof.
+
+Follow-up update: note history/versioning was prepared as a decision packet in
+`docs/roadmap/manual-review-notes-v1-note-history-versioning-decision-packet.md`.
+That packet recommends the current effective H1 local/test state: current
+manual note value plus last-write metadata only. It does not approve
+append-only history, old note value retention, generated suggestion history,
+retention/privacy enforcement, schema/API/runtime/UI changes, D1 migrations, or
+production behavior.
 
 ## 2. Current State
 
