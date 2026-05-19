@@ -12,6 +12,12 @@ async function patchLead(db, payload, leadId = 'lead-1') {
   return handleUpdateLead(request, { DB: db }, leadId);
 }
 
+function assertParseableIsoTimestamp(value) {
+  assert.equal(typeof value, 'string');
+  assert.ok(value.length > 0);
+  assert.equal(new Date(value).toISOString(), value);
+}
+
 test('manualReviewNotes PATCH persists human-entered notes with manual provenance', async () => {
   const db = new FakeD1Database({ leads: [createLeadRow()] });
 
@@ -27,13 +33,24 @@ test('manualReviewNotes PATCH persists human-entered notes with manual provenanc
   assert.equal(payload.lead.manualReviewNotes, 'Human-entered review note: confirm buyer before outreach.');
   assert.equal(payload.lead.notes, 'Human-entered review note: confirm buyer before outreach.');
   assert.equal(payload.lead.manualReviewNotesProvenance, 'human_entered');
+  assertParseableIsoTimestamp(payload.lead.manualReviewNotesUpdatedAt);
   assert.equal(lead.manualReviewNotes, 'Human-entered review note: confirm buyer before outreach.');
   assert.equal(lead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(lead.manualReviewNotesUpdatedAt, payload.lead.manualReviewNotesUpdatedAt);
   assert.equal(db.leads.get('lead-1').notes, 'Human-entered review note: confirm buyer before outreach.');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, payload.lead.manualReviewNotesUpdatedAt);
 });
 
 test('manualReviewNotes PATCH edits an existing human-entered note', async () => {
-  const db = new FakeD1Database({ leads: [createLeadRow({ notes: 'Initial human review note.' })] });
+  const originalManualNoteUpdatedAt = '2026-04-07T00:00:00.000Z';
+  const db = new FakeD1Database({
+    leads: [
+      createLeadRow({
+        notes: 'Initial human review note.',
+        manual_review_notes_updated_at: originalManualNoteUpdatedAt,
+      }),
+    ],
+  });
 
   const response = await patchLead(db, {
     manualReviewNotes: 'Updated human review note after second pass.',
@@ -46,16 +63,22 @@ test('manualReviewNotes PATCH edits an existing human-entered note', async () =>
   assert.deepEqual(payload.changedFields, ['manualReviewNotes']);
   assert.equal(payload.lead.manualReviewNotes, 'Updated human review note after second pass.');
   assert.equal(payload.lead.manualReviewNotesProvenance, 'human_entered');
+  assertParseableIsoTimestamp(payload.lead.manualReviewNotesUpdatedAt);
+  assert.notEqual(payload.lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
   assert.equal(lead.manualReviewNotes, 'Updated human review note after second pass.');
+  assert.equal(lead.manualReviewNotesUpdatedAt, payload.lead.manualReviewNotesUpdatedAt);
   assert.equal(db.leads.get('lead-1').notes, 'Updated human review note after second pass.');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, payload.lead.manualReviewNotesUpdatedAt);
 });
 
 test('updatedAt is lead-level and can change without a manual note save', async () => {
   const originalUpdatedAt = '2026-04-07T00:00:00.000Z';
+  const originalManualNoteUpdatedAt = '2026-04-06T00:00:00.000Z';
   const db = new FakeD1Database({
     leads: [
       createLeadRow({
         notes: 'Existing human review note.',
+        manual_review_notes_updated_at: originalManualNoteUpdatedAt,
         review_status: 'NEEDS_REVIEW',
         updated_at: originalUpdatedAt,
       }),
@@ -74,12 +97,23 @@ test('updatedAt is lead-level and can change without a manual note save', async 
   assert.equal(payload.lead.manualReviewNotes, 'Existing human review note.');
   assert.equal(payload.lead.manualReviewNotesProvenance, 'human_entered');
   assert.notEqual(payload.lead.updatedAt, originalUpdatedAt);
+  assert.equal(payload.lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
   assert.equal(lead.updatedAt, payload.lead.updatedAt);
+  assert.equal(lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
   assert.equal(db.leads.get('lead-1').notes, 'Existing human review note.');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
 });
 
 test('manualReviewNotes PATCH clears an existing human-entered note', async () => {
-  const db = new FakeD1Database({ leads: [createLeadRow({ notes: 'Saved note to clear.' })] });
+  const originalManualNoteUpdatedAt = '2026-04-07T00:00:00.000Z';
+  const db = new FakeD1Database({
+    leads: [
+      createLeadRow({
+        notes: 'Saved note to clear.',
+        manual_review_notes_updated_at: originalManualNoteUpdatedAt,
+      }),
+    ],
+  });
 
   const response = await patchLead(db, {
     manualReviewNotes: '',
@@ -93,9 +127,39 @@ test('manualReviewNotes PATCH clears an existing human-entered note', async () =
   assert.equal(payload.lead.manualReviewNotes, '');
   assert.equal(payload.lead.notes, '');
   assert.equal(payload.lead.manualReviewNotesProvenance, '');
+  assertParseableIsoTimestamp(payload.lead.manualReviewNotesUpdatedAt);
+  assert.notEqual(payload.lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
   assert.equal(lead.manualReviewNotes, '');
   assert.equal(lead.manualReviewNotesProvenance, '');
+  assert.equal(lead.manualReviewNotesUpdatedAt, payload.lead.manualReviewNotesUpdatedAt);
   assert.equal(db.leads.get('lead-1').notes, '');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, payload.lead.manualReviewNotesUpdatedAt);
+});
+
+test('unchanged manualReviewNotes PATCH does not update note-specific timestamp', async () => {
+  const originalManualNoteUpdatedAt = '2026-04-07T00:00:00.000Z';
+  const db = new FakeD1Database({
+    leads: [
+      createLeadRow({
+        notes: 'Existing human review note.',
+        manual_review_notes_updated_at: originalManualNoteUpdatedAt,
+      }),
+    ],
+  });
+
+  const response = await patchLead(db, {
+    manualReviewNotes: 'Existing human review note.',
+  });
+  const payload = await response.json();
+  const lead = await getLeadById(db, 'lead-1');
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.success, true);
+  assert.deepEqual(payload.changedFields, []);
+  assert.equal(payload.lead.manualReviewNotes, 'Existing human review note.');
+  assert.equal(payload.lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
+  assert.equal(lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
+  assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
 });
 
 test('manualReviewNotes is exposed on local read paths without saving generated suggestions', async () => {
@@ -127,6 +191,7 @@ test('manualReviewNotes is exposed on local read paths without saving generated 
   assert.equal(payload.source, 'd1');
   assert.equal(payload.leads[0].manualReviewNotes, 'Saved by a human reviewer.');
   assert.equal(payload.leads[0].manualReviewNotesProvenance, 'human_entered');
+  assert.equal(payload.leads[0].manualReviewNotesUpdatedAt, null);
   assert.equal(payload.leads[0].reviewNoteSuggestion, undefined);
   assert.equal(payload.reviewerActionQueue.items[0].reviewNoteSuggestion.state, 'APPROVED');
   assert.match(payload.reviewerActionQueue.items[0].reviewNoteSuggestion.text, /Decision: APPROVED/);
@@ -134,7 +199,15 @@ test('manualReviewNotes is exposed on local read paths without saving generated 
 });
 
 test('generated reviewer note suggestion persistence attempts are rejected atomically', async () => {
-  const db = new FakeD1Database({ leads: [createLeadRow({ notes: 'Keep human note' })] });
+  const originalManualNoteUpdatedAt = '2026-04-07T00:00:00.000Z';
+  const db = new FakeD1Database({
+    leads: [
+      createLeadRow({
+        notes: 'Keep human note',
+        manual_review_notes_updated_at: originalManualNoteUpdatedAt,
+      }),
+    ],
+  });
 
   const response = await patchLead(db, {
     reviewNoteSuggestion: {
@@ -149,7 +222,9 @@ test('generated reviewer note suggestion persistence attempts are rejected atomi
   assert.equal(payload.success, false);
   assert.match(payload.message, /copy-only/);
   assert.equal(lead.manualReviewNotes, 'Keep human note');
+  assert.equal(lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
   assert.equal(db.leads.get('lead-1').notes, 'Keep human note');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
 
   const templatesResponse = await patchLead(db, {
     reviewNoteTemplates: [
@@ -162,6 +237,7 @@ test('generated reviewer note suggestion persistence attempts are rejected atomi
   assert.equal(templatesPayload.success, false);
   assert.match(templatesPayload.message, /copy-only/);
   assert.equal(db.leads.get('lead-1').notes, 'Keep human note');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
 });
 
 test('generated suggestion persistence attempts cannot clear manual review notes', async () => {
@@ -237,6 +313,8 @@ test('generated batch inserts do not create saved manual review notes', async ()
   const lead = await getLeadById(db, 'generated-lead-1');
 
   assert.equal(db.leads.get('generated-lead-1').notes, '');
+  assert.equal(lead.manualReviewNotesUpdatedAt, null);
+  assert.equal(db.leads.get('generated-lead-1').manual_review_notes_updated_at, undefined);
   assert.equal(lead.manualReviewNotes, '');
   assert.equal(lead.manualReviewNotesProvenance, '');
   assert.equal(lead.reviewNoteSuggestion, undefined);

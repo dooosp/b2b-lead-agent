@@ -52,6 +52,11 @@ function manualReviewNoteProvenance(notes) {
   return stringOrEmpty(notes).trim() ? MANUAL_REVIEW_NOTE_PROVENANCE : '';
 }
 
+function timestampOrNull(value) {
+  const text = stringOrEmpty(value).trim();
+  return text || null;
+}
+
 function normalizeGenerationMode(value, fallback = 'llm') {
   const mode = sanitizeLeadText(value, '').toLowerCase();
   if (mode === 'llm' || mode === 'heuristic' || mode === 'demo') return mode;
@@ -225,6 +230,9 @@ function normalizePersistedLead(lead = {}, { profileId = '', source = '', rowId 
     || buildLeadIdentityKey(identityLead, { profileId });
 
   const manualReviewNotes = stringOrEmpty(lead.manualReviewNotes ?? lead.manual_review_notes ?? lead.notes);
+  const manualReviewNotesUpdatedAt = timestampOrNull(
+    lead.manualReviewNotesUpdatedAt ?? lead.manual_review_notes_updated_at
+  );
 
   const persistedLead = {
     id: sanitizeLeadText(rowId || lead.id, '')
@@ -246,6 +254,7 @@ function normalizePersistedLead(lead = {}, { profileId = '', source = '', rowId 
     notes: manualReviewNotes,
     manualReviewNotes,
     manualReviewNotesProvenance: manualReviewNoteProvenance(manualReviewNotes),
+    manualReviewNotesUpdatedAt,
     enriched: toFiniteNumber(lead.enriched, 0),
     articleBody: stringOrEmpty(lead.articleBody ?? lead.article_body),
     actionItems: Array.isArray(lead.actionItems ?? lead.action_items) ? (lead.actionItems ?? lead.action_items) : [],
@@ -299,6 +308,7 @@ export function rowToLead(row) {
     sources: parseJson(row.sources || '[]', []),
     notes: row.notes,
     manual_review_notes: row.manual_review_notes,
+    manual_review_notes_updated_at: row.manual_review_notes_updated_at,
     enriched: row.enriched,
     article_body: row.article_body,
     action_items: parseJson(row.action_items || '[]', []),
@@ -352,6 +362,7 @@ export function rowToLead(row) {
     notes: normalized.notes,
     manualReviewNotes: normalized.manualReviewNotes,
     manualReviewNotesProvenance: normalized.manualReviewNotesProvenance,
+    manualReviewNotesUpdatedAt: normalized.manualReviewNotesUpdatedAt,
     enriched: normalized.enriched,
     articleBody: normalized.articleBody,
     actionItems: normalized.actionItems,
@@ -400,6 +411,7 @@ export function leadToRow(lead, profileId, source) {
     global_context: normalized.globalContext,
     sources: JSON.stringify(normalized.sources),
     notes: normalized.notes,
+    manual_review_notes_updated_at: normalized.manualReviewNotesUpdatedAt,
     score_reason: normalized.scoreReason,
     urgency: normalized.urgency,
     urgency_reason: normalized.urgencyReason,

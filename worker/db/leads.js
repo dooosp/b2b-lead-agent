@@ -111,7 +111,7 @@ export async function updateLeadNotes(db, id, notes) {
   if (!db) return false;
   await ensureD1Schema(db);
   const now = new Date().toISOString();
-  await db.prepare('UPDATE leads SET notes = ?, updated_at = ? WHERE id = ?').bind(notes, now, id).run();
+  await db.prepare('UPDATE leads SET notes = ?, manual_review_notes_updated_at = ?, updated_at = ? WHERE id = ?').bind(notes, now, now, id).run();
   return true;
 }
 
@@ -119,6 +119,7 @@ function normalizeLeadPatch(lead, patch) {
   const changedFields = [];
   const leadUpdates = {};
   let statusLogEntry = null;
+  let manualReviewNotesChanged = false;
 
   rejectGeneratedReviewNotePersistence(patch);
 
@@ -169,6 +170,7 @@ function normalizeLeadPatch(lead, patch) {
     const notes = (hasManualReviewNotes ? rawManualReviewNotes : patch.notes).slice(0, 2000);
     if (notes !== (lead.notes || '')) {
       leadUpdates.notes = notes;
+      manualReviewNotesChanged = true;
       changedFields.push(hasManualReviewNotes ? 'manualReviewNotes' : 'notes');
     }
   }
@@ -199,17 +201,20 @@ function normalizeLeadPatch(lead, patch) {
     }
   }
 
-  return { leadUpdates, statusLogEntry, changedFields };
+  return { leadUpdates, statusLogEntry, changedFields, manualReviewNotesChanged };
 }
 
 export async function updateLeadPatchAtomic(db, lead, patch) {
   if (!db || !lead) return { lead, changedFields: [] };
   await ensureD1Schema(db);
 
-  const { leadUpdates, statusLogEntry, changedFields } = normalizeLeadPatch(lead, patch);
+  const { leadUpdates, statusLogEntry, changedFields, manualReviewNotesChanged } = normalizeLeadPatch(lead, patch);
   if (changedFields.length === 0) return { lead, changedFields };
 
   const now = new Date().toISOString();
+  if (manualReviewNotesChanged) {
+    leadUpdates.manual_review_notes_updated_at = now;
+  }
   const updateFields = Object.keys(leadUpdates);
   const setClause = [
     ...updateFields.map((field) => `${field} = ?`),

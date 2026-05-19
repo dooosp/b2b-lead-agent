@@ -60,7 +60,7 @@ Patchable concepts:
 | --- | --- | --- |
 | Sales pipeline state | `status` | Uses `VALID_TRANSITIONS` from `worker/db/transform.js` |
 | Human review state | `review_status` / `reviewStatus` | Frozen states from `worker/lib/leadbrief-v1.js`; separate from `status` |
-| Operator notes | `notes` | Truncated to the allowed payload size in code |
+| Operator notes | `notes`, `manual_review_notes_updated_at` | Human-entered manual notes are truncated to the allowed payload size in code; the timestamp records the last accepted manual note change/save/clear event only |
 | Follow-up | `follow_up_date` | Validated as `YYYY-MM-DD` |
 | Value estimate | `estimated_value` | Stored as non-negative integer |
 
@@ -124,7 +124,7 @@ Runtime D1 setup is owned by `ensureD1Schema(db)` in `worker/db/schema.js`. The 
 | Group | Columns |
 | --- | --- |
 | Identity and ownership | `id`, `identity_key`, `profile_id`, `source`, `created_at`, `updated_at` |
-| Pipeline and review | `status`, `review_status`, `notes`, `follow_up_date`, `estimated_value` |
+| Pipeline and review | `status`, `review_status`, `notes`, `manual_review_notes_updated_at`, `follow_up_date`, `estimated_value` |
 | Core brief | `company`, `summary`, `product`, `score`, `grade`, `roi`, `sales_pitch`, `global_context`, `sources` |
 | LeadBrief and trust | `score_reason`, `urgency`, `urgency_reason`, `buyer_role`, `evidence`, `confidence`, `confidence_reason`, `assumptions`, `generation_mode`, `verification_status`, `data_gaps`, `event_type` |
 | Enrichment | `enriched`, `article_body`, `action_items`, `key_figures`, `pain_points`, `enriched_at`, `meddic`, `competitive`, `buying_signals` |

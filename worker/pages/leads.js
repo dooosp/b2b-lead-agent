@@ -545,22 +545,33 @@ export function getLeadsPage() {
       return getManualReviewNoteValue(lead) ? '저장됨' : '비어 있음';
     }
 
-    function formatLeadUpdatedAt(lead) {
-      const raw = lead && (lead.updatedAt || lead.updated_at);
+    function formatTimestamp(raw) {
       if (!raw) return '';
       const date = new Date(raw);
       if (Number.isNaN(date.getTime())) return '';
       return date.toLocaleString('ko-KR');
     }
 
+    function formatLeadUpdatedAt(lead) {
+      return formatTimestamp(lead && (lead.updatedAt || lead.updated_at));
+    }
+
+    function formatManualReviewNotesUpdatedAt(lead) {
+      return formatTimestamp(lead && (lead.manualReviewNotesUpdatedAt || lead.manual_review_notes_updated_at));
+    }
+
     function renderManualReviewNoteState(lead) {
       const hasSavedNote = Boolean(getManualReviewNoteValue(lead));
-      const updatedAt = formatLeadUpdatedAt(lead);
+      const noteUpdatedAt = formatManualReviewNotesUpdatedAt(lead);
+      const leadUpdatedAt = formatLeadUpdatedAt(lead);
+      const timestampMeta = noteUpdatedAt
+        ? \`<span class="notes-state-meta">\${hasSavedNote ? '수동 리뷰 메모 마지막 변경' : '수동 리뷰 메모가 마지막으로 비워짐/변경됨'}: \${esc(noteUpdatedAt)}</span>\`
+        : (leadUpdatedAt ? \`<span class="notes-state-meta">리드 마지막 업데이트: \${esc(leadUpdatedAt)} (메모 전용 시간 아님)</span>\` : '');
       return \`
         <div class="notes-state \${hasSavedNote ? 'is-saved' : 'is-empty'}" data-manual-note-state="\${hasSavedNote ? 'saved' : 'empty'}">
           <strong>\${hasSavedNote ? '저장된 수동 리뷰 메모 있음' : '저장된 수동 리뷰 메모 없음'}</strong>
           <span>\${hasSavedNote ? '사람이 입력한 수동 메모만 저장 상태로 표시됩니다.' : '비어 있음 상태입니다. 생성된 검토 메모 제안은 저장 상태가 아닙니다.'}</span>
-          \${updatedAt ? \`<span class="notes-state-meta">리드 마지막 업데이트: \${esc(updatedAt)} (메모 전용 시간 아님)</span>\` : ''}
+          \${timestampMeta}
         </div>
       \`;
     }

@@ -21,6 +21,12 @@ async function readJson(response) {
   return response.json();
 }
 
+function assertParseableIsoTimestamp(value) {
+  assert.equal(typeof value, 'string');
+  assert.ok(value.length > 0);
+  assert.equal(new Date(value).toISOString(), value);
+}
+
 test('local-only fake D1 Worker smoke covers core lead routes and browser rendering', async (t) => {
   const fetchGuard = installLocalOnlyFetchGuard();
   const env = createLocalSmokeEnv();
@@ -79,6 +85,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.equal(approvedLead.reviewStatus, 'APPROVED');
   assert.equal(approvedLead.manualReviewNotes, 'Seeded local smoke note');
   assert.equal(approvedLead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(approvedLead.manualReviewNotesUpdatedAt, '2026-05-01T10:05:00.000Z');
   assert.equal(approvedLead.reviewNoteSuggestion, undefined);
 
   const detailResponse = await localFetch('/leads/local-lead-approved');
@@ -367,6 +374,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   await assertRenderedText(page, ['포커스 이동 2건', '노트 복사 2건']);
 
   await page.locator('.notes-section details').first().click();
+  await assertRenderedText(page, ['수동 리뷰 메모 마지막 변경']);
   await page.locator('.notes-textarea').first().focus();
   const manualReviewNoteText = 'Human-entered local E2E manual review note';
   await page.locator('.notes-textarea').first().fill(manualReviewNoteText);
@@ -376,6 +384,8 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   const manualNotesLead = manualNotesPayload.leads.find((lead) => lead.id === 'local-lead-approved');
   assert.equal(manualNotesLead.manualReviewNotes, manualReviewNoteText);
   assert.equal(manualNotesLead.manualReviewNotesProvenance, 'human_entered');
+  assertParseableIsoTimestamp(manualNotesLead.manualReviewNotesUpdatedAt);
+  assert.notEqual(manualNotesLead.manualReviewNotesUpdatedAt, '2026-05-01T10:05:00.000Z');
   assert.equal(manualNotesLead.reviewNoteSuggestion, undefined);
   await page.waitForFunction(() => !document.querySelector('.notes-saved.show'));
   const editedManualReviewNoteText = 'Edited human-entered local E2E manual review note';
@@ -386,6 +396,8 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   const editedManualNotesLead = editedManualNotesPayload.leads.find((lead) => lead.id === 'local-lead-approved');
   assert.equal(editedManualNotesLead.manualReviewNotes, editedManualReviewNoteText);
   assert.equal(editedManualNotesLead.manualReviewNotesProvenance, 'human_entered');
+  assertParseableIsoTimestamp(editedManualNotesLead.manualReviewNotesUpdatedAt);
+  assert.notEqual(editedManualNotesLead.manualReviewNotesUpdatedAt, manualNotesLead.manualReviewNotesUpdatedAt);
   assert.equal(editedManualNotesLead.reviewNoteSuggestion, undefined);
   await page.keyboard.press('j');
   await page.keyboard.press('c');
@@ -404,7 +416,10 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   const clearedManualNotesLead = clearedManualNotesPayload.leads.find((lead) => lead.id === 'local-lead-approved');
   assert.equal(clearedManualNotesLead.manualReviewNotes, '');
   assert.equal(clearedManualNotesLead.manualReviewNotesProvenance, '');
+  assertParseableIsoTimestamp(clearedManualNotesLead.manualReviewNotesUpdatedAt);
+  assert.notEqual(clearedManualNotesLead.manualReviewNotesUpdatedAt, editedManualNotesLead.manualReviewNotesUpdatedAt);
   assert.equal(clearedManualNotesLead.reviewNoteSuggestion, undefined);
+  await assertRenderedText(page, ['수동 리뷰 메모가 마지막으로 비워짐/변경됨']);
 
   const shortcutLeadsResponse = await localFetch('/api/leads?profile=danfoss');
   const shortcutLeadsPayload = await readJson(shortcutLeadsResponse);

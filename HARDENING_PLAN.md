@@ -280,14 +280,16 @@
   clarification for `/leads`, Opportunity Workbench, tests, and related docs.
   Generated suggestions remain helper text only: copy-only, not saved, not sent,
   and not human-authored saved notes.
-- Generated suggestion persistence remains unimplemented. Manual Review Notes v0
+- Generated suggestion persistence remains unimplemented. Manual Review Notes
   persistence is limited to human-entered `manualReviewNotes` backed by the
   existing `leads.notes` value; edit means saving a changed value, and
   clear/delete means confirmed clearing of that value. PR #122 clarified saved
   vs empty state and displayed lead-level last-update timing only with honest
-  lead-level copy; note-specific saved-time display still requires a future
-  schema/API decision. Schema expansion, production, CRM, outreach, analytics,
-  LLM, outcome learning, note history, reviewer identity, retention/privacy
+  lead-level copy. The T1 local/test-safe timestamp implementation adds
+  `manualReviewNotesUpdatedAt` / `manual_review_notes_updated_at` only for the
+  last accepted human-entered manual note change/save/clear event. It remains
+  current-value metadata only; production, CRM, outreach, analytics, LLM,
+  outcome learning, note history, reviewer identity, retention/privacy
   enforcement, and manager dashboard expansion remain separately scoped.
 - Issue #111 is closed as completed for the Manager / Reviewer Summary v0 UX
   Findings Intake.
@@ -311,8 +313,8 @@
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
-  - Recommended next non-production goal: make Manual Review Notes v1 data semantics decision-ready before any note-specific timestamp, note history, reviewer identity, retention/privacy, schema/API, or production saved-note work.
-  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, the Human UX Review Packet, Issue #100 closeout, the compact `다음 리뷰` strip, reviewer-note summaries, roadmap/current-train source-of-truth sync, production-proof planning records, Issue #34 closeout, standing approval policy, Manager / Reviewer Summary v0, PR #110 source-of-truth sync, Issue #111 UX intake closeout, the Saved Review Notes Decision Packet, Issue #113 Option E completion, PR #114 copy-only clarification, PR #119-#122 Manual Review Notes v0 local/test-safe work, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay docs/local/test/CI oriented unless a separate human-approved production prompt opens operational work.
+  - Recommended next non-production goal: after the T1 note-specific timestamp lands, keep future Manual Review Notes work separately scoped unless a later approval selects reviewer identity, note history/versioning, retention/privacy enforcement, or production proof.
+  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, the Human UX Review Packet, Issue #100 closeout, the compact `다음 리뷰` strip, reviewer-note summaries, roadmap/current-train source-of-truth sync, production-proof planning records, Issue #34 closeout, standing approval policy, Manager / Reviewer Summary v0, PR #110 source-of-truth sync, Issue #111 UX intake closeout, the Saved Review Notes Decision Packet, Issue #113 Option E completion, PR #114 copy-only clarification, PR #119-#123 Manual Review Notes local/test-safe work, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay docs/local/test/CI oriented unless a separate human-approved production prompt opens operational work.
   - Keep production proof, platform migration, storage migration, and production observation work behind separate approval gates.
 
 ## Current Operating Sequence

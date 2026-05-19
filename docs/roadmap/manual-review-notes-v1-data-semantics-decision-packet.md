@@ -16,6 +16,10 @@ local/test-safe Manual Review Notes v0 work. It is documentation only.
 - Runtime behavior changed by this packet: none.
 - Schema/API behavior changed by this packet: none.
 - Production action performed by this packet: none.
+- Post-packet T1 implementation approval record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4483448642`.
+- Post-packet T1 implementation scope: local/test-safe note-specific timestamp
+  semantics only.
 
 This packet does not approve v1 implementation. It records the remaining
 decisions needed before note-specific timestamps, reviewer identity, note
@@ -33,6 +37,13 @@ manual_review_notes_v1_decision_packet:
   generated_suggestion_persistence: FORBIDDEN
 ```
 
+Post-packet update: the T1 timestamp option was approved for local/test-safe
+implementation only. The approved API field is `manualReviewNotesUpdatedAt`,
+backed by `manual_review_notes_updated_at`. It records the last accepted
+human-entered manual note change/save/clear event. It does not record reviewer
+identity, note history/versioning, retention/privacy proof, generated
+suggestion time, production proof, or production D1 evidence.
+
 ## 2. Current State
 
 - PR #120 implemented the local/test-safe save/read path for human-entered
@@ -45,7 +56,9 @@ manual_review_notes_v1_decision_packet:
 - Current provenance: `manualReviewNotesProvenance: "human_entered"` only when
   non-empty saved manual note text exists.
 - Current clear behavior: `manualReviewNotes: ""`.
-- Current timestamp semantics: `updatedAt` / `updated_at` is lead-level update
+- Current timestamp semantics: `manualReviewNotesUpdatedAt` is the local/test-safe
+  note-specific last-change timestamp for accepted human-entered manual note
+  create/edit/clear events. `updatedAt` / `updated_at` remains lead-level update
   time only, not note-specific saved time.
 - Current generated suggestion semantics: generated reviewer note suggestions
   are copy-only helper text, unsaved, unsnapshotted, and not human-authored
