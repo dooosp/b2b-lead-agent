@@ -79,6 +79,14 @@ const EXPECTED_LEADS_LAZY_ALTER_COLUMNS = Object.freeze([
   'event_type',
 ]);
 
+const EXPECTED_MANUAL_REVIEW_NOTE_EVENT_COLUMNS = Object.freeze([
+  'id',
+  'lead_id',
+  'event_type',
+  'changed_at',
+  'author_label',
+]);
+
 const DRIFT_CRITICAL_COLUMNS = Object.freeze([
   'review_status',
   'manual_review_notes_author_label',
@@ -251,10 +259,10 @@ function assertColumnSet(errors, label, actualColumns, expectedColumns) {
   }
 }
 
-function assertDefinitionsMatch(errors, leftLabel, leftColumns, rightLabel, rightColumns) {
+function assertDefinitionsForColumnsMatch(errors, expectedColumns, leftLabel, leftColumns, rightLabel, rightColumns) {
   const left = toDefinitionMap(leftColumns);
   const right = toDefinitionMap(rightColumns);
-  for (const column of EXPECTED_LEADS_COLUMNS) {
+  for (const column of expectedColumns) {
     if (!left.has(column) || !right.has(column)) continue;
     const leftDefinition = left.get(column);
     const rightDefinition = right.get(column);
@@ -265,6 +273,10 @@ function assertDefinitionsMatch(errors, leftLabel, leftColumns, rightLabel, righ
       );
     }
   }
+}
+
+function assertDefinitionsMatch(errors, leftLabel, leftColumns, rightLabel, rightColumns) {
+  assertDefinitionsForColumnsMatch(errors, EXPECTED_LEADS_COLUMNS, leftLabel, leftColumns, rightLabel, rightColumns);
 }
 
 function assertLazyDefinitionsMatchCreate(errors, createColumns, lazyAlterColumns) {
@@ -288,9 +300,13 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
   let schemaSqlCreateColumns = [];
   let schemaJsCreateColumns = [];
   let schemaJsLazyAlterColumns = [];
+  let schemaSqlManualReviewNoteEventColumns = [];
+  let schemaJsManualReviewNoteEventColumns = [];
   let schemaSqlCreateDefinitions = [];
   let schemaJsCreateDefinitions = [];
   let schemaJsLazyAlterDefinitions = [];
+  let schemaSqlManualReviewNoteEventDefinitions = [];
+  let schemaJsManualReviewNoteEventDefinitions = [];
 
   try {
     schemaSqlCreateDefinitions = parseCreateTableColumns(schemaSql, 'leads');
@@ -313,6 +329,20 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
     errors.push(`worker/db/schema.js lazy ALTER parse failed: ${err.message}`);
   }
 
+  try {
+    schemaSqlManualReviewNoteEventDefinitions = parseCreateTableColumns(schemaSql, 'manual_review_note_events');
+    schemaSqlManualReviewNoteEventColumns = names(schemaSqlManualReviewNoteEventDefinitions);
+  } catch (err) {
+    errors.push(`worker/schema.sql CREATE TABLE manual_review_note_events parse failed: ${err.message}`);
+  }
+
+  try {
+    schemaJsManualReviewNoteEventDefinitions = parseCreateTableColumns(schemaJs, 'manual_review_note_events');
+    schemaJsManualReviewNoteEventColumns = names(schemaJsManualReviewNoteEventDefinitions);
+  } catch (err) {
+    errors.push(`worker/db/schema.js CREATE TABLE manual_review_note_events parse failed: ${err.message}`);
+  }
+
   assertColumnSet(errors, 'worker/schema.sql CREATE TABLE leads', schemaSqlCreateColumns, EXPECTED_LEADS_COLUMNS);
   assertColumnSet(errors, 'worker/db/schema.js CREATE TABLE leads', schemaJsCreateColumns, EXPECTED_LEADS_COLUMNS);
   assertColumnSet(
@@ -327,6 +357,26 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
     schemaSqlCreateDefinitions,
     'worker/db/schema.js CREATE TABLE leads',
     schemaJsCreateDefinitions
+  );
+  assertColumnSet(
+    errors,
+    'worker/schema.sql CREATE TABLE manual_review_note_events',
+    schemaSqlManualReviewNoteEventColumns,
+    EXPECTED_MANUAL_REVIEW_NOTE_EVENT_COLUMNS
+  );
+  assertColumnSet(
+    errors,
+    'worker/db/schema.js CREATE TABLE manual_review_note_events',
+    schemaJsManualReviewNoteEventColumns,
+    EXPECTED_MANUAL_REVIEW_NOTE_EVENT_COLUMNS
+  );
+  assertDefinitionsForColumnsMatch(
+    errors,
+    EXPECTED_MANUAL_REVIEW_NOTE_EVENT_COLUMNS,
+    'worker/schema.sql CREATE TABLE manual_review_note_events',
+    schemaSqlManualReviewNoteEventDefinitions,
+    'worker/db/schema.js CREATE TABLE manual_review_note_events',
+    schemaJsManualReviewNoteEventDefinitions
   );
   assertLazyDefinitionsMatchCreate(errors, schemaJsCreateDefinitions, schemaJsLazyAlterDefinitions);
 
@@ -349,9 +399,13 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
       schemaSqlCreateColumns,
       schemaJsCreateColumns,
       schemaJsLazyAlterColumns,
+      schemaSqlManualReviewNoteEventColumns,
+      schemaJsManualReviewNoteEventColumns,
       schemaSqlCreateDefinitions,
       schemaJsCreateDefinitions,
       schemaJsLazyAlterDefinitions,
+      schemaSqlManualReviewNoteEventDefinitions,
+      schemaJsManualReviewNoteEventDefinitions,
     },
   };
 }
@@ -378,6 +432,8 @@ function runCli() {
   console.log(`- worker/schema.sql CREATE TABLE leads: ${result.sources.schemaSqlCreateColumns.length} columns`);
   console.log(`- worker/db/schema.js CREATE TABLE leads: ${result.sources.schemaJsCreateColumns.length} columns`);
   console.log(`- worker/db/schema.js lazy ALTER leads: ${result.sources.schemaJsLazyAlterColumns.length} columns`);
+  console.log(`- worker/schema.sql CREATE TABLE manual_review_note_events: ${result.sources.schemaSqlManualReviewNoteEventColumns.length} columns`);
+  console.log(`- worker/db/schema.js CREATE TABLE manual_review_note_events: ${result.sources.schemaJsManualReviewNoteEventColumns.length} columns`);
 }
 
 if (require.main === module) {
@@ -388,6 +444,7 @@ module.exports = {
   DRIFT_CRITICAL_COLUMNS,
   EXPECTED_LEADS_COLUMNS,
   EXPECTED_LEADS_LAZY_ALTER_COLUMNS,
+  EXPECTED_MANUAL_REVIEW_NOTE_EVENT_COLUMNS,
   parseCreateTableColumns,
   parseLazyAlterColumns,
   validateSchemaSources,

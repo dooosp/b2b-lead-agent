@@ -75,6 +75,16 @@ CREATE TABLE IF NOT EXISTS status_log (
 );
 CREATE INDEX IF NOT EXISTS idx_status_log_lead ON status_log(lead_id);
 
+CREATE TABLE IF NOT EXISTS manual_review_note_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lead_id TEXT NOT NULL,
+  event_type TEXT NOT NULL CHECK (event_type IN ('create', 'edit', 'clear')),
+  changed_at TEXT NOT NULL,
+  author_label TEXT NOT NULL DEFAULT 'manual_reviewer' CHECK (author_label = 'manual_reviewer')
+);
+CREATE INDEX IF NOT EXISTS idx_manual_review_note_events_lead
+  ON manual_review_note_events(lead_id, changed_at DESC);
+
 CREATE TABLE IF NOT EXISTS job_runs (
   request_id TEXT PRIMARY KEY,
   profile_id TEXT NOT NULL,

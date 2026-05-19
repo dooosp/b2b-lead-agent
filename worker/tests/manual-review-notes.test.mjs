@@ -18,6 +18,22 @@ function assertParseableIsoTimestamp(value) {
   assert.equal(new Date(value).toISOString(), value);
 }
 
+function pickManualNoteEvent(event) {
+  return {
+    lead_id: event.lead_id,
+    event_type: event.event_type,
+    changed_at: event.changed_at,
+    author_label: event.author_label,
+  };
+}
+
+function assertManualNoteHistoryDoesNotRetainText(db, forbiddenText) {
+  const serializedEvents = JSON.stringify(db.manualReviewNoteEvents);
+  for (const text of Array.isArray(forbiddenText) ? forbiddenText : [forbiddenText]) {
+    assert.equal(serializedEvents.includes(text), false);
+  }
+}
+
 test('manualReviewNotes PATCH persists human-entered notes with manual provenance', async () => {
   const db = new FakeD1Database({ leads: [createLeadRow()] });
 
@@ -42,6 +58,19 @@ test('manualReviewNotes PATCH persists human-entered notes with manual provenanc
   assert.equal(db.leads.get('lead-1').notes, 'Human-entered review note: confirm buyer before outreach.');
   assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, payload.lead.manualReviewNotesUpdatedAt);
+  assert.deepEqual(db.manualReviewNoteEvents.map(pickManualNoteEvent), [
+    {
+      lead_id: 'lead-1',
+      event_type: 'create',
+      changed_at: payload.lead.manualReviewNotesUpdatedAt,
+      author_label: 'manual_reviewer',
+    },
+  ]);
+  assert.equal(payload.lead.manualReviewNotesHistoryEventCount, 1);
+  assert.equal(payload.lead.manualReviewNotesHistoryLastEventType, 'create');
+  assert.equal(payload.lead.manualReviewNotesHistoryLastEventAt, payload.lead.manualReviewNotesUpdatedAt);
+  assert.equal(payload.lead.manualReviewNotesHistoryLastAuthorLabel, 'manual_reviewer');
+  assertManualNoteHistoryDoesNotRetainText(db, 'Human-entered review note: confirm buyer before outreach.');
 });
 
 test('manualReviewNotes PATCH edits an existing human-entered note', async () => {
@@ -76,6 +105,20 @@ test('manualReviewNotes PATCH edits an existing human-entered note', async () =>
   assert.equal(db.leads.get('lead-1').notes, 'Updated human review note after second pass.');
   assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, payload.lead.manualReviewNotesUpdatedAt);
+  assert.deepEqual(db.manualReviewNoteEvents.map(pickManualNoteEvent), [
+    {
+      lead_id: 'lead-1',
+      event_type: 'edit',
+      changed_at: payload.lead.manualReviewNotesUpdatedAt,
+      author_label: 'manual_reviewer',
+    },
+  ]);
+  assert.equal(payload.lead.manualReviewNotesHistoryEventCount, 1);
+  assert.equal(payload.lead.manualReviewNotesHistoryLastEventType, 'edit');
+  assertManualNoteHistoryDoesNotRetainText(db, [
+    'Initial human review note.',
+    'Updated human review note after second pass.',
+  ]);
 });
 
 test('updatedAt is lead-level and can change without a manual note save', async () => {
@@ -113,6 +156,7 @@ test('updatedAt is lead-level and can change without a manual note save', async 
   assert.equal(db.leads.get('lead-1').notes, 'Existing human review note.');
   assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
+  assert.deepEqual(db.manualReviewNoteEvents, []);
 });
 
 test('manualReviewNotes PATCH clears an existing human-entered note', async () => {
@@ -148,6 +192,17 @@ test('manualReviewNotes PATCH clears an existing human-entered note', async () =
   assert.equal(db.leads.get('lead-1').notes, '');
   assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, payload.lead.manualReviewNotesUpdatedAt);
+  assert.deepEqual(db.manualReviewNoteEvents.map(pickManualNoteEvent), [
+    {
+      lead_id: 'lead-1',
+      event_type: 'clear',
+      changed_at: payload.lead.manualReviewNotesUpdatedAt,
+      author_label: 'manual_reviewer',
+    },
+  ]);
+  assert.equal(payload.lead.manualReviewNotesHistoryEventCount, 1);
+  assert.equal(payload.lead.manualReviewNotesHistoryLastEventType, 'clear');
+  assertManualNoteHistoryDoesNotRetainText(db, 'Saved note to clear.');
 });
 
 test('unchanged manualReviewNotes PATCH does not update note-specific timestamp', async () => {
@@ -178,6 +233,7 @@ test('unchanged manualReviewNotes PATCH does not update note-specific timestamp'
   assert.equal(lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
   assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
+  assert.deepEqual(db.manualReviewNoteEvents, []);
 });
 
 test('unchanged manualReviewNotes PATCH does not invent a generic author label', async () => {
@@ -204,9 +260,11 @@ test('unchanged manualReviewNotes PATCH does not invent a generic author label',
   assert.equal(lead.manualReviewNotesAuthorLabel, '');
   assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, undefined);
   assert.equal(payload.lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
+  assert.deepEqual(db.manualReviewNoteEvents, []);
 });
 
 test('manualReviewNotes is exposed on local read paths without saving generated suggestions', async () => {
+  const historyChangedAt = '2026-05-19T01:10:00.000Z';
   const db = new FakeD1Database({
     leads: [
       createLeadRow({
@@ -220,6 +278,14 @@ test('manualReviewNotes is exposed on local read paths without saving generated 
         urgency_reason: 'Procurement review is active now.',
         evidence: JSON.stringify([{ field: 'summary', quote: 'Approved evidence quote', sourceUrl: 'https://example.com/fixture' }]),
       }),
+    ],
+    manualReviewNoteEvents: [
+      {
+        lead_id: 'lead-1',
+        event_type: 'create',
+        changed_at: historyChangedAt,
+        author_label: 'manual_reviewer',
+      },
     ],
   });
 
@@ -238,10 +304,58 @@ test('manualReviewNotes is exposed on local read paths without saving generated 
   assert.equal(payload.leads[0].manualReviewNotesProvenance, 'human_entered');
   assert.equal(payload.leads[0].manualReviewNotesAuthorLabel, 'manual_reviewer');
   assert.equal(payload.leads[0].manualReviewNotesUpdatedAt, null);
+  assert.equal(payload.leads[0].manualReviewNotesHistoryEventCount, 1);
+  assert.equal(payload.leads[0].manualReviewNotesHistoryLastEventType, 'create');
+  assert.equal(payload.leads[0].manualReviewNotesHistoryLastEventAt, historyChangedAt);
+  assert.equal(payload.leads[0].manualReviewNotesHistoryLastAuthorLabel, 'manual_reviewer');
   assert.equal(payload.leads[0].reviewNoteSuggestion, undefined);
   assert.equal(payload.reviewerActionQueue.items[0].reviewNoteSuggestion.state, 'APPROVED');
   assert.match(payload.reviewerActionQueue.items[0].reviewNoteSuggestion.text, /Decision: APPROVED/);
   assert.equal(db.leads.get('lead-1').notes, 'Saved by a human reviewer.');
+});
+
+test('manualReviewNotes PATCH accumulates metadata-only create/edit/clear history without note text', async () => {
+  const db = new FakeD1Database({ leads: [createLeadRow()] });
+
+  const createResponse = await patchLead(db, { manualReviewNotes: 'First human note body.' });
+  const createPayload = await createResponse.json();
+  const editResponse = await patchLead(db, { manualReviewNotes: 'Second human note body.' });
+  const editPayload = await editResponse.json();
+  const clearResponse = await patchLead(db, { manualReviewNotes: '' });
+  const clearPayload = await clearResponse.json();
+
+  assert.equal(createResponse.status, 200);
+  assert.equal(editResponse.status, 200);
+  assert.equal(clearResponse.status, 200);
+  assert.deepEqual(db.manualReviewNoteEvents.map(pickManualNoteEvent), [
+    {
+      lead_id: 'lead-1',
+      event_type: 'create',
+      changed_at: createPayload.lead.manualReviewNotesUpdatedAt,
+      author_label: 'manual_reviewer',
+    },
+    {
+      lead_id: 'lead-1',
+      event_type: 'edit',
+      changed_at: editPayload.lead.manualReviewNotesUpdatedAt,
+      author_label: 'manual_reviewer',
+    },
+    {
+      lead_id: 'lead-1',
+      event_type: 'clear',
+      changed_at: clearPayload.lead.manualReviewNotesUpdatedAt,
+      author_label: 'manual_reviewer',
+    },
+  ]);
+  assert.equal(clearPayload.lead.manualReviewNotes, '');
+  assert.equal(clearPayload.lead.manualReviewNotesHistoryEventCount, 3);
+  assert.equal(clearPayload.lead.manualReviewNotesHistoryLastEventType, 'clear');
+  assert.equal(clearPayload.lead.manualReviewNotesHistoryLastEventAt, clearPayload.lead.manualReviewNotesUpdatedAt);
+  assert.equal(clearPayload.lead.manualReviewNotesHistoryLastAuthorLabel, 'manual_reviewer');
+  assertManualNoteHistoryDoesNotRetainText(db, [
+    'First human note body.',
+    'Second human note body.',
+  ]);
 });
 
 test('generated reviewer note suggestion persistence attempts are rejected atomically', async () => {
@@ -274,6 +388,7 @@ test('generated reviewer note suggestion persistence attempts are rejected atomi
   assert.equal(db.leads.get('lead-1').notes, 'Keep human note');
   assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
+  assert.deepEqual(db.manualReviewNoteEvents, []);
 
   const templatesResponse = await patchLead(db, {
     reviewNoteTemplates: [
@@ -288,6 +403,7 @@ test('generated reviewer note suggestion persistence attempts are rejected atomi
   assert.equal(db.leads.get('lead-1').notes, 'Keep human note');
   assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
   assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
+  assert.deepEqual(db.manualReviewNoteEvents, []);
 });
 
 test('generated suggestion persistence attempts cannot clear manual review notes', async () => {
@@ -306,6 +422,7 @@ test('generated suggestion persistence attempts cannot clear manual review notes
   assert.equal(lead.manualReviewNotes, 'Keep this human-entered note.');
   assert.equal(lead.manualReviewNotesProvenance, 'human_entered');
   assert.equal(db.leads.get('lead-1').notes, 'Keep this human-entered note.');
+  assert.deepEqual(db.manualReviewNoteEvents, []);
 });
 
 test('lead refresh preserves existing human-entered notes and ignores generated note fields', async () => {
@@ -367,6 +484,7 @@ test('generated batch inserts do not create saved manual review notes', async ()
   assert.equal(lead.manualReviewNotesAuthorLabel, '');
   assert.equal(db.leads.get('generated-lead-1').manual_review_notes_author_label, undefined);
   assert.equal(db.leads.get('generated-lead-1').manual_review_notes_updated_at, undefined);
+  assert.deepEqual(db.manualReviewNoteEvents, []);
   assert.equal(lead.manualReviewNotes, '');
   assert.equal(lead.manualReviewNotesProvenance, '');
   assert.equal(lead.reviewNoteSuggestion, undefined);

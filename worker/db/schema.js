@@ -75,6 +75,14 @@ export async function ensureD1Schema(db) {
         changed_at TEXT NOT NULL
       )`),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_status_log_lead ON status_log(lead_id)'),
+      db.prepare(`CREATE TABLE IF NOT EXISTS manual_review_note_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id TEXT NOT NULL,
+        event_type TEXT NOT NULL CHECK (event_type IN ('create', 'edit', 'clear')),
+        changed_at TEXT NOT NULL,
+        author_label TEXT NOT NULL DEFAULT 'manual_reviewer' CHECK (author_label = 'manual_reviewer')
+      )`),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_manual_review_note_events_lead ON manual_review_note_events(lead_id, changed_at DESC)'),
       db.prepare(`CREATE TABLE IF NOT EXISTS job_runs (
         request_id TEXT PRIMARY KEY,
         profile_id TEXT NOT NULL,
@@ -156,6 +164,14 @@ export async function ensureD1Schema(db) {
       try { await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_job_runs_idempotency ON job_runs(idempotency_key) WHERE idempotency_key IS NOT NULL AND idempotency_key != ''").run(); } catch { /* index exists */ }
       try { await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_job_runs_active_profile ON job_runs(profile_id) WHERE state IN ('accepted', 'running')").run(); } catch { /* index exists */ }
       try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_job_runs_updated ON job_runs(updated_at DESC)').run(); } catch { /* index exists */ }
+      await db.prepare(`CREATE TABLE IF NOT EXISTS manual_review_note_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id TEXT NOT NULL,
+        event_type TEXT NOT NULL CHECK (event_type IN ('create', 'edit', 'clear')),
+        changed_at TEXT NOT NULL,
+        author_label TEXT NOT NULL DEFAULT 'manual_reviewer' CHECK (author_label = 'manual_reviewer')
+      )`).run();
+      try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_manual_review_note_events_lead ON manual_review_note_events(lead_id, changed_at DESC)').run(); } catch { /* index exists */ }
       await db.prepare(`CREATE TABLE IF NOT EXISTS reference_library (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         profile_id TEXT NOT NULL,

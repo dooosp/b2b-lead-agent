@@ -29,6 +29,7 @@ class FakeReviewDb {
   constructor(row) {
     this.row = { ...row };
     this.statusLog = [];
+    this.manualReviewNoteEvents = [];
   }
 
   prepare(sql) {
@@ -64,6 +65,21 @@ class FakeReviewDb {
     if (normalized === 'SELECT * FROM leads WHERE id = ?') {
       return params[0] === this.row.id ? { ...this.row } : null;
     }
+    if (normalized === 'SELECT COUNT(*) as event_count FROM manual_review_note_events WHERE lead_id = ?') {
+      return {
+        event_count: this.manualReviewNoteEvents.filter((row) => row.lead_id === params[0]).length,
+      };
+    }
+    if (normalized === 'SELECT event_type, changed_at, author_label FROM manual_review_note_events WHERE lead_id = ? ORDER BY changed_at DESC, id DESC LIMIT 1') {
+      const row = this.manualReviewNoteEvents
+        .filter((event) => event.lead_id === params[0])
+        .sort((a, b) => {
+          const changedOrder = String(b.changed_at || '').localeCompare(String(a.changed_at || ''));
+          if (changedOrder !== 0) return changedOrder;
+          return Number(b.id || 0) - Number(a.id || 0);
+        })[0];
+      return row ? { event_type: row.event_type, changed_at: row.changed_at, author_label: row.author_label } : null;
+    }
     if (normalized.startsWith('UPDATE leads SET ') && normalized.endsWith(' WHERE id = ?')) {
       const id = params[params.length - 1];
       assert.equal(id, this.row.id);
@@ -80,6 +96,16 @@ class FakeReviewDb {
         from_status: params[1],
         to_status: params[2],
         changed_at: params[3]
+      });
+      return { meta: { changes: 1 } };
+    }
+    if (normalized === 'INSERT INTO manual_review_note_events (lead_id, event_type, changed_at, author_label) VALUES (?, ?, ?, ?)') {
+      this.manualReviewNoteEvents.push({
+        id: this.manualReviewNoteEvents.length + 1,
+        lead_id: params[0],
+        event_type: params[1],
+        changed_at: params[2],
+        author_label: params[3],
       });
       return { meta: { changes: 1 } };
     }
@@ -280,6 +306,10 @@ test('lead review pages render note-specific manual note timestamps when present
     notes: '사람이 입력한 검토 메모',
     updatedAt: '2026-05-18T11:55:40.000Z',
     manualReviewNotesUpdatedAt: '2026-05-19T00:20:00.000Z',
+    manualReviewNotesHistoryEventCount: 2,
+    manualReviewNotesHistoryLastEventType: 'edit',
+    manualReviewNotesHistoryLastEventAt: '2026-05-19T00:20:00.000Z',
+    manualReviewNotesHistoryLastAuthorLabel: 'manual_reviewer',
     sources: [{ title: 'DL이앤씨 데이터센터 증설', url: 'https://example.com/dl' }],
     product: 'Turbocor 컴프레서',
     score: 84,
@@ -298,6 +328,10 @@ test('lead review pages render note-specific manual note timestamps when present
     notes: '',
     updatedAt: '2026-05-18T11:55:40.000Z',
     manualReviewNotesUpdatedAt: '2026-05-19T00:25:00.000Z',
+    manualReviewNotesHistoryEventCount: 3,
+    manualReviewNotesHistoryLastEventType: 'clear',
+    manualReviewNotesHistoryLastEventAt: '2026-05-19T00:25:00.000Z',
+    manualReviewNotesHistoryLastAuthorLabel: 'manual_reviewer',
     sources: [{ title: 'Fixture', url: 'https://example.com/fixture' }],
     product: 'Turbocor 컴프레서',
     score: 80,
@@ -311,14 +345,20 @@ test('lead review pages render note-specific manual note timestamps when present
   assert.match(listHtml, /로컬\/테스트 일반 라벨/);
   assert.match(listHtml, /수동 리뷰 메모 마지막 변경/);
   assert.match(listHtml, /수동 리뷰 메모가 마지막으로 비워짐\/변경됨/);
+  assert.match(listHtml, /수동 메모 메타데이터 이력 이벤트/);
+  assert.match(listHtml, /manualReviewNotesHistoryEventCount/);
   assert.match(savedDetailHtml, /저장된 수동 리뷰 메모 있음/);
   assert.match(savedDetailHtml, /최근 수동 변경/);
   assert.match(savedDetailHtml, /수동 리뷰어/);
   assert.match(savedDetailHtml, /수동 리뷰 메모 마지막 변경/);
+  assert.match(savedDetailHtml, /수동 메모 메타데이터 이력 이벤트/);
   assert.match(clearedDetailHtml, /저장된 수동 리뷰 메모 없음/);
   assert.match(clearedDetailHtml, /수동 리뷰 메모가 마지막으로 비워짐\/변경됨/);
+  assert.match(clearedDetailHtml, /수동 메모 메타데이터 이력 이벤트/);
   assert.doesNotMatch(listHtml, /수동 리뷰 메모 마지막 저장|Manual note last saved|note-specific saved/);
   assert.doesNotMatch(savedDetailHtml, /수동 리뷰 메모 마지막 저장|Manual note last saved|note-specific saved/);
+  assert.doesNotMatch(listHtml, /이전 수동 리뷰 메모|전체 메모 이력|old note|previous note|note body history/i);
+  assert.doesNotMatch(savedDetailHtml, /이전 수동 리뷰 메모|전체 메모 이력|old note|previous note|note body history/i);
 });
 
 test('lead review pages keep lead-level timestamp copy honest when note-specific timestamp is absent', () => {
