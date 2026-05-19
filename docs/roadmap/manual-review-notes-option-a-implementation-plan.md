@@ -17,6 +17,11 @@
 > authorizes only local/test-safe saved/empty state clarity and truthful
 > timestamp/update-state labeling. Existing `updated_at` is lead-level unless a
 > future schema/API decision adds a note-specific timestamp.
+> PR #122 shipped that state/timestamp clarity scope. The later approval-intent
+> record
+> `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4483259825`
+> authorizes only a docs-only Manual Review Notes v1 data semantics decision
+> packet.
 
 **Goal:** Define the safe local/test-only implementation path for Option A:
 save only human-entered manual notes while generated reviewer note suggestions
@@ -41,12 +46,14 @@ local tests, Node test runner, local-only route/page smoke tests.
 - `IMPLEMENTATION_DECISION`: `IMPLEMENT_OPTION_A_MANUAL_NOTES_LOCAL_TEST_ONLY`
 - `EDIT_CLEAR_UX_DECISION`: `IMPLEMENT_MANUAL_REVIEW_NOTES_V0_EDIT_CLEAR_UX_HARDENING_LOCAL_TEST_ONLY`
 - `STATE_TIMESTAMP_CLARITY_DECISION`: `IMPLEMENT_MANUAL_REVIEW_NOTES_V0_STATE_TIMESTAMP_CLARITY_LOCAL_TEST_ONLY`
+- `V1_DATA_SEMANTICS_DECISION_PACKET`: `PREPARE_MANUAL_REVIEW_NOTES_V1_DATA_SEMANTICS_DECISION_PACKET_DOCS_ONLY`
 - `MANAGER_DASHBOARD_DECISION`: `HOLD`
 - `OUTCOME_LEARNING_DECISION`: `HOLD`
 - `PRODUCTION_PROOF_DECISION`: `HOLD`
 - Approval record: `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4477073009`
 - Edit/clear approval record: `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4477320711`
 - State/timestamp clarity approval record: `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4483103871`
+- V1 data semantics packet approval-intent record: `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4483259825`
 
 Decision meaning:
 
@@ -65,17 +72,23 @@ Decision meaning:
   saved/empty state display and lead-level update-state labeling. `updated_at`
   must not be described as "manual note saved at" unless a future schema/API
   decision creates a note-specific timestamp.
+- Manual Review Notes v1 data semantics work is approved only as a docs-only
+  decision packet. It does not approve implementation, schema/API/runtime
+  behavior, production proof, production D1, reviewer identity, note history,
+  retention enforcement, or generated suggestion persistence.
 
 ## Verified Baseline
 
 - Repository: `dooosp/b2b-lead-agent`
 - Default branch: `master`
-- Current baseline: `f9d96d05fe33a7e1c3e356b1814fb74ac8829fad`
+- Current baseline: `876d11dd13b65f7d33cc2acf7cde3fde7b8765ea`
 - PR #117: merged as `fix: reduce duplicate reviewer note suggestion display`
 - PR #120: merged as `feat: add manual review notes option a`
 - PR #121: merged as `feat: harden manual review note edit clear ux`
+- PR #122: merged as `feat: clarify manual review note state`
 - Issue #115: closed as completed
 - Decision packet present: `docs/roadmap/saved-review-notes-decision-packet.md`
+- V1 data semantics packet present: `docs/roadmap/manual-review-notes-v1-data-semantics-decision-packet.md`
 - Standing approval policy present: `docs/standing-approval-policy.md`
 
 This implementation stays inside the standing non-production boundary. It does
