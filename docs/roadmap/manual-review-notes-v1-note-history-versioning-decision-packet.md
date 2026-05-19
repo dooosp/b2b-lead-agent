@@ -9,6 +9,8 @@ generic author-label work. It is documentation only.
 - Document status: `DRAFT_NOT_APPROVED`.
 - Approval-intent record:
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4487570553`.
+- Pull request:
+  `https://github.com/dooosp/b2b-lead-agent/pull/127`.
 - Repository: `dooosp/b2b-lead-agent`.
 - Default branch: `master`.
 - Post-PR126 baseline inspected:
