@@ -2,9 +2,9 @@
 
 This plan translates the Manual Review Notes v1 access, visibility, API, export,
 metadata-history, and generated-suggestion decisions into an access-control
-implementation map. PR #133 added this as documentation only. The current C2
-update implements only an opt-in local/test role stub for tests and local
-fixtures. It does not implement real auth, sessions, production roles, manager
+implementation map. PR #133 added this as documentation only. PR #135
+implemented only an opt-in local/test role stub for tests and local fixtures.
+It does not implement real auth, sessions, production roles, manager
 visibility expansion, export expansion, API exposure expansion,
 retention/privacy enforcement, production proof, production deploy, production
 D1 access, production endpoint calls, or production logs/secrets access.
@@ -18,8 +18,8 @@ D1 access, production endpoint calls, or production logs/secrets access.
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4495568414`.
 - Repository: `dooosp/b2b-lead-agent`.
 - Default branch: `master`.
-- Post-PR134 baseline inspected:
-  `9191373163d80588778c35927d5744361192c446`.
+- Post-PR135 baseline inspected:
+  `0c1bf0c839127d757664c21b9dc7aa1c64b1f8f3`.
 - Scope: C2 local/test role stub only.
 - Runtime behavior changed by this update: only when
   `MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB=enabled` is explicitly set.
@@ -42,7 +42,7 @@ manual_review_notes_v1_access_control_plan_status:
   c1_docs_only_plan_approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4493804215"
   approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4495568414"
   scope: C2_LOCAL_TEST_ROLE_STUB_ONLY
-  post_pr134_baseline: "9191373163d80588778c35927d5744361192c446"
+  post_pr135_baseline: "0c1bf0c839127d757664c21b9dc7aa1c64b1f8f3"
   access_control_implemented: LOCAL_TEST_STUB_ONLY
   auth_session_implemented: false
   role_model_implemented: LOCAL_TEST_STUB_ONLY
@@ -76,6 +76,7 @@ Completed local/test and decision-record state:
 - PR #132 added the docs-only access/visibility/export decision packet.
 - PR #133 added the docs-only access-control plan.
 - PR #134 synced source-of-truth docs after the access-control plan.
+- PR #135 implemented only the C2 opt-in local/test role stub.
 - Current C2 approval record:
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4495568414`
   authorizes only an opt-in local/test role stub.
