@@ -1,9 +1,9 @@
 # Production Proof Boundaries
 
 This document records the production-proof boundary after Issue #34 and the
-Manual Review Notes v1 PR train through PR #137 plus the production D1
-migration plan packet. It is a planning and safety
-document only; it is not production evidence.
+Manual Review Notes v1 PR train through PR #138 plus the production D1
+migration plan and production rollback/backout plan packets. It is a planning
+and safety document only; it is not production evidence.
 
 Audited repo baseline for this snapshot:
 
@@ -11,7 +11,7 @@ Audited repo baseline for this snapshot:
 - Previous Manual Review Notes v1 privacy-warning baseline:
   `f2ddf35e828017eec9332dc80876e50bbee2f54a` (PR #130)
 - Current source-of-truth `origin/master`:
-  `f1bfd573cb9a6c15dcc27097668dc99e3b2dca19` (PR #137)
+  `d0fb449f359c57d6a3747da76c455ea20ae13d32` (PR #138)
 - Issue #34 current state: closed as completed after GitHub-only closeout, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -22,11 +22,13 @@ Audited repo baseline for this snapshot:
   `docs/roadmap/manual-review-notes-v1-production-proof-plan.md`
 - Current Manual Review Notes v1 production D1 migration plan:
   `docs/roadmap/manual-review-notes-v1-production-d1-migration-plan.md`
+- Current Manual Review Notes v1 production rollback/backout plan:
+  `docs/roadmap/manual-review-notes-v1-production-rollback-backout-plan.md`
 
-Post-PR137 operating update:
+Post-PR138 operating update:
 
 - Current source-of-truth `origin/master` for this boundary update:
-  `f1bfd573cb9a6c15dcc27097668dc99e3b2dca19` (PR #137).
+  `d0fb449f359c57d6a3747da76c455ea20ae13d32` (PR #138).
 - Issue #34 is closed as completed after a GitHub-only closeout approval and
   closeout record.
 - Standing approval policy: `docs/standing-approval-policy.md`.
@@ -69,6 +71,20 @@ Post-PR137 operating update:
   production access-control implementation, retention/privacy enforcement,
   manager visibility, export expansion, or any production readiness claim
   beyond "production D1 migration plan prepared."
+- The Manual Review Notes v1 production rollback/backout plan is docs-only
+  planning. It documents rollback scenarios, partial migration handling,
+  nullable field behavior, metadata-only history backout, no-destructive-data
+  rules, local/staging rehearsal, generated-suggestion rollback exclusion,
+  access/privacy/retention gates, evidence boundaries, and explicit production
+  execution approval blocks. It does not authorize executable rollback or
+  migration files, rollback execution, production D1 schema observation,
+  production D1 migration/access/write/delete, production proof execution,
+  production deploy, Wrangler production commands, production endpoints,
+  production logs/secrets, production smoke tests, customer data
+  access/mutation, production access-control implementation,
+  retention/privacy enforcement, destructive data action, purge/delete jobs,
+  manager visibility, export expansion, or any production readiness claim
+  beyond "production rollback/backout plan prepared."
 
 ## Standing Approval Policy
 
@@ -105,8 +121,8 @@ Accepted Issue #34 records:
 Important freshness rule: Issue #34's accepted execution/proof scopes were tied
 to earlier approved SHAs, including the final read-only schema-proof baseline at
 `512b537797fc67d974acf1f1e690bd638de4919b` (PR #106). The latest audited
-source-of-truth `master` baseline is `f1bfd573cb9a6c15dcc27097668dc99e3b2dca19`
-after PR #137 added the Manual Review Notes v1 production proof plan. Any new production action must refresh the actual current
+source-of-truth `master` baseline is `d0fb449f359c57d6a3747da76c455ea20ae13d32`
+after PR #138 added the Manual Review Notes v1 production D1 migration plan. Any new production action must refresh the actual current
 `origin/master` SHA, CI metadata, owners, and approval records before
 execution. Issue #34 closeout does not authorize further production proof work.
 
@@ -118,7 +134,7 @@ execution. Issue #34 closeout does not authorize further production proof work.
 | Production D1 schema remediation and schema metadata proof | Accepted in Issue #34 for prior approved SHAs only | Do not extend these approvals to current `master` without a new explicit production approval. |
 | Static Worker runtime route | One raw `/manifest.json` proof accepted | Proves only the public manifest route response in that approved scope. |
 | D1-backed Worker routes | Unproven in production after current train | Requires separate approval for any endpoint or D1 access. |
-| Manual Review Notes v1 saved-note production use | Unproven and not approved after PR #137; docs-only production proof plan and production D1 migration plan prepared | Requires separate approval for migration execution, rollback, retention/privacy, access/visibility, observability/evidence, generated suggestion exclusion, customer-data handling, legal/privacy, and production proof execution gates. |
+| Manual Review Notes v1 saved-note production use | Unproven and not approved after PR #138; docs-only production proof plan, production D1 migration plan, and production rollback/backout plan prepared | Requires separate approval for migration execution, rollback execution, destructive data action, retention/privacy, access/visibility, observability/evidence, generated suggestion exclusion, customer-data handling, legal/privacy, and production proof execution gates. |
 | Row serialization and roundtrip | Unproven in production | Requires safe real row/action and explicit production write approval. |
 | Product production observation | Unproven | Requires explicit production observation-claim approval after valid evidence exists. |
 
@@ -155,11 +171,13 @@ The following support engineering confidence but are not production proof:
 
 ## Minimum Future Approval Packet
 
-Before any next production proof or production D1 migration run, use
-`docs/roadmap/manual-review-notes-v1-production-proof-plan.md` and
-`docs/roadmap/manual-review-notes-v1-production-d1-migration-plan.md` as
-non-authorizing starting gates and prepare a new Issue #34-style execution packet
-with:
+Before any next production proof, production D1 migration, or production
+rollback/backout run, use
+`docs/roadmap/manual-review-notes-v1-production-proof-plan.md`,
+`docs/roadmap/manual-review-notes-v1-production-d1-migration-plan.md`, and
+`docs/roadmap/manual-review-notes-v1-production-rollback-backout-plan.md` as
+non-authorizing starting gates and prepare a new Issue #34-style execution
+packet with:
 
 - Actual current `master` SHA and CI status.
 - Exact production action requested.
@@ -167,6 +185,8 @@ with:
 - Deploy owner, production DB owner, rollback owner, and observation owner.
 - Evidence storage location, access control, and redaction policy.
 - Rollback path and stop criteria.
+- No-destructive-data decision and any separately approved destructive-data
+  action, if requested.
 - Safe profile, lead, or explicit no-row decision.
 - Confirmation that `status` and `reviewStatus` remain separate.
 - Confirmation that the frozen `crm.published-report.v1` contract is not being expanded.

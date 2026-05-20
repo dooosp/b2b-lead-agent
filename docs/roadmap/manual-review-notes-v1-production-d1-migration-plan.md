@@ -12,6 +12,8 @@ behavior.
 - Document status: `DRAFT_NOT_APPROVED_FOR_EXECUTION`.
 - Approval record:
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4497697004`.
+- Related rollback/backout plan approval-intent record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4497893786`.
 - Repository: `dooosp/b2b-lead-agent`.
 - Default branch: `master`.
 - Post-PR137 baseline inspected:
@@ -35,6 +37,7 @@ manual_review_notes_v1_production_d1_migration_plan:
   production_d1_schema_observation_decision: HOLD
   production_d1_migration_execution_decision: HOLD
   production_d1_write_decision: HOLD
+  rollback_backout_plan_status: PREPARED_DOCS_ONLY
   production_rollback_execution_decision: HOLD
   staging_or_local_rehearsal_decision: HOLD
   migration_order_decision: HOLD
@@ -164,9 +167,12 @@ remains `HOLD`.
    - Existing rows with null metadata must serialize safely.
    - Manual note field visibility must remain access-gated by the selected
      access model.
-9. Verify rollback/backout plan before proof.
-   - A future migration cannot proceed until partial migration failure and
-     non-destructive backout behavior are approved.
+9. Verify the docs-only rollback/backout plan before proof.
+   - The current plan lives at
+     `docs/roadmap/manual-review-notes-v1-production-rollback-backout-plan.md`.
+   - A future migration cannot proceed until partial migration failure,
+     non-destructive backout behavior, exact execution steps, owners, and
+     evidence boundaries are separately approved.
 10. Keep production proof execution blocked.
    - Migration planning does not authorize proof execution or production smoke
      tests.
@@ -502,7 +508,7 @@ manual_review_notes_v1_production_d1_migration_candidate:
     - stale base SHA
     - failing local/CI validation
     - missing owner
-    - missing rollback plan
+    - missing approved rollback execution plan
     - missing privacy/access approval
     - unclear D1 target
     - unsafe evidence boundary
@@ -522,12 +528,12 @@ execution or rehearsal for dooosp/b2b-lead-agent. Use approval_record: <URL>.
 Start from current origin/master and prove repo root, branch, HEAD SHA, default
 branch, dirty state, PR/CI state, and validation commands. Run only the exact
 commands and surfaces listed in the approval record. Stop on stale SHA, failing
-validation, missing owner, missing rollback, unclear production D1 target,
-missing privacy/access approval, unsafe evidence, unapproved customer-data
-access, or generated suggestion persistence. Generated reviewer suggestions
-remain copy-only, unsaved, unretained, unattributed, unexported, excluded from
-history, and not human-authored saved notes unless a separate future decision
-changes that boundary.
+validation, missing owner, missing approved rollback execution plan, unclear
+production D1 target, missing privacy/access approval, unsafe evidence,
+unapproved customer-data access, or generated suggestion persistence. Generated
+reviewer suggestions remain copy-only, unsaved, unretained, unattributed,
+unexported, excluded from history, and not human-authored saved notes unless a
+separate future decision changes that boundary.
 ```
 
 ## 15. Validation Expectations For This Packet

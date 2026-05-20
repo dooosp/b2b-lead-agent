@@ -10,6 +10,8 @@ or secrets, mutate customer data, or change runtime/UI/schema/API behavior.
 - Document status: `DRAFT_NOT_APPROVED_FOR_EXECUTION`.
 - Approval-intent record:
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4496285404`.
+- Related rollback/backout plan approval-intent record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4497893786`.
 - Repository: `dooosp/b2b-lead-agent`.
 - Default branch: `master`.
 - Post-PR136 baseline inspected:
@@ -35,7 +37,8 @@ manual_review_notes_v1_production_proof_plan:
   production_deploy_decision: HOLD
   production_endpoint_call_decision: HOLD
   production_logs_secrets_decision: HOLD
-  rollback_plan_decision: HOLD
+  rollback_backout_plan_status: PREPARED_DOCS_ONLY
+  rollback_execution_decision: HOLD
   access_control_production_decision: HOLD
   retention_privacy_production_decision: HOLD
   generated_suggestion_boundary_proof_decision: HOLD
@@ -112,7 +115,7 @@ production proof is not approved or executed. This plan answers:
 - What must be true before production proof can be approved?
 - What production actions would be required if proof were later approved?
 - What must be verified only locally or in staging first?
-- What migration and backout planning is missing?
+- What migration and backout planning must be reviewed before execution?
 - What access-control, privacy, retention, and observability gates are missing?
 - How should generated suggestion exclusion be proven without storing generated
   content?
@@ -121,9 +124,10 @@ production proof is not approved or executed. This plan answers:
 
 Without this plan, future work could confuse local/fake-D1 evidence with
 production observation, use warning-only copy as privacy compliance, trigger
-production D1 writes without a rollback plan, expose manual note text through
-roles/exports/logs before access and privacy policy exist, or treat generated
-helper text as saved human-authored note data.
+production D1 writes without using the separately prepared rollback/backout
+plan, expose manual note text through roles/exports/logs before access and
+privacy policy exist, or treat generated helper text as saved human-authored
+note data.
 
 ## 3. Non-Authorizing Statement
 
@@ -160,7 +164,7 @@ observation.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | P1: explicit production proof execution approval missing | Only the docs-only planning step is authorized. | A plan can be mistaken for permission to run production steps. | Approval record naming exact target, commands/surfaces, owners, data boundaries, stop conditions, and evidence policy. | Product/ops approval. | Production proof execution approval packet. | Production smoke tests, endpoint calls, D1 access, logs/secrets access. | Keep execution HOLD. |
 | P2: production D1 migration/access approval missing | Local schema supports current fields/table; production D1 is not accessed. | Migration or schema reads could expose or mutate production state. | DB owner approval, exact D1 target, command allowlist, read/write boundary, and redaction policy. | DB/ops/product approval. | Production D1 migration/access packet. | D1 reads, writes, migrations, lazy-DDL claims. | Keep production D1 HOLD. |
-| P3: production rollback/backout plan missing | No approved backout plan for manual notes production use. | Partial migration/deploy could leave broken schema or retained note data. | Backout sequence, owner, stop points, data preservation rules, and no-destructive-action policy. | Ops/DB approval. | Rollback/backout packet. | Deploy, migration, production proof execution. | Require before any proof. |
+| P3: production rollback/backout execution approval missing | Docs-only rollback/backout plan prepared in `docs/roadmap/manual-review-notes-v1-production-rollback-backout-plan.md`; execution remains unapproved. | Partial migration/deploy could leave broken schema or retained note data if the plan is skipped or overclaimed. | Approved backout sequence, owner, stop points, data preservation rules, no-destructive-action policy, exact commands, and evidence boundary. | Ops/DB/product/privacy approval. | Executable rollback/backout approval packet or runbook. | Rollback execution, destructive data action, deploy, migration, production proof execution. | Review the docs-only rollback/backout plan before any proof; keep execution HOLD. |
 | P4: production access-control/auth decision missing | C2 is local/test stub only; no real auth/session/identity. | Production proof could overclaim access control or expose notes to broad API-token users. | Role/auth source, reviewer/manager/API/export matrix, unauthorized tests, null behavior. | Product/auth/privacy decision. | Production access-control decision packet. | Production saved-note visibility, access-control claims. | Decide before proof. |
 | P5: retention/privacy enforcement decision missing | Static warning only; no enforcement, purge, redaction, or detection. | Sensitive manual note text could be retained without policy. | Retention period, clear/delete semantics, enforcement plan, privacy/legal signoff if needed. | Privacy/legal/product/ops decision. | Retention/privacy implementation or approval packet. | Production saved-note use, compliance claims. | Warning-only is not enough. |
 | P6: generated-suggestion exclusion proof design missing | Local tests enforce copy-only boundary; no production re-test design exists. | Proof could accidentally persist, attribute, export, log, or history-store generated text. | Boundary checklist proving no save, persistence, attribution, retention, export, history, timestamp, or author update. | Product/privacy/QA decision. | Generated-suggestion production-boundary proof design. | Production saved-note claims, generated-suggestion persistence. | Make explicit gate. |
@@ -289,8 +293,14 @@ approved and must not inherit permission from this packet.
 
 ## 9. Rollback / Backout Planning Requirements
 
-A future production proof cannot proceed until rollback/backout planning
-answers:
+The docs-only rollback/backout plan now lives at
+`docs/roadmap/manual-review-notes-v1-production-rollback-backout-plan.md`. It
+is planning evidence only and does not authorize rollback execution,
+production D1 access/write/delete/schema observation, Wrangler production
+commands, production proof, deploy, or destructive data action.
+
+A future production proof cannot proceed until a separate execution approval
+uses that plan to answer:
 
 - which code artifact can be redeployed or disabled,
 - whether manual note UI/API paths can be hidden without data deletion,
@@ -494,7 +504,7 @@ manual_review_notes_v1_production_proof_candidate:
     - stale base SHA
     - failing local/CI validation
     - missing owner
-    - missing rollback plan
+    - missing approved rollback execution plan
     - missing privacy/access approval
     - unclear D1 target
     - unsafe evidence boundary
@@ -513,11 +523,12 @@ proof for dooosp/b2b-lead-agent. Use approval_record: <URL>. Start from current
 origin/master and prove repo root, branch, HEAD SHA, default branch, dirty
 state, PR/CI state, and validation commands. Run only the exact commands and
 surfaces listed in the approval record. Stop on stale SHA, failing validation,
-missing owner, missing rollback, unclear production D1 target, missing
-privacy/access approval, unsafe evidence, or unapproved customer-data access.
-Generated reviewer suggestions remain copy-only, unsaved, unretained,
-unattributed, unexported, excluded from history, and not human-authored saved
-notes unless a separate future decision changes that boundary.
+missing owner, missing approved rollback execution plan, unclear production D1
+target, missing privacy/access approval, unsafe evidence, or unapproved
+customer-data access. Generated reviewer suggestions remain copy-only,
+unsaved, unretained, unattributed, unexported, excluded from history, and not
+human-authored saved notes unless a separate future decision changes that
+boundary.
 ```
 
 ## 17. Validation Expectations For This Packet
