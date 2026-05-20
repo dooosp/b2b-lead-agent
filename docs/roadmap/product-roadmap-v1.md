@@ -5,6 +5,16 @@ This roadmap turns the current PR train, old branch archaeology, Issue #34 proof
 Current baseline:
 
 - `master` includes PRs #36-#43, PR #51's integration of #44-#49, review-quality follow-ups plus CI maintenance through PR #84, Lead Action Intelligence v1 through PR #87, Reviewer Action Queue v1.1 through PR #88, Lead Review Session v1 through PR #89, Reviewer Notes Template v1 through PR #90, Reviewer Productivity Toolkit v1 through PR #91, Lead Detail Workbench Productivity Parity v1 through PR #92, Reviewer Workflow QA & Accessibility Hardening v1 through PR #93, Reviewer Workflow Roving Keyboard & Accessibility Snapshot Gate v1 through PR #94, the Reviewer Workflow Final Audit & Demo Packet through PR #95, roadmap/current-train source-of-truth sync through PR #96 and PR #97, reviewer workflow demo rehearsal clarification through PR #98, Human UX Review Packet through PR #99, Issue #100 reviewer workflow UX closeout through PR #101 and PR #102, source-of-truth sync after Issue #100 closeout through PR #103, production-proof planning/precheck docs through PR #104-#106, the standing approval policy through PR #107, Manager / Reviewer Summary v0 through PR #109, post-PR109 source-of-truth sync through PR #110, the Saved Review Notes Decision Packet through PR #112, Issue #113 Option E completion, copy-only reviewer note suggestion clarification through PR #114, the Option A manual review notes implementation plan through PR #119, local/test-safe Option A implementation through PR #120, Manual Review Notes v0 edit/clear UX through PR #121, Manual Review Notes v0 state/timestamp clarity through PR #122, Manual Review Notes v1 data semantics through PR #123, local/test-safe T1 note-specific timestamp implementation through PR #124, the Manual Review Notes v1 reviewer identity decision packet through PR #125, the local/test-only generic manual reviewer label through PR #126, the Manual Review Notes v1 note history/versioning decision packet through PR #127, local/test-only H2 metadata-only manual note history through PR #128, the Manual Review Notes v1 retention/privacy policy decision packet through PR #129, static local/test manual notes privacy warning copy through PR #130, the Manual Review Notes v1 production readiness gap packet through PR #131, the Manual Review Notes v1 access/visibility/export decision packet through PR #132, the Manual Review Notes v1 access-control plan through PR #133, post-plan source-of-truth sync through PR #134, Manual Review Notes v1 C2 local/test role stub through PR #135, post-C2 source-of-truth sync through PR #136, the docs-only Manual Review Notes v1 production proof plan through PR #137, the docs-only Manual Review Notes v1 production D1 migration plan through PR #138, and the docs-only Manual Review Notes v1 production rollback/backout plan through PR #139 at baseline `e9dc9f402124714b5d004e310b266b7ebdf5d1bf`. Issue #111 completed and closed the Manager / Reviewer Summary v0 UX findings intake; Issue #113 completed and closed the saved review notes Option E selection; Issue #118 completed and closed the Option A plan-only and local/test-safe implementation records. The current local/staging dry-run plan approval-intent record authorizes only docs-only planning; the current production rollback/backout plan approval-intent record authorizes only docs-only planning; the current production D1 migration plan approval record authorizes only docs-only planning; the current production proof plan approval-intent record authorizes only docs-only planning; the current C2 approval record authorizes only the shipped opt-in local/test role stub; the generic label approval record allows only local/test `manualReviewNotesAuthorLabel: "manual_reviewer"`, metadata-only history stores only create/edit/clear event metadata with no old/new note text, and the privacy warning is warning-only local/test guidance.
+- Post-PR140 addendum: PR #140 merged the docs-only local/staging dry-run
+  plan at `81033750a1c3e5ad7fec730f18686b28d209c257`, and the current
+  local/fake-D1 evidence packet lives at
+  `docs/roadmap/manual-review-notes-v1-local-fake-d1-dry-run-evidence.md`.
+  The approval record authorizes only local/fake-D1 execution and docs-only
+  evidence capture. It does not approve staging, production D1, production
+  proof, deploy, migration, rollback, production endpoints, production
+  logs/secrets, customer data, retention/privacy enforcement, real auth or
+  identity, manager/export/API expansion, destructive data action, or generated
+  suggestion persistence/history/export/attribution.
 - The canonical product unit is a LeadBrief-style lead with source, trust, confidence, assumptions, data gaps, and human `reviewStatus`.
 - Opportunity Workbench includes deterministic, advisory next-review-action reasons, a review gate, a human review checklist, reviewer note suggestions, a Solution Translation Summary, Product Context / Signal Fusion, and Stakeholder Prep guidance derived from existing product, event, buyer, evidence, enrichment, and review fields.
 - Lead Action Intelligence v1 adds deterministic reviewer guidance for next action, reason, risk flags, missing-info prompts, stakeholder angle, suggested follow-up draft, reviewer note templates, priority, and confidence from existing LeadBrief fields only. Reviewer Action Queue v1.1 turns those outputs into deterministic queue lanes, filters, sorting, compact review summaries, and note suggestions.
@@ -21,12 +31,12 @@ Current baseline:
 
 The strongest next product path is a review-quality workbench around LeadBrief v1, not a broad CRM or platform migration. The system should help an operator decide whether a lead is credible, what evidence supports it, what is missing, and what the next reviewed action should be.
 
-Post-PR138, Manager / Reviewer Summary v0 is shipped from existing
+Post-PR140, Manager / Reviewer Summary v0 is shipped from existing
 local/test-safe lead and queue data, Issue #111 has completed the summary v0 UX
 intake, Issue #113 selected `OPTION_E`, PR #114 shipped the copy-only generated
 reviewer note suggestion wording clarification, Issue #118 recorded the
 separate approval for local/test-safe Option A manual notes implementation, and
-PRs #122 through #139 shipped reviewer-safe saved/empty state clarity,
+PRs #122 through #140 shipped reviewer-safe saved/empty state clarity,
 truthful lead-level update-state labeling, the v1 data semantics packet, and
 local/test-safe T1 note-specific timestamp semantics plus the reviewer identity
 decision packet, fixed generic author label, note history/versioning packet,
@@ -36,12 +46,11 @@ readiness, access/visibility/export planning, the access-control plan,
 post-plan source-of-truth sync, the opt-in C2 local/test role stub, post-C2
 source-of-truth sync, the docs-only production proof plan, the docs-only
 production D1 migration plan, and the docs-only production rollback/backout
-plan. The current docs-only local/staging dry-run plan now makes rehearsal
-scope, preflight checks, fake-D1/staging-like target requirements,
-migration-readiness rehearsal, rollback/backout rehearsal, C2 role-stub
-rehearsal, generated-suggestion exclusion checks, privacy/retention checks,
-evidence boundaries, and execution approval blocks explicit while keeping
-execution blocked. The production rollback/backout plan makes rollback
+plan, and the docs-only local/staging dry-run plan. The current local/fake-D1
+dry-run evidence packet records approved local-only execution for schema,
+manual-note, worker, full test, loopback/fake-D1 E2E, naming, install, and
+synthetic fixture commands while keeping staging and production execution
+blocked. The production rollback/backout plan makes rollback
 scenarios, partial migration handling, nullable field
 behavior, metadata-only history backout, no-destructive-data rules,
 local/staging rehearsal, generated-suggestion rollback exclusion,
@@ -55,7 +64,7 @@ persistence, generated suggestion retention, generated suggestion export,
 real access-control implementation, auth/session, production roles, API exposure
 expansion, retention/privacy enforcement, purge/delete jobs, redaction, automated PII detection,
 export/manager visibility expansion, outcome learning, summary v1, production
-staging execution, local/fake-D1 dry-run execution beyond ordinary docs-only PR validation,
+staging execution, further local/fake-D1 dry-run execution beyond the approved evidence packet and ordinary docs-only PR validation,
 production rollback/proof execution/deploy, production D1 schema observation/migration/access/write/delete,
 production endpoints, production logs/secrets, customer data access/mutation,
 destructive data action, or production observation.
@@ -70,7 +79,7 @@ The near-term product spine:
 
 ## Immediate Merge Queue
 
-At this source-of-truth sync preflight, PR #119 through PR #139 are merged, Issue #118 is closed as completed for the plan-only record and local/test-safe Option A implementation trail, and the current local/staging dry-run plan approval-intent record authorizes only docs-only planning. Issue #100 is closed as completed for its recorded local/test-safe UX findings. Issue #111 is closed as completed for Manager / Reviewer Summary v0 UX intake. Issue #113 is closed as completed for Option E. Issue #115 is closed as completed for copy-only reviewer note suggestion UX findings. Issue #34 is closed as completed after GitHub-only closeout, with no further production execution approved. New work should start from current `master`, not from old stacked branches. The active safe path keeps Manual Review Notes v1 local/staging dry-run plan-ready but execution-blocked; staging execution, local/fake-D1 dry-run execution beyond ordinary docs-only PR validation, production rollback execution, destructive data action, production proof execution, production saved-note use, production deploy, production D1 schema observation/migration/access/write/delete, production endpoints, production logs/secrets, production smoke tests, customer data access/mutation, real access-control implementation, auth/session implementation, production role implementation, manager dashboard expansion, manager visibility expansion, API exposure expansion, export expansion, outcome learning, note history expansion, append-only text logs, old note value retention, authenticated reviewer identity, real reviewer display names/emails, author audit trails, retention/privacy enforcement, purge/delete jobs, redaction, automated PII detection, generated suggestion history/export/retention/attribution, generated suggestion persistence, and broader persistence work should not begin unless separately selected and scoped.
+At this source-of-truth sync preflight, PR #119 through PR #140 are merged, Issue #118 is closed as completed for the plan-only record and local/test-safe Option A implementation trail, and the current local/fake-D1 dry-run evidence record authorizes only local/fake-D1 execution and docs-only evidence capture. Issue #100 is closed as completed for its recorded local/test-safe UX findings. Issue #111 is closed as completed for Manager / Reviewer Summary v0 UX intake. Issue #113 is closed as completed for Option E. Issue #115 is closed as completed for copy-only reviewer note suggestion UX findings. Issue #34 is closed as completed after GitHub-only closeout, with no further production execution approved. New work should start from current `master`, not from old stacked branches. The active safe path keeps staging and production execution blocked; staging execution, further local/fake-D1 dry-run execution beyond the approved evidence packet and ordinary docs-only PR validation, production rollback execution, destructive data action, production proof execution, production saved-note use, production deploy, production D1 schema observation/migration/access/write/delete, production endpoints, production logs/secrets, production smoke tests, customer data access/mutation, real access-control implementation, auth/session implementation, production role implementation, manager dashboard expansion, manager visibility expansion, API exposure expansion, export expansion, outcome learning, note history expansion, append-only text logs, old note value retention, authenticated reviewer identity, real reviewer display names/emails, author audit trails, retention/privacy enforcement, purge/delete jobs, redaction, automated PII detection, generated suggestion history/export/retention/attribution, generated suggestion persistence, and broader persistence work should not begin unless separately selected and scoped.
 
 Each new PR should rerun `npm run check:naming`, `git diff --check`, and `npm test` before it exits draft or merges. Product/review-quality changes should also run `npm run eval:lead-quality`, and review-flow changes should run `npm run test:e2e:local`; CI runs both as local-only gates.
 
