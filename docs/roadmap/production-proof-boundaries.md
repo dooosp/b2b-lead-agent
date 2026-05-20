@@ -5,16 +5,18 @@ This document records the production-proof boundary after Issue #34 and the May 
 Audited repo baseline for this snapshot:
 
 - Previous audited production-proof planning baseline: `f157b4c51af37d840f36d3680120e7d74b526c03` (PR #103)
-- Current source-of-truth `origin/master`: `db2a69a7b92502bec3183b94bf0d728e1312a121` (PR #107)
+- Current source-of-truth `origin/master`: `f2ddf35e828017eec9332dc80876e50bbee2f54a` (PR #130)
 - Issue #34 current state: closed as completed after GitHub-only closeout, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
 - Current non-production readiness refresh packet: `docs/exec-plans/production-proof-readiness-packet.md`
+- Current Manual Review Notes v1 production readiness gap packet:
+  `docs/roadmap/manual-review-notes-v1-production-readiness-gap-packet.md`
 
-Post-PR107 operating update:
+Post-PR130 operating update:
 
-- Current source-of-truth `origin/master` for the standing-approval-policy
-  update: `db2a69a7b92502bec3183b94bf0d728e1312a121` (PR #107).
+- Current source-of-truth `origin/master` for this boundary update:
+  `f2ddf35e828017eec9332dc80876e50bbee2f54a` (PR #130).
 - Issue #34 is closed as completed after a GitHub-only closeout approval and
   closeout record.
 - Standing approval policy: `docs/standing-approval-policy.md`.
@@ -25,6 +27,15 @@ Post-PR107 operating update:
   production D1 access, production Worker endpoint calls, production
   logs/secrets, production smoke tests, row reads/writes, row roundtrip, or new
   production observation claims.
+- PR #130's Manual Review Notes privacy warning is static local/test guidance
+  only. It does not create production compliance evidence, detection,
+  redaction, retention enforcement, purge/delete behavior, export or manager
+  visibility approval, authenticated reviewer identity, or production proof.
+- The Manual Review Notes v1 production readiness gap packet is docs-only
+  planning. It keeps production proof execution, production deploy, production
+  D1 migration/access/write, production endpoints, production logs/secrets,
+  customer-data access, retention/privacy enforcement, and production readiness
+  claims blocked until separate explicit approval.
 
 ## Standing Approval Policy
 
@@ -61,8 +72,9 @@ Accepted Issue #34 records:
 Important freshness rule: Issue #34's accepted execution/proof scopes were tied
 to earlier approved SHAs, including the final read-only schema-proof baseline at
 `512b537797fc67d974acf1f1e690bd638de4919b` (PR #106). The latest audited
-source-of-truth `master` baseline is `db2a69a7b92502bec3183b94bf0d728e1312a121`
-after PR #107 added the standing approval policy. Any new production action
+source-of-truth `master` baseline is `f2ddf35e828017eec9332dc80876e50bbee2f54a`
+after PR #130 added static local/test Manual Review Notes privacy warning copy.
+Any new production action
 must refresh the actual current `origin/master` SHA, CI metadata, owners, and
 approval records before execution. Issue #34 closeout does not authorize further
 production proof work.
@@ -75,6 +87,7 @@ production proof work.
 | Production D1 schema remediation and schema metadata proof | Accepted in Issue #34 for prior approved SHAs only | Do not extend these approvals to current `master` without a new explicit production approval. |
 | Static Worker runtime route | One raw `/manifest.json` proof accepted | Proves only the public manifest route response in that approved scope. |
 | D1-backed Worker routes | Unproven in production after current train | Requires separate approval for any endpoint or D1 access. |
+| Manual Review Notes v1 saved-note production use | Unproven and not approved after PR #130 | Requires separate approval for migration, rollback, retention/privacy, access/visibility, observability/evidence, generated suggestion exclusion, customer-data handling, legal/privacy, and production proof gates. |
 | Row serialization and roundtrip | Unproven in production | Requires safe real row/action and explicit production write approval. |
 | Product production observation | Unproven | Requires explicit production observation-claim approval after valid evidence exists. |
 
@@ -100,6 +113,7 @@ The following support engineering confidence but are not production proof:
 - GitHub check status.
 - PR descriptions.
 - Documentation.
+- Production readiness gap packets.
 - Source/config files.
 - D1 binding names, database names, or database IDs.
 - Local fake-D1 or staging observations.
