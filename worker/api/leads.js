@@ -1,6 +1,14 @@
 import { jsonResponse } from '../lib/utils.js';
 import { canonicalizeLeadCollectionForProfile, resolveProfileId } from '../lib/profile.js';
 import { buildLeadReviewSession, buildReviewerActionQueue } from '../lib/lead-action-intelligence.js';
+import {
+  assertManualReviewNotesWriteAllowed,
+  filterManualReviewNotesLeadCollection,
+  filterManualReviewNotesProtectedFields,
+  patchTouchesManualReviewNotes,
+  resolveManualReviewNotesAccess,
+  withManualReviewNotesAccessMetadata
+} from '../lib/manual-review-notes-access.js';
 import { getLeadsByProfile, getAllLeads, getLeadById, saveLeadsBatch, updateLeadPatchAtomic } from '../db/leads.js';
 import { createLeadsCsvFilename, serializeLeadsCsv } from './serializers/lead-csv.js';
 
@@ -8,32 +16,39 @@ function canonicalizeLeadPayload(profile, leads) {
   return canonicalizeLeadCollectionForProfile(profile, Array.isArray(leads) ? leads : []);
 }
 
-function buildLeadListPayload(canonicalized, source, extra = {}) {
+function buildLeadListPayload(canonicalized, source, extra = {}, manualReviewNotesAccess = {}) {
   const reviewerActionQueue = buildReviewerActionQueue(canonicalized.leads);
-  return {
-    leads: canonicalized.leads,
+  const leads = filterManualReviewNotesLeadCollection(canonicalized.leads, manualReviewNotesAccess);
+  return withManualReviewNotesAccessMetadata({
+    leads,
     profile: canonicalized.profileId,
     source,
     reviewerActionQueue,
     leadReviewSession: buildLeadReviewSession(canonicalized.leads, { queue: reviewerActionQueue }),
     ...extra,
-  };
+  }, manualReviewNotesAccess);
 }
 
-export async function fetchLeads(env, profile) {
+export async function fetchLeads(env, profile, request) {
+  const manualReviewNotesAccess = resolveManualReviewNotesAccess(request, env);
   try {
     const isSelfServiceProfile = profile.startsWith('self-service:');
     if (env.DB) {
       const dbLeads = await getLeadsByProfile(env.DB, profile);
       if (dbLeads.length > 0) {
         const canonicalized = canonicalizeLeadPayload(profile, dbLeads);
-        return jsonResponse(buildLeadListPayload(canonicalized, 'd1'));
+        return jsonResponse(buildLeadListPayload(canonicalized, 'd1', {}, manualReviewNotesAccess));
       }
     }
 
     if (isSelfServiceProfile) {
       const canonicalized = canonicalizeLeadPayload(profile, []);
-      return jsonResponse(buildLeadListPayload(canonicalized, 'd1', { message: '해당 셀프서비스 리드가 없습니다.' }));
+      return jsonResponse(buildLeadListPayload(
+        canonicalized,
+        'd1',
+        { message: '해당 셀프서비스 리드가 없습니다.' },
+        manualReviewNotesAccess
+      ));
     }
 
     const response = await fetch(
@@ -48,25 +63,35 @@ export async function fetchLeads(env, profile) {
       try { await saveLeadsBatch(env.DB, canonicalized.leads, canonicalized.profileId, 'managed'); } catch { /* ignore migration errors */ }
     }
 
-    return jsonResponse(buildLeadListPayload(canonicalized, 'github'));
+    return jsonResponse(buildLeadListPayload(canonicalized, 'github', {}, manualReviewNotesAccess));
   } catch {
     return jsonResponse({ success: false, leads: [], message: '리드 데이터를 불러오는 중 오류가 발생했습니다.' }, 500);
   }
 }
 
-export async function fetchHistory(env, profile) {
+export async function fetchHistory(env, profile, request) {
+  const manualReviewNotesAccess = resolveManualReviewNotesAccess(request, env);
   try {
     const isSelfServiceProfile = profile.startsWith('self-service:');
     if (env.DB) {
       const dbHistory = await getLeadsByProfile(env.DB, profile, { limit: 500 });
       if (dbHistory.length > 0) {
         const canonicalized = canonicalizeLeadPayload(profile, dbHistory);
-        return jsonResponse({ history: canonicalized.leads, profile: canonicalized.profileId, source: 'd1' });
+        return jsonResponse(withManualReviewNotesAccessMetadata({
+          history: filterManualReviewNotesLeadCollection(canonicalized.leads, manualReviewNotesAccess),
+          profile: canonicalized.profileId,
+          source: 'd1',
+        }, manualReviewNotesAccess));
       }
     }
 
     if (isSelfServiceProfile) {
-      return jsonResponse({ history: [], profile, source: 'd1', message: '해당 셀프서비스 히스토리가 없습니다.' });
+      return jsonResponse(withManualReviewNotesAccessMetadata({
+        history: [],
+        profile,
+        source: 'd1',
+        message: '해당 셀프서비스 히스토리가 없습니다.',
+      }, manualReviewNotesAccess));
     }
 
     const response = await fetch(
@@ -81,7 +106,11 @@ export async function fetchHistory(env, profile) {
       try { await saveLeadsBatch(env.DB, canonicalized.leads, canonicalized.profileId, 'managed'); } catch { /* ignore */ }
     }
 
-    return jsonResponse({ history: canonicalized.leads, profile: canonicalized.profileId, source: 'github' });
+    return jsonResponse(withManualReviewNotesAccessMetadata({
+      history: filterManualReviewNotesLeadCollection(canonicalized.leads, manualReviewNotesAccess),
+      profile: canonicalized.profileId,
+      source: 'github',
+    }, manualReviewNotesAccess));
   } catch {
     return jsonResponse({ success: false, history: [], message: '리드 히스토리를 불러오는 중 오류가 발생했습니다.' }, 500);
   }
@@ -89,13 +118,21 @@ export async function fetchHistory(env, profile) {
 
 export async function handleUpdateLead(request, env, leadId) {
   if (!env.DB) return jsonResponse({ success: false, message: '시스템 설정이 필요합니다. 관리자에게 문의하세요.' }, 503);
+  const manualReviewNotesAccess = resolveManualReviewNotesAccess(request, env);
   const body = await request.json().catch(() => ({}));
   const lead = await getLeadById(env.DB, leadId);
   if (!lead) return jsonResponse({ success: false, message: '리드를 찾을 수 없습니다.' }, 404);
 
   try {
+    if (patchTouchesManualReviewNotes(body)) {
+      assertManualReviewNotesWriteAllowed(manualReviewNotesAccess);
+    }
     const result = await updateLeadPatchAtomic(env.DB, lead, body);
-    return jsonResponse({ success: true, lead: result.lead, changedFields: result.changedFields });
+    return jsonResponse(withManualReviewNotesAccessMetadata({
+      success: true,
+      lead: filterManualReviewNotesProtectedFields(result.lead, manualReviewNotesAccess),
+      changedFields: result.changedFields,
+    }, manualReviewNotesAccess));
   } catch (error) {
     if (error?.status) {
       return jsonResponse({ success: false, message: error.message }, error.status);
@@ -106,6 +143,7 @@ export async function handleUpdateLead(request, env, leadId) {
 
 export async function handleExportCSV(request, env) {
   if (!env.DB) return jsonResponse({ success: false, message: '시스템 설정이 필요합니다. 관리자에게 문의하세요.' }, 503);
+  const manualReviewNotesAccess = resolveManualReviewNotesAccess(request, env);
   const url = new URL(request.url);
   const requestedProfile = (url.searchParams.get('profile') || 'all').trim();
   if (requestedProfile !== 'all' && requestedProfile !== resolveProfileId(requestedProfile, env)) {
@@ -116,7 +154,7 @@ export async function handleExportCSV(request, env) {
     ? await getAllLeads(env.DB, { limit: 1000 })
     : await getLeadsByProfile(env.DB, profileId, { limit: 1000 });
 
-  const csv = serializeLeadsCsv(leads);
+  const csv = serializeLeadsCsv(filterManualReviewNotesLeadCollection(leads, manualReviewNotesAccess));
   const filename = createLeadsCsvFilename(profileId);
   return new Response(csv, {
     headers: {

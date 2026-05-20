@@ -106,10 +106,10 @@ export const apiRoutes = Object.freeze([
     auth: AUTH.API,
     cors: true,
     match: exact('/api/leads'),
-    handle: async ({ env, url }) => {
+    handle: async ({ request, env, url }) => {
       const profile = resolveProfileOrResponse(url, env);
       if (profile.response) return profile.response;
-      return fetchLeadCollection(env, profile.profileId);
+      return fetchLeadCollection(env, profile.profileId, request);
     }
   },
   {
@@ -150,10 +150,10 @@ export const apiRoutes = Object.freeze([
     auth: AUTH.API,
     cors: true,
     match: exact('/api/history'),
-    handle: async ({ env, url }) => {
+    handle: async ({ request, env, url }) => {
       const profile = resolveProfileOrResponse(url, env);
       if (profile.response) return profile.response;
-      return fetchLeadHistory(env, profile.profileId);
+      return fetchLeadHistory(env, profile.profileId, request);
     }
   },
   {
