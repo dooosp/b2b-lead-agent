@@ -21,11 +21,25 @@ only.
 - D1 migration performed by this packet: none.
 - Retention/privacy enforcement performed by this packet: none.
 - Production action performed by this packet: none.
+- Follow-up access/visibility/export decision-packet approval-intent record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4493367361`.
+- Follow-up access/visibility/export packet:
+  `docs/roadmap/manual-review-notes-v1-access-visibility-export-decision-packet.md`.
 
 This packet does not approve implementation. It makes current-value note
 retention, metadata-only history retention, clear/delete semantics,
 PII/sensitive-content handling, export/visibility, and production-readiness
 decisions ready for a future human/product/privacy decision.
+
+Follow-up update: export, API exposure, reviewer visibility, manager
+visibility, metadata-history visibility, generated-suggestion exclusion, and
+access-control prerequisites are prepared in
+`docs/roadmap/manual-review-notes-v1-access-visibility-export-decision-packet.md`.
+That packet remains docs-only and does not approve export expansion, manager
+visibility expansion, API exposure expansion, access-control implementation,
+retention/privacy enforcement, production proof/deploy, production D1,
+production endpoints, production logs/secrets, or generated suggestion
+export/persistence/history/retention/attribution.
 
 ```yaml
 manual_review_notes_v1_retention_privacy_packet:

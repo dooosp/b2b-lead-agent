@@ -24,6 +24,10 @@ visibility expansion, or real/authenticated reviewer identity.
 - Production action performed by this packet: none.
 - Production readiness claim made by this packet: none beyond "gap packet
   prepared."
+- Follow-up access/visibility/export decision-packet approval-intent record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4493367361`.
+- Follow-up access/visibility/export packet:
+  `docs/roadmap/manual-review-notes-v1-access-visibility-export-decision-packet.md`.
 
 ```yaml
 manual_review_notes_v1_production_readiness_packet:
@@ -289,6 +293,17 @@ This packet keeps the following actions blocked:
 - generated suggestion persistence/history/retention/attribution,
 - CRM, outreach, analytics, LLM, manager dashboard v1, outcome learning, or
   production proof work.
+
+Follow-up update: access, visibility, API exposure, metadata-history visibility,
+export, generated-suggestion exclusion, and access-control prerequisites are
+prepared in
+`docs/roadmap/manual-review-notes-v1-access-visibility-export-decision-packet.md`.
+That packet remains docs-only and does not approve access-control
+implementation, manager visibility expansion, export expansion, API exposure
+expansion, retention/privacy enforcement, production proof/deploy, production
+D1 migration/access/write, production endpoints, production logs/secrets,
+automated PII detection/redaction, real/authenticated reviewer identity, or
+generated suggestion export/persistence/history/retention/attribution.
 
 ## 13. Future Approval Blocks
 
