@@ -1,11 +1,13 @@
 # Manual Review Notes V1 Production Readiness Gap Packet
 
 This packet prepares future production-readiness decisions for Manual Review
-Notes v1 after PR #130. It is documentation only. It does not perform or
-approve production proof, production deploy, production D1 migration/access,
-production endpoint calls, production logs/secrets access, retention/privacy
-enforcement, automated PII detection/redaction, export expansion, manager
-visibility expansion, or real/authenticated reviewer identity.
+Notes v1 after PR #130. Post-PR136 follow-up planning now records a docs-only
+production proof plan. This packet and the follow-up plan are documentation
+only. They do not perform or approve production proof, production deploy,
+production D1 migration/access, production endpoint calls, production
+logs/secrets access, retention/privacy enforcement, automated PII
+detection/redaction, export expansion, manager visibility expansion, or
+real/authenticated reviewer identity.
 
 ## Document Status
 
@@ -28,6 +30,12 @@ visibility expansion, or real/authenticated reviewer identity.
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4493367361`.
 - Follow-up access/visibility/export packet:
   `docs/roadmap/manual-review-notes-v1-access-visibility-export-decision-packet.md`.
+- Follow-up production proof plan approval-intent record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4496285404`.
+- Follow-up production proof plan:
+  `docs/roadmap/manual-review-notes-v1-production-proof-plan.md`.
+- Follow-up production proof plan status:
+  `DRAFT_NOT_APPROVED_FOR_EXECUTION`; plan-ready only, execution blocked.
 
 ```yaml
 manual_review_notes_v1_production_readiness_packet:
@@ -35,6 +43,9 @@ manual_review_notes_v1_production_readiness_packet:
   approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4493189325"
   scope: DOCS_ONLY_GAP_PACKET
   post_pr130_baseline: "f2ddf35e828017eec9332dc80876e50bbee2f54a"
+  follow_up_production_proof_plan: "docs/roadmap/manual-review-notes-v1-production-proof-plan.md"
+  follow_up_production_proof_plan_approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4496285404"
+  follow_up_production_proof_plan_status: DRAFT_NOT_APPROVED_FOR_EXECUTION
   production_readiness_approved: false
   production_proof_approved: false
   production_deploy_approved: false
@@ -304,6 +315,22 @@ expansion, retention/privacy enforcement, production proof/deploy, production
 D1 migration/access/write, production endpoints, production logs/secrets,
 automated PII detection/redaction, real/authenticated reviewer identity, or
 generated suggestion export/persistence/history/retention/attribution.
+
+Follow-up update: the docs-only Manual Review Notes v1 production proof plan is
+prepared in `docs/roadmap/manual-review-notes-v1-production-proof-plan.md` with
+approval-intent record
+`https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4496285404`.
+That plan converts this gap packet into production-proof planning prerequisites,
+local/staging-only dry-run checks, migration-readiness checks,
+rollback/backout requirements, access-control checks, retention/privacy checks,
+generated-suggestion exclusion checks, observability/logging requirements,
+evidence boundaries, and explicit future approval blocks. It remains
+non-authorizing and does not approve production proof execution, production
+D1 access/migration, production deploy, production endpoint calls, production
+logs/secrets access, production smoke tests, customer data access, runtime
+changes, access-control implementation, retention/privacy enforcement, manager
+visibility, export expansion, generated suggestion persistence, or any
+production readiness claim beyond "production proof plan prepared."
 
 ## 13. Future Approval Blocks
 

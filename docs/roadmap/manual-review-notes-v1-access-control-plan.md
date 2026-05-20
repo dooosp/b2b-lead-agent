@@ -35,6 +35,13 @@ D1 access, production endpoint calls, or production logs/secrets access.
 - Production action performed by this plan: none.
 - Production readiness claim made by this plan: none beyond "C2 local/test role
   stub prepared."
+- Follow-up production proof plan approval-intent record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4496285404`.
+- Follow-up production proof plan:
+  `docs/roadmap/manual-review-notes-v1-production-proof-plan.md`.
+- Follow-up production proof plan status:
+  `DRAFT_NOT_APPROVED_FOR_EXECUTION`; C2 remains local/test only and does not
+  satisfy production auth/access-control proof.
 
 ```yaml
 manual_review_notes_v1_access_control_plan_status:
@@ -46,6 +53,9 @@ manual_review_notes_v1_access_control_plan_status:
   access_control_implemented: LOCAL_TEST_STUB_ONLY
   auth_session_implemented: false
   role_model_implemented: LOCAL_TEST_STUB_ONLY
+  follow_up_production_proof_plan: "docs/roadmap/manual-review-notes-v1-production-proof-plan.md"
+  follow_up_production_proof_plan_approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4496285404"
+  follow_up_production_proof_plan_status: DRAFT_NOT_APPROVED_FOR_EXECUTION
   manager_visibility_implemented: false
   export_expansion_implemented: false
   api_expansion_implemented: LOCAL_TEST_ROLE_STUB_CHECKS_ONLY
@@ -698,3 +708,10 @@ Recommended next safe state after this plan:
 - Production proof remains blocked until privacy/retention, access-control,
   export/API, D1 migration, rollback, evidence, generated-suggestion exclusion,
   and customer-data gates are approved.
+- The follow-up production proof plan is prepared as docs-only planning in
+  `docs/roadmap/manual-review-notes-v1-production-proof-plan.md`. It does not
+  convert the C2 local/test role stub into production auth and does not approve
+  production proof execution, production D1 access/migration, production deploy,
+  production endpoint calls, production logs/secrets access, production smoke
+  tests, manager visibility, export expansion, or production access-control
+  claims.
