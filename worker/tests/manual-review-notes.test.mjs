@@ -1,15 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { fetchLeads, handleUpdateLead } from '../api/leads.js';
+import { fetchLeads, handleExportCSV, handleUpdateLead } from '../api/leads.js';
 import { getLeadById, saveLeadsBatch } from '../db/leads.js';
 import { FakeD1Database } from './helpers/fake-d1.mjs';
 import { createLead, createLeadRow } from './helpers/fixtures.mjs';
 import { createWorkerRequest } from './helpers/http.mjs';
 
-async function patchLead(db, payload, leadId = 'lead-1') {
-  const request = createWorkerRequest(`/api/leads/${leadId}`, { method: 'PATCH', json: payload });
-  return handleUpdateLead(request, { DB: db }, leadId);
+const LOCAL_TEST_ROLE_STUB_ENV = Object.freeze({
+  MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB: 'enabled',
+});
+
+const LOCAL_TEST_ROLE_HEADER = 'X-Manual-Review-Notes-Local-Test-Role';
+
+async function patchLead(db, payload, leadId = 'lead-1', options = {}) {
+  const request = createWorkerRequest(`/api/leads/${leadId}`, {
+    method: 'PATCH',
+    headers: options.headers || {},
+    json: payload,
+  });
+  return handleUpdateLead(request, { DB: db, ...(options.env || {}) }, leadId);
 }
 
 function assertParseableIsoTimestamp(value) {
@@ -332,6 +342,137 @@ test('manualReviewNotes is exposed on local read paths without saving generated 
   assert.equal(payload.reviewerActionQueue.items[0].reviewNoteSuggestion.state, 'APPROVED');
   assert.match(payload.reviewerActionQueue.items[0].reviewNoteSuggestion.text, /Decision: APPROVED/);
   assert.equal(db.leads.get('lead-1').notes, 'Saved by a human reviewer.');
+});
+
+test('C2 local/test reviewer role stub can read and write manual review notes without real auth identity', async () => {
+  const db = new FakeD1Database({ leads: [createLeadRow()] });
+  const headers = { [LOCAL_TEST_ROLE_HEADER]: 'reviewer' };
+
+  const writeResponse = await patchLead(
+    db,
+    { manualReviewNotes: 'Reviewer role stub note.' },
+    'lead-1',
+    { env: LOCAL_TEST_ROLE_STUB_ENV, headers }
+  );
+  const writePayload = await writeResponse.json();
+
+  assert.equal(writeResponse.status, 200);
+  assert.equal(writePayload.success, true);
+  assert.equal(writePayload.lead.manualReviewNotes, 'Reviewer role stub note.');
+  assert.equal(writePayload.lead.manualReviewNotesProvenance, 'human_entered');
+  assert.equal(writePayload.lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
+  assert.deepEqual(writePayload.manualReviewNotesAccess, {
+    mode: 'local_test_role_stub',
+    approvalRecord: 'https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4495568414',
+    role: 'reviewer',
+    manualNotesRead: true,
+    manualNotesWrite: true,
+    metadataHistorySummaryRead: true,
+    realAuthImplemented: false,
+    productionReady: false,
+  });
+
+  const readRequest = createWorkerRequest('/api/leads', { headers });
+  const readResponse = await fetchLeads(
+    { DB: db, GITHUB_REPO: 'dooosp/b2b-lead-agent', ...LOCAL_TEST_ROLE_STUB_ENV },
+    'danfoss',
+    readRequest
+  );
+  const readPayload = await readResponse.json();
+
+  assert.equal(readResponse.status, 200);
+  assert.equal(readPayload.leads[0].manualReviewNotes, 'Reviewer role stub note.');
+  assert.equal(readPayload.leads[0].manualReviewNotesHistoryEventCount, 1);
+  assert.equal(readPayload.manualReviewNotesAccess.role, 'reviewer');
+  assert.equal(readPayload.manualReviewNotesAccess.realAuthImplemented, false);
+});
+
+test('C2 local/test manager role stub cannot write or read protected manual note fields', async () => {
+  const db = new FakeD1Database({
+    leads: [
+      createLeadRow({
+        notes: 'Manager must not receive this manual note.',
+        manual_review_notes_author_label: 'manual_reviewer',
+        manual_review_notes_updated_at: '2026-05-19T01:10:00.000Z',
+      }),
+    ],
+    manualReviewNoteEvents: [
+      {
+        lead_id: 'lead-1',
+        event_type: 'create',
+        changed_at: '2026-05-19T01:10:00.000Z',
+        author_label: 'manual_reviewer',
+      },
+    ],
+  });
+  const headers = { [LOCAL_TEST_ROLE_HEADER]: 'manager' };
+
+  const writeResponse = await patchLead(
+    db,
+    { manualReviewNotes: 'Manager write attempt should be denied.' },
+    'lead-1',
+    { env: LOCAL_TEST_ROLE_STUB_ENV, headers }
+  );
+  const writePayload = await writeResponse.json();
+  const persistedLead = await getLeadById(db, 'lead-1');
+
+  assert.equal(writeResponse.status, 403);
+  assert.equal(writePayload.success, false);
+  assert.match(writePayload.message, /local\/test role stub/);
+  assert.equal(persistedLead.manualReviewNotes, 'Manager must not receive this manual note.');
+  assert.equal(db.leads.get('lead-1').notes, 'Manager must not receive this manual note.');
+  assert.equal(db.manualReviewNoteEvents.length, 1);
+
+  const readRequest = createWorkerRequest('/api/leads', { headers });
+  const readResponse = await fetchLeads(
+    { DB: db, GITHUB_REPO: 'dooosp/b2b-lead-agent', ...LOCAL_TEST_ROLE_STUB_ENV },
+    'danfoss',
+    readRequest
+  );
+  const readPayload = await readResponse.json();
+  const managerLead = readPayload.leads[0];
+
+  assert.equal(readResponse.status, 200);
+  assert.equal(Object.hasOwn(managerLead, 'manualReviewNotes'), false);
+  assert.equal(Object.hasOwn(managerLead, 'notes'), false);
+  assert.equal(Object.hasOwn(managerLead, 'manualReviewNotesProvenance'), false);
+  assert.equal(Object.hasOwn(managerLead, 'manualReviewNotesAuthorLabel'), false);
+  assert.equal(Object.hasOwn(managerLead, 'manualReviewNotesUpdatedAt'), false);
+  assert.equal(Object.hasOwn(managerLead, 'manualReviewNotesHistoryEventCount'), false);
+  assert.deepEqual(readPayload.manualReviewNotesAccess, {
+    mode: 'local_test_role_stub',
+    approvalRecord: 'https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4495568414',
+    role: 'manager',
+    manualNotesRead: false,
+    manualNotesWrite: false,
+    metadataHistorySummaryRead: false,
+    realAuthImplemented: false,
+    productionReady: false,
+  });
+});
+
+test('C2 local/test role stub keeps CSV export from expanding manual note visibility for managers', async () => {
+  const db = new FakeD1Database({
+    leads: [
+      createLeadRow({
+        notes: 'Manager export must not include this manual note.',
+        manual_review_notes_author_label: 'manual_reviewer',
+        manual_review_notes_updated_at: '2026-05-19T01:10:00.000Z',
+      }),
+    ],
+  });
+  const request = createWorkerRequest('/api/export/csv?profile=danfoss', {
+    headers: { [LOCAL_TEST_ROLE_HEADER]: 'manager' },
+  });
+
+  const response = await handleExportCSV(request, { DB: db, ...LOCAL_TEST_ROLE_STUB_ENV });
+  const csv = await response.text();
+
+  assert.equal(response.status, 200);
+  assert.equal(csv.includes('Manager export must not include this manual note.'), false);
+  assert.equal(csv.includes('manualReviewNotesUpdatedAt'), false);
+  assert.equal(csv.includes('manualReviewNotesHistoryEventCount'), false);
+  assert.equal(csv.includes('reviewNoteSuggestion'), false);
 });
 
 test('manualReviewNotes PATCH accumulates metadata-only create/edit/clear history without note text', async () => {

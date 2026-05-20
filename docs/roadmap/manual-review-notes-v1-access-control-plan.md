@@ -1,45 +1,54 @@
 # Manual Review Notes V1 Access Control Plan
 
 This plan translates the Manual Review Notes v1 access, visibility, API, export,
-metadata-history, and generated-suggestion decisions into a future
-access-control implementation map. It is documentation only. It does not
-implement access control, auth, roles, manager visibility, export behavior, API
-exposure changes, runtime/UI/schema behavior, retention/privacy enforcement,
-production proof, production deploy, production D1 access, production endpoint
-calls, or production logs/secrets access.
+metadata-history, and generated-suggestion decisions into an access-control
+implementation map. PR #133 added this as documentation only. The current C2
+update implements only an opt-in local/test role stub for tests and local
+fixtures. It does not implement real auth, sessions, production roles, manager
+visibility expansion, export expansion, API exposure expansion,
+retention/privacy enforcement, production proof, production deploy, production
+D1 access, production endpoint calls, or production logs/secrets access.
 
 ## Document Status
 
-- Document status: `DRAFT_NOT_APPROVED`.
-- Approval record:
+- Document status: `APPROVED_LOCAL_TEST_ONLY_FOR_C2_ROLE_STUB`.
+- C1 docs-only plan approval record:
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4493804215`.
+- C2 local/test role-stub approval record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4495568414`.
 - Repository: `dooosp/b2b-lead-agent`.
 - Default branch: `master`.
-- Post-PR132 baseline inspected:
-  `8c5c100664f63251cf82f72057ab4b31f8ebad27`.
-- Scope: docs-only Manual Review Notes v1 access-control plan.
-- Runtime behavior changed by this plan: none.
+- Post-PR134 baseline inspected:
+  `9191373163d80588778c35927d5744361192c446`.
+- Scope: C2 local/test role stub only.
+- Runtime behavior changed by this update: only when
+  `MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB=enabled` is explicitly set.
 - UI behavior changed by this plan: none.
-- Schema/API behavior changed by this plan: none.
-- Access-control implementation performed by this plan: none.
+- Schema behavior changed by this update: none.
+- API behavior changed by this update: local/test role-stub checks only when
+  `MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB=enabled`; no production API
+  expansion.
+- Access-control implementation performed by this update: opt-in local/test role
+  checks only; no production auth/session/identity.
 - Auth/session/role implementation performed by this plan: none.
 - Manager visibility/export/API expansion performed by this plan: none.
 - Production action performed by this plan: none.
-- Production readiness claim made by this plan: none beyond "access-control
-  plan prepared."
+- Production readiness claim made by this plan: none beyond "C2 local/test role
+  stub prepared."
 
 ```yaml
 manual_review_notes_v1_access_control_plan_status:
-  document_status: DRAFT_NOT_APPROVED
-  approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4493804215"
-  scope: DOCS_ONLY_ACCESS_CONTROL_PLAN
-  post_pr132_baseline: "8c5c100664f63251cf82f72057ab4b31f8ebad27"
-  access_control_implemented: false
+  document_status: APPROVED_LOCAL_TEST_ONLY_FOR_C2_ROLE_STUB
+  c1_docs_only_plan_approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4493804215"
+  approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4495568414"
+  scope: C2_LOCAL_TEST_ROLE_STUB_ONLY
+  post_pr134_baseline: "9191373163d80588778c35927d5744361192c446"
+  access_control_implemented: LOCAL_TEST_STUB_ONLY
   auth_session_implemented: false
-  role_model_implemented: false
+  role_model_implemented: LOCAL_TEST_STUB_ONLY
   manager_visibility_implemented: false
   export_expansion_implemented: false
-  api_expansion_implemented: false
+  api_expansion_implemented: LOCAL_TEST_ROLE_STUB_CHECKS_ONLY
   production_approved: false
   generated_suggestion_access: FORBIDDEN_AS_SAVED_NOTE
 ```
@@ -65,6 +74,11 @@ Completed local/test and decision-record state:
 - PR #130 implemented static local/test privacy warning copy.
 - PR #131 added the docs-only production readiness gap packet.
 - PR #132 added the docs-only access/visibility/export decision packet.
+- PR #133 added the docs-only access-control plan.
+- PR #134 synced source-of-truth docs after the access-control plan.
+- Current C2 approval record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4495568414`
+  authorizes only an opt-in local/test role stub.
 
 Current implementation semantics:
 
@@ -100,6 +114,19 @@ Current implementation semantics:
 - Current generated suggestion boundary: generated reviewer note suggestions
   are copy-only, unsaved, unattributed, unretained, unexported, excluded from
   history, and not human-authored saved notes.
+- Current C2 local/test role stub:
+  `MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB=enabled` activates header-based
+  test roles through `X-Manual-Review-Notes-Local-Test-Role`.
+- Current C2 reviewer role: `reviewer` can read current manual note fields,
+  write `manualReviewNotes`, and read metadata-history summary fields in
+  local/test only.
+- Current C2 manager role: `manager` cannot write manual notes and receives
+  lead list/history/export payloads with protected manual note fields omitted
+  in local/test only.
+- Current C2 API role or missing/unknown role: treated as non-reviewer for
+  protected manual note fields in local/test only.
+- Current C2 access metadata explicitly reports
+  `realAuthImplemented: false` and `productionReady: false`.
 - Current auth assumption: protected APIs use the general bearer API token, but
   there is no reviewer/manager role model and no real reviewer identity.
 - Current CSV compatibility: `GET /api/export/csv` serializes the existing
@@ -168,16 +195,79 @@ production evidence handling are approved.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | C0: no access-control implementation; local/test only | Keeps current behavior and production HOLD. | No new protection beyond existing API token assumptions. | None beyond current docs/local tests. | Lowest new exposure, but current local/test API token is not role-aware. | None. | Docs validation and no-runtime-change diff review. | Production remains blocked. | Safe baseline. |
 | C1: docs-only access-control plan | Maps fields, surfaces, role options, tests, and gates without behavior changes. | Plan can be mistaken for implementation if wording overclaims. | Approval-intent record and current repo inspection. | Low. | Low, docs-only. | Docs validation, no runtime diff, checklist completeness. | Safe non-production next step. | Recommended now. |
-| C2: local/test role stub only | Enables local tests for reviewer/manager/API behavior without real production auth. | Stub can be mistaken for real auth or diverge from future production roles. | Explicit local/test implementation approval and role names. | Low to medium depending on fields shown. | Medium. | Reviewer/manager role-stub tests, unauthorized tests, no-production-auth-claim tests. | Not production proof. | Only after explicit local/test approval. |
+| C2: local/test role stub only | Enables local tests for reviewer/manager/API behavior without real production auth. | Stub can be mistaken for real auth or diverge from future production roles. | Explicit local/test implementation approval and role names. | Low to medium depending on fields shown. | Medium. | Reviewer/manager role-stub tests, unauthorized tests, no-production-auth-claim tests. | Not production proof. | Approved and implemented only as opt-in local/test role stub. |
 | C3: reviewer-only access control | Protects note text/write paths for reviewer workflows. | Reviewer role source may be wrong without real auth/session design. | Auth/session or local/test role stub decision. | Medium because note text remains visible to reviewers. | Medium to high. | Reviewer read/write allow, non-reviewer deny, generated suggestion exclusion, export/API omission tests. | Production HOLD until auth/privacy gates pass. | HOLD. |
 | C4: reviewer + manager roles | Enables explicit manager denials or approved manager read paths. | Manager visibility can broaden sensitive note exposure. | Product/privacy role policy and manager access decision. | Medium to high. | High. | Manager allow/deny matrix, current-note-only or metadata-only tests, export denial, no full history. | Production HOLD until manager visibility is approved. | HOLD. |
 | C5: authenticated production role controls | Real production-capable roles and session semantics. | Highest blast radius if auth, roles, logs, or exports are wrong. | Auth/session source, privacy/legal, ops owner, D1/production proof plan. | High if text or identity enters production. | Highest. | Full UI/API/export/log role matrix, retention/delete, production proof gates, rollback tests. | Required before production saved-note visibility, but not approved. | HOLD. |
 
 Recommended default:
 
-- Choose C1 now.
-- Consider C2 only after explicit local/test implementation approval.
+- C1 is complete as docs-only planning.
+- C2 is approved and implemented only as an opt-in local/test role stub.
 - Keep C3, C4, and C5 on HOLD.
+
+## 5A. C2 Local/Test Role Stub
+
+The C2 stub exists only to make role-oriented manual note access behavior
+testable before real auth/session/identity exists.
+
+Activation:
+
+- Environment flag:
+  `MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB=enabled`.
+- Request header:
+  `X-Manual-Review-Notes-Local-Test-Role`.
+- Supported local/test header values: `reviewer`, `manager`, and `api`.
+- Missing or unknown values are treated as no role for protected manual note
+  fields.
+
+Reviewer behavior:
+
+- `reviewer` can read current manual note fields on local/test list/history
+  payloads.
+- `reviewer` can write `manualReviewNotes` through the existing lead PATCH
+  path.
+- `reviewer` can see metadata-history summary fields only, not full event
+  lists or note text history.
+- `reviewer` does not become a real authenticated identity; saved changes still
+  use only the fixed `manual_reviewer` label.
+
+Manager/API behavior:
+
+- `manager` cannot write manual notes in the local/test stub.
+- `manager`, `api`, missing role, and unknown role omit protected manual note
+  fields from list/history payloads while the stub is enabled.
+- CSV export receives filtered lead objects under the stub so protected manual
+  note text is not newly exposed to manager/API roles.
+- Export receives no new manual-note metadata columns and no generated
+  suggestion fields.
+
+The protected local/test fields are:
+
+- `notes`,
+- `manualReviewNotes`,
+- `manualReviewNotesProvenance`,
+- `manualReviewNotesUpdatedAt`,
+- `manualReviewNotesAuthorLabel`,
+- `manualReviewNotesHistoryEventCount`,
+- `manualReviewNotesHistoryLastEventType`,
+- `manualReviewNotesHistoryLastEventAt`,
+- `manualReviewNotesHistoryLastAuthorLabel`.
+
+The access metadata returned by local/test API responses is intentionally
+non-production:
+
+```json
+{
+  "mode": "local_test_role_stub",
+  "realAuthImplemented": false,
+  "productionReady": false
+}
+```
+
+This is not real auth, not a production role model, not reviewer identity, not
+manager visibility approval, not export expansion, and not API exposure
+approval.
 
 ## 6. Reviewer Access Plan
 
@@ -464,22 +554,22 @@ Blocked production actions:
 
 ## 14. Future Approval Blocks
 
-Use this block to keep the current plan non-authorizing:
+Current approved local/test-only C2 block:
 
 ```yaml
 manual_review_notes_v1_access_control_plan:
-  document_status: DRAFT_NOT_APPROVED
-  approval_record: null
-  access_model_decision: HOLD
-  reviewer_access_decision: HOLD
-  manager_access_decision: HOLD
-  api_access_decision: HOLD
-  export_access_decision: HOLD
-  metadata_history_access_decision: HOLD
-  auth_session_decision: HOLD
+  document_status: APPROVED_LOCAL_TEST_ONLY
+  approval_record: "https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4495568414"
+  access_model_decision: IMPLEMENT_LOCAL_TEST_ROLE_STUB_ONLY
+  reviewer_access_decision: REVIEWER_ROLE_CAN_USE_MANUAL_NOTES_LOCAL_TEST_ONLY
+  manager_access_decision: MANAGER_ROLE_DENIED_MANUAL_NOTE_WRITE_LOCAL_TEST_ONLY
+  api_access_decision: LOCAL_TEST_ROLE_STUB_CHECKS_ONLY
+  export_access_decision: NO_EXPORT_EXPANSION
+  metadata_history_access_decision: LOCAL_TEST_REVIEWER_SUMMARY_ONLY
+  auth_session_decision: NO_REAL_AUTH_NO_SESSION_NO_IDENTITY
   production_readiness_decision: HOLD
   generated_suggestion_access: FORBIDDEN_AS_SAVED_NOTE
-  allowed_next_action: DECISION_ONLY
+  allowed_next_action: IMPLEMENT_C2_LOCAL_TEST_ROLE_STUB_ONLY
 ```
 
 Use this candidate block only after a human fills non-HOLD values:
@@ -540,15 +630,16 @@ manual_review_notes_v1_access_control_candidate:
 
 ## 15. Explicit Non-Decisions
 
-This plan does not approve:
+Outside the opt-in C2 local/test role stub described above, this plan does not
+approve:
 
-- runtime behavior change,
+- production runtime behavior change,
 - UI behavior change,
 - schema change,
-- API contract change,
-- access-control implementation,
+- production API contract change,
+- production access-control implementation,
 - auth/session implementation,
-- role implementation,
+- real role implementation,
 - manager visibility implementation,
 - export implementation,
 - API exposure expansion,
@@ -600,8 +691,7 @@ notes.
 Recommended next safe state after this plan:
 
 - C1 is complete as docs-only planning once this document is merged.
-- C2 local/test role stub remains the safest possible implementation follow-up,
-  but only after explicit approval.
+- C2 local/test role stub is approved only for opt-in local/test role checks.
 - C3 reviewer-only controls, C4 reviewer plus manager roles, and C5
   authenticated production role controls remain HOLD.
 - Production proof remains blocked until privacy/retention, access-control,
