@@ -1,9 +1,10 @@
 # Production Proof Boundaries
 
 This document records the production-proof boundary after Issue #34 and the
-Manual Review Notes v1 PR train through PR #138 plus the production D1
-migration plan and production rollback/backout plan packets. It is a planning
-and safety document only; it is not production evidence.
+Manual Review Notes v1 PR train through PR #139 plus the production D1
+migration plan, production rollback/backout plan, and local/staging dry-run
+plan packets. It is a planning and safety document only; it is not production
+evidence.
 
 Audited repo baseline for this snapshot:
 
@@ -11,7 +12,7 @@ Audited repo baseline for this snapshot:
 - Previous Manual Review Notes v1 privacy-warning baseline:
   `f2ddf35e828017eec9332dc80876e50bbee2f54a` (PR #130)
 - Current source-of-truth `origin/master`:
-  `d0fb449f359c57d6a3747da76c455ea20ae13d32` (PR #138)
+  `e9dc9f402124714b5d004e310b266b7ebdf5d1bf` (PR #139)
 - Issue #34 current state: closed as completed after GitHub-only closeout, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -24,11 +25,13 @@ Audited repo baseline for this snapshot:
   `docs/roadmap/manual-review-notes-v1-production-d1-migration-plan.md`
 - Current Manual Review Notes v1 production rollback/backout plan:
   `docs/roadmap/manual-review-notes-v1-production-rollback-backout-plan.md`
+- Current Manual Review Notes v1 local/staging dry-run plan:
+  `docs/roadmap/manual-review-notes-v1-staging-dry-run-plan.md`
 
-Post-PR138 operating update:
+Post-PR139 operating update:
 
 - Current source-of-truth `origin/master` for this boundary update:
-  `d0fb449f359c57d6a3747da76c455ea20ae13d32` (PR #138).
+  `e9dc9f402124714b5d004e310b266b7ebdf5d1bf` (PR #139).
 - Issue #34 is closed as completed after a GitHub-only closeout approval and
   closeout record.
 - Standing approval policy: `docs/standing-approval-policy.md`.
@@ -85,6 +88,21 @@ Post-PR138 operating update:
   retention/privacy enforcement, destructive data action, purge/delete jobs,
   manager visibility, export expansion, or any production readiness claim
   beyond "production rollback/backout plan prepared."
+- The Manual Review Notes v1 local/staging dry-run plan is docs-only planning.
+  It documents dry-run scenarios, preflight checks, local fake-D1 rehearsal,
+  migration-readiness rehearsal, rollback/backout rehearsal, C2 role-stub
+  rehearsal, generated-suggestion exclusion checks, privacy/retention checks,
+  staging-like target requirements, evidence/anti-overclaim rules, and explicit
+  execution approval blocks. It does not authorize staging execution,
+  local/fake-D1 dry-run execution beyond ordinary docs-only PR validation,
+  production D1 schema observation/access/write/delete, Wrangler production
+  commands, production proof execution, production deploy, production endpoints,
+  production logs/secrets, production smoke tests, customer data
+  access/mutation, runtime/UI/schema/API behavior changes, executable migration
+  or rollback files, production access-control implementation, retention/privacy
+  enforcement, destructive data action, purge/delete jobs, manager visibility,
+  export expansion, or any production readiness claim beyond "local/staging
+  dry-run plan prepared."
 
 ## Standing Approval Policy
 
@@ -121,8 +139,8 @@ Accepted Issue #34 records:
 Important freshness rule: Issue #34's accepted execution/proof scopes were tied
 to earlier approved SHAs, including the final read-only schema-proof baseline at
 `512b537797fc67d974acf1f1e690bd638de4919b` (PR #106). The latest audited
-source-of-truth `master` baseline is `d0fb449f359c57d6a3747da76c455ea20ae13d32`
-after PR #138 added the Manual Review Notes v1 production D1 migration plan. Any new production action must refresh the actual current
+source-of-truth `master` baseline is `e9dc9f402124714b5d004e310b266b7ebdf5d1bf`
+after PR #139 added the Manual Review Notes v1 production rollback/backout plan. Any new production action must refresh the actual current
 `origin/master` SHA, CI metadata, owners, and approval records before
 execution. Issue #34 closeout does not authorize further production proof work.
 
@@ -134,7 +152,7 @@ execution. Issue #34 closeout does not authorize further production proof work.
 | Production D1 schema remediation and schema metadata proof | Accepted in Issue #34 for prior approved SHAs only | Do not extend these approvals to current `master` without a new explicit production approval. |
 | Static Worker runtime route | One raw `/manifest.json` proof accepted | Proves only the public manifest route response in that approved scope. |
 | D1-backed Worker routes | Unproven in production after current train | Requires separate approval for any endpoint or D1 access. |
-| Manual Review Notes v1 saved-note production use | Unproven and not approved after PR #138; docs-only production proof plan, production D1 migration plan, and production rollback/backout plan prepared | Requires separate approval for migration execution, rollback execution, destructive data action, retention/privacy, access/visibility, observability/evidence, generated suggestion exclusion, customer-data handling, legal/privacy, and production proof execution gates. |
+| Manual Review Notes v1 saved-note production use | Unproven and not approved after PR #139; docs-only production proof plan, production D1 migration plan, production rollback/backout plan, and local/staging dry-run plan prepared | Requires separate approval for local/staging dry-run execution beyond ordinary docs-only PR validation, migration execution, rollback execution, destructive data action, retention/privacy, access/visibility, observability/evidence, generated suggestion exclusion, customer-data handling, legal/privacy, and production proof execution gates. |
 | Row serialization and roundtrip | Unproven in production | Requires safe real row/action and explicit production write approval. |
 | Product production observation | Unproven | Requires explicit production observation-claim approval after valid evidence exists. |
 
