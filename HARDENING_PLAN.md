@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-05-20.
-> Audited against first-parent `master` history through `f2ddf35e828017eec9332dc80876e50bbee2f54a` (`Merge pull request #130 from dooosp/codex/manual-review-notes-privacy-warning`) and current GitHub PR state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#130, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #118 completion, Issue #115 completion, and Issue #34 GitHub-only closeout.
+> Audited against first-parent `master` history through `6619419a31558d05e26aa162d65386b3aa0c5672` (`Merge pull request #131 from dooosp/codex/manual-notes-prod-readiness-gap-packet`) and current GitHub PR state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#131, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #118 completion, Issue #115 completion, and Issue #34 GitHub-only closeout.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -41,6 +41,7 @@
 | 31 | 2026-05-19 | #128 | `4d74341` | Manual Review Notes v1 H2 metadata-only history | Implemented local/test-only `manual_review_note_events` metadata for accepted manual note create/edit/clear events with lead id, event type, timestamp, and fixed generic author label only, without old/new note text, generated suggestion history, retention/privacy enforcement, or production proof |
 | 32 | 2026-05-19 | #129 | `7a8a117` | Manual Review Notes v1 retention/privacy policy packet | Added the docs-only retention/privacy policy decision packet and kept enforcement, purge/delete jobs, redaction, automated PII detection, export/manager visibility expansion, generated suggestion retention/history, and production action unapproved |
 | 33 | 2026-05-19 | #130 | `f2ddf35` | Manual Review Notes v1 static privacy warning | Implemented static local/test reviewer-facing warning copy only, without detection, blocking, redaction, retention enforcement, purge/delete jobs, export/manager visibility, real identity, production proof, or production compliance evidence |
+| 34 | 2026-05-20 | #131 | `6619419` | Manual Review Notes v1 production readiness gap packet | Added the docs-only production readiness gap packet and kept production proof/deploy, production D1 migration/access/write, production endpoints, logs/secrets, retention/privacy enforcement, automated PII detection/redaction, export/manager visibility expansion, real/authenticated reviewer identity, and runtime/UI/schema/API changes unapproved |
 
 ## Wave Summary
 
@@ -210,7 +211,15 @@
   PII detection/redaction, export/manager visibility expansion, real reviewer
   identity, generated suggestion persistence/retention/history/attribution, and
   production readiness claims blocked.
-- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#130, the local/test H2 metadata-history implementation, the docs-only retention/privacy packet, this docs-only production readiness gap packet, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #34 GitHub-only closeout, or the stale PR cleanup.
+- `docs/roadmap/manual-review-notes-v1-access-visibility-export-decision-packet.md`
+  records the docs-only access, visibility, API, metadata-history visibility,
+  export, generated-suggestion boundary, and access-control prerequisite packet
+  after PR #131. It keeps access-control implementation, manager visibility
+  expansion, export expansion, API exposure expansion, runtime/UI/schema/API
+  behavior, production proof/deploy, production D1 migration/access/write,
+  production endpoints, logs/secrets, retention/privacy enforcement, automated
+  PII detection/redaction, and real/authenticated reviewer identity blocked.
+- Production deploy, production D1 access, production D1 writes, production Worker endpoint calls, Wrangler commands, and production observation claims were not part of PRs #36-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#131, the local/test H2 metadata-history implementation, the docs-only retention/privacy packet, the docs-only production readiness gap packet, this docs-only access/visibility/export packet, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #34 GitHub-only closeout, or the stale PR cleanup.
 
 ## Findings Closed On `master`
 
@@ -368,6 +377,15 @@
   detection/redaction, export/manager visibility expansion, real/authenticated
   reviewer identity, generated suggestion persistence/retention/history/
   attribution, or production readiness claims beyond "gap packet prepared."
+- `docs/roadmap/manual-review-notes-v1-access-visibility-export-decision-packet.md`
+  is the current docs-only access/visibility/export decision packet. It does
+  not approve runtime/UI/schema/API changes, access-control implementation,
+  manager visibility expansion, export expansion, API exposure expansion,
+  production proof/deploy, production D1 migration/access/write, production
+  endpoints, production logs/secrets, retention/privacy enforcement, automated
+  PII detection/redaction, real/authenticated reviewer identity, generated
+  suggestion export/persistence/history/retention/attribution, or production
+  readiness claims beyond "access/visibility/export packet prepared."
 - Issue #111 is closed as completed for the Manager / Reviewer Summary v0 UX
   Findings Intake.
 - `docs/roadmap/next-product-track-decision-packet.md` remains the
@@ -390,8 +408,8 @@
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
-  - Recommended next non-production goal: keep Manual Review Notes production readiness gaps decision-ready and explicitly blocked; do not implement production proof, production deploy, production D1 migration/access/write, production endpoint calls, production logs/secrets access, retention/privacy enforcement, purge/delete jobs, redaction, automated PII detection, export/manager visibility expansion, old note value retention, full history, generated suggestion history, or production history until a later approval selects those boundaries.
-  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, the Human UX Review Packet, Issue #100 closeout, the compact `다음 리뷰` strip, reviewer-note summaries, roadmap/current-train source-of-truth sync, production-proof planning records, Issue #34 closeout, standing approval policy, Manager / Reviewer Summary v0, PR #110 source-of-truth sync, Issue #111 UX intake closeout, the Saved Review Notes Decision Packet, Issue #113 Option E completion, PR #114 copy-only clarification, PR #119-#130 Manual Review Notes local/test-safe work, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay docs/local/test/CI oriented unless a separate human-approved production prompt opens operational work.
+  - Recommended next non-production goal: keep Manual Review Notes access, visibility, API, export, metadata-history visibility, generated-suggestion exclusion, and access-control prerequisites decision-ready and explicitly blocked; do not implement access control, manager visibility, export expansion, API exposure expansion, production proof, production deploy, production D1 migration/access/write, production endpoint calls, production logs/secrets access, retention/privacy enforcement, purge/delete jobs, redaction, automated PII detection, old note value retention, full history, generated suggestion history/export/persistence, or production history until a later approval selects those boundaries.
+  - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, the Human UX Review Packet, Issue #100 closeout, the compact `다음 리뷰` strip, reviewer-note summaries, roadmap/current-train source-of-truth sync, production-proof planning records, Issue #34 closeout, standing approval policy, Manager / Reviewer Summary v0, PR #110 source-of-truth sync, Issue #111 UX intake closeout, the Saved Review Notes Decision Packet, Issue #113 Option E completion, PR #114 copy-only clarification, PR #119-#131 Manual Review Notes local/test-safe work and docs-only production readiness gap planning, Validate Naming workflow action maintenance, deterministic `npm ci` check-workflow installs, and local-only CI smoke coverage are now shipped. The next increment should stay docs/local/test/CI oriented unless a separate human-approved production prompt opens operational work.
   - Keep production proof, platform migration, storage migration, and production observation work behind separate approval gates.
 
 ## Current Operating Sequence

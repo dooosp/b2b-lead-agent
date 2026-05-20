@@ -34,6 +34,10 @@ local/test-safe Manual Review Notes v0 work. It is documentation only.
   `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4492814282`.
 - Follow-up retention/privacy policy packet:
   `docs/roadmap/manual-review-notes-v1-retention-privacy-policy-decision-packet.md`.
+- Follow-up access/visibility/export decision-packet approval-intent record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4493367361`.
+- Follow-up access/visibility/export packet:
+  `docs/roadmap/manual-review-notes-v1-access-visibility-export-decision-packet.md`.
 
 This packet does not approve v1 implementation. It records the remaining
 decisions needed before note-specific timestamps, reviewer identity, note
@@ -90,6 +94,17 @@ purge/delete jobs, redaction, automated PII detection, export/manager
 visibility expansion, old note value retention, generated suggestion
 retention/history, schema/API/runtime/UI changes, D1 migrations, or production
 behavior.
+
+Follow-up update: access, visibility, API exposure, metadata-history visibility,
+export, generated-suggestion exclusion, and access-control prerequisites were
+prepared as a decision packet in
+`docs/roadmap/manual-review-notes-v1-access-visibility-export-decision-packet.md`.
+That packet keeps production HOLD, recommends no manager visibility expansion
+and no export expansion now, and does not approve access-control
+implementation, runtime/UI/schema/API changes, retention/privacy enforcement,
+production proof/deploy, production D1, production endpoints, production
+logs/secrets, real/authenticated reviewer identity, or generated suggestion
+export/persistence/history/retention/attribution.
 
 ## 2. Current State
 
