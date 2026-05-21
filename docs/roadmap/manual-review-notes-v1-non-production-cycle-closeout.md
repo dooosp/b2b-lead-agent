@@ -209,7 +209,27 @@ Future work, if selected later, should start as a new approval-gated cycle:
 Until such a future approval exists, the correct state is no-op plus truthful
 reporting.
 
-## 9. Closeout PR Validation
+## 9. Post-Closeout Feedback Record
+
+The first human reviewer feedback record was attached after this closeout:
+
+- Feedback record ID: `MRN-V1-FEEDBACK-001`.
+- Source:
+  `https://github.com/dooosp/b2b-lead-agent/issues/144#issuecomment-4503838503`.
+- Processing approval/comment record:
+  `https://github.com/dooosp/b2b-lead-agent/issues/144#issuecomment-4503911395`.
+- Disposition packet:
+  `docs/roadmap/manual-review-notes-v1-feedback-record-001-disposition.md`.
+- Classification: P3/docs/no-follow-up.
+
+That feedback confirms the docs are clear enough for the current
+non-production cycle and does not request implementation, staging, production,
+manager visibility/export/API expansion, real reviewer identity, access-control
+implementation, retention/privacy enforcement, or generated suggestion
+persistence/history/export/attribution. The correct state remains HOLD with
+`NEXT_MANDATORY_ACTION: NONE`.
+
+## 10. Closeout PR Validation
 
 This packet is documentation-only. Local validation for the closeout PR was:
 
