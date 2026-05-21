@@ -19,9 +19,14 @@ access, secret access, customer-data access, outcome learning, or automation.
 - Expected repo basename: `b2b-lead-agent`.
 - Default branch: `master`.
 - Baseline inspected: `origin/master` at
-  `df2cb9b8f1de2cb0e46bfb17ea679894b75e55a4`.
-- Latest related merged PR: PR #152,
-  `docs: add privacy retention decision packet`.
+  `32802c3a89b7b0fbde31736ad8045b8b0a684015`.
+- Latest related merged PR: PR #153,
+  `docs: add privacy owner input request packet`.
+- Privacy owner input tracking issue:
+  https://github.com/dooosp/b2b-lead-agent/issues/154.
+- Privacy owner input tracking issue status: `OPEN`.
+- Owner input status: `MISSING`.
+- Privacy implementation status: `NOT_STARTED`.
 - Controlling roadmap:
   `docs/roadmap/b2b-lead-agent-productization-roadmap-v1.md`.
 - Controlling readiness packet:
@@ -48,12 +53,16 @@ b2b_lead_agent_privacy_owner_input_request:
   human_decision: PREPARE_PRIVACY_OWNER_INPUT_REQUEST_DOCS_ONLY
   repository: dooosp/b2b-lead-agent
   default_branch: master
-  inspected_origin_master: "df2cb9b8f1de2cb0e46bfb17ea679894b75e55a4"
-  latest_related_merged_pr: 152
+  inspected_origin_master: "32802c3a89b7b0fbde31736ad8045b8b0a684015"
+  latest_related_merged_pr: 153
+  privacy_owner_input_tracking_issue_url: "https://github.com/dooosp/b2b-lead-agent/issues/154"
+  privacy_owner_input_tracking_issue_status: OPEN
+  owner_input_status: MISSING
   current_productization_level: LEVEL_0_COMPLETE
   target_productization_level: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
   privacy_owner_input_status: INCOMPLETE
   privacy_implementation_plan_ready: false
+  privacy_implementation_status: NOT_STARTED
   production_reviewer_workflow_ready: BLOCKED
   owner_values_provided_by_packet: false
   privacy_retention_implementation_performed: false
@@ -305,10 +314,14 @@ scope, owner approvals, and validation gates.
 
 ```text
 PRIVACY_OWNER_INPUT_REQUEST_PACKET: CREATED
+PRIVACY_OWNER_INPUT_TRACKING_ISSUE_URL: https://github.com/dooosp/b2b-lead-agent/issues/154
+PRIVACY_OWNER_INPUT_TRACKING_ISSUE_STATUS: OPEN
 CURRENT_PRODUCTIZATION_LEVEL: LEVEL_0_COMPLETE
 TARGET_PRODUCTIZATION_LEVEL: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
+OWNER_INPUT_STATUS: MISSING
 PRIVACY_OWNER_INPUT_STATUS: INCOMPLETE
 PRIVACY_IMPLEMENTATION_PLAN_READY: NO
+PRIVACY_IMPLEMENTATION_STATUS: NOT_STARTED
 PRODUCTION_REVIEWER_WORKFLOW_READY: BLOCKED
 STAGING_EXECUTION: HOLD
 PRODUCTION_PROOF: HOLD
