@@ -25,7 +25,13 @@ access, secret access, customer-data access, outcome learning, or automation.
 - Privacy owner input tracking issue:
   https://github.com/dooosp/b2b-lead-agent/issues/154.
 - Privacy owner input tracking issue status: `OPEN`.
-- Owner input status: `MISSING`.
+- Privacy owner input authority comment:
+  https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4513826313.
+- Owner authority status: `IDENTIFIED`.
+- Privacy owner: `@dooosp / Taeho Jang`.
+- Retention owner: `@dooosp / Taeho Jang`.
+- Approved by: `@dooosp / Taeho Jang`.
+- Detailed owner values status: `INCOMPLETE`.
 - Privacy implementation status: `NOT_STARTED`.
 - Controlling roadmap:
   `docs/roadmap/b2b-lead-agent-productization-roadmap-v1.md`.
@@ -57,7 +63,12 @@ b2b_lead_agent_privacy_owner_input_request:
   latest_related_merged_pr: 153
   privacy_owner_input_tracking_issue_url: "https://github.com/dooosp/b2b-lead-agent/issues/154"
   privacy_owner_input_tracking_issue_status: OPEN
-  owner_input_status: MISSING
+  owner_authority_comment_url: "https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4513826313"
+  owner_authority_status: IDENTIFIED
+  privacy_owner: "@dooosp / Taeho Jang"
+  retention_owner: "@dooosp / Taeho Jang"
+  approved_by: "@dooosp / Taeho Jang"
+  detailed_owner_values_status: INCOMPLETE
   current_productization_level: LEVEL_0_COMPLETE
   target_productization_level: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
   privacy_owner_input_status: INCOMPLETE
@@ -130,7 +141,9 @@ Audited source records:
 Current blockers:
 
 - Production reviewer workflow is blocked.
-- Privacy/retention owner decisions are missing.
+- Privacy/retention owner authority is identified for Issue #154 owner-input
+  purposes.
+- Detailed privacy/retention owner decisions remain incomplete.
 - Manual notes may contain sensitive reviewer-entered text.
 - The static privacy warning is warning-only.
 - The static privacy warning is not enforcement, redaction, retention, purge,
@@ -149,6 +162,9 @@ Current blockers:
 
 Every row below is required before this packet can be considered complete. The
 request asks for decisions only; it does not decide or infer the answers.
+Issue #154 now identifies `@dooosp / Taeho Jang` as privacy owner, retention
+owner, and approver for owner-input purposes, but all detailed policy values
+still require explicit scoped decisions.
 
 | Item | Requested answer | Why it matters | Acceptable answer format | What must not be provided | Blocks production reviewer workflow | Can implementation proceed without it |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -316,9 +332,14 @@ scope, owner approvals, and validation gates.
 PRIVACY_OWNER_INPUT_REQUEST_PACKET: CREATED
 PRIVACY_OWNER_INPUT_TRACKING_ISSUE_URL: https://github.com/dooosp/b2b-lead-agent/issues/154
 PRIVACY_OWNER_INPUT_TRACKING_ISSUE_STATUS: OPEN
+PRIVACY_OWNER_INPUT_AUTHORITY_COMMENT_URL: https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4513826313
 CURRENT_PRODUCTIZATION_LEVEL: LEVEL_0_COMPLETE
 TARGET_PRODUCTIZATION_LEVEL: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
-OWNER_INPUT_STATUS: MISSING
+OWNER_AUTHORITY_STATUS: IDENTIFIED
+PRIVACY_OWNER: @dooosp / Taeho Jang
+RETENTION_OWNER: @dooosp / Taeho Jang
+APPROVED_BY: @dooosp / Taeho Jang
+DETAILED_OWNER_VALUES_STATUS: INCOMPLETE
 PRIVACY_OWNER_INPUT_STATUS: INCOMPLETE
 PRIVACY_IMPLEMENTATION_PLAN_READY: NO
 PRIVACY_IMPLEMENTATION_STATUS: NOT_STARTED
@@ -332,5 +353,5 @@ NEXT_DECISION: HOLD
 ```
 
 The next safe action is not implementation. The next safe action is for the
-privacy and retention owner to provide explicit responses to the template above
-using acceptable evidence.
+privacy and retention owner to provide explicit responses to the remaining
+TBD fields in the template above using acceptable evidence.
