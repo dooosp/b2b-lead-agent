@@ -12,27 +12,35 @@ access, secret access, customer-data access, outcome learning, or automation.
 
 ## Document Status
 
-- Document status: `PRIVACY_OWNER_INPUT_REQUEST_PACKET_CREATED_DOCS_ONLY`.
+- Document status: `COMPLETE_FOR_CONSERVATIVE_POLICY`.
 - Human decision:
-  `PREPARE_PRIVACY_OWNER_INPUT_REQUEST_DOCS_ONLY`.
+  `PROCESS_ISSUE_154_CONSERVATIVE_POLICY_APPROVAL_DOCS_ONLY`.
 - Repository: `dooosp/b2b-lead-agent`.
 - Expected repo basename: `b2b-lead-agent`.
 - Default branch: `master`.
 - Baseline inspected: `origin/master` at
-  `32802c3a89b7b0fbde31736ad8045b8b0a684015`.
-- Latest related merged PR: PR #153,
-  `docs: add privacy owner input request packet`.
+  `9dfca8394a8123a2667851c098c5da82b4b10f59`.
+- Latest related merged PR: PR #156,
+  `docs: record Issue #154 owner authority`.
 - Privacy owner input tracking issue:
   https://github.com/dooosp/b2b-lead-agent/issues/154.
 - Privacy owner input tracking issue status: `OPEN`.
 - Privacy owner input authority comment:
   https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4513826313.
+- Draft conservative policy comment:
+  https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4516861417.
+- Approval comment:
+  https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4517118232.
 - Owner authority status: `IDENTIFIED`.
+- Conservative policy approval status: `APPROVED`.
 - Privacy owner: `@dooosp / Taeho Jang`.
 - Retention owner: `@dooosp / Taeho Jang`.
 - Approved by: `@dooosp / Taeho Jang`.
-- Detailed owner values status: `INCOMPLETE`.
+- Approved values: conservative policy values only.
+- Detailed owner values status:
+  `CONSERVATIVE_POLICY_APPROVED_WITH_UNRESOLVED_VALUES`.
 - Privacy implementation status: `NOT_STARTED`.
+- Privacy implementation plan readiness: `POSSIBLE`.
 - Controlling roadmap:
   `docs/roadmap/b2b-lead-agent-productization-roadmap-v1.md`.
 - Controlling readiness packet:
@@ -43,7 +51,7 @@ access, secret access, customer-data access, outcome learning, or automation.
   `docs/roadmap/b2b-lead-agent-privacy-retention-decision-packet.md`.
 - Current productization level: `LEVEL_0_COMPLETE`.
 - Target productization level: `LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW`.
-- Owner values provided by this packet: no.
+- Owner values provided by this packet: conservative policy values only.
 - Privacy/retention implementation performed by this packet: no.
 - PII detection, redaction, purge/delete, or export-control implementation:
   no.
@@ -55,27 +63,31 @@ access, secret access, customer-data access, outcome learning, or automation.
 
 ```yaml
 b2b_lead_agent_privacy_owner_input_request:
-  document_status: PRIVACY_OWNER_INPUT_REQUEST_PACKET_CREATED_DOCS_ONLY
-  human_decision: PREPARE_PRIVACY_OWNER_INPUT_REQUEST_DOCS_ONLY
+  document_status: COMPLETE_FOR_CONSERVATIVE_POLICY
+  human_decision: PROCESS_ISSUE_154_CONSERVATIVE_POLICY_APPROVAL_DOCS_ONLY
   repository: dooosp/b2b-lead-agent
   default_branch: master
-  inspected_origin_master: "32802c3a89b7b0fbde31736ad8045b8b0a684015"
-  latest_related_merged_pr: 153
+  inspected_origin_master: "9dfca8394a8123a2667851c098c5da82b4b10f59"
+  latest_related_merged_pr: 156
   privacy_owner_input_tracking_issue_url: "https://github.com/dooosp/b2b-lead-agent/issues/154"
   privacy_owner_input_tracking_issue_status: OPEN
   owner_authority_comment_url: "https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4513826313"
+  draft_conservative_policy_comment_url: "https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4516861417"
+  approval_comment_url: "https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4517118232"
   owner_authority_status: IDENTIFIED
+  conservative_policy_approval_status: APPROVED
   privacy_owner: "@dooosp / Taeho Jang"
   retention_owner: "@dooosp / Taeho Jang"
   approved_by: "@dooosp / Taeho Jang"
-  detailed_owner_values_status: INCOMPLETE
+  approved_values_scope: CONSERVATIVE_POLICY_VALUES_ONLY
+  detailed_owner_values_status: CONSERVATIVE_POLICY_APPROVED_WITH_UNRESOLVED_VALUES
   current_productization_level: LEVEL_0_COMPLETE
   target_productization_level: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
-  privacy_owner_input_status: INCOMPLETE
-  privacy_implementation_plan_ready: false
+  privacy_owner_input_status: COMPLETE_FOR_CONSERVATIVE_POLICY
+  privacy_implementation_plan_ready: POSSIBLE
   privacy_implementation_status: NOT_STARTED
-  production_reviewer_workflow_ready: BLOCKED
-  owner_values_provided_by_packet: false
+  production_reviewer_workflow_ready: STILL_BLOCKED_PENDING_AUTH_D1_ROLLBACK_PROOF
+  owner_values_provided_by_packet: CONSERVATIVE_POLICY_VALUES_ONLY
   privacy_retention_implementation_performed: false
   pii_detection_implemented: false
   redaction_implemented: false
@@ -85,8 +97,11 @@ b2b_lead_agent_privacy_owner_input_request:
   production_proof: HOLD
   production_deploy: HOLD
   crm_outreach_llm_automation: FORBIDDEN
-  next_recommended_cycle: HOLD_FOR_PRIVACY_OWNER_INPUT
-  next_decision: HOLD
+  implementation_authorized: false
+  production_proof_deploy_d1_endpoints_authorized: false
+  crm_outreach_llm_automation_authorized: false
+  next_recommended_cycle: PRIVACY_RETENTION_IMPLEMENTATION_PLAN_DOCS_ONLY or AUTH_ACCESS_CONTROL_IMPLEMENTATION_PLAN_DOCS_ONLY
+  next_decision: HOLD_PENDING_NEW_EXPLICIT_GOAL
 ```
 
 ## 1. Purpose
@@ -109,7 +124,10 @@ This packet is not:
 - permission to access customer data;
 - permission to connect CRM, outreach, LLM, or automation systems.
 
-Current status remains `HOLD`.
+Current status is `COMPLETE_FOR_CONSERVATIVE_POLICY` for the conservative
+policy values only. Implementation, production proof, production deploy,
+production D1 access, endpoint calls, CRM, outreach, LLM, automation, and
+customer/private data access remain on `HOLD_PENDING_NEW_EXPLICIT_GOAL`.
 
 ## 2. Repo-Grounded Audit
 
@@ -132,7 +150,11 @@ Audited source records:
 | Production readiness gap packet | `docs/roadmap/manual-review-notes-v1-production-readiness-gap-packet.md` separates local/test evidence from missing production gates and keeps production proof, deploy, production D1, endpoints, logs/secrets, privacy enforcement, PII detection/redaction, export/manager visibility, and real reviewer identity blocked. |
 | Production proof plan | `docs/roadmap/manual-review-notes-v1-production-proof-plan.md` is docs-only and not approval to execute production proof, D1 access, endpoint calls, logs/secrets reads, production smoke tests, customer-data access, auth implementation, manager visibility, export expansion, retention enforcement, PII detection/redaction, or generated suggestion persistence/export/history/attribution. |
 | Rollback/backout plan | `docs/roadmap/manual-review-notes-v1-production-rollback-backout-plan.md` is docs-only; production rollback, destructive data action, and production D1 action remain unapproved. |
-| Current PR train / roadmap source of truth | `docs/roadmap/current-pr-train.md` tracks the May 2026 train and is updated by this packet to recognize PR #152 and the owner-input request as the next docs-only cycle. |
+| Current PR train / roadmap source of truth | `docs/roadmap/current-pr-train.md` tracks the May 2026 train and is updated by this disposition to recognize Issue #154 as `COMPLETE_FOR_CONSERVATIVE_POLICY` only. |
+| Issue #154 owner authority | Issue #154 comment https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4513826313 identifies `@dooosp / Taeho Jang` as privacy owner, retention owner, and approver for owner-input purposes. |
+| Issue #154 conservative policy draft | Issue #154 comment https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4516861417 provides the conservative policy values for owner approval. |
+| Issue #154 conservative policy approval | Issue #154 comment https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4517118232 is the owner-authored approval of the proposed conservative policy values as the current scoped owner decision. |
+| Issue #154 conservative policy disposition | `docs/roadmap/b2b-lead-agent-privacy-owner-input-disposition.md` records `COMPLETE_FOR_CONSERVATIVE_POLICY`, keeps approved values scoped to conservative policy only, and preserves all implementation/proof/data-access boundaries. |
 | Package scripts and validation commands | `package.json` exposes `check:naming`, `check:schema`, `eval:lead-quality`, `test:e2e:local`, `test:root`, `test:unit`, `test:contract`, `test:worker`, and `test`. |
 | CI workflows | `.github/workflows/ci.yml` runs schema, synthetic eval, unit/contract tests, and local-only Worker E2E. `.github/workflows/validate-naming.yml` runs naming plus worker tests. `.github/workflows/generate-report.yml` is dispatch-only report generation and is not used by this packet. |
 
@@ -140,10 +162,17 @@ Audited source records:
 
 Current blockers:
 
-- Production reviewer workflow is blocked.
+- Production reviewer workflow is still blocked pending auth, D1, rollback, and
+  proof gates.
 - Privacy/retention owner authority is identified for Issue #154 owner-input
   purposes.
-- Detailed privacy/retention owner decisions remain incomplete.
+- Conservative policy values are approved for Issue #154 only.
+- Approved values are conservative policy values only.
+- Retention duration remains unresolved.
+- Metadata retention duration remains unresolved.
+- Expiration/review date remains unresolved.
+- Future PII detection, redaction, and purge/delete implementation details
+  remain unresolved.
 - Manual notes may contain sensitive reviewer-entered text.
 - The static privacy warning is warning-only.
 - The static privacy warning is not enforcement, redaction, retention, purge,
@@ -152,11 +181,11 @@ Current blockers:
 - Export manual note visibility remains blocked.
 - API manual note visibility remains blocked.
 - Real reviewer identity retention remains unresolved.
-- CRM data use remains unresolved and unapproved.
-- Outreach data use remains unresolved and unapproved.
-- Outcome learning data use remains unresolved and unapproved.
-- Privacy implementation planning remains blocked until owner values are
-  explicitly provided.
+- CRM data use is not allowed under the conservative policy.
+- Outreach data use is not allowed under the conservative policy.
+- Outcome learning data use is not allowed under the conservative policy.
+- Privacy implementation plan readiness is `POSSIBLE`, but implementation is
+  not authorized.
 
 ## 4. Required Owner Decisions
 
@@ -262,6 +291,18 @@ Unacceptable evidence:
 
 ## 8. Future Decision Rule
 
+If conservative owner values are approved but retention duration, metadata
+retention duration, expiration/review date, and future PII/redaction/purge
+implementation details remain unresolved:
+
+```text
+PRIVACY_OWNER_INPUT_STATUS: COMPLETE_FOR_CONSERVATIVE_POLICY
+PRIVACY_IMPLEMENTATION_PLAN_READY: POSSIBLE
+PRODUCTION_REVIEWER_WORKFLOW_READY: STILL_BLOCKED_PENDING_AUTH_D1_ROLLBACK_PROOF
+NEXT_RECOMMENDED_CYCLE: PRIVACY_RETENTION_IMPLEMENTATION_PLAN_DOCS_ONLY or AUTH_ACCESS_CONTROL_IMPLEMENTATION_PLAN_DOCS_ONLY
+NEXT_DECISION: HOLD_PENDING_NEW_EXPLICIT_GOAL
+```
+
 If all required owner values are provided:
 
 ```text
@@ -285,11 +326,11 @@ NEXT_DECISION: HOLD
 Current packet disposition:
 
 ```text
-PRIVACY_OWNER_INPUT_STATUS: INCOMPLETE
-PRIVACY_IMPLEMENTATION_PLAN_READY: NO
-PRODUCTION_REVIEWER_WORKFLOW_READY: BLOCKED
-NEXT_RECOMMENDED_CYCLE: HOLD_FOR_PRIVACY_OWNER_INPUT
-NEXT_DECISION: HOLD
+PRIVACY_OWNER_INPUT_STATUS: COMPLETE_FOR_CONSERVATIVE_POLICY
+PRIVACY_IMPLEMENTATION_PLAN_READY: POSSIBLE
+PRODUCTION_REVIEWER_WORKFLOW_READY: STILL_BLOCKED_PENDING_AUTH_D1_ROLLBACK_PROOF
+NEXT_RECOMMENDED_CYCLE: PRIVACY_RETENTION_IMPLEMENTATION_PLAN_DOCS_ONLY or AUTH_ACCESS_CONTROL_IMPLEMENTATION_PLAN_DOCS_ONLY
+NEXT_DECISION: HOLD_PENDING_NEW_EXPLICIT_GOAL
 ```
 
 ## 9. Boundaries For Future Cycles
@@ -333,25 +374,33 @@ PRIVACY_OWNER_INPUT_REQUEST_PACKET: CREATED
 PRIVACY_OWNER_INPUT_TRACKING_ISSUE_URL: https://github.com/dooosp/b2b-lead-agent/issues/154
 PRIVACY_OWNER_INPUT_TRACKING_ISSUE_STATUS: OPEN
 PRIVACY_OWNER_INPUT_AUTHORITY_COMMENT_URL: https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4513826313
+PRIVACY_OWNER_INPUT_DRAFT_CONSERVATIVE_POLICY_COMMENT_URL: https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4516861417
+PRIVACY_OWNER_INPUT_APPROVAL_COMMENT_URL: https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4517118232
 CURRENT_PRODUCTIZATION_LEVEL: LEVEL_0_COMPLETE
 TARGET_PRODUCTIZATION_LEVEL: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
 OWNER_AUTHORITY_STATUS: IDENTIFIED
+CONSERVATIVE_POLICY_APPROVAL_STATUS: APPROVED
 PRIVACY_OWNER: @dooosp / Taeho Jang
 RETENTION_OWNER: @dooosp / Taeho Jang
 APPROVED_BY: @dooosp / Taeho Jang
-DETAILED_OWNER_VALUES_STATUS: INCOMPLETE
-PRIVACY_OWNER_INPUT_STATUS: INCOMPLETE
-PRIVACY_IMPLEMENTATION_PLAN_READY: NO
+APPROVED_VALUES: CONSERVATIVE_POLICY_VALUES_ONLY
+DETAILED_OWNER_VALUES_STATUS: CONSERVATIVE_POLICY_APPROVED_WITH_UNRESOLVED_VALUES
+UNRESOLVED_VALUES: retention duration, metadata retention duration, expiration/review date, future PII/redaction/purge implementation details
+PRIVACY_OWNER_INPUT_STATUS: COMPLETE_FOR_CONSERVATIVE_POLICY
+PRIVACY_IMPLEMENTATION_PLAN_READY: POSSIBLE
 PRIVACY_IMPLEMENTATION_STATUS: NOT_STARTED
-PRODUCTION_REVIEWER_WORKFLOW_READY: BLOCKED
+PRODUCTION_REVIEWER_WORKFLOW_READY: STILL_BLOCKED_PENDING_AUTH_D1_ROLLBACK_PROOF
 STAGING_EXECUTION: HOLD
 PRODUCTION_PROOF: HOLD
 PRODUCTION_DEPLOY: HOLD
 CRM_OUTREACH_LLM_AUTOMATION: FORBIDDEN
-NEXT_RECOMMENDED_CYCLE: HOLD_FOR_PRIVACY_OWNER_INPUT
-NEXT_DECISION: HOLD
+IMPLEMENTATION_AUTHORIZED: NO
+PRODUCTION_PROOF_DEPLOY_D1_ENDPOINTS_AUTHORIZED: NO
+CRM_OUTREACH_LLM_AUTOMATION_AUTHORIZED: NO
+NEXT_RECOMMENDED_CYCLE: PRIVACY_RETENTION_IMPLEMENTATION_PLAN_DOCS_ONLY or AUTH_ACCESS_CONTROL_IMPLEMENTATION_PLAN_DOCS_ONLY
+NEXT_DECISION: HOLD_PENDING_NEW_EXPLICIT_GOAL
 ```
 
-The next safe action is not implementation. The next safe action is for the
-privacy and retention owner to provide explicit responses to the remaining
-TBD fields in the template above using acceptable evidence.
+The next safe action is not implementation. The next safe action is a new
+explicit docs-only goal for either privacy/retention implementation planning or
+auth/access-control implementation planning.
