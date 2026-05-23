@@ -1,7 +1,7 @@
 # B2B Lead Agent Level 1 Owner Input Disposition
 
-This disposition records the owner confirmations posted after PR #167 for
-Level 1 production reviewer workflow owner-input blockers.
+This disposition records the owner confirmations posted after PR #167 and
+PR #168 for Level 1 production reviewer workflow owner-input blockers.
 
 It is documentation only. It does not implement auth, sessions, roles, access
 control, runtime behavior, UI behavior, API behavior, schema behavior,
@@ -20,15 +20,15 @@ customer/private data access.
 - Repository: `dooosp/b2b-lead-agent`.
 - Default branch: `master`.
 - Baseline inspected: `origin/master` at
-  `2390a398b6cd80f9022b5fe4673c915bc275a039`.
-- Latest related merged PR: PR #167,
-  `docs: process Level 1 owner input drafts`.
+  `993f918e93cf270b3103a89cb39f808be8d404ef`.
+- Latest related merged PR: PR #168,
+  `docs: record Level 1 owner input disposition`.
 - Inspection date: 2026-05-23.
 - Current productization level: `LEVEL_0_COMPLETE`.
 - Target productization level:
   `LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW`.
 - Production reviewer workflow status:
-  `BLOCKED_PENDING_FINAL_PRODUCTION_PROOF_APPROVAL_AND_FUTURE_IMPLEMENTATION_GOALS`.
+  `BLOCKED_PENDING_SEPARATE_EXPLICIT_FUTURE_IMPLEMENTATION_OR_PROOF_GOAL`.
 - Implementation authorized: no.
 - Production proof authorized: no.
 - Production deploy authorized: no.
@@ -37,7 +37,7 @@ customer/private data access.
 - CRM/outreach/LLM/automation authorized: no.
 - Customer/private data access authorized: no.
 - Next recommended cycle:
-  `FINAL_PRODUCTION_PROOF_OWNER_REQUEST_DOCS_ONLY_AFTER_PREREQUISITES`.
+  `SEPARATE_EXPLICIT_FUTURE_IMPLEMENTATION_OR_PROOF_GOAL_REQUIRED`.
 - Next decision: `HOLD_PENDING_NEW_EXPLICIT_GOAL`.
 
 ```yaml
@@ -46,11 +46,11 @@ b2b_lead_agent_level_1_owner_input_disposition:
   human_decision: PROCESS_LEVEL1_OWNER_APPROVAL_CONFIRMATIONS_DOCS_ONLY
   repository: dooosp/b2b-lead-agent
   default_branch: master
-  inspected_origin_master: "2390a398b6cd80f9022b5fe4673c915bc275a039"
-  latest_related_merged_pr: 167
+  inspected_origin_master: "993f918e93cf270b3103a89cb39f808be8d404ef"
+  latest_related_merged_pr: 168
   current_productization_level: LEVEL_0_COMPLETE
   target_productization_level: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
-  production_reviewer_workflow: BLOCKED_PENDING_FINAL_PRODUCTION_PROOF_APPROVAL_AND_FUTURE_IMPLEMENTATION_GOALS
+  production_reviewer_workflow: BLOCKED_PENDING_SEPARATE_EXPLICIT_FUTURE_IMPLEMENTATION_OR_PROOF_GOAL
   confirmations:
     auth_provider_session_production_roles:
       issue_url: https://github.com/dooosp/b2b-lead-agent/issues/162
@@ -70,8 +70,8 @@ b2b_lead_agent_level_1_owner_input_disposition:
       status: COMPLETE
     final_production_proof_approval:
       issue_url: https://github.com/dooosp/b2b-lead-agent/issues/165
-      confirmation_comment_url: null
-      status: MISSING
+      confirmation_comment_url: https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4525359304
+      status: COMPLETE
   implementation_authorized: false
   production_proof_authorized: false
   production_deploy_authorized: false
@@ -80,7 +80,7 @@ b2b_lead_agent_level_1_owner_input_disposition:
   logs_secrets_access_authorized: false
   crm_outreach_llm_automation_authorized: false
   customer_private_data_access_authorized: false
-  next_recommended_cycle: FINAL_PRODUCTION_PROOF_OWNER_REQUEST_DOCS_ONLY_AFTER_PREREQUISITES
+  next_recommended_cycle: SEPARATE_EXPLICIT_FUTURE_IMPLEMENTATION_OR_PROOF_GOAL_REQUIRED
   next_decision: HOLD_PENDING_NEW_EXPLICIT_GOAL
 ```
 
@@ -92,12 +92,12 @@ b2b_lead_agent_level_1_owner_input_disposition:
 | [#163](https://github.com/dooosp/b2b-lead-agent/issues/163) | Production D1 schema observation owner input | https://github.com/dooosp/b2b-lead-agent/issues/163#issuecomment-4525316833 | `COMPLETE` |
 | [#164](https://github.com/dooosp/b2b-lead-agent/issues/164) | Rollback/backout owner and stop-write policy | https://github.com/dooosp/b2b-lead-agent/issues/164#issuecomment-4525317479 | `COMPLETE` |
 | [#154](https://github.com/dooosp/b2b-lead-agent/issues/154) | Privacy residual values | https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4525319355 | `COMPLETE` |
-| [#165](https://github.com/dooosp/b2b-lead-agent/issues/165) | Final production proof approval | No new owner confirmation after PR #167 | `MISSING` |
+| [#165](https://github.com/dooosp/b2b-lead-agent/issues/165) | Final production proof approval decision | https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4525359304 | `COMPLETE` |
 
 The confirmation comments above are owner-authored, scoped to docs planning,
 and contain explicit non-approval boundaries for implementation, production
-proof, deploy, production D1 access, endpoint calls, CRM/outreach/LLM/
-automation, logs/secrets access, and customer/private data access.
+proof execution, deploy, production D1 access, endpoint calls, CRM/outreach/
+LLM/automation, logs/secrets access, and customer/private data access.
 
 ## 2. Issue Dispositions
 
@@ -299,48 +299,80 @@ until a separate explicit future goal.
 
 ### Issue #165: Final Production Proof Approval
 
-Status: `MISSING`.
+Status: `COMPLETE`.
 
-No valid owner confirmation exists after PR #167. The only comment remains the
-`DRAFT / NOT APPROVED` prompt at
-https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4524999909.
+Confirmation comment:
+https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4525359304.
 
-Missing fields:
+Approved docs-planning fields:
 
-- prerequisite record verification for #162, #163, #164, and #154;
-- local validation record;
-- final production proof approval;
-- non-secret target label;
-- exact command allowlist;
-- endpoint boundary;
-- D1 boundary;
-- fixture or non-customer data policy;
-- redaction rules;
-- evidence storage path;
-- rollback owner confirmation for proof execution;
-- explicit non-claims.
+- `AUTH_PROVIDER_SESSION_RECORD`: Issue #162 complete at
+  https://github.com/dooosp/b2b-lead-agent/issues/162#issuecomment-4525315986.
+- `PRODUCTION_D1_SCHEMA_OBSERVATION_RECORD`: Issue #163 complete at
+  https://github.com/dooosp/b2b-lead-agent/issues/163#issuecomment-4525316833.
+- `ROLLBACK_BACKOUT_OWNER_RECORD`: Issue #164 complete at
+  https://github.com/dooosp/b2b-lead-agent/issues/164#issuecomment-4525317479.
+- `PRIVACY_RETENTION_RECORD`: Issue #154 complete at
+  https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4525319355.
+- `LOCAL_VALIDATION_RECORD`: PR #168 local validation and GitHub checks,
+  recorded as local/CI evidence only and not production proof.
+- `PRODUCTION_PROOF_APPROVED`:
+  `NO_NOT_UNTIL_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL`.
+- `TARGET_LABEL_NON_SECRET`: Cloudflare Worker production target
+  `b2b-lead-trigger` with production D1 binding `DB` / database name
+  `b2b-leads-db`, for planning labels only.
+- `EXACT_COMMAND_ALLOWLIST`: `NONE_APPROVED_FOR_EXECUTION_NOW`.
+- `ENDPOINT_BOUNDARY`: `NONE_APPROVED_FOR_EXECUTION_NOW`.
+- `D1_BOUNDARY`: `NONE_APPROVED_FOR_EXECUTION_NOW`.
+- `FIXTURE_OR_NON_CUSTOMER_DATA_POLICY`: future proof, if separately
+  approved, must use non-customer synthetic fixtures or approved
+  non-customer metadata only.
+- `CUSTOMER_DATA_ALLOWED: NO`
+- `LOGS_SECRETS_ALLOWED: NO`
+- `REDACTION_RULES`: redact auth material, identities, account/database IDs,
+  private URLs, customer payloads, manual note body text, generated suggestion
+  text, CRM/outreach data, production/staging logs, and private lead/person
+  fields.
+- `EVIDENCE_STORAGE_PATH`:
+  `docs/roadmap/b2b-lead-agent-level-1-production-proof-evidence.md` for a
+  future separately approved proof record only.
+- `ROLLBACK_OWNER_CONFIRMED`: `YES_FOR_DOCS_PLANNING_ONLY`.
 
-Production proof remains `NO` / `HOLD`.
+Explicit non-approvals:
+
+- `PRODUCTION_DEPLOY_APPROVED: NO`
+- `PRODUCTION_D1_WRITE_OR_MIGRATION_APPROVED: NO`
+- `CUSTOMER_ROW_READ_OR_WRITE_APPROVED: NO`
+- `PRODUCTION_LOG_OR_SECRET_ACCESS_APPROVED: NO`
+- `CRM_OR_OUTREACH_ACTION_APPROVED: NO`
+- `LLM_OR_AUTOMATION_ACTION_APPROVED: NO`
+- `GENERATED_SUGGESTION_PERSISTENCE_OR_EXPORT_APPROVED: NO`
+
+Missing or ambiguous fields: none for docs-planning final production proof
+owner input. Production proof execution, deploy, staging/production access,
+D1 access/observation/write/migration/delete, endpoint calls, logs/secrets
+access, customer/private data, production readiness, and issue closure remain
+unauthorized until a separate explicit future goal.
 
 ## 3. Production Reviewer Workflow Status
 
-The owner-input prerequisites for #162, #163, #164, and #154 are now complete
-for docs-planning purposes only. The production reviewer workflow remains
-blocked because #165 final production proof approval is missing and because no
-future implementation/proof goal has authorized real auth implementation,
-access-control expansion, privacy enforcement, D1 access, endpoint calls,
-production proof execution, deploy, CRM/outreach/LLM/automation, or
-customer/private data access.
+The owner-input prerequisites for #162, #163, #164, #165, and #154 are now
+complete for docs-planning purposes only. The production reviewer workflow
+remains blocked because #165 explicitly did not approve production proof
+execution and no future implementation/proof goal has authorized real auth
+implementation, access-control expansion, privacy enforcement, D1 access,
+endpoint calls, production proof execution, deploy, CRM/outreach/LLM/
+automation, or customer/private data access.
 
 ## 4. Next Recommended Cycle
 
 Recommended next cycle:
 
-`FINAL_PRODUCTION_PROOF_OWNER_REQUEST_DOCS_ONLY_AFTER_PREREQUISITES`
+`SEPARATE_EXPLICIT_FUTURE_IMPLEMENTATION_OR_PROOF_GOAL_REQUIRED`
 
-That cycle should prepare or request a scoped Issue #165 owner response using
-the completed prerequisite records. It must remain docs-only unless a separate
-future explicit goal authorizes implementation or proof execution.
+The next cycle must be a separate explicit future goal. This disposition does
+not approve implementation, proof execution, staging/production access, D1
+access, endpoint calls, or customer/private data access.
 
 ## 5. Boundary Confirmation
 
@@ -384,8 +416,8 @@ ISSUE_164_STATUS: COMPLETE
 ISSUE_164_CONFIRMATION_COMMENT_URL: https://github.com/dooosp/b2b-lead-agent/issues/164#issuecomment-4525317479
 ISSUE_154_STATUS: COMPLETE
 ISSUE_154_CONFIRMATION_COMMENT_URL: https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4525319355
-ISSUE_165_STATUS: MISSING
-ISSUE_165_CONFIRMATION_COMMENT_URL: none
+ISSUE_165_STATUS: COMPLETE
+ISSUE_165_CONFIRMATION_COMMENT_URL: https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4525359304
 IMPLEMENTATION_AUTHORIZED: no
 PRODUCTION_PROOF_AUTHORIZED: no
 PRODUCTION_DEPLOY_AUTHORIZED: no
@@ -393,7 +425,7 @@ PRODUCTION_D1_ACCESS_AUTHORIZED_NOW: no
 ENDPOINT_CALLS_AUTHORIZED: no
 CRM_OUTREACH_LLM_AUTOMATION_AUTHORIZED: no
 CUSTOMER_PRIVATE_DATA_ACCESS_AUTHORIZED: no
-PRODUCTION_REVIEWER_WORKFLOW_STATUS: BLOCKED_PENDING_FINAL_PRODUCTION_PROOF_APPROVAL_AND_FUTURE_IMPLEMENTATION_GOALS
-NEXT_RECOMMENDED_CYCLE: FINAL_PRODUCTION_PROOF_OWNER_REQUEST_DOCS_ONLY_AFTER_PREREQUISITES
+PRODUCTION_REVIEWER_WORKFLOW_STATUS: BLOCKED_PENDING_SEPARATE_EXPLICIT_FUTURE_IMPLEMENTATION_OR_PROOF_GOAL
+NEXT_RECOMMENDED_CYCLE: SEPARATE_EXPLICIT_FUTURE_IMPLEMENTATION_OR_PROOF_GOAL_REQUIRED
 NEXT_DECISION: HOLD_PENDING_NEW_EXPLICIT_GOAL
 ```
