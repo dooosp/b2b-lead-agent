@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { fetchLeads, handleExportCSV, handleUpdateLead } from '../api/leads.js';
+import { fetchHistory, fetchLeads, handleExportCSV, handleUpdateLead } from '../api/leads.js';
 import { getLeadById, saveLeadsBatch } from '../db/leads.js';
 import { FakeD1Database } from './helpers/fake-d1.mjs';
 import { createLead, createLeadRow } from './helpers/fixtures.mjs';
@@ -12,6 +12,26 @@ const LOCAL_TEST_ROLE_STUB_ENV = Object.freeze({
 });
 
 const LOCAL_TEST_ROLE_HEADER = 'X-Manual-Review-Notes-Local-Test-Role';
+
+const PROTECTED_MANUAL_NOTE_FIELDS = Object.freeze([
+  'notes',
+  'manualReviewNotes',
+  'manual_review_notes',
+  'manualReviewNotesProvenance',
+  'manual_review_notes_provenance',
+  'manualReviewNotesAuthorLabel',
+  'manual_review_notes_author_label',
+  'manualReviewNotesUpdatedAt',
+  'manual_review_notes_updated_at',
+  'manualReviewNotesHistoryEventCount',
+  'manual_review_notes_history_event_count',
+  'manualReviewNotesHistoryLastEventType',
+  'manual_review_notes_history_last_event_type',
+  'manualReviewNotesHistoryLastEventAt',
+  'manual_review_notes_history_last_event_at',
+  'manualReviewNotesHistoryLastAuthorLabel',
+  'manual_review_notes_history_last_author_label',
+]);
 
 async function patchLead(db, payload, leadId = 'lead-1', options = {}) {
   const request = createWorkerRequest(`/api/leads/${leadId}`, {
@@ -42,6 +62,32 @@ function assertManualNoteHistoryDoesNotRetainText(db, forbiddenText) {
   for (const text of Array.isArray(forbiddenText) ? forbiddenText : [forbiddenText]) {
     assert.equal(serializedEvents.includes(text), false);
   }
+}
+
+function assertProtectedManualNoteFieldsOmitted(lead) {
+  for (const field of PROTECTED_MANUAL_NOTE_FIELDS) {
+    assert.equal(Object.hasOwn(lead, field), false, `${field} should be omitted`);
+  }
+}
+
+function assertSerializedPayloadDoesNotContain(payload, forbiddenText) {
+  const serialized = typeof payload === 'string' ? payload : JSON.stringify(payload);
+  for (const text of Array.isArray(forbiddenText) ? forbiddenText : [forbiddenText]) {
+    assert.equal(serialized.includes(text), false, `${text} should not be present`);
+  }
+}
+
+function assertLocalTestAccessMetadata(metadata, role, canUseManualNotes) {
+  assert.deepEqual(metadata, {
+    mode: 'local_test_role_stub',
+    approvalRecord: 'https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4495568414',
+    role,
+    manualNotesRead: canUseManualNotes,
+    manualNotesWrite: canUseManualNotes,
+    metadataHistorySummaryRead: canUseManualNotes,
+    realAuthImplemented: false,
+    productionReady: false,
+  });
 }
 
 test('manualReviewNotes PATCH persists human-entered notes with manual provenance', async () => {
@@ -387,6 +433,73 @@ test('C2 local/test reviewer role stub can read and write manual review notes wi
   assert.equal(readPayload.manualReviewNotesAccess.realAuthImplemented, false);
 });
 
+test('C2 local/test reviewer role stub can save edit and clear current manual notes only', async () => {
+  const db = new FakeD1Database({ leads: [createLeadRow()] });
+  const headers = { [LOCAL_TEST_ROLE_HEADER]: 'reviewer' };
+
+  const createResponse = await patchLead(
+    db,
+    { manualReviewNotes: 'Reviewer role stub saved current note.' },
+    'lead-1',
+    { env: LOCAL_TEST_ROLE_STUB_ENV, headers }
+  );
+  const createPayload = await createResponse.json();
+  const editResponse = await patchLead(
+    db,
+    { manualReviewNotes: 'Reviewer role stub edited current note.' },
+    'lead-1',
+    { env: LOCAL_TEST_ROLE_STUB_ENV, headers }
+  );
+  const editPayload = await editResponse.json();
+  const clearResponse = await patchLead(
+    db,
+    { manualReviewNotes: '' },
+    'lead-1',
+    { env: LOCAL_TEST_ROLE_STUB_ENV, headers }
+  );
+  const clearPayload = await clearResponse.json();
+  const persistedLead = await getLeadById(db, 'lead-1');
+
+  assert.equal(createResponse.status, 200);
+  assert.equal(editResponse.status, 200);
+  assert.equal(clearResponse.status, 200);
+  assert.deepEqual(createPayload.changedFields, ['manualReviewNotes']);
+  assert.deepEqual(editPayload.changedFields, ['manualReviewNotes']);
+  assert.deepEqual(clearPayload.changedFields, ['manualReviewNotes']);
+  assert.equal(clearPayload.lead.manualReviewNotes, '');
+  assert.equal(clearPayload.lead.manualReviewNotesProvenance, '');
+  assert.equal(clearPayload.lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
+  assert.equal(clearPayload.lead.manualReviewNotesHistoryEventCount, 3);
+  assert.equal(clearPayload.lead.manualReviewNotesHistoryLastEventType, 'clear');
+  assert.equal(persistedLead.manualReviewNotes, '');
+  assert.equal(persistedLead.manualReviewNotesAuthorLabel, 'manual_reviewer');
+  assert.deepEqual(db.manualReviewNoteEvents.map(pickManualNoteEvent), [
+    {
+      lead_id: 'lead-1',
+      event_type: 'create',
+      changed_at: createPayload.lead.manualReviewNotesUpdatedAt,
+      author_label: 'manual_reviewer',
+    },
+    {
+      lead_id: 'lead-1',
+      event_type: 'edit',
+      changed_at: editPayload.lead.manualReviewNotesUpdatedAt,
+      author_label: 'manual_reviewer',
+    },
+    {
+      lead_id: 'lead-1',
+      event_type: 'clear',
+      changed_at: clearPayload.lead.manualReviewNotesUpdatedAt,
+      author_label: 'manual_reviewer',
+    },
+  ]);
+  assertLocalTestAccessMetadata(clearPayload.manualReviewNotesAccess, 'reviewer', true);
+  assertManualNoteHistoryDoesNotRetainText(db, [
+    'Reviewer role stub saved current note.',
+    'Reviewer role stub edited current note.',
+  ]);
+});
+
 test('C2 local/test manager role stub cannot write or read protected manual note fields', async () => {
   const db = new FakeD1Database({
     leads: [
@@ -450,6 +563,134 @@ test('C2 local/test manager role stub cannot write or read protected manual note
     productionReady: false,
   });
 });
+
+for (const scenario of [
+  {
+    name: 'manager',
+    headers: { [LOCAL_TEST_ROLE_HEADER]: 'manager' },
+    expectedRole: 'manager',
+  },
+  {
+    name: 'api',
+    headers: { [LOCAL_TEST_ROLE_HEADER]: 'api' },
+    expectedRole: 'api',
+  },
+  {
+    name: 'missing',
+    headers: {},
+    expectedRole: 'none',
+  },
+  {
+    name: 'unknown',
+    headers: { [LOCAL_TEST_ROLE_HEADER]: 'auditor' },
+    expectedRole: 'none',
+  },
+]) {
+  test(`C2 local/test ${scenario.name} role stub denies manual note writes through all aliases`, async () => {
+    const originalManualNote = `Original protected manual note for ${scenario.name} role.`;
+    const originalManualNoteUpdatedAt = '2026-05-19T01:10:00.000Z';
+    const db = new FakeD1Database({
+      leads: [
+        createLeadRow({
+          notes: originalManualNote,
+          manual_review_notes_author_label: 'manual_reviewer',
+          manual_review_notes_updated_at: originalManualNoteUpdatedAt,
+        }),
+      ],
+      manualReviewNoteEvents: [
+        {
+          lead_id: 'lead-1',
+          event_type: 'create',
+          changed_at: originalManualNoteUpdatedAt,
+          author_label: 'manual_reviewer',
+        },
+      ],
+    });
+    const attemptedWrites = [
+      { manualReviewNotes: `Denied ${scenario.name} manualReviewNotes write.` },
+      { manual_review_notes: `Denied ${scenario.name} manual_review_notes write.` },
+      { notes: `Denied ${scenario.name} legacy notes write.` },
+    ];
+
+    for (const attemptedWrite of attemptedWrites) {
+      const attemptedText = Object.values(attemptedWrite)[0];
+      const response = await patchLead(
+        db,
+        attemptedWrite,
+        'lead-1',
+        { env: LOCAL_TEST_ROLE_STUB_ENV, headers: scenario.headers }
+      );
+      const payload = await response.json();
+      const persistedLead = await getLeadById(db, 'lead-1');
+
+      assert.equal(response.status, 403);
+      assert.equal(payload.success, false);
+      assert.match(payload.message, /local\/test role stub/);
+      assert.equal(payload.message.includes(attemptedText), false);
+      assert.equal(persistedLead.manualReviewNotes, originalManualNote);
+      assert.equal(persistedLead.manualReviewNotesAuthorLabel, 'manual_reviewer');
+      assert.equal(persistedLead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
+      assert.equal(db.leads.get('lead-1').notes, originalManualNote);
+      assert.equal(db.manualReviewNoteEvents.length, 1);
+      assertManualNoteHistoryDoesNotRetainText(db, attemptedText);
+    }
+  });
+
+  test(`C2 local/test ${scenario.name} role stub omits protected fields from list history and CSV`, async () => {
+    const originalManualNote = `Protected manual note hidden from ${scenario.name} role.`;
+    const originalManualNoteUpdatedAt = '2026-05-19T01:10:00.000Z';
+    const db = new FakeD1Database({
+      leads: [
+        createLeadRow({
+          notes: originalManualNote,
+          manual_review_notes_author_label: 'manual_reviewer',
+          manual_review_notes_updated_at: originalManualNoteUpdatedAt,
+        }),
+      ],
+      manualReviewNoteEvents: [
+        {
+          lead_id: 'lead-1',
+          event_type: 'create',
+          changed_at: originalManualNoteUpdatedAt,
+          author_label: 'manual_reviewer',
+        },
+      ],
+    });
+    const readRequest = createWorkerRequest('/api/leads', { headers: scenario.headers });
+    const listResponse = await fetchLeads(
+      { DB: db, GITHUB_REPO: 'dooosp/b2b-lead-agent', ...LOCAL_TEST_ROLE_STUB_ENV },
+      'danfoss',
+      readRequest
+    );
+    const listPayload = await listResponse.json();
+    const historyRequest = createWorkerRequest('/api/history', { headers: scenario.headers });
+    const historyResponse = await fetchHistory(
+      { DB: db, GITHUB_REPO: 'dooosp/b2b-lead-agent', ...LOCAL_TEST_ROLE_STUB_ENV },
+      'danfoss',
+      historyRequest
+    );
+    const historyPayload = await historyResponse.json();
+    const exportRequest = createWorkerRequest('/api/export/csv?profile=danfoss', { headers: scenario.headers });
+    const exportResponse = await handleExportCSV(exportRequest, { DB: db, ...LOCAL_TEST_ROLE_STUB_ENV });
+    const csv = await exportResponse.text();
+
+    assert.equal(listResponse.status, 200);
+    assert.equal(historyResponse.status, 200);
+    assert.equal(exportResponse.status, 200);
+    assertProtectedManualNoteFieldsOmitted(listPayload.leads[0]);
+    assertProtectedManualNoteFieldsOmitted(historyPayload.history[0]);
+    assertLocalTestAccessMetadata(listPayload.manualReviewNotesAccess, scenario.expectedRole, false);
+    assertLocalTestAccessMetadata(historyPayload.manualReviewNotesAccess, scenario.expectedRole, false);
+    assertSerializedPayloadDoesNotContain(listPayload, originalManualNote);
+    assertSerializedPayloadDoesNotContain(historyPayload, originalManualNote);
+    assertSerializedPayloadDoesNotContain(csv, [
+      originalManualNote,
+      'manualReviewNotesUpdatedAt',
+      'manualReviewNotesHistoryEventCount',
+      'reviewNoteSuggestion',
+    ]);
+  });
+}
 
 test('C2 local/test role stub keeps CSV export from expanding manual note visibility for managers', async () => {
   const db = new FakeD1Database({
@@ -584,6 +825,57 @@ test('generated suggestion persistence attempts cannot clear manual review notes
   assert.equal(lead.manualReviewNotesProvenance, 'human_entered');
   assert.equal(db.leads.get('lead-1').notes, 'Keep this human-entered note.');
   assert.deepEqual(db.manualReviewNoteEvents, []);
+});
+
+test('generated reviewer note suggestions stay out of manual note storage history attribution and exports', async () => {
+  const originalManualNoteUpdatedAt = '2026-04-07T00:00:00.000Z';
+  const generatedSuggestionText = 'Generated helper text must stay copy-only and unsaved.';
+  const db = new FakeD1Database({
+    leads: [
+      createLeadRow({
+        notes: 'Existing saved human note.',
+        manual_review_notes_author_label: 'manual_reviewer',
+        manual_review_notes_updated_at: originalManualNoteUpdatedAt,
+      }),
+    ],
+  });
+  const reviewerHeaders = { [LOCAL_TEST_ROLE_HEADER]: 'reviewer' };
+
+  const response = await patchLead(
+    db,
+    {
+      manualReviewNotes: 'Human note bundled with generated helper must not save.',
+      reviewNoteSuggestion: {
+        state: 'APPROVED',
+        text: generatedSuggestionText,
+      },
+    },
+    'lead-1',
+    { env: LOCAL_TEST_ROLE_STUB_ENV, headers: reviewerHeaders }
+  );
+  const payload = await response.json();
+  const lead = await getLeadById(db, 'lead-1');
+  const exportResponse = await handleExportCSV(
+    createWorkerRequest('/api/export/csv?profile=danfoss', { headers: reviewerHeaders }),
+    { DB: db, ...LOCAL_TEST_ROLE_STUB_ENV }
+  );
+  const csv = await exportResponse.text();
+
+  assert.equal(response.status, 400);
+  assert.equal(payload.success, false);
+  assert.match(payload.message, /copy-only/);
+  assert.equal(lead.manualReviewNotes, 'Existing saved human note.');
+  assert.equal(lead.manualReviewNotesAuthorLabel, 'manual_reviewer');
+  assert.equal(lead.manualReviewNotesUpdatedAt, originalManualNoteUpdatedAt);
+  assert.equal(db.leads.get('lead-1').notes, 'Existing saved human note.');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_author_label, 'manual_reviewer');
+  assert.equal(db.leads.get('lead-1').manual_review_notes_updated_at, originalManualNoteUpdatedAt);
+  assert.deepEqual(db.manualReviewNoteEvents, []);
+  assertManualNoteHistoryDoesNotRetainText(db, [
+    generatedSuggestionText,
+    'Human note bundled with generated helper must not save.',
+  ]);
+  assertSerializedPayloadDoesNotContain(csv, generatedSuggestionText);
 });
 
 test('lead refresh preserves existing human-entered notes and ignores generated note fields', async () => {
