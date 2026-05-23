@@ -479,6 +479,18 @@
   selected before PR #109. After PR #114 and Issue #113, use
   `docs/roadmap/saved-review-notes-decision-packet.md` for the next saved-notes
   product/data boundary before any persistence or v1 expansion.
+- PR #149 through PR #160 reframed the closed Manual Review Notes lane into the
+  Level 1 productization path. Current productization level remains
+  `LEVEL_0_COMPLETE`; target remains
+  `LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW`; PR #160 added non-production guard
+  tests for the existing C2 local/test role stub only. The current Level 1
+  blocker burn-down packet is
+  `docs/roadmap/b2b-lead-agent-level-1-blocker-burndown-packet.md`.
+  Production reviewer workflow remains blocked by auth provider/session
+  decisions, production D1 facts/proof, rollback/backout ownership, final
+  production proof approval, and privacy residual values. Conservative privacy
+  policy remains planning-only. No production/staging/D1/endpoint/log/secret,
+  CRM, outreach, LLM, automation, or customer/private data action is approved.
 
 ## Remaining Open Items
 
@@ -494,7 +506,26 @@
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step:
-- Recommended next non-production goal: none mandatory. Manual Review Notes v1 local/test cycle is closed; local/test implementation is complete, local/fake-D1 evidence exists, staging target selection is decision-ready/HOLD, and future staging or production work should start only as a separate approval-gated cycle. Staging execution, staging D1 access, staging endpoint calls, staging logs/secrets, local/fake-D1 dry-run execution beyond ordinary docs-only PR validation, C3-C5, real access control, auth/session, production roles, manager visibility, export expansion, API exposure expansion, production rollback execution, destructive data action, production proof execution, production deploy, production D1 schema observation/migration/access/write/delete, production endpoint calls, production logs/secrets access, retention/privacy enforcement, purge/delete jobs, redaction, automated PII detection, old note value retention, full history, generated suggestion history/export/persistence, production history, and customer-data access remain HOLD until a later approval selects those boundaries.
+- Recommended next non-production goal:
+  `LEVEL_1_BLOCKER_OWNER_REQUEST_PACKET_DOCS_ONLY` if a new explicit goal asks
+  to continue Level 1 burn-down. Manual Review Notes v1 local/test cycle is
+  closed; local/test implementation is complete; local/fake-D1 evidence exists;
+  staging target selection is decision-ready/HOLD; PR #160 guard tests cover
+  existing local/test role-stub boundaries; and the Level 1 blocker burn-down
+  packet lists owner-input templates for auth provider/session decisions,
+  production D1 schema observation, rollback/backout ownership, final
+  production proof approval, and privacy residual values. Staging execution,
+  staging D1 access, staging endpoint calls, staging logs/secrets,
+  local/fake-D1 dry-run execution beyond ordinary docs-only PR validation,
+  C3-C5, real access control, auth/session, production roles, manager
+  visibility, export expansion, API exposure expansion, production rollback
+  execution, destructive data action, production proof execution, production
+  deploy, production D1 schema observation/migration/access/write/delete,
+  production endpoint calls, production logs/secrets access,
+  retention/privacy enforcement, purge/delete jobs, redaction, automated PII
+  detection, old note value retention, full history, generated suggestion
+  history/export/persistence, production history, and customer-data access
+  remain HOLD until a later approval selects those boundaries.
 - Rationale: Workbench, deterministic review gate, local E2E, synthetic lead-quality evaluation, advisory next-action guidance, review filters, solution translation, product context, stakeholder prep, evidence/data-gap review slices, advisory roleplay stakeholder context, list-level review-gate summaries/filtering/counts, Kanban gate labels/chips, filter empty-state recovery, reviewer productivity controls, lead-detail productivity parity, reviewer workflow QA/accessibility hardening, roving tablist behavior, semantic snapshot coverage, the final audit/demo packet, the Human UX Review Packet, Issue #100 closeout, the compact `다음 리뷰` strip, reviewer-note summaries, roadmap/current-train source-of-truth sync, production-proof planning records, Issue #34 closeout, standing approval policy, Manager / Reviewer Summary v0, PR #110 source-of-truth sync, Issue #111 UX intake closeout, the Saved Review Notes Decision Packet, Issue #113 Option E completion, PR #114 copy-only clarification, PR #119-#142 Manual Review Notes local/test-safe and docs-only work, docs-only access-control planning, the C2 opt-in role stub, the production proof plan, the production D1 migration plan, the production rollback/backout plan, the local/staging dry-run plan, the local/fake-D1 evidence packet, the staging target decision packet, and the non-production closeout packet are documented without production action. The stable state is HOLD/no-op until a separate human-approved staging or production prompt opens operational work.
   - Keep production proof execution, platform migration, storage migration, and production observation work behind separate approval gates.
 
