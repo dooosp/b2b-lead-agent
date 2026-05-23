@@ -5,10 +5,10 @@ This document summarizes the May 2026 PR train, stale PR disposition, and next w
 Evidence baseline:
 
 - Repo default branch: `master`
-- Latest audited source-of-truth `origin/master`: `96fd9beff8f9485927a3a25f0a1dbd6ce4816c5b` (PR #166)
+- Latest audited source-of-truth `origin/master`: `2390a398b6cd80f9022b5fe4673c915bc275a039` (PR #167)
 - Evidence collected from GitHub PR/issue metadata, PR bodies, current `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md`
 - Scope: documentation synthesis plus local/test-safe Option A manual review notes implementation, edit/clear record, saved/empty state plus timestamp clarity record, Manual Review Notes v1 data semantics decision readiness, the T1 local/test-safe note-specific timestamp implementation, reviewer identity / author attribution decision readiness, generic author-label implementation, H2 metadata-only history implementation, retention/privacy policy decision readiness, static local/test privacy warning implementation, production readiness gap planning, access/visibility/export decision readiness, access-control plan readiness, the C2 opt-in local/test role stub, post-PR135 source-of-truth sync, docs-only Manual Review Notes v1 production proof plan readiness, docs-only Manual Review Notes v1 production D1 migration plan readiness, docs-only Manual Review Notes v1 production rollback/backout plan readiness, docs-only Manual Review Notes v1 local/staging dry-run plan readiness, approved local/fake-D1 dry-run evidence capture, docs-only staging target decision readiness, final non-production cycle closeout, reviewer feedback intake, first feedback record disposition, docs-only staging execution readiness packet preparation, docs-only staging prerequisite classification, docs-only B2B Lead Agent productization roadmap v1 preparation, docs-only Production Reviewer Workflow Readiness Packet preparation, docs-only Auth / Access Control Decision Packet preparation, docs-only Privacy / Retention Decision Packet preparation, docs-only Privacy Owner Input Request Packet preparation, GitHub Privacy Owner Input tracking issue creation/sync, Issue #154 owner authority sync, Issue #154 conservative policy disposition preparation, docs-only Privacy / Retention Implementation Plan preparation, docs-only Auth / Access Control Implementation Plan preparation, merged non-production Auth / Access Control test guard coverage, docs-only Level 1 blocker burn-down packet preparation, and GitHub Level 1 owner-input tracking issue creation/sync
-- Current owner-input response processing: Issues #162, #163, #164, and #165 had no owner response and received one `DRAFT / NOT APPROVED` comment each; Issue #154 had no new residual-value owner input and was not reopened.
+- Current owner-input response processing: Issues #162, #163, #164, and #154 now have scoped owner confirmations processed as docs-planning `COMPLETE`; Issue #165 remains `MISSING` for final production proof approval. Production reviewer workflow remains `BLOCKED`.
 - Production actions performed for this synthesis: none
 
 ## May 11 PR Train
@@ -100,23 +100,22 @@ CRM connection or mutation, outreach, LLM calls, automation, generated
 suggestion persistence/history/export/attribution, runtime changes, UI
 changes, schema/API changes, or auth implementation.
 
-Current Level 1 owner-input response processing update: after PR #166 merged at
-`96fd9beff8f9485927a3a25f0a1dbd6ce4816c5b`, Issues #162, #163, #164, #165,
-and #154 were inspected for owner responses. Issues #162 through #165 had no
-owner comments, so one conservative `DRAFT / NOT APPROVED` prompt was posted
-to each issue. Issue #154 already records the prior owner-approved conservative
-privacy policy and had no new residual-value owner input, so no new draft was
-posted there. Production reviewer workflow remains `BLOCKED`, owner
-confirmation remains pending for every open Level 1 blocker or residual value,
-and `NEXT_DECISION` remains `HOLD_PENDING_NEW_EXPLICIT_GOAL`.
+Current Level 1 owner-input response processing update: after PR #167 merged at
+`2390a398b6cd80f9022b5fe4673c915bc275a039`, Issues #162, #163, #164, #165,
+and #154 were inspected again for owner responses. Issues #162, #163, #164,
+and #154 now have scoped owner confirmations processed in
+`docs/roadmap/b2b-lead-agent-level-1-owner-input-disposition.md` as
+docs-planning `COMPLETE`. Issue #165 remains `MISSING` for final production
+proof approval. Production reviewer workflow remains `BLOCKED`, and
+`NEXT_DECISION` remains `HOLD_PENDING_NEW_EXPLICIT_GOAL`.
 
-| Issue | Response status | Draft posted | Owner confirmation pending | Production reviewer workflow | Next decision |
-| --- | --- | --- | --- | --- | --- |
-| [#162](https://github.com/dooosp/b2b-lead-agent/issues/162) auth provider/session/roles | `MISSING` | Yes: https://github.com/dooosp/b2b-lead-agent/issues/162#issuecomment-4524998675 | Yes | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
-| [#163](https://github.com/dooosp/b2b-lead-agent/issues/163) production D1 schema observation | `MISSING` | Yes: https://github.com/dooosp/b2b-lead-agent/issues/163#issuecomment-4524999038 | Yes | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
-| [#164](https://github.com/dooosp/b2b-lead-agent/issues/164) rollback/backout stop-write policy | `MISSING` | Yes: https://github.com/dooosp/b2b-lead-agent/issues/164#issuecomment-4524999487 | Yes | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
-| [#165](https://github.com/dooosp/b2b-lead-agent/issues/165) final production proof approval | `MISSING` | Yes: https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4524999909 | Yes | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
-| [#154](https://github.com/dooosp/b2b-lead-agent/issues/154) privacy residual values | `MISSING` for residual values; prior conservative policy disposition remains `COMPLETE_FOR_CONSERVATIVE_POLICY` | No | Yes for residual values; no for the already-approved conservative policy | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| Issue | Response status | Confirmation URL | Production reviewer workflow | Next decision |
+| --- | --- | --- | --- | --- |
+| [#162](https://github.com/dooosp/b2b-lead-agent/issues/162) auth provider/session/roles | `COMPLETE_FOR_DOCS_PLANNING_ONLY` | https://github.com/dooosp/b2b-lead-agent/issues/162#issuecomment-4525315986 | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| [#163](https://github.com/dooosp/b2b-lead-agent/issues/163) production D1 schema observation | `COMPLETE_FOR_DOCS_PLANNING_ONLY` | https://github.com/dooosp/b2b-lead-agent/issues/163#issuecomment-4525316833 | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| [#164](https://github.com/dooosp/b2b-lead-agent/issues/164) rollback/backout stop-write policy | `COMPLETE_FOR_DOCS_PLANNING_ONLY` | https://github.com/dooosp/b2b-lead-agent/issues/164#issuecomment-4525317479 | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| [#165](https://github.com/dooosp/b2b-lead-agent/issues/165) final production proof approval | `MISSING` | none | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| [#154](https://github.com/dooosp/b2b-lead-agent/issues/154) privacy residual values | `COMPLETE_FOR_DOCS_PLANNING_ONLY` | https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4525319355 | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
 
 This response processing pass does not authorize implementation, production
 access, staging access, deploy, D1 access/observation/write/migration/delete,
@@ -415,6 +414,28 @@ does not authorize implementation, production proof, production deploy,
 production D1 access, endpoint calls, logs/secrets access, CRM, outreach, LLM,
 automation, guessed owner values, guessed production facts, or
 customer/private data access.
+
+Post-PR167 owner-input disposition update: PR #167 is merged into `master` at
+`2390a398b6cd80f9022b5fe4673c915bc275a039`. The post-PR167 owner
+confirmations are processed in
+`docs/roadmap/b2b-lead-agent-level-1-owner-input-disposition.md`. Issue #162
+auth provider/session/production role input is
+`COMPLETE_FOR_DOCS_PLANNING_ONLY` at
+https://github.com/dooosp/b2b-lead-agent/issues/162#issuecomment-4525315986.
+Issue #163 production D1 schema-observation input is
+`COMPLETE_FOR_DOCS_PLANNING_ONLY` at
+https://github.com/dooosp/b2b-lead-agent/issues/163#issuecomment-4525316833.
+Issue #164 rollback/backout owner and stop-write input is
+`COMPLETE_FOR_DOCS_PLANNING_ONLY` at
+https://github.com/dooosp/b2b-lead-agent/issues/164#issuecomment-4525317479.
+Issue #154 privacy residual values are `COMPLETE_FOR_DOCS_PLANNING_ONLY` at
+https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4525319355.
+Issue #165 final production proof approval remains `MISSING`, so the
+production reviewer workflow remains `BLOCKED` and `NEXT_DECISION` remains
+`HOLD_PENDING_NEW_EXPLICIT_GOAL`. The disposition authorizes no
+implementation, production proof execution, production deploy, production D1
+access/observation/write/migration/delete, endpoint calls, logs/secrets
+access, CRM, outreach, LLM, automation, or customer/private data access.
 
 ## Old PR Disposition
 
