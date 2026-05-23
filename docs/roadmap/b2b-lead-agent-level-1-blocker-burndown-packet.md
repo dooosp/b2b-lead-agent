@@ -1,7 +1,8 @@
 # B2B Lead Agent Level 1 Blocker Burn-Down Packet
 
 This packet classifies the remaining blockers for
-`LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW` after PR #160.
+`LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW` after PR #160 and records the current
+GitHub tracking issues after PR #161.
 
 It is documentation only. It does not implement auth, sessions, roles, access
 control, runtime behavior, UI behavior, API behavior, schema behavior,
@@ -15,17 +16,22 @@ customer/private data access.
 
 - Document status:
   `LEVEL_1_REVIEWER_WORKFLOW_BLOCKER_BURNDOWN_CREATED_DOCS_ONLY`.
+- Tracking issue sync status:
+  `LEVEL_1_OWNER_INPUT_TRACKING_ISSUES_SYNCED_DOCS_ONLY`.
 - Repository: `dooosp/b2b-lead-agent`.
 - Default branch: `master`.
 - Baseline inspected: `origin/master` at
-  `531e504889d654186432ba1f2f043ede3e3e9323`.
-- Latest related merged PR: PR #160,
-  `test: guard auth access control boundaries`.
+  `a37e7d2056f9fabd052cf29907aaa481bca973c3`.
+- Latest related merged PR: PR #161,
+  `docs: add level 1 blocker burn-down packet`.
 - Current productization level: `LEVEL_0_COMPLETE`.
 - Target productization level: `LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW`.
 - Production reviewer workflow status:
-  `BLOCKED_PENDING_AUTH_D1_ROLLBACK_PROOF_APPROVAL`.
+  `BLOCKED`.
 - Conservative privacy policy status: `PLANNING_ONLY`.
+- GitHub tracking issue status: `OPEN`.
+- Owner input status: `MISSING`.
+- Next decision: `HOLD_PENDING_NEW_EXPLICIT_GOAL`.
 - Runtime/UI/API/schema/database behavior changed by this packet: none.
 - Staging, production, CRM, outreach, LLM, automation, D1, endpoint,
   logs/secrets, or customer/private data action performed by this packet: no.
@@ -33,14 +39,23 @@ customer/private data access.
 ```yaml
 b2b_lead_agent_level_1_blocker_burndown:
   document_status: LEVEL_1_REVIEWER_WORKFLOW_BLOCKER_BURNDOWN_CREATED_DOCS_ONLY
+  tracking_issue_sync_status: LEVEL_1_OWNER_INPUT_TRACKING_ISSUES_SYNCED_DOCS_ONLY
   repository: dooosp/b2b-lead-agent
   default_branch: master
-  inspected_origin_master: "531e504889d654186432ba1f2f043ede3e3e9323"
-  latest_related_merged_pr: 160
+  inspected_origin_master: "a37e7d2056f9fabd052cf29907aaa481bca973c3"
+  latest_related_merged_pr: 161
   current_productization_level: LEVEL_0_COMPLETE
   target_productization_level: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
-  production_reviewer_workflow: BLOCKED_PENDING_AUTH_D1_ROLLBACK_PROOF_APPROVAL
+  production_reviewer_workflow: BLOCKED
   conservative_privacy_policy_status: PLANNING_ONLY
+  owner_input_status: MISSING
+  tracking_issue_status: OPEN
+  tracking_issues:
+    auth_provider_session_production_roles: https://github.com/dooosp/b2b-lead-agent/issues/162
+    production_d1_schema_observation: https://github.com/dooosp/b2b-lead-agent/issues/163
+    rollback_backout_stop_write_policy: https://github.com/dooosp/b2b-lead-agent/issues/164
+    final_production_proof_approval: https://github.com/dooosp/b2b-lead-agent/issues/165
+    privacy_residual_values: https://github.com/dooosp/b2b-lead-agent/issues/154
   production_d1_access: HOLD
   production_proof: HOLD
   production_deploy: HOLD
@@ -70,12 +85,16 @@ approval status.
 
 ## 2. Current Baseline
 
-Repo-visible state after PR #160:
+Repo-visible state after PR #161 and the tracking issue sync:
 
 - `CURRENT_PRODUCTIZATION_LEVEL` remains `LEVEL_0_COMPLETE`.
 - `NEXT_TARGET_LEVEL` remains
   `LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW`.
 - PR #160 added local/test guard coverage only.
+- PR #161 added this blocker burn-down packet and did not change runtime,
+  UI, API, schema, database, auth, privacy, or production behavior.
+- GitHub owner-input tracking is now durable in open issues #162, #163,
+  #164, #165, and reused issue #154 for privacy residual values.
 - The C2 role stub remains opt-in local/test behavior through
   `MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB=enabled` plus
   `X-Manual-Review-Notes-Local-Test-Role`.
@@ -102,7 +121,28 @@ Repo-visible state after PR #160:
 | Final production proof approval | `BLOCKED_NEEDS_FINAL_APPROVAL_AFTER_PREREQUISITES` | Product/ops/security/privacy/DB owners must approve exact proof target, operators, command allowlist, endpoint/D1 boundaries, fixture/non-customer data policy, redaction, rollback owner, stop conditions, and non-claims. | Docs-only approval request now. Future evidence only after all prerequisites and explicit approval: local validation, approved target record, redacted command transcript, approved schema metadata, fixture-only proof, rollback readiness evidence. | Executing proof now, production endpoints, production D1, smoke tests, deploys, logs/secrets, customer/private data, production auth claims, production privacy compliance claims, generated suggestion saved-note evidence. | `PRODUCTION_PROOF_APPROVAL_REQUEST_DOCS_ONLY_AFTER_PREREQUISITES` | Stop if auth, D1, rollback, privacy, or evidence boundaries remain unresolved, or if any command/action is not explicitly named by the approval. |
 | Privacy/retention residual values | `PARTIAL_PLANNING_ONLY_NEEDS_FUTURE_OWNER_DECISIONS` | Privacy/legal/product owner must decide retention duration, metadata retention duration, expiration/review cadence, PII detection, redaction, purge/delete semantics, and whether production privacy proof can ever run. | Docs-only owner response and policy values. Local synthetic tests only after explicit implementation goal. | Privacy enforcement, PII detection, redaction, purge/delete jobs, production privacy proof, customer data, note body history, manager/export/API expansion, treating warning-only copy as compliance. | `PRIVACY_RESIDUAL_VALUES_REQUEST_DOCS_ONLY` | Stop if requested work requires enforcement, production saved-note use, customer data, or legal/privacy claims without explicit owner approval. |
 
-## 4. Owner Request Templates
+## 4. GitHub Tracking Issues
+
+These issues are durable owner-input trackers only. They do not authorize
+implementation, production access, deploy, D1, endpoints, logs/secrets, CRM,
+outreach, LLM, automation, customer/private data access, or guessed owner
+values.
+
+| Blocker | Tracking issue | Status | Owner input | Production reviewer workflow | Next decision |
+| --- | --- | --- | --- | --- | --- |
+| Auth provider, sessions, and production roles | [#162](https://github.com/dooosp/b2b-lead-agent/issues/162) | `OPEN` | `MISSING` | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| Production D1 schema facts and observation path | [#163](https://github.com/dooosp/b2b-lead-agent/issues/163) | `OPEN` | `MISSING` | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| Rollback/backout owner and stop-write policy | [#164](https://github.com/dooosp/b2b-lead-agent/issues/164) | `OPEN` | `MISSING` | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| Final production proof approval | [#165](https://github.com/dooosp/b2b-lead-agent/issues/165) | `OPEN` | `MISSING` | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| Privacy/retention residual values | [#154](https://github.com/dooosp/b2b-lead-agent/issues/154) | `OPEN` | `MISSING` for residual values | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+
+Issue #154 is reused for privacy residual values because it already covers
+privacy/retention owner input. Its conservative policy comments do not fill the
+remaining residual values for retention duration, metadata retention duration,
+expiration/review date, future PII detection, redaction, purge/delete, or
+production privacy proof.
+
+## 5. Owner Request Templates
 
 The templates below are copy-paste request packets. They are intentionally
 non-executable and must not be treated as approval unless an owner fills the
@@ -320,7 +360,7 @@ Owner response:
 - STOP_CONDITIONS:
 ```
 
-## 5. Next Executable Non-Production Cycles
+## 6. Next Executable Non-Production Cycles
 
 Safe next cycles from this packet:
 
@@ -344,7 +384,7 @@ Safe next cycles from this packet:
      records are owner-filled.
    - Do not execute proof.
 
-## 6. Stop Conditions
+## 7. Stop Conditions
 
 Stop and require a new explicit goal if any next step needs:
 
@@ -365,7 +405,7 @@ Stop and require a new explicit goal if any next step needs:
 - production readiness, production proof, production D1, production auth, or
   production privacy claims not backed by explicit owner-approved evidence.
 
-## 7. Final State
+## 8. Final State
 
 `FINAL_STATE: HOLD_PENDING_NEW_EXPLICIT_GOAL`
 
