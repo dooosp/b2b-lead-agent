@@ -2,7 +2,7 @@
 
 This packet classifies the remaining blockers for
 `LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW` after PR #160 and records the current
-GitHub tracking issues after PR #161.
+GitHub tracking issues after PR #166.
 
 It is documentation only. It does not implement auth, sessions, roles, access
 control, runtime behavior, UI behavior, API behavior, schema behavior,
@@ -18,12 +18,14 @@ customer/private data access.
   `LEVEL_1_REVIEWER_WORKFLOW_BLOCKER_BURNDOWN_CREATED_DOCS_ONLY`.
 - Tracking issue sync status:
   `LEVEL_1_OWNER_INPUT_TRACKING_ISSUES_SYNCED_DOCS_ONLY`.
+- Owner-response processing status:
+  `MISSING_RESPONSES_DRAFTED_DOCS_ONLY`.
 - Repository: `dooosp/b2b-lead-agent`.
 - Default branch: `master`.
 - Baseline inspected: `origin/master` at
-  `a37e7d2056f9fabd052cf29907aaa481bca973c3`.
-- Latest related merged PR: PR #161,
-  `docs: add level 1 blocker burn-down packet`.
+  `96fd9beff8f9485927a3a25f0a1dbd6ce4816c5b`.
+- Latest related merged PR: PR #166,
+  `docs: sync Level 1 owner-input tracking`.
 - Current productization level: `LEVEL_0_COMPLETE`.
 - Target productization level: `LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW`.
 - Production reviewer workflow status:
@@ -40,10 +42,11 @@ customer/private data access.
 b2b_lead_agent_level_1_blocker_burndown:
   document_status: LEVEL_1_REVIEWER_WORKFLOW_BLOCKER_BURNDOWN_CREATED_DOCS_ONLY
   tracking_issue_sync_status: LEVEL_1_OWNER_INPUT_TRACKING_ISSUES_SYNCED_DOCS_ONLY
+  owner_response_processing_status: MISSING_RESPONSES_DRAFTED_DOCS_ONLY
   repository: dooosp/b2b-lead-agent
   default_branch: master
-  inspected_origin_master: "a37e7d2056f9fabd052cf29907aaa481bca973c3"
-  latest_related_merged_pr: 161
+  inspected_origin_master: "96fd9beff8f9485927a3a25f0a1dbd6ce4816c5b"
+  latest_related_merged_pr: 166
   current_productization_level: LEVEL_0_COMPLETE
   target_productization_level: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
   production_reviewer_workflow: BLOCKED
@@ -56,6 +59,38 @@ b2b_lead_agent_level_1_blocker_burndown:
     rollback_backout_stop_write_policy: https://github.com/dooosp/b2b-lead-agent/issues/164
     final_production_proof_approval: https://github.com/dooosp/b2b-lead-agent/issues/165
     privacy_residual_values: https://github.com/dooosp/b2b-lead-agent/issues/154
+  response_processing:
+    auth_provider_session_production_roles:
+      issue_url: https://github.com/dooosp/b2b-lead-agent/issues/162
+      response_status: MISSING
+      draft_posted: true
+      draft_comment_url: https://github.com/dooosp/b2b-lead-agent/issues/162#issuecomment-4524998675
+      owner_confirmation_pending: true
+    production_d1_schema_observation:
+      issue_url: https://github.com/dooosp/b2b-lead-agent/issues/163
+      response_status: MISSING
+      draft_posted: true
+      draft_comment_url: https://github.com/dooosp/b2b-lead-agent/issues/163#issuecomment-4524999038
+      owner_confirmation_pending: true
+    rollback_backout_stop_write_policy:
+      issue_url: https://github.com/dooosp/b2b-lead-agent/issues/164
+      response_status: MISSING
+      draft_posted: true
+      draft_comment_url: https://github.com/dooosp/b2b-lead-agent/issues/164#issuecomment-4524999487
+      owner_confirmation_pending: true
+    final_production_proof_approval:
+      issue_url: https://github.com/dooosp/b2b-lead-agent/issues/165
+      response_status: MISSING
+      draft_posted: true
+      draft_comment_url: https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4524999909
+      owner_confirmation_pending: true
+    privacy_residual_values:
+      issue_url: https://github.com/dooosp/b2b-lead-agent/issues/154
+      response_status: MISSING
+      response_scope: privacy_residual_values_only
+      prior_conservative_policy_status: COMPLETE_FOR_CONSERVATIVE_POLICY
+      draft_posted: false
+      owner_confirmation_pending: true
   production_d1_access: HOLD
   production_proof: HOLD
   production_deploy: HOLD
@@ -85,7 +120,8 @@ approval status.
 
 ## 2. Current Baseline
 
-Repo-visible state after PR #161 and the tracking issue sync:
+Repo-visible state after PR #166, the tracking issue sync, and this
+owner-response processing pass:
 
 - `CURRENT_PRODUCTIZATION_LEVEL` remains `LEVEL_0_COMPLETE`.
 - `NEXT_TARGET_LEVEL` remains
@@ -93,8 +129,14 @@ Repo-visible state after PR #161 and the tracking issue sync:
 - PR #160 added local/test guard coverage only.
 - PR #161 added this blocker burn-down packet and did not change runtime,
   UI, API, schema, database, auth, privacy, or production behavior.
+- PR #166 synced the Level 1 owner-input tracking issues and did not change
+  runtime, UI, API, schema, database, auth, privacy, or production behavior.
 - GitHub owner-input tracking is now durable in open issues #162, #163,
   #164, #165, and reused issue #154 for privacy residual values.
+- Issues #162, #163, #164, and #165 had no owner comments at inspection time,
+  so one `DRAFT / NOT APPROVED` owner-response prompt was posted to each.
+- Issue #154 already has an owner-approved conservative policy disposition;
+  no new residual-value owner input was present, so no new draft was posted.
 - The C2 role stub remains opt-in local/test behavior through
   `MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB=enabled` plus
   `X-Manual-Review-Notes-Local-Test-Role`.
@@ -141,6 +183,46 @@ privacy/retention owner input. Its conservative policy comments do not fill the
 remaining residual values for retention duration, metadata retention duration,
 expiration/review date, future PII detection, redaction, purge/delete, or
 production privacy proof.
+
+## 4.1 Owner-Response Processing Pass
+
+Inspection date: 2026-05-23. Source branch baseline:
+`origin/master` at `96fd9beff8f9485927a3a25f0a1dbd6ce4816c5b` after PR #166.
+
+This pass posted drafts only where no issue comment existed. Draft comments are
+not approval and do not change productization readiness.
+
+| Blocker | Issue URL | Response status | Draft posted | Owner confirmation pending | Production reviewer workflow | Next decision |
+| --- | --- | --- | --- | --- | --- | --- |
+| Auth provider, sessions, and production roles | https://github.com/dooosp/b2b-lead-agent/issues/162 | `MISSING` | Yes: https://github.com/dooosp/b2b-lead-agent/issues/162#issuecomment-4524998675 | Yes | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| Production D1 schema observation | https://github.com/dooosp/b2b-lead-agent/issues/163 | `MISSING` | Yes: https://github.com/dooosp/b2b-lead-agent/issues/163#issuecomment-4524999038 | Yes | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| Rollback/backout owner and stop-write policy | https://github.com/dooosp/b2b-lead-agent/issues/164 | `MISSING` | Yes: https://github.com/dooosp/b2b-lead-agent/issues/164#issuecomment-4524999487 | Yes | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| Final production proof approval | https://github.com/dooosp/b2b-lead-agent/issues/165 | `MISSING` | Yes: https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4524999909 | Yes | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+| Privacy/retention residual values | https://github.com/dooosp/b2b-lead-agent/issues/154 | `MISSING` for residual values; prior conservative policy disposition remains `COMPLETE_FOR_CONSERVATIVE_POLICY` | No | Yes for residual values; no for the already-approved conservative policy | `BLOCKED` | `HOLD_PENDING_NEW_EXPLICIT_GOAL` |
+
+Draft defaults recorded by this pass:
+
+- Issue #162 keeps provider, session, role source, and role semantics
+  `TBD_BY_OWNER`; real auth, auth implementation, access-control expansion,
+  and production proof remain unapproved.
+- Issue #163 recommends only a future observation request path; no production
+  D1 access, command, write, migration, delete, endpoint call, or production
+  proof is approved.
+- Issue #164 keeps owner, triggers, escalation, stop-write policy, and command
+  policy `TBD_BY_OWNER`; rollback execution, D1 access/write/delete, and
+  destructive data action remain unapproved.
+- Issue #165 keeps final production proof approval `NO` until all prerequisite
+  records are complete; deploy, proof, D1 access, endpoint calls, and
+  customer/private data access remain unapproved.
+- Issue #154 was not reopened. Only new residual-value owner input should be
+  processed in a future explicit goal.
+
+Boundary statement: this pass does not authorize implementation, production
+access, staging access, deploy, D1 access/observation/write/migration/delete,
+endpoint calls, logs/secrets access, CRM, outreach, LLM, automation,
+customer/private data access, guessed owner values, guessed production facts,
+or production reviewer workflow readiness. Future implementation/proof requires
+a separate explicit goal.
 
 ## 5. Owner Request Templates
 
