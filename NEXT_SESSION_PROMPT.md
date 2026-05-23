@@ -3,7 +3,7 @@
 ## 현재 기준 상태
 
 - 기준 브랜치: `master`
-- 마지막 검증된 post-PR #145 `origin/master` HEAD: `c0505cf146a371490aa2399e2db182f9800ec48a` (`docs: add manual notes feedback intake`)
+- 마지막 검증된 post-PR #160 `origin/master` HEAD: `531e504889d654186432ba1f2f043ede3e3e9323` (`test: guard auth access control boundaries`)
 - 다음 세션도 반드시 `git fetch origin master`와 `git rev-parse origin/master`로 실제 최신 HEAD를 다시 기록한다.
 - hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`, `docs/architecture/*.md`, `NEXT_SESSION_PROMPT.md`
 - LeadBrief v1 merge baseline: `5776d4a` (`[Product] Freeze LeadBrief v1 review contract (#27)`)
@@ -138,6 +138,19 @@
   - Current Issue #118 non-production cycle closeout approval record `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4503631245` authorizes only a docs-only Manual Review Notes v1 non-production closeout packet. The packet is `docs/roadmap/manual-review-notes-v1-non-production-cycle-closeout.md`. It marks local/test implementation complete, local fake-D1 evidence complete, staging target selection decision-ready/HOLD, staging execution HOLD, production proof/deploy HOLD, and `NEXT_MANDATORY_ACTION: NONE`.
   - Current Issue #118 reviewer feedback intake approval record `https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4503763122` authorized only a docs-only Manual Review Notes v1 reviewer feedback intake packet after PR #143. The packet is `docs/roadmap/manual-review-notes-v1-reviewer-feedback-intake.md`. Optional feedback issue `https://github.com/dooosp/b2b-lead-agent/issues/144` remains an intake container.
   - Current Issue #144 feedback record 001 disposition approval/comment record `https://github.com/dooosp/b2b-lead-agent/issues/144#issuecomment-4503911395` records only docs-only processing of `MRN-V1-FEEDBACK-001`. The feedback source is `https://github.com/dooosp/b2b-lead-agent/issues/144#issuecomment-4503838503`; feedback collected is `YES`, disposition is `RECORDED`, severity is P3, observation type is docs, no separate follow-up is needed, staging/production remain HOLD, and `NEXT_MANDATORY_ACTION: NONE`.
+- Productization roadmap updates after the closed Manual Review Notes lane:
+  - #149 added `docs/roadmap/b2b-lead-agent-productization-roadmap-v1.md`, set `CURRENT_PRODUCTIZATION_LEVEL: LEVEL_0_COMPLETE`, set `NEXT_TARGET_LEVEL: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW`, and kept staging, production, CRM, outreach, LLM, automation, and generated-suggestion persistence/history/export/attribution blocked.
+  - #150 added `docs/roadmap/b2b-lead-agent-production-reviewer-workflow-readiness-packet.md`, concluded `PRODUCTION_REVIEWER_WORKFLOW_READY: BLOCKED`, and identified auth/access-control, production D1, privacy/retention, rollback/backout, observability/evidence, and production proof blockers.
+  - #151 added the docs-only Auth / Access Control Decision Packet. It selected `OPTION_C_NEEDS_HUMAN_SECURITY_DECISION` and did not implement auth.
+  - #152 added the docs-only Privacy / Retention Decision Packet. It selected `OPTION_C_NEEDS_HUMAN_PRIVACY_OWNER_DECISION` and did not implement enforcement.
+  - #153 added the docs-only Privacy Owner Input Request Packet.
+  - #155 created and synced Issue #154 as the privacy/retention owner-input tracking issue.
+  - #156 recorded Issue #154 owner authority for owner-input purposes only.
+  - #157 recorded Issue #154 as `COMPLETE_FOR_CONSERVATIVE_POLICY` for conservative policy values only. Retention duration, metadata retention duration, expiration/review date, future PII detection, redaction, purge/delete, and production privacy proof remain unresolved.
+  - #158 added the docs-only Privacy / Retention Implementation Plan. Conservative privacy policy remains planning-only and does not authorize enforcement or production proof.
+  - #159 added the docs-only Auth / Access Control Implementation Plan. Real auth, sessions, production roles, provider decisions, production D1 facts, rollback owner, and production proof approval remain unresolved.
+  - #160 added non-production auth/access-control guard tests for the existing C2 local/test role stub only. The stub remains opt-in local/test behavior and reports `realAuthImplemented: false` / `productionReady: false`.
+- Current Level 1 blocker burn-down packet lives at `docs/roadmap/b2b-lead-agent-level-1-blocker-burndown-packet.md`. It classifies remaining blockers for auth provider/session owner input, production D1 schema observation input, rollback/backout owner input, final production proof approval, and privacy residual values. It includes copy-paste owner request templates and keeps `FINAL_STATE: HOLD_PENDING_NEW_EXPLICIT_GOAL`.
 - Reviewer Workflow Final Audit & Demo Packet lives at `docs/reviewer-workflow-final-audit.md` and is the canonical local/test-safe handoff baseline for completed reviewer workflow demo, validation, allowed/forbidden claims, note-persistence wording, and production evidence boundaries.
 - Issue #100 is closed as completed for the recorded local/test-safe Human UX Review findings. Future UX feedback should open a new issue or separately scoped record.
 - Issue #111 is closed as completed for the Manager / Reviewer Summary v0 UX Findings Intake.
