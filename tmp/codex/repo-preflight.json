@@ -1,53 +1,92 @@
 {
-  "repo_root": "/Users/jangtaeho/Documents/New/worktrees/b2b-worker-api-architecture-refactor-v1",
+  "repo_root": "/Users/jangtaeho/Documents/New/b2b-lead-agent-level1-approval-packet-non-production",
   "repo_identity_ok": true,
   "identity_evidence": [
-    "git rev-parse --show-toplevel => /Users/jangtaeho/Documents/New/worktrees/b2b-worker-api-architecture-refactor-v1",
-    "fresh worktree created at /Users/jangtaeho/Documents/New/worktrees/b2b-worker-api-architecture-refactor-v1 from origin/master",
-    "package.json name => b2b-lead-agent",
-    "main.js exists",
-    "worker/index.js exists",
-    "tests/main.runtime.test.js exists",
-    ".github/workflows/validate-naming.yml exists"
+    "origin=https://github.com/dooosp/b2b-lead-agent.git",
+    "package.name=b2b-lead-agent",
+    "AGENTS.md identifies repository/package as b2b-lead-agent",
+    "batch entrypoint main.js exists",
+    "worker entrypoint worker/index.js exists"
   ],
-  "current_branch": "codex/worker-api-architecture-refactor-v1",
-  "head_sha": "12d44374a24a9958de179fae5f9311621606ad24",
-  "local_base_candidates": [
-    "master",
-    "origin/master"
-  ],
-  "remote_names": [
-    "origin"
-  ],
+  "current_branch": "codex/level1-approval-packet-non-production",
+  "head_sha": "cc7944c7d851a57642e933435d482932eaabf921",
+  "default_branch": "master",
   "pinned_base_ref": "origin/master",
-  "pinned_base_sha": "12d44374a24a9958de179fae5f9311621606ad24",
-  "worktree_clean_at_preflight": true,
-  "dirty_paths_at_preflight": [],
-  "required_commands": {
-    "git": "/usr/bin/git",
-    "node": "/opt/homebrew/bin/node",
-    "npm": "/opt/homebrew/bin/npm",
-    "gh": "/opt/homebrew/bin/gh",
-    "python3": "/usr/bin/python3",
-    "rg": "/Applications/Codex.app/Contents/Resources/rg"
-  },
-  "available_scripts": [
-    "check:naming",
-    "e2e",
-    "email",
-    "start",
-    "test",
-    "test:contract",
-    "test:root",
-    "test:runtime",
-    "test:unit",
-    "test:worker"
+  "pinned_base_sha": "cc7944c7d851a57642e933435d482932eaabf921",
+  "worktree_clean_at_start": true,
+  "original_checkout_dirty_paths": [
+    "docs/exec-plans/root-cycle-merge-and-wave2-bootstrap-verification.md",
+    "docs/exec-plans/root-cycle-merge-and-wave2-bootstrap.md",
+    "tmp/codex/root-cycle-merge-and-wave2-bootstrap-status.md",
+    "tmp/codex/root-cycle-merge-and-wave2-bootstrap-verification-status.md"
   ],
+  "isolation": {
+    "strategy": "fresh_git_worktree",
+    "reason": "original checkout had unrelated untracked docs/tmp files",
+    "path": "/Users/jangtaeho/Documents/New/b2b-lead-agent-level1-approval-packet-non-production"
+  },
+  "available_commands": [
+    "npm run check:naming",
+    "npm run check:schema",
+    "npm run test:root",
+    "npm run test:unit",
+    "npm run test:contract",
+    "npm run proof:level1:preflight",
+    "npm run proof:level1:approval-dry-run",
+    "npm test"
+  ],
+  "github": {
+    "open_prs_at_preflight": [],
+    "recent_merged_prs": [
+      {
+        "number": 171,
+        "mergedAt": "2026-05-31T07:18:34Z",
+        "mergeCommit": "a4f8a080ebe426d79bb85dba8298372ef6d14cfc"
+      },
+      {
+        "number": 172,
+        "mergedAt": "2026-05-31T07:55:22Z",
+        "mergeCommit": "6f5f764e2a4404157d4eb6120b44db6d173d41aa"
+      },
+      {
+        "number": 173,
+        "mergedAt": "2026-05-31T08:38:39Z",
+        "mergeCommit": "cc7944c7d851a57642e933435d482932eaabf921"
+      }
+    ],
+    "issues": {
+      "154": {
+        "state": "OPEN",
+        "status": "COMPLETE_FOR_DOCS_PLANNING_ONLY",
+        "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4525319355"
+      },
+      "162": {
+        "state": "OPEN",
+        "status": "COMPLETE_FOR_DOCS_PLANNING_ONLY",
+        "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/162#issuecomment-4525315986"
+      },
+      "163": {
+        "state": "OPEN",
+        "status": "COMPLETE_FOR_DOCS_PLANNING_ONLY",
+        "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/163#issuecomment-4525316833"
+      },
+      "164": {
+        "state": "OPEN",
+        "status": "COMPLETE_FOR_DOCS_PLANNING_ONLY",
+        "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/164#issuecomment-4525317479"
+      },
+      "165": {
+        "state": "OPEN",
+        "status": "HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL",
+        "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4525359304"
+      },
+      "144": {
+        "state": "OPEN",
+        "status": "OPTIONAL_FEEDBACK_INTAKE_OPEN",
+        "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/144#issuecomment-4503911395"
+      }
+    }
+  },
   "can_proceed": true,
-  "stop_reasons": [],
-  "notes": [
-    "Source checkout /Users/jangtaeho/Documents/New/b2b-lead-agent had unrelated dirty changes in files required by this task, so edits are isolated in this fresh worktree.",
-    "Remote default branch was resolved as origin/master and pinned to 12d44374a24a9958de179fae5f9311621606ad24 before branch/worktree work.",
-    "Dependencies were installed locally with npm ci. No deploy, Wrangler D1 command, Wrangler tail, production Worker call, production write, or production observation was performed."
-  ]
+  "stop_reasons": []
 }

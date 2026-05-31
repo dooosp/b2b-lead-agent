@@ -93,6 +93,18 @@ const FORBIDDEN_EVIDENCE_FIELDS = new Set([
   'generatedSuggestionText',
   'jwt',
   'logs',
+  'manualReviewNotes',
+  'manual_review_notes',
+  'manualReviewNotesAuthorLabel',
+  'manual_review_notes_author_label',
+  'manualReviewNotesHistoryEventCount',
+  'manual_review_notes_history_event_count',
+  'manualReviewNotesHistoryLastAuthorLabel',
+  'manual_review_notes_history_last_author_label',
+  'manualReviewNotesProvenance',
+  'manual_review_notes_provenance',
+  'manualReviewNotesUpdatedAt',
+  'manual_review_notes_updated_at',
   'manualNoteBodyText',
   'noteBody',
   'privateLeadPersonFields',
@@ -100,6 +112,8 @@ const FORBIDDEN_EVIDENCE_FIELDS = new Set([
   'providerInput',
   'rawSessionClaims',
   'rawCommandContext',
+  'reviewNoteSuggestion',
+  'reviewNoteTemplates',
   'rowCount',
   'rowData',
   'secret',
@@ -117,21 +131,80 @@ const FORBIDDEN_EVIDENCE_FIELD_PATTERNS = [
   /generated.*suggestion/i,
   /generated.*helper/i,
   /jwt/i,
+  /manual[_-]?review[_-]?notes/i,
+  /manual.*note.*author/i,
   /manual.*note.*body/i,
+  /manual.*note.*history/i,
+  /manual.*note.*provenance/i,
+  /manual.*note.*updated/i,
   /note.*body/i,
   /private/i,
   /provider.*input/i,
   /raw.*command/i,
   /raw.*session.*claim/i,
+  /review.*note.*suggestion/i,
+  /review.*note.*template/i,
   /secret/i,
   /session.*claim/i,
   /token/i,
   /user.*identity/i,
 ];
 
+export const LEVEL1_FUTURE_PRODUCTION_PROOF_EVIDENCE_REQUIRED_FIELDS = Object.freeze([
+  'schemaVersion',
+  'documentStatus',
+  'evidenceType',
+  'generatedAt',
+  'boundary',
+  'notProductionEvidence',
+  'productionReady',
+  'productionReviewerWorkflowReady',
+  'approvalStatus',
+  'sourcePacketPath',
+  'repo',
+  'issueRefs',
+  'prerequisites',
+  'ownerChecklist',
+  'evidenceRequirements',
+  'abortConditions',
+  'redactionRules',
+  'operatorDryRun',
+  'nonClaims',
+]);
+
+export const LEVEL1_FUTURE_PRODUCTION_PROOF_EVIDENCE_BOUNDARY =
+  'NOT_PRODUCTION_EVIDENCE';
+
+function hasOwn(object, key) {
+  return Object.prototype.hasOwnProperty.call(object || {}, key);
+}
+
 function isForbiddenEvidenceField(field) {
   if (FORBIDDEN_EVIDENCE_FIELDS.has(field)) return true;
   return FORBIDDEN_EVIDENCE_FIELD_PATTERNS.some((pattern) => pattern.test(field));
+}
+
+function formatFieldPath(path) {
+  return path.map((part) => String(part)).join('.');
+}
+
+function collectForbiddenEvidenceFieldPaths(value, path = []) {
+  if (path.length > 0 && isForbiddenEvidenceField(String(path[path.length - 1]))) {
+    return [formatFieldPath(path)];
+  }
+  if (!value || typeof value !== 'object') return [];
+  const entries = Array.isArray(value)
+    ? value.map((item, index) => [index, item])
+    : Object.entries(value);
+  return entries.flatMap(([field, item]) => (
+    collectForbiddenEvidenceFieldPaths(item, path.concat(field))
+  ));
+}
+
+function isIsoTimestamp(value) {
+  if (typeof value !== 'string' || !value.trim()) return false;
+  const parsed = new Date(value);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString() === value;
 }
 
 function normalizeStatus(status) {
@@ -213,6 +286,107 @@ export function redactLevel1EvidenceRecord(record = {}) {
     }
     return [field, redactValue(value)];
   }));
+}
+
+export function buildLevel1FutureProductionProofEvidenceArtifact(overrides = {}) {
+  return {
+    schemaVersion: 'level1.future_production_proof_evidence.v1',
+    documentStatus: 'LEVEL1_FUTURE_PRODUCTION_PROOF_EVIDENCE_SCHEMA_NON_PRODUCTION',
+    evidenceType: 'REDACTED_FUTURE_PROOF_SCHEMA_ONLY',
+    generatedAt: new Date().toISOString(),
+    boundary: LEVEL1_FUTURE_PRODUCTION_PROOF_EVIDENCE_BOUNDARY,
+    notProductionEvidence: true,
+    productionReady: false,
+    productionReviewerWorkflowReady: false,
+    approvalStatus: 'HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL',
+    sourcePacketPath: 'docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-packet-non-production.md',
+    repo: 'dooosp/b2b-lead-agent',
+    issueRefs: {
+      privacy: 'https://github.com/dooosp/b2b-lead-agent/issues/154',
+      authProviderSession: 'https://github.com/dooosp/b2b-lead-agent/issues/162',
+      productionD1Observation: 'https://github.com/dooosp/b2b-lead-agent/issues/163',
+      rollbackStopWrite: 'https://github.com/dooosp/b2b-lead-agent/issues/164',
+      finalProofApproval: 'https://github.com/dooosp/b2b-lead-agent/issues/165',
+      reviewerFeedback: 'https://github.com/dooosp/b2b-lead-agent/issues/144',
+    },
+    prerequisites: [
+      'Separate explicit future production proof goal is present.',
+      'Exact command, endpoint, D1, fixture, evidence, rollback, and stop-condition boundary is approved.',
+      'Local approval packet dry-run passes without production/staging/D1/secret/provider blockers.',
+    ],
+    ownerChecklist: {
+      productOwner: '@dooosp / Taeho Jang',
+      opsOwner: '@dooosp / Taeho Jang',
+      securityOwner: '@dooosp / Taeho Jang',
+      privacyOwner: '@dooosp / Taeho Jang',
+      dbOwner: '@dooosp / Taeho Jang',
+      rollbackOwner: '@dooosp / Taeho Jang',
+    },
+    evidenceRequirements: [
+      'Use redacted non-secret pass/fail outcomes only.',
+      'Use synthetic fixtures or approved non-customer metadata only.',
+      'Keep manual note body text, generated suggestion text, provider inputs, raw auth/session material, logs, secrets, and customer/private data out of evidence.',
+    ],
+    abortConditions: [
+      'Abort if production/staging access is requested without a separate explicit future proof goal.',
+      'Abort if generated suggestions persist, export, enter history, receive attribution, or appear in evidence.',
+      'Abort if protected manual note fields leak to manager, API client, missing, unknown, expired, wrong-audience, or provider-error roles.',
+      'Abort if redaction cannot be guaranteed before capture.',
+    ],
+    redactionRules: [
+      'Redact secrets, tokens, cookies, auth headers, JWT/session claims, account IDs, database IDs, private URLs, names, emails, user IDs, customer payloads, manual note body text, generated suggestion text, CRM/outreach data, logs, and private lead/person fields.',
+    ],
+    operatorDryRun: {
+      required: true,
+      command: 'npm run proof:level1:approval-dry-run',
+      allowedBoundary: 'local_only_non_production',
+    },
+    nonClaims: [
+      'This schema is not production proof.',
+      'This schema does not approve production/staging D1, endpoints, logs, secrets, customer/private data, CRM, outreach, LLM, automation, deploy, or production readiness.',
+      'productionReady remains false.',
+    ],
+    ...overrides,
+  };
+}
+
+export function validateLevel1FutureProductionProofEvidenceArtifact(artifact = {}) {
+  const missingFields = LEVEL1_FUTURE_PRODUCTION_PROOF_EVIDENCE_REQUIRED_FIELDS
+    .filter((field) => !hasOwn(artifact, field));
+  const invalidFields = [];
+
+  if (hasOwn(artifact, 'generatedAt') && !isIsoTimestamp(artifact.generatedAt)) {
+    invalidFields.push('generatedAt');
+  }
+  if (hasOwn(artifact, 'boundary') && artifact.boundary !== LEVEL1_FUTURE_PRODUCTION_PROOF_EVIDENCE_BOUNDARY) {
+    invalidFields.push('boundary');
+  }
+  if (hasOwn(artifact, 'notProductionEvidence') && artifact.notProductionEvidence !== true) {
+    invalidFields.push('notProductionEvidence');
+  }
+  if (hasOwn(artifact, 'productionReady') && artifact.productionReady !== false) {
+    invalidFields.push('productionReady');
+  }
+  if (hasOwn(artifact, 'productionReviewerWorkflowReady') && artifact.productionReviewerWorkflowReady !== false) {
+    invalidFields.push('productionReviewerWorkflowReady');
+  }
+  if (
+    hasOwn(artifact, 'approvalStatus')
+    && !/HOLD|NO_NOT_UNTIL_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL/.test(String(artifact.approvalStatus))
+  ) {
+    invalidFields.push('approvalStatus');
+  }
+
+  const forbiddenFieldPaths = collectForbiddenEvidenceFieldPaths(artifact);
+
+  return {
+    ok: missingFields.length === 0
+      && invalidFields.length === 0
+      && forbiddenFieldPaths.length === 0,
+    missingFields,
+    invalidFields,
+    forbiddenFieldPaths,
+  };
 }
 
 export function buildLevel1ReadinessScorecard(statuses = {}) {

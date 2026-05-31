@@ -1,0 +1,46 @@
+{
+  "documentStatus": "LEVEL1_PRODUCTION_PROOF_APPROVAL_PACKET_DRY_RUN_NON_PRODUCTION",
+  "status": "PASS",
+  "evidenceType": "LOCAL_DRY_RUN_REDACTED_SYNTHETIC_ONLY",
+  "boundary": "NON_PRODUCTION_ONLY",
+  "notProductionEvidence": true,
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "approvalStatus": "HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL",
+  "gates": [
+    {
+      "id": "packet_completeness",
+      "status": "PASS"
+    },
+    {
+      "id": "future_evidence_schema",
+      "status": "PASS"
+    },
+    {
+      "id": "local_input_refusal",
+      "status": "PASS"
+    },
+    {
+      "id": "production_proof_approval",
+      "status": "HOLD"
+    }
+  ],
+  "packetValidation": {
+    "ok": true,
+    "missingMarkers": [],
+    "forbiddenMatches": []
+  },
+  "evidenceValidation": {
+    "ok": true,
+    "missingFields": [],
+    "invalidFields": [],
+    "forbiddenFieldPaths": []
+  },
+  "blockers": [],
+  "rawInputs": {},
+  "nonClaims": [
+    "This dry-run is not production proof.",
+    "This dry-run does not access production/staging D1, endpoints, logs, secrets, auth material, customer/private data, CRM, outreach, LLM, or automation.",
+    "productionReady remains false."
+  ]
+}
