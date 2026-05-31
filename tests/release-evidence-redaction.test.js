@@ -64,3 +64,32 @@ test('redactText redacts sensitive inline values while preserving non-sensitive 
   assert.match(redacted, /\[REDACTED:PRIVATE_URL\]/);
   assert.doesNotMatch(redacted, /abc\.def\.ghi|sid=secret|11111111|release\.owner@example\.com|internal\.example\.test/);
 });
+
+test('redactEvidence removes manual-note and generated-suggestion evidence fields', () => {
+  const input = {
+    manualReviewNotes: 'Human note body must not appear.',
+    manual_review_notes: 'Snake case note body must not appear.',
+    manualNoteBodyText: 'Manual note body alias must not appear.',
+    generatedSuggestionText: 'Generated suggestion body must not appear.',
+    reviewNoteSuggestion: {
+      state: 'APPROVED',
+      text: 'Decision: APPROVED generated helper must not appear.',
+    },
+    reviewNoteTemplates: [
+      { text: 'Template generated helper must not appear.' },
+    ],
+    safeStatus: 'PASS_LOCAL',
+  };
+
+  const redacted = redactEvidence(input);
+  const serialized = JSON.stringify(redacted);
+
+  assert.equal(redacted.manualReviewNotes, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.manual_review_notes, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.manualNoteBodyText, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.generatedSuggestionText, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.reviewNoteSuggestion, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.reviewNoteTemplates, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.safeStatus, 'PASS_LOCAL');
+  assert.doesNotMatch(serialized, /Human note body|Generated suggestion|Decision: APPROVED|Template generated helper/);
+});

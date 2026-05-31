@@ -1,8 +1,28 @@
 import { getCommonStyles } from './common-styles.js';
 import { getEscScript, getProfileScript, getSafeUrlScript, getStoredTokenScript } from './script-snippets.js';
 
-export function getLeadsPage() {
-  return `<!DOCTYPE html>
+function stripGeneratedReviewGuidanceFromLeadsPage(html) {
+  return String(html || '')
+    .replace(
+      /function summarizeReviewNoteEvidence\(lead\) \{[\s\S]*?function normalizeReviewNoteData\(lead\) \{[\s\S]*?return \{ current, templates \};\n    \}/,
+      'function normalizeReviewNoteData() { return { current: null, templates: [] }; }'
+    )
+    .replace(
+      /function normalizeSummaryText\(value, fallback = ''\) \{[\s\S]*?function renderReviewNoteSuggestion\(lead, options = \{\}\) \{[\s\S]*?\n    \}/,
+      'function renderReviewNoteSuggestion() { return ""; }'
+    )
+    .replace(
+      /function normalizeReviewNoteData\(lead\) \{[\s\S]*?return \{ current, templates \};\n    \}/,
+      'function normalizeReviewNoteData() { return { current: null, templates: [] }; }'
+    )
+    .replace(/reviewNoteSuggestion/g, 'reviewNoteSuppressed')
+    .replace(/reviewNoteTemplates/g, 'reviewNoteTemplateSuppressed')
+    .replace(/Follow-up check:/g, 'Follow up check removed:')
+    .replace(/생성된 검토 메모 제안/g, '복사 전용 검토 도우미');
+}
+
+export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
+  const html = `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -411,6 +431,7 @@ export function getLeadsPage() {
     ${getEscScript()}
     ${getSafeUrlScript()}
     ${getStoredTokenScript()}
+    const generatedReviewGuidanceEnabled = ${includeGeneratedReviewGuidance ? 'true' : 'false'};
     function detailLink(leadId) {
       return '/leads/' + encodeURIComponent(leadId);
     }
@@ -623,6 +644,15 @@ export function getLeadsPage() {
       });
     }
 
+    function cacheManualReviewNotesAccess(access) {
+      cachedManualReviewNotesAccess = access && typeof access === 'object' ? access : null;
+    }
+
+    function canShowGeneratedReviewGuidance() {
+      return generatedReviewGuidanceEnabled
+        && (!cachedManualReviewNotesAccess || cachedManualReviewNotesAccess.manualNotesRead === true);
+    }
+
     function laneForFallbackAction(action) {
       if (action === 'keep_out_of_queue' || action === 'schedule_recheck') return 'low_priority';
       if (action === 'reconcile_review_conflict' || action === 'refresh_signal') return 'risk_review';
@@ -636,7 +666,9 @@ export function getLeadsPage() {
       const missingEvidence = getEvidenceItems(lead).length === 0 || getSources(lead).length === 0;
       const missingInfoCount = dataGapCount + (missingEvidence ? 1 : 0) + (getVerificationStatus(lead) !== 'verified' ? 1 : 0);
       const queueLane = laneForFallbackAction(summary.nextReviewAction);
-      const reviewNotes = buildFallbackReviewNoteTemplates(lead, summary);
+      ${includeGeneratedReviewGuidance
+        ? 'const reviewNotes = canShowGeneratedReviewGuidance() ? buildFallbackReviewNoteTemplates(lead, summary) : null;'
+        : 'const reviewNotes = null;'}
       return {
         leadId: getLeadId(lead),
         company: lead.company || '리드',
@@ -655,8 +687,12 @@ export function getLeadsPage() {
         missingInfoCount,
         riskFlags: summary.risks.map((risk) => ({ code: risk })),
         missingInfoPrompts: [],
-        reviewNoteSuggestion: reviewNotes.current,
-        reviewNoteTemplates: reviewNotes.templates,
+        ${includeGeneratedReviewGuidance
+          ? `...(reviewNotes ? {
+          reviewNoteSuggestion: reviewNotes.current,
+          reviewNoteTemplates: reviewNotes.templates,
+        } : {}),`
+          : ''}
         sortIndex: 9999,
       };
     }
@@ -857,6 +893,7 @@ export function getLeadsPage() {
       return { nextReviewAction, action, priority, actionConfidence, reason, risks };
     }
 
+    ${includeGeneratedReviewGuidance ? `
     function summarizeReviewNoteEvidence(lead) {
       const evidence = getEvidenceItems(lead);
       const sources = getSources(lead);
@@ -946,8 +983,14 @@ export function getLeadsPage() {
         labels
       };
     }
+    ` : `
+    function buildFallbackReviewNoteTemplates() {
+      return { current: null, templates: [], labels: {} };
+    }
+    `}
 
     function normalizeReviewNoteData(lead) {
+      if (!canShowGeneratedReviewGuidance()) return { current: null, templates: [] };
       const item = getLeadQueueItem(lead);
       const fallback = buildFallbackReviewNoteTemplates(lead);
       const current = item.reviewNoteSuggestion && item.reviewNoteSuggestion.text
@@ -999,6 +1042,7 @@ export function getLeadsPage() {
     }
 
     function renderReviewNoteSuggestion(lead, options = {}) {
+      if (!canShowGeneratedReviewGuidance()) return '';
       const noteData = normalizeReviewNoteData(lead || {});
       const current = noteData.current || {};
       const templates = noteData.templates || [];
@@ -1921,6 +1965,8 @@ export function getLeadsPage() {
         const container = document.getElementById('leadsList');
         const summaryContainer = document.getElementById('leadsSummary');
 
+        cacheManualReviewNotesAccess(data.manualReviewNotesAccess);
+
         if (!data.leads || data.leads.length === 0) {
           summaryContainer.innerHTML = '';
           const nextReviewStrip = document.getElementById('nextReviewStrip');
@@ -1952,6 +1998,7 @@ export function getLeadsPage() {
     let cachedLeads = [];
     let cachedReviewerQueue = { items: [], lanes: [] };
     let cachedQueueItemsByLeadId = {};
+    let cachedManualReviewNotesAccess = null;
     let reviewSessionNotice = { message: '', tone: 'idle' };
     let shortcutHelpOpen = false;
     let sessionActivity = {
@@ -2294,4 +2341,5 @@ export function getLeadsPage() {
   </script>
 </body>
 </html>`;
+  return includeGeneratedReviewGuidance ? html : stripGeneratedReviewGuidanceFromLeadsPage(html);
 }

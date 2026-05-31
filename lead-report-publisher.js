@@ -239,12 +239,43 @@ function generateLeadId(lead, { profileId = '' } = {}) {
   return computeStableLeadId(lead, { profileId });
 }
 
+const PROTECTED_PUBLICATION_FIELDS = [
+  'notes',
+  'manualReviewNotes',
+  'manual_review_notes',
+  'manualReviewNotesProvenance',
+  'manual_review_notes_provenance',
+  'manualReviewNotesAuthorLabel',
+  'manual_review_notes_author_label',
+  'manualReviewNotesUpdatedAt',
+  'manual_review_notes_updated_at',
+  'manualReviewNotesHistoryEventCount',
+  'manual_review_notes_history_event_count',
+  'manualReviewNotesHistoryLastEventType',
+  'manual_review_notes_history_last_event_type',
+  'manualReviewNotesHistoryLastEventAt',
+  'manual_review_notes_history_last_event_at',
+  'manualReviewNotesHistoryLastAuthorLabel',
+  'manual_review_notes_history_last_author_label',
+  'reviewNoteSuggestion',
+  'reviewNoteTemplates',
+];
+
+function omitProtectedPublicationFields(lead) {
+  const record = { ...(lead || {}) };
+  for (const field of PROTECTED_PUBLICATION_FIELDS) {
+    delete record[field];
+  }
+  return record;
+}
+
 function prepareLeadSnapshotRecords(leads, { now = new Date().toISOString(), idFactory = generateLeadId, profileId = '' } = {}) {
   return (Array.isArray(leads) ? leads : []).map(lead => {
-    const trust = normalizePublicationTrust(lead);
-    const sources = normalizePublicationSources(lead && lead.sources);
+    const publishableLead = omitProtectedPublicationFields(lead);
+    const trust = normalizePublicationTrust(publishableLead);
+    const sources = normalizePublicationSources(publishableLead && publishableLead.sources);
     const brief = buildPublicationLeadBriefFields({
-      ...lead,
+      ...publishableLead,
       generationMode: trust.generationMode,
       verificationStatus: trust.verificationStatus,
       confidence: trust.confidence,
@@ -252,11 +283,11 @@ function prepareLeadSnapshotRecords(leads, { now = new Date().toISOString(), idF
       dataGaps: trust.dataGaps,
     }, { profileId, sources, dataGaps: trust.dataGaps });
     return {
-      id: idFactory(lead, { profileId }),
+      id: idFactory(publishableLead, { profileId }),
       status: 'NEW',
       createdAt: now,
       updatedAt: now,
-      ...lead,
+      ...publishableLead,
       profileId: brief.profileId,
       signal: brief.signal,
       whyNow: brief.whyNow,
@@ -284,7 +315,7 @@ function findExistingLeadIndex(history, newLead) {
 }
 
 function mergeLeadHistory(history, newLeads, { now = new Date().toISOString(), profileId = '' } = {}) {
-  const nextHistory = Array.isArray(history) ? history.map((entry) => ({ ...entry })) : [];
+  const nextHistory = Array.isArray(history) ? history.map(omitProtectedPublicationFields) : [];
   const preparedLeads = prepareLeadSnapshotRecords(newLeads, { now, profileId });
 
   for (const newLead of preparedLeads) {

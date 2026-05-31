@@ -4,6 +4,7 @@ const REDACTION_LABELS = Object.freeze({
   databaseId: '[REDACTED:DATABASE_ID]',
   pii: '[REDACTED:PII]',
   privateUrl: '[REDACTED:PRIVATE_URL]',
+  protectedText: '[REDACTED:PROTECTED_TEXT]',
   token: '[REDACTED:TOKEN]'
 });
 
@@ -13,6 +14,7 @@ const AUTH_HEADER_KEY_RE = /^authorization$|proxy-authorization|auth[_-]?header/
 const COOKIE_KEY_RE = /^cookie$|^set-cookie$|cookie/i;
 const PRIVATE_URL_KEY_RE = /private[_-]?url|internal[_-]?url|callback[_-]?url|endpoint|webhook/i;
 const PII_KEY_RE = /email|phone|contact|customer|person|user[_-]?name|full[_-]?name|owner|approver|observer|actor|author/i;
+const PROTECTED_TEXT_KEY_RE = /manual[_-]?review[_-]?notes|manual[_-]?note[_-]?body|generated[_-]?suggestion|generated[_-]?helper|review[_-]?note[_-]?suggestion|review[_-]?note[_-]?templates/i;
 
 const AUTH_HEADER_RE = /\b(?:Authorization|Proxy-Authorization)\s*:\s*[^\r\n]+/gi;
 const TOKEN_HEADER_RE = /\b(?:X-API-Key|X-Auth-Token|X-Job-Callback-Token|Callback-Token)\s*:\s*[^\r\n]+/gi;
@@ -50,6 +52,10 @@ function isPrivateUrlKey(keyPath) {
 
 function isPiiKey(keyPath) {
   return PII_KEY_RE.test(normalizeKeyPath(keyPath));
+}
+
+function isProtectedTextKey(keyPath) {
+  return PROTECTED_TEXT_KEY_RE.test(normalizeKeyPath(keyPath));
 }
 
 function isPrivateHostname(hostname) {
@@ -121,6 +127,7 @@ function redactStringForKey(value, keyPath) {
 
 function redactEvidence(value, keyPath = []) {
   if (value === null || value === undefined) return value;
+  if (isProtectedTextKey(keyPath)) return REDACTION_LABELS.protectedText;
   if (Array.isArray(value)) {
     return value.map((item, index) => redactEvidence(item, keyPath.concat(index)));
   }

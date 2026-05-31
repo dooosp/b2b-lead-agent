@@ -14,13 +14,15 @@ redacted proof-preflight evidence.
 
 | Gate | Status | Evidence | Boundary |
 | --- | --- | --- | --- |
+| Provider-agnostic auth adapter contract | `PASS` | `worker/lib/local-test-auth-adapter.js`; `worker/tests/local-test-auth-adapter.test.mjs` | Injected local/test adapter only; no real provider, header, token, cookie, JWT, session, identity, or Cloudflare Access parsing. |
 | Auth provider/session scaffold | `PASS` | `worker/lib/auth-provider-session-scaffold.js`; `worker/tests/auth-provider-session-scaffold.test.mjs` | Non-production scaffold only; no real auth/provider/session/token/cookie/secret/identity. Fails closed for non-local envs. |
-| Local proof-preflight automation | `PASS_LOCAL`, `HOLD_PRODUCTION` | `scripts/level1-proof-preflight.mjs`; `worker/tests/level1-proof-preflight.test.mjs`; `npm run proof:level1:preflight` | Emits redacted synthetic fixture evidence only and refuses non-local envs, production/staging URLs, D1 bindings/private IDs, secrets, and real provider inputs. This is not production evidence. |
+| Local proof-preflight automation | `PASS_LOCAL`, `HOLD_PRODUCTION` | `scripts/level1-proof-preflight.mjs`; `worker/tests/level1-proof-preflight.test.mjs`; `npm run proof:level1:preflight` | Emits redacted synthetic fixture evidence only and refuses non-local/prod/staging/preview envs, production/staging URLs, non-local hostnames, D1 bindings/private IDs, secrets, and real provider inputs. This is not production evidence. |
 | Local proof simulation | `PASS` | `worker/tests/level1-local-proof-simulation.test.mjs` | Fake D1 and synthetic fixtures only; no production/staging endpoints. |
 | D1/schema guards | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `worker/tests/d1-schema-contract.test.mjs`; `tests/d1-schema-consistency.test.js`; `worker/lib/level1-readiness-guards.js` | Local schema/index/constraint guard only; production D1 observation remains HOLD. |
 | Rollback/privacy guards | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `worker/tests/level1-readiness-guards.test.mjs`; `worker/tests/manual-review-notes.test.mjs` | Stop-write and redaction guard only; rollback execution, destructive actions, retention enforcement, purge, PII detection, and privacy proof remain HOLD. |
 | Generated suggestion boundary | `PASS` | `worker/tests/manual-review-notes.test.mjs`; `worker/tests/level1-local-proof-simulation.test.mjs` | Generated suggestions remain copy-only, unsaved, unattributed, unretained, unexported, and excluded from history. |
-| Manager/export/API/detail protected-field boundary | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | Scaffold, C2, and Level 1 simulation tests | Managers/admin/API clients/missing/unknown/expired/missing-audience/wrong-audience/provider-error cases fail closed or omit protected fields locally; real production roles remain unimplemented. |
+| Route audit protected-field boundary | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `worker/lib/level1-auth-route-audit.js`; `worker/tests/level1-auth-route-audit.test.mjs` | Managers/admin/API clients/missing/unknown/expired/wrong-audience/provider-error cases fail closed or omit protected fields locally across reviewer queue, history, export, enrich, note write, `/leads`, and detail routes. Real production roles remain unimplemented. |
+| Publication and evidence redaction boundary | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `lead-report-publisher.js`; `tests/leadbrief-publication-contract.test.js`; `scripts/release-evidence-redactor.js`; `tests/release-evidence-redaction.test.js` | Published latest/history snapshots and evidence packets omit or redact manual note bodies, generated suggestions/templates, and protected note metadata. |
 | Local-only Worker E2E smoke | `PASS` | `npm run test:e2e:local` after `npm ci` | Fake D1 and loopback only; not production/staging smoke. |
 | Final production proof approval | `HOLD` | Issue #165 records docs-planning only | No production proof execution approved. |
 
@@ -64,6 +66,30 @@ productionReady: false
 The scaffold blocks non-local `WORKER_ENV` / deployment environment values
 such as `production`, `staging`, and `preview`. It does not parse real
 headers, tokens, cookies, JWTs, or provider sessions.
+
+## Auth Adapter Route Audit
+
+`LEVEL1_AUTH_ADAPTER_ROUTE_AUDIT_NON_PRODUCTION` adds a provider-agnostic
+local/test adapter contract and route audit manifest. The contract lives at
+`worker/lib/local-test-auth-adapter.js`, records
+`level1.local_test_auth_adapter.v1`, and is explicitly limited to injected
+local/test adapters. It does not parse request auth headers, cookies, tokens,
+JWTs, real sessions, provider responses, or Cloudflare Access material.
+
+The route audit covers:
+
+- `/api/leads` reviewer queue payloads;
+- `/api/history`;
+- `/api/export/csv`;
+- `/api/leads/:id/enrich`;
+- `/api/leads/:id` manual-note writes;
+- `/leads` reviewer queue page rendering;
+- `/leads/:id` detail rendering.
+
+Protected manual note fields and generated suggestion/template text are denied
+or omitted for non-reviewer synthetic roles and provider-error cases. CSV
+export, publication snapshots/history, and evidence artifacts do not carry
+manual note bodies or generated suggestion text.
 
 ## Proof-Preflight Automation
 

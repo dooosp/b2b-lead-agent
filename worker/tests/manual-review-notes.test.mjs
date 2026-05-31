@@ -581,6 +581,16 @@ for (const scenario of [
     expectedRole: 'api',
   },
   {
+    name: 'api_client',
+    headers: { [LOCAL_TEST_ROLE_HEADER]: 'api_client' },
+    expectedRole: 'api',
+  },
+  {
+    name: 'api-client',
+    headers: { [LOCAL_TEST_ROLE_HEADER]: 'api-client' },
+    expectedRole: 'api',
+  },
+  {
     name: 'missing',
     headers: {},
     expectedRole: 'none',

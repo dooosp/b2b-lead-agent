@@ -51,14 +51,21 @@ export const pageRoutes = Object.freeze([
       const manualReviewNotesAccess = await resolveManualReviewNotesAccess(request, env);
       const filteredLead = filterManualReviewNotesProtectedFields(lead, manualReviewNotesAccess);
       const statusLogs = await getStatusLogByLead(env.DB, params.leadId);
-      return htmlResponse(getLeadDetailPage(filteredLead, statusLogs));
+      return htmlResponse(getLeadDetailPage(filteredLead, statusLogs, {
+        includeGeneratedReviewGuidance: !manualReviewNotesAccess.enabled || manualReviewNotesAccess.manualNotesRead === true,
+      }));
     }
   },
   {
     id: 'page.leads',
     methods: ['GET'],
     match: exact('/leads'),
-    handle: () => htmlResponse(getLeadsPage())
+    handle: async ({ request, env }) => {
+      const manualReviewNotesAccess = await resolveManualReviewNotesAccess(request, env);
+      return htmlResponse(getLeadsPage({
+        includeGeneratedReviewGuidance: !manualReviewNotesAccess.enabled || manualReviewNotesAccess.manualNotesRead === true,
+      }));
+    }
   },
   {
     id: 'page.ppt',

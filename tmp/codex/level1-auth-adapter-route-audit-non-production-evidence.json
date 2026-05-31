@@ -1,0 +1,55 @@
+{
+  "artifact_status": "LEVEL1_AUTH_ADAPTER_ROUTE_AUDIT_NON_PRODUCTION_EVIDENCE_LOCAL_ONLY",
+  "created_at_utc": "2026-05-31T08:19:02Z",
+  "repository": "dooosp/b2b-lead-agent",
+  "branch": "codex/level1-auth-adapter-route-audit",
+  "base_sha": "6f5f764e2a4404157d4eb6120b44db6d173d41aa",
+  "productionReady": false,
+  "notProductionEvidence": true,
+  "scope": [
+    "provider-agnostic local/test-only auth adapter contracts",
+    "route audit coverage for reviewer, manager, export, API, queue, notes, list-page, and detail surfaces",
+    "deny-by-default synthetic-role gates",
+    "manual-note and generated-suggestion privacy guards",
+    "local proof preflight refusal hardening for production-like inputs",
+    "reviewer docs and redacted local-only evidence"
+  ],
+  "non_goals": [
+    "real JWT parsing",
+    "real cookie parsing",
+    "real token parsing",
+    "real provider/session parsing",
+    "live Cloudflare Access calls",
+    "production D1 observation or mutation",
+    "production endpoint calls",
+    "customer or private data access",
+    "CRM, outreach, LLM, automation, or production readiness claims"
+  ],
+  "route_audit": {
+    "contract": "worker/lib/level1-auth-route-audit.js",
+    "tested_by": "worker/tests/level1-auth-route-audit.test.mjs",
+    "protected_roles": [
+      "reviewer"
+    ],
+    "denied_roles": [
+      "manager",
+      "admin",
+      "api_client",
+      "missing",
+      "unknown",
+      "expired",
+      "wrong-audience",
+      "provider-error"
+    ]
+  },
+  "privacy_evidence": {
+    "manual_note_body_publication": "redacted/omitted from manager, export, API, history, attribution, evidence, and published artifacts in local tests",
+    "generated_suggestion_publication": "redacted/omitted from denied-role queue/session/list-page/detail surfaces, export/history/attribution/evidence, and published artifacts in local tests",
+    "raw_provider_input": "redacted from local preflight fixture evidence"
+  },
+  "validation_snapshot": {
+    "targeted_auth_route_privacy_preflight": "node --test worker/tests/auth-provider-session-scaffold.test.mjs worker/tests/level1-local-proof-simulation.test.mjs worker/tests/level1-readiness-guards.test.mjs worker/tests/level1-proof-preflight.test.mjs worker/tests/manual-review-notes.test.mjs worker/tests/level1-auth-route-audit.test.mjs worker/tests/d1-schema-contract.test.mjs tests/d1-schema-consistency.test.js tests/release-evidence-redaction.test.js tests/leadbrief-publication-contract.test.js",
+    "last_recorded_result": "102 pass / 0 fail before final full validation rerun"
+  },
+  "boundary_statement": "This artifact is local/test-only readiness evidence. It is not production evidence and does not approve deploys, D1 access, endpoint calls, logs/secrets, real auth, customer/private data, CRM/outreach/LLM/automation, or productionReady=true."
+}

@@ -4,6 +4,10 @@ import { resolveProfileId } from '../lib/profile.js';
 import { ensureD1Schema } from '../db/schema.js';
 import { rowToLead } from '../db/transform.js';
 import { getLeadById, updateLeadEnrichment } from '../db/leads.js';
+import {
+  filterManualReviewNotesProtectedFields,
+  resolveManualReviewNotesAccess,
+} from '../lib/manual-review-notes-access.js';
 
 const NUMBER_SIGNAL_RE = /(\d|억원|조원|만|%|MW|GW|kW|㎡|m²)/i;
 const NO_BODY_DATA_GAP = '기사 본문 미확보';
@@ -221,10 +225,15 @@ export async function handleEnrichLead(request, env, leadId) {
   if (!env.GEMINI_API_KEY) return jsonResponse({ success: false, message: '서버 설정 오류: GEMINI_API_KEY가 설정되지 않았습니다.' }, 503);
   const lead = await getLeadById(env.DB, leadId);
   if (!lead) return jsonResponse({ success: false, message: '리드를 찾을 수 없습니다.' }, 404);
+  const manualReviewNotesAccess = await resolveManualReviewNotesAccess(request, env);
 
   const url = new URL(request.url);
   if (lead.enriched && !url.searchParams.get('force')) {
-    return jsonResponse({ success: false, message: '이미 분석된 리드입니다. 재분석 버튼을 이용하세요.', lead }, 409);
+    return jsonResponse({
+      success: false,
+      message: '이미 분석된 리드입니다. 재분석 버튼을 이용하세요.',
+      lead: filterManualReviewNotesProtectedFields(lead, manualReviewNotesAccess),
+    }, 409);
   }
 
   try {
@@ -234,7 +243,11 @@ export async function handleEnrichLead(request, env, leadId) {
     await updateLeadEnrichment(env.DB, leadId, enrichData, articleBody);
 
     const updated = await getLeadById(env.DB, leadId);
-    return jsonResponse({ success: true, lead: updated, hadArticle: hasArticleBody(articleBody) });
+    return jsonResponse({
+      success: true,
+      lead: filterManualReviewNotesProtectedFields(updated, manualReviewNotesAccess),
+      hadArticle: hasArticleBody(articleBody),
+    });
   } catch {
     return jsonResponse({ success: false, message: '심층 분석 중 오류가 발생했습니다.' }, 502);
   }

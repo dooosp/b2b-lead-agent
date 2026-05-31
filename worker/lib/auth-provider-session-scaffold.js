@@ -1,3 +1,9 @@
+import {
+  createStaticLocalTestAuthAdapter,
+  normalizeLocalTestAuthAdapterRole,
+  resolveLocalTestAuthAdapter,
+} from './local-test-auth-adapter.js';
+
 export const AUTH_PROVIDER_SESSION_SCAFFOLD_APPROVAL_RECORD =
   'https://github.com/dooosp/b2b-lead-agent/issues/162#issuecomment-4525315986';
 
@@ -16,20 +22,6 @@ export const AUTH_PROVIDER_SESSION_SCAFFOLD_EXPECTED_AUDIENCE =
 const ENABLED_VALUES = new Set(['1', 'true', 'enabled', 'local_test', 'local-test', 'non_production']);
 const NON_LOCAL_VALUES = new Set(['production', 'prod', 'staging', 'stage', 'preview', 'live']);
 const ROLE_REVIEWER = 'reviewer';
-const ROLE_MANAGER = 'manager';
-const ROLE_ADMIN = 'admin';
-const ROLE_API_CLIENT = 'api_client';
-
-const ROLE_ALIASES = new Map([
-  [ROLE_REVIEWER, ROLE_REVIEWER],
-  [ROLE_MANAGER, ROLE_MANAGER],
-  [ROLE_ADMIN, ROLE_ADMIN],
-  [ROLE_API_CLIENT, ROLE_API_CLIENT],
-  ['api-client', ROLE_API_CLIENT],
-  ['api client', ROLE_API_CLIENT],
-  ['api', ROLE_API_CLIENT],
-]);
-
 function normalizeText(value) {
   return String(value || '').trim().toLowerCase();
 }
@@ -39,7 +31,16 @@ function isEnabledValue(value) {
 }
 
 function isProductionLikeEnv(env = {}) {
-  return ['WORKER_ENV', 'DEPLOYMENT_ENV', 'APP_ENV', 'ENVIRONMENT', 'CF_ENV']
+  return [
+    'WORKER_ENV',
+    'DEPLOYMENT_ENV',
+    'APP_ENV',
+    'ENVIRONMENT',
+    'CF_ENV',
+    'NODE_ENV',
+    'WRANGLER_ENV',
+    'CLOUDFLARE_ENV',
+  ]
     .some((key) => NON_LOCAL_VALUES.has(normalizeText(env[key])));
 }
 
@@ -48,15 +49,7 @@ export function isAuthProviderSessionScaffoldRequested(env = {}) {
 }
 
 export function resolveAuthProviderSessionRole(value) {
-  const rawRole = normalizeText(value).replace(/\s+/g, ' ');
-  if (!rawRole) {
-    return { role: 'none', roleStatus: 'missing' };
-  }
-  const role = ROLE_ALIASES.get(rawRole);
-  if (!role) {
-    return { role: 'none', roleStatus: 'unknown' };
-  }
-  return { role, roleStatus: 'recognized' };
+  return normalizeLocalTestAuthAdapterRole(value);
 }
 
 function scaffoldAccess({
@@ -87,45 +80,6 @@ function scaffoldAccess({
     productionReady: false,
     denialMessage: 'Manual review notes are restricted by the non-production auth provider/session scaffold. Role "reviewer" is required; no real auth/session/provider is implemented.',
   };
-}
-
-function resolveSyntheticClaimStatus(session, now = new Date()) {
-  if (!session) return 'missing_session';
-  if (session.expired === true || session.claimStatus === 'expired') return 'expired';
-
-  if (session.expiresAt) {
-    const expiresAt = new Date(session.expiresAt);
-    if (Number.isNaN(expiresAt.getTime())) return 'expired';
-    if (expiresAt.getTime() <= now.getTime()) return 'expired';
-  }
-
-  if (!session.audience) return 'missing_audience';
-
-  if (String(session.audience) !== AUTH_PROVIDER_SESSION_SCAFFOLD_EXPECTED_AUDIENCE) {
-    return 'wrong_audience';
-  }
-
-  return 'valid';
-}
-
-async function resolveProviderSession(provider, context) {
-  if (!provider) {
-    return { session: null, providerStatus: 'missing_provider' };
-  }
-  try {
-    if (typeof provider === 'function') {
-      return { session: await provider(context), providerStatus: 'resolved' };
-    }
-    if (typeof provider.resolveSession === 'function') {
-      return { session: await provider.resolveSession(context), providerStatus: 'resolved' };
-    }
-    if (Object.prototype.hasOwnProperty.call(provider, 'session')) {
-      return { session: provider.session, providerStatus: 'resolved' };
-    }
-    return { session: null, providerStatus: 'missing_provider' };
-  } catch {
-    return { session: null, providerStatus: 'provider_error' };
-  }
 }
 
 export function authProviderSessionScaffoldMetadata(access = {}) {
@@ -170,23 +124,27 @@ export async function resolveAuthProviderSessionScaffold(request, env = {}) {
     });
   }
 
-  const provider = env[AUTH_PROVIDER_SESSION_SCAFFOLD_PROVIDER_ENV];
-  const { session, providerStatus } = await resolveProviderSession(provider, { request, env });
-  if (!session || providerStatus !== 'resolved') {
+  const adapter = env[AUTH_PROVIDER_SESSION_SCAFFOLD_PROVIDER_ENV];
+  const { adapterStatus, claims } = await resolveLocalTestAuthAdapter({
+    adapter,
+    request,
+    env,
+    expectedAudience: AUTH_PROVIDER_SESSION_SCAFFOLD_EXPECTED_AUDIENCE,
+  });
+  const providerStatus = adapterStatus === 'missing_adapter' ? 'missing_provider' : adapterStatus;
+  if (adapterStatus !== 'resolved' || claims.claimStatus === 'missing_session') {
     return scaffoldAccess({
       providerStatus,
       claimStatus: providerStatus === 'provider_error' ? 'provider_error' : 'missing_session',
     });
   }
 
-  const claimStatus = resolveSyntheticClaimStatus(session);
-  const { role, roleStatus } = resolveAuthProviderSessionRole(session.role);
   return scaffoldAccess({
-    role,
-    roleStatus,
-    authenticated: session.authenticated === true && claimStatus === 'valid',
+    role: claims.role,
+    roleStatus: claims.roleStatus,
+    authenticated: claims.authenticated,
     providerStatus,
-    claimStatus,
+    claimStatus: claims.claimStatus,
   });
 }
 
@@ -198,16 +156,12 @@ export function createStaticAuthProviderSessionScaffoldProvider({
   expired,
   claimStatus,
 } = {}) {
-  return {
-    async resolveSession() {
-      return {
-        role,
-        authenticated,
-        audience,
-        expiresAt,
-        expired,
-        claimStatus,
-      };
-    },
-  };
+  return createStaticLocalTestAuthAdapter({
+    role,
+    authenticated,
+    audience,
+    expiresAt,
+    expired,
+    claimStatus,
+  });
 }

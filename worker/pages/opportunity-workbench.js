@@ -724,7 +724,7 @@ function renderStakeholderRole(role) {
               </article>`;
 }
 
-export function renderOpportunityWorkbench(model) {
+export function renderOpportunityWorkbench(model, { includeGeneratedReviewGuidance = true } = {}) {
   const workbench = model && model.nextAction && model.reviewGate && model.actionIntelligence && model.solutionTranslation && model.productContext && model.stakeholderPrep
     ? model
     : buildOpportunityWorkbenchModel(model);
@@ -773,10 +773,11 @@ export function renderOpportunityWorkbench(model) {
                 <dt>Stakeholder angle</dt>
                 <dd>${escapeHtml(workbench.actionIntelligence.stakeholderAngle)}</dd>
               </div>
-              <div>
-                <dt>Suggested follow-up</dt>
-                <dd>${escapeHtml(workbench.actionIntelligence.suggestedFollowUp)}</dd>
-              </div>
+              ${includeGeneratedReviewGuidance ? `
+                <div>
+                  <dt>Suggested follow-up</dt>
+                  <dd>${escapeHtml(workbench.actionIntelligence.suggestedFollowUp)}</dd>
+                </div>` : ''}
             </dl>
             <div class="opportunity-workbench-intelligence-columns">
               <div>
@@ -792,7 +793,7 @@ export function renderOpportunityWorkbench(model) {
                 </ul>
               </div>
             </div>
-            ${renderReviewerNoteTemplates(workbench.actionIntelligence)}
+            ${includeGeneratedReviewGuidance ? renderReviewerNoteTemplates(workbench.actionIntelligence) : ''}
             <p class="opportunity-workbench-caveat">Deterministic reviewer guidance only; it does not approve outreach or send messages automatically.</p>
           </div>
           <div class="opportunity-workbench-panel opportunity-workbench-wide opportunity-workbench-solution">

@@ -3,8 +3,11 @@ import { canonicalizeLeadCollectionForProfile, resolveProfileId } from '../lib/p
 import { buildLeadReviewSession, buildReviewerActionQueue } from '../lib/lead-action-intelligence.js';
 import {
   assertManualReviewNotesWriteAllowed,
+  filterManualReviewNotesForExport,
   filterManualReviewNotesLeadCollection,
   filterManualReviewNotesProtectedFields,
+  filterManualReviewNotesLeadReviewSession,
+  filterManualReviewNotesReviewerQueue,
   patchTouchesManualReviewNotes,
   resolveManualReviewNotesAccess,
   withManualReviewNotesAccessMetadata
@@ -17,14 +20,20 @@ function canonicalizeLeadPayload(profile, leads) {
 }
 
 function buildLeadListPayload(canonicalized, source, extra = {}, manualReviewNotesAccess = {}) {
-  const reviewerActionQueue = buildReviewerActionQueue(canonicalized.leads);
+  const reviewerActionQueue = filterManualReviewNotesReviewerQueue(
+    buildReviewerActionQueue(canonicalized.leads),
+    manualReviewNotesAccess
+  );
   const leads = filterManualReviewNotesLeadCollection(canonicalized.leads, manualReviewNotesAccess);
   return withManualReviewNotesAccessMetadata({
     leads,
     profile: canonicalized.profileId,
     source,
     reviewerActionQueue,
-    leadReviewSession: buildLeadReviewSession(canonicalized.leads, { queue: reviewerActionQueue }),
+    leadReviewSession: filterManualReviewNotesLeadReviewSession(
+      buildLeadReviewSession(canonicalized.leads, { queue: reviewerActionQueue }),
+      manualReviewNotesAccess
+    ),
     ...extra,
   }, manualReviewNotesAccess);
 }
@@ -154,7 +163,7 @@ export async function handleExportCSV(request, env) {
     ? await getAllLeads(env.DB, { limit: 1000 })
     : await getLeadsByProfile(env.DB, profileId, { limit: 1000 });
 
-  const csv = serializeLeadsCsv(filterManualReviewNotesLeadCollection(leads, manualReviewNotesAccess));
+  const csv = serializeLeadsCsv(filterManualReviewNotesForExport(leads, manualReviewNotesAccess));
   const filename = createLeadsCsvFilename(profileId);
   return new Response(csv, {
     headers: {

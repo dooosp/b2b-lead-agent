@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-05-31.
-> Audited against first-parent `master` history through `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` (PR #171, `Level 1 non-production auth session scaffold guards`) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input and proof-preflight planning through PR #171, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #118 completion, Issue #115 completion, Issue #34 GitHub-only closeout, and Issue #144 feedback record 001. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit future production proof goal.
+> Audited against first-parent `master` history through `6f5f764e2a4404157d4eb6120b44db6d173d41aa` (PR #172, `Level 1 local proof preflight automation`) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input, auth scaffold, and proof-preflight planning through PR #172, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #118 completion, Issue #115 completion, Issue #34 GitHub-only closeout, and Issue #144 feedback record 001. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit future production proof goal.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -56,18 +56,23 @@
 | 46 | 2026-05-21 | #143 | `a9a6c17` | Manual Review Notes v1 non-production cycle closeout | Closed the local/test cycle as docs-only closeout with local implementation complete, local/fake-D1 evidence complete, staging target decision-ready/HOLD, staging execution HOLD, production proof/deploy HOLD, and no mandatory next action |
 | 47 | 2026-05-21 | #145 | `c0505cf` | Manual Review Notes v1 reviewer feedback intake | Added docs-only feedback intake structure and Issue #144 as the optional feedback container; first actual feedback is now dispositioned separately as P3/docs/no-follow-up. It did not approve staging, production, implementation, manager/export/API expansion, access control, retention/privacy enforcement, or generated suggestion persistence |
 
-Post-PR171 update: PR #171 merged at
+Post-PR172 update: PR #171 merged at
 `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` with non-production
 auth-provider/session scaffold guards, local/fake-D1 proof simulation, D1 /
-rollback / privacy guards, and Level 1 scorecard/evidence docs. The current
-Level 1 follow-up adds local-only proof-preflight automation, stricter
-synthetic claim cases including missing audience, detail-page protected-field
-filtering, D1 index and metadata fixture checks, recursive evidence redaction,
-bare non-local hostname refusal, and local stop-write rollback guards. These
-artifacts are **not production evidence** and do not authorize production
-proof, deploy, D1 access, endpoint calls, logs/secrets, customer/private data,
-real auth/session/provider parsing, CRM/outreach, LLM, automation, or generated
-suggestion persistence/export/history/attribution.
+rollback / privacy guards, and Level 1 scorecard/evidence docs. PR #172 merged
+at `6f5f764e2a4404157d4eb6120b44db6d173d41aa` with local-only
+proof-preflight automation, stricter synthetic claim cases including missing
+audience, detail-page protected-field filtering, D1 index and metadata fixture
+checks, recursive evidence redaction, bare non-local hostname refusal, and
+local stop-write rollback guards. The current
+`LEVEL1_AUTH_ADAPTER_ROUTE_AUDIT_NON_PRODUCTION` follow-up adds only
+provider-agnostic injected local/test auth adapter contracts, route-audit
+coverage, deny-by-default route/privacy gates, and redacted reviewer docs.
+These artifacts are **not production evidence** and do not authorize
+production proof, deploy, D1 access, endpoint calls, logs/secrets,
+customer/private data, real auth/session/provider parsing, Cloudflare Access
+calls, CRM/outreach, LLM, automation, or generated suggestion
+persistence/export/history/attribution.
 
 ## Wave Summary
 
@@ -106,7 +111,7 @@ suggestion persistence/export/history/attribution.
 
 - PR #25 shipped the P0 trust-boundary and fallback-publication guard baseline.
 - Current `master` therefore includes:
-  - `/api/internal/*` authenticates with `API_TOKEN` only
+  - `/api/internal/*` authenticates with `INTERNAL_API_TOKEN` when configured, with `API_TOKEN` compatibility fallback when unset
   - `TRIGGER_PASSWORD` does not grant access to internal APIs
   - latest-published readiness lookup failures return HTTP `503` with `error.code = "readiness_unavailable"`
   - managed/root qualification fails closed when the LLM is missing or fails, unless explicit demo mode is enabled
