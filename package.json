@@ -10,6 +10,7 @@
     "check:schema": "node scripts/check-d1-schema-consistency.js",
     "evidence:packet": "node scripts/generate-release-evidence-packet.js",
     "proof:level1:preflight": "node scripts/level1-proof-preflight.mjs --json --output tmp/codex/level1-proof-preflight-automation-non-production-evidence.json",
+    "proof:level1:approval-dry-run": "node scripts/level1-production-proof-approval-dry-run.mjs --json --output tmp/codex/level1-production-proof-approval-dry-run-non-production-evidence.json",
     "eval:lead-quality": "node scripts/evaluate-lead-quality.js --fixtures",
     "e2e": "node e2e-test.mjs",
     "test:e2e:local": "node --test worker/e2e/local-e2e.test.mjs",

@@ -22,7 +22,10 @@ redacted proof-preflight evidence.
 | Rollback/privacy guards | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `worker/tests/level1-readiness-guards.test.mjs`; `worker/tests/manual-review-notes.test.mjs` | Stop-write and redaction guard only; rollback execution, destructive actions, retention enforcement, purge, PII detection, and privacy proof remain HOLD. |
 | Generated suggestion boundary | `PASS` | `worker/tests/manual-review-notes.test.mjs`; `worker/tests/level1-local-proof-simulation.test.mjs` | Generated suggestions remain copy-only, unsaved, unattributed, unretained, unexported, and excluded from history. |
 | Route audit protected-field boundary | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `worker/lib/level1-auth-route-audit.js`; `worker/tests/level1-auth-route-audit.test.mjs` | Managers/admin/API clients/missing/unknown/expired/wrong-audience/provider-error cases fail closed or omit protected fields locally across reviewer queue, history, export, enrich, note write, `/leads`, and detail routes. Real production roles remain unimplemented. |
-| Publication and evidence redaction boundary | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `lead-report-publisher.js`; `tests/leadbrief-publication-contract.test.js`; `scripts/release-evidence-redactor.js`; `tests/release-evidence-redaction.test.js` | Published latest/history snapshots and evidence packets omit or redact manual note bodies, generated suggestions/templates, and protected note metadata. |
+| Publication and evidence redaction boundary | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `lead-report-publisher.js`; `tests/leadbrief-publication-contract.test.js`; `scripts/release-evidence-redactor.js`; `tests/release-evidence-redaction.test.js` | Published latest/history snapshots and evidence packets omit or redact manual note bodies, generated suggestions/templates, protected note metadata, provider/raw auth inputs, tokens, cookies, private identifiers, and secret-shaped fields. |
+| Final approval packet | `PASS_LOCAL`, `HOLD_PRODUCTION` | `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-packet-non-production.md` | Final non-production packet is prepared with prerequisites, owner checklist, rollback owner, stop-write trigger, evidence requirements, abort conditions, and exact future approval fields. It is not production evidence and does not approve execution. |
+| Future evidence schema | `PASS_LOCAL`, `HOLD_PRODUCTION` | `worker/lib/level1-readiness-guards.js`; `worker/tests/level1-production-proof-approval.test.mjs` | Future evidence schema requires timestamps, boundary labels, required fields, `productionReady:false`, `notProductionEvidence:true`, and forbidden-field rejection for manual-note, generated-guidance, provider, raw auth/session, D1, secret, and customer/private fields. |
+| Approval packet dry-run operator | `PASS_LOCAL`, `HOLD_PRODUCTION` | `scripts/level1-production-proof-approval-dry-run.mjs`; `worker/tests/level1-production-proof-approval.test.mjs`; `npm run proof:level1:approval-dry-run` | Local-only dry-run validates packet completeness and refuses production/staging URLs, D1 bindings/private IDs, secrets, tokens, auth material, provider inputs, real endpoints, and non-local env values. It does not call endpoints. |
 | Local-only Worker E2E smoke | `PASS` | `npm run test:e2e:local` after `npm ci` | Fake D1 and loopback only; not production/staging smoke. |
 | Final production proof approval | `HOLD` | Issue #165 records docs-planning only | No production proof execution approved. |
 
@@ -33,6 +36,7 @@ LEVEL_1_NON_PRODUCTION_PROGRESS: ADVANCED
 PRODUCTION_REVIEWER_WORKFLOW_READY: NO
 OVERALL_STATUS: BLOCKED_PENDING_SEPARATE_EXPLICIT_PRODUCTION_PROOF_GOAL
 BOUNDARY: NON_PRODUCTION_ONLY
+NEXT_HUMAN_APPROVAL_NEEDED: SEPARATE_EXPLICIT_FUTURE_PRODUCTION_PROOF_GOAL_WITH_EXACT_BOUNDARIES
 ```
 
 ## Auth Gate
@@ -113,6 +117,29 @@ body text, generated suggestion text, tokens, cookies, auth headers,
 customer/private fields, and nested secret-shaped fields before evidence is
 emitted.
 
+## Approval Packet Dry-Run
+
+Local command:
+
+```bash
+npm run proof:level1:approval-dry-run
+```
+
+Runner and reviewer artifact surfaces:
+
+- `scripts/level1-production-proof-approval-dry-run.mjs`;
+- `worker/lib/level1-readiness-guards.js`;
+- `worker/tests/level1-production-proof-approval.test.mjs`;
+- `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-packet-non-production.md`;
+- `tmp/codex/level1-production-proof-approval-dry-run-non-production-evidence.json`.
+
+The dry-run validates the approval packet, future evidence schema, and local
+input boundary. It refuses production/staging URLs, non-local hostnames, D1
+bindings, private identifiers, secrets, tokens, cookies, auth headers,
+provider inputs, and non-local environment values. It does not call endpoints
+and it keeps `productionReady: false`, `notProductionEvidence: true`, and
+production proof approval on `HOLD`.
+
 ## D1 Gate
 
 Local schema guard coverage verifies:
@@ -175,12 +202,25 @@ Current constraints remain:
 
 - no manual note body history;
 - no generated suggestion persistence/history/export/attribution;
+- no provider/raw auth input publication, history retention, or evidence
+  capture;
 - no manager/export/API/detail expansion for protected manual note fields;
 - no retention enforcement;
 - no purge/delete job;
 - no PII detection;
 - no redaction implementation beyond local evidence-record redaction helper;
 - no production privacy proof.
+
+Additional approval-packet constraints:
+
+- manual note body, generated suggestion/template/guidance, provider input, raw
+  session claim, auth material, D1/private identifier, and customer/private
+  fields are forbidden in approval-packet evidence;
+- packet text rejects field-shaped protected payloads such as
+  `manualReviewNotes:`, `generatedSuggestionText:`, `providerInput:`, and
+  `rawSessionClaims:`;
+- future proof evidence must include `NOT_PRODUCTION_EVIDENCE`,
+  `productionReady: false`, and `productionReviewerWorkflowReady: false`.
 
 ## Stop Conditions
 

@@ -3,7 +3,7 @@
 ## 현재 기준 상태
 
 - 기준 브랜치: `master`
-- 마지막 검증된 post-PR #160 `origin/master` HEAD: `531e504889d654186432ba1f2f043ede3e3e9323` (`test: guard auth access control boundaries`)
+- 마지막 검증된 post-PR #173 `origin/master` HEAD: `cc7944c7d851a57642e933435d482932eaabf921` (`Level 1 local auth adapter route audit`)
 - 다음 세션도 반드시 `git fetch origin master`와 `git rev-parse origin/master`로 실제 최신 HEAD를 다시 기록한다.
 - hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`, `docs/architecture/*.md`, `NEXT_SESSION_PROMPT.md`
 - LeadBrief v1 merge baseline: `5776d4a` (`[Product] Freeze LeadBrief v1 review contract (#27)`)
@@ -151,7 +151,9 @@
   - #159 added the docs-only Auth / Access Control Implementation Plan. Real auth, sessions, production roles, provider decisions, production D1 facts, rollback owner, and production proof approval remain unresolved.
   - #160 added non-production auth/access-control guard tests for the existing C2 local/test role stub only. The stub remains opt-in local/test behavior and reports `realAuthImplemented: false` / `productionReady: false`.
   - #171 merged the non-production auth provider/session scaffold, local fake-D1 proof simulation, Level 1 readiness guards, and Level 1 scorecard/evidence docs. It remains synthetic and local-only: no real tokens, cookies, JWTs, sessions, provider parsing, production D1, production endpoints, logs/secrets, customer/private data, CRM/outreach, LLM, automation, or production-readiness claim.
-  - Current follow-up `LEVEL1_AUTH_ADAPTER_ROUTE_AUDIT_NON_PRODUCTION` builds on PR #171/#172 with provider-agnostic injected local/test auth adapter contracts, route audit coverage, deny-by-default synthetic role checks, stricter local proof/auth preflight refusal, enrich/export/publication/evidence privacy guards, and reviewer docs. It is **not production evidence**, does not parse real auth material or call Cloudflare Access, and keeps `productionReady: false`.
+  - #172 merged local-only proof preflight automation, redacted synthetic fixture evidence, and refusal of production-like env/URL/D1/secret/provider inputs. It is **not production evidence** and keeps `productionReady: false`.
+  - #173 merged `LEVEL1_AUTH_ADAPTER_ROUTE_AUDIT_NON_PRODUCTION` with provider-agnostic injected local/test auth adapter contracts, route audit coverage, deny-by-default synthetic role checks, stricter local proof/auth preflight refusal, enrich/export/publication/evidence privacy guards, and reviewer docs. It is **not production evidence**, does not parse real auth material or call Cloudflare Access, and keeps `productionReady: false`.
+  - Current follow-up `LEVEL1_PRODUCTION_PROOF_APPROVAL_PACKET_NON_PRODUCTION` prepares only the final non-production approval packet, future evidence schema, and local approval dry-run operator after PRs #171/#172/#173. It does not execute production proof and keeps `productionReady: false`.
 - Current Level 1 blocker burn-down packet lives at `docs/roadmap/b2b-lead-agent-level-1-blocker-burndown-packet.md`. It classifies remaining blockers for auth provider/session owner input, production D1 schema observation input, rollback/backout owner input, final production proof approval, and privacy residual values. It includes copy-paste owner request templates and keeps `FINAL_STATE: HOLD_PENDING_NEW_EXPLICIT_GOAL`.
 - Reviewer Workflow Final Audit & Demo Packet lives at `docs/reviewer-workflow-final-audit.md` and is the canonical local/test-safe handoff baseline for completed reviewer workflow demo, validation, allowed/forbidden claims, note-persistence wording, and production evidence boundaries.
 - Issue #100 is closed as completed for the recorded local/test-safe Human UX Review findings. Future UX feedback should open a new issue or separately scoped record.

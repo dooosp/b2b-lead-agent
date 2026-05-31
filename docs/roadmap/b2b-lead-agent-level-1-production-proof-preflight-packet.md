@@ -25,9 +25,9 @@ evidence**.
 - Repository: `dooosp/b2b-lead-agent`.
 - Default branch: `master`.
 - Baseline inspected: `origin/master` at
-  `6f5f764e2a4404157d4eb6120b44db6d173d41aa` (PR #172 merge).
-- Latest shipped related merged PR: PR #172,
-  `Level 1 local proof preflight automation`.
+  `cc7944c7d851a57642e933435d482932eaabf921` (PR #173 merge).
+- Latest shipped related merged PR: PR #173,
+  `Level 1 local auth adapter route audit`.
 - Packet path:
   `docs/roadmap/b2b-lead-agent-level-1-production-proof-preflight-packet.md`.
 - Production proof execution performed: no.
@@ -42,8 +42,8 @@ b2b_lead_agent_level_1_production_proof_preflight_packet:
   human_decision: PREPARE_LEVEL1_PRODUCTION_PROOF_PREFLIGHT_PACKET_DOCS_ONLY
   repository: dooosp/b2b-lead-agent
   default_branch: master
-  inspected_origin_master: "6f5f764e2a4404157d4eb6120b44db6d173d41aa"
-  latest_related_merged_pr: 172
+  inspected_origin_master: "cc7944c7d851a57642e933435d482932eaabf921"
+  latest_related_merged_pr: 173
   current_state: LEVEL_0_COMPLETE
   target: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
   owner_inputs: COMPLETE_FOR_DOCS_PLANNING_ONLY
@@ -72,6 +72,8 @@ Source-of-truth records:
   https://github.com/dooosp/b2b-lead-agent/pull/171
 - PR #172:
   https://github.com/dooosp/b2b-lead-agent/pull/172
+- PR #173:
+  https://github.com/dooosp/b2b-lead-agent/pull/173
 - PR #169:
   https://github.com/dooosp/b2b-lead-agent/pull/169
 - Owner-input disposition:
@@ -94,11 +96,19 @@ non-local hostnames, D1 bindings/private IDs, secrets, real provider inputs,
 and non-local envs. This automation is local preflight only and is not
 production evidence.
 
-Post-PR172 route/auth-adapter audit work remains non-production only. It adds
+Post-PR173 route/auth-adapter audit work remains non-production only. It adds
 provider-agnostic injected local/test adapter contracts, route-audit coverage,
 deny-by-default synthetic role checks, export/enrich/publication/evidence
 redaction guards, and reviewer docs. It is not real auth, not Cloudflare
 Access integration, not production proof, and not production evidence.
+
+This final approval packet follow-up remains non-production only. The packet
+at
+`docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-packet-non-production.md`
+and the local command `npm run proof:level1:approval-dry-run` validate
+operator prerequisites, owner checklist, rollback owner, stop-write trigger,
+evidence schema, abort conditions, and local input refusal. This is not
+production evidence and does not approve proof execution.
 
 ## 2. Prerequisite Matrix
 
@@ -285,6 +295,7 @@ future explicit goal or its cited owner comments.
 | Generated-suggestion exclusion checks | No saved note, timestamp, author label, history, export, or evidence text | `TBD_BY_FUTURE_EXPLICIT_GOAL` |
 | Rollback/backout trigger | Stop-write and escalation path confirmed for this proof | `TBD_BY_FUTURE_EXPLICIT_GOAL` |
 | Stop conditions | Explicit halt list for this proof | `TBD_BY_FUTURE_EXPLICIT_GOAL` |
+| Final approval packet dry-run | `npm run proof:level1:approval-dry-run` local-only artifact | `PASS_LOCAL_NOT_PRODUCTION_EVIDENCE` |
 
 ## 7. Boundary Confirmation
 

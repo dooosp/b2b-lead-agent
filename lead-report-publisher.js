@@ -259,6 +259,16 @@ const PROTECTED_PUBLICATION_FIELDS = [
   'manual_review_notes_history_last_author_label',
   'reviewNoteSuggestion',
   'reviewNoteTemplates',
+  'providerInput',
+  'rawSessionClaims',
+  'rawCommandContext',
+  'authHeader',
+  'cookie',
+  'token',
+  'jwt',
+  'sessionClaim',
+  'databaseId',
+  'accountId',
 ];
 
 function omitProtectedPublicationFields(lead) {

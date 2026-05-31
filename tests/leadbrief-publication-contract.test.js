@@ -78,6 +78,10 @@ test('published snapshots omit manual-note and generated-suggestion fields', () 
     reviewNoteTemplates: [
       { text: 'Generated template must not publish.' },
     ],
+    providerInput: 'Raw provider input must not publish.',
+    rawSessionClaims: { token: 'Raw session token must not publish.' },
+    authHeader: 'Bearer raw auth header must not publish.',
+    token: 'Raw token must not publish.',
   })], {
     now: '2026-05-05T00:00:00.000Z',
     profileId: 'danfoss',
@@ -95,10 +99,14 @@ test('published snapshots omit manual-note and generated-suggestion fields', () 
     'manualReviewNotesHistoryEventCount',
     'reviewNoteSuggestion',
     'reviewNoteTemplates',
+    'providerInput',
+    'rawSessionClaims',
+    'authHeader',
+    'token',
   ]) {
     assert.equal(Object.hasOwn(record, field), false, `${field} should not publish`);
   }
-  assert.doesNotMatch(serialized, /Manual note body|manual_reviewer|Generated suggestion|Generated template/);
+  assert.doesNotMatch(serialized, /Manual note body|manual_reviewer|Generated suggestion|Generated template|Raw provider input|Raw session token|raw auth header|Raw token/);
 });
 
 test('lead history merge drops stale protected manual-note fields from existing history', () => {
@@ -110,6 +118,8 @@ test('lead history merge drops stale protected manual-note fields from existing 
       notes: 'Existing history note body must not remain.',
       manualReviewNotesAuthorLabel: 'manual_reviewer',
       reviewNoteSuggestion: { text: 'Existing generated suggestion must not remain.' },
+      providerInput: 'Existing provider input must not remain.',
+      rawSessionClaims: { token: 'Existing raw session must not remain.' },
       createdAt: '2026-05-01T00:00:00.000Z',
     },
   ], [createLead()], {
@@ -122,5 +132,7 @@ test('lead history merge drops stale protected manual-note fields from existing 
   assert.equal(Object.hasOwn(record, 'notes'), false);
   assert.equal(Object.hasOwn(record, 'manualReviewNotesAuthorLabel'), false);
   assert.equal(Object.hasOwn(record, 'reviewNoteSuggestion'), false);
-  assert.doesNotMatch(serialized, /Existing history note body|manual_reviewer|Existing generated suggestion/);
+  assert.equal(Object.hasOwn(record, 'providerInput'), false);
+  assert.equal(Object.hasOwn(record, 'rawSessionClaims'), false);
+  assert.doesNotMatch(serialized, /Existing history note body|manual_reviewer|Existing generated suggestion|Existing provider input|Existing raw session/);
 });
