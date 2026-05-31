@@ -33,11 +33,25 @@ const DENIED_RENDERED_HTML_FORBIDDEN_FRAGMENTS = Object.freeze([
   "'authHeader'",
   'authHeader:',
 ]);
+const RAW_AUTH_API_FORBIDDEN_FRAGMENTS = Object.freeze([
+  'providerInput',
+  'rawSessionClaims',
+  'rawAuth',
+  'raw_auth',
+  '"authHeader"',
+  "'authHeader'",
+  'authHeader:',
+  'Authorization=Bearer',
+  'Cookie=',
+]);
 
 function createAuditEnv(session) {
+  const provider = session && typeof session.resolveSession === 'function'
+    ? session
+    : createStaticAuthProviderSessionScaffoldProvider(session);
   const env = createWorkerEnv({
     [AUTH_PROVIDER_SESSION_SCAFFOLD_NON_PRODUCTION_ENV]: 'enabled',
-    [AUTH_PROVIDER_SESSION_SCAFFOLD_PROVIDER_ENV]: createStaticAuthProviderSessionScaffoldProvider(session),
+    [AUTH_PROVIDER_SESSION_SCAFFOLD_PROVIDER_ENV]: provider,
   });
   env.DB.leads.set('lead-1', createLeadRow({
     enriched: 1,
@@ -90,6 +104,17 @@ function assertDoesNotLeakGeneratedSuggestion(payload) {
   assert.equal(serialized.includes('reviewNoteTemplates'), false);
 }
 
+function assertDoesNotLeakRawAuthFields(payload, surface) {
+  const serialized = typeof payload === 'string' ? payload : JSON.stringify(payload);
+  for (const fragment of RAW_AUTH_API_FORBIDDEN_FRAGMENTS) {
+    assert.equal(
+      serialized.includes(fragment),
+      false,
+      `${surface} leaked forbidden raw auth/provider fragment: ${fragment}`
+    );
+  }
+}
+
 function assertDeniedRenderedHtmlDoesNotLeakProtectedFields(html, surface) {
   assert.equal(typeof html, 'string');
   for (const fragment of DENIED_RENDERED_HTML_FORBIDDEN_FRAGMENTS) {
@@ -113,6 +138,7 @@ test('Level 1 auth route audit inventory maps current protected route ids', () =
       'api.leads.list',
       'api.history',
       'api.exportCsv',
+      'api.leads.batchEnrich',
       'api.leads.enrich',
       'api.leads.patch',
       'page.leads',
@@ -183,10 +209,23 @@ for (const scenario of [
   { name: 'manager', session: { role: 'manager' } },
   { name: 'admin', session: { role: 'admin' } },
   { name: 'api client', session: { role: 'api_client' } },
+  { name: 'api client hyphen alias', session: { role: 'api-client' } },
+  { name: 'api alias', session: { role: 'api' } },
   { name: 'missing role', session: { role: '' } },
   { name: 'unknown role', session: { role: 'auditor' } },
+  { name: 'mixed roles', session: { role: ['reviewer', 'manager'] } },
+  { name: 'single-item role array', session: { role: ['reviewer'] } },
   { name: 'expired reviewer', session: { role: 'reviewer', expiresAt: '2000-01-01T00:00:00.000Z' } },
   { name: 'wrong audience reviewer', session: { role: 'reviewer', audience: 'wrong-audience' } },
+  { name: 'malformed audience array reviewer', session: { role: 'reviewer', audience: ['b2b-lead-agent-level1-local-proof'] } },
+  {
+    name: 'malformed provider claim payload',
+    session: {
+      async resolveSession() {
+        return 'role=reviewer;Authorization=Bearer synthetic-route-token';
+      },
+    },
+  },
 ]) {
   test(`Level 1 route audit fails closed for ${scenario.name}`, async () => {
     const env = createAuditEnv(scenario.session);
@@ -228,6 +267,19 @@ for (const scenario of [
       {}
     );
     const enrichPayload = await json(enrichResponse);
+    const batchEnrichResponse = await handleWorkerRequest(
+      createWorkerRequest('/api/leads/batch-enrich', {
+        method: 'POST',
+        headers: API_HEADERS,
+        json: { profile: 'danfoss' },
+      }),
+      {
+        ...env,
+        GEMINI_API_KEY: 'synthetic-local-key',
+      },
+      {}
+    );
+    const batchEnrichPayload = await json(batchEnrichResponse);
     const writeResponse = await handleWorkerRequest(
       createWorkerRequest('/api/leads/lead-1', {
         method: 'PATCH',
@@ -238,9 +290,21 @@ for (const scenario of [
       {}
     );
     const writePayload = await json(writeResponse);
+    const nonManualPatchResponse = await handleWorkerRequest(
+      createWorkerRequest('/api/leads/lead-1', {
+        method: 'PATCH',
+        headers: API_HEADERS,
+        json: { reviewStatus: 'APPROVED' },
+      }),
+      env,
+      {}
+    );
+    const nonManualPatchPayload = await json(nonManualPatchResponse);
 
     assert.equal(writeResponse.status, 403);
     assert.equal(enrichResponse.status, 409);
+    assert.equal(batchEnrichResponse.status, 200);
+    assert.equal(nonManualPatchResponse.status, 200);
     assert.equal(writePayload.success, false);
     assert.equal(listPayload.reviewerActionQueue.items.length, 1);
     assertDoesNotLeakProtectedText(listPayload);
@@ -249,11 +313,25 @@ for (const scenario of [
     assertDeniedRenderedHtmlDoesNotLeakProtectedFields(leadsPageHtml, `${scenario.name} leads HTML`);
     assertDoesNotLeakProtectedText(exportCsv);
     assertDoesNotLeakProtectedText(enrichPayload);
+    assertDoesNotLeakProtectedText(batchEnrichPayload);
+    assertDoesNotLeakProtectedText(nonManualPatchPayload);
     assertDoesNotLeakGeneratedSuggestion(listPayload);
     assertDoesNotLeakGeneratedSuggestion(historyPayload);
     assertDoesNotLeakGeneratedSuggestion(exportCsv);
     assertDoesNotLeakGeneratedSuggestion(enrichPayload);
+    assertDoesNotLeakGeneratedSuggestion(batchEnrichPayload);
+    assertDoesNotLeakGeneratedSuggestion(nonManualPatchPayload);
+    assertDoesNotLeakRawAuthFields(listPayload, `${scenario.name} list payload`);
+    assertDoesNotLeakRawAuthFields(historyPayload, `${scenario.name} history payload`);
+    assertDoesNotLeakRawAuthFields(exportCsv, `${scenario.name} export CSV`);
+    assertDoesNotLeakRawAuthFields(enrichPayload, `${scenario.name} enrich payload`);
+    assertDoesNotLeakRawAuthFields(batchEnrichPayload, `${scenario.name} batch enrich payload`);
+    assertDoesNotLeakRawAuthFields(writePayload, `${scenario.name} write payload`);
+    assertDoesNotLeakRawAuthFields(nonManualPatchPayload, `${scenario.name} non-manual patch payload`);
     assert.equal(JSON.stringify(writePayload).includes(`Denied ${scenario.name} write.`), false);
+    assert.equal(JSON.stringify(listPayload).includes('synthetic-route-token'), false);
+    assert.equal(detailHtml.includes('synthetic-route-token'), false);
+    assert.equal(leadsPageHtml.includes('synthetic-route-token'), false);
     assert.equal(env.DB.leads.get('lead-1').notes, PROTECTED_NOTE);
   });
 }
@@ -292,4 +370,73 @@ test('Level 1 route audit fails closed and redacts provider-error details', asyn
   assert.equal(leadsPageHtml.includes(providerSecret), false);
   assert.equal(listPayload.manualReviewNotesAccess.providerStatus, 'provider_error');
   assert.equal(listPayload.manualReviewNotesAccess.productionReady, false);
+});
+
+test('Level 1 route audit filters denied-role successful enrich response', async () => {
+  const originalFetch = globalThis.fetch;
+  const env = createAuditEnv({ role: 'manager' });
+  env.DB.leads.set('lead-1', {
+    ...env.DB.leads.get('lead-1'),
+    enriched: 0,
+  });
+  globalThis.fetch = async (url) => {
+    const rawUrl = String(url);
+    if (rawUrl.includes('generativelanguage.googleapis.com')) {
+      return new Response(JSON.stringify({
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: JSON.stringify({
+                    summary: 'Synthetic enriched summary.',
+                    roi: '근거 없음(추정 불가) - synthetic',
+                    salesPitch: 'Synthetic sales pitch.',
+                    globalContext: 'Synthetic global context.',
+                    actionItems: ['Synthetic action'],
+                    keyFigures: [],
+                    painPoints: ['Synthetic pain'],
+                    meddic: {},
+                    competitive: {},
+                    buyingSignals: ['Synthetic signal'],
+                    evidence: [],
+                    assumptions: ['Synthetic assumption'],
+                    dataGaps: ['Synthetic gap'],
+                  }),
+                },
+              ],
+            },
+          },
+        ],
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    return new Response('<article><p>Local synthetic article body with enough plain text to satisfy body extraction for this route audit fixture.</p></article>', {
+      status: 200,
+      headers: { 'Content-Type': 'text/html' },
+    });
+  };
+
+  try {
+    const response = await handleWorkerRequest(
+      createWorkerRequest('/api/leads/lead-1/enrich?force=1', {
+        method: 'POST',
+        headers: API_HEADERS,
+      }),
+      {
+        ...env,
+        GEMINI_API_KEY: 'synthetic-local-key',
+      },
+      {}
+    );
+    const payload = await json(response);
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.success, true);
+    assertDoesNotLeakProtectedText(payload);
+    assertDoesNotLeakGeneratedSuggestion(payload);
+    assertDoesNotLeakRawAuthFields(payload, 'successful denied-role enrich payload');
+    assert.equal(JSON.stringify(payload).includes(PROTECTED_NOTE), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

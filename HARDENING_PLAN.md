@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-05-31.
-> Audited against first-parent `master` history through `766447f95635b9a57c66d97c1b49ef670f57a687` (PR #174, `Level 1 approval packet dry run`) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input, auth scaffold, proof-preflight planning, route/auth-adapter hardening, and approval packet dry-run through PR #174, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #118 completion, Issue #115 completion, Issue #34 GitHub-only closeout, and Issue #144 feedback record 001. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit future production proof goal.
+> Audited against first-parent `master` history through `43a6a382139858b2c373f26d2e00ba62400303cf` (PR #175, `Add Level 1 non-production regression gate`) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input, auth scaffold, proof-preflight planning, route/auth-adapter hardening, approval packet dry-run through PR #174, and CI/package gate through PR #175, Issue #100 closeout, Issue #111 closeout, Issue #113 completion, Issue #118 completion, Issue #115 completion, Issue #34 GitHub-only closeout, and Issue #144 feedback record 001. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit future production proof goal.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -55,8 +55,9 @@
 | 45 | 2026-05-21 | #142 | `d18260a` | Manual Review Notes v1 staging target decision packet | Added the docs-only staging target packet that makes target selection decision-ready while keeping staging execution, staging D1 access, staging endpoints, staging logs/secrets, production proof/deploy, production D1, customer data, runtime/UI/schema/API changes, executable migration/rollback files, and generated suggestion persistence/history/export/attribution blocked |
 | 46 | 2026-05-21 | #143 | `a9a6c17` | Manual Review Notes v1 non-production cycle closeout | Closed the local/test cycle as docs-only closeout with local implementation complete, local/fake-D1 evidence complete, staging target decision-ready/HOLD, staging execution HOLD, production proof/deploy HOLD, and no mandatory next action |
 | 47 | 2026-05-21 | #145 | `c0505cf` | Manual Review Notes v1 reviewer feedback intake | Added docs-only feedback intake structure and Issue #144 as the optional feedback container; first actual feedback is now dispositioned separately as P3/docs/no-follow-up. It did not approve staging, production, implementation, manager/export/API expansion, access control, retention/privacy enforcement, or generated suggestion persistence |
+| 48 | 2026-05-31 | #171-#175 | `43a6a38` | Level 1 non-production proof, auth/route, approval, and CI gate train | Added local/test auth-provider/session scaffold, local proof-preflight automation, route/privacy audit, non-production approval dry-run, and `npm run check:level1` CI gate while preserving production proof HOLD |
 
-Post-PR174 update: PR #171 merged at
+Post-PR175 update: PR #171 merged at
 `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` with non-production
 auth-provider/session scaffold guards, local/fake-D1 proof simulation, D1 /
 rollback / privacy guards, and Level 1 scorecard/evidence docs. PR #172 merged
@@ -71,14 +72,24 @@ local/test auth adapter contracts, route-audit coverage, deny-by-default
 route/privacy gates, and redacted reviewer docs. PR #174 merged at
 `766447f95635b9a57c66d97c1b49ef670f57a687` with the final non-production
 approval packet, future evidence schema, and local approval dry-run operator.
+PR #175 merged at `43a6a382139858b2c373f26d2e00ba62400303cf` with the
+durable local-only Level 1 package/CI regression gate.
 The Level 1 regression gate is now `npm run check:level1`: it runs the local
 auth adapter/scaffold, route/UI privacy, generated-suggestion/manual-note,
-proof-preflight, approval dry-run, and redacted local artifact checks without
-secrets, deploy, Wrangler, D1 bindings, endpoints, or production inputs. These
-artifacts are **not production evidence** and do not authorize production
-proof, deploy, D1 access, endpoint calls, logs/secrets, customer/private data,
-real auth/session/provider parsing, Cloudflare Access calls, CRM/outreach, LLM,
-automation, or generated suggestion persistence/export/history/attribution.
+proof-preflight, approval dry-run, release-evidence redaction, and redacted
+local artifact checks without secrets, deploy, Wrangler, D1 bindings,
+endpoints, or production inputs. The current fail-closed matrix also covers
+malformed synthetic claim arrays, mixed roles, auth-header / Cloudflare Access /
+D1 / API-key alias env poison, denied-role route/API leak checks, poisoned
+future evidence artifacts, bare `notes` / validation-note evidence body
+redaction, value-aware raw-input redaction, missing local D1 metadata/index
+drift, stop-write disabled rollback requests, and mutating or destructive
+rollback/SQL requests. These artifacts are **not production evidence** and do
+not authorize production proof,
+deploy, D1 access, endpoint calls, logs/secrets, customer/private data, real
+auth/session/provider parsing, Cloudflare Access calls, CRM/outreach, LLM,
+automation, rollback execution, destructive data action, or generated
+suggestion persistence/export/history/attribution.
 Issue #165 remains the exact human approval blocker for any future production
 proof execution.
 

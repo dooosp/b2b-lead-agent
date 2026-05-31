@@ -49,6 +49,7 @@
     }
   },
   "localD1ObservationMetadata": {
+    "status": "PASS_LOCAL",
     "source": "local_fixture_metadata_only",
     "productionD1Observed": false,
     "productionReady": false,
@@ -118,7 +119,9 @@
         "partial": false
       }
     ],
-    "invalidRecords": []
+    "missingRecordKeys": [],
+    "invalidRecords": [],
+    "nextAction": "LOCAL_ONLY_NO_PRODUCTION_ACTION"
   },
   "rollbackGuard": {
     "trigger": "level1_local_preflight_blocker",

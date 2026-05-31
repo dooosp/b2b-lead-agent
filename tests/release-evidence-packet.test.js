@@ -76,3 +76,22 @@ test('rendered packet redacts sensitive content and states invalid production ev
   assert.match(yaml, /productionObservationClaimed: false/);
   assert.doesNotMatch(markdown + yaml, /11111111-2222-4333-8444-555555555555/);
 });
+
+test('validation notes fallback is treated as protected evidence text', () => {
+  const packet = createEvidencePacket({
+    title: 'Poisoned validation notes packet',
+    validations: [
+      {
+        command: 'npm run check:level1',
+        source: 'local',
+        status: 'pass',
+        notes: 'Human manual note body must not enter packet summaries.',
+      }
+    ],
+  });
+  const rendered = `${renderMarkdown(packet)}\n${renderYaml(packet)}`;
+
+  assert.equal(packet.validations[0].summary, '[REDACTED:PROTECTED_TEXT]');
+  assert.doesNotMatch(JSON.stringify(packet), /Human manual note body/);
+  assert.doesNotMatch(rendered, /Human manual note body/);
+});
