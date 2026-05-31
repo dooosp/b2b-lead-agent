@@ -53,6 +53,7 @@ function isLevel1ManualReviewNotesStopWriteEnabled(env = {}) {
 function normalizeRole(value) {
   const role = String(value || '').trim().toLowerCase();
   if (role === ROLE_REVIEWER || role === ROLE_MANAGER || role === ROLE_API) return role;
+  if (role === 'api_client' || role === 'api-client' || role === 'api client') return ROLE_API;
   return 'none';
 }
 
@@ -149,4 +150,48 @@ export function filterManualReviewNotesLeadCollection(leads, access = {}) {
   return Array.isArray(leads)
     ? leads.map((lead) => filterManualReviewNotesProtectedFields(lead, access))
     : [];
+}
+
+export function filterManualReviewNotesForExport(leads) {
+  return filterManualReviewNotesLeadCollection(leads, {
+    enabled: true,
+    manualNotesRead: false,
+  });
+}
+
+function omitGeneratedSuggestionFields(item = {}) {
+  if (!item || typeof item !== 'object') return item;
+  const {
+    reviewNoteSuggestion,
+    reviewNoteTemplates,
+    ...filtered
+  } = item;
+  return filtered;
+}
+
+export function filterManualReviewNotesReviewerQueue(queue, access = {}) {
+  if (!queue || !access.enabled || access.manualNotesRead) return queue;
+  const items = Array.isArray(queue.items)
+    ? queue.items.map(omitGeneratedSuggestionFields)
+    : [];
+  return {
+    ...queue,
+    items,
+    lanes: Array.isArray(queue.lanes)
+      ? queue.lanes.map((lane) => ({
+        ...lane,
+        items: Array.isArray(lane.items)
+          ? lane.items.map(omitGeneratedSuggestionFields)
+          : [],
+      }))
+      : [],
+  };
+}
+
+export function filterManualReviewNotesLeadReviewSession(session, access = {}) {
+  if (!session || !access.enabled || access.manualNotesRead) return session;
+  return {
+    ...session,
+    nextLead: session.nextLead ? omitGeneratedSuggestionFields(session.nextLead) : session.nextLead,
+  };
 }

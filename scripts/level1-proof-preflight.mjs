@@ -20,6 +20,9 @@ const ENVIRONMENT_KEYS = Object.freeze([
   'APP_ENV',
   'ENVIRONMENT',
   'CF_ENV',
+  'NODE_ENV',
+  'WRANGLER_ENV',
+  'CLOUDFLARE_ENV',
 ]);
 const SECRET_KEYS = Object.freeze([
   'API_TOKEN',
@@ -53,9 +56,14 @@ const D1_KEYS = Object.freeze([
 const URL_KEYS = Object.freeze([
   'LEVEL1_PROOF_PREFLIGHT_URL',
   'WORKER_ORIGIN',
+  'WORKER_HOSTNAME',
+  'CF_WORKER_HOSTNAME',
+  'HOSTNAME',
+  'PUBLIC_HOSTNAME',
   'BASE_URL',
   'API_URL',
   'ENDPOINT_URL',
+  'PREVIEW_URL',
   'STAGING_URL',
   'PRODUCTION_URL',
 ]);
@@ -157,9 +165,17 @@ export function buildLevel1RedactedFixtureEvidence() {
     status: 'PASS',
     manualNoteBodyText: 'Synthetic manual note body must never appear in emitted evidence.',
     generatedSuggestionText: 'Synthetic generated suggestion must never appear in emitted evidence.',
+    providerInput: 'Synthetic provider input must never appear in emitted evidence.',
+    adapterSecret: 'Synthetic adapter secret must never appear in emitted evidence.',
+    noteBody: 'Synthetic note body alias must never appear in emitted evidence.',
+    rawSessionClaims: {
+      role: 'reviewer',
+      token: 'nested-session-token',
+    },
     token: 'synthetic-token-must-redact',
     nested: {
       authHeader: 'Bearer synthetic-secret',
+      generatedHelperText: 'Nested generated helper text must redact.',
       safeCheck: 'protected fields omitted',
     },
   });

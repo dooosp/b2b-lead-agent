@@ -37,9 +37,14 @@
     "status": "PASS",
     "manualNoteBodyText": "[REDACTED]",
     "generatedSuggestionText": "[REDACTED]",
+    "providerInput": "[REDACTED]",
+    "adapterSecret": "[REDACTED]",
+    "noteBody": "[REDACTED]",
+    "rawSessionClaims": "[REDACTED]",
     "token": "[REDACTED]",
     "nested": {
       "authHeader": "[REDACTED]",
+      "generatedHelperText": "[REDACTED]",
       "safeCheck": "protected fields omitted"
     }
   },

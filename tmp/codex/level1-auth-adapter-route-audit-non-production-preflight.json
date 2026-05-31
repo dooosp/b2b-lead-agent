@@ -1,0 +1,70 @@
+{
+  "artifact_status": "LEVEL1_AUTH_ADAPTER_ROUTE_AUDIT_NON_PRODUCTION_PREFLIGHT",
+  "created_at_utc": "2026-05-31T08:19:02Z",
+  "repository": "dooosp/b2b-lead-agent",
+  "repo_root": "/Users/jangtaeho/Documents/New/b2b-lead-agent-level1-auth-adapter-route-audit",
+  "repo_identity_ok": true,
+  "identity_evidence": [
+    "git rev-parse --show-toplevel => /Users/jangtaeho/Documents/New/b2b-lead-agent-level1-auth-adapter-route-audit",
+    "package.json name => b2b-lead-agent",
+    "AGENTS.md repository/package name b2b-lead-agent",
+    "origin remote => https://github.com/dooosp/b2b-lead-agent.git",
+    "batch entrypoint main.js exists",
+    "worker entrypoint worker/index.js exists"
+  ],
+  "current_branch": "codex/level1-auth-adapter-route-audit",
+  "head_sha": "6f5f764e2a4404157d4eb6120b44db6d173d41aa",
+  "default_branch": "master",
+  "pinned_base_ref": "origin/master",
+  "pinned_base_sha": "6f5f764e2a4404157d4eb6120b44db6d173d41aa",
+  "pre_edit_worktree_clean": true,
+  "control_worktree_dirty_paths_preserved": [
+    "docs/exec-plans/root-cycle-merge-and-wave2-bootstrap-verification.md",
+    "docs/exec-plans/root-cycle-merge-and-wave2-bootstrap.md",
+    "tmp/codex/root-cycle-merge-and-wave2-bootstrap-status.md",
+    "tmp/codex/root-cycle-merge-and-wave2-bootstrap-verification-status.md"
+  ],
+  "available_commands": {
+    "check:naming": "node scripts/check-naming.js",
+    "check:schema": "node scripts/check-d1-schema-consistency.js",
+    "proof:level1:preflight": "node scripts/level1-proof-preflight.mjs --json --output tmp/codex/level1-proof-preflight-automation-non-production-evidence.json",
+    "test:e2e:local": "node --test worker/e2e/local-e2e.test.mjs",
+    "test:root": "node --test tests/*.test.js",
+    "test:unit": "find worker/tests -maxdepth 1 -name '*.test.mjs' ! -name 'job-trigger.test.mjs' ! -name 'trigger-handler.test.mjs' ! -name 'workflow-contract.test.mjs' -print0 | xargs -0 node --test",
+    "test:contract": "node --test worker/tests/job-trigger.test.mjs worker/tests/trigger-handler.test.mjs worker/tests/workflow-contract.test.mjs",
+    "test": "npm run test:root && npm run test:worker"
+  },
+  "ci_workflows": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/generate-report.yml",
+    ".github/workflows/validate-naming.yml"
+  ],
+  "open_prs_at_preflight": [],
+  "open_issues_at_preflight": [
+    165,
+    164,
+    163,
+    162,
+    154,
+    144
+  ],
+  "recent_pr_context": {
+    "171": {
+      "state": "MERGED",
+      "merged_at_utc": "2026-05-31T07:18:34Z",
+      "merge_commit": "a4f8a080ebe426d79bb85dba8298372ef6d14cfc",
+      "url": "https://github.com/dooosp/b2b-lead-agent/pull/171"
+    },
+    "172": {
+      "state": "MERGED",
+      "merged_at_utc": "2026-05-31T07:55:22Z",
+      "merge_commit": "6f5f764e2a4404157d4eb6120b44db6d173d41aa",
+      "url": "https://github.com/dooosp/b2b-lead-agent/pull/172"
+    }
+  },
+  "production_ready": false,
+  "not_production_evidence": true,
+  "forbidden_actions_performed": false,
+  "can_proceed": true,
+  "stop_reasons": []
+}

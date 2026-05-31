@@ -48,8 +48,12 @@ test('Level 1 proof preflight refuses non-local envs URLs D1 bindings secrets an
     env: {
       LEVEL1_PROOF_PREFLIGHT_ENV: 'staging',
       WORKER_ENV: 'production',
+      NODE_ENV: 'production',
+      WRANGLER_ENV: 'preview',
       WORKER_ORIGIN: 'https://b2b-lead-trigger.example.com',
       BASE_URL: 'b2b-lead-trigger.example.com',
+      PREVIEW_URL: 'https://preview.b2b-lead-trigger.example.com',
+      WORKER_HOSTNAME: 'b2b-lead-trigger.example.com',
       API_TOKEN: 'real-token-must-not-be-read',
       GH_TOKEN: 'github-token-must-not-be-read',
       AUTH_PROVIDER_SESSION_SCAFFOLD_PROVIDER: 'real-provider-input',
@@ -62,11 +66,15 @@ test('Level 1 proof preflight refuses non-local envs URLs D1 bindings secrets an
   assert.deepEqual(blockers.map((blocker) => blocker.reason), [
     'non_local_environment_refused',
     'non_local_environment_refused',
+    'non_local_environment_refused',
+    'non_local_environment_refused',
     'secret_or_real_provider_input_refused',
     'secret_or_real_provider_input_refused',
     'secret_or_real_provider_input_refused',
     'd1_binding_or_private_identifier_refused',
     'd1_binding_or_private_identifier_refused',
+    'production_or_non_local_url_refused',
+    'production_or_non_local_url_refused',
     'production_or_non_local_url_refused',
     'production_or_non_local_url_refused',
     'production_or_non_local_url_refused',
@@ -77,6 +85,7 @@ test('Level 1 proof preflight refuses non-local envs URLs D1 bindings secrets an
   assert.equal(JSON.stringify(blockers).includes('real-token-must-not-be-read'), false);
   assert.equal(JSON.stringify(blockers).includes('github-token-must-not-be-read'), false);
   assert.equal(JSON.stringify(blockers).includes('private-db-id'), false);
+  assert.equal(JSON.stringify(blockers).includes('b2b-lead-trigger.example.com'), false);
 });
 
 test('Level 1 proof preflight redacted fixture helper has no raw note provider or generated suggestion material', () => {
@@ -85,7 +94,12 @@ test('Level 1 proof preflight redacted fixture helper has no raw note provider o
   assert.equal(evidence.manualNoteBodyText, '[REDACTED]');
   assert.equal(evidence.generatedSuggestionText, '[REDACTED]');
   assert.equal(evidence.token, '[REDACTED]');
+  assert.equal(evidence.providerInput, '[REDACTED]');
+  assert.equal(evidence.adapterSecret, '[REDACTED]');
+  assert.equal(evidence.noteBody, '[REDACTED]');
+  assert.equal(evidence.rawSessionClaims, '[REDACTED]');
   assert.equal(evidence.nested.authHeader, '[REDACTED]');
+  assert.equal(evidence.nested.generatedHelperText, '[REDACTED]');
   assert.equal(evidence.nested.safeCheck, 'protected fields omitted');
 });
 

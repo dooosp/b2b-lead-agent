@@ -63,6 +63,8 @@ test('Level 1 local proof simulation covers /leads page, reviewer API queue, det
   const leadsPageHtml = await leadsPageResponse.text();
   assert.equal(leadsPageResponse.status, 200);
   assert.match(leadsPageHtml, /리드 리뷰 큐/);
+  assert.match(leadsPageHtml, /Follow-up check:/);
+  assert.match(leadsPageHtml, /생성된 검토 메모 제안/);
 
   const apiLeadsResponse = await handleWorkerRequest(
     createWorkerRequest('/api/leads?profile=danfoss', { headers: authHeaders() }),
@@ -145,41 +147,48 @@ for (const scenario of [
   },
 ]) {
   test(`Level 1 local proof simulation omits protected notes for ${scenario.name} while preserving queue metadata`, async () => {
-  const env = createProofEnv(scenario.session);
+    const env = createProofEnv(scenario.session);
 
-  const apiLeadsResponse = await handleWorkerRequest(
-    createWorkerRequest('/api/leads?profile=danfoss', { headers: authHeaders() }),
-    env,
-    {}
-  );
-  const apiLeadsPayload = await readJson(apiLeadsResponse);
-  const csvResponse = await handleWorkerRequest(
-    createWorkerRequest('/api/export/csv?profile=danfoss', { headers: authHeaders() }),
-    env,
-    {}
-  );
-  const csv = await csvResponse.text();
-  const detailResponse = await handleWorkerRequest(
-    createWorkerRequest('/leads/lead-1', { headers: authHeaders() }),
-    env,
-    {}
-  );
-  const detailHtml = await detailResponse.text();
+    const apiLeadsResponse = await handleWorkerRequest(
+      createWorkerRequest('/api/leads?profile=danfoss', { headers: authHeaders() }),
+      env,
+      {}
+    );
+    const apiLeadsPayload = await readJson(apiLeadsResponse);
+    const csvResponse = await handleWorkerRequest(
+      createWorkerRequest('/api/export/csv?profile=danfoss', { headers: authHeaders() }),
+      env,
+      {}
+    );
+    const csv = await csvResponse.text();
+    const detailResponse = await handleWorkerRequest(
+      createWorkerRequest('/leads/lead-1', { headers: authHeaders() }),
+      env,
+      {}
+    );
+    const detailHtml = await detailResponse.text();
+    const leadsPageResponse = await handleWorkerRequest(createWorkerRequest('/leads'), env, {});
+    const leadsPageHtml = await leadsPageResponse.text();
 
-  assert.equal(apiLeadsResponse.status, 200);
-  assert.equal(apiLeadsPayload.reviewerActionQueue.items.length, 1);
-  assert.equal(Object.hasOwn(apiLeadsPayload.leads[0], 'manualReviewNotes'), false);
-  assert.equal(Object.hasOwn(apiLeadsPayload.leads[0], 'manualReviewNotesUpdatedAt'), false);
-  assert.equal(JSON.stringify(apiLeadsPayload).includes(SYNTHETIC_MANUAL_NOTE), false);
-  assert.equal(csvResponse.status, 200);
-  assert.equal(csv.includes(SYNTHETIC_MANUAL_NOTE), false);
-  assert.equal(csv.includes('reviewNoteSuggestion'), false);
-  assert.equal(detailResponse.status, 200);
-  assert.equal(detailHtml.includes(SYNTHETIC_MANUAL_NOTE), false);
-  assert.equal(apiLeadsPayload.manualReviewNotesAccess.role, scenario.expectedRole);
-  assert.equal(apiLeadsPayload.manualReviewNotesAccess.claimStatus, scenario.claimStatus);
-  assert.equal(apiLeadsPayload.manualReviewNotesAccess.manualNotesRead, false);
-});
+    assert.equal(apiLeadsResponse.status, 200);
+    assert.equal(apiLeadsPayload.reviewerActionQueue.items.length, 1);
+    assert.equal(Object.hasOwn(apiLeadsPayload.leads[0], 'manualReviewNotes'), false);
+    assert.equal(Object.hasOwn(apiLeadsPayload.leads[0], 'manualReviewNotesUpdatedAt'), false);
+    assert.equal(JSON.stringify(apiLeadsPayload).includes(SYNTHETIC_MANUAL_NOTE), false);
+    assert.equal(csvResponse.status, 200);
+    assert.equal(csv.includes(SYNTHETIC_MANUAL_NOTE), false);
+    assert.equal(csv.includes('reviewNoteSuggestion'), false);
+    assert.equal(detailResponse.status, 200);
+    assert.equal(detailHtml.includes(SYNTHETIC_MANUAL_NOTE), false);
+    assert.equal(leadsPageResponse.status, 200);
+    assert.equal(leadsPageHtml.includes(SYNTHETIC_MANUAL_NOTE), false);
+    assert.equal(leadsPageHtml.includes('Follow-up check:'), false);
+    assert.equal(leadsPageHtml.includes('reviewNoteSuggestion'), false);
+    assert.equal(leadsPageHtml.includes('reviewNoteTemplates'), false);
+    assert.equal(apiLeadsPayload.manualReviewNotesAccess.role, scenario.expectedRole);
+    assert.equal(apiLeadsPayload.manualReviewNotesAccess.claimStatus, scenario.claimStatus);
+    assert.equal(apiLeadsPayload.manualReviewNotesAccess.manualNotesRead, false);
+  });
 }
 
 test('Level 1 local proof simulation omits protected notes on provider error', async () => {
@@ -204,6 +213,8 @@ test('Level 1 local proof simulation omits protected notes on provider error', a
     {}
   );
   const detailHtml = await detailResponse.text();
+  const leadsPageResponse = await handleWorkerRequest(createWorkerRequest('/leads'), env, {});
+  const leadsPageHtml = await leadsPageResponse.text();
 
   assert.equal(apiLeadsResponse.status, 200);
   assert.equal(Object.hasOwn(apiLeadsPayload.leads[0], 'manualReviewNotes'), false);
@@ -212,6 +223,12 @@ test('Level 1 local proof simulation omits protected notes on provider error', a
   assert.equal(detailResponse.status, 200);
   assert.equal(detailHtml.includes(SYNTHETIC_MANUAL_NOTE), false);
   assert.equal(detailHtml.includes('secret text'), false);
+  assert.equal(leadsPageResponse.status, 200);
+  assert.equal(leadsPageHtml.includes(SYNTHETIC_MANUAL_NOTE), false);
+  assert.equal(leadsPageHtml.includes('secret text'), false);
+  assert.equal(leadsPageHtml.includes('Follow-up check:'), false);
+  assert.equal(leadsPageHtml.includes('reviewNoteSuggestion'), false);
+  assert.equal(leadsPageHtml.includes('reviewNoteTemplates'), false);
   assert.equal(apiLeadsPayload.manualReviewNotesAccess.providerStatus, 'provider_error');
   assert.equal(apiLeadsPayload.manualReviewNotesAccess.claimStatus, 'provider_error');
   assert.equal(apiLeadsPayload.manualReviewNotesAccess.productionReady, false);

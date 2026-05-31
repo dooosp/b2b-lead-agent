@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { prepareLeadSnapshotRecords } = require('../lead-report-publisher');
+const { mergeLeadHistory, prepareLeadSnapshotRecords } = require('../lead-report-publisher');
 
 function createLead(overrides = {}) {
   return {
@@ -62,4 +62,65 @@ test('published heuristic snapshot stays non-approved and review-needed', () => 
   assert.equal(record.reviewStatus, 'NEEDS_REVIEW');
   assert.ok(record.dataGaps.includes('LLM lead qualification not completed'));
   assert.ok(record.dataGaps.includes('Direct evidence quote missing'));
+});
+
+test('published snapshots omit manual-note and generated-suggestion fields', () => {
+  const [record] = prepareLeadSnapshotRecords([createLead({
+    notes: 'Manual note body must not publish.',
+    manualReviewNotes: 'Manual review note alias must not publish.',
+    manual_review_notes: 'Snake manual note must not publish.',
+    manualReviewNotesUpdatedAt: '2026-05-31T00:00:00.000Z',
+    manualReviewNotesAuthorLabel: 'manual_reviewer',
+    manualReviewNotesHistoryEventCount: 1,
+    reviewNoteSuggestion: {
+      text: 'Generated suggestion must not publish.',
+    },
+    reviewNoteTemplates: [
+      { text: 'Generated template must not publish.' },
+    ],
+  })], {
+    now: '2026-05-05T00:00:00.000Z',
+    profileId: 'danfoss',
+    idFactory: () => 'lead-private-fields'
+  });
+
+  const serialized = JSON.stringify(record);
+
+  for (const field of [
+    'notes',
+    'manualReviewNotes',
+    'manual_review_notes',
+    'manualReviewNotesUpdatedAt',
+    'manualReviewNotesAuthorLabel',
+    'manualReviewNotesHistoryEventCount',
+    'reviewNoteSuggestion',
+    'reviewNoteTemplates',
+  ]) {
+    assert.equal(Object.hasOwn(record, field), false, `${field} should not publish`);
+  }
+  assert.doesNotMatch(serialized, /Manual note body|manual_reviewer|Generated suggestion|Generated template/);
+});
+
+test('lead history merge drops stale protected manual-note fields from existing history', () => {
+  const history = mergeLeadHistory([
+    {
+      id: 'lead-history-private-fields',
+      company: 'DL이앤씨',
+      summary: '데이터센터 냉각 설비 증설 착공',
+      notes: 'Existing history note body must not remain.',
+      manualReviewNotesAuthorLabel: 'manual_reviewer',
+      reviewNoteSuggestion: { text: 'Existing generated suggestion must not remain.' },
+      createdAt: '2026-05-01T00:00:00.000Z',
+    },
+  ], [createLead()], {
+    now: '2026-05-05T00:00:00.000Z',
+    profileId: 'danfoss',
+  });
+  const [record] = history;
+  const serialized = JSON.stringify(record);
+
+  assert.equal(Object.hasOwn(record, 'notes'), false);
+  assert.equal(Object.hasOwn(record, 'manualReviewNotesAuthorLabel'), false);
+  assert.equal(Object.hasOwn(record, 'reviewNoteSuggestion'), false);
+  assert.doesNotMatch(serialized, /Existing history note body|manual_reviewer|Existing generated suggestion/);
 });

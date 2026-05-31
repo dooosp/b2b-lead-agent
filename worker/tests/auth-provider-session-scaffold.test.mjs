@@ -361,6 +361,9 @@ for (const blockedEnv of [
   { key: 'WORKER_ENV', value: 'production' },
   { key: 'WORKER_ENV', value: 'staging' },
   { key: 'DEPLOYMENT_ENV', value: 'preview' },
+  { key: 'NODE_ENV', value: 'production' },
+  { key: 'WRANGLER_ENV', value: 'staging' },
+  { key: 'CLOUDFLARE_ENV', value: 'preview' },
 ]) {
   test(`non-production auth provider/session scaffold fails closed in non-local env ${blockedEnv.key}=${blockedEnv.value}`, async () => {
     const originalManualNote = 'Production-like scaffold attempt must not expose this note.';
