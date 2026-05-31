@@ -14,19 +14,19 @@ redacted proof-preflight evidence.
 
 | Gate | Status | Evidence | Boundary |
 | --- | --- | --- | --- |
-| Provider-agnostic auth adapter contract | `PASS` | `worker/lib/local-test-auth-adapter.js`; `worker/tests/local-test-auth-adapter.test.mjs` | Injected local/test adapter only; no real provider, header, token, cookie, JWT, session, identity, or Cloudflare Access parsing. |
-| Auth provider/session scaffold | `PASS` | `worker/lib/auth-provider-session-scaffold.js`; `worker/tests/auth-provider-session-scaffold.test.mjs` | Non-production scaffold only; no real auth/provider/session/token/cookie/secret/identity. Fails closed for non-local envs. |
-| Local proof-preflight automation | `PASS_LOCAL`, `HOLD_PRODUCTION` | `scripts/level1-proof-preflight.mjs`; `worker/tests/level1-proof-preflight.test.mjs`; `npm run proof:level1:preflight` | Emits redacted synthetic fixture evidence only and refuses non-local/prod/staging/preview envs, production/staging URLs, non-local hostnames, D1 bindings/private IDs, secrets, and real provider inputs. This is not production evidence. |
+| Provider-agnostic auth adapter contract | `PASS` | `worker/lib/local-test-auth-adapter.js`; `worker/tests/local-test-auth-adapter.test.mjs` | Injected local/test adapter only; no real provider, header, token, cookie, JWT, session, identity, or Cloudflare Access parsing. Malformed role/audience claim shapes, arrays, mixed roles, missing role, wrong audience, expired claims, and provider errors fail closed. |
+| Auth provider/session scaffold | `PASS` | `worker/lib/auth-provider-session-scaffold.js`; `worker/tests/auth-provider-session-scaffold.test.mjs` | Non-production scaffold only; no real auth/provider/session/token/cookie/secret/identity. Fails closed for non-local envs, malformed synthetic claim payloads, malformed role/audience arrays, and mixed roles. |
+| Local proof-preflight automation | `PASS_LOCAL`, `HOLD_PRODUCTION` | `scripts/level1-proof-preflight.mjs`; `worker/tests/level1-proof-preflight.test.mjs`; `npm run proof:level1:preflight` | Emits redacted synthetic fixture evidence only and refuses non-local/prod/staging/preview envs, production/staging URLs, non-local hostnames, D1 bindings/private IDs including alias keys, secrets, auth-header env values, API-key aliases, Cloudflare Access credential-shaped values, and real provider inputs. This is not production evidence. |
 | Local proof simulation | `PASS` | `worker/tests/level1-local-proof-simulation.test.mjs` | Fake D1 and synthetic fixtures only; no production/staging endpoints. |
-| D1/schema guards | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `worker/tests/d1-schema-contract.test.mjs`; `tests/d1-schema-consistency.test.js`; `worker/lib/level1-readiness-guards.js` | Local schema/index/constraint guard only; production D1 observation remains HOLD. |
-| Rollback/privacy guards | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `worker/tests/level1-readiness-guards.test.mjs`; `worker/tests/manual-review-notes.test.mjs` | Stop-write and redaction guard only; rollback execution, destructive actions, retention enforcement, purge, PII detection, and privacy proof remain HOLD. |
+| D1/schema guards | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `worker/tests/d1-schema-contract.test.mjs`; `tests/d1-schema-consistency.test.js`; `worker/lib/level1-readiness-guards.js` | Local schema/index/constraint guard only; missing manual-note columns or index drift return `HOLD` with missing keys. Production D1 observation remains HOLD. |
+| Rollback/privacy guards | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `worker/tests/level1-readiness-guards.test.mjs`; `worker/tests/manual-review-notes.test.mjs` | Stop-write and redaction guard only; stop-write-disabled rollback requests, mutating SQL requests, and destructive rollback SQL/action requests return `HOLD`. Rollback execution, destructive actions, retention enforcement, purge, PII detection, and privacy proof remain HOLD. |
 | Generated suggestion boundary | `PASS` | `worker/tests/manual-review-notes.test.mjs`; `worker/tests/level1-local-proof-simulation.test.mjs` | Generated suggestions remain copy-only, unsaved, unattributed, unretained, unexported, and excluded from history. |
-| Route audit protected-field boundary | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `worker/lib/level1-auth-route-audit.js`; `worker/tests/level1-auth-route-audit.test.mjs` | Managers/admin/API clients/missing/unknown/expired/wrong-audience/provider-error cases fail closed or omit protected fields locally across reviewer queue, history, export, enrich, note write, `/leads`, and detail routes. Real production roles remain unimplemented. |
-| Publication and evidence redaction boundary | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `lead-report-publisher.js`; `tests/leadbrief-publication-contract.test.js`; `scripts/release-evidence-redactor.js`; `tests/release-evidence-redaction.test.js` | Published latest/history snapshots and evidence packets omit or redact manual note bodies, generated suggestions/templates, protected note metadata, provider/raw auth inputs, tokens, cookies, private identifiers, and secret-shaped fields. |
+| Route audit protected-field boundary | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `worker/lib/level1-auth-route-audit.js`; `worker/tests/level1-auth-route-audit.test.mjs` | Managers/admin/API clients/API aliases/missing/unknown/expired/wrong-audience/malformed-claim/provider-error cases fail closed or omit protected fields locally across reviewer queue, history, export, batch enrich, enrich success/error, note write, non-manual PATCH response, `/leads`, and detail routes. Real production roles remain unimplemented. |
+| Publication and evidence redaction boundary | `PASS_LOCAL`, `BLOCKED_PRODUCTION` | `lead-report-publisher.js`; `tests/leadbrief-publication-contract.test.js`; `scripts/release-evidence-redactor.js`; `tests/release-evidence-redaction.test.js`; `tests/release-evidence-packet.test.js` | Published latest/history snapshots and evidence packets omit or redact manual note bodies, bare `notes` fallback bodies, manual-note aliases, generated suggestions/templates, protected note metadata, provider/raw auth inputs, tokens, cookies, private identifiers, and secret-shaped fields. |
 | Final approval packet | `PASS_LOCAL`, `HOLD_PRODUCTION` | `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-packet-non-production.md` | Final non-production packet is prepared with prerequisites, owner checklist, rollback owner, stop-write trigger, evidence requirements, abort conditions, and exact future approval fields. It is not production evidence and does not approve execution. |
-| Future evidence schema | `PASS_LOCAL`, `HOLD_PRODUCTION` | `worker/lib/level1-readiness-guards.js`; `worker/tests/level1-production-proof-approval.test.mjs` | Future evidence schema requires timestamps, boundary labels, required fields, `productionReady:false`, `notProductionEvidence:true`, and forbidden-field rejection for manual-note, generated-guidance, provider, raw auth/session, D1, secret, and customer/private fields. |
-| Approval packet dry-run operator | `PASS_LOCAL`, `HOLD_PRODUCTION` | `scripts/level1-production-proof-approval-dry-run.mjs`; `worker/tests/level1-production-proof-approval.test.mjs`; `npm run proof:level1:approval-dry-run` | Local-only dry-run validates packet completeness and refuses production/staging URLs, D1 bindings/private IDs, secrets, tokens, auth material, provider inputs, real endpoints, and non-local env values. It does not call endpoints. |
-| Level 1 package/CI regression gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `package.json`; `.github/workflows/ci.yml`; `worker/tests/workflow-contract.test.mjs`; `npm run check:level1` | Durable local-only package gate runs Level 1 auth adapter/scaffold, route/privacy, proof-preflight, approval dry-run, artifact redaction, and generated-suggestion/manual-note boundary coverage. CI runs it without secrets, deploy, Wrangler, D1 bindings, endpoint calls, or production inputs. |
+| Future evidence schema | `PASS_LOCAL`, `HOLD_PRODUCTION` | `worker/lib/level1-readiness-guards.js`; `worker/tests/level1-production-proof-approval.test.mjs` | Future evidence schema requires timestamps, boundary labels, required fields, `productionReady:false`, `notProductionEvidence:true`, and forbidden-field rejection for manual-note aliases, generated-guidance, provider, raw auth/session, D1, secret, destructive-approval, rollback-execution, and customer/private fields. Dry-run raw inputs also receive value-aware redaction when secret/manual-note text is hidden under benign keys. |
+| Approval packet dry-run operator | `PASS_LOCAL`, `HOLD_PRODUCTION` | `scripts/level1-production-proof-approval-dry-run.mjs`; `worker/tests/level1-production-proof-approval.test.mjs`; `npm run proof:level1:approval-dry-run` | Local-only dry-run validates packet completeness and refuses production/staging URLs, D1 bindings/private IDs including alias keys, secrets, tokens, auth material, auth-header env values, API-key aliases, Cloudflare Access credential-shaped values, provider inputs, case-variant forbidden packet fields, destructive/mutating SQL/action text, real endpoints, and non-local env values. It does not call endpoints. |
+| Level 1 package/CI regression gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `package.json`; `.github/workflows/ci.yml`; `worker/tests/workflow-contract.test.mjs`; `npm run check:level1` | Durable local-only package gate runs Level 1 auth adapter/scaffold, route/privacy, proof-preflight, approval dry-run, release-evidence redaction, artifact redaction, and generated-suggestion/manual-note boundary coverage. CI runs it without secrets, deploy, Wrangler, D1 bindings, endpoint calls, or production inputs. |
 | Local-only Worker E2E smoke | `PASS` | `npm run test:e2e:local` after `npm ci` | Fake D1 and loopback only; not production/staging smoke. |
 | Final production proof approval | `HOLD` | Issue #165 records docs-planning only | No production proof execution approved. |
 
@@ -53,9 +53,11 @@ normalizes roles for:
 - `api`;
 - missing role;
 - unknown role;
+- mixed roles and malformed role arrays;
 - expired synthetic claim;
 - missing synthetic audience;
 - wrong synthetic audience;
+- malformed synthetic audience arrays;
 - provider error;
 - missing or invalid synthetic provider.
 
@@ -86,8 +88,10 @@ The route audit covers:
 - `/api/leads` reviewer queue payloads;
 - `/api/history`;
 - `/api/export/csv`;
+- `/api/leads/batch-enrich`;
 - `/api/leads/:id/enrich`;
 - `/api/leads/:id` manual-note writes;
+- `/api/leads/:id` non-manual PATCH responses;
 - `/leads` reviewer queue page rendering;
 - `/leads/:id` detail rendering.
 
@@ -155,8 +159,11 @@ This gate runs only local/test and synthetic fixture coverage:
 - provider-agnostic local auth adapter and scaffold tests;
 - Level 1 readiness/redaction/D1 metadata guards;
 - fake-D1 local proof simulation;
-- protected route/UI privacy audit for `/leads` and `/leads/:id`;
+- protected route/UI/API privacy audit for `/leads`, `/leads/:id`,
+  queue/history/export/batch-enrich/enrich/PATCH responses;
 - generated-suggestion/manual-note persistence and export privacy tests;
+- release evidence redaction tests for manual-note/generated-guidance aliases
+  and bare `notes` fallback bodies;
 - proof-preflight tests and local artifact writer;
 - approval-packet dry-run tests and local artifact writer.
 
@@ -177,6 +184,9 @@ Local schema guard coverage verifies:
 - `idx_manual_review_note_events_lead`;
 - fake-D1 enforcement of metadata-only event type and author-label checks;
 - no old/new note body text columns in metadata-only history.
+- missing required manual-note metadata columns or
+  `idx_manual_review_note_events_lead` index drift returns `HOLD` and records
+  `missingRecordKeys`.
 
 Future production D1 observation remains blocked. The only metadata fields
 allowed by the local guard for a future separately approved observation are:
@@ -216,6 +226,13 @@ guard for manual note writes. It blocks create/edit/clear and generated
 suggestion-bundled manual writes with existing note/event rows preserved.
 It is not rollback execution and does not run cleanup, repair, migration, or
 production commands.
+
+`evaluateLevel1RollbackGate()` is a local-only guard evaluator. It returns
+`HOLD` when stop-write is not enabled or when a rollback request includes
+destructive or mutating action text such as drop/delete/truncate/purge/update.
+It does not execute
+rollback, cleanup, repair, migration, D1 access, endpoint calls, deploy, or
+destructive data action.
 
 No rollback command, executable migration, production D1 action, endpoint call,
 deploy, repair, cleanup, or destructive action is approved or implemented.

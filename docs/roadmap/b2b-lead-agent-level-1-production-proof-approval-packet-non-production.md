@@ -25,7 +25,8 @@ BOUNDARY: NOT_PRODUCTION_EVIDENCE
 | PR #172 | `MERGED` | Local-only proof preflight automation and redacted synthetic fixture evidence. |
 | PR #173 | `MERGED` | Provider-agnostic local/test auth adapter and protected route audit. |
 | PR #174 | `MERGED` | Final non-production approval packet and local approval dry-run. |
-| Level 1 CI/package gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run check:level1` runs local-only Level 1 tests and proof/approval dry-runs in CI without secrets, deploy, D1 bindings, endpoints, or production inputs. |
+| PR #175 | `MERGED` | Durable local-only Level 1 regression gate in CI. |
+| Level 1 CI/package gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run check:level1` runs local-only Level 1 tests, release-evidence redaction tests, and proof/approval dry-runs in CI without secrets, deploy, D1 bindings, endpoints, or production inputs. |
 | Final proof approval | `HOLD` | Issue #165 keeps proof execution blocked until a separate explicit future proof goal. |
 | Production reviewer workflow | `BLOCKED` | No real auth, production D1 observation, endpoint proof, or production evidence exists. |
 
@@ -162,6 +163,9 @@ Forbidden fields and values:
 - customer/private data, customer payloads, private lead/person fields;
 - manual note body text, generated suggestion text, generated helper text,
   note body aliases, manual note attribution fields, or history/body fields;
+- destructive approval flags, rollback execution approval flags,
+  case-variant forbidden packet fields, destructive/mutating SQL/action text,
+  or production-action approval flags;
 - CRM, outreach, LLM, automation, or outcome-learning data.
 
 ## Operator Dry-Run
@@ -180,8 +184,11 @@ Dry-run behavior:
 - writes redacted local evidence to
   `tmp/codex/level1-production-proof-approval-dry-run-non-production-evidence.json`;
 - refuses production/staging URLs, non-local hostnames, D1 bindings, database
-  IDs, secrets, tokens, cookies, auth headers, provider inputs, and non-local
-  environment values;
+  IDs and alias keys such as `D1_DATABASE_ID`, secrets, tokens, cookies, auth
+  headers, auth-header env values, API-key aliases, Cloudflare Access
+  credential-shaped env values, provider inputs, case-variant forbidden packet
+  fields, destructive/mutating rollback/SQL text, and non-local environment
+  values;
 - keeps `productionReady: false`;
 - keeps `production_proof_approval` on `HOLD`.
 
@@ -194,12 +201,13 @@ CI/package regression command:
 npm run check:level1
 ```
 
-`check:level1` combines the local-only auth adapter/scaffold tests, route/UI
-privacy tests, generated-suggestion/manual-note boundary tests,
+`check:level1` combines the local-only auth adapter/scaffold tests, route/UI/API
+privacy tests, generated-suggestion/manual-note boundary tests, generic release
+evidence redaction tests, including bare `notes` fallback redaction,
 proof-preflight tests, approval dry-run tests, and the two local artifact
-writers. It is a regression gate only. It is not production evidence and does
-not satisfy Issue #165's separate explicit future production proof approval
-blocker.
+writers. It is a regression gate only. It is not
+production evidence and does not satisfy Issue #165's separate explicit future
+production proof approval blocker.
 
 ## Rollback And Stop-Write
 

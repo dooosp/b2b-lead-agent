@@ -2,7 +2,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { redactEvidence } = require('./release-evidence-redactor');
+const { REDACTION_LABELS, redactEvidence } = require('./release-evidence-redactor');
 
 const DEFAULT_INVALID_PRODUCTION_EVIDENCE = Object.freeze([
   'CI is not production evidence',
@@ -48,7 +48,7 @@ function normalizeValidation(validation) {
     exitCode: validation.exitCode,
     startedAtUtc: validation.startedAtUtc,
     completedAtUtc: validation.completedAtUtc,
-    summary: validation.summary || validation.notes || ''
+    summary: validation.summary || (validation.notes ? REDACTION_LABELS.protectedText : '')
   };
 }
 

@@ -13,7 +13,7 @@ Audited repo baseline for this snapshot:
 - Previous Manual Review Notes v1 privacy-warning baseline:
   `f2ddf35e828017eec9332dc80876e50bbee2f54a` (PR #130)
 - Current source-of-truth `origin/master`:
-  `d18260a4e27dd228c83553f658f14fff5b90bd78` (PR #142)
+  `43a6a382139858b2c373f26d2e00ba62400303cf` (PR #175)
 - Issue #34 current state: closed as completed after GitHub-only closeout, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -35,10 +35,10 @@ Audited repo baseline for this snapshot:
 - Current Manual Review Notes v1 non-production cycle closeout packet:
   `docs/roadmap/manual-review-notes-v1-non-production-cycle-closeout.md`
 
-Post-PR142 operating update:
+Post-PR175 operating update:
 
 - Current source-of-truth `origin/master` for this boundary update:
-  `d18260a4e27dd228c83553f658f14fff5b90bd78` (PR #142).
+  `43a6a382139858b2c373f26d2e00ba62400303cf` (PR #175).
 - Issue #34 is closed as completed after a GitHub-only closeout approval and
   closeout record.
 - Standing approval policy: `docs/standing-approval-policy.md`.
@@ -141,6 +141,20 @@ Post-PR142 operating update:
   complete, leaves staging target selection decision-ready/HOLD, keeps staging
   execution and production proof/deploy on HOLD, and records no mandatory next
   action.
+- The Level 1 non-production gate train through PR #175 is local/test evidence
+  only. `npm run check:level1` runs auth adapter/scaffold, route/UI privacy,
+  generated-suggestion/manual-note, proof-preflight, approval dry-run, and local
+  artifact checks in CI without secrets, deploy, Wrangler, D1 bindings,
+  endpoint calls, or production inputs.
+- The current fail-closed matrix refuses malformed synthetic auth claims, mixed
+  roles, auth-header / Cloudflare Access / D1 / API-key alias env poison,
+  poisoned future evidence fields, bare `notes` / validation-note evidence
+  body redaction, value-aware raw-input redaction, missing local D1
+  metadata/index drift, stop-write-disabled rollback requests, and mutating or
+  destructive rollback/SQL requests. It still does not approve production
+  proof, deploy, D1 access, endpoint calls, logs/secrets, customer/private data,
+  real auth/session/provider parsing, Cloudflare Access calls, rollback
+  execution, or destructive data action.
 
 ## Standing Approval Policy
 
@@ -177,9 +191,9 @@ Accepted Issue #34 records:
 Important freshness rule: Issue #34's accepted execution/proof scopes were tied
 to earlier approved SHAs, including the final read-only schema-proof baseline at
 `512b537797fc67d974acf1f1e690bd638de4919b` (PR #106). The latest audited
-source-of-truth `master` baseline is `d18260a4e27dd228c83553f658f14fff5b90bd78`
-after PR #142 recorded the Manual Review Notes v1 staging target decision
-packet. Any new production action must refresh the actual current
+source-of-truth `master` baseline is `43a6a382139858b2c373f26d2e00ba62400303cf`
+after PR #175 added the Level 1 non-production regression gate. Any new
+production action must refresh the actual current
 `origin/master` SHA, CI metadata, owners, and approval records before
 execution. Issue #34 closeout does not authorize further production proof work.
 
@@ -218,6 +232,7 @@ The following support engineering confidence but are not production proof:
 - PR descriptions.
 - Documentation.
 - Production readiness gap packets.
+- Level 1 CI/package gate results and `NOT_PRODUCTION_EVIDENCE` artifacts.
 - Source/config files.
 - D1 binding names, database names, or database IDs.
 - Local fake-D1 or staging observations.

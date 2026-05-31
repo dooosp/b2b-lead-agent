@@ -89,6 +89,60 @@ test('Level 1 proof preflight refuses non-local envs URLs D1 bindings secrets an
   assert.equal(JSON.stringify(blockers).includes('b2b-lead-trigger.example.com'), false);
 });
 
+test('Level 1 proof preflight refuses auth header and access credential-shaped env poison', () => {
+  const blockers = findLevel1ProofPreflightBlockers({
+    env: {
+      LEVEL1_PROOF_PREFLIGHT_ENV: 'local_test',
+      WORKER_ENV: 'local',
+      AUTHORIZATION: 'Bearer synthetic-auth-header',
+      AUTHORIZATION_HEADER: 'Bearer synthetic-auth-header-alias',
+      HTTP_AUTHORIZATION: 'Bearer synthetic-http-auth-header',
+      CLOUDFLARE_API_KEY: 'synthetic-cloudflare-api-key',
+      CF_ACCESS_CLIENT_ID: 'synthetic-access-client-id',
+      CF_ACCESS_CLIENT_SECRET: 'synthetic-access-client-secret',
+      CF_ACCESS_AUD: 'synthetic-access-audience',
+      CLOUDFLARE_ACCESS_CLIENT_ID: 'synthetic-cloudflare-access-client-id',
+      CLOUDFLARE_ACCESS_CLIENT_SECRET: 'synthetic-cloudflare-access-client-secret',
+      D1_DATABASE_ID: 'synthetic-d1-database-id',
+    },
+  });
+
+  assert.deepEqual(blockers.map((blocker) => blocker.key).sort(), [
+    'AUTHORIZATION',
+    'AUTHORIZATION_HEADER',
+    'CF_ACCESS_AUD',
+    'CF_ACCESS_CLIENT_ID',
+    'CF_ACCESS_CLIENT_SECRET',
+    'CLOUDFLARE_ACCESS_CLIENT_ID',
+    'CLOUDFLARE_ACCESS_CLIENT_SECRET',
+    'CLOUDFLARE_API_KEY',
+    'D1_DATABASE_ID',
+    'HTTP_AUTHORIZATION',
+  ]);
+  assert.ok(blockers.some((blocker) => blocker.key === 'D1_DATABASE_ID' && blocker.reason === 'd1_binding_or_private_identifier_refused'));
+  assert.ok(blockers.filter((blocker) => blocker.key !== 'D1_DATABASE_ID').every((blocker) => blocker.reason === 'secret_or_real_provider_input_refused'));
+  assert.ok(blockers.every((blocker) => blocker.status === 'HOLD'));
+  assert.equal(JSON.stringify(blockers).includes('synthetic-auth-header'), false);
+  assert.equal(JSON.stringify(blockers).includes('synthetic-access-client-secret'), false);
+  assert.equal(JSON.stringify(blockers).includes('synthetic-d1-database-id'), false);
+});
+
+test('Level 1 proof preflight allows ambient GitHub Actions metadata env', () => {
+  const blockers = findLevel1ProofPreflightBlockers({
+    env: {
+      LEVEL1_PROOF_PREFLIGHT_ENV: 'local_test',
+      WORKER_ENV: 'local',
+      GITHUB_ENV: '/home/runner/work/_temp/_runner_file_commands/set_env',
+      GITHUB_API_URL: 'https://api.github.com',
+      GITHUB_SERVER_URL: 'https://github.com',
+      GITHUB_GRAPHQL_URL: 'https://api.github.com/graphql',
+      RUNNER_ENVIRONMENT: 'github-hosted',
+    },
+  });
+
+  assert.deepEqual(blockers, []);
+});
+
 test('Level 1 proof preflight redacted fixture helper has no raw note provider or generated suggestion material', () => {
   const evidence = buildLevel1RedactedFixtureEvidence();
 
