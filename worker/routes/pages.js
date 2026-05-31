@@ -1,5 +1,9 @@
 import { verifyAuth } from '../lib/auth.js';
 import { getLeadById, getStatusLogByLead } from '../db/leads.js';
+import {
+  filterManualReviewNotesProtectedFields,
+  resolveManualReviewNotesAccess
+} from '../lib/manual-review-notes-access.js';
 import { getAuthRequiredPage } from '../pages/auth-required.js';
 import { getCPAPage } from '../pages/cpa.js';
 import { getDashboardPage } from '../pages/dashboard.js';
@@ -44,8 +48,10 @@ export const pageRoutes = Object.freeze([
       }
       const lead = await getLeadById(env.DB, params.leadId);
       if (!lead) return textResponse('리드를 찾을 수 없습니다.', 404);
+      const manualReviewNotesAccess = await resolveManualReviewNotesAccess(request, env);
+      const filteredLead = filterManualReviewNotesProtectedFields(lead, manualReviewNotesAccess);
       const statusLogs = await getStatusLogByLead(env.DB, params.leadId);
-      return htmlResponse(getLeadDetailPage(lead, statusLogs));
+      return htmlResponse(getLeadDetailPage(filteredLead, statusLogs));
     }
   },
   {

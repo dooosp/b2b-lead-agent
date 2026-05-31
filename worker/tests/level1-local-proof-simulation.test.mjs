@@ -17,7 +17,10 @@ function authHeaders() {
   return { Authorization: 'Bearer api-secret' };
 }
 
-function createProofEnv(role = 'reviewer') {
+function createProofEnv(sessionOptions = { role: 'reviewer' }) {
+  const session = typeof sessionOptions === 'string'
+    ? { role: sessionOptions }
+    : sessionOptions;
   const env = createWorkerEnv();
   env.DB.leads.set('lead-1', createLeadRow({
     notes: SYNTHETIC_MANUAL_NOTE,
@@ -45,7 +48,7 @@ function createProofEnv(role = 'reviewer') {
   return {
     ...env,
     [AUTH_PROVIDER_SESSION_SCAFFOLD_NON_PRODUCTION_ENV]: 'enabled',
-    [AUTH_PROVIDER_SESSION_SCAFFOLD_PROVIDER_ENV]: createStaticAuthProviderSessionScaffoldProvider({ role }),
+    [AUTH_PROVIDER_SESSION_SCAFFOLD_PROVIDER_ENV]: createStaticAuthProviderSessionScaffoldProvider(session),
   };
 }
 
@@ -113,8 +116,36 @@ test('Level 1 local proof simulation covers /leads page, reviewer API queue, det
   assert.equal(env.DB.manualReviewNoteEvents.length, 0);
 });
 
-test('Level 1 local proof simulation omits protected notes for manager role while preserving queue metadata', async () => {
-  const env = createProofEnv('manager');
+for (const scenario of [
+  { name: 'manager', session: { role: 'manager' }, expectedRole: 'manager', claimStatus: 'valid' },
+  { name: 'admin', session: { role: 'admin' }, expectedRole: 'admin', claimStatus: 'valid' },
+  { name: 'api client', session: { role: 'api_client' }, expectedRole: 'api_client', claimStatus: 'valid' },
+  { name: 'missing role', session: { role: '' }, expectedRole: 'none', claimStatus: 'valid' },
+  { name: 'unknown role', session: { role: 'auditor' }, expectedRole: 'none', claimStatus: 'valid' },
+  {
+    name: 'expired reviewer claim',
+    session: { role: 'reviewer', expiresAt: '2000-01-01T00:00:00.000Z' },
+    expectedRole: 'reviewer',
+    claimStatus: 'expired',
+  },
+  {
+    name: 'missing audience reviewer claim',
+    session: {
+      role: 'reviewer',
+      audience: '',
+    },
+    expectedRole: 'reviewer',
+    claimStatus: 'missing_audience',
+  },
+  {
+    name: 'wrong audience reviewer claim',
+    session: { role: 'reviewer', audience: 'wrong-local-proof-audience' },
+    expectedRole: 'reviewer',
+    claimStatus: 'wrong_audience',
+  },
+]) {
+  test(`Level 1 local proof simulation omits protected notes for ${scenario.name} while preserving queue metadata`, async () => {
+  const env = createProofEnv(scenario.session);
 
   const apiLeadsResponse = await handleWorkerRequest(
     createWorkerRequest('/api/leads?profile=danfoss', { headers: authHeaders() }),
@@ -128,6 +159,12 @@ test('Level 1 local proof simulation omits protected notes for manager role whil
     {}
   );
   const csv = await csvResponse.text();
+  const detailResponse = await handleWorkerRequest(
+    createWorkerRequest('/leads/lead-1', { headers: authHeaders() }),
+    env,
+    {}
+  );
+  const detailHtml = await detailResponse.text();
 
   assert.equal(apiLeadsResponse.status, 200);
   assert.equal(apiLeadsPayload.reviewerActionQueue.items.length, 1);
@@ -137,6 +174,45 @@ test('Level 1 local proof simulation omits protected notes for manager role whil
   assert.equal(csvResponse.status, 200);
   assert.equal(csv.includes(SYNTHETIC_MANUAL_NOTE), false);
   assert.equal(csv.includes('reviewNoteSuggestion'), false);
-  assert.equal(apiLeadsPayload.manualReviewNotesAccess.role, 'manager');
+  assert.equal(detailResponse.status, 200);
+  assert.equal(detailHtml.includes(SYNTHETIC_MANUAL_NOTE), false);
+  assert.equal(apiLeadsPayload.manualReviewNotesAccess.role, scenario.expectedRole);
+  assert.equal(apiLeadsPayload.manualReviewNotesAccess.claimStatus, scenario.claimStatus);
   assert.equal(apiLeadsPayload.manualReviewNotesAccess.manualNotesRead, false);
+});
+}
+
+test('Level 1 local proof simulation omits protected notes on provider error', async () => {
+  const env = {
+    ...createProofEnv('reviewer'),
+    [AUTH_PROVIDER_SESSION_SCAFFOLD_PROVIDER_ENV]: {
+      async resolveSession() {
+        throw new Error('synthetic provider failure with secret text');
+      },
+    },
+  };
+
+  const apiLeadsResponse = await handleWorkerRequest(
+    createWorkerRequest('/api/leads?profile=danfoss', { headers: authHeaders() }),
+    env,
+    {}
+  );
+  const apiLeadsPayload = await readJson(apiLeadsResponse);
+  const detailResponse = await handleWorkerRequest(
+    createWorkerRequest('/leads/lead-1', { headers: authHeaders() }),
+    env,
+    {}
+  );
+  const detailHtml = await detailResponse.text();
+
+  assert.equal(apiLeadsResponse.status, 200);
+  assert.equal(Object.hasOwn(apiLeadsPayload.leads[0], 'manualReviewNotes'), false);
+  assert.equal(JSON.stringify(apiLeadsPayload).includes(SYNTHETIC_MANUAL_NOTE), false);
+  assert.equal(JSON.stringify(apiLeadsPayload).includes('secret text'), false);
+  assert.equal(detailResponse.status, 200);
+  assert.equal(detailHtml.includes(SYNTHETIC_MANUAL_NOTE), false);
+  assert.equal(detailHtml.includes('secret text'), false);
+  assert.equal(apiLeadsPayload.manualReviewNotesAccess.providerStatus, 'provider_error');
+  assert.equal(apiLeadsPayload.manualReviewNotesAccess.claimStatus, 'provider_error');
+  assert.equal(apiLeadsPayload.manualReviewNotesAccess.productionReady, false);
 });

@@ -6,6 +6,7 @@ import {
   LOCAL_E2E_TOKEN,
   createLocalE2EAnalyticsRows,
   createLocalE2ELeadRows,
+  createLocalE2EManualReviewNoteEventRows,
   createLocalE2EStatusLogRows,
 } from './local-e2e-fixtures.mjs';
 
@@ -25,6 +26,7 @@ export function createLocalSmokeEnv(overrides = {}) {
     WORKER_ORIGIN: 'http://127.0.0.1',
     DB: new FakeD1Database({
       leads: createLocalE2ELeadRows(),
+      manualReviewNoteEvents: createLocalE2EManualReviewNoteEventRows(),
       statusLog: createLocalE2EStatusLogRows(),
       analytics: createLocalE2EAnalyticsRows(),
     }),

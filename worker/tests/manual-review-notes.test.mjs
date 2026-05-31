@@ -11,6 +11,11 @@ const LOCAL_TEST_ROLE_STUB_ENV = Object.freeze({
   MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB: 'enabled',
 });
 
+const LEVEL1_STOP_WRITE_ENV = Object.freeze({
+  ...LOCAL_TEST_ROLE_STUB_ENV,
+  LEVEL1_MANUAL_REVIEW_NOTES_STOP_WRITE: 'enabled',
+});
+
 const LOCAL_TEST_ROLE_HEADER = 'X-Manual-Review-Notes-Local-Test-Role';
 
 const PROTECTED_MANUAL_NOTE_FIELDS = Object.freeze([
@@ -876,6 +881,111 @@ test('generated reviewer note suggestions stay out of manual note storage histor
     'Human note bundled with generated helper must not save.',
   ]);
   assertSerializedPayloadDoesNotContain(csv, generatedSuggestionText);
+});
+
+test('Level 1 stop-write rollback guard blocks manual note create edit clear and preserves existing data', async () => {
+  const cases = [
+    {
+      name: 'create',
+      row: createLeadRow({ notes: '' }),
+      payload: { manualReviewNotes: 'Blocked create note.' },
+      expectedNote: '',
+      events: [],
+    },
+    {
+      name: 'edit',
+      row: createLeadRow({
+        notes: 'Existing note before stop-write.',
+        manual_review_notes_author_label: 'manual_reviewer',
+        manual_review_notes_updated_at: '2026-05-31T00:00:00.000Z',
+      }),
+      payload: { manualReviewNotes: 'Blocked edit note.' },
+      expectedNote: 'Existing note before stop-write.',
+      events: [
+        {
+          lead_id: 'lead-1',
+          event_type: 'create',
+          changed_at: '2026-05-31T00:00:00.000Z',
+          author_label: 'manual_reviewer',
+        },
+      ],
+    },
+    {
+      name: 'clear',
+      row: createLeadRow({
+        notes: 'Existing note before blocked clear.',
+        manual_review_notes_author_label: 'manual_reviewer',
+        manual_review_notes_updated_at: '2026-05-31T00:00:00.000Z',
+      }),
+      payload: { manualReviewNotes: '' },
+      expectedNote: 'Existing note before blocked clear.',
+      events: [
+        {
+          lead_id: 'lead-1',
+          event_type: 'edit',
+          changed_at: '2026-05-31T00:00:00.000Z',
+          author_label: 'manual_reviewer',
+        },
+      ],
+    },
+  ];
+
+  for (const scenario of cases) {
+    const db = new FakeD1Database({
+      leads: [scenario.row],
+      manualReviewNoteEvents: scenario.events,
+    });
+    const response = await patchLead(db, scenario.payload, 'lead-1', {
+      env: LEVEL1_STOP_WRITE_ENV,
+      headers: { [LOCAL_TEST_ROLE_HEADER]: 'reviewer' },
+    });
+    const payload = await response.json();
+    const lead = await getLeadById(db, 'lead-1');
+
+    assert.equal(response.status, 423, scenario.name);
+    assert.equal(payload.success, false);
+    assert.match(payload.message, /stop-write guard/);
+    assert.equal(lead.manualReviewNotes, scenario.expectedNote);
+    assert.equal(db.leads.get('lead-1').notes, scenario.expectedNote);
+    assert.deepEqual(db.manualReviewNoteEvents.map(pickManualNoteEvent), scenario.events);
+  }
+});
+
+test('Level 1 stop-write rollback guard blocks generated-suggestion bundled manual writes without mutation', async () => {
+  const db = new FakeD1Database({
+    leads: [
+      createLeadRow({
+        notes: 'Existing note before generated suggestion stop-write.',
+        manual_review_notes_author_label: 'manual_reviewer',
+        manual_review_notes_updated_at: '2026-05-31T00:00:00.000Z',
+      }),
+    ],
+  });
+
+  const response = await patchLead(
+    db,
+    {
+      manualReviewNotes: 'Blocked human note bundled with generated helper.',
+      reviewNoteSuggestion: {
+        state: 'APPROVED',
+        text: 'Generated helper must not persist during stop-write.',
+      },
+    },
+    'lead-1',
+    {
+      env: LEVEL1_STOP_WRITE_ENV,
+      headers: { [LOCAL_TEST_ROLE_HEADER]: 'reviewer' },
+    }
+  );
+  const payload = await response.json();
+  const lead = await getLeadById(db, 'lead-1');
+
+  assert.equal(response.status, 423);
+  assert.equal(payload.success, false);
+  assert.match(payload.message, /stop-write guard/);
+  assert.equal(lead.manualReviewNotes, 'Existing note before generated suggestion stop-write.');
+  assert.equal(db.leads.get('lead-1').notes, 'Existing note before generated suggestion stop-write.');
+  assert.deepEqual(db.manualReviewNoteEvents, []);
 });
 
 test('lead refresh preserves existing human-entered notes and ignores generated note fields', async () => {

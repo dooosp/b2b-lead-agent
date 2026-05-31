@@ -11,6 +11,78 @@ export const LEVEL1_D1_OBSERVATION_ALLOWED_METADATA_FIELDS = Object.freeze([
   'partial',
 ]);
 
+export const LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_FIXTURE = Object.freeze([
+  Object.freeze({
+    tableName: 'leads',
+    columnName: 'notes',
+    columnType: 'TEXT',
+    notNull: false,
+    defaultValue: "''",
+    primaryKey: false,
+  }),
+  Object.freeze({
+    tableName: 'leads',
+    columnName: 'manual_review_notes_author_label',
+    columnType: 'TEXT',
+    notNull: false,
+    defaultValue: null,
+    primaryKey: false,
+  }),
+  Object.freeze({
+    tableName: 'leads',
+    columnName: 'manual_review_notes_updated_at',
+    columnType: 'TEXT',
+    notNull: false,
+    defaultValue: null,
+    primaryKey: false,
+  }),
+  Object.freeze({
+    tableName: 'manual_review_note_events',
+    columnName: 'lead_id',
+    columnType: 'TEXT',
+    notNull: true,
+    defaultValue: null,
+    primaryKey: false,
+  }),
+  Object.freeze({
+    tableName: 'manual_review_note_events',
+    columnName: 'event_type',
+    columnType: 'TEXT',
+    notNull: true,
+    defaultValue: null,
+    primaryKey: false,
+  }),
+  Object.freeze({
+    tableName: 'manual_review_note_events',
+    columnName: 'changed_at',
+    columnType: 'TEXT',
+    notNull: true,
+    defaultValue: null,
+    primaryKey: false,
+  }),
+  Object.freeze({
+    tableName: 'manual_review_note_events',
+    columnName: 'author_label',
+    columnType: 'TEXT',
+    notNull: true,
+    defaultValue: "'manual_reviewer'",
+    primaryKey: false,
+  }),
+  Object.freeze({
+    tableName: 'manual_review_note_events',
+    indexName: 'idx_manual_review_note_events_lead',
+    unique: false,
+    origin: 'c',
+    partial: false,
+  }),
+]);
+
+const LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_KEYS = new Set(
+  LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_FIXTURE.map((record) => (
+    `${record.tableName}:${record.columnName || record.indexName || ''}`
+  ))
+);
+
 const FORBIDDEN_EVIDENCE_FIELDS = new Set([
   'accountId',
   'authHeader',
@@ -33,6 +105,28 @@ const FORBIDDEN_EVIDENCE_FIELDS = new Set([
   'userIdentity',
 ]);
 
+const FORBIDDEN_EVIDENCE_FIELD_PATTERNS = [
+  /account[_-]?id/i,
+  /auth[_-]?header/i,
+  /cookie/i,
+  /customer/i,
+  /database[_-]?id/i,
+  /generated.*suggestion/i,
+  /jwt/i,
+  /manual.*note.*body/i,
+  /private/i,
+  /raw.*command/i,
+  /secret/i,
+  /session.*claim/i,
+  /token/i,
+  /user.*identity/i,
+];
+
+function isForbiddenEvidenceField(field) {
+  if (FORBIDDEN_EVIDENCE_FIELDS.has(field)) return true;
+  return FORBIDDEN_EVIDENCE_FIELD_PATTERNS.some((pattern) => pattern.test(field));
+}
+
 function normalizeStatus(status) {
   const normalized = String(status || 'BLOCKED').trim().toUpperCase();
   return ['PASS', 'BLOCKED', 'HOLD'].includes(normalized) ? normalized : 'BLOCKED';
@@ -40,11 +134,54 @@ function normalizeStatus(status) {
 
 export function validateLevel1D1ObservationEvidence(record = {}) {
   const forbiddenFields = Object.keys(record).filter((field) => {
-    return FORBIDDEN_EVIDENCE_FIELDS.has(field) || !LEVEL1_D1_OBSERVATION_ALLOWED_METADATA_FIELDS.includes(field);
+    const value = record[field];
+    const isNestedValue = value !== null && typeof value === 'object';
+    return isForbiddenEvidenceField(field)
+      || !LEVEL1_D1_OBSERVATION_ALLOWED_METADATA_FIELDS.includes(field)
+      || isNestedValue;
   });
   return {
     ok: forbiddenFields.length === 0,
     forbiddenFields,
+  };
+}
+
+function redactValue(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => redactValue(item));
+  }
+  if (value && typeof value === 'object') {
+    return redactLevel1EvidenceRecord(value);
+  }
+  return value;
+}
+
+export function validateLevel1ManualReviewNotesSchemaMetadata(record = {}) {
+  const result = validateLevel1D1ObservationEvidence(record);
+  const key = `${record.tableName || ''}:${record.columnName || record.indexName || ''}`;
+  const forbiddenFields = [...result.forbiddenFields];
+  if (!LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_KEYS.has(key)) {
+    forbiddenFields.push('tableName');
+  }
+  return {
+    ok: forbiddenFields.length === 0,
+    forbiddenFields,
+  };
+}
+
+export function buildLevel1LocalD1ObservationMetadata(records = LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_FIXTURE) {
+  const evidence = records.map((record) => ({ ...record }));
+  const invalidRecords = evidence
+    .map((record, index) => ({ index, ...validateLevel1ManualReviewNotesSchemaMetadata(record) }))
+    .filter((result) => !result.ok);
+
+  return {
+    source: 'local_fixture_metadata_only',
+    productionD1Observed: false,
+    productionReady: false,
+    evidenceBoundary: 'NOT_PRODUCTION_EVIDENCE',
+    records: evidence,
+    invalidRecords,
   };
 }
 
@@ -64,10 +201,10 @@ export function buildLevel1RollbackStopWriteGuard(trigger = 'unspecified') {
 
 export function redactLevel1EvidenceRecord(record = {}) {
   return Object.fromEntries(Object.entries(record).map(([field, value]) => {
-    if (FORBIDDEN_EVIDENCE_FIELDS.has(field)) {
+    if (isForbiddenEvidenceField(field)) {
       return [field, '[REDACTED]'];
     }
-    return [field, value];
+    return [field, redactValue(value)];
   }));
 }
 

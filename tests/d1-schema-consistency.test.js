@@ -6,6 +6,7 @@ const test = require('node:test');
 const {
   DRIFT_CRITICAL_COLUMNS,
   EXPECTED_MANUAL_REVIEW_NOTE_EVENT_COLUMNS,
+  EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES,
   EXPECTED_LEADS_COLUMNS,
   validateSchemaSources,
 } = require('../scripts/check-d1-schema-consistency.js');
@@ -26,6 +27,14 @@ test('D1 schema sources cover the full expected leads column set', () => {
   assertSameMembers(result.sources.schemaJsCreateColumns, EXPECTED_LEADS_COLUMNS);
   assertSameMembers(result.sources.schemaSqlManualReviewNoteEventColumns, EXPECTED_MANUAL_REVIEW_NOTE_EVENT_COLUMNS);
   assertSameMembers(result.sources.schemaJsManualReviewNoteEventColumns, EXPECTED_MANUAL_REVIEW_NOTE_EVENT_COLUMNS);
+  assert.deepEqual(
+    result.sources.schemaSqlIndexes.filter((index) => index.table === 'manual_review_note_events'),
+    EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES
+  );
+  assert.deepEqual(
+    result.sources.schemaJsIndexes.filter((index) => index.table === 'manual_review_note_events'),
+    EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES
+  );
   for (const column of DRIFT_CRITICAL_COLUMNS) {
     assert.ok(result.sources.schemaJsLazyAlterColumns.includes(column), `${column} missing from lazy DDL`);
   }
@@ -38,6 +47,17 @@ test('checker reports manual review note event table drift', () => {
   assert.equal(result.ok, false);
   assert.ok(
     result.errors.some((error) => error.includes('worker/schema.sql CREATE TABLE manual_review_note_events')),
+    result.errors.join('\n')
+  );
+});
+
+test('checker reports manual review note event index drift', () => {
+  const driftedSql = schemaSql.replace(/CREATE INDEX IF NOT EXISTS idx_manual_review_note_events_lead[\s\S]*?\);\n/, '');
+  const result = validateSchemaSources({ schemaSql: driftedSql, schemaJs });
+
+  assert.equal(result.ok, false);
+  assert.ok(
+    result.errors.some((error) => error.includes('worker/schema.sql missing expected index idx_manual_review_note_events_lead')),
     result.errors.join('\n')
   );
 });
