@@ -1,0 +1,51 @@
+{
+  "repo_root": "/Users/jangtaeho/Documents/New/b2b-lead-agent-level1-reviewer-workflow-readiness",
+  "repository": "dooosp/b2b-lead-agent",
+  "package_name": "b2b-lead-agent",
+  "repo_identity_ok": true,
+  "identity_evidence": [
+    "AGENTS.md repository/package name b2b-lead-agent",
+    "package.json name b2b-lead-agent",
+    "origin remote https://github.com/dooosp/b2b-lead-agent.git",
+    "batch entrypoint main.js",
+    "worker entrypoint worker/index.js"
+  ],
+  "current_branch": "codex/level1-reviewer-workflow-readiness",
+  "head_sha": "4c5e285c6e68a98b8c5206874b6aa015d57f2541",
+  "default_branch": "master",
+  "pinned_base_ref": "origin/master",
+  "pinned_base_sha": "4c5e285c6e68a98b8c5206874b6aa015d57f2541",
+  "pre_edit_worktree_clean": true,
+  "control_worktree_dirty_paths_preserved": [
+    "docs/exec-plans/root-cycle-merge-and-wave2-bootstrap-verification.md",
+    "docs/exec-plans/root-cycle-merge-and-wave2-bootstrap.md",
+    "tmp/codex/root-cycle-merge-and-wave2-bootstrap-status.md",
+    "tmp/codex/root-cycle-merge-and-wave2-bootstrap-verification-status.md"
+  ],
+  "available_commands": {
+    "start": "node main.js --profile danfoss",
+    "email": "node main.js --profile danfoss --email",
+    "check:naming": "node scripts/check-naming.js",
+    "check:schema": "node scripts/check-d1-schema-consistency.js",
+    "evidence:packet": "node scripts/generate-release-evidence-packet.js",
+    "eval:lead-quality": "node scripts/evaluate-lead-quality.js --fixtures",
+    "e2e": "node e2e-test.mjs",
+    "test:e2e:local": "node --test worker/e2e/local-e2e.test.mjs",
+    "test:evidence": "node --test tests/release-evidence-redaction.test.js tests/release-evidence-packet.test.js",
+    "test:root": "node --test tests/*.test.js",
+    "test:runtime": "npm run test:root",
+    "test:unit": "find worker/tests -maxdepth 1 -name '*.test.mjs' ! -name 'job-trigger.test.mjs' ! -name 'trigger-handler.test.mjs' ! -name 'workflow-contract.test.mjs' -print0 | xargs -0 node --test",
+    "test:contract": "node --test worker/tests/job-trigger.test.mjs worker/tests/trigger-handler.test.mjs worker/tests/workflow-contract.test.mjs",
+    "test:worker": "npm run test:unit && npm run test:contract",
+    "test": "npm run test:root && npm run test:worker"
+  },
+  "ci_workflows": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/validate-naming.yml",
+    ".github/workflows/generate-report.yml"
+  ],
+  "open_prs_at_preflight": [],
+  "production_evidence_boundary": "Production/staging D1, endpoints, deploys, logs/secrets, customer/private data, CRM, outreach, LLM, automation, and generated-suggestion persistence/export/history/attribution are forbidden for this goal.",
+  "can_proceed": true,
+  "stop_reasons": []
+}

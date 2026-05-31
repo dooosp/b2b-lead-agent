@@ -30,7 +30,7 @@ function buildLeadListPayload(canonicalized, source, extra = {}, manualReviewNot
 }
 
 export async function fetchLeads(env, profile, request) {
-  const manualReviewNotesAccess = resolveManualReviewNotesAccess(request, env);
+  const manualReviewNotesAccess = await resolveManualReviewNotesAccess(request, env);
   try {
     const isSelfServiceProfile = profile.startsWith('self-service:');
     if (env.DB) {
@@ -70,7 +70,7 @@ export async function fetchLeads(env, profile, request) {
 }
 
 export async function fetchHistory(env, profile, request) {
-  const manualReviewNotesAccess = resolveManualReviewNotesAccess(request, env);
+  const manualReviewNotesAccess = await resolveManualReviewNotesAccess(request, env);
   try {
     const isSelfServiceProfile = profile.startsWith('self-service:');
     if (env.DB) {
@@ -118,7 +118,7 @@ export async function fetchHistory(env, profile, request) {
 
 export async function handleUpdateLead(request, env, leadId) {
   if (!env.DB) return jsonResponse({ success: false, message: '시스템 설정이 필요합니다. 관리자에게 문의하세요.' }, 503);
-  const manualReviewNotesAccess = resolveManualReviewNotesAccess(request, env);
+  const manualReviewNotesAccess = await resolveManualReviewNotesAccess(request, env);
   const body = await request.json().catch(() => ({}));
   const lead = await getLeadById(env.DB, leadId);
   if (!lead) return jsonResponse({ success: false, message: '리드를 찾을 수 없습니다.' }, 404);
@@ -143,7 +143,7 @@ export async function handleUpdateLead(request, env, leadId) {
 
 export async function handleExportCSV(request, env) {
   if (!env.DB) return jsonResponse({ success: false, message: '시스템 설정이 필요합니다. 관리자에게 문의하세요.' }, 503);
-  const manualReviewNotesAccess = resolveManualReviewNotesAccess(request, env);
+  const manualReviewNotesAccess = await resolveManualReviewNotesAccess(request, env);
   const url = new URL(request.url);
   const requestedProfile = (url.searchParams.get('profile') || 'all').trim();
   if (requestedProfile !== 'all' && requestedProfile !== resolveProfileId(requestedProfile, env)) {
