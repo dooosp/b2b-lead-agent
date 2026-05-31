@@ -3,7 +3,7 @@
 ## 현재 기준 상태
 
 - 기준 브랜치: `master`
-- 마지막 검증된 post-PR #174 `origin/master` HEAD: `766447f95635b9a57c66d97c1b49ef670f57a687` (`Level 1 approval packet dry run`)
+- 마지막 검증된 post-PR #175 `origin/master` HEAD: `43a6a382139858b2c373f26d2e00ba62400303cf` (`Add Level 1 non-production regression gate`)
 - 다음 세션도 반드시 `git fetch origin master`와 `git rev-parse origin/master`로 실제 최신 HEAD를 다시 기록한다.
 - hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`, `docs/architecture/*.md`, `NEXT_SESSION_PROMPT.md`
 - LeadBrief v1 merge baseline: `5776d4a` (`[Product] Freeze LeadBrief v1 review contract (#27)`)
@@ -154,7 +154,8 @@
   - #172 merged local-only proof preflight automation, redacted synthetic fixture evidence, and refusal of production-like env/URL/D1/secret/provider inputs. It is **not production evidence** and keeps `productionReady: false`.
   - #173 merged `LEVEL1_AUTH_ADAPTER_ROUTE_AUDIT_NON_PRODUCTION` with provider-agnostic injected local/test auth adapter contracts, route audit coverage, deny-by-default synthetic role checks, stricter local proof/auth preflight refusal, enrich/export/publication/evidence privacy guards, and reviewer docs. It is **not production evidence**, does not parse real auth material or call Cloudflare Access, and keeps `productionReady: false`.
   - #174 merged `LEVEL1_PRODUCTION_PROOF_APPROVAL_PACKET_NON_PRODUCTION`: the final non-production approval packet, future evidence schema, and local approval dry-run operator after PRs #171/#172/#173. It does not execute production proof and keeps `productionReady: false`.
-  - Current Level 1 CI/package gate is `npm run check:level1`. It runs local-only auth adapter/scaffold, route/UI privacy, generated-suggestion/manual-note, proof-preflight, approval dry-run, and redacted local artifact checks; CI runs it without secrets, deploy, Wrangler, D1 bindings, endpoints, or production inputs. It is not production evidence and does not satisfy Issue #165.
+  - #175 merged the durable local-only `npm run check:level1` CI/package gate. It runs local-only auth adapter/scaffold, route/UI privacy, generated-suggestion/manual-note, proof-preflight, approval dry-run, and redacted local artifact checks; CI runs it without secrets, deploy, Wrangler, D1 bindings, endpoints, or production inputs. It is not production evidence and does not satisfy Issue #165.
+  - Current Level 1 fail-closed fault-injection coverage adds malformed synthetic claim arrays, mixed roles, API-client aliases, denied-route/API leak checks, auth-header / Cloudflare Access / D1 / API-key alias env poison, poisoned future evidence artifacts, bare `notes` / validation-note evidence body redaction, value-aware raw-input redaction, missing local D1 metadata/index drift, stop-write-disabled rollback requests, and mutating or destructive rollback/SQL request refusal. It remains local/test-only and keeps `productionReady:false`.
 - Current Level 1 blocker burn-down packet lives at `docs/roadmap/b2b-lead-agent-level-1-blocker-burndown-packet.md`. It classifies remaining blockers for auth provider/session owner input, production D1 schema observation input, rollback/backout owner input, final production proof approval, and privacy residual values. It includes copy-paste owner request templates and keeps `FINAL_STATE: HOLD_PENDING_NEW_EXPLICIT_GOAL`.
 - Reviewer Workflow Final Audit & Demo Packet lives at `docs/reviewer-workflow-final-audit.md` and is the canonical local/test-safe handoff baseline for completed reviewer workflow demo, validation, allowed/forbidden claims, note-persistence wording, and production evidence boundaries.
 - Issue #100 is closed as completed for the recorded local/test-safe Human UX Review findings. Future UX feedback should open a new issue or separately scoped record.
@@ -230,7 +231,7 @@
 - `npm run check:naming` = canonical path/naming guard
 - `npm run check:schema` = local D1 schema drift guard
 - `npm run eval:lead-quality` = synthetic-only LeadBrief quality and review-readiness evaluator
-- `npm run check:level1` = local-only Level 1 auth/route/privacy/proof/preflight/approval regression gate; writes only redacted `NOT_PRODUCTION_EVIDENCE` artifacts and keeps `productionReady:false`
+- `npm run check:level1` = local-only Level 1 auth/route/privacy/proof/preflight/approval/evidence-redaction regression gate; writes only redacted `NOT_PRODUCTION_EVIDENCE` artifacts and keeps `productionReady:false`
 - `npm run test:evidence` = release evidence toolkit tests
 - `npm run test:unit` = Worker unit coverage
 - `npm run test:contract` = Worker contract and trigger coverage

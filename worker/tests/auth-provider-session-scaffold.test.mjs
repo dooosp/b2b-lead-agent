@@ -201,6 +201,43 @@ for (const scenario of [
     session: { audience: 'wrong-local-proof-audience' },
     claimStatus: 'wrong_audience',
   },
+  {
+    name: 'mixed role reviewer claim',
+    role: ['reviewer', 'manager'],
+    expectedRole: 'none',
+    roleStatus: 'missing',
+    authenticated: true,
+  },
+  {
+    name: 'single-item role array reviewer claim',
+    role: ['reviewer'],
+    expectedRole: 'none',
+    roleStatus: 'missing',
+    authenticated: true,
+  },
+  {
+    name: 'malformed audience array reviewer claim',
+    role: 'reviewer',
+    expectedRole: 'reviewer',
+    roleStatus: 'recognized',
+    authenticated: false,
+    providerAuthenticated: true,
+    session: { audience: [AUTH_PROVIDER_SESSION_SCAFFOLD_EXPECTED_AUDIENCE] },
+    claimStatus: 'wrong_audience',
+  },
+  {
+    name: 'malformed provider claim payload',
+    expectedRole: 'none',
+    roleStatus: 'missing',
+    authenticated: false,
+    providerAuthenticated: true,
+    providerFactory: () => ({
+      async resolveSession() {
+        return 'role=reviewer;token=synthetic-provider-token';
+      },
+    }),
+    claimStatus: 'missing_session',
+  },
 ]) {
   test(`non-production auth provider/session scaffold fails closed for ${scenario.name}`, async () => {
     const originalManualNote = `Protected note hidden from ${scenario.name}.`;

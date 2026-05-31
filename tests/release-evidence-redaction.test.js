@@ -22,7 +22,7 @@ test('redactEvidence removes auth material, database ids, private URLs, and PII-
     contactEmail: 'buyer@example.com',
     author: 'Release Owner',
     phoneNumber: '+1 (415) 555-0101',
-    notes: 'Authorization: Bearer abc.def.ghi\nCookie: sid=abc\ninternal URL http://10.0.0.4/admin?api_key=secret'
+    operatorSummary: 'Authorization: Bearer abc.def.ghi\nCookie: sid=abc\ninternal URL http://10.0.0.4/admin?api_key=secret'
   };
 
   const redacted = redactEvidence(input);
@@ -38,9 +38,9 @@ test('redactEvidence removes auth material, database ids, private URLs, and PII-
   assert.equal(redacted.contactEmail, REDACTION_LABELS.pii);
   assert.equal(redacted.author, REDACTION_LABELS.pii);
   assert.equal(redacted.phoneNumber, REDACTION_LABELS.pii);
-  assert.match(redacted.notes, /\[REDACTED:AUTH_HEADER\]/);
-  assert.match(redacted.notes, /\[REDACTED:COOKIE\]/);
-  assert.match(redacted.notes, /\[REDACTED:PRIVATE_URL\]/);
+  assert.match(redacted.operatorSummary, /\[REDACTED:AUTH_HEADER\]/);
+  assert.match(redacted.operatorSummary, /\[REDACTED:COOKIE\]/);
+  assert.match(redacted.operatorSummary, /\[REDACTED:PRIVATE_URL\]/);
   assert.doesNotMatch(JSON.stringify(redacted), /super-secret-token-value|secret-session|buyer@example\.com|10\.0\.0\.4/);
 });
 
@@ -69,6 +69,9 @@ test('redactEvidence removes manual-note and generated-suggestion evidence field
   const input = {
     manualReviewNotes: 'Human note body must not appear.',
     manual_review_notes: 'Snake case note body must not appear.',
+    notes: 'Bare notes body must not appear.',
+    manualNote: 'Manual note alias must not appear.',
+    noteBody: 'Bare note body alias must not appear.',
     manualNoteBodyText: 'Manual note body alias must not appear.',
     generatedSuggestionText: 'Generated suggestion body must not appear.',
     reviewNoteSuggestion: {
@@ -86,6 +89,9 @@ test('redactEvidence removes manual-note and generated-suggestion evidence field
 
   assert.equal(redacted.manualReviewNotes, REDACTION_LABELS.protectedText);
   assert.equal(redacted.manual_review_notes, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.notes, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.manualNote, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.noteBody, REDACTION_LABELS.protectedText);
   assert.equal(redacted.manualNoteBodyText, REDACTION_LABELS.protectedText);
   assert.equal(redacted.generatedSuggestionText, REDACTION_LABELS.protectedText);
   assert.equal(redacted.reviewNoteSuggestion, REDACTION_LABELS.protectedText);

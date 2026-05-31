@@ -111,6 +111,39 @@ for (const scenario of [
       claimStatus: 'wrong_audience',
     },
   },
+  {
+    name: 'mixed roles',
+    session: { role: ['reviewer', 'manager'] },
+    expected: {
+      adapterStatus: 'resolved',
+      role: 'none',
+      roleStatus: 'missing',
+      authenticated: true,
+      claimStatus: 'valid',
+    },
+  },
+  {
+    name: 'single-item role array',
+    session: { role: ['reviewer'] },
+    expected: {
+      adapterStatus: 'resolved',
+      role: 'none',
+      roleStatus: 'missing',
+      authenticated: true,
+      claimStatus: 'valid',
+    },
+  },
+  {
+    name: 'malformed audience array',
+    session: { role: 'reviewer', audience: [EXPECTED_AUDIENCE] },
+    expected: {
+      adapterStatus: 'resolved',
+      role: 'reviewer',
+      roleStatus: 'recognized',
+      authenticated: false,
+      claimStatus: 'wrong_audience',
+    },
+  },
 ]) {
   test(`local/test auth adapter normalizes ${scenario.name} claims`, async () => {
     const result = await resolveLocalTestAuthAdapter({
@@ -175,4 +208,29 @@ test('local/test auth adapter redacts provider errors and fails closed', async (
   assert.equal(result.claims.role, 'none');
   assert.equal(result.claims.authenticated, false);
   assert.equal(JSON.stringify(result).includes(secretText), false);
+});
+
+test('local/test auth adapter fails closed for malformed synthetic session claims', async () => {
+  const result = await resolveLocalTestAuthAdapter({
+    adapter: {
+      async resolveSession() {
+        return 'role=reviewer;token=synthetic-token-that-must-not-parse';
+      },
+    },
+    expectedAudience: EXPECTED_AUDIENCE,
+  });
+
+  assert.equal(result.adapterStatus, 'resolved');
+  assert.deepEqual(result.claims, {
+    contractVersion: 'level1.local_test_auth_adapter.v1',
+    adapterStatus: 'resolved',
+    role: 'none',
+    roleStatus: 'missing',
+    authenticated: false,
+    claimStatus: 'missing_session',
+    expectedAudience: EXPECTED_AUDIENCE,
+    realAuthImplemented: false,
+    productionReady: false,
+  });
+  assert.equal(JSON.stringify(result).includes('synthetic-token-that-must-not-parse'), false);
 });

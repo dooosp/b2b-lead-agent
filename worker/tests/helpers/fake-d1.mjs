@@ -496,6 +496,15 @@ export class FakeD1Database {
         .map(clone);
     }
 
+    if (normalized === 'select * from leads where profile_id = ? and (enriched is null or enriched = 0) order by score desc limit 3') {
+      const [profileId] = args;
+      return [...this.leads.values()]
+        .filter((row) => row.profile_id === profileId && toNumber(row.enriched) === 0)
+        .sort((a, b) => toNumber(b.score) - toNumber(a.score))
+        .slice(0, 3)
+        .map(clone);
+    }
+
     if (normalized === 'select * from leads where profile_id = ? and status = ? order by created_at desc limit ? offset ?') {
       const [profileId, status, limit, offset] = args;
       return sortByCreatedDesc([...this.leads.values()].filter((row) => row.profile_id === profileId && row.status === status))

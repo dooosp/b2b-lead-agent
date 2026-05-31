@@ -28,7 +28,7 @@ const ROLE_ALIASES = new Map([
 ]);
 
 function normalizeText(value) {
-  return String(value || '').trim().toLowerCase();
+  return typeof value === 'string' ? value.trim().toLowerCase() : '';
 }
 
 export function normalizeLocalTestAuthAdapterRole(value) {
@@ -54,6 +54,7 @@ function resolveClaimStatus(session, { expectedAudience = DEFAULT_EXPECTED_AUDIE
   }
 
   if (!session.audience) return 'missing_audience';
+  if (typeof session.audience !== 'string') return 'wrong_audience';
   if (String(session.audience) !== expectedAudience) return 'wrong_audience';
 
   return 'valid';

@@ -7,6 +7,7 @@ import {
   buildLevel1LocalD1ObservationMetadata,
   buildLevel1ReadinessScorecard,
   buildLevel1RollbackStopWriteGuard,
+  evaluateLevel1RollbackGate,
   redactLevel1EvidenceRecord,
   validateLevel1ManualReviewNotesSchemaMetadata,
   validateLevel1D1ObservationEvidence
@@ -90,6 +91,25 @@ test('Level 1 local D1 observation metadata fixture covers manual-note schema wi
   assert.equal(JSON.stringify(observation).includes('rowCount'), false);
 });
 
+test('Level 1 local D1 observation metadata fails closed on missing columns or index drift', () => {
+  const driftedRecords = LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_FIXTURE
+    .filter((record) => (
+      record.columnName !== 'manual_review_notes_updated_at'
+        && record.indexName !== 'idx_manual_review_note_events_lead'
+    ));
+
+  const observation = buildLevel1LocalD1ObservationMetadata(driftedRecords);
+
+  assert.equal(observation.status, 'HOLD');
+  assert.equal(observation.productionD1Observed, false);
+  assert.equal(observation.productionReady, false);
+  assert.equal(observation.evidenceBoundary, 'NOT_PRODUCTION_EVIDENCE');
+  assert.deepEqual(observation.invalidRecords, []);
+  assert.ok(observation.missingRecordKeys.includes('leads:manual_review_notes_updated_at'));
+  assert.ok(observation.missingRecordKeys.includes('manual_review_note_events:idx_manual_review_note_events_lead'));
+  assert.equal(observation.nextAction, 'HOLD_FOR_OWNER_APPROVAL');
+});
+
 test('Level 1 manual-note schema metadata rejects non-manual-note table or index combinations', () => {
   assert.deepEqual(
     validateLevel1ManualReviewNotesSchemaMetadata({
@@ -139,6 +159,44 @@ test('Level 1 rollback guard is stop-write and non-destructive first', () => {
     rollbackExecutionApproved: false,
     nextAction: 'HOLD_FOR_OWNER_APPROVAL',
   });
+});
+
+test('Level 1 rollback gate blocks stop-write disabled and destructive rollback requests', () => {
+  const missingStopWrite = evaluateLevel1RollbackGate({
+    trigger: 'fault_injection_stop_write_disabled',
+    stopWrites: false,
+    requestedAction: 'repair metadata only',
+  });
+  const destructiveRequest = evaluateLevel1RollbackGate({
+    trigger: 'fault_injection_destructive_rollback',
+    stopWrites: true,
+    requestedAction: 'DROP TABLE manual_review_note_events',
+  });
+  const mutatingSqlRequest = evaluateLevel1RollbackGate({
+    trigger: 'fault_injection_mutating_sql_rollback',
+    stopWrites: true,
+    requestedAction: "UPDATE leads SET notes = ''",
+  });
+  const localSafe = evaluateLevel1RollbackGate({
+    trigger: 'fault_injection_non_destructive_backout',
+    stopWrites: true,
+    requestedAction: 'preserve existing data and capture redacted evidence only',
+  });
+
+  assert.equal(missingStopWrite.status, 'HOLD');
+  assert.deepEqual(missingStopWrite.blockers.map((blocker) => blocker.reason), ['stop_write_not_enabled']);
+  assert.equal(missingStopWrite.productionReady, false);
+  assert.equal(missingStopWrite.rollbackGuard.stopWrites, true);
+  assert.equal(destructiveRequest.status, 'HOLD');
+  assert.deepEqual(destructiveRequest.blockers.map((blocker) => blocker.reason), ['destructive_rollback_request_refused']);
+  assert.equal(destructiveRequest.rollbackGuard.destructiveDataActionApproved, false);
+  assert.equal(mutatingSqlRequest.status, 'HOLD');
+  assert.deepEqual(mutatingSqlRequest.blockers.map((blocker) => blocker.reason), ['destructive_rollback_request_refused']);
+  assert.equal(mutatingSqlRequest.destructiveDataActionApproved, false);
+  assert.equal(localSafe.status, 'PASS_LOCAL');
+  assert.deepEqual(localSafe.blockers, []);
+  assert.equal(localSafe.productionReady, false);
+  assert.equal(localSafe.rollbackExecutionApproved, false);
 });
 
 test('Level 1 evidence redaction drops forbidden evidence fields without mutating the input record', () => {

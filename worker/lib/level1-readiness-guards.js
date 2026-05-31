@@ -83,6 +83,10 @@ const LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_KEYS = new Set(
   ))
 );
 
+export const LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_REQUIRED_KEYS = Object.freeze(
+  [...LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_KEYS]
+);
+
 const FORBIDDEN_EVIDENCE_FIELDS = new Set([
   'accountId',
   'authHeader',
@@ -93,6 +97,7 @@ const FORBIDDEN_EVIDENCE_FIELDS = new Set([
   'generatedSuggestionText',
   'jwt',
   'logs',
+  'manualNote',
   'manualReviewNotes',
   'manual_review_notes',
   'manualReviewNotesAuthorLabel',
@@ -106,10 +111,13 @@ const FORBIDDEN_EVIDENCE_FIELDS = new Set([
   'manualReviewNotesUpdatedAt',
   'manual_review_notes_updated_at',
   'manualNoteBodyText',
+  'notes',
   'noteBody',
   'privateLeadPersonFields',
   'privateUrl',
   'providerInput',
+  'rawAuth',
+  'raw_auth',
   'rawSessionClaims',
   'rawCommandContext',
   'reviewNoteSuggestion',
@@ -120,6 +128,9 @@ const FORBIDDEN_EVIDENCE_FIELDS = new Set([
   'sessionClaim',
   'token',
   'userIdentity',
+  'destructiveDataActionApproved',
+  'rollbackExecutionApproved',
+  'productionActionApproved',
 ]);
 
 const FORBIDDEN_EVIDENCE_FIELD_PATTERNS = [
@@ -131,6 +142,8 @@ const FORBIDDEN_EVIDENCE_FIELD_PATTERNS = [
   /generated.*suggestion/i,
   /generated.*helper/i,
   /jwt/i,
+  /^notes$/i,
+  /^manual[_-]?note$/i,
   /manual[_-]?review[_-]?notes/i,
   /manual.*note.*author/i,
   /manual.*note.*body/i,
@@ -140,6 +153,7 @@ const FORBIDDEN_EVIDENCE_FIELD_PATTERNS = [
   /note.*body/i,
   /private/i,
   /provider.*input/i,
+  /raw[_-]?auth/i,
   /raw.*command/i,
   /raw.*session.*claim/i,
   /review.*note.*suggestion/i,
@@ -148,7 +162,23 @@ const FORBIDDEN_EVIDENCE_FIELD_PATTERNS = [
   /session.*claim/i,
   /token/i,
   /user.*identity/i,
+  /destructive.*approved/i,
+  /rollback.*execution.*approved/i,
+  /production.*action.*approved/i,
 ];
+
+const FORBIDDEN_EVIDENCE_TEXT_PATTERNS = Object.freeze([
+  /\b(?:authorization|proxy-authorization)\s*[:=]\s*[^\s,;]+/i,
+  /\bbearer\s+[a-z0-9._~+/-]+=*/i,
+  /\b(?:cookie|set-cookie)\s*[:=]\s*[^\r\n;]+/i,
+  /\b(?:token|secret|api[_-]?key|password|jwt|session)\s*[:=]\s*[^\s,;]+/i,
+  /\bmanual\s+note\b/i,
+  /\bmanual[_-]?review[_-]?notes?\b/i,
+  /\bnote\s+body\b/i,
+  /\bgenerated\s+(?:suggestion|helper)\b/i,
+  /\b(?:drop\s+table|delete\s+from|truncate\s+table|drop\s+index|update\s+[\w".]+\s+set|insert\s+into|replace\s+into|merge\s+into|alter\s+table)\b/i,
+  /https?:\/\/(?:localhost|127\.0\.0\.1|10\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.168\.|internal\.|[^/\s]+\.workers\.dev|[^/\s]+\.cloudflareworkers\.com)[^\s]*/i,
+]);
 
 export const LEVEL1_FUTURE_PRODUCTION_PROOF_EVIDENCE_REQUIRED_FIELDS = Object.freeze([
   'schemaVersion',
@@ -212,6 +242,10 @@ function normalizeStatus(status) {
   return ['PASS', 'BLOCKED', 'HOLD'].includes(normalized) ? normalized : 'BLOCKED';
 }
 
+function level1SchemaMetadataKey(record = {}) {
+  return `${record.tableName || ''}:${record.columnName || record.indexName || ''}`;
+}
+
 export function validateLevel1D1ObservationEvidence(record = {}) {
   const forbiddenFields = Object.keys(record).filter((field) => {
     const value = record[field];
@@ -233,12 +267,15 @@ function redactValue(value) {
   if (value && typeof value === 'object') {
     return redactLevel1EvidenceRecord(value);
   }
+  if (typeof value === 'string' && FORBIDDEN_EVIDENCE_TEXT_PATTERNS.some((pattern) => pattern.test(value))) {
+    return '[REDACTED]';
+  }
   return value;
 }
 
 export function validateLevel1ManualReviewNotesSchemaMetadata(record = {}) {
   const result = validateLevel1D1ObservationEvidence(record);
-  const key = `${record.tableName || ''}:${record.columnName || record.indexName || ''}`;
+  const key = level1SchemaMetadataKey(record);
   const forbiddenFields = [...result.forbiddenFields];
   if (!LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_KEYS.has(key)) {
     forbiddenFields.push('tableName');
@@ -251,17 +288,24 @@ export function validateLevel1ManualReviewNotesSchemaMetadata(record = {}) {
 
 export function buildLevel1LocalD1ObservationMetadata(records = LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_FIXTURE) {
   const evidence = records.map((record) => ({ ...record }));
+  const observedKeys = new Set(evidence.map(level1SchemaMetadataKey));
+  const missingRecordKeys = LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_REQUIRED_KEYS
+    .filter((key) => !observedKeys.has(key));
   const invalidRecords = evidence
     .map((record, index) => ({ index, ...validateLevel1ManualReviewNotesSchemaMetadata(record) }))
     .filter((result) => !result.ok);
+  const ok = invalidRecords.length === 0 && missingRecordKeys.length === 0;
 
   return {
+    status: ok ? 'PASS_LOCAL' : 'HOLD',
     source: 'local_fixture_metadata_only',
     productionD1Observed: false,
     productionReady: false,
     evidenceBoundary: 'NOT_PRODUCTION_EVIDENCE',
     records: evidence,
+    missingRecordKeys,
     invalidRecords,
+    nextAction: ok ? 'LOCAL_ONLY_NO_PRODUCTION_ACTION' : 'HOLD_FOR_OWNER_APPROVAL',
   };
 }
 
@@ -276,6 +320,64 @@ export function buildLevel1RollbackStopWriteGuard(trigger = 'unspecified') {
     destructiveDataActionApproved: false,
     rollbackExecutionApproved: false,
     nextAction: 'HOLD_FOR_OWNER_APPROVAL',
+  };
+}
+
+const DESTRUCTIVE_ROLLBACK_ACTION_PATTERNS = Object.freeze([
+  /\bdelete\b/i,
+  /\bdrop\b/i,
+  /\btruncate\b/i,
+  /\bdestroy\b/i,
+  /\bwipe\b/i,
+  /\bpurge\b/i,
+  /\bupdate\s+[\w".]+\s+set\b/i,
+  /\binsert\s+into\b/i,
+  /\breplace\s+into\b/i,
+  /\bmerge\s+into\b/i,
+  /\balter\s+table\b/i,
+  /\bcreate\s+(?:table|index|trigger)\b/i,
+  /\bremove\s+rows?\b/i,
+  /\bdelete\s+rows?\b/i,
+  /\brollback\s+execution\b/i,
+]);
+
+export function evaluateLevel1RollbackGate({
+  trigger = 'unspecified',
+  stopWrites = false,
+  requestedAction = '',
+} = {}) {
+  const action = String(requestedAction || '');
+  const blockers = [];
+
+  if (stopWrites !== true) {
+    blockers.push({
+      reason: 'stop_write_not_enabled',
+      status: 'HOLD',
+      detail: 'Level 1 rollback/backout must stop writes before repair, rollback, or evidence capture.',
+    });
+  }
+
+  if (DESTRUCTIVE_ROLLBACK_ACTION_PATTERNS.some((pattern) => pattern.test(action))) {
+    blockers.push({
+      reason: 'destructive_rollback_request_refused',
+      status: 'HOLD',
+      detail: 'Destructive or mutating rollback, cleanup, SQL change, purge, delete, drop, truncate, or row removal is not approved.',
+    });
+  }
+
+  return {
+    status: blockers.length === 0 ? 'PASS_LOCAL' : 'HOLD',
+    productionReady: false,
+    productionActionApproved: false,
+    rollbackExecutionApproved: false,
+    destructiveDataActionApproved: false,
+    blockers,
+    rollbackGuard: buildLevel1RollbackStopWriteGuard(trigger),
+    nonClaims: [
+      'This is a local-only rollback gate evaluation.',
+      'This does not execute rollback, cleanup, repair, migration, D1 access, endpoint calls, deploy, or destructive data action.',
+      'Owner approval remains required before any rollback execution.',
+    ],
   };
 }
 

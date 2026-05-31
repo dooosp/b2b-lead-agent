@@ -78,6 +78,7 @@ test('package exposes a local-only Level 1 regression gate', async () => {
   assert.match(script, /worker\/tests\/manual-review-notes\.test\.mjs/);
   assert.match(script, /worker\/tests\/level1-proof-preflight\.test\.mjs/);
   assert.match(script, /worker\/tests\/level1-production-proof-approval\.test\.mjs/);
+  assert.match(script, /npm run test:evidence/);
   assert.match(script, /npm run proof:level1:preflight/);
   assert.match(script, /npm run proof:level1:approval-dry-run/);
   assert.doesNotMatch(script, /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);

@@ -27,6 +27,20 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   is the first human reviewer feedback record. It is P3/docs/no-follow-up,
   confirms the docs are clear enough for the closed non-production cycle, and
   leaves `NEXT_MANDATORY_ACTION: NONE`, staging HOLD, and production HOLD.
+- Post-PR175 Level 1 addendum: `master` includes PRs #171-#175 through
+  `43a6a382139858b2c373f26d2e00ba62400303cf`. `npm run check:level1`
+  is the durable local-only Level 1 regression gate in CI. It is not production
+  evidence, keeps `productionReady:false`, and does not approve production
+  proof, deploy, D1 access, endpoint calls, logs/secrets, customer/private
+  data, real auth/session/provider parsing, Cloudflare Access calls,
+  rollback execution, destructive data action, CRM/outreach, LLM, automation,
+  or generated suggestion persistence/export/history/attribution. Current
+  fail-closed coverage includes malformed synthetic auth claims, mixed roles,
+  denied route/API privacy checks, auth-header and Cloudflare Access
+  credential-shaped env poison, poisoned evidence artifacts, missing local D1
+  metadata/index drift, stop-write-disabled rollback requests, mutating or
+  destructive rollback/SQL refusal, and value-aware redaction of poisoned raw
+  evidence input under benign keys.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.

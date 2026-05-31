@@ -27,6 +27,15 @@ export const LEVEL1_AUTH_ROUTE_AUDIT_NON_PRODUCTION = Object.freeze([
     productionReady: false,
   }),
   Object.freeze({
+    surface: 'batch_enrichment_api',
+    routeId: 'api.leads.batchEnrich',
+    method: 'POST',
+    path: '/api/leads/batch-enrich',
+    manualNoteBody: 'never_return',
+    generatedSuggestion: 'never_return',
+    productionReady: false,
+  }),
+  Object.freeze({
     surface: 'enrichment_api',
     routeId: 'api.leads.enrich',
     method: 'POST',

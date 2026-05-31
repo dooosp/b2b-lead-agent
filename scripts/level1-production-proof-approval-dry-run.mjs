@@ -47,18 +47,24 @@ const REQUIRED_PACKET_MARKERS = Object.freeze([
 ]);
 
 const FORBIDDEN_PACKET_FIELD_PATTERNS = Object.freeze([
-  ['manualReviewNotes', /\bmanualReviewNotes\s*:/],
-  ['manual_review_notes', /\bmanual_review_notes\s*:/],
-  ['manualNoteBodyText', /\bmanualNoteBodyText\s*:/],
-  ['generatedSuggestionText', /\bgeneratedSuggestionText\s*:/],
-  ['reviewNoteSuggestion', /\breviewNoteSuggestion\s*:/],
-  ['reviewNoteTemplates', /\breviewNoteTemplates\s*:/],
-  ['providerInput', /\bproviderInput\s*:/],
-  ['rawSessionClaims', /\brawSessionClaims\s*:/],
-  ['authHeader', /\bauthHeader\s*:/],
-  ['cookie', /\bcookie\s*:/],
-  ['token', /\btoken\s*:/],
-  ['databaseId', /\bdatabaseId\s*:/],
+  ['manualReviewNotes', /\bmanualReviewNotes\s*:/i],
+  ['manual_review_notes', /\bmanual_review_notes\s*:/i],
+  ['notes', /\bnotes\s*:/i],
+  ['manualNote', /\bmanualNote\s*:/i],
+  ['noteBody', /\bnoteBody\s*:/i],
+  ['manualNoteBodyText', /\bmanualNoteBodyText\s*:/i],
+  ['generatedSuggestionText', /\bgeneratedSuggestionText\s*:/i],
+  ['reviewNoteSuggestion', /\breviewNoteSuggestion\s*:/i],
+  ['reviewNoteTemplates', /\breviewNoteTemplates\s*:/i],
+  ['providerInput', /\bproviderInput\s*:/i],
+  ['rawSessionClaims', /\brawSessionClaims\s*:/i],
+  ['authHeader', /\bauthHeader\s*:/i],
+  ['cookie', /\bcookie\s*:/i],
+  ['token', /\btoken\s*:/i],
+  ['databaseId', /\bdatabaseId\s*:/i],
+  ['destructiveDataActionApproved', /\bdestructiveDataActionApproved\s*:\s*true\b/i],
+  ['rollbackExecutionApproved', /\brollbackExecutionApproved\s*:\s*true\b/i],
+  ['destructiveSql', /\b(?:drop\s+table|delete\s+from|truncate\s+table|drop\s+index)\b/i],
 ]);
 
 function optionValue(flag, argv = process.argv) {

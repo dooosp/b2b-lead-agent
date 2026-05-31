@@ -81,6 +81,7 @@ test('Level 1 approval packet text requires prerequisite, owner, rollback, evide
   const valid = validateLevel1ApprovalPacketText(COMPLETE_PACKET_TEXT);
   const missingIssue = validateLevel1ApprovalPacketText(COMPLETE_PACKET_TEXT.replace('Issue #154', 'Issue #154 omitted'));
   const unsafe = validateLevel1ApprovalPacketText(`${COMPLETE_PACKET_TEXT}\nmanualReviewNotes: Real note body must not enter packet.`);
+  const destructive = validateLevel1ApprovalPacketText(`${COMPLETE_PACKET_TEXT}\nNotes: real note body\nmanualNote: alias body\nToken: leaked-token\ndestructiveDataActionApproved: true\nDROP TABLE manual_review_note_events;`);
 
   assert.equal(valid.ok, true);
   assert.deepEqual(valid.missingMarkers, []);
@@ -89,6 +90,12 @@ test('Level 1 approval packet text requires prerequisite, owner, rollback, evide
   assert.ok(missingIssue.missingMarkers.includes('Issue #154'));
   assert.equal(unsafe.ok, false);
   assert.ok(unsafe.forbiddenMatches.includes('manualReviewNotes'));
+  assert.equal(destructive.ok, false);
+  assert.ok(destructive.forbiddenMatches.includes('notes'));
+  assert.ok(destructive.forbiddenMatches.includes('manualNote'));
+  assert.ok(destructive.forbiddenMatches.includes('token'));
+  assert.ok(destructive.forbiddenMatches.includes('destructiveDataActionApproved'));
+  assert.ok(destructive.forbiddenMatches.includes('destructiveSql'));
 });
 
 test('Level 1 future proof evidence schema requires redacted non-production fields', () => {
@@ -112,6 +119,11 @@ test('Level 1 future proof evidence schema requires redacted non-production fiel
     generatedAt: 'not-a-timestamp',
     boundary: 'PRODUCTION_EVIDENCE',
     productionReady: true,
+    destructiveDataActionApproved: true,
+    rollbackExecutionApproved: true,
+    notes: 'Notes alias must not enter future evidence.',
+    manualNote: 'Manual note alias must not enter future evidence.',
+    noteBody: 'Note body alias must not enter future evidence.',
     manualReviewNotes: 'Manual note body must not enter future evidence.',
     nested: {
       generatedSuggestionText: 'Generated helper must not enter future evidence.',
@@ -127,7 +139,12 @@ test('Level 1 future proof evidence schema requires redacted non-production fiel
   assert.ok(invalid.invalidFields.includes('generatedAt'));
   assert.ok(invalid.invalidFields.includes('boundary'));
   assert.ok(invalid.invalidFields.includes('productionReady'));
+  assert.ok(invalid.forbiddenFieldPaths.includes('notes'));
+  assert.ok(invalid.forbiddenFieldPaths.includes('manualNote'));
+  assert.ok(invalid.forbiddenFieldPaths.includes('noteBody'));
   assert.ok(invalid.forbiddenFieldPaths.includes('manualReviewNotes'));
+  assert.ok(invalid.forbiddenFieldPaths.includes('destructiveDataActionApproved'));
+  assert.ok(invalid.forbiddenFieldPaths.includes('rollbackExecutionApproved'));
   assert.ok(invalid.forbiddenFieldPaths.includes('nested.generatedSuggestionText'));
   assert.ok(invalid.forbiddenFieldPaths.includes('nested.providerInput'));
 });
@@ -192,6 +209,57 @@ test('Level 1 approval dry-run refuses production-like URLs D1 bindings secrets 
   assert.equal(serialized.includes('b2b-lead-trigger.example.com'), false);
 });
 
+test('Level 1 approval dry-run refuses auth header env poison and poisoned evidence artifacts', () => {
+  const result = evaluateLevel1ApprovalPacketDryRun({
+    env: {
+      LEVEL1_PROOF_PREFLIGHT_ENV: 'local_test',
+      WORKER_ENV: 'local',
+      AUTHORIZATION: 'Bearer synthetic-auth-header',
+      AUTHORIZATION_HEADER: 'Bearer synthetic-auth-header-alias',
+      HTTP_AUTHORIZATION: 'Bearer synthetic-http-auth-header',
+      CLOUDFLARE_API_KEY: 'synthetic-cloudflare-api-key',
+      CF_ACCESS_AUD: 'synthetic-access-audience',
+      D1_DATABASE_ID: 'synthetic-d1-database-id',
+    },
+    packetText: COMPLETE_PACKET_TEXT,
+    evidenceArtifact: buildLevel1FutureProductionProofEvidenceArtifact({
+      generatedAt: '2026-05-31T00:00:00.000Z',
+      boundary: 'PRODUCTION_EVIDENCE',
+      productionReady: true,
+      approvalStatus: 'APPROVED',
+      manualReviewNotes: 'Manual note body must not enter evidence.',
+      rawAuth: { token: 'raw-auth-token-must-not-enter-evidence' },
+    }),
+    rawInputs: {
+      authHeader: 'Bearer raw-input-auth-header',
+    },
+  });
+  const serialized = JSON.stringify(result);
+
+  assert.equal(result.ok, false);
+  assert.equal(result.evidence.status, 'HOLD');
+  assert.ok(result.evidence.gates.some((gate) => gate.id === 'future_evidence_schema' && gate.status === 'HOLD'));
+  assert.ok(result.evidence.gates.some((gate) => gate.id === 'local_input_refusal' && gate.status === 'HOLD'));
+  assert.ok(result.blockers.some((blocker) => blocker.key === 'AUTHORIZATION'));
+  assert.ok(result.blockers.some((blocker) => blocker.key === 'AUTHORIZATION_HEADER'));
+  assert.ok(result.blockers.some((blocker) => blocker.key === 'HTTP_AUTHORIZATION'));
+  assert.ok(result.blockers.some((blocker) => blocker.key === 'CLOUDFLARE_API_KEY'));
+  assert.ok(result.blockers.some((blocker) => blocker.key === 'CF_ACCESS_AUD'));
+  assert.ok(result.blockers.some((blocker) => blocker.key === 'D1_DATABASE_ID'));
+  assert.ok(result.evidenceValidation.invalidFields.includes('boundary'));
+  assert.ok(result.evidenceValidation.invalidFields.includes('productionReady'));
+  assert.ok(result.evidenceValidation.invalidFields.includes('approvalStatus'));
+  assert.ok(result.evidenceValidation.forbiddenFieldPaths.includes('manualReviewNotes'));
+  assert.ok(result.evidenceValidation.forbiddenFieldPaths.includes('rawAuth'));
+  assert.equal(result.evidence.productionReady, false);
+  assert.equal(result.evidence.notProductionEvidence, true);
+  assert.equal(result.evidence.rawInputs.authHeader, '[REDACTED]');
+  assert.equal(serialized.includes('synthetic-auth-header'), false);
+  assert.equal(serialized.includes('raw-input-auth-header'), false);
+  assert.equal(serialized.includes('Manual note body must not enter evidence'), false);
+  assert.equal(serialized.includes('raw-auth-token-must-not-enter-evidence'), false);
+});
+
 test('Level 1 approval dry-run evidence builder redacts raw proof inputs recursively', () => {
   const evidence = buildLevel1ApprovalPacketDryRunEvidence({
     status: 'PASS',
@@ -203,6 +271,10 @@ test('Level 1 approval dry-run evidence builder redacts raw proof inputs recursi
       generatedSuggestionText: 'Generated helper must not appear.',
       providerInput: 'Provider input must not appear.',
       rawSessionClaims: { token: 'session-token-must-not-appear' },
+      operatorComment: 'Authorization: Bearer operator-token-must-not-appear',
+      nested: {
+        note: 'manual note body: secret human text must not appear',
+      },
     },
   });
   const serialized = JSON.stringify(evidence);
@@ -211,10 +283,14 @@ test('Level 1 approval dry-run evidence builder redacts raw proof inputs recursi
   assert.equal(evidence.rawInputs.generatedSuggestionText, '[REDACTED]');
   assert.equal(evidence.rawInputs.providerInput, '[REDACTED]');
   assert.equal(evidence.rawInputs.rawSessionClaims, '[REDACTED]');
+  assert.equal(evidence.rawInputs.operatorComment, '[REDACTED]');
+  assert.equal(evidence.rawInputs.nested.note, '[REDACTED]');
   assert.equal(serialized.includes('Manual note body must not appear'), false);
   assert.equal(serialized.includes('Generated helper must not appear'), false);
   assert.equal(serialized.includes('Provider input must not appear'), false);
   assert.equal(serialized.includes('session-token-must-not-appear'), false);
+  assert.equal(serialized.includes('operator-token-must-not-appear'), false);
+  assert.equal(serialized.includes('secret human text must not appear'), false);
 });
 
 test('Level 1 evidence redaction removes manual-note generated-guidance provider and raw auth fields', () => {

@@ -28,6 +28,8 @@ const SECRET_KEYS = Object.freeze([
   'API_TOKEN',
   'INTERNAL_API_TOKEN',
   'TRIGGER_PASSWORD',
+  'AUTHORIZATION',
+  'HTTP_AUTHORIZATION',
   'AUTH_TOKEN',
   'SESSION_TOKEN',
   'JWT',
@@ -38,20 +40,41 @@ const SECRET_KEYS = Object.freeze([
   'GITHUB_PAT',
   'CLOUDFLARE_API_TOKEN',
   'CF_API_TOKEN',
+  'CF_ACCESS_CLIENT_ID',
+  'CF_ACCESS_CLIENT_SECRET',
+  'CLOUDFLARE_ACCESS_CLIENT_ID',
+  'CLOUDFLARE_ACCESS_CLIENT_SECRET',
   'WRANGLER_API_TOKEN',
   'GEMINI_API_KEY',
   'GMAIL_PASS',
   'CALLBACK_TOKEN',
   AUTH_PROVIDER_SESSION_SCAFFOLD_PROVIDER_ENV,
 ]);
+const SECRET_KEY_PATTERNS = Object.freeze([
+  /^authorization(?:_header)?$/i,
+  /^http_authorization$/i,
+  /^cf_access_/i,
+  /^cloudflare_access_/i,
+  /^cf_api_/i,
+  /^cloudflare_api_(?:key|token)$/i,
+  /(?:^|_)(?:api[_-]?key|api[_-]?token|auth[_-]?token|session[_-]?token|jwt|jwt[_-]?secret|cookie|secret|password|pat|credential|client[_-]?secret|access[_-]?aud)(?:_|$)/i,
+]);
 const D1_KEYS = Object.freeze([
   'DB',
   'D1',
   'D1_BINDING',
   'D1_DATABASE',
+  'D1_DATABASE_ID',
   'DATABASE_ID',
   'CLOUDFLARE_ACCOUNT_ID',
   'CLOUDFLARE_D1_DATABASE_ID',
+]);
+const D1_KEY_PATTERNS = Object.freeze([
+  /^d1(?:_|$)/i,
+  /(?:^|_)d1(?:_|$)/i,
+  /database[_-]?id/i,
+  /account[_-]?id/i,
+  /d1.*binding/i,
 ]);
 const URL_KEYS = Object.freeze([
   'LEVEL1_PROOF_PREFLIGHT_URL',
@@ -66,6 +89,12 @@ const URL_KEYS = Object.freeze([
   'PREVIEW_URL',
   'STAGING_URL',
   'PRODUCTION_URL',
+]);
+const ENVIRONMENT_KEY_PATTERNS = Object.freeze([
+  /(?:^|_)(?:env|environment)$/i,
+]);
+const URL_KEY_PATTERNS = Object.freeze([
+  /(?:^|_)(?:url|uri|origin|hostname|host|endpoint)(?:_|$)/i,
 ]);
 
 function hasValue(value) {
@@ -106,12 +135,17 @@ function isLocalOrSyntheticUrl(value) {
 }
 
 function collectRefusal(blockers, reason, key, detail) {
+  if (blockers.some((blocker) => blocker.reason === reason && blocker.key === key)) return;
   blockers.push({
     reason,
     key,
     detail,
     status: 'HOLD',
   });
+}
+
+function matchesAnyPattern(key, patterns) {
+  return patterns.some((pattern) => pattern.test(String(key || '')));
 }
 
 export function findLevel1ProofPreflightBlockers({ env = {}, urls = [] } = {}) {
@@ -137,6 +171,22 @@ export function findLevel1ProofPreflightBlockers({ env = {}, urls = [] } = {}) {
 
   for (const key of URL_KEYS) {
     if (hasValue(env[key]) && !isLocalOrSyntheticUrl(env[key])) {
+      collectRefusal(blockers, 'production_or_non_local_url_refused', key, '[REDACTED]');
+    }
+  }
+
+  for (const key of Object.keys(env || {})) {
+    if (!hasValue(env[key])) continue;
+    if (matchesAnyPattern(key, ENVIRONMENT_KEY_PATTERNS) && !isLocalEnvironmentValue(env[key])) {
+      collectRefusal(blockers, 'non_local_environment_refused', key, String(env[key]));
+    }
+    if (matchesAnyPattern(key, SECRET_KEY_PATTERNS)) {
+      collectRefusal(blockers, 'secret_or_real_provider_input_refused', key, '[REDACTED]');
+    }
+    if (matchesAnyPattern(key, D1_KEY_PATTERNS)) {
+      collectRefusal(blockers, 'd1_binding_or_private_identifier_refused', key, '[REDACTED]');
+    }
+    if (matchesAnyPattern(key, URL_KEY_PATTERNS) && !isLocalOrSyntheticUrl(env[key])) {
       collectRefusal(blockers, 'production_or_non_local_url_refused', key, '[REDACTED]');
     }
   }
