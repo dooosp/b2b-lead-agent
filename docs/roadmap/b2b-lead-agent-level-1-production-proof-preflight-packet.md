@@ -13,6 +13,9 @@ purge data, or capture production evidence.
 
 This packet is not approval.
 
+All local proof-preflight artifacts referenced here are **not production
+evidence**.
+
 ## Document Status
 
 - Document status:
@@ -22,9 +25,9 @@ This packet is not approval.
 - Repository: `dooosp/b2b-lead-agent`.
 - Default branch: `master`.
 - Baseline inspected: `origin/master` at
-  `6bc34c93734f8cbcb7e4ae720c4eb589f832c89c`.
-- Latest related merged PR: PR #169,
-  `docs: record final Level 1 owner proof decision`.
+  `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` (PR #171 merge).
+- Latest related merged PR: PR #171,
+  `Level 1 non-production auth session scaffold guards`.
 - Packet path:
   `docs/roadmap/b2b-lead-agent-level-1-production-proof-preflight-packet.md`.
 - Production proof execution performed: no.
@@ -39,8 +42,8 @@ b2b_lead_agent_level_1_production_proof_preflight_packet:
   human_decision: PREPARE_LEVEL1_PRODUCTION_PROOF_PREFLIGHT_PACKET_DOCS_ONLY
   repository: dooosp/b2b-lead-agent
   default_branch: master
-  inspected_origin_master: "6bc34c93734f8cbcb7e4ae720c4eb589f832c89c"
-  latest_related_merged_pr: 169
+  inspected_origin_master: "a4f8a080ebe426d79bb85dba8298372ef6d14cfc"
+  latest_related_merged_pr: 171
   current_state: LEVEL_0_COMPLETE
   target: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
   owner_inputs: COMPLETE_FOR_DOCS_PLANNING_ONLY
@@ -65,6 +68,8 @@ b2b_lead_agent_level_1_production_proof_preflight_packet:
 
 Source-of-truth records:
 
+- PR #171:
+  https://github.com/dooosp/b2b-lead-agent/pull/171
 - PR #169:
   https://github.com/dooosp/b2b-lead-agent/pull/169
 - Owner-input disposition:
@@ -78,6 +83,14 @@ The owner inputs are complete enough to plan a future proof packet. They do
 not approve implementation, production proof, production access, D1 access,
 endpoint calls, evidence capture, deploy, logs/secrets access, CRM, outreach,
 LLM, automation, or customer/private data access.
+
+Post-PR171 local-only automation now provides a stricter preflight layer:
+`npm run proof:level1:preflight` emits redacted synthetic fixture evidence to
+stdout and `tmp/codex/level1-proof-preflight-automation-non-production-evidence.json`,
+keeps `productionReady: false`, and refuses production/staging URLs, bare
+non-local hostnames, D1 bindings/private IDs, secrets, real provider inputs,
+and non-local envs. This automation is local preflight only and is not
+production evidence.
 
 ## 2. Prerequisite Matrix
 
@@ -256,6 +269,7 @@ future explicit goal or its cited owner comments.
 | Endpoint allowlist | Exact endpoint calls, if any | `TBD_BY_FUTURE_EXPLICIT_GOAL` |
 | D1 boundary | Exact metadata/read/write scope, if any | `TBD_BY_FUTURE_EXPLICIT_GOAL` |
 | Fixture manifest | Synthetic/non-customer fixture IDs or approved non-customer metadata | `TBD_BY_FUTURE_EXPLICIT_GOAL` |
+| Local proof-preflight automation | Redacted synthetic fixture evidence only | `PASS_LOCAL_NOT_PRODUCTION_EVIDENCE` |
 | Evidence path | File/path or PR/issue comment where redacted evidence will be stored | `TBD_BY_FUTURE_EXPLICIT_GOAL` |
 | Redaction method | Fields to redact before capture | `TBD_BY_FUTURE_EXPLICIT_GOAL` |
 | Auth/session/role proof boundary | Approved role matrix and non-secret proof method | `TBD_BY_FUTURE_EXPLICIT_GOAL` |

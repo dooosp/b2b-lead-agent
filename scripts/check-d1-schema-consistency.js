@@ -87,6 +87,15 @@ const EXPECTED_MANUAL_REVIEW_NOTE_EVENT_COLUMNS = Object.freeze([
   'author_label',
 ]);
 
+const EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES = Object.freeze([
+  Object.freeze({
+    name: 'idx_manual_review_note_events_lead',
+    table: 'manual_review_note_events',
+    columns: 'lead_id, changed_at DESC',
+    unique: false,
+  }),
+]);
+
 const DRIFT_CRITICAL_COLUMNS = Object.freeze([
   'review_status',
   'manual_review_notes_author_label',
@@ -233,6 +242,25 @@ function parseLazyAlterColumns(schemaJsText) {
   return columns;
 }
 
+function parseCreateIndexes(sourceText) {
+  const indexes = [];
+  const pattern = /CREATE\s+(UNIQUE\s+)?INDEX\s+IF\s+NOT\s+EXISTS\s+([A-Za-z_][A-Za-z0-9_]*)\s+ON\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([\s\S]*?)\)/gi;
+  for (const match of sourceText.matchAll(pattern)) {
+    indexes.push({
+      name: match[2],
+      table: match[3],
+      columns: normalizeDefinition(match[4]),
+      unique: Boolean(match[1]),
+    });
+  }
+  return indexes.filter((index, position) => {
+    const key = `${index.name}|${index.table}|${index.columns}|${index.unique}`;
+    return indexes.findIndex((candidate) => (
+      `${candidate.name}|${candidate.table}|${candidate.columns}|${candidate.unique}` === key
+    )) === position;
+  });
+}
+
 function toDefinitionMap(columns) {
   return new Map(columns.map((column) => [column.name, column.definition]));
 }
@@ -295,6 +323,22 @@ function assertLazyDefinitionsMatchCreate(errors, createColumns, lazyAlterColumn
   }
 }
 
+function assertRequiredIndexes(errors, label, actualIndexes, expectedIndexes) {
+  for (const expected of expectedIndexes) {
+    const match = actualIndexes.find((index) => (
+      index.name === expected.name
+      && index.table === expected.table
+      && index.columns === expected.columns
+      && index.unique === expected.unique
+    ));
+    if (!match) {
+      errors.push(
+        `${label} missing expected index ${expected.name} ON ${expected.table}(${expected.columns})`
+      );
+    }
+  }
+}
+
 function validateSchemaSources({ schemaSql, schemaJs }) {
   const errors = [];
   let schemaSqlCreateColumns = [];
@@ -307,6 +351,8 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
   let schemaJsLazyAlterDefinitions = [];
   let schemaSqlManualReviewNoteEventDefinitions = [];
   let schemaJsManualReviewNoteEventDefinitions = [];
+  let schemaSqlIndexes = [];
+  let schemaJsIndexes = [];
 
   try {
     schemaSqlCreateDefinitions = parseCreateTableColumns(schemaSql, 'leads');
@@ -341,6 +387,18 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
     schemaJsManualReviewNoteEventColumns = names(schemaJsManualReviewNoteEventDefinitions);
   } catch (err) {
     errors.push(`worker/db/schema.js CREATE TABLE manual_review_note_events parse failed: ${err.message}`);
+  }
+
+  try {
+    schemaSqlIndexes = parseCreateIndexes(schemaSql);
+  } catch (err) {
+    errors.push(`worker/schema.sql index parse failed: ${err.message}`);
+  }
+
+  try {
+    schemaJsIndexes = parseCreateIndexes(schemaJs);
+  } catch (err) {
+    errors.push(`worker/db/schema.js index parse failed: ${err.message}`);
   }
 
   assertColumnSet(errors, 'worker/schema.sql CREATE TABLE leads', schemaSqlCreateColumns, EXPECTED_LEADS_COLUMNS);
@@ -379,6 +437,18 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
     schemaJsManualReviewNoteEventDefinitions
   );
   assertLazyDefinitionsMatchCreate(errors, schemaJsCreateDefinitions, schemaJsLazyAlterDefinitions);
+  assertRequiredIndexes(
+    errors,
+    'worker/schema.sql',
+    schemaSqlIndexes,
+    EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES
+  );
+  assertRequiredIndexes(
+    errors,
+    'worker/db/schema.js',
+    schemaJsIndexes,
+    EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES
+  );
 
   for (const column of DRIFT_CRITICAL_COLUMNS) {
     if (!schemaSqlCreateColumns.includes(column)) {
@@ -406,6 +476,8 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
       schemaJsLazyAlterDefinitions,
       schemaSqlManualReviewNoteEventDefinitions,
       schemaJsManualReviewNoteEventDefinitions,
+      schemaSqlIndexes,
+      schemaJsIndexes,
     },
   };
 }
@@ -434,6 +506,7 @@ function runCli() {
   console.log(`- worker/db/schema.js lazy ALTER leads: ${result.sources.schemaJsLazyAlterColumns.length} columns`);
   console.log(`- worker/schema.sql CREATE TABLE manual_review_note_events: ${result.sources.schemaSqlManualReviewNoteEventColumns.length} columns`);
   console.log(`- worker/db/schema.js CREATE TABLE manual_review_note_events: ${result.sources.schemaJsManualReviewNoteEventColumns.length} columns`);
+  console.log(`- required manual_review_note_events indexes: ${EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES.length}`);
 }
 
 if (require.main === module) {
@@ -445,7 +518,9 @@ module.exports = {
   EXPECTED_LEADS_COLUMNS,
   EXPECTED_LEADS_LAZY_ALTER_COLUMNS,
   EXPECTED_MANUAL_REVIEW_NOTE_EVENT_COLUMNS,
+  EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES,
   parseCreateTableColumns,
+  parseCreateIndexes,
   parseLazyAlterColumns,
   validateSchemaSources,
 };

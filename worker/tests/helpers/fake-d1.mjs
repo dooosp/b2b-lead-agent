@@ -8,6 +8,15 @@ function uniqueConstraintError(message) {
   return error;
 }
 
+function constraintError(message) {
+  const error = new Error(message);
+  error.name = 'D1_ERROR';
+  return error;
+}
+
+const MANUAL_REVIEW_NOTE_EVENT_TYPES = new Set(['create', 'edit', 'clear']);
+const MANUAL_REVIEW_NOTES_AUTHOR_LABEL = 'manual_reviewer';
+
 class FakeStatement {
   constructor(db, sql) {
     this.db = db;
@@ -35,6 +44,15 @@ class FakeStatement {
 
 function clone(row) {
   return row ? { ...row } : null;
+}
+
+function validateManualReviewNoteEvent(row) {
+  if (!MANUAL_REVIEW_NOTE_EVENT_TYPES.has(row.event_type)) {
+    throw constraintError('CHECK constraint failed: manual_review_note_events.event_type');
+  }
+  if ((row.author_label || MANUAL_REVIEW_NOTES_AUTHOR_LABEL) !== MANUAL_REVIEW_NOTES_AUTHOR_LABEL) {
+    throw constraintError('CHECK constraint failed: manual_review_note_events.author_label');
+  }
 }
 
 function toLeadInsertRow(args) {
@@ -128,10 +146,14 @@ export class FakeD1Database {
     this.jobRuns = new Map(jobRuns.map((row) => [row.request_id, { ...row }]));
     this.statusLog = statusLog.map((row, index) => ({ id: index + 1, ...row }));
     this.analytics = analytics.map((row) => ({ ...row }));
-    this.manualReviewNoteEvents = manualReviewNoteEvents.map((row, index) => ({
-      id: row.id || index + 1,
-      ...row,
-    }));
+    this.manualReviewNoteEvents = manualReviewNoteEvents.map((row, index) => {
+      const event = {
+        id: row.id || index + 1,
+        ...row,
+      };
+      validateManualReviewNoteEvent(event);
+      return event;
+    });
     this.schemaStatements = [];
     this.failOnSql = failOnSql;
   }
@@ -246,13 +268,15 @@ export class FakeD1Database {
     }
 
     if (normalized === 'insert into manual_review_note_events (lead_id, event_type, changed_at, author_label) values (?, ?, ?, ?)') {
-      this.manualReviewNoteEvents.push({
+      const event = {
         id: this.manualReviewNoteEvents.length + 1,
         lead_id: args[0],
         event_type: args[1],
         changed_at: args[2],
         author_label: args[3],
-      });
+      };
+      validateManualReviewNoteEvent(event);
+      this.manualReviewNoteEvents.push(event);
       return { meta: { changes: 1 }, success: true };
     }
 

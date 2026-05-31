@@ -22,6 +22,7 @@ export function createLocalE2ELeadRows() {
         { title: 'Local fixture source', url: 'https://news.example/local-factory-automation' },
       ]),
       notes: 'Seeded local smoke note',
+      manual_review_notes_author_label: 'manual_reviewer',
       manual_review_notes_updated_at: '2026-05-01T10:05:00.000Z',
       score_reason: 'Budget, timing, and operational pain are all present in the fixture.',
       urgency: 'HIGH',
@@ -83,6 +84,7 @@ export function createLocalE2ELeadRows() {
         { title: 'Local data center source', url: 'https://news.example/local-data-center-cooling' },
       ]),
       notes: 'Needs human review before outreach',
+      manual_review_notes_author_label: 'manual_reviewer',
       manual_review_notes_updated_at: '2026-05-02T10:05:00.000Z',
       score_reason: 'Strong event signal but missing buyer and budget details.',
       urgency: 'MEDIUM',
@@ -152,6 +154,23 @@ export function createLocalE2ELeadRows() {
       created_at: '2026-04-15T10:00:00.000Z',
       updated_at: '2026-05-03T10:00:00.000Z',
     }),
+  ];
+}
+
+export function createLocalE2EManualReviewNoteEventRows() {
+  return [
+    {
+      lead_id: 'local-lead-approved',
+      event_type: 'create',
+      changed_at: '2026-05-01T10:05:00.000Z',
+      author_label: 'manual_reviewer',
+    },
+    {
+      lead_id: 'local-lead-review',
+      event_type: 'create',
+      changed_at: '2026-05-02T10:05:00.000Z',
+      author_label: 'manual_reviewer',
+    },
   ];
 }
 

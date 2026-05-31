@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { fetchHistory, fetchLeads, handleExportCSV, handleUpdateLead } from '../api/leads.js';
 import { getLeadById } from '../db/leads.js';
 import {
+  AUTH_PROVIDER_SESSION_SCAFFOLD_EXPECTED_AUDIENCE,
   AUTH_PROVIDER_SESSION_SCAFFOLD_NON_PRODUCTION_ENV,
   AUTH_PROVIDER_SESSION_SCAFFOLD_PROVIDER_ENV,
   createStaticAuthProviderSessionScaffoldProvider
@@ -52,6 +53,7 @@ function assertScaffoldMetadata(metadata, {
   authenticated = true,
   canUseManualNotes = role === 'reviewer',
   providerStatus = 'resolved',
+  claimStatus = 'valid',
 } = {}) {
   assert.deepEqual(metadata, {
     mode: 'auth_provider_session_scaffold_non_production',
@@ -63,6 +65,8 @@ function assertScaffoldMetadata(metadata, {
     roleStatus,
     authenticated,
     providerStatus,
+    claimStatus,
+    expectedAudience: AUTH_PROVIDER_SESSION_SCAFFOLD_EXPECTED_AUDIENCE,
     manualNotesRead: canUseManualNotes,
     manualNotesWrite: canUseManualNotes,
     metadataHistorySummaryRead: canUseManualNotes,
@@ -101,14 +105,102 @@ test('non-production auth provider/session scaffold lets reviewer read and write
   assertScaffoldMetadata(readPayload.manualReviewNotesAccess, { role: 'reviewer' });
 });
 
+test('non-production auth provider/session scaffold exposes stop-write rollback metadata', async () => {
+  const originalManualNote = 'Existing note preserved by scaffold stop-write.';
+  const db = new FakeD1Database({
+    leads: [
+      createLeadRow({
+        notes: originalManualNote,
+        manual_review_notes_author_label: 'manual_reviewer',
+        manual_review_notes_updated_at: '2026-05-31T00:00:00.000Z',
+      }),
+    ],
+  });
+  const env = scaffoldEnv(
+    createStaticAuthProviderSessionScaffoldProvider({ role: 'reviewer' }),
+    { LEVEL1_MANUAL_REVIEW_NOTES_STOP_WRITE: 'enabled' }
+  );
+
+  const writeResponse = await patchLead(db, {
+    manualReviewNotes: 'Blocked by scaffold stop-write.',
+  }, env);
+  const writePayload = await writeResponse.json();
+  const persistedLead = await getLeadById(db, 'lead-1');
+  const listResponse = await fetchLeads(
+    { DB: db, GITHUB_REPO: 'dooosp/b2b-lead-agent', ...env },
+    'danfoss',
+    createWorkerRequest('/api/leads')
+  );
+  const listPayload = await listResponse.json();
+
+  assert.equal(writeResponse.status, 423);
+  assert.equal(writePayload.success, false);
+  assert.match(writePayload.message, /stop-write guard/);
+  assert.equal(persistedLead.manualReviewNotes, originalManualNote);
+  assert.equal(listResponse.status, 200);
+  assert.equal(listPayload.leads[0].manualReviewNotes, originalManualNote);
+  assert.equal(listPayload.manualReviewNotesAccess.mode, 'auth_provider_session_scaffold_non_production');
+  assert.equal(listPayload.manualReviewNotesAccess.role, 'reviewer');
+  assert.equal(listPayload.manualReviewNotesAccess.manualNotesRead, true);
+  assert.equal(listPayload.manualReviewNotesAccess.manualNotesWrite, false);
+  assert.equal(listPayload.manualReviewNotesAccess.productionReady, false);
+  assert.equal(listPayload.manualReviewNotesAccess.stopWrites, true);
+  assert.deepEqual(listPayload.manualReviewNotesAccess.rollbackGuard, {
+    trigger: 'manual_review_notes_stop_write',
+    stopWrites: true,
+    nonDestructiveBackoutFirst: true,
+    preserveExistingData: true,
+    preserveRedactedEvidenceOnly: true,
+    productionActionApproved: false,
+    destructiveDataActionApproved: false,
+    rollbackExecutionApproved: false,
+    nextAction: 'HOLD_FOR_OWNER_APPROVAL',
+  });
+});
+
 for (const scenario of [
   { name: 'manager', role: 'manager', expectedRole: 'manager', roleStatus: 'recognized', authenticated: true },
   { name: 'admin', role: 'admin', expectedRole: 'admin', roleStatus: 'recognized', authenticated: true },
   { name: 'api client underscore', role: 'api_client', expectedRole: 'api_client', roleStatus: 'recognized', authenticated: true },
   { name: 'api client hyphen', role: 'api-client', expectedRole: 'api_client', roleStatus: 'recognized', authenticated: true },
+  { name: 'api alias', role: 'api', expectedRole: 'api_client', roleStatus: 'recognized', authenticated: true },
   { name: 'missing role', role: '', expectedRole: 'none', roleStatus: 'missing', authenticated: true },
   { name: 'unknown role', role: 'auditor', expectedRole: 'none', roleStatus: 'unknown', authenticated: true },
   { name: 'unauthenticated reviewer', role: 'reviewer', expectedRole: 'reviewer', roleStatus: 'recognized', authenticated: false },
+  {
+    name: 'expired reviewer claim',
+    role: 'reviewer',
+    expectedRole: 'reviewer',
+    roleStatus: 'recognized',
+    authenticated: false,
+    providerAuthenticated: true,
+    session: { expiresAt: '2000-01-01T00:00:00.000Z' },
+    claimStatus: 'expired',
+  },
+  {
+    name: 'missing audience reviewer claim',
+    role: 'reviewer',
+    expectedRole: 'reviewer',
+    roleStatus: 'recognized',
+    authenticated: false,
+    providerAuthenticated: true,
+    providerFactory: () => ({
+      async resolveSession() {
+        return { role: 'reviewer', authenticated: true };
+      },
+    }),
+    claimStatus: 'missing_audience',
+  },
+  {
+    name: 'wrong audience reviewer claim',
+    role: 'reviewer',
+    expectedRole: 'reviewer',
+    roleStatus: 'recognized',
+    authenticated: false,
+    providerAuthenticated: true,
+    session: { audience: 'wrong-local-proof-audience' },
+    claimStatus: 'wrong_audience',
+  },
 ]) {
   test(`non-production auth provider/session scaffold fails closed for ${scenario.name}`, async () => {
     const originalManualNote = `Protected note hidden from ${scenario.name}.`;
@@ -129,10 +221,13 @@ for (const scenario of [
         },
       ],
     });
-    const provider = createStaticAuthProviderSessionScaffoldProvider({
-      role: scenario.role,
-      authenticated: scenario.authenticated,
-    });
+    const provider = scenario.providerFactory
+      ? scenario.providerFactory()
+      : createStaticAuthProviderSessionScaffoldProvider({
+        role: scenario.role,
+        authenticated: scenario.providerAuthenticated ?? scenario.authenticated,
+        ...(scenario.session || {}),
+      });
     const env = scaffoldEnv(provider);
     const attemptedNote = `Denied scaffold note for ${scenario.name}.`;
 
@@ -178,12 +273,14 @@ for (const scenario of [
       roleStatus: scenario.roleStatus,
       authenticated: scenario.authenticated,
       canUseManualNotes: false,
+      claimStatus: scenario.claimStatus || 'valid',
     });
     assertScaffoldMetadata(historyPayload.manualReviewNotesAccess, {
       role: scenario.expectedRole,
       roleStatus: scenario.roleStatus,
       authenticated: scenario.authenticated,
       canUseManualNotes: false,
+      claimStatus: scenario.claimStatus || 'valid',
     });
   });
 }
@@ -216,60 +313,138 @@ test('non-production auth provider/session scaffold fails closed on missing or f
     createWorkerRequest('/api/leads')
   );
   const listPayload = await listResponse.json();
+  const historyResponse = await fetchHistory(
+    { DB: db, GITHUB_REPO: 'dooosp/b2b-lead-agent', ...env },
+    'danfoss',
+    createWorkerRequest('/api/history')
+  );
+  const historyPayload = await historyResponse.json();
+  const exportResponse = await handleExportCSV(
+    createWorkerRequest('/api/export/csv?profile=danfoss'),
+    { DB: db, ...env }
+  );
+  const csv = await exportResponse.text();
 
   assert.equal(writeResponse.status, 403);
   assert.equal(writePayload.success, false);
   assert.equal(JSON.stringify(writePayload).includes(providerSecret), false);
   assert.equal(listResponse.status, 200);
+  assert.equal(historyResponse.status, 200);
+  assert.equal(exportResponse.status, 200);
   assertProtectedManualNoteFieldsOmitted(listPayload.leads[0]);
+  assertProtectedManualNoteFieldsOmitted(historyPayload.history[0]);
   assert.equal(JSON.stringify(listPayload).includes(originalManualNote), false);
+  assert.equal(JSON.stringify(historyPayload).includes(originalManualNote), false);
+  assert.equal(csv.includes(originalManualNote), false);
   assert.equal(JSON.stringify(listPayload).includes(providerSecret), false);
+  assert.equal(JSON.stringify(historyPayload).includes(providerSecret), false);
+  assert.equal(csv.includes(providerSecret), false);
   assertScaffoldMetadata(listPayload.manualReviewNotesAccess, {
     role: 'none',
     roleStatus: 'missing',
     authenticated: false,
     canUseManualNotes: false,
     providerStatus: 'provider_error',
+    claimStatus: 'provider_error',
   });
-});
-
-test('non-production auth provider/session scaffold fails closed in production-like env even with reviewer provider', async () => {
-  const originalManualNote = 'Production-like scaffold attempt must not expose this note.';
-  const db = new FakeD1Database({
-    leads: [
-      createLeadRow({
-        notes: originalManualNote,
-        manual_review_notes_author_label: 'manual_reviewer',
-        manual_review_notes_updated_at: '2026-05-31T00:00:00.000Z',
-      }),
-    ],
-  });
-  const env = scaffoldEnv(
-    createStaticAuthProviderSessionScaffoldProvider({ role: 'reviewer' }),
-    { WORKER_ENV: 'production' }
-  );
-
-  const writeResponse = await patchLead(db, {
-    manualReviewNotes: 'Production-like scaffold attempt must not write.',
-  }, env);
-  const writePayload = await writeResponse.json();
-  const listResponse = await fetchLeads(
-    { DB: db, GITHUB_REPO: 'dooosp/b2b-lead-agent', ...env },
-    'danfoss',
-    createWorkerRequest('/api/leads')
-  );
-  const listPayload = await listResponse.json();
-
-  assert.equal(writeResponse.status, 403);
-  assert.equal(writePayload.success, false);
-  assert.equal(listResponse.status, 200);
-  assertProtectedManualNoteFieldsOmitted(listPayload.leads[0]);
-  assert.equal(JSON.stringify(listPayload).includes(originalManualNote), false);
-  assertScaffoldMetadata(listPayload.manualReviewNotesAccess, {
+  assertScaffoldMetadata(historyPayload.manualReviewNotesAccess, {
     role: 'none',
-    roleStatus: 'blocked_production_like_environment',
+    roleStatus: 'missing',
     authenticated: false,
     canUseManualNotes: false,
-    providerStatus: 'blocked',
+    providerStatus: 'provider_error',
+    claimStatus: 'provider_error',
   });
 });
+
+for (const blockedEnv of [
+  { key: 'WORKER_ENV', value: 'production' },
+  { key: 'WORKER_ENV', value: 'staging' },
+  { key: 'DEPLOYMENT_ENV', value: 'preview' },
+]) {
+  test(`non-production auth provider/session scaffold fails closed in non-local env ${blockedEnv.key}=${blockedEnv.value}`, async () => {
+    const originalManualNote = 'Production-like scaffold attempt must not expose this note.';
+    const db = new FakeD1Database({
+      leads: [
+        createLeadRow({
+          notes: originalManualNote,
+          manual_review_notes_author_label: 'manual_reviewer',
+          manual_review_notes_updated_at: '2026-05-31T00:00:00.000Z',
+        }),
+      ],
+    });
+    const env = scaffoldEnv(
+      createStaticAuthProviderSessionScaffoldProvider({ role: 'reviewer' }),
+      { [blockedEnv.key]: blockedEnv.value }
+    );
+
+    const writeResponse = await patchLead(db, {
+      manualReviewNotes: 'Production-like scaffold attempt must not write.',
+    }, env);
+    const writePayload = await writeResponse.json();
+    const listResponse = await fetchLeads(
+      { DB: db, GITHUB_REPO: 'dooosp/b2b-lead-agent', ...env },
+      'danfoss',
+      createWorkerRequest('/api/leads')
+    );
+    const listPayload = await listResponse.json();
+
+    assert.equal(writeResponse.status, 403);
+    assert.equal(writePayload.success, false);
+    assert.equal(listResponse.status, 200);
+    assertProtectedManualNoteFieldsOmitted(listPayload.leads[0]);
+    assert.equal(JSON.stringify(listPayload).includes(originalManualNote), false);
+    assertScaffoldMetadata(listPayload.manualReviewNotesAccess, {
+      role: 'none',
+      roleStatus: 'blocked_production_like_environment',
+      authenticated: false,
+      canUseManualNotes: false,
+      providerStatus: 'blocked',
+      claimStatus: 'blocked_production_like_environment',
+    });
+  });
+}
+
+for (const scenario of [
+  { name: 'missing provider', provider: undefined, providerStatus: 'missing_provider' },
+  { name: 'invalid provider object', provider: {}, providerStatus: 'missing_provider' },
+]) {
+  test(`non-production auth provider/session scaffold fails closed for ${scenario.name}`, async () => {
+    const originalManualNote = `Protected note hidden for ${scenario.name}.`;
+    const db = new FakeD1Database({
+      leads: [
+        createLeadRow({
+          notes: originalManualNote,
+          manual_review_notes_author_label: 'manual_reviewer',
+          manual_review_notes_updated_at: '2026-05-31T00:00:00.000Z',
+        }),
+      ],
+    });
+    const env = scaffoldEnv(scenario.provider);
+
+    const writeResponse = await patchLead(db, {
+      manualReviewNotes: `Denied scaffold note for ${scenario.name}.`,
+    }, env);
+    const writePayload = await writeResponse.json();
+    const listResponse = await fetchLeads(
+      { DB: db, GITHUB_REPO: 'dooosp/b2b-lead-agent', ...env },
+      'danfoss',
+      createWorkerRequest('/api/leads')
+    );
+    const listPayload = await listResponse.json();
+
+    assert.equal(writeResponse.status, 403);
+    assert.equal(writePayload.success, false);
+    assert.equal(listResponse.status, 200);
+    assertProtectedManualNoteFieldsOmitted(listPayload.leads[0]);
+    assert.equal(JSON.stringify(listPayload).includes(originalManualNote), false);
+    assertScaffoldMetadata(listPayload.manualReviewNotesAccess, {
+      role: 'none',
+      roleStatus: 'missing',
+      authenticated: false,
+      canUseManualNotes: false,
+      providerStatus: scenario.providerStatus,
+      claimStatus: 'missing_session',
+    });
+  });
+}

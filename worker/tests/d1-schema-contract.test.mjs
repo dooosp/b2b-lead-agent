@@ -31,3 +31,31 @@ test('D1 schema defaults preserve conservative lead and job-run contracts', asyn
   assert.match(ddl, /target TEXT NOT NULL DEFAULT 'github-actions'/);
   assert.match(ddl, /last_error TEXT DEFAULT ''/);
 });
+
+test('fake D1 enforces manual note event metadata-only constraints', async () => {
+  const db = new FakeD1Database();
+
+  await db.prepare(
+    'INSERT INTO manual_review_note_events (lead_id, event_type, changed_at, author_label) VALUES (?, ?, ?, ?)'
+  ).bind('lead-1', 'create', '2026-05-31T00:00:00.000Z', 'manual_reviewer').run();
+
+  assert.throws(
+    () => new FakeD1Database({
+      manualReviewNoteEvents: [
+        {
+          lead_id: 'lead-1',
+          event_type: 'restore',
+          changed_at: '2026-05-31T00:00:00.000Z',
+          author_label: 'manual_reviewer',
+        },
+      ],
+    }),
+    /manual_review_note_events\.event_type/
+  );
+  await assert.rejects(
+    db.prepare(
+      'INSERT INTO manual_review_note_events (lead_id, event_type, changed_at, author_label) VALUES (?, ?, ?, ?)'
+    ).bind('lead-1', 'edit', '2026-05-31T00:00:01.000Z', 'named_reviewer').run(),
+    /manual_review_note_events\.author_label/
+  );
+});

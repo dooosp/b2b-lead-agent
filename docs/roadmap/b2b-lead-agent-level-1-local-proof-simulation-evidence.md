@@ -9,14 +9,17 @@ or secrets, does not use customer/private data, does not touch CRM/outreach,
 does not call LLMs, does not run automation, and does not claim production
 reviewer workflow readiness.
 
+Exact evidence wording for reviewers: this packet and its generated artifacts
+are **not production evidence**.
+
 ## Status
 
 - Document status:
-  `LEVEL_1_LOCAL_PROOF_SIMULATION_EVIDENCE_CREATED_NON_PRODUCTION_ONLY`.
+  `LEVEL_1_LOCAL_PROOF_PREFLIGHT_AUTOMATION_EVIDENCE_NON_PRODUCTION_ONLY`.
 - Repository: `dooosp/b2b-lead-agent`.
-- Branch: `codex/level1-reviewer-workflow-readiness`.
+- Branch: `codex/level1-proof-preflight-automation-non-production`.
 - Base: `origin/master` at
-  `4c5e285c6e68a98b8c5206874b6aa015d57f2541`.
+  `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` (PR #171 merge).
 - Evidence type: local fake-D1 and synthetic fixtures only.
 - Production evidence captured: no.
 - Production reviewer workflow ready: no, still blocked.
@@ -26,14 +29,14 @@ reviewer workflow readiness.
 Targeted command:
 
 ```bash
-node --test worker/tests/auth-provider-session-scaffold.test.mjs worker/tests/level1-readiness-guards.test.mjs worker/tests/level1-local-proof-simulation.test.mjs worker/tests/manual-review-notes.test.mjs worker/tests/d1-schema-contract.test.mjs tests/d1-schema-consistency.test.js
+node --test worker/tests/auth-provider-session-scaffold.test.mjs worker/tests/level1-readiness-guards.test.mjs worker/tests/level1-proof-preflight.test.mjs worker/tests/level1-local-proof-simulation.test.mjs worker/tests/manual-review-notes.test.mjs worker/tests/d1-schema-contract.test.mjs tests/d1-schema-consistency.test.js
 ```
 
 Result:
 
 ```text
-tests 50
-pass 50
+tests 78
+pass 78
 fail 0
 ```
 
@@ -41,11 +44,12 @@ Additional local validation:
 
 | Command | Result |
 | --- | --- |
+| `npm run proof:level1:preflight` | `PASS_LOCAL`; emitted redacted synthetic fixture evidence to stdout and `tmp/codex/level1-proof-preflight-automation-non-production-evidence.json` with `productionReady: false`, `notProductionEvidence: true`, and production proof approval `HOLD`. |
 | `git diff --check` | `PASS` |
 | `npm run check:naming` | `PASS` |
 | `npm run check:schema` | `PASS`; local schema sources remain consistent. |
 | `npm run eval:lead-quality` | `PASS`; 6 synthetic fixtures evaluated. |
-| `npm test` | `PASS`; root 59, worker unit 194, contract 20. |
+| `npm test` | `PASS`; root 60, worker unit 221, contract 20. |
 | `npm run test:e2e:local` | `PASS` after lockfile install with `npm ci`; 1 local-only fake-D1 Worker smoke passed. |
 
 The first `npm run test:e2e:local` attempt in this fresh worktree failed
@@ -58,21 +62,23 @@ setup evidence only, not a production proof.
 | Area | Local result | Evidence boundary |
 | --- | --- | --- |
 | Auth provider/session scaffold | `PASS` | Opt-in `AUTH_PROVIDER_SESSION_SCAFFOLD_NON_PRODUCTION`; injected synthetic provider only; no real provider, token, cookie, secret, session store, or identity. |
-| Role resolver | `PASS` | `reviewer`, `manager`, `admin`, `api_client`, `api-client`, missing, unknown, unauthenticated, provider-error, and production-like env cases tested locally. |
+| Role/claim resolver | `PASS` | `reviewer`, `manager`, `admin`, `api_client`, `api-client`, `api`, missing, unknown, unauthenticated, expired, missing-audience, wrong-audience, missing provider, invalid provider, provider-error, and non-local env cases tested locally. |
+| Local proof preflight runner | `PASS_LOCAL` | Refuses production/staging URLs, D1 bindings/private IDs, secrets, real provider inputs, and non-local envs; emits only redacted synthetic fixture evidence. |
 | C2 role stub preservation | `PASS` | Existing `MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB` behavior remains covered; metadata still reports `realAuthImplemented: false` and `productionReady: false`. |
 | `/leads` | `PASS` | Page route returns local reviewer workflow shell using synthetic/fake-D1 test context only. |
 | `/api/leads` queue | `PASS` | Reviewer Action Queue metadata is present from fake-D1 fixture data; generated note suggestion remains helper output, not saved lead data. |
-| Lead detail | `PASS` | Authenticated local request renders the synthetic lead detail and manual note fixture; no production route call. |
+| Lead detail | `PASS` | Authenticated local reviewer request renders the synthetic lead detail and manual note fixture; denied manager/admin/API/missing/unknown/expired/missing-audience/wrong-audience/provider-error cases omit protected note bodies locally. No production route call. |
 | Manual note write boundary | `PASS` | Reviewer scaffold may save human-entered local notes; manager/admin/API/missing/unknown roles fail closed. |
 | Generated suggestion exclusion | `PASS` | Generated suggestion persistence attempts are rejected atomically and do not write note text, timestamp, author label, history, or export fields. |
-| D1 schema guard | `PASS` | Local schema sources and fake-D1 DDL cover manual note columns and metadata-only event table/index. |
+| D1 schema guard | `PASS` | Local schema sources and fake-D1 DDL cover manual note columns, metadata-only event table/index, index drift checks, and event constraint checks. |
 | D1 observation metadata guard | `PASS` | Future observation metadata is limited to table/column/index metadata fields; row data, row counts, IDs, auth material, note text, and generated suggestion text are forbidden. |
-| Rollback guard | `PASS` | Local guard is stop-write, non-destructive-first, preserve-existing-data, redacted-evidence-only, and requires owner approval for any rollback execution. |
-| Privacy guard | `PASS` | Redaction guard removes forbidden evidence fields; no note body history, generated suggestion history/export/attribution, manager/export/API expansion, purge, retention enforcement, or PII detection is implemented. |
+| Rollback guard | `PASS` | Local stop-write guard blocks manual note create/edit/clear and generated-suggestion-bundled manual writes while preserving existing data. It remains non-destructive-first, redacted-evidence-only, and requires owner approval for rollback execution. |
+| Privacy guard | `PASS` | Recursive redaction guard removes forbidden evidence fields; no note body history, generated suggestion history/export/attribution, manager/export/API/detail expansion, purge, retention enforcement, or PII detection is implemented. |
 
 ## Explicit Non-Claims
 
 - This is not production proof.
+- This is not production evidence.
 - This is not production D1 schema observation.
 - This is not production auth/session/provider validation.
 - This is not production access-control proof.

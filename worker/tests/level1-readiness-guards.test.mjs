@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 
 import {
   LEVEL1_D1_OBSERVATION_ALLOWED_METADATA_FIELDS,
+  LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_FIXTURE,
+  buildLevel1LocalD1ObservationMetadata,
   buildLevel1ReadinessScorecard,
   buildLevel1RollbackStopWriteGuard,
   redactLevel1EvidenceRecord,
+  validateLevel1ManualReviewNotesSchemaMetadata,
   validateLevel1D1ObservationEvidence
 } from '../lib/level1-readiness-guards.js';
 
@@ -46,6 +49,7 @@ test('Level 1 D1 observation guard allows schema metadata fields only', () => {
     databaseId: 'private-db-id',
     authHeader: 'Bearer secret',
     generatedSuggestionText: 'generated text',
+    defaultValue: { nestedSecret: 'not allowed' },
   });
 
   assert.equal(unsafeResult.ok, false);
@@ -55,7 +59,70 @@ test('Level 1 D1 observation guard allows schema metadata fields only', () => {
     'databaseId',
     'authHeader',
     'generatedSuggestionText',
+    'defaultValue',
   ]);
+});
+
+test('Level 1 local D1 observation metadata fixture covers manual-note schema without row data', () => {
+  const observation = buildLevel1LocalD1ObservationMetadata();
+  const fixtureKeys = LEVEL1_MANUAL_REVIEW_NOTES_SCHEMA_METADATA_FIXTURE.map((record) => [
+    record.tableName,
+    record.columnName || record.indexName,
+  ]);
+
+  assert.equal(observation.source, 'local_fixture_metadata_only');
+  assert.equal(observation.productionD1Observed, false);
+  assert.equal(observation.productionReady, false);
+  assert.equal(observation.evidenceBoundary, 'NOT_PRODUCTION_EVIDENCE');
+  assert.deepEqual(observation.invalidRecords, []);
+  assert.deepEqual(fixtureKeys, [
+    ['leads', 'notes'],
+    ['leads', 'manual_review_notes_author_label'],
+    ['leads', 'manual_review_notes_updated_at'],
+    ['manual_review_note_events', 'lead_id'],
+    ['manual_review_note_events', 'event_type'],
+    ['manual_review_note_events', 'changed_at'],
+    ['manual_review_note_events', 'author_label'],
+    ['manual_review_note_events', 'idx_manual_review_note_events_lead'],
+  ]);
+  assert.equal(JSON.stringify(observation).includes('manualNoteBodyText'), false);
+  assert.equal(JSON.stringify(observation).includes('rowData'), false);
+  assert.equal(JSON.stringify(observation).includes('rowCount'), false);
+});
+
+test('Level 1 manual-note schema metadata rejects non-manual-note table or index combinations', () => {
+  assert.deepEqual(
+    validateLevel1ManualReviewNotesSchemaMetadata({
+      tableName: 'leads',
+      columnName: 'manual_review_notes_updated_at',
+      columnType: 'TEXT',
+      notNull: false,
+      defaultValue: null,
+      primaryKey: false,
+    }),
+    { ok: true, forbiddenFields: [] }
+  );
+
+  const invalidColumn = validateLevel1ManualReviewNotesSchemaMetadata({
+    tableName: 'leads',
+    columnName: 'article_body',
+    columnType: 'TEXT',
+    notNull: false,
+    defaultValue: null,
+    primaryKey: false,
+  });
+  const invalidIndex = validateLevel1ManualReviewNotesSchemaMetadata({
+    tableName: 'manual_review_note_events',
+    indexName: 'idx_private_customer_rows',
+    unique: false,
+    origin: 'c',
+    partial: false,
+  });
+
+  assert.equal(invalidColumn.ok, false);
+  assert.equal(invalidIndex.ok, false);
+  assert.deepEqual(invalidColumn.forbiddenFields, ['tableName']);
+  assert.deepEqual(invalidIndex.forbiddenFields, ['tableName']);
 });
 
 test('Level 1 rollback guard is stop-write and non-destructive first', () => {
@@ -101,6 +168,47 @@ test('Level 1 evidence redaction drops forbidden evidence fields without mutatin
     databaseId: '[REDACTED]',
   });
   assert.equal(original.manualNoteBodyText, 'human note body');
+});
+
+test('Level 1 evidence redaction is recursive and pattern-based for nested proof records', () => {
+  const original = {
+    status: 'PASS',
+    nested: {
+      providerToken: 'nested-token',
+      reviewer: {
+        manualNoteBodyText: 'nested manual body',
+        generatedReviewSuggestionText: 'nested generated helper',
+      },
+    },
+    events: [
+      {
+        route: '/api/leads',
+        cookieValue: 'nested-cookie',
+        safeLabel: 'local-fixture',
+      },
+    ],
+  };
+
+  const redacted = redactLevel1EvidenceRecord(original);
+
+  assert.deepEqual(redacted, {
+    status: 'PASS',
+    nested: {
+      providerToken: '[REDACTED]',
+      reviewer: {
+        manualNoteBodyText: '[REDACTED]',
+        generatedReviewSuggestionText: '[REDACTED]',
+      },
+    },
+    events: [
+      {
+        route: '/api/leads',
+        cookieValue: '[REDACTED]',
+        safeLabel: 'local-fixture',
+      },
+    ],
+  });
+  assert.equal(original.nested.providerToken, 'nested-token');
 });
 
 test('Level 1 readiness scorecard stays blocked without production proof approval', () => {

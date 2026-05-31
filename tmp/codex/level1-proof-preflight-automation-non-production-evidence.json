@@ -1,0 +1,175 @@
+{
+  "documentStatus": "LEVEL1_PROOF_PREFLIGHT_AUTOMATION_NON_PRODUCTION",
+  "status": "PASS",
+  "evidenceType": "REDACTED_SYNTHETIC_FIXTURE_ONLY",
+  "boundary": "NON_PRODUCTION_ONLY",
+  "notProductionEvidence": true,
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "refusedProductionInputs": [],
+  "gates": [
+    {
+      "id": "local_environment",
+      "status": "PASS"
+    },
+    {
+      "id": "no_secrets_or_real_provider_inputs",
+      "status": "PASS"
+    },
+    {
+      "id": "no_d1_binding_or_private_identifier",
+      "status": "PASS"
+    },
+    {
+      "id": "no_production_or_staging_urls",
+      "status": "PASS"
+    },
+    {
+      "id": "production_proof_approval",
+      "status": "HOLD"
+    }
+  ],
+  "redactedFixtureEvidence": {
+    "fixtureId": "synthetic-level1-local-proof-preflight",
+    "source": "local_fixture_only",
+    "route": "/api/leads",
+    "url": "https://synthetic.example/level1/local-proof-preflight",
+    "status": "PASS",
+    "manualNoteBodyText": "[REDACTED]",
+    "generatedSuggestionText": "[REDACTED]",
+    "token": "[REDACTED]",
+    "nested": {
+      "authHeader": "[REDACTED]",
+      "safeCheck": "protected fields omitted"
+    }
+  },
+  "localD1ObservationMetadata": {
+    "source": "local_fixture_metadata_only",
+    "productionD1Observed": false,
+    "productionReady": false,
+    "evidenceBoundary": "NOT_PRODUCTION_EVIDENCE",
+    "records": [
+      {
+        "tableName": "leads",
+        "columnName": "notes",
+        "columnType": "TEXT",
+        "notNull": false,
+        "defaultValue": "''",
+        "primaryKey": false
+      },
+      {
+        "tableName": "leads",
+        "columnName": "manual_review_notes_author_label",
+        "columnType": "TEXT",
+        "notNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+      },
+      {
+        "tableName": "leads",
+        "columnName": "manual_review_notes_updated_at",
+        "columnType": "TEXT",
+        "notNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+      },
+      {
+        "tableName": "manual_review_note_events",
+        "columnName": "lead_id",
+        "columnType": "TEXT",
+        "notNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+      },
+      {
+        "tableName": "manual_review_note_events",
+        "columnName": "event_type",
+        "columnType": "TEXT",
+        "notNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+      },
+      {
+        "tableName": "manual_review_note_events",
+        "columnName": "changed_at",
+        "columnType": "TEXT",
+        "notNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+      },
+      {
+        "tableName": "manual_review_note_events",
+        "columnName": "author_label",
+        "columnType": "TEXT",
+        "notNull": true,
+        "defaultValue": "'manual_reviewer'",
+        "primaryKey": false
+      },
+      {
+        "tableName": "manual_review_note_events",
+        "indexName": "idx_manual_review_note_events_lead",
+        "unique": false,
+        "origin": "c",
+        "partial": false
+      }
+    ],
+    "invalidRecords": []
+  },
+  "rollbackGuard": {
+    "trigger": "level1_local_preflight_blocker",
+    "stopWrites": true,
+    "nonDestructiveBackoutFirst": true,
+    "preserveExistingData": true,
+    "preserveRedactedEvidenceOnly": true,
+    "productionActionApproved": false,
+    "destructiveDataActionApproved": false,
+    "rollbackExecutionApproved": false,
+    "nextAction": "HOLD_FOR_OWNER_APPROVAL"
+  },
+  "readinessScorecard": {
+    "overallStatus": "BLOCKED",
+    "productionReviewerWorkflowReady": false,
+    "boundaryConfirmation": "NON_PRODUCTION_ONLY",
+    "items": [
+      {
+        "id": "auth_provider_session_scaffold_non_production",
+        "status": "PASS",
+        "boundary": "local_test_only"
+      },
+      {
+        "id": "local_proof_simulation_fake_d1",
+        "status": "PASS",
+        "boundary": "fake_d1_only"
+      },
+      {
+        "id": "d1_schema_guard_local_only",
+        "status": "PASS",
+        "boundary": "no_production_d1_observation"
+      },
+      {
+        "id": "rollback_stop_write_guard_local_only",
+        "status": "PASS",
+        "boundary": "no_rollback_execution"
+      },
+      {
+        "id": "privacy_generated_suggestion_guard_local_only",
+        "status": "PASS",
+        "boundary": "no_note_body_history_no_generated_suggestion_persistence"
+      },
+      {
+        "id": "production_proof_approval",
+        "status": "HOLD",
+        "boundary": "separate_explicit_future_goal_required"
+      }
+    ],
+    "nonClaims": [
+      "This scorecard does not claim production reviewer workflow readiness.",
+      "This scorecard does not claim production D1 observation, production proof, deploy, endpoint, logs, secrets, customer data, CRM, outreach, LLM, or automation evidence."
+    ]
+  },
+  "nonClaims": [
+    "This is not production proof.",
+    "This does not access production/staging D1, endpoints, logs, secrets, auth material, customer/private data, CRM, outreach, LLM, or automation.",
+    "productionReady remains false."
+  ]
+}
