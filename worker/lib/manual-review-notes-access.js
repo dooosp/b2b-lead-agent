@@ -1,3 +1,9 @@
+import {
+  authProviderSessionScaffoldMetadata,
+  isAuthProviderSessionScaffoldRequested,
+  resolveAuthProviderSessionScaffold
+} from './auth-provider-session-scaffold.js';
+
 export const MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB_APPROVAL_RECORD =
   'https://github.com/dooosp/b2b-lead-agent/issues/118#issuecomment-4495568414';
 
@@ -44,7 +50,11 @@ function normalizeRole(value) {
   return 'none';
 }
 
-export function resolveManualReviewNotesAccess(request, env = {}) {
+export async function resolveManualReviewNotesAccess(request, env = {}) {
+  if (isAuthProviderSessionScaffoldRequested(env)) {
+    return resolveAuthProviderSessionScaffold(request, env);
+  }
+
   const enabled = isLocalTestRoleStubEnabled(env);
   const role = enabled
     ? normalizeRole(request?.headers?.get(MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_HEADER))
@@ -61,6 +71,9 @@ export function resolveManualReviewNotesAccess(request, env = {}) {
 }
 
 export function manualReviewNotesAccessMetadata(access = {}) {
+  const scaffoldMetadata = authProviderSessionScaffoldMetadata(access);
+  if (scaffoldMetadata) return scaffoldMetadata;
+
   if (!access.enabled) return undefined;
   return {
     mode: 'local_test_role_stub',
@@ -88,7 +101,7 @@ export function patchTouchesManualReviewNotes(patch = {}) {
 export function assertManualReviewNotesWriteAllowed(access = {}) {
   if (!access.enabled || access.manualNotesWrite) return;
   throw Object.assign(
-    new Error('Manual review notes are restricted by the C2 local/test role stub. Use role "reviewer" for local/test manual note writes; no real auth/session/identity is implemented.'),
+    new Error(access.denialMessage || 'Manual review notes are restricted by the C2 local/test role stub. Use role "reviewer" for local/test manual note writes; no real auth/session/identity is implemented.'),
     { status: 403 }
   );
 }
