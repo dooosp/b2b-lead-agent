@@ -14,7 +14,7 @@ productionReady: false
 notProductionEvidence: true
 PRODUCTION_PROOF_APPROVED: NO_NOT_UNTIL_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL
 PRODUCTION_REVIEWER_WORKFLOW_READY: false
-BOUNDARY: NON_PRODUCTION_ONLY
+BOUNDARY: NOT_PRODUCTION_EVIDENCE
 ```
 
 ## Current Status
@@ -24,6 +24,8 @@ BOUNDARY: NON_PRODUCTION_ONLY
 | PR #171 | `MERGED` | Synthetic auth/session scaffold and local fake-D1 proof simulation. |
 | PR #172 | `MERGED` | Local-only proof preflight automation and redacted synthetic fixture evidence. |
 | PR #173 | `MERGED` | Provider-agnostic local/test auth adapter and protected route audit. |
+| PR #174 | `MERGED` | Final non-production approval packet and local approval dry-run. |
+| Level 1 CI/package gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run check:level1` runs local-only Level 1 tests and proof/approval dry-runs in CI without secrets, deploy, D1 bindings, endpoints, or production inputs. |
 | Final proof approval | `HOLD` | Issue #165 keeps proof execution blocked until a separate explicit future proof goal. |
 | Production reviewer workflow | `BLOCKED` | No real auth, production D1 observation, endpoint proof, or production evidence exists. |
 
@@ -185,6 +187,19 @@ Dry-run behavior:
 
 This dry-run never calls the provided URL strings. They are only inspected as
 input values.
+
+CI/package regression command:
+
+```bash
+npm run check:level1
+```
+
+`check:level1` combines the local-only auth adapter/scaffold tests, route/UI
+privacy tests, generated-suggestion/manual-note boundary tests,
+proof-preflight tests, approval dry-run tests, and the two local artifact
+writers. It is a regression gate only. It is not production evidence and does
+not satisfy Issue #165's separate explicit future production proof approval
+blocker.
 
 ## Rollback And Stop-Write
 

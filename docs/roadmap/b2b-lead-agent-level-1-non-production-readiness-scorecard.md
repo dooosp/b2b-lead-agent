@@ -26,6 +26,7 @@ redacted proof-preflight evidence.
 | Final approval packet | `PASS_LOCAL`, `HOLD_PRODUCTION` | `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-packet-non-production.md` | Final non-production packet is prepared with prerequisites, owner checklist, rollback owner, stop-write trigger, evidence requirements, abort conditions, and exact future approval fields. It is not production evidence and does not approve execution. |
 | Future evidence schema | `PASS_LOCAL`, `HOLD_PRODUCTION` | `worker/lib/level1-readiness-guards.js`; `worker/tests/level1-production-proof-approval.test.mjs` | Future evidence schema requires timestamps, boundary labels, required fields, `productionReady:false`, `notProductionEvidence:true`, and forbidden-field rejection for manual-note, generated-guidance, provider, raw auth/session, D1, secret, and customer/private fields. |
 | Approval packet dry-run operator | `PASS_LOCAL`, `HOLD_PRODUCTION` | `scripts/level1-production-proof-approval-dry-run.mjs`; `worker/tests/level1-production-proof-approval.test.mjs`; `npm run proof:level1:approval-dry-run` | Local-only dry-run validates packet completeness and refuses production/staging URLs, D1 bindings/private IDs, secrets, tokens, auth material, provider inputs, real endpoints, and non-local env values. It does not call endpoints. |
+| Level 1 package/CI regression gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `package.json`; `.github/workflows/ci.yml`; `worker/tests/workflow-contract.test.mjs`; `npm run check:level1` | Durable local-only package gate runs Level 1 auth adapter/scaffold, route/privacy, proof-preflight, approval dry-run, artifact redaction, and generated-suggestion/manual-note boundary coverage. CI runs it without secrets, deploy, Wrangler, D1 bindings, endpoint calls, or production inputs. |
 | Local-only Worker E2E smoke | `PASS` | `npm run test:e2e:local` after `npm ci` | Fake D1 and loopback only; not production/staging smoke. |
 | Final production proof approval | `HOLD` | Issue #165 records docs-planning only | No production proof execution approved. |
 
@@ -111,7 +112,8 @@ Runner and reviewer artifact surfaces:
 - `tmp/codex/level1-proof-preflight-automation-non-production-preflight.json`.
 
 The runner writes the redacted evidence JSON artifact above and returns
-`productionReady: false`, `notProductionEvidence: true`, and a
+`boundary: NOT_PRODUCTION_EVIDENCE`, `productionReady: false`,
+`notProductionEvidence: true`, and a
 `production_proof_approval` gate of `HOLD`. It redacts synthetic manual note
 body text, generated suggestion text, tokens, cookies, auth headers,
 customer/private fields, and nested secret-shaped fields before evidence is
@@ -137,8 +139,32 @@ The dry-run validates the approval packet, future evidence schema, and local
 input boundary. It refuses production/staging URLs, non-local hostnames, D1
 bindings, private identifiers, secrets, tokens, cookies, auth headers,
 provider inputs, and non-local environment values. It does not call endpoints
-and it keeps `productionReady: false`, `notProductionEvidence: true`, and
-production proof approval on `HOLD`.
+and it keeps `boundary: NOT_PRODUCTION_EVIDENCE`, `productionReady: false`,
+`notProductionEvidence: true`, and production proof approval on `HOLD`.
+
+## Package And CI Gate
+
+Local command:
+
+```bash
+npm run check:level1
+```
+
+This gate runs only local/test and synthetic fixture coverage:
+
+- provider-agnostic local auth adapter and scaffold tests;
+- Level 1 readiness/redaction/D1 metadata guards;
+- fake-D1 local proof simulation;
+- protected route/UI privacy audit for `/leads` and `/leads/:id`;
+- generated-suggestion/manual-note persistence and export privacy tests;
+- proof-preflight tests and local artifact writer;
+- approval-packet dry-run tests and local artifact writer.
+
+CI runs the same package gate in `.github/workflows/ci.yml` after schema and
+synthetic lead-quality checks and before `npm test`. The gate does not use
+secrets, Wrangler, deploy, production/staging endpoints, D1 bindings,
+Cloudflare Access, real JWT/cookie/token/session/provider parsing,
+customer/private data, CRM, outreach, LLM, or automation.
 
 ## D1 Gate
 

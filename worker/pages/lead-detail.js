@@ -11,7 +11,11 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     buildOpportunityWorkbenchModel(lead),
     { includeGeneratedReviewGuidance }
   );
+  const emptyManualReviewNoteStateText = includeGeneratedReviewGuidance
+    ? '비어 있음 상태입니다. 생성된 검토 메모 제안은 저장 상태가 아닙니다.'
+    : '비어 있음 상태입니다. 권한 없는 역할에는 보호된 수동 메모를 표시하지 않습니다.';
   const opportunityWorkbenchHtmlJS = JSON.stringify(opportunityWorkbenchHtml).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+  const emptyManualReviewNoteStateTextJS = JSON.stringify(emptyManualReviewNoteStateText);
   const leadJSON = JSON.stringify(lead).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   const logsJSON = JSON.stringify(statusLogs || []).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   return `<!DOCTYPE html>
@@ -132,6 +136,7 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     const reviewStatusLabels = ${reviewStatusLabelsJS};
     const reviewStatuses = Object.keys(reviewStatusLabels);
     const opportunityWorkbenchHtml = ${opportunityWorkbenchHtmlJS};
+    const emptyManualReviewNoteStateText = ${emptyManualReviewNoteStateTextJS};
     const verificationStatusLabels = { verified: '검증됨', needs_review: '검증 필요', draft: '초안', unverified: '미검증' };
     const generationModeLabels = { llm: 'LLM 생성', heuristic: '휴리스틱 생성', demo: '데모', unavailable: '생성 불가' };
     const confidenceLabels = { HIGH: '신뢰도 HIGH', MEDIUM: '신뢰도 MEDIUM', LOW: '신뢰도 LOW' };
@@ -258,7 +263,7 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
         : '';
       return '<div id="manualReviewNoteState" class="notes-state ' + (hasSavedNote ? 'is-saved' : 'is-empty') + '" data-manual-note-state="' + (hasSavedNote ? 'saved' : 'empty') + '">' +
         '<strong>' + (hasSavedNote ? '저장된 수동 리뷰 메모 있음' : '저장된 수동 리뷰 메모 없음') + '</strong>' +
-        '<span>' + (hasSavedNote ? '사람이 입력한 수동 메모만 저장 상태로 표시됩니다.' : '비어 있음 상태입니다. 생성된 검토 메모 제안은 저장 상태가 아닙니다.') + '</span>' +
+        '<span>' + (hasSavedNote ? '사람이 입력한 수동 메모만 저장 상태로 표시됩니다.' : emptyManualReviewNoteStateText) + '</span>' +
         timestampMeta +
         authorMeta +
         historyMeta +

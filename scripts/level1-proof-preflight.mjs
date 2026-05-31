@@ -197,7 +197,7 @@ export function evaluateLevel1ProofPreflight(input = {}) {
       documentStatus: 'LEVEL1_PROOF_PREFLIGHT_AUTOMATION_NON_PRODUCTION',
       status: localStatus,
       evidenceType: 'REDACTED_SYNTHETIC_FIXTURE_ONLY',
-      boundary: 'NON_PRODUCTION_ONLY',
+      boundary: 'NOT_PRODUCTION_EVIDENCE',
       notProductionEvidence: true,
       productionReady: false,
       productionReviewerWorkflowReady: false,

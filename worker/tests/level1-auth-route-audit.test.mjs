@@ -19,6 +19,20 @@ import { createWorkerRequest } from './helpers/http.mjs';
 const API_HEADERS = Object.freeze({ Authorization: 'Bearer api-secret' });
 const PROTECTED_NOTE = 'Synthetic protected manual note body for route audit.';
 const GENERATED_SUGGESTION_FRAGMENT = 'Follow-up check:';
+const DENIED_RENDERED_HTML_FORBIDDEN_FRAGMENTS = Object.freeze([
+  PROTECTED_NOTE,
+  GENERATED_SUGGESTION_FRAGMENT,
+  '생성된 검토 메모 제안',
+  'reviewNoteSuggestion',
+  'reviewNoteTemplates',
+  'providerInput',
+  'rawSessionClaims',
+  'rawAuth',
+  'raw_auth',
+  '"authHeader"',
+  "'authHeader'",
+  'authHeader:',
+]);
 
 function createAuditEnv(session) {
   const env = createWorkerEnv({
@@ -74,6 +88,19 @@ function assertDoesNotLeakGeneratedSuggestion(payload) {
   assert.equal(serialized.includes(GENERATED_SUGGESTION_FRAGMENT), false);
   assert.equal(serialized.includes('reviewNoteSuggestion'), false);
   assert.equal(serialized.includes('reviewNoteTemplates'), false);
+}
+
+function assertDeniedRenderedHtmlDoesNotLeakProtectedFields(html, surface) {
+  assert.equal(typeof html, 'string');
+  for (const fragment of DENIED_RENDERED_HTML_FORBIDDEN_FRAGMENTS) {
+    assert.equal(
+      html.includes(fragment),
+      false,
+      `${surface} leaked forbidden Level 1 fragment: ${fragment}`
+    );
+  }
+  assertDoesNotLeakProtectedText(html, { allowStaticAuthorLabelCode: true });
+  assertDoesNotLeakGeneratedSuggestion(html);
 }
 
 test('Level 1 auth route audit inventory maps current protected route ids', () => {
@@ -218,14 +245,12 @@ for (const scenario of [
     assert.equal(listPayload.reviewerActionQueue.items.length, 1);
     assertDoesNotLeakProtectedText(listPayload);
     assertDoesNotLeakProtectedText(historyPayload);
-    assertDoesNotLeakProtectedText(detailHtml, { allowStaticAuthorLabelCode: true });
-    assertDoesNotLeakProtectedText(leadsPageHtml, { allowStaticAuthorLabelCode: true });
+    assertDeniedRenderedHtmlDoesNotLeakProtectedFields(detailHtml, `${scenario.name} detail HTML`);
+    assertDeniedRenderedHtmlDoesNotLeakProtectedFields(leadsPageHtml, `${scenario.name} leads HTML`);
     assertDoesNotLeakProtectedText(exportCsv);
     assertDoesNotLeakProtectedText(enrichPayload);
     assertDoesNotLeakGeneratedSuggestion(listPayload);
     assertDoesNotLeakGeneratedSuggestion(historyPayload);
-    assertDoesNotLeakGeneratedSuggestion(detailHtml);
-    assertDoesNotLeakGeneratedSuggestion(leadsPageHtml);
     assertDoesNotLeakGeneratedSuggestion(exportCsv);
     assertDoesNotLeakGeneratedSuggestion(enrichPayload);
     assert.equal(JSON.stringify(writePayload).includes(`Denied ${scenario.name} write.`), false);
@@ -259,11 +284,9 @@ test('Level 1 route audit fails closed and redacts provider-error details', asyn
   ));
 
   assertDoesNotLeakProtectedText(listPayload);
-  assertDoesNotLeakProtectedText(detailHtml, { allowStaticAuthorLabelCode: true });
-  assertDoesNotLeakProtectedText(leadsPageHtml, { allowStaticAuthorLabelCode: true });
+  assertDeniedRenderedHtmlDoesNotLeakProtectedFields(detailHtml, 'provider-error detail HTML');
+  assertDeniedRenderedHtmlDoesNotLeakProtectedFields(leadsPageHtml, 'provider-error leads HTML');
   assertDoesNotLeakGeneratedSuggestion(listPayload);
-  assertDoesNotLeakGeneratedSuggestion(detailHtml);
-  assertDoesNotLeakGeneratedSuggestion(leadsPageHtml);
   assert.equal(JSON.stringify(listPayload).includes(providerSecret), false);
   assert.equal(detailHtml.includes(providerSecret), false);
   assert.equal(leadsPageHtml.includes(providerSecret), false);

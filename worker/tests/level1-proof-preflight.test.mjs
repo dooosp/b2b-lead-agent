@@ -25,6 +25,7 @@ test('Level 1 proof preflight emits redacted fixture evidence and stays non-prod
 
   assert.equal(result.ok, true);
   assert.equal(result.evidence.status, 'PASS');
+  assert.equal(result.evidence.boundary, 'NOT_PRODUCTION_EVIDENCE');
   assert.equal(result.evidence.notProductionEvidence, true);
   assert.equal(result.evidence.productionReady, false);
   assert.equal(result.evidence.productionReviewerWorkflowReady, false);
@@ -127,6 +128,7 @@ test('Level 1 proof preflight CLI writes the reviewer evidence artifact', () => 
     const artifact = JSON.parse(readFileSync(outputPath, 'utf8'));
     assert.equal(artifact.documentStatus, 'LEVEL1_PROOF_PREFLIGHT_AUTOMATION_NON_PRODUCTION');
     assert.equal(artifact.status, 'PASS');
+    assert.equal(artifact.boundary, 'NOT_PRODUCTION_EVIDENCE');
     assert.equal(artifact.productionReady, false);
     assert.equal(artifact.notProductionEvidence, true);
   } finally {
