@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const packageJsonPath = path.resolve(__dirname, '../../package.json');
 const workflowPath = path.resolve(__dirname, '../../.github/workflows/generate-report.yml');
 const ciWorkflowPath = path.resolve(__dirname, '../../.github/workflows/ci.yml');
 const validateNamingWorkflowPath = path.resolve(__dirname, '../../.github/workflows/validate-naming.yml');
@@ -62,4 +63,31 @@ test('CI workflow runs the local-only Worker E2E smoke after full tests', async 
   assert.match(workflow, /name:\s+Install Playwright Chromium\s+run:\s+npx playwright install --with-deps chromium/);
   assert.match(workflow, /run:\s+npm test[\s\S]*run:\s+npm run test:e2e:local/);
   assert.match(workflow, /run:\s+npx playwright install --with-deps chromium[\s\S]*run:\s+npm run test:e2e:local/);
+});
+
+test('package exposes a local-only Level 1 regression gate', async () => {
+  const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+  const script = packageJson.scripts['check:level1'] || '';
+
+  assert.match(script, /node --test/);
+  assert.match(script, /worker\/tests\/local-test-auth-adapter\.test\.mjs/);
+  assert.match(script, /worker\/tests\/auth-provider-session-scaffold\.test\.mjs/);
+  assert.match(script, /worker\/tests\/level1-readiness-guards\.test\.mjs/);
+  assert.match(script, /worker\/tests\/level1-local-proof-simulation\.test\.mjs/);
+  assert.match(script, /worker\/tests\/level1-auth-route-audit\.test\.mjs/);
+  assert.match(script, /worker\/tests\/manual-review-notes\.test\.mjs/);
+  assert.match(script, /worker\/tests\/level1-proof-preflight\.test\.mjs/);
+  assert.match(script, /worker\/tests\/level1-production-proof-approval\.test\.mjs/);
+  assert.match(script, /npm run proof:level1:preflight/);
+  assert.match(script, /npm run proof:level1:approval-dry-run/);
+  assert.doesNotMatch(script, /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
+});
+
+test('CI workflow runs the safe Level 1 regression gate before full tests', async () => {
+  const workflow = await readFile(ciWorkflowPath, 'utf8');
+
+  assert.match(workflow, /name:\s+Run Level 1 non-production regression gate\s+run:\s+npm run check:level1/);
+  assert.match(workflow, /run:\s+npm run eval:lead-quality[\s\S]*run:\s+npm run check:level1[\s\S]*run:\s+npm test/);
+  assert.doesNotMatch(workflow, /secrets\./);
+  assert.doesNotMatch(workflow, /wrangler|curl|deploy|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL/i);
 });

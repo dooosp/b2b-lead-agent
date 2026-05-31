@@ -2,7 +2,7 @@
   "documentStatus": "LEVEL1_PRODUCTION_PROOF_APPROVAL_PACKET_DRY_RUN_NON_PRODUCTION",
   "status": "PASS",
   "evidenceType": "LOCAL_DRY_RUN_REDACTED_SYNTHETIC_ONLY",
-  "boundary": "NON_PRODUCTION_ONLY",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
   "notProductionEvidence": true,
   "productionReady": false,
   "productionReviewerWorkflowReady": false,

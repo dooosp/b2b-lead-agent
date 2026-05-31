@@ -38,6 +38,7 @@ PRODUCTION_REVIEWER_WORKFLOW_READY: false
 - PR #171 merged.
 - PR #172 merged.
 - PR #173 merged.
+- PR #174 merged.
 
 ## Owner Checklist
 - PRODUCT_OWNER: @dooosp / Taeho Jang
@@ -148,6 +149,7 @@ test('Level 1 approval dry-run passes only with local inputs and blocked product
   assert.equal(result.ok, true);
   assert.equal(result.evidence.status, 'PASS');
   assert.equal(result.evidence.documentStatus, 'LEVEL1_PRODUCTION_PROOF_APPROVAL_PACKET_DRY_RUN_NON_PRODUCTION');
+  assert.equal(result.evidence.boundary, 'NOT_PRODUCTION_EVIDENCE');
   assert.equal(result.evidence.notProductionEvidence, true);
   assert.equal(result.evidence.productionReady, false);
   assert.equal(result.evidence.productionReviewerWorkflowReady, false);
@@ -272,6 +274,7 @@ test('Level 1 approval dry-run CLI writes local non-production artifact only', (
     const artifact = JSON.parse(readFileSync(outputPath, 'utf8'));
     assert.equal(artifact.documentStatus, 'LEVEL1_PRODUCTION_PROOF_APPROVAL_PACKET_DRY_RUN_NON_PRODUCTION');
     assert.equal(artifact.status, 'PASS');
+    assert.equal(artifact.boundary, 'NOT_PRODUCTION_EVIDENCE');
     assert.equal(artifact.productionReady, false);
     assert.equal(artifact.notProductionEvidence, true);
   } finally {

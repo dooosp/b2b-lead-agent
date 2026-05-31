@@ -28,6 +28,9 @@ jobs:
       - name: Run synthetic lead-quality evaluation
         run: npm run eval:lead-quality
 
+      - name: Run Level 1 non-production regression gate
+        run: npm run check:level1
+
       - name: Run unit and contract tests
         run: npm test
 

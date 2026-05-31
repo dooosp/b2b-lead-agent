@@ -3,7 +3,7 @@
 ## 현재 기준 상태
 
 - 기준 브랜치: `master`
-- 마지막 검증된 post-PR #173 `origin/master` HEAD: `cc7944c7d851a57642e933435d482932eaabf921` (`Level 1 local auth adapter route audit`)
+- 마지막 검증된 post-PR #174 `origin/master` HEAD: `766447f95635b9a57c66d97c1b49ef670f57a687` (`Level 1 approval packet dry run`)
 - 다음 세션도 반드시 `git fetch origin master`와 `git rev-parse origin/master`로 실제 최신 HEAD를 다시 기록한다.
 - hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`, `docs/architecture/*.md`, `NEXT_SESSION_PROMPT.md`
 - LeadBrief v1 merge baseline: `5776d4a` (`[Product] Freeze LeadBrief v1 review contract (#27)`)
@@ -153,7 +153,8 @@
   - #171 merged the non-production auth provider/session scaffold, local fake-D1 proof simulation, Level 1 readiness guards, and Level 1 scorecard/evidence docs. It remains synthetic and local-only: no real tokens, cookies, JWTs, sessions, provider parsing, production D1, production endpoints, logs/secrets, customer/private data, CRM/outreach, LLM, automation, or production-readiness claim.
   - #172 merged local-only proof preflight automation, redacted synthetic fixture evidence, and refusal of production-like env/URL/D1/secret/provider inputs. It is **not production evidence** and keeps `productionReady: false`.
   - #173 merged `LEVEL1_AUTH_ADAPTER_ROUTE_AUDIT_NON_PRODUCTION` with provider-agnostic injected local/test auth adapter contracts, route audit coverage, deny-by-default synthetic role checks, stricter local proof/auth preflight refusal, enrich/export/publication/evidence privacy guards, and reviewer docs. It is **not production evidence**, does not parse real auth material or call Cloudflare Access, and keeps `productionReady: false`.
-  - Current follow-up `LEVEL1_PRODUCTION_PROOF_APPROVAL_PACKET_NON_PRODUCTION` prepares only the final non-production approval packet, future evidence schema, and local approval dry-run operator after PRs #171/#172/#173. It does not execute production proof and keeps `productionReady: false`.
+  - #174 merged `LEVEL1_PRODUCTION_PROOF_APPROVAL_PACKET_NON_PRODUCTION`: the final non-production approval packet, future evidence schema, and local approval dry-run operator after PRs #171/#172/#173. It does not execute production proof and keeps `productionReady: false`.
+  - Current Level 1 CI/package gate is `npm run check:level1`. It runs local-only auth adapter/scaffold, route/UI privacy, generated-suggestion/manual-note, proof-preflight, approval dry-run, and redacted local artifact checks; CI runs it without secrets, deploy, Wrangler, D1 bindings, endpoints, or production inputs. It is not production evidence and does not satisfy Issue #165.
 - Current Level 1 blocker burn-down packet lives at `docs/roadmap/b2b-lead-agent-level-1-blocker-burndown-packet.md`. It classifies remaining blockers for auth provider/session owner input, production D1 schema observation input, rollback/backout owner input, final production proof approval, and privacy residual values. It includes copy-paste owner request templates and keeps `FINAL_STATE: HOLD_PENDING_NEW_EXPLICIT_GOAL`.
 - Reviewer Workflow Final Audit & Demo Packet lives at `docs/reviewer-workflow-final-audit.md` and is the canonical local/test-safe handoff baseline for completed reviewer workflow demo, validation, allowed/forbidden claims, note-persistence wording, and production evidence boundaries.
 - Issue #100 is closed as completed for the recorded local/test-safe Human UX Review findings. Future UX feedback should open a new issue or separately scoped record.
@@ -220,7 +221,7 @@
 - `docs/roadmap/manual-review-notes-v1-staging-target-decision-packet.md` is plan-only and does not authorize runtime/UI/schema/API changes, executable rollback or migration files, staging execution, staging D1 access, staging endpoint calls, staging logs/secrets, production D1 schema observation/access/write/delete, Wrangler production commands, production proof execution, production deploy, production endpoint calls, production logs/secrets access, production smoke tests, customer data access/mutation, production access-control implementation, real auth/session/identity, manager visibility, export expansion, retention/privacy enforcement, purge/delete jobs, automated PII detection/redaction, destructive data action, generated suggestion persistence/export/history/attribution, or production readiness claims beyond "staging target decision packet prepared."
 - `docs/roadmap/manual-review-notes-v1-non-production-cycle-closeout.md` is final non-production closeout and does not authorize runtime/UI/schema/API changes, executable rollback or migration files, staging execution, staging D1 access, staging endpoint calls, staging logs/secrets, production proof execution, production deploy, production rollback, production D1 schema observation/migration/access/write/delete, production endpoint calls, production logs/secrets, production smoke tests, customer data access/mutation, production access-control implementation, real auth/session/identity, manager visibility, export expansion, retention/privacy enforcement, purge/delete jobs, automated PII detection/redaction, destructive data action, or generated suggestion persistence/export/history/attribution.
 - `docs/roadmap/manual-review-notes-v1-reviewer-feedback-intake.md` and `docs/roadmap/manual-review-notes-v1-feedback-record-001-disposition.md` record only docs feedback intake/disposition. They do not authorize runtime/UI/schema/API changes, staging execution, staging D1 access, staging endpoint/log/secret access, production proof/deploy/D1/endpoints/logs/secrets/smoke tests, customer data, real reviewer identity, access-control implementation, manager visibility/export/API expansion, retention/privacy enforcement, automated PII detection/redaction, or generated suggestion persistence/history/export/attribution.
-- CI, docs, source inspection, local fake-D1 tests, and release evidence packets are not production D1 evidence.
+- CI, docs, source inspection, `npm run check:level1`, local fake-D1 tests, and release evidence packets are not production D1 evidence.
 - Production deploy, Wrangler deploy, Wrangler D1 execute, production Worker endpoint calls, production DB access, and production writes remain separate human-approved operations.
 - The auto-filled production D1 observation confirmation draft remains `DRAFT_NOT_APPROVED` unless a human owner explicitly changes it.
 
@@ -229,6 +230,7 @@
 - `npm run check:naming` = canonical path/naming guard
 - `npm run check:schema` = local D1 schema drift guard
 - `npm run eval:lead-quality` = synthetic-only LeadBrief quality and review-readiness evaluator
+- `npm run check:level1` = local-only Level 1 auth/route/privacy/proof/preflight/approval regression gate; writes only redacted `NOT_PRODUCTION_EVIDENCE` artifacts and keeps `productionReady:false`
 - `npm run test:evidence` = release evidence toolkit tests
 - `npm run test:unit` = Worker unit coverage
 - `npm run test:contract` = Worker contract and trigger coverage

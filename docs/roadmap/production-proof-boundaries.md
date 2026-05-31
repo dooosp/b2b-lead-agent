@@ -160,7 +160,7 @@ Issue #34 established the approval pattern for production proof work:
 
 - Approval comments are not deploy approval unless they explicitly say so.
 - GitHub ownership, PR authorship, and merge rights are not production ownership.
-- CI, docs, source/config inspection, local fake-D1 tests, and generated evidence packets are not production evidence.
+- CI, docs, source/config inspection, `npm run check:level1`, local fake-D1 tests, and generated evidence packets are not production evidence.
 - Schema proof, runtime proof, row read, row write, row roundtrip, deploy, rollback, and observation claim are separate gates.
 - Evidence must be minimized and redacted.
 
@@ -225,6 +225,11 @@ The following support engineering confidence but are not production proof:
 - Screenshots or image-only artifacts as sole proof.
 - Synthetic fixtures.
 - Release evidence packets generated from local inputs.
+- Level 1 CI/package gate results and `NOT_PRODUCTION_EVIDENCE` artifacts.
+
+The exact remaining Level 1 human blocker is Issue #165: a separate explicit
+future production proof goal with exact command, endpoint, D1, fixture,
+redaction, evidence, rollback, and stop-condition boundaries.
 
 ## Minimum Future Approval Packet
 
