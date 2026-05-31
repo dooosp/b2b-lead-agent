@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "level1.production_proof_change_control_manifest.v1",
+  "documentStatus": "LEVEL1_PRODUCTION_PROOF_CHANGE_CONTROL_MANIFEST_NON_PRODUCTION",
+  "repo": "dooosp/b2b-lead-agent",
+  "baseline": {
+    "branch": "master",
+    "headSha": "27bf1a57af3826427eecf2810e2d6642e05dcc0b",
+    "mergedPrs": [171, 172, 173, 174, 175, 176]
+  },
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "notProductionEvidence": true,
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "approvalStatus": "HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL",
+  "issueRefs": {
+    "privacy": "https://github.com/dooosp/b2b-lead-agent/issues/154",
+    "authProviderSession": "https://github.com/dooosp/b2b-lead-agent/issues/162",
+    "productionD1Observation": "https://github.com/dooosp/b2b-lead-agent/issues/163",
+    "rollbackStopWrite": "https://github.com/dooosp/b2b-lead-agent/issues/164",
+    "finalProofApproval": "https://github.com/dooosp/b2b-lead-agent/issues/165",
+    "reviewerFeedback": "https://github.com/dooosp/b2b-lead-agent/issues/144"
+  },
+  "changeControl": {
+    "owner": "@dooosp / Taeho Jang",
+    "reviewer": "@dooosp / Taeho Jang",
+    "operator": "NO_OPERATOR_APPROVED_FOR_EXECUTION_NOW",
+    "executionWindow": {
+      "startsAt": "NO_WINDOW_APPROVED_FOR_EXECUTION_NOW",
+      "expiresAt": "NO_WINDOW_APPROVED_FOR_EXECUTION_NOW",
+      "timezone": "UTC"
+    }
+  },
+  "approvalRecord": {
+    "sourceIssue": 165,
+    "sourceUrl": "https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4525359304",
+    "status": "NO_NOT_UNTIL_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL",
+    "approvedAt": "NO_APPROVAL_RECORDED",
+    "expiresAt": "NO_APPROVAL_RECORDED"
+  },
+  "command": {
+    "executionMode": "NON_EXECUTABLE_DRY_RUN_ONLY",
+    "allowlist": ["NONE_APPROVED_FOR_EXECUTION_NOW"],
+    "denylist": [
+      "deploy",
+      "wrangler d1 execute --remote",
+      "curl production or staging endpoint",
+      "destructive SQL"
+    ]
+  },
+  "endpoint": {
+    "boundary": "NONE_APPROVED_FOR_EXECUTION_NOW",
+    "allowedEndpoints": ["NONE_APPROVED_FOR_EXECUTION_NOW"],
+    "broadEndpointsAllowed": false
+  },
+  "d1": {
+    "bindingLabelNonSecret": "DB / b2b-leads-db planning label only",
+    "databaseId": "NOT_RECORDED_NO_DATABASE_ID_ALLOWED",
+    "schemaObservationApprovedNow": false,
+    "writeOrMigrationApprovedNow": false
+  },
+  "fixture": {
+    "policy": "SYNTHETIC_OR_APPROVED_NON_CUSTOMER_ONLY",
+    "fixtureId": "NO_FIXTURE_APPROVED_FOR_EXECUTION_NOW",
+    "customerDataAllowed": false
+  },
+  "rollback": {
+    "owner": "@dooosp / Taeho Jang",
+    "stopWriteTrigger": "Stop writes on protected-field leakage, generated-suggestion persistence, redaction failure, D1 boundary drift, endpoint exposure, or unapproved production access.",
+    "nonDestructiveBackoutFirst": true,
+    "rollbackExecutionApproved": false,
+    "destructiveDataActionApproved": false
+  },
+  "redaction": {
+    "required": true,
+    "rules": [
+      "Redact secrets, tokens, cookies, auth headers, JWT/session claims, account ids, database ids, private URLs, names, emails, user ids, customer payloads, manual note body text, generated suggestion text, CRM/outreach data, logs, and private lead/person fields."
+    ]
+  },
+  "abortConditions": [
+    "Abort without a separate explicit future production proof goal.",
+    "Abort on production/staging endpoint, D1, log, secret, customer/private data, real auth material, generated suggestion persistence, or destructive action requirement."
+  ],
+  "evidence": {
+    "destination": "docs/roadmap/b2b-lead-agent-level-1-production-proof-evidence.md",
+    "redactedOnly": true,
+    "writeApprovedNow": false
+  }
+}

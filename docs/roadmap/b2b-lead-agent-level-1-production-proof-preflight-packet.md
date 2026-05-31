@@ -25,9 +25,9 @@ evidence**.
 - Repository: `dooosp/b2b-lead-agent`.
 - Default branch: `master`.
 - Baseline inspected: `origin/master` at
-  `cc7944c7d851a57642e933435d482932eaabf921` (PR #173 merge).
-- Latest shipped related merged PR: PR #173,
-  `Level 1 local auth adapter route audit`.
+  `27bf1a57af3826427eecf2810e2d6642e05dcc0b` (PR #176 merge).
+- Latest shipped related merged PR: PR #176,
+  `Add Level 1 fail-closed fault injection coverage`.
 - Packet path:
   `docs/roadmap/b2b-lead-agent-level-1-production-proof-preflight-packet.md`.
 - Production proof execution performed: no.
@@ -42,8 +42,8 @@ b2b_lead_agent_level_1_production_proof_preflight_packet:
   human_decision: PREPARE_LEVEL1_PRODUCTION_PROOF_PREFLIGHT_PACKET_DOCS_ONLY
   repository: dooosp/b2b-lead-agent
   default_branch: master
-  inspected_origin_master: "cc7944c7d851a57642e933435d482932eaabf921"
-  latest_related_merged_pr: 173
+  inspected_origin_master: "27bf1a57af3826427eecf2810e2d6642e05dcc0b"
+  latest_related_merged_pr: 176
   current_state: LEVEL_0_COMPLETE
   target: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
   owner_inputs: COMPLETE_FOR_DOCS_PLANNING_ONLY
@@ -74,6 +74,12 @@ Source-of-truth records:
   https://github.com/dooosp/b2b-lead-agent/pull/172
 - PR #173:
   https://github.com/dooosp/b2b-lead-agent/pull/173
+- PR #174:
+  https://github.com/dooosp/b2b-lead-agent/pull/174
+- PR #175:
+  https://github.com/dooosp/b2b-lead-agent/pull/175
+- PR #176:
+  https://github.com/dooosp/b2b-lead-agent/pull/176
 - PR #169:
   https://github.com/dooosp/b2b-lead-agent/pull/169
 - Owner-input disposition:
@@ -109,6 +115,14 @@ and the local command `npm run proof:level1:approval-dry-run` validate
 operator prerequisites, owner checklist, rollback owner, stop-write trigger,
 evidence schema, abort conditions, and local input refusal. This is not
 production evidence and does not approve proof execution.
+
+The change-control manifest follow-up remains non-production only. The packet
+at
+`docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.md`
+and the local command `npm run proof:level1:change-control-manifest` validate a
+machine-checkable future proof manifest and emit only a redacted,
+non-executable `NOT_PRODUCTION_EVIDENCE` dry-run plan. This is not production
+evidence, does not call endpoints or D1, and does not approve proof execution.
 
 ## 2. Prerequisite Matrix
 
@@ -296,6 +310,7 @@ future explicit goal or its cited owner comments.
 | Rollback/backout trigger | Stop-write and escalation path confirmed for this proof | `TBD_BY_FUTURE_EXPLICIT_GOAL` |
 | Stop conditions | Explicit halt list for this proof | `TBD_BY_FUTURE_EXPLICIT_GOAL` |
 | Final approval packet dry-run | `npm run proof:level1:approval-dry-run` local-only artifact | `PASS_LOCAL_NOT_PRODUCTION_EVIDENCE` |
+| Change-control manifest dry-run | `npm run proof:level1:change-control-manifest` local-only non-executable plan | `PASS_LOCAL_NOT_PRODUCTION_EVIDENCE` |
 
 ## 7. Boundary Confirmation
 

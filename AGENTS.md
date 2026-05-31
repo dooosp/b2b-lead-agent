@@ -27,8 +27,8 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   is the first human reviewer feedback record. It is P3/docs/no-follow-up,
   confirms the docs are clear enough for the closed non-production cycle, and
   leaves `NEXT_MANDATORY_ACTION: NONE`, staging HOLD, and production HOLD.
-- Post-PR175 Level 1 addendum: `master` includes PRs #171-#175 through
-  `43a6a382139858b2c373f26d2e00ba62400303cf`. `npm run check:level1`
+- Post-PR176 Level 1 addendum: `master` includes PRs #171-#176 through
+  `27bf1a57af3826427eecf2810e2d6642e05dcc0b`. `npm run check:level1`
   is the durable local-only Level 1 regression gate in CI. It is not production
   evidence, keeps `productionReady:false`, and does not approve production
   proof, deploy, D1 access, endpoint calls, logs/secrets, customer/private
@@ -40,7 +40,11 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   credential-shaped env poison, poisoned evidence artifacts, missing local D1
   metadata/index drift, stop-write-disabled rollback requests, mutating or
   destructive rollback/SQL refusal, and value-aware redaction of poisoned raw
-  evidence input under benign keys.
+  evidence input under benign keys. The Level 1 change-control manifest packet
+  and `npm run proof:level1:change-control-manifest` add only a local,
+  machine-checkable `NOT_PRODUCTION_EVIDENCE` manifest/dry-run gate for a
+  future separately approved proof goal; they do not execute proof or weaken
+  Issue #165.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -216,7 +220,8 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - `npm run test:unit` for worker unit coverage only
 - `npm run test:contract` for worker trigger and contract coverage only
 - `npm run test:worker` for the combined worker gate (`test:unit` + `test:contract`)
-- `npm run check:level1` for the local-only Level 1 auth/route/privacy/proof/preflight/approval regression gate
+- `npm run proof:level1:change-control-manifest` for the local-only Level 1 change-control manifest dry-run gate
+- `npm run check:level1` for the local-only Level 1 auth/route/privacy/proof/preflight/approval/change-control regression gate
 - `npm run eval:lead-quality` for synthetic-only LeadBrief quality and review-readiness checks
 - `npm run test:e2e:local` for fake-D1, loopback-only Worker route/page smoke coverage
 - `npm test` for the root gate plus the combined worker gate

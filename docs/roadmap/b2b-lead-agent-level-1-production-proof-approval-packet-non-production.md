@@ -26,7 +26,9 @@ BOUNDARY: NOT_PRODUCTION_EVIDENCE
 | PR #173 | `MERGED` | Provider-agnostic local/test auth adapter and protected route audit. |
 | PR #174 | `MERGED` | Final non-production approval packet and local approval dry-run. |
 | PR #175 | `MERGED` | Durable local-only Level 1 regression gate in CI. |
-| Level 1 CI/package gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run check:level1` runs local-only Level 1 tests, release-evidence redaction tests, and proof/approval dry-runs in CI without secrets, deploy, D1 bindings, endpoints, or production inputs. |
+| PR #176 | `MERGED` | Local-only fail-closed fault injection coverage. |
+| Change-control manifest gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run proof:level1:change-control-manifest` writes a redacted `NOT_PRODUCTION_EVIDENCE` non-executable plan and refuses unsafe manifest values. |
+| Level 1 CI/package gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run check:level1` runs local-only Level 1 tests, release-evidence redaction tests, and proof/approval/change-control dry-runs in CI without secrets, deploy, D1 bindings, endpoints, or production inputs. |
 | Final proof approval | `HOLD` | Issue #165 keeps proof execution blocked until a separate explicit future proof goal. |
 | Production reviewer workflow | `BLOCKED` | No real auth, production D1 observation, endpoint proof, or production evidence exists. |
 
@@ -204,10 +206,20 @@ npm run check:level1
 `check:level1` combines the local-only auth adapter/scaffold tests, route/UI/API
 privacy tests, generated-suggestion/manual-note boundary tests, generic release
 evidence redaction tests, including bare `notes` fallback redaction,
-proof-preflight tests, approval dry-run tests, and the two local artifact
-writers. It is a regression gate only. It is not
+proof-preflight tests, approval dry-run tests, change-control manifest tests,
+and the local artifact writers. It is a regression gate only. It is not
 production evidence and does not satisfy Issue #165's separate explicit future
 production proof approval blocker.
+
+The follow-up change-control manifest packet at
+`docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.md`
+is the local-only machine-checkable manifest layer for any future separately
+approved proof goal. It requires owner/reviewer/operator/window fields to be
+explicitly marked as not approved now, keeps `productionReady:false`, refuses
+unexpected manifest fields, production/staging URLs, D1 private identifiers or
+binding/id aliases, secrets/raw auth fields, broad endpoints, destructive SQL,
+missing rollback ownership, stale or missing approval records, and evidence
+writes, and emits only `REVIEW_ONLY_DO_NOT_EXECUTE` dry-run steps.
 
 ## Rollback And Stop-Write
 

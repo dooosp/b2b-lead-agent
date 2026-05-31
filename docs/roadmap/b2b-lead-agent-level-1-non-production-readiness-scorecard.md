@@ -26,7 +26,8 @@ redacted proof-preflight evidence.
 | Final approval packet | `PASS_LOCAL`, `HOLD_PRODUCTION` | `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-packet-non-production.md` | Final non-production packet is prepared with prerequisites, owner checklist, rollback owner, stop-write trigger, evidence requirements, abort conditions, and exact future approval fields. It is not production evidence and does not approve execution. |
 | Future evidence schema | `PASS_LOCAL`, `HOLD_PRODUCTION` | `worker/lib/level1-readiness-guards.js`; `worker/tests/level1-production-proof-approval.test.mjs` | Future evidence schema requires timestamps, boundary labels, required fields, `productionReady:false`, `notProductionEvidence:true`, and forbidden-field rejection for manual-note aliases, generated-guidance, provider, raw auth/session, D1, secret, destructive-approval, rollback-execution, and customer/private fields. Dry-run raw inputs also receive value-aware redaction when secret/manual-note text is hidden under benign keys. |
 | Approval packet dry-run operator | `PASS_LOCAL`, `HOLD_PRODUCTION` | `scripts/level1-production-proof-approval-dry-run.mjs`; `worker/tests/level1-production-proof-approval.test.mjs`; `npm run proof:level1:approval-dry-run` | Local-only dry-run validates packet completeness and refuses production/staging URLs, D1 bindings/private IDs including alias keys, secrets, tokens, auth material, auth-header env values, API-key aliases, Cloudflare Access credential-shaped values, provider inputs, case-variant forbidden packet fields, destructive/mutating SQL/action text, real endpoints, and non-local env values. It does not call endpoints. |
-| Level 1 package/CI regression gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `package.json`; `.github/workflows/ci.yml`; `worker/tests/workflow-contract.test.mjs`; `npm run check:level1` | Durable local-only package gate runs Level 1 auth adapter/scaffold, route/privacy, proof-preflight, approval dry-run, release-evidence redaction, artifact redaction, and generated-suggestion/manual-note boundary coverage. CI runs it without secrets, deploy, Wrangler, D1 bindings, endpoint calls, or production inputs. |
+| Change-control manifest gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.json`; `docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest.schema.json`; `scripts/level1-production-proof-change-control-manifest.mjs`; `worker/tests/level1-production-proof-change-control-manifest.test.mjs`; `npm run proof:level1:change-control-manifest` | Local-only manifest linter/planner refuses unexpected manifest fields, production/staging URLs, D1 private identifiers or binding/id aliases, secrets/tokens/raw auth fields, broad endpoints, destructive SQL, missing rollback owner/stop-write trigger, stale or missing approval records, evidence writes, and `productionReady:true`. It emits only a redacted `NOT_PRODUCTION_EVIDENCE` non-executable dry-run plan and keeps Issue #165 on HOLD. |
+| Level 1 package/CI regression gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `package.json`; `.github/workflows/ci.yml`; `worker/tests/workflow-contract.test.mjs`; `npm run check:level1` | Durable local-only package gate runs Level 1 auth adapter/scaffold, route/privacy, proof-preflight, approval dry-run, change-control manifest dry-run, release-evidence redaction, artifact redaction, and generated-suggestion/manual-note boundary coverage. CI runs it without secrets, deploy, Wrangler, D1 bindings, endpoint calls, or production inputs. |
 | Local-only Worker E2E smoke | `PASS` | `npm run test:e2e:local` after `npm ci` | Fake D1 and loopback only; not production/staging smoke. |
 | Final production proof approval | `HOLD` | Issue #165 records docs-planning only | No production proof execution approved. |
 
@@ -146,6 +147,37 @@ provider inputs, and non-local environment values. It does not call endpoints
 and it keeps `boundary: NOT_PRODUCTION_EVIDENCE`, `productionReady: false`,
 `notProductionEvidence: true`, and production proof approval on `HOLD`.
 
+## Change-Control Manifest Gate
+
+Local command:
+
+```bash
+npm run proof:level1:change-control-manifest
+```
+
+Runner and reviewer artifact surfaces:
+
+- `docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.md`;
+- `docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.json`;
+- `docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest.schema.json`;
+- `scripts/level1-production-proof-change-control-manifest.mjs`;
+- `worker/tests/level1-production-proof-change-control-manifest.test.mjs`;
+- `tmp/codex/level1-production-proof-change-control-manifest-non-production-plan.json`.
+
+The manifest gate is a local-only approval/change-control completeness check
+for a future separately approved proof goal. It refuses production/staging
+endpoint-shaped values, broad endpoints, D1 private identifiers or D1
+binding/id aliases, secrets, tokens, raw auth/session/provider fields,
+destructive or mutating SQL/action text, missing rollback owner or stop-write
+trigger, stale or missing approval records, evidence writes, and
+`productionReady:true`.
+
+The generated plan is labeled `NOT_PRODUCTION_EVIDENCE`, marks every step
+`REVIEW_ONLY_DO_NOT_EXECUTE`, keeps `productionReady:false`, and keeps
+`production_proof_approval` on `HOLD`. It does not call endpoints, inspect D1,
+run shell/Wrangler/curl/deploy/smoke commands, parse real auth, touch
+Cloudflare Access, use customer/private data, or claim production readiness.
+
 ## Package And CI Gate
 
 Local command:
@@ -166,6 +198,7 @@ This gate runs only local/test and synthetic fixture coverage:
   and bare `notes` fallback bodies;
 - proof-preflight tests and local artifact writer;
 - approval-packet dry-run tests and local artifact writer.
+- change-control manifest tests and local non-executable plan writer.
 
 CI runs the same package gate in `.github/workflows/ci.yml` after schema and
 synthetic lead-quality checks and before `npm test`. The gate does not use
