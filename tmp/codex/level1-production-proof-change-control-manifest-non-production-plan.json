@@ -1,0 +1,100 @@
+{
+  "documentStatus": "LEVEL1_PRODUCTION_PROOF_CHANGE_CONTROL_DRY_RUN_PLAN_NON_PRODUCTION",
+  "status": "PASS",
+  "evidenceType": "REDACTED_NON_EXECUTABLE_CHANGE_CONTROL_PLAN_ONLY",
+  "generatedAt": "2026-05-31T12:47:53.259Z",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "notProductionEvidence": true,
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "approvalStatus": "HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL",
+  "sourceManifestPath": "docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.json",
+  "repo": "dooosp/b2b-lead-agent",
+  "manifestValidation": {
+    "ok": true,
+    "status": "PASS",
+    "schemaPath": "docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest.schema.json",
+    "blockers": []
+  },
+  "manifestSummary": {
+    "schemaVersion": "level1.production_proof_change_control_manifest.v1",
+    "documentStatus": "LEVEL1_PRODUCTION_PROOF_CHANGE_CONTROL_MANIFEST_NON_PRODUCTION",
+    "owner": "@dooosp / Taeho Jang",
+    "reviewer": "@dooosp / Taeho Jang",
+    "operator": "NO_OPERATOR_APPROVED_FOR_EXECUTION_NOW",
+    "commandExecutionMode": "NON_EXECUTABLE_DRY_RUN_ONLY",
+    "endpointBoundary": "NONE_APPROVED_FOR_EXECUTION_NOW",
+    "d1BindingLabelNonSecret": "[REDACTED]",
+    "fixturePolicy": "SYNTHETIC_OR_APPROVED_NON_CUSTOMER_ONLY",
+    "rollbackOwner": "@dooosp / Taeho Jang",
+    "evidenceDestination": "docs/roadmap/b2b-lead-agent-level-1-production-proof-evidence.md",
+    "approvalRecord": {
+      "sourceIssue": 165,
+      "sourceUrl": "https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4525359304",
+      "status": "NO_NOT_UNTIL_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL",
+      "approvedAt": "NO_APPROVAL_RECORDED",
+      "expiresAt": "NO_APPROVAL_RECORDED"
+    }
+  },
+  "gates": [
+    {
+      "id": "manifest_schema",
+      "status": "PASS"
+    },
+    {
+      "id": "local_non_executable_boundary",
+      "status": "PASS"
+    },
+    {
+      "id": "approval_record",
+      "status": "PASS"
+    },
+    {
+      "id": "production_proof_approval",
+      "status": "HOLD"
+    }
+  ],
+  "nonExecutableSteps": [
+    {
+      "id": "review_manifest",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "purpose": "Confirm manifest fields are complete, non-secret, and local gate compatible."
+    },
+    {
+      "id": "verify_issue_165",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "purpose": "Verify Issue #165 still supplies the separate explicit proof approval blocker or a future explicit approval record."
+    },
+    {
+      "id": "verify_command_boundary",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "purpose": "Review exact command labels without executing shell, Wrangler, D1, curl, deploy, or smoke commands."
+    },
+    {
+      "id": "verify_endpoint_and_d1_boundaries",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "purpose": "Review endpoint and D1 labels only; do not call endpoints or inspect D1."
+    },
+    {
+      "id": "preserve_rollback_stop_write",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "purpose": "Confirm rollback owner, stop-write trigger, non-destructive-first policy, and abort conditions are present."
+    },
+    {
+      "id": "prepare_redacted_evidence_destination",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "purpose": "Confirm only a future separately approved proof may write redacted evidence to the named destination."
+    }
+  ],
+  "nonClaims": [
+    "This dry-run plan is not production proof.",
+    "This dry-run plan does not execute commands, deploy, call endpoints, inspect D1, read logs/secrets, parse real auth material, use customer/private data, or touch CRM/outreach/LLM/automation.",
+    "productionReady remains false."
+  ]
+}

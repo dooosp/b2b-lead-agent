@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dooosp/b2b-lead-agent/docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest.schema.json",
+  "title": "B2B Lead Agent Level 1 Production Proof Change-Control Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "documentStatus",
+    "repo",
+    "baseline",
+    "boundary",
+    "notProductionEvidence",
+    "productionReady",
+    "productionReviewerWorkflowReady",
+    "approvalStatus",
+    "issueRefs",
+    "changeControl",
+    "approvalRecord",
+    "command",
+    "endpoint",
+    "d1",
+    "fixture",
+    "rollback",
+    "redaction",
+    "abortConditions",
+    "evidence"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "level1.production_proof_change_control_manifest.v1"
+    },
+    "documentStatus": {
+      "const": "LEVEL1_PRODUCTION_PROOF_CHANGE_CONTROL_MANIFEST_NON_PRODUCTION"
+    },
+    "repo": {
+      "const": "dooosp/b2b-lead-agent"
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["branch", "headSha", "mergedPrs"],
+      "properties": {
+        "branch": { "const": "master" },
+        "headSha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "mergedPrs": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "minItems": 6
+        }
+      }
+    },
+    "boundary": {
+      "const": "NOT_PRODUCTION_EVIDENCE"
+    },
+    "notProductionEvidence": {
+      "const": true
+    },
+    "productionReady": {
+      "const": false
+    },
+    "productionReviewerWorkflowReady": {
+      "const": false
+    },
+    "approvalStatus": {
+      "const": "HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL"
+    },
+    "issueRefs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "privacy",
+        "authProviderSession",
+        "productionD1Observation",
+        "rollbackStopWrite",
+        "finalProofApproval",
+        "reviewerFeedback"
+      ],
+      "properties": {
+        "privacy": {
+          "type": "string",
+          "pattern": "^https://github\\.com/dooosp/b2b-lead-agent/issues/154$"
+        },
+        "authProviderSession": {
+          "type": "string",
+          "pattern": "^https://github\\.com/dooosp/b2b-lead-agent/issues/162$"
+        },
+        "productionD1Observation": {
+          "type": "string",
+          "pattern": "^https://github\\.com/dooosp/b2b-lead-agent/issues/163$"
+        },
+        "rollbackStopWrite": {
+          "type": "string",
+          "pattern": "^https://github\\.com/dooosp/b2b-lead-agent/issues/164$"
+        },
+        "finalProofApproval": {
+          "type": "string",
+          "pattern": "^https://github\\.com/dooosp/b2b-lead-agent/issues/165$"
+        },
+        "reviewerFeedback": {
+          "type": "string",
+          "pattern": "^https://github\\.com/dooosp/b2b-lead-agent/issues/144$"
+        }
+      }
+    },
+    "changeControl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "reviewer", "operator", "executionWindow"],
+      "properties": {
+        "owner": { "type": "string" },
+        "reviewer": { "type": "string" },
+        "operator": { "type": "string" },
+        "executionWindow": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["startsAt", "expiresAt", "timezone"],
+          "properties": {
+            "startsAt": { "type": "string" },
+            "expiresAt": { "type": "string" },
+            "timezone": { "type": "string" }
+          }
+        }
+      }
+    },
+    "approvalRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceIssue", "sourceUrl", "status", "approvedAt", "expiresAt"],
+      "properties": {
+        "sourceIssue": { "const": 165 },
+        "sourceUrl": {
+          "type": "string",
+          "pattern": "^https://github\\.com/dooosp/b2b-lead-agent/issues/165#issuecomment-[0-9]+$"
+        },
+        "status": {
+          "const": "NO_NOT_UNTIL_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL"
+        },
+        "approvedAt": { "const": "NO_APPROVAL_RECORDED" },
+        "expiresAt": { "const": "NO_APPROVAL_RECORDED" }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executionMode", "allowlist", "denylist"],
+      "properties": {
+        "executionMode": { "const": "NON_EXECUTABLE_DRY_RUN_ONLY" },
+        "allowlist": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "denylist": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      }
+    },
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundary", "allowedEndpoints", "broadEndpointsAllowed"],
+      "properties": {
+        "boundary": { "const": "NONE_APPROVED_FOR_EXECUTION_NOW" },
+        "allowedEndpoints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "broadEndpointsAllowed": { "const": false }
+      }
+    },
+    "d1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bindingLabelNonSecret",
+        "databaseId",
+        "schemaObservationApprovedNow",
+        "writeOrMigrationApprovedNow"
+      ],
+      "properties": {
+        "bindingLabelNonSecret": { "type": "string" },
+        "databaseId": { "const": "NOT_RECORDED_NO_DATABASE_ID_ALLOWED" },
+        "schemaObservationApprovedNow": { "const": false },
+        "writeOrMigrationApprovedNow": { "const": false }
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "fixtureId", "customerDataAllowed"],
+      "properties": {
+        "policy": { "type": "string" },
+        "fixtureId": { "const": "NO_FIXTURE_APPROVED_FOR_EXECUTION_NOW" },
+        "customerDataAllowed": { "const": false }
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "stopWriteTrigger",
+        "nonDestructiveBackoutFirst",
+        "rollbackExecutionApproved",
+        "destructiveDataActionApproved"
+      ],
+      "properties": {
+        "owner": { "type": "string" },
+        "stopWriteTrigger": { "type": "string" },
+        "nonDestructiveBackoutFirst": { "const": true },
+        "rollbackExecutionApproved": { "const": false },
+        "destructiveDataActionApproved": { "const": false }
+      }
+    },
+    "redaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "rules"],
+      "properties": {
+        "required": { "const": true },
+        "rules": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      }
+    },
+    "abortConditions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["destination", "redactedOnly", "writeApprovedNow"],
+      "properties": {
+        "destination": { "type": "string" },
+        "redactedOnly": { "const": true },
+        "writeApprovedNow": { "const": false }
+      }
+    }
+  }
+}

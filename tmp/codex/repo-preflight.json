@@ -1,5 +1,5 @@
 {
-  "repo_root": "/Users/jangtaeho/Documents/New/b2b-lead-agent-level1-approval-packet-non-production",
+  "repo_root": "/Users/jangtaeho/.config/superpowers/worktrees/b2b-lead-agent/codex-level1-change-control-manifest-non-production",
   "repo_identity_ok": true,
   "identity_evidence": [
     "origin=https://github.com/dooosp/b2b-lead-agent.git",
@@ -8,12 +8,22 @@
     "batch entrypoint main.js exists",
     "worker entrypoint worker/index.js exists"
   ],
-  "current_branch": "codex/level1-approval-packet-non-production",
-  "head_sha": "cc7944c7d851a57642e933435d482932eaabf921",
+  "current_branch": "codex/level1-change-control-manifest-non-production",
+  "head_sha": "27bf1a57af3826427eecf2810e2d6642e05dcc0b",
   "default_branch": "master",
   "pinned_base_ref": "origin/master",
-  "pinned_base_sha": "cc7944c7d851a57642e933435d482932eaabf921",
-  "worktree_clean_at_start": true,
+  "pinned_base_sha": "27bf1a57af3826427eecf2810e2d6642e05dcc0b",
+  "worktree_clean_at_start": false,
+  "dirty_paths_at_start": [
+    "package.json",
+    "worker/tests/workflow-contract.test.mjs",
+    "docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.json",
+    "docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.md",
+    "docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest.schema.json",
+    "scripts/level1-production-proof-change-control-manifest.mjs",
+    "tmp/codex/level1-production-proof-change-control-manifest-non-production-plan.json",
+    "worker/tests/level1-production-proof-change-control-manifest.test.mjs"
+  ],
   "original_checkout_dirty_paths": [
     "docs/exec-plans/root-cycle-merge-and-wave2-bootstrap-verification.md",
     "docs/exec-plans/root-cycle-merge-and-wave2-bootstrap.md",
@@ -21,19 +31,22 @@
     "tmp/codex/root-cycle-merge-and-wave2-bootstrap-verification-status.md"
   ],
   "isolation": {
-    "strategy": "fresh_git_worktree",
-    "reason": "original checkout had unrelated untracked docs/tmp files",
-    "path": "/Users/jangtaeho/Documents/New/b2b-lead-agent-level1-approval-packet-non-production"
+    "strategy": "resume_existing_git_worktree",
+    "reason": "target branch already existed with scoped partial manifest work; original checkout had unrelated untracked docs/tmp files",
+    "path": "/Users/jangtaeho/.config/superpowers/worktrees/b2b-lead-agent/codex-level1-change-control-manifest-non-production"
   },
   "available_commands": [
+    "git diff --check",
+    "node --test worker/tests/level1-production-proof-change-control-manifest.test.mjs",
+    "node --test worker/tests/workflow-contract.test.mjs",
+    "npm run proof:level1:change-control-manifest",
+    "npm run check:level1",
     "npm run check:naming",
     "npm run check:schema",
-    "npm run test:root",
-    "npm run test:unit",
-    "npm run test:contract",
     "npm run proof:level1:preflight",
     "npm run proof:level1:approval-dry-run",
-    "npm test"
+    "npm test",
+    "npm run test:e2e:local"
   ],
   "github": {
     "open_prs_at_preflight": [],
@@ -52,6 +65,21 @@
         "number": 173,
         "mergedAt": "2026-05-31T08:38:39Z",
         "mergeCommit": "cc7944c7d851a57642e933435d482932eaabf921"
+      },
+      {
+        "number": 174,
+        "mergedAt": "2026-05-31T09:10:42Z",
+        "mergeCommit": "766447f95635b9a57c66d97c1b49ef670f57a687"
+      },
+      {
+        "number": 175,
+        "mergedAt": "2026-05-31T10:17:04Z",
+        "mergeCommit": "43a6a382139858b2c373f26d2e00ba62400303cf"
+      },
+      {
+        "number": 176,
+        "mergedAt": "2026-05-31T11:22:41Z",
+        "mergeCommit": "27bf1a57af3826427eecf2810e2d6642e05dcc0b"
       }
     ],
     "issues": {
