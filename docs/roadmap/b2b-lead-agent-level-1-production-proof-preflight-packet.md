@@ -25,9 +25,9 @@ evidence**.
 - Repository: `dooosp/b2b-lead-agent`.
 - Default branch: `master`.
 - Baseline inspected: `origin/master` at
-  `27bf1a57af3826427eecf2810e2d6642e05dcc0b` (PR #176 merge).
-- Latest shipped related merged PR: PR #176,
-  `Add Level 1 fail-closed fault injection coverage`.
+  `c61317144f5adb77516412af30e26925f1a97146` (PR #177 merge).
+- Latest shipped related merged PR: PR #177,
+  `Add Level 1 change-control manifest gate`.
 - Packet path:
   `docs/roadmap/b2b-lead-agent-level-1-production-proof-preflight-packet.md`.
 - Production proof execution performed: no.
@@ -42,8 +42,8 @@ b2b_lead_agent_level_1_production_proof_preflight_packet:
   human_decision: PREPARE_LEVEL1_PRODUCTION_PROOF_PREFLIGHT_PACKET_DOCS_ONLY
   repository: dooosp/b2b-lead-agent
   default_branch: master
-  inspected_origin_master: "27bf1a57af3826427eecf2810e2d6642e05dcc0b"
-  latest_related_merged_pr: 176
+  inspected_origin_master: "c61317144f5adb77516412af30e26925f1a97146"
+  latest_related_merged_pr: 177
   current_state: LEVEL_0_COMPLETE
   target: LEVEL_1_PRODUCTION_REVIEWER_WORKFLOW
   owner_inputs: COMPLETE_FOR_DOCS_PLANNING_ONLY
@@ -80,6 +80,8 @@ Source-of-truth records:
   https://github.com/dooosp/b2b-lead-agent/pull/175
 - PR #176:
   https://github.com/dooosp/b2b-lead-agent/pull/176
+- PR #177:
+  https://github.com/dooosp/b2b-lead-agent/pull/177
 - PR #169:
   https://github.com/dooosp/b2b-lead-agent/pull/169
 - Owner-input disposition:
@@ -123,6 +125,13 @@ and the local command `npm run proof:level1:change-control-manifest` validate a
 machine-checkable future proof manifest and emit only a redacted,
 non-executable `NOT_PRODUCTION_EVIDENCE` dry-run plan. This is not production
 evidence, does not call endpoints or D1, and does not approve proof execution.
+
+The operator rehearsal follow-up remains non-production only. The packet at
+`docs/roadmap/b2b-lead-agent-level-1-operator-rehearsal-gate-non-production.md`
+and the local command `npm run proof:level1:operator-rehearsal` consume the
+approval packet and change-control manifest, map the gate sequence, emit only a
+redacted non-executable `NOT_PRODUCTION_EVIDENCE` runbook, and keep
+`proofStartBlocked:true`.
 
 ## 2. Prerequisite Matrix
 
@@ -311,6 +320,7 @@ future explicit goal or its cited owner comments.
 | Stop conditions | Explicit halt list for this proof | `TBD_BY_FUTURE_EXPLICIT_GOAL` |
 | Final approval packet dry-run | `npm run proof:level1:approval-dry-run` local-only artifact | `PASS_LOCAL_NOT_PRODUCTION_EVIDENCE` |
 | Change-control manifest dry-run | `npm run proof:level1:change-control-manifest` local-only non-executable plan | `PASS_LOCAL_NOT_PRODUCTION_EVIDENCE` |
+| Operator rehearsal runbook | `npm run proof:level1:operator-rehearsal` local-only non-executable runbook | `PASS_LOCAL_NOT_PRODUCTION_EVIDENCE` |
 
 ## 7. Boundary Confirmation
 

@@ -49,7 +49,7 @@
         "mergedPrs": {
           "type": "array",
           "items": { "type": "integer" },
-          "minItems": 6
+          "minItems": 7
         }
       }
     },

@@ -1,0 +1,176 @@
+{
+  "documentStatus": "LEVEL1_OPERATOR_REHEARSAL_GATE_NON_PRODUCTION",
+  "status": "PASS_LOCAL",
+  "evidenceType": "REDACTED_NON_EXECUTABLE_OPERATOR_REHEARSAL_ONLY",
+  "generatedAt": "2026-06-02T11:22:17.531Z",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "notProductionEvidence": true,
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "proofStartBlocked": true,
+  "approvalStatus": "HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL",
+  "sourceArtifacts": {
+    "approvalPacket": "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-packet-non-production.md",
+    "changeControlManifest": "docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.json",
+    "proofPreflightScript": "scripts/level1-proof-preflight.mjs",
+    "approvalDryRunScript": "scripts/level1-production-proof-approval-dry-run.mjs",
+    "changeControlScript": "scripts/level1-production-proof-change-control-manifest.mjs"
+  },
+  "issueRefs": {
+    "privacy": "https://github.com/dooosp/b2b-lead-agent/issues/154",
+    "authProviderSession": "https://github.com/dooosp/b2b-lead-agent/issues/162",
+    "productionD1Observation": "https://github.com/dooosp/b2b-lead-agent/issues/163",
+    "rollbackStopWrite": "https://github.com/dooosp/b2b-lead-agent/issues/164",
+    "finalProofApproval": "https://github.com/dooosp/b2b-lead-agent/issues/165",
+    "reviewerFeedback": "https://github.com/dooosp/b2b-lead-agent/issues/144"
+  },
+  "owners": {
+    "productOwner": "@dooosp / Taeho Jang",
+    "reviewer": "@dooosp / Taeho Jang",
+    "operator": "NO_OPERATOR_APPROVED_FOR_EXECUTION_NOW",
+    "rollbackOwner": "@dooosp / Taeho Jang"
+  },
+  "gates": [
+    {
+      "id": "proof_preflight",
+      "status": "PASS"
+    },
+    {
+      "id": "approval_packet",
+      "status": "PASS"
+    },
+    {
+      "id": "change_control_manifest",
+      "status": "PASS"
+    },
+    {
+      "id": "rollback_stop_write",
+      "status": "PASS"
+    },
+    {
+      "id": "privacy_redaction",
+      "status": "PASS"
+    },
+    {
+      "id": "evidence_artifact",
+      "status": "PASS"
+    },
+    {
+      "id": "production_proof_approval",
+      "status": "HOLD"
+    }
+  ],
+  "blockers": [],
+  "orderedSteps": [
+    {
+      "id": "confirm_source_artifacts",
+      "owner": "@dooosp / Taeho Jang",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "purpose": "Confirm the approval packet, change-control manifest, merged PR train, issue references, and non-production boundary are present."
+    },
+    {
+      "id": "review_proof_preflight",
+      "owner": "NO_OPERATOR_APPROVED_FOR_EXECUTION_NOW",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "commandLabel": "npm run proof:level1:preflight",
+      "purpose": "Review local-only preflight output; do not provide production/staging URL, D1, secret, token, raw auth, or provider input."
+    },
+    {
+      "id": "review_approval_packet_dry_run",
+      "owner": "@dooosp / Taeho Jang",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "commandLabel": "npm run proof:level1:approval-dry-run",
+      "purpose": "Review packet completeness and future evidence schema while Issue #165 keeps proof approval on HOLD."
+    },
+    {
+      "id": "review_change_control_manifest",
+      "owner": "@dooosp / Taeho Jang",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "commandLabel": "npm run proof:level1:change-control-manifest",
+      "purpose": "Review exact command, endpoint, D1, fixture, evidence, approval-record, and execution-window labels without executing them."
+    },
+    {
+      "id": "confirm_rollback_stop_write",
+      "owner": "@dooosp / Taeho Jang",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "purpose": "Confirm rollback owner, stop-write trigger, non-destructive-first policy, and owner approval requirement before any future repair or rollback."
+    },
+    {
+      "id": "confirm_privacy_redaction",
+      "owner": "@dooosp / Taeho Jang",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "purpose": "Confirm evidence slots accept only redacted pass/fail metadata and never manual note body, generated suggestion, token, cookie, raw auth, D1 id, log, or customer/private fields."
+    },
+    {
+      "id": "prepare_empty_evidence_slots",
+      "owner": "NO_OPERATOR_APPROVED_FOR_EXECUTION_NOW",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "purpose": "Prepare empty future evidence slots only; do not write production evidence or claim readiness."
+    },
+    {
+      "id": "stop_before_proof_start",
+      "owner": "@dooosp / Taeho Jang",
+      "action": "REVIEW_ONLY_DO_NOT_EXECUTE",
+      "nonExecutable": true,
+      "purpose": "Stop because production proof start requires a separate explicit future proof goal with exact approved boundaries."
+    }
+  ],
+  "abortTriggers": [
+    "Abort on production/staging endpoint, smoke, deploy, Wrangler, D1 access, D1 id, D1 binding, logs, secrets, real auth material, Cloudflare Access, or customer/private data.",
+    "Abort on missing, stale, ambiguous, or non-Issue-165 future proof approval.",
+    "Abort on broad endpoints, destructive or mutating SQL, rollback execution approval, destructive data action approval, or evidence write approval.",
+    "Abort on manual note body, generated suggestion/helper text, provider input, raw session claims, token, cookie, auth header, private URL, account id, database id, CRM, outreach, LLM, or automation evidence.",
+    "Abort on any attempt to flip productionReady or productionReviewerWorkflowReady to true."
+  ],
+  "rollbackStopWriteChecklist": [
+    "Stop writes before repair, rollback, proof continuation, evidence capture, D1 command, endpoint call, cleanup, or deploy.",
+    "Use rollback owner only after separate approval: @dooosp / Taeho Jang.",
+    "Stop-write trigger: Stop writes on protected-field leakage, generated-suggestion persistence, redaction failure, D1 boundary drift, endpoint exposure, or unapproved production access.",
+    "Prefer non-destructive backout first and preserve existing data.",
+    "Preserve redacted non-secret evidence only and require owner approval before any future action."
+  ],
+  "evidenceSlots": [
+    {
+      "id": "approval_packet_result",
+      "destination": "tmp/codex/level1-production-proof-approval-dry-run-non-production-evidence.json",
+      "status": "EMPTY_PENDING_FUTURE_APPROVAL",
+      "redactedOnly": true
+    },
+    {
+      "id": "change_control_plan",
+      "destination": "tmp/codex/level1-production-proof-change-control-manifest-non-production-plan.json",
+      "status": "EMPTY_PENDING_FUTURE_APPROVAL",
+      "redactedOnly": true
+    },
+    {
+      "id": "future_proof_evidence",
+      "destination": "docs/roadmap/b2b-lead-agent-level-1-production-proof-evidence.md",
+      "status": "EMPTY_PENDING_FUTURE_APPROVAL",
+      "redactedOnly": true
+    }
+  ],
+  "redactedValues": {
+    "rehearsalFixtureId": "synthetic-level1-operator-rehearsal",
+    "manualNoteBodyText": "[REDACTED]",
+    "generatedSuggestionText": "[REDACTED]",
+    "authHeader": "[REDACTED]",
+    "providerInput": "[REDACTED]",
+    "nested": {
+      "token": "[REDACTED]",
+      "safeLabel": "redacted local fixture placeholder"
+    }
+  },
+  "nonClaims": [
+    "This operator rehearsal is not production proof.",
+    "This operator rehearsal does not execute commands, deploy, call endpoints, inspect D1, read logs/secrets, parse real auth material, use customer/private data, or touch CRM/outreach/LLM/automation.",
+    "This operator rehearsal does not approve proof start; Issue #165 remains HOLD until a separate explicit future production proof goal.",
+    "productionReady remains false and productionReviewerWorkflowReady remains false."
+  ]
+}

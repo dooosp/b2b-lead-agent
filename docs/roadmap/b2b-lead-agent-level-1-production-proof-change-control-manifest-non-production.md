@@ -28,6 +28,7 @@ PRODUCTION_PROOF_APPROVED: NO_NOT_UNTIL_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL
 | PR #174 | `MERGED` | `baseline.mergedPrs` records approval packet dry-run. |
 | PR #175 | `MERGED` | `baseline.mergedPrs` records `check:level1` CI regression gate. |
 | PR #176 | `MERGED` | `baseline.mergedPrs` records fail-closed fault injection coverage. |
+| PR #177 | `MERGED` | `baseline.mergedPrs` records this change-control manifest gate. |
 | Issue #154 | `DOCS_PLANNING_COMPLETE`, `OPEN` | `issueRefs.privacy`; `redaction.rules`; `fixture.customerDataAllowed:false`. |
 | Issue #162 | `DOCS_PLANNING_COMPLETE`, `OPEN` | `issueRefs.authProviderSession`; no real auth/session/provider fields allowed. |
 | Issue #163 | `DOCS_PLANNING_COMPLETE`, `OPEN` | `issueRefs.productionD1Observation`; `d1.*`; production D1 access remains not approved. |
@@ -69,6 +70,18 @@ tmp/codex/level1-production-proof-change-control-manifest-non-production-plan.js
 
 The artifact is labeled `NOT_PRODUCTION_EVIDENCE`, contains only a redacted
 non-executable review plan, and keeps production proof approval on `HOLD`.
+
+The follow-up local operator rehearsal command consumes this manifest plus the
+approval packet:
+
+```bash
+npm run proof:level1:operator-rehearsal
+```
+
+It emits
+`tmp/codex/level1-operator-rehearsal-non-production-runbook.json`, marks every
+step `REVIEW_ONLY_DO_NOT_EXECUTE`, refuses unsafe proof-start inputs, and keeps
+`proofStartBlocked: true`.
 
 ## Required Fields
 
@@ -141,8 +154,10 @@ Required local validation for this packet:
 
 ```bash
 node --test worker/tests/level1-production-proof-change-control-manifest.test.mjs
+node --test worker/tests/level1-operator-rehearsal.test.mjs
 node --test worker/tests/workflow-contract.test.mjs
 npm run proof:level1:change-control-manifest
+npm run proof:level1:operator-rehearsal
 npm run check:level1
 ```
 

@@ -4,8 +4,8 @@
   "repo": "dooosp/b2b-lead-agent",
   "baseline": {
     "branch": "master",
-    "headSha": "27bf1a57af3826427eecf2810e2d6642e05dcc0b",
-    "mergedPrs": [171, 172, 173, 174, 175, 176]
+    "headSha": "c61317144f5adb77516412af30e26925f1a97146",
+    "mergedPrs": [171, 172, 173, 174, 175, 176, 177]
   },
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "notProductionEvidence": true,

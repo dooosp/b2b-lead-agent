@@ -27,7 +27,9 @@ BOUNDARY: NOT_PRODUCTION_EVIDENCE
 | PR #174 | `MERGED` | Final non-production approval packet and local approval dry-run. |
 | PR #175 | `MERGED` | Durable local-only Level 1 regression gate in CI. |
 | PR #176 | `MERGED` | Local-only fail-closed fault injection coverage. |
+| PR #177 | `MERGED` | Local-only change-control manifest gate. |
 | Change-control manifest gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run proof:level1:change-control-manifest` writes a redacted `NOT_PRODUCTION_EVIDENCE` non-executable plan and refuses unsafe manifest values. |
+| Operator rehearsal gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run proof:level1:operator-rehearsal` consumes this packet plus the change-control manifest and writes a redacted non-executable runbook without starting proof. |
 | Level 1 CI/package gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run check:level1` runs local-only Level 1 tests, release-evidence redaction tests, and proof/approval/change-control dry-runs in CI without secrets, deploy, D1 bindings, endpoints, or production inputs. |
 | Final proof approval | `HOLD` | Issue #165 keeps proof execution blocked until a separate explicit future proof goal. |
 | Production reviewer workflow | `BLOCKED` | No real auth, production D1 observation, endpoint proof, or production evidence exists. |
@@ -207,11 +209,12 @@ npm run check:level1
 privacy tests, generated-suggestion/manual-note boundary tests, generic release
 evidence redaction tests, including bare `notes` fallback redaction,
 proof-preflight tests, approval dry-run tests, change-control manifest tests,
-and the local artifact writers. It is a regression gate only. It is not
+operator rehearsal tests, and the local artifact writers. It is a regression
+gate only. It is not
 production evidence and does not satisfy Issue #165's separate explicit future
 production proof approval blocker.
 
-The follow-up change-control manifest packet at
+The follow-up change-control manifest packet from PR #177 at
 `docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.md`
 is the local-only machine-checkable manifest layer for any future separately
 approved proof goal. It requires owner/reviewer/operator/window fields to be
@@ -220,6 +223,34 @@ unexpected manifest fields, production/staging URLs, D1 private identifiers or
 binding/id aliases, secrets/raw auth fields, broad endpoints, destructive SQL,
 missing rollback ownership, stale or missing approval records, and evidence
 writes, and emits only `REVIEW_ONLY_DO_NOT_EXECUTE` dry-run steps.
+
+## Operator Rehearsal Gate
+
+Local command:
+
+```bash
+npm run proof:level1:operator-rehearsal
+```
+
+Rehearsal behavior:
+
+- reads this approval packet and the checked-in change-control manifest;
+- maps proof preflight, approval dry-run, change-control manifest, rollback /
+  stop-write, privacy/redaction, and future evidence-schema gates into one
+  ordered review sequence;
+- writes
+  `tmp/codex/level1-operator-rehearsal-non-production-runbook.json`;
+- marks every step `REVIEW_ONLY_DO_NOT_EXECUTE` and `nonExecutable: true`;
+- emits only `NOT_PRODUCTION_EVIDENCE`;
+- refuses missing/stale approval, production or staging URL values, D1 binding
+  or database-id values, secret/token/raw-auth values, destructive SQL, broad
+  endpoints, `productionReady:true`, and missing rollback ownership;
+- keeps `proofStartBlocked: true`, `productionReady: false`, and
+  `productionReviewerWorkflowReady: false`.
+
+The rehearsal does not call the inspected URL strings, run shell commands,
+execute Wrangler, observe D1, read logs/secrets, parse real auth material, or
+start production proof.
 
 ## Rollback And Stop-Write
 
