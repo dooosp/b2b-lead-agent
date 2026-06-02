@@ -27,7 +27,8 @@ redacted proof-preflight evidence.
 | Future evidence schema | `PASS_LOCAL`, `HOLD_PRODUCTION` | `worker/lib/level1-readiness-guards.js`; `worker/tests/level1-production-proof-approval.test.mjs` | Future evidence schema requires timestamps, boundary labels, required fields, `productionReady:false`, `notProductionEvidence:true`, and forbidden-field rejection for manual-note aliases, generated-guidance, provider, raw auth/session, D1, secret, destructive-approval, rollback-execution, and customer/private fields. Dry-run raw inputs also receive value-aware redaction when secret/manual-note text is hidden under benign keys. |
 | Approval packet dry-run operator | `PASS_LOCAL`, `HOLD_PRODUCTION` | `scripts/level1-production-proof-approval-dry-run.mjs`; `worker/tests/level1-production-proof-approval.test.mjs`; `npm run proof:level1:approval-dry-run` | Local-only dry-run validates packet completeness and refuses production/staging URLs, D1 bindings/private IDs including alias keys, secrets, tokens, auth material, auth-header env values, API-key aliases, Cloudflare Access credential-shaped values, provider inputs, case-variant forbidden packet fields, destructive/mutating SQL/action text, real endpoints, and non-local env values. It does not call endpoints. |
 | Change-control manifest gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.json`; `docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest.schema.json`; `scripts/level1-production-proof-change-control-manifest.mjs`; `worker/tests/level1-production-proof-change-control-manifest.test.mjs`; `npm run proof:level1:change-control-manifest` | Local-only manifest linter/planner refuses unexpected manifest fields, production/staging URLs, D1 private identifiers or binding/id aliases, secrets/tokens/raw auth fields, broad endpoints, destructive SQL, missing rollback owner/stop-write trigger, stale or missing approval records, evidence writes, and `productionReady:true`. It emits only a redacted `NOT_PRODUCTION_EVIDENCE` non-executable dry-run plan and keeps Issue #165 on HOLD. |
-| Level 1 package/CI regression gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `package.json`; `.github/workflows/ci.yml`; `worker/tests/workflow-contract.test.mjs`; `npm run check:level1` | Durable local-only package gate runs Level 1 auth adapter/scaffold, route/privacy, proof-preflight, approval dry-run, change-control manifest dry-run, release-evidence redaction, artifact redaction, and generated-suggestion/manual-note boundary coverage. CI runs it without secrets, deploy, Wrangler, D1 bindings, endpoint calls, or production inputs. |
+| Operator rehearsal gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `docs/roadmap/b2b-lead-agent-level-1-operator-rehearsal-gate-non-production.md`; `scripts/level1-operator-rehearsal.mjs`; `worker/tests/level1-operator-rehearsal.test.mjs`; `npm run proof:level1:operator-rehearsal` | Local-only end-to-end rehearsal consumes the approval packet and change-control manifest, validates preflight/approval/manifest/rollback/privacy/evidence gates, emits a redacted non-executable runbook, refuses unsafe proof-start inputs, and keeps `proofStartBlocked:true`, `productionReady:false`, and Issue #165 on HOLD. |
+| Level 1 package/CI regression gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `package.json`; `.github/workflows/ci.yml`; `worker/tests/workflow-contract.test.mjs`; `npm run check:level1` | Durable local-only package gate runs Level 1 auth adapter/scaffold, route/privacy, proof-preflight, approval dry-run, change-control manifest dry-run, operator rehearsal, release-evidence redaction, artifact redaction, and generated-suggestion/manual-note boundary coverage. CI runs it without secrets, deploy, Wrangler, D1 bindings, endpoint calls, or production inputs. |
 | Local-only Worker E2E smoke | `PASS` | `npm run test:e2e:local` after `npm ci` | Fake D1 and loopback only; not production/staging smoke. |
 | Final production proof approval | `HOLD` | Issue #165 records docs-planning only | No production proof execution approved. |
 
@@ -178,6 +179,36 @@ The generated plan is labeled `NOT_PRODUCTION_EVIDENCE`, marks every step
 run shell/Wrangler/curl/deploy/smoke commands, parse real auth, touch
 Cloudflare Access, use customer/private data, or claim production readiness.
 
+## Operator Rehearsal Gate
+
+Local command:
+
+```bash
+npm run proof:level1:operator-rehearsal
+```
+
+Runner and reviewer artifact surfaces:
+
+- `docs/roadmap/b2b-lead-agent-level-1-operator-rehearsal-gate-non-production.md`;
+- `scripts/level1-operator-rehearsal.mjs`;
+- `worker/tests/level1-operator-rehearsal.test.mjs`;
+- `tmp/codex/level1-operator-rehearsal-non-production-runbook.json`.
+
+The rehearsal reads only checked-in non-production source artifacts and local
+synthetic inputs. It maps proof preflight, approval dry-run, change-control
+manifest, rollback / stop-write, privacy/redaction, future evidence schema, and
+the final proof approval HOLD into one ordered runbook. The runbook is labeled
+`NOT_PRODUCTION_EVIDENCE`, marks every step `REVIEW_ONLY_DO_NOT_EXECUTE`, keeps
+`proofStartBlocked:true`, and keeps `productionReady:false` /
+`productionReviewerWorkflowReady:false`.
+
+Safety matrix coverage refuses missing approval, stale approval, production or
+staging URL values, D1 binding/id values, secret/token/raw-auth values,
+destructive SQL, broad endpoints, `productionReady:true`, and missing rollback
+owner. The rehearsal does not execute commands, call endpoints, inspect D1,
+read logs/secrets, parse real auth material, touch Cloudflare Access, use
+customer/private data, or claim production readiness.
+
 ## Package And CI Gate
 
 Local command:
@@ -198,7 +229,8 @@ This gate runs only local/test and synthetic fixture coverage:
   and bare `notes` fallback bodies;
 - proof-preflight tests and local artifact writer;
 - approval-packet dry-run tests and local artifact writer.
-- change-control manifest tests and local non-executable plan writer.
+- change-control manifest tests and local non-executable plan writer;
+- operator rehearsal tests and local non-executable runbook writer.
 
 CI runs the same package gate in `.github/workflows/ci.yml` after schema and
 synthetic lead-quality checks and before `npm test`. The gate does not use

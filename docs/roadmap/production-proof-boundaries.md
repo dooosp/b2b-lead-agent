@@ -13,7 +13,7 @@ Audited repo baseline for this snapshot:
 - Previous Manual Review Notes v1 privacy-warning baseline:
   `f2ddf35e828017eec9332dc80876e50bbee2f54a` (PR #130)
 - Current source-of-truth `origin/master`:
-  `27bf1a57af3826427eecf2810e2d6642e05dcc0b` (PR #176)
+  `c61317144f5adb77516412af30e26925f1a97146` (PR #177)
 - Issue #34 current state: closed as completed after GitHub-only closeout, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -36,11 +36,13 @@ Audited repo baseline for this snapshot:
   `docs/roadmap/manual-review-notes-v1-non-production-cycle-closeout.md`
 - Current Level 1 change-control manifest packet:
   `docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.md`
+- Current Level 1 operator rehearsal packet:
+  `docs/roadmap/b2b-lead-agent-level-1-operator-rehearsal-gate-non-production.md`
 
-Post-PR176 operating update:
+Post-PR177 operating update:
 
 - Current source-of-truth `origin/master` for this boundary update:
-  `27bf1a57af3826427eecf2810e2d6642e05dcc0b` (PR #176).
+  `c61317144f5adb77516412af30e26925f1a97146` (PR #177).
 - Issue #34 is closed as completed after a GitHub-only closeout approval and
   closeout record.
 - Standing approval policy: `docs/standing-approval-policy.md`.
@@ -143,11 +145,12 @@ Post-PR176 operating update:
   complete, leaves staging target selection decision-ready/HOLD, keeps staging
   execution and production proof/deploy on HOLD, and records no mandatory next
   action.
-- The Level 1 non-production gate train through PR #176 is local/test evidence
+- The Level 1 non-production gate train through PR #177 is local/test evidence
   only. `npm run check:level1` runs auth adapter/scaffold, route/UI privacy,
   generated-suggestion/manual-note, proof-preflight, approval dry-run,
-  change-control manifest dry-run, and local artifact checks in CI without
-  secrets, deploy, Wrangler, D1 bindings, endpoint calls, or production inputs.
+  change-control manifest dry-run, operator rehearsal, and local artifact
+  checks in CI without secrets, deploy, Wrangler, D1 bindings, endpoint calls,
+  or production inputs.
 - The Level 1 change-control manifest packet is local-only and
   non-executable. It writes only a redacted `NOT_PRODUCTION_EVIDENCE` dry-run
   plan, refuses unexpected manifest fields, production/staging URLs, D1 private
@@ -155,6 +158,12 @@ Post-PR176 operating update:
   endpoints, destructive SQL, missing rollback ownership, stale or missing
   approval records, evidence writes, and
   `productionReady:true`, and keeps Issue #165 on HOLD.
+- The Level 1 operator rehearsal gate is local-only and non-executable. It
+  writes only a redacted `NOT_PRODUCTION_EVIDENCE` runbook, consumes the
+  approval packet and change-control manifest, maps preflight / approval /
+  manifest / rollback / privacy / evidence gates into one sequence, refuses
+  accidental proof-start inputs, keeps `proofStartBlocked:true`, and keeps
+  Issue #165 on HOLD.
 - The current fail-closed matrix refuses malformed synthetic auth claims, mixed
   roles, auth-header / Cloudflare Access / D1 / API-key alias env poison,
   poisoned future evidence fields, bare `notes` / validation-note evidence
@@ -200,8 +209,8 @@ Accepted Issue #34 records:
 Important freshness rule: Issue #34's accepted execution/proof scopes were tied
 to earlier approved SHAs, including the final read-only schema-proof baseline at
 `512b537797fc67d974acf1f1e690bd638de4919b` (PR #106). The latest audited
-source-of-truth `master` baseline is `27bf1a57af3826427eecf2810e2d6642e05dcc0b`
-after PR #176 added Level 1 fail-closed fault injection coverage. Any new
+source-of-truth `master` baseline is `c61317144f5adb77516412af30e26925f1a97146`
+after PR #177 added the Level 1 change-control manifest gate. Any new
 production action must refresh the actual current
 `origin/master` SHA, CI metadata, owners, and approval records before
 execution. Issue #34 closeout does not authorize further production proof work.

@@ -39,6 +39,9 @@ PRODUCTION_REVIEWER_WORKFLOW_READY: false
 - PR #172 merged.
 - PR #173 merged.
 - PR #174 merged.
+- PR #175 merged.
+- PR #176 merged.
+- PR #177 merged.
 
 ## Owner Checklist
 - PRODUCT_OWNER: @dooosp / Taeho Jang
@@ -80,6 +83,7 @@ PRODUCTION_REVIEWER_WORKFLOW_READY: false
 test('Level 1 approval packet text requires prerequisite, owner, rollback, evidence, and boundary markers', () => {
   const valid = validateLevel1ApprovalPacketText(COMPLETE_PACKET_TEXT);
   const missingIssue = validateLevel1ApprovalPacketText(COMPLETE_PACKET_TEXT.replace('Issue #154', 'Issue #154 omitted'));
+  const missingPr177 = validateLevel1ApprovalPacketText(COMPLETE_PACKET_TEXT.replace('PR #177', 'PR number 177 omitted'));
   const unsafe = validateLevel1ApprovalPacketText(`${COMPLETE_PACKET_TEXT}\nmanualReviewNotes: Real note body must not enter packet.`);
   const destructive = validateLevel1ApprovalPacketText(`${COMPLETE_PACKET_TEXT}\nNotes: real note body\nmanualNote: alias body\nToken: leaked-token\ndestructiveDataActionApproved: true\nDROP TABLE manual_review_note_events;`);
 
@@ -88,6 +92,8 @@ test('Level 1 approval packet text requires prerequisite, owner, rollback, evide
   assert.deepEqual(valid.forbiddenMatches, []);
   assert.equal(missingIssue.ok, false);
   assert.ok(missingIssue.missingMarkers.includes('Issue #154'));
+  assert.equal(missingPr177.ok, false);
+  assert.ok(missingPr177.missingMarkers.includes('PR #177'));
   assert.equal(unsafe.ok, false);
   assert.ok(unsafe.forbiddenMatches.includes('manualReviewNotes'));
   assert.equal(destructive.ok, false);
