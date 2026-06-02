@@ -13,6 +13,7 @@
     "proof:level1:approval-dry-run": "node scripts/level1-production-proof-approval-dry-run.mjs --json --output tmp/codex/level1-production-proof-approval-dry-run-non-production-evidence.json",
     "proof:level1:change-control-manifest": "node scripts/level1-production-proof-change-control-manifest.mjs --json --output tmp/codex/level1-production-proof-change-control-manifest-non-production-plan.json",
     "proof:level1:operator-rehearsal": "node scripts/level1-operator-rehearsal.mjs --json --output tmp/codex/level1-operator-rehearsal-non-production-runbook.json",
+    "security:audit-triage": "node scripts/security-dependency-audit-triage.mjs --json --output tmp/codex/security-dependency-audit-triage-non-production.json",
     "check:level1": "node --test worker/tests/local-test-auth-adapter.test.mjs worker/tests/auth-provider-session-scaffold.test.mjs worker/tests/level1-readiness-guards.test.mjs worker/tests/level1-local-proof-simulation.test.mjs worker/tests/level1-auth-route-audit.test.mjs worker/tests/manual-review-notes.test.mjs worker/tests/level1-proof-preflight.test.mjs worker/tests/level1-production-proof-approval.test.mjs worker/tests/level1-production-proof-change-control-manifest.test.mjs worker/tests/level1-operator-rehearsal.test.mjs && npm run test:evidence && npm run proof:level1:preflight && npm run proof:level1:approval-dry-run && npm run proof:level1:change-control-manifest && npm run proof:level1:operator-rehearsal",
     "eval:lead-quality": "node scripts/evaluate-lead-quality.js --fixtures",
     "e2e": "node e2e-test.mjs",
@@ -27,7 +28,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
-    "axios": "^1.15.2",
+    "axios": "^1.16.0",
     "cheerio": "^1.1.2",
     "dotenv": "^17.2.3",
     "nodemailer": "^8.0.5",

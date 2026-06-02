@@ -56,6 +56,20 @@ test('CI workflow runs the synthetic lead-quality evaluator before full tests', 
   assert.match(workflow, /run:\s+npm run check:schema[\s\S]*run:\s+npm run eval:lead-quality[\s\S]*run:\s+npm test/);
 });
 
+test('CI workflow runs the scoped security dependency audit triage after npm ci', async () => {
+  const [workflow, packageJsonRaw] = await Promise.all([
+    readFile(ciWorkflowPath, 'utf8'),
+    readFile(packageJsonPath, 'utf8'),
+  ]);
+  const packageJson = JSON.parse(packageJsonRaw);
+  const script = packageJson.scripts['security:audit-triage'] || '';
+
+  assert.match(script, /node scripts\/security-dependency-audit-triage\.mjs --json --output tmp\/codex\/security-dependency-audit-triage-non-production\.json/);
+  assert.doesNotMatch(script, /npm audit|wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
+  assert.match(workflow, /name:\s+Run security dependency audit triage\s+run:\s+npm run security:audit-triage/);
+  assert.match(workflow, /run:\s+npm ci[\s\S]*run:\s+npm run security:audit-triage[\s\S]*run:\s+npm run check:schema/);
+});
+
 test('CI workflow runs the local-only Worker E2E smoke after full tests', async () => {
   const workflow = await readFile(ciWorkflowPath, 'utf8');
 
