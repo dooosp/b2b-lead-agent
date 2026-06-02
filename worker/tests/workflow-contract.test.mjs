@@ -70,6 +70,21 @@ test('CI workflow runs the scoped security dependency audit triage after npm ci'
   assert.match(workflow, /run:\s+npm ci[\s\S]*run:\s+npm run security:audit-triage[\s\S]*run:\s+npm run check:schema/);
 });
 
+test('CI workflow runs the local-only outbound HTTP enrichment boundary guard after security triage', async () => {
+  const [workflow, packageJsonRaw] = await Promise.all([
+    readFile(ciWorkflowPath, 'utf8'),
+    readFile(packageJsonPath, 'utf8'),
+  ]);
+  const packageJson = JSON.parse(packageJsonRaw);
+  const script = packageJson.scripts['check:enrichment-boundary'] || '';
+
+  assert.match(script, /node --test tests\/enrichment-outbound-http-boundary\.test\.js/);
+  assert.match(script, /node scripts\/outbound-http-enrichment-boundary-audit\.mjs --json --output tmp\/codex\/outbound-http-enrichment-boundary-guards-non-production\.json/);
+  assert.doesNotMatch(script, /npm audit|wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
+  assert.match(workflow, /name:\s+Run outbound HTTP enrichment boundary guard\s+run:\s+npm run check:enrichment-boundary/);
+  assert.match(workflow, /run:\s+npm run security:audit-triage[\s\S]*run:\s+npm run check:enrichment-boundary[\s\S]*run:\s+npm run check:schema/);
+});
+
 test('CI workflow runs the local-only Worker E2E smoke after full tests', async () => {
   const workflow = await readFile(ciWorkflowPath, 'utf8');
 

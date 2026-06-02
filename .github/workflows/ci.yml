@@ -25,6 +25,9 @@ jobs:
       - name: Run security dependency audit triage
         run: npm run security:audit-triage
 
+      - name: Run outbound HTTP enrichment boundary guard
+        run: npm run check:enrichment-boundary
+
       - name: Run D1 schema consistency check
         run: npm run check:schema
 

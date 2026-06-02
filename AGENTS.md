@@ -47,8 +47,21 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   Issue #165. The Level 1 operator rehearsal gate and
   `npm run proof:level1:operator-rehearsal` add only a local,
   redacted, non-executable runbook rehearsal that consumes the approval packet
-  plus manifest, refuses accidental proof-start inputs, keeps
-  `proofStartBlocked:true`, and does not execute proof or touch production.
+	  plus manifest, refuses accidental proof-start inputs, keeps
+	  `proofStartBlocked:true`, and does not execute proof or touch production.
+- Post-PR179 outbound HTTP addendum: `master` includes PR #178's local-only
+  Level 1 operator rehearsal gate at
+  `b4d407171fefa5e6a6c2bb86b3e52aaa63bde9da` and PR #179's scoped axios
+  audit triage at `bf78c2bc5f6779723eea44300978e40ca8d41574`. Axios is
+  patched to `1.16.0` and remains reachable only in the root lead-generation
+  enrichment pipeline, not Worker runtime. Current outbound HTTP enrichment
+  boundary work centralizes axios behind `enricher/outbound-http-boundary.js`,
+  adds injected local/test transports, request-policy guards, failure-mode and
+  redaction coverage, `npm run check:enrichment-boundary`, and
+  `docs/roadmap/outbound-http-enrichment-boundary-guards-non-production.md`.
+  This is local/test-only and does not approve production/staging deploy,
+  endpoint calls, D1 access, logs/secrets, customer/private data,
+  CRM/outreach, LLM, automation, or production-readiness claims.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -226,6 +239,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - `npm run test:worker` for the combined worker gate (`test:unit` + `test:contract`)
 - `npm run proof:level1:change-control-manifest` for the local-only Level 1 change-control manifest dry-run gate
 - `npm run proof:level1:operator-rehearsal` for the local-only Level 1 operator rehearsal runbook gate
+- `npm run check:enrichment-boundary` for the local-only outbound HTTP enrichment boundary guard
 - `npm run check:level1` for the local-only Level 1 auth/route/privacy/proof/preflight/approval/change-control/operator-rehearsal regression gate
 - `npm run eval:lead-quality` for synthetic-only LeadBrief quality and review-readiness checks
 - `npm run test:e2e:local` for fake-D1, loopback-only Worker route/page smoke coverage

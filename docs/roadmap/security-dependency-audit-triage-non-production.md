@@ -7,7 +7,7 @@ DOCUMENT_STATUS: SECURITY_DEPENDENCY_AUDIT_TRIAGE_NON_PRODUCTION
 DATE: 2026-06-02
 REPO: dooosp/b2b-lead-agent
 BASELINE_BRANCH: master
-BASELINE_HEAD: b4d407171fefa5e6a6c2bb86b3e52aaa63bde9da
+BASELINE_HEAD: bf78c2bc5f6779723eea44300978e40ca8d41574
 BOUNDARY: NOT_PRODUCTION_EVIDENCE
 PRODUCTION_READY: false
 ISSUE_165_LEVEL_1_PROOF: HOLD
@@ -53,8 +53,10 @@ Advisories reported by npm audit:
 
 ## Reachability
 
-`axios` is reachable from the root lead-generation pipeline:
+`axios` is reachable from the root lead-generation pipeline through the
+central outbound enrichment boundary:
 
+- `enricher/outbound-http-boundary.js`
 - `enricher/article-content-scraper.js`
 - `enricher/article-url-resolver.js`
 - `orchestrator/news-orchestrator.js`
@@ -134,8 +136,8 @@ checks remain explicit validation commands, not production evidence.
 | Item | Value |
 | --- | --- |
 | Risk owner | `@dooosp / Taeho Jang` |
-| Follow-up | Keep `npm audit --json`, `npm audit --omit=dev --json`, and `npm run security:audit-triage` in local/PR validation when dependency surfaces change. |
-| Residual risk | Future axios advisories or root pipeline outbound HTTP behavior changes require a new scoped triage. |
+| Follow-up | Keep `npm audit --json`, `npm audit --omit=dev --json`, `npm run security:audit-triage`, and `npm run check:enrichment-boundary` in local/PR validation when dependency or outbound HTTP surfaces change. |
+| Residual risk | Future axios advisories or root pipeline outbound HTTP behavior changes require a new scoped triage. The current local/test boundary packet is `docs/roadmap/outbound-http-enrichment-boundary-guards-non-production.md`. |
 | Production boundary | Issue #165 remains HOLD; this packet does not change Level 1 proof status. |
 
 ## Non-Claims
