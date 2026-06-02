@@ -2,7 +2,7 @@
   "ok": true,
   "schemaVersion": "security.dependency_audit_triage.v1",
   "documentStatus": "SECURITY_DEPENDENCY_AUDIT_TRIAGE_NON_PRODUCTION",
-  "generatedAt": "2026-06-02T12:16:54.975Z",
+  "generatedAt": "2026-06-02T13:01:05.793Z",
   "repo": "dooosp/b2b-lead-agent",
   "packageJsonPath": "package.json",
   "packageLockPath": "package-lock.json",
@@ -67,6 +67,7 @@
     "rootRuntimePipeline": true,
     "workerRuntimeEntrypoint": false,
     "affectedFiles": [
+      "enricher/outbound-http-boundary.js",
       "enricher/article-content-scraper.js",
       "enricher/article-url-resolver.js"
     ],
@@ -81,7 +82,7 @@
     "status": "PASS_LOCAL_PATCHED",
     "action": "PATCHED_WITH_SCOPED_AXIOS_1_16_0_UPDATE",
     "riskOwner": "@dooosp / Taeho Jang",
-    "followUp": "Keep npm audit in local validation and keep this scoped offline gate in CI for the known axios advisory floor."
+    "followUp": "Keep npm audit, security:audit-triage, and check:enrichment-boundary in local validation when axios or outbound enrichment HTTP surfaces change."
   },
   "blockers": [],
   "nonClaims": [

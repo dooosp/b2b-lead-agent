@@ -1,0 +1,79 @@
+{
+  "documentStatus": "OUTBOUND_HTTP_ENRICHMENT_BOUNDARY_GUARDS_NON_PRODUCTION",
+  "generatedAt": "2026-06-02T13:00:43.208Z",
+  "repo": "dooosp/b2b-lead-agent",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "notProductionEvidence": true,
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "issueRefs": {
+    "level1ProofHold": "https://github.com/dooosp/b2b-lead-agent/issues/165"
+  },
+  "inventory": {
+    "axiosImportBoundary": "enricher/outbound-http-boundary.js",
+    "rootEnrichmentCallers": [
+      "enricher/article-content-scraper.js",
+      "enricher/article-url-resolver.js",
+      "enricher/article-enricher.js",
+      "orchestrator/news-orchestrator.js",
+      "lib/news-fetcher/index.js",
+      "main.js"
+    ],
+    "workerRuntimeEntrypointImportsAxios": false,
+    "responsePersistencePaths": [
+      "article.content bodySource=article-body",
+      "article.link resolvedUrl/originalLink source trace fields",
+      "lead-report-publisher published LeadBrief source metadata"
+    ]
+  },
+  "policy": {
+    "allowedSchemes": [
+      "http",
+      "https"
+    ],
+    "blockedHostTypes": [
+      "localhost",
+      "private_ipv4",
+      "loopback_ipv6",
+      "link_local_ipv6",
+      "internal_host_label",
+      "repo_production_like_host",
+      "workers_dev_pages_dev"
+    ],
+    "timeoutMs": 8000,
+    "maxRedirects": 3,
+    "maxBytes": 524288,
+    "authOrSecretHeadersAllowed": false
+  },
+  "transportContract": {
+    "defaultTransport": "axios.get",
+    "injectable": true,
+    "liveNetworkRequiredForTests": false,
+    "localFixtureOnly": true
+  },
+  "failureModeCoverage": [
+    "dns_network_error",
+    "timeout",
+    "4xx_5xx",
+    "malformed_html",
+    "huge_body",
+    "redirect_loop",
+    "axios_error_shape"
+  ],
+  "redaction": {
+    "urls": "redacted_or_private_url_redacted",
+    "headers": "redacted",
+    "errors": "normalized_without_raw_message_stack_config_response_payload",
+    "snippets": "redacted",
+    "sampleEvidence": {
+      "url": "[REDACTED:URL]",
+      "headers": "[REDACTED]",
+      "error": "[REDACTED]"
+    }
+  },
+  "nonClaims": [
+    "This artifact is not production proof.",
+    "This artifact does not call production or staging endpoints, deploy, access D1, read logs or secrets, use customer/private data, or touch CRM/outreach/LLM/automation.",
+    "This artifact proves local/test contracts only and does not claim future outbound dependency risk is eliminated."
+  ]
+}

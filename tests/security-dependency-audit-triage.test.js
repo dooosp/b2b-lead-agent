@@ -27,7 +27,9 @@ test('security dependency audit triage reports patched axios boundary as non-pro
   assert.equal(result.finding.lockedVersion, '1.16.0');
   assert.equal(result.finding.patchedMinimum, '1.16.0');
   assert.equal(result.decision.status, 'PASS_LOCAL_PATCHED');
+  assert.match(result.decision.followUp, /check:enrichment-boundary/);
   assert.deepEqual(result.blockers, []);
+  assert.ok(result.reachability.affectedFiles.includes('enricher/outbound-http-boundary.js'));
   assert.ok(result.reachability.affectedFiles.includes('enricher/article-content-scraper.js'));
   assert.ok(result.reachability.affectedFiles.includes('enricher/article-url-resolver.js'));
 });

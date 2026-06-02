@@ -1,10 +1,8 @@
 /**
  * 뉴스 기사 본문 크롤링 (cheerio 기반)
  */
-const axios = require('axios');
 const cheerio = require('cheerio');
-
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const { readEnrichmentHttpText } = require('./outbound-http-boundary');
 
 const BODY_SELECTORS = [
   '.article_body', '#articleBody', '#newsEndContents', '.article-body',
@@ -13,14 +11,21 @@ const BODY_SELECTORS = [
   '.story_area', '.news_view', '.article_view'
 ];
 
-async function fetchArticleContent(url, { timeout = 8000, maxLength = 1500 } = {}) {
+async function fetchArticleContent(
+  url,
+  { timeout = 8000, maxLength = 1500, maxBytes, maxRedirects, transport } = {}
+) {
   if (!url || url.includes('news.google.com')) return '';
   try {
-    const res = await axios.get(url, {
-      headers: { 'User-Agent': UA },
-      timeout
+    const res = await readEnrichmentHttpText(url, {
+      timeout,
+      maxBytes,
+      maxRedirects,
+      transport,
     });
-    const $ = cheerio.load(res.data);
+    if (!res.ok) return '';
+
+    const $ = cheerio.load(res.body);
 
     let content = '';
     for (const sel of BODY_SELECTORS) {

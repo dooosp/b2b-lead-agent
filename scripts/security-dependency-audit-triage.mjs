@@ -159,6 +159,7 @@ export function evaluateSecurityDependencyAuditTriage(input = {}) {
       rootRuntimePipeline: true,
       workerRuntimeEntrypoint: false,
       affectedFiles: [
+        'enricher/outbound-http-boundary.js',
         'enricher/article-content-scraper.js',
         'enricher/article-url-resolver.js',
       ],
@@ -177,7 +178,7 @@ export function evaluateSecurityDependencyAuditTriage(input = {}) {
         : 'HOLD_UNTIL_AXIOS_PATCHED_MINIMUM_RESTORED',
       riskOwner: '@dooosp / Taeho Jang',
       followUp:
-        'Keep npm audit in local validation and keep this scoped offline gate in CI for the known axios advisory floor.',
+        'Keep npm audit, security:audit-triage, and check:enrichment-boundary in local validation when axios or outbound enrichment HTTP surfaces change.',
     },
     blockers,
     nonClaims: [
