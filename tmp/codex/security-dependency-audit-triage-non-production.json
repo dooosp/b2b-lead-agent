@@ -1,0 +1,92 @@
+{
+  "ok": true,
+  "schemaVersion": "security.dependency_audit_triage.v1",
+  "documentStatus": "SECURITY_DEPENDENCY_AUDIT_TRIAGE_NON_PRODUCTION",
+  "generatedAt": "2026-06-02T12:16:54.975Z",
+  "repo": "dooosp/b2b-lead-agent",
+  "packageJsonPath": "package.json",
+  "packageLockPath": "package-lock.json",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "notProductionEvidence": true,
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "issueRefs": {
+    "level1ProofHold": "https://github.com/dooosp/b2b-lead-agent/issues/165"
+  },
+  "finding": {
+    "packageName": "axios",
+    "directDependency": true,
+    "devOnly": false,
+    "prodScope": true,
+    "manifestSpec": "^1.16.0",
+    "manifestMinimum": "1.16.0",
+    "lockedVersion": "1.16.0",
+    "patchedMinimum": "1.16.0",
+    "lockDependencies": {
+      "follow-redirects": "^1.16.0",
+      "form-data": "^4.0.5",
+      "proxy-from-env": "^2.1.0"
+    },
+    "baselineSeverity": "high",
+    "baselineAuditCommands": [
+      "npm audit --json",
+      "npm audit --omit=dev --json"
+    ],
+    "advisories": [
+      {
+        "source": 1119667,
+        "url": "https://github.com/advisories/GHSA-pjwm-pj3p-43mv",
+        "severity": "high",
+        "range": ">=1.0.0 <1.16.0",
+        "title": "axios shouldBypassProxy does not recognize IPv4-mapped IPv6 addresses, allowing NO_PROXY bypass"
+      },
+      {
+        "source": 1119669,
+        "url": "https://github.com/advisories/GHSA-898c-q2cr-xwhg",
+        "severity": "moderate",
+        "range": ">=1.0.0 <1.16.0",
+        "title": "axios has DoS and Header Injection via Prototype Pollution Read-Side Gadgets in merge functions"
+      },
+      {
+        "source": 1119670,
+        "url": "https://github.com/advisories/GHSA-654m-c8p4-x5fp",
+        "severity": "low",
+        "range": "=1.15.2",
+        "title": "Axios Proxy-Authorization Header Injection via Prototype Pollution incomplete null-prototype fix"
+      },
+      {
+        "source": 1119675,
+        "url": "https://github.com/advisories/GHSA-35jp-ww65-95wh",
+        "severity": "high",
+        "range": ">=1.0.0 <1.16.0",
+        "title": "axios vulnerable to full man-in-the-middle via Prototype Pollution gadget in config.proxy"
+      }
+    ]
+  },
+  "reachability": {
+    "rootRuntimePipeline": true,
+    "workerRuntimeEntrypoint": false,
+    "affectedFiles": [
+      "enricher/article-content-scraper.js",
+      "enricher/article-url-resolver.js"
+    ],
+    "affectedScriptsAndWorkflows": [
+      "npm start",
+      "npm run email",
+      ".github/workflows/generate-report.yml node main.js --profile \"$PROFILE\" --email"
+    ],
+    "exploitSurface": "Outbound HTTP GET requests for public article and DuckDuckGo HTML lookup URLs in the root lead-generation pipeline."
+  },
+  "decision": {
+    "status": "PASS_LOCAL_PATCHED",
+    "action": "PATCHED_WITH_SCOPED_AXIOS_1_16_0_UPDATE",
+    "riskOwner": "@dooosp / Taeho Jang",
+    "followUp": "Keep npm audit in local validation and keep this scoped offline gate in CI for the known axios advisory floor."
+  },
+  "blockers": [],
+  "nonClaims": [
+    "This artifact is not production proof.",
+    "This artifact does not deploy, call production or staging endpoints, access D1, read logs or secrets, parse real auth material, use customer/private data, or touch CRM/outreach/LLM/automation.",
+    "This artifact is scoped to the known axios audit finding and does not certify all future dependency risk."
+  ]
+}

@@ -22,6 +22,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run security dependency audit triage
+        run: npm run security:audit-triage
+
       - name: Run D1 schema consistency check
         run: npm run check:schema
 
