@@ -28,6 +28,9 @@ jobs:
       - name: Run outbound HTTP enrichment boundary guard
         run: npm run check:enrichment-boundary
 
+      - name: Run enrichment fixture replay output contract
+        run: npm run check:enrichment-replay
+
       - name: Run D1 schema consistency check
         run: npm run check:schema
 

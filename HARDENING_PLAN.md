@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
-> Status: current hardening source of truth for `master` as of 2026-06-02.
-> Audited against first-parent `master` history through `bf78c2bc5f6779723eea44300978e40ca8d41574` (PR #179, `Triage npm audit dependency finding`) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input, auth scaffold, proof-preflight planning, route/auth-adapter hardening, approval packet dry-run through PR #174, CI/package gate through PR #175, fail-closed fault injection through PR #176, the non-production Level 1 change-control manifest gate packet through PR #177, operator rehearsal through PR #178, and axios dependency audit triage through PR #179. Current outbound HTTP enrichment boundary work is local/test-only and recorded in `docs/roadmap/outbound-http-enrichment-boundary-guards-non-production.md`. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit future production proof goal.
+> Status: current hardening source of truth for `master` as of 2026-06-03.
+> Audited against first-parent `master` history through `6950e2c91bee564c1d2c17917cfe06d5d45241f8` (PR #180, `Guard outbound enrichment HTTP boundary`) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input, auth scaffold, proof-preflight planning, route/auth-adapter hardening, approval packet dry-run through PR #174, CI/package gate through PR #175, fail-closed fault injection through PR #176, the non-production Level 1 change-control manifest gate packet through PR #177, operator rehearsal through PR #178, axios dependency audit triage through PR #179, and outbound HTTP enrichment boundary guards through PR #180. Current enrichment fixture replay output contract work is local/test-only and recorded in `docs/roadmap/enrichment-fixture-replay-output-contract-non-production.md`. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit future production proof goal.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -57,7 +57,8 @@
 | 47 | 2026-05-21 | #145 | `c0505cf` | Manual Review Notes v1 reviewer feedback intake | Added docs-only feedback intake structure and Issue #144 as the optional feedback container; first actual feedback is now dispositioned separately as P3/docs/no-follow-up. It did not approve staging, production, implementation, manager/export/API expansion, access control, retention/privacy enforcement, or generated suggestion persistence |
 | 48 | 2026-05-31 | #171-#177 | `c613171` | Level 1 non-production proof, auth/route, approval, CI, fail-closed, and change-control gate train | Added local/test auth-provider/session scaffold, local proof-preflight automation, route/privacy audit, non-production approval dry-run, `npm run check:level1` CI gate, fail-closed fault injection, and change-control manifest gate while preserving production proof HOLD |
 | 49 | 2026-06-02 | #178-#179 | `bf78c2b` | Operator rehearsal and axios audit triage | Added the local-only Level 1 operator rehearsal gate, then patched axios to `1.16.0` with scoped audit triage while preserving production proof HOLD |
-| 50 | 2026-06-02 | current branch | pending | Outbound HTTP enrichment boundary guards | Centralizes root enrichment axios usage behind an injectable local/test transport boundary, request policy, redaction/failure coverage, local-only CI gate, and non-production evidence packet without production/staging calls |
+| 50 | 2026-06-02 | #180 | `6950e2c` | Outbound HTTP enrichment boundary guards | Centralized root enrichment axios usage behind an injectable local/test transport boundary, request policy, redaction/failure coverage, local-only CI gate, and non-production evidence packet without production/staging calls |
+| 51 | 2026-06-03 | current branch | pending | Enrichment fixture replay output contract | Adds deterministic fixture-only replay for URL resolution, scraping, normalized outputs/failures, redaction, and stable non-production artifacts without live scraping or production/staging calls |
 
 Post-PR177 update: PR #171 merged at
 `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` with non-production
@@ -116,20 +117,24 @@ does not execute production proof or touch production/staging.
 Issue #165 remains the exact human approval blocker for any future production
 proof execution.
 
-Post-PR179 outbound boundary update: PR #178 merged at
+Post-PR180 enrichment boundary update: PR #178 merged at
 `b4d407171fefa5e6a6c2bb86b3e52aaa63bde9da` with the local-only Level 1
 operator rehearsal gate. PR #179 merged at
 `bf78c2bc5f6779723eea44300978e40ca8d41574` with the scoped axios `1.16.0`
-audit triage and clean npm audit baseline. The current
-`OUTBOUND_HTTP_ENRICHMENT_BOUNDARY_GUARDS_NON_PRODUCTION` work keeps that
+audit triage and clean npm audit baseline. PR #180 merged at
+`6950e2c91bee564c1d2c17917cfe06d5d45241f8` with
+`OUTBOUND_HTTP_ENRICHMENT_BOUNDARY_GUARDS_NON_PRODUCTION`, which keeps that
 dependency reachable only through `enricher/outbound-http-boundary.js`, adds
 injectable local/test transport contracts for `fetchArticleContent` and
 `resolveOriginalUrl`, refuses unsafe schemes/hosts/headers/redirect targets,
 normalizes timeout/network/HTTP/redirect/oversized/malformed fixture failures,
 redacts boundary artifacts, and adds `npm run check:enrichment-boundary` to CI.
-This is not production evidence and does not call production/staging endpoints,
-access D1, read logs/secrets, use customer/private data, or change Worker
-runtime behavior.
+Current `ENRICHMENT_FIXTURE_REPLAY_OUTPUT_CONTRACT_NON_PRODUCTION` work builds
+on PR #180 with `npm run check:enrichment-replay`, deterministic fixture-only
+URL resolution, scraping, normalized output/failure, redaction, and artifact
+contracts. These are not production evidence and do not call
+production/staging endpoints, perform live scraping, access D1, read
+logs/secrets, use customer/private data, or change Worker runtime behavior.
 
 ## Wave Summary
 
