@@ -1,5 +1,5 @@
 {
-  "repo_root": "/Users/jangtaeho/.config/superpowers/worktrees/b2b-lead-agent/codex-level1-change-control-manifest-non-production",
+  "repo_root": "/Users/jangtaeho/.config/superpowers/worktrees/b2b-lead-agent-hardening-control/level1-readiness-closure-dashboard",
   "repo_identity_ok": true,
   "identity_evidence": [
     "origin=https://github.com/dooosp/b2b-lead-agent.git",
@@ -8,22 +8,13 @@
     "batch entrypoint main.js exists",
     "worker entrypoint worker/index.js exists"
   ],
-  "current_branch": "codex/level1-change-control-manifest-non-production",
-  "head_sha": "27bf1a57af3826427eecf2810e2d6642e05dcc0b",
+  "current_branch": "codex/level1-readiness-closure-dashboard",
+  "head_sha": "7bc11e398415acdf480641f597eee6e3f4def228",
   "default_branch": "master",
   "pinned_base_ref": "origin/master",
-  "pinned_base_sha": "27bf1a57af3826427eecf2810e2d6642e05dcc0b",
-  "worktree_clean_at_start": false,
-  "dirty_paths_at_start": [
-    "package.json",
-    "worker/tests/workflow-contract.test.mjs",
-    "docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.json",
-    "docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.md",
-    "docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest.schema.json",
-    "scripts/level1-production-proof-change-control-manifest.mjs",
-    "tmp/codex/level1-production-proof-change-control-manifest-non-production-plan.json",
-    "worker/tests/level1-production-proof-change-control-manifest.test.mjs"
-  ],
+  "pinned_base_sha": "7bc11e398415acdf480641f597eee6e3f4def228",
+  "worktree_clean_at_start": true,
+  "dirty_paths_at_start": [],
   "original_checkout_dirty_paths": [
     "docs/exec-plans/root-cycle-merge-and-wave2-bootstrap-verification.md",
     "docs/exec-plans/root-cycle-merge-and-wave2-bootstrap.md",
@@ -31,86 +22,149 @@
     "tmp/codex/root-cycle-merge-and-wave2-bootstrap-verification-status.md"
   ],
   "isolation": {
-    "strategy": "resume_existing_git_worktree",
-    "reason": "target branch already existed with scoped partial manifest work; original checkout had unrelated untracked docs/tmp files",
-    "path": "/Users/jangtaeho/.config/superpowers/worktrees/b2b-lead-agent/codex-level1-change-control-manifest-non-production"
+    "strategy": "new_git_worktree_from_pinned_origin_master",
+    "reason": "original checkout had unrelated untracked docs/tmp files and the task required one scoped branch",
+    "path": "/Users/jangtaeho/.config/superpowers/worktrees/b2b-lead-agent-hardening-control/level1-readiness-closure-dashboard"
   },
   "available_commands": [
+    "git status --short",
     "git diff --check",
-    "node --test worker/tests/level1-production-proof-change-control-manifest.test.mjs",
-    "node --test worker/tests/workflow-contract.test.mjs",
-    "npm run proof:level1:change-control-manifest",
-    "npm run check:level1",
+    "node --test worker/tests/level1-readiness-closure-dashboard.test.mjs worker/tests/workflow-contract.test.mjs",
+    "npm run proof:level1:closure-dashboard",
+    "npm run check:lead-pipeline-replay",
+    "npm run check:enrichment-replay",
+    "npm run check:enrichment-boundary",
+    "npm run security:audit-triage",
+    "npm audit --json",
+    "npm audit --omit=dev --json",
     "npm run check:naming",
     "npm run check:schema",
-    "npm run proof:level1:preflight",
-    "npm run proof:level1:approval-dry-run",
+    "npm run check:level1",
+    "npm run eval:lead-quality",
     "npm test",
     "npm run test:e2e:local"
   ],
+  "baseline_validation": {
+    "npm_ci": "PASS, found 0 vulnerabilities",
+    "npm_test": "PASS, root 89 / worker unit 283 / contract 26"
+  },
   "github": {
     "open_prs_at_preflight": [],
-    "recent_merged_prs": [
+    "pr_171_182_context": [
       {
         "number": 171,
+        "title": "Level 1 non-production auth session scaffold guards",
+        "state": "MERGED",
         "mergedAt": "2026-05-31T07:18:34Z",
         "mergeCommit": "a4f8a080ebe426d79bb85dba8298372ef6d14cfc"
       },
       {
         "number": 172,
+        "title": "Level 1 local proof preflight automation",
+        "state": "MERGED",
         "mergedAt": "2026-05-31T07:55:22Z",
         "mergeCommit": "6f5f764e2a4404157d4eb6120b44db6d173d41aa"
       },
       {
         "number": 173,
+        "title": "Level 1 local auth adapter route audit",
+        "state": "MERGED",
         "mergedAt": "2026-05-31T08:38:39Z",
         "mergeCommit": "cc7944c7d851a57642e933435d482932eaabf921"
       },
       {
         "number": 174,
+        "title": "Level 1 approval packet dry run",
+        "state": "MERGED",
         "mergedAt": "2026-05-31T09:10:42Z",
         "mergeCommit": "766447f95635b9a57c66d97c1b49ef670f57a687"
       },
       {
         "number": 175,
+        "title": "Add Level 1 non-production regression gate",
+        "state": "MERGED",
         "mergedAt": "2026-05-31T10:17:04Z",
         "mergeCommit": "43a6a382139858b2c373f26d2e00ba62400303cf"
       },
       {
         "number": 176,
+        "title": "Add Level 1 fail-closed fault injection coverage",
+        "state": "MERGED",
         "mergedAt": "2026-05-31T11:22:41Z",
         "mergeCommit": "27bf1a57af3826427eecf2810e2d6642e05dcc0b"
+      },
+      {
+        "number": 177,
+        "title": "Add Level 1 change-control manifest gate",
+        "state": "MERGED",
+        "mergedAt": "2026-05-31T12:51:39Z",
+        "mergeCommit": "c61317144f5adb77516412af30e26925f1a97146"
+      },
+      {
+        "number": 178,
+        "title": "[codex] Add Level 1 operator rehearsal gate",
+        "state": "MERGED",
+        "mergedAt": "2026-06-02T11:27:09Z",
+        "mergeCommit": "b4d407171fefa5e6a6c2bb86b3e52aaa63bde9da"
+      },
+      {
+        "number": 179,
+        "title": "Triage npm audit dependency finding",
+        "state": "MERGED",
+        "mergedAt": "2026-06-02T12:20:43Z",
+        "mergeCommit": "bf78c2bc5f6779723eea44300978e40ca8d41574"
+      },
+      {
+        "number": 180,
+        "title": "Guard outbound enrichment HTTP boundary",
+        "state": "MERGED",
+        "mergedAt": "2026-06-02T13:03:43Z",
+        "mergeCommit": "6950e2c91bee564c1d2c17917cfe06d5d45241f8"
+      },
+      {
+        "number": 181,
+        "title": "Add enrichment fixture replay output contract",
+        "state": "MERGED",
+        "mergedAt": "2026-06-03T00:23:12Z",
+        "mergeCommit": "ae14cd907b65c008e09098689e2c22fce784863d"
+      },
+      {
+        "number": 182,
+        "title": "Add lead pipeline fixture replay artifact contract",
+        "state": "MERGED",
+        "mergedAt": "2026-06-03T03:19:05Z",
+        "mergeCommit": "7bc11e398415acdf480641f597eee6e3f4def228"
       }
     ],
     "issues": {
       "154": {
         "state": "OPEN",
-        "status": "COMPLETE_FOR_DOCS_PLANNING_ONLY",
+        "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED",
         "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/154#issuecomment-4525319355"
       },
       "162": {
         "state": "OPEN",
-        "status": "COMPLETE_FOR_DOCS_PLANNING_ONLY",
+        "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED",
         "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/162#issuecomment-4525315986"
       },
       "163": {
         "state": "OPEN",
-        "status": "COMPLETE_FOR_DOCS_PLANNING_ONLY",
+        "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED",
         "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/163#issuecomment-4525316833"
       },
       "164": {
         "state": "OPEN",
-        "status": "COMPLETE_FOR_DOCS_PLANNING_ONLY",
+        "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED",
         "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/164#issuecomment-4525317479"
       },
       "165": {
         "state": "OPEN",
-        "status": "HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL",
-        "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4525359304"
+        "status": "OPEN_HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL",
+        "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4586256037"
       },
       "144": {
         "state": "OPEN",
-        "status": "OPTIONAL_FEEDBACK_INTAKE_OPEN",
+        "status": "OPEN_OPTIONAL_FEEDBACK_INTAKE_RECORD_001_RECORDED",
         "confirmation": "https://github.com/dooosp/b2b-lead-agent/issues/144#issuecomment-4503911395"
       }
     }
