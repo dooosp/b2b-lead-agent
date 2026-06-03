@@ -3,7 +3,7 @@
 ## 현재 기준 상태
 
 - 기준 브랜치: `master`
-- 마지막 검증된 post-PR #180 `origin/master` HEAD: `6950e2c91bee564c1d2c17917cfe06d5d45241f8` (`Guard outbound enrichment HTTP boundary`)
+- 마지막 검증된 post-PR #181 `origin/master` HEAD: `ae14cd907b65c008e09098689e2c22fce784863d` (`Add enrichment fixture replay output contract`)
 - 다음 세션도 반드시 `git fetch origin master`와 `git rev-parse origin/master`로 실제 최신 HEAD를 다시 기록한다.
 - hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`, `docs/architecture/*.md`, `NEXT_SESSION_PROMPT.md`
 - LeadBrief v1 merge baseline: `5776d4a` (`[Product] Freeze LeadBrief v1 review contract (#27)`)
@@ -160,7 +160,8 @@
   - #178 merged `LEVEL1_OPERATOR_REHEARSAL_GATE_NON_PRODUCTION`: a local-only runbook command that consumes the approval packet and change-control manifest, maps preflight/approval/manifest/rollback/privacy/evidence gates into one sequence, emits a redacted non-executable runbook, refuses unsafe proof-start inputs, keeps `proofStartBlocked:true`, and leaves Issue #165 on HOLD.
   - #179 merged the scoped axios dependency audit triage: `axios` is `1.16.0`, `npm run security:audit-triage` is local/offline/CI-visible, npm audit was clean, and axios remains reachable only in the root lead-generation enrichment pipeline, not Worker runtime.
   - #180 merged `OUTBOUND_HTTP_ENRICHMENT_BOUNDARY_GUARDS_NON_PRODUCTION`: `enricher/outbound-http-boundary.js`, injectable local/test transports for scraper/resolver tests, request-policy guards, failure-mode/redaction coverage, `npm run check:enrichment-boundary`, and `docs/roadmap/outbound-http-enrichment-boundary-guards-non-production.md`. It is local/test-only and not production evidence.
-  - Current enrichment replay work adds `ENRICHMENT_FIXTURE_REPLAY_OUTPUT_CONTRACT_NON_PRODUCTION`: deterministic in-memory fixture replay for root URL resolution, scraping, redirect, timeout, malformed HTML, empty content, blocked URL, 4xx/5xx, oversized body, normalized outputs, redaction, and stable artifact shape through `npm run check:enrichment-replay` and `docs/roadmap/enrichment-fixture-replay-output-contract-non-production.md`. It is local/test-only and not production evidence.
+  - #181 merged `ENRICHMENT_FIXTURE_REPLAY_OUTPUT_CONTRACT_NON_PRODUCTION`: deterministic in-memory fixture replay for root URL resolution, scraping, redirect, timeout, malformed HTML, empty content, blocked URL, 4xx/5xx, oversized body, normalized outputs, redaction, and stable artifact shape through `npm run check:enrichment-replay` and `docs/roadmap/enrichment-fixture-replay-output-contract-non-production.md`. It is local/test-only and not production evidence.
+  - Current lead pipeline replay work adds `LEAD_PIPELINE_FIXTURE_REPLAY_ARTIFACT_CONTRACT_NON_PRODUCTION`: deterministic local-only replay-to-artifact summaries from PR #181 enrichment outputs into synthetic lead-quality inputs, report fields, publication summaries, release evidence, provenance labels, redaction checks, and stable artifact shape through `npm run check:lead-pipeline-replay` and `docs/roadmap/lead-pipeline-fixture-replay-artifact-contract-non-production.md`. It is local/test-only and not production evidence.
 - Current Level 1 blocker burn-down packet lives at `docs/roadmap/b2b-lead-agent-level-1-blocker-burndown-packet.md`. It classifies remaining blockers for auth provider/session owner input, production D1 schema observation input, rollback/backout owner input, final production proof approval, and privacy residual values. It includes copy-paste owner request templates and keeps `FINAL_STATE: HOLD_PENDING_NEW_EXPLICIT_GOAL`.
 - Reviewer Workflow Final Audit & Demo Packet lives at `docs/reviewer-workflow-final-audit.md` and is the canonical local/test-safe handoff baseline for completed reviewer workflow demo, validation, allowed/forbidden claims, note-persistence wording, and production evidence boundaries.
 - Issue #100 is closed as completed for the recorded local/test-safe Human UX Review findings. Future UX feedback should open a new issue or separately scoped record.
@@ -236,6 +237,7 @@
 - `npm run check:naming` = canonical path/naming guard
 - `npm run check:enrichment-boundary` = local-only outbound HTTP enrichment boundary guard; runs injected-transport fixtures and writes redacted `NOT_PRODUCTION_EVIDENCE`
 - `npm run check:enrichment-replay` = local-only root enrichment fixture replay output contract; uses in-memory fixtures only and writes redacted `NOT_PRODUCTION_EVIDENCE`
+- `npm run check:lead-pipeline-replay` = local-only root lead pipeline fixture replay artifact contract; uses synthetic in-memory replay outputs only and writes redacted `NOT_PRODUCTION_EVIDENCE`
 - `npm run check:schema` = local D1 schema drift guard
 - `npm run eval:lead-quality` = synthetic-only LeadBrief quality and review-readiness evaluator
 - `npm run proof:level1:change-control-manifest` = local-only Level 1 change-control manifest linter/planner and redacted non-executable plan writer

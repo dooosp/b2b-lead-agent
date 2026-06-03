@@ -100,6 +100,23 @@ test('CI workflow runs the local-only enrichment fixture replay output contract 
   assert.match(workflow, /run:\s+npm run check:enrichment-boundary[\s\S]*run:\s+npm run check:enrichment-replay[\s\S]*run:\s+npm run check:schema/);
 });
 
+test('CI workflow runs the local-only lead pipeline replay artifact contract after enrichment replay', async () => {
+  const [workflow, packageJsonRaw] = await Promise.all([
+    readFile(ciWorkflowPath, 'utf8'),
+    readFile(packageJsonPath, 'utf8'),
+  ]);
+  const packageJson = JSON.parse(packageJsonRaw);
+  const script = packageJson.scripts['check:lead-pipeline-replay'] || '';
+
+  assert.match(script, /node --test tests\/lead-pipeline-fixture-replay-artifact-contract\.test\.js/);
+  assert.match(script, /node scripts\/lead-pipeline-fixture-replay\.mjs --json --output tmp\/codex\/lead-pipeline-fixture-replay-artifact-contract-non-production\.json/);
+  assert.doesNotMatch(script, /npm audit|wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
+  assert.match(workflow, /name:\s+Run lead pipeline fixture replay artifact contract\s+run:\s+npm run check:lead-pipeline-replay/);
+  assert.match(workflow, /run:\s+npm run check:enrichment-replay[\s\S]*run:\s+npm run check:lead-pipeline-replay[\s\S]*run:\s+npm run check:schema/);
+  assert.doesNotMatch(workflow, /secrets\./);
+  assert.doesNotMatch(workflow, /wrangler|curl|deploy|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL/i);
+});
+
 test('CI workflow runs the local-only Worker E2E smoke after full tests', async () => {
   const workflow = await readFile(ciWorkflowPath, 'utf8');
 

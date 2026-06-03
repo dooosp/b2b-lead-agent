@@ -60,12 +60,18 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   request-policy guards, failure-mode and redaction coverage,
   `npm run check:enrichment-boundary`, and
   `docs/roadmap/outbound-http-enrichment-boundary-guards-non-production.md`.
-  Current replay work adds
+  PR #181 merged at `ae14cd907b65c008e09098689e2c22fce784863d` with
   `ENRICHMENT_FIXTURE_REPLAY_OUTPUT_CONTRACT_NON_PRODUCTION`,
   `npm run check:enrichment-replay`, and
   `docs/roadmap/enrichment-fixture-replay-output-contract-non-production.md`
   to prove fixture-only URL resolution, scraping, normalized failures,
-  redaction, and stable artifacts. This is local/test-only and does not approve
+  redaction, and stable artifacts. Current lead pipeline replay work adds
+  `LEAD_PIPELINE_FIXTURE_REPLAY_ARTIFACT_CONTRACT_NON_PRODUCTION`,
+  `npm run check:lead-pipeline-replay`, and
+  `docs/roadmap/lead-pipeline-fixture-replay-artifact-contract-non-production.md`
+  to prove deterministic fixture replay outputs flow into synthetic
+  lead-quality, report, publication, and evidence summaries without serializing
+  raw URLs or protected text. This is local/test-only and does not approve
   production/staging deploy, endpoint calls, D1 access, logs/secrets,
   live scraping, customer/private data, CRM/outreach, LLM, automation, or
   production-readiness claims.
@@ -248,6 +254,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - `npm run proof:level1:operator-rehearsal` for the local-only Level 1 operator rehearsal runbook gate
 - `npm run check:enrichment-boundary` for the local-only outbound HTTP enrichment boundary guard
 - `npm run check:enrichment-replay` for the local-only root enrichment fixture replay output contract
+- `npm run check:lead-pipeline-replay` for the local-only root lead pipeline fixture replay artifact contract
 - `npm run check:level1` for the local-only Level 1 auth/route/privacy/proof/preflight/approval/change-control/operator-rehearsal regression gate
 - `npm run eval:lead-quality` for synthetic-only LeadBrief quality and review-readiness checks
 - `npm run test:e2e:local` for fake-D1, loopback-only Worker route/page smoke coverage

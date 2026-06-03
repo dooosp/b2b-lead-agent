@@ -31,6 +31,9 @@ jobs:
       - name: Run enrichment fixture replay output contract
         run: npm run check:enrichment-replay
 
+      - name: Run lead pipeline fixture replay artifact contract
+        run: npm run check:lead-pipeline-replay
+
       - name: Run D1 schema consistency check
         run: npm run check:schema
 
