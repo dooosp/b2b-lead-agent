@@ -131,6 +131,7 @@ test('package exposes a local-only Level 1 regression gate', async () => {
   const script = packageJson.scripts['check:level1'] || '';
   const manifestScript = packageJson.scripts['proof:level1:change-control-manifest'] || '';
   const rehearsalScript = packageJson.scripts['proof:level1:operator-rehearsal'] || '';
+  const closureDashboardScript = packageJson.scripts['proof:level1:closure-dashboard'] || '';
 
   assert.match(script, /node --test/);
   assert.match(script, /worker\/tests\/local-test-auth-adapter\.test\.mjs/);
@@ -143,16 +144,20 @@ test('package exposes a local-only Level 1 regression gate', async () => {
   assert.match(script, /worker\/tests\/level1-production-proof-approval\.test\.mjs/);
   assert.match(script, /worker\/tests\/level1-production-proof-change-control-manifest\.test\.mjs/);
   assert.match(script, /worker\/tests\/level1-operator-rehearsal\.test\.mjs/);
+  assert.match(script, /worker\/tests\/level1-readiness-closure-dashboard\.test\.mjs/);
   assert.match(script, /npm run test:evidence/);
   assert.match(script, /npm run proof:level1:preflight/);
   assert.match(script, /npm run proof:level1:approval-dry-run/);
   assert.match(script, /npm run proof:level1:change-control-manifest/);
   assert.match(script, /npm run proof:level1:operator-rehearsal/);
+  assert.match(script, /npm run proof:level1:closure-dashboard/);
   assert.doesNotMatch(script, /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
   assert.match(manifestScript, /node scripts\/level1-production-proof-change-control-manifest\.mjs --json --output tmp\/codex\/level1-production-proof-change-control-manifest-non-production-plan\.json/);
   assert.doesNotMatch(manifestScript, /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
   assert.match(rehearsalScript, /node scripts\/level1-operator-rehearsal\.mjs --json --output tmp\/codex\/level1-operator-rehearsal-non-production-runbook\.json/);
   assert.doesNotMatch(rehearsalScript, /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
+  assert.match(closureDashboardScript, /node scripts\/level1-readiness-closure-dashboard\.mjs --json --output tmp\/codex\/level1-readiness-closure-dashboard-non-production\.json --markdown --markdown-output docs\/roadmap\/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production\.md/);
+  assert.doesNotMatch(closureDashboardScript, /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
 });
 
 test('CI workflow runs the safe Level 1 regression gate before full tests', async () => {
