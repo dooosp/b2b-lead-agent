@@ -1,0 +1,323 @@
+{
+  "documentStatus": "LEAD_PIPELINE_FIXTURE_REPLAY_ARTIFACT_CONTRACT_NON_PRODUCTION",
+  "generatedAt": "2026-06-03T00:00:00.000Z",
+  "repo": "dooosp/b2b-lead-agent",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "notProductionEvidence": true,
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "issueRefs": {
+    "level1ProofHold": "Issue #165"
+  },
+  "summary": {
+    "replayCases": 9,
+    "successReplayCases": 2,
+    "failureReplayCases": 7,
+    "syntheticArticles": 2,
+    "syntheticLeads": 2,
+    "leadQualityResults": 2,
+    "liveNetworkCalls": 0,
+    "llmCalls": 0,
+    "crmCalls": 0,
+    "d1Calls": 0
+  },
+  "transport": {
+    "localFixtureOnly": true,
+    "liveNetworkAllowed": false,
+    "liveNetworkCalls": 0,
+    "fixtureTransport": "in-memory"
+  },
+  "outputContract": {
+    "artifactFields": [
+      "sourceReplay",
+      "syntheticArticles",
+      "leadQuality",
+      "report",
+      "publication",
+      "evidence",
+      "redaction"
+    ],
+    "deterministicOrdering": [
+      "success_resolved_article",
+      "success_safe_redirect",
+      "failure_timeout",
+      "failure_malformed_search_html",
+      "failure_empty_content",
+      "failure_blocked_private_url",
+      "failure_http_404",
+      "failure_http_500",
+      "failure_oversized_body"
+    ],
+    "stableTimestamp": "2026-06-03T00:00:00.000Z",
+    "sourceUrlPolicy": "labels_only_in_serialized_artifacts"
+  },
+  "sourceReplay": {
+    "documentStatus": "ENRICHMENT_FIXTURE_REPLAY_OUTPUT_CONTRACT_NON_PRODUCTION",
+    "generatedAt": "2026-06-03T00:00:00.000Z",
+    "caseOrder": [
+      "success_resolved_article",
+      "success_safe_redirect",
+      "failure_timeout",
+      "failure_malformed_search_html",
+      "failure_empty_content",
+      "failure_blocked_private_url",
+      "failure_http_404",
+      "failure_http_500",
+      "failure_oversized_body"
+    ],
+    "successCaseIds": [
+      "success_resolved_article",
+      "success_safe_redirect"
+    ],
+    "failureTaxonomy": [
+      "empty_content",
+      "http_status",
+      "malformed_html",
+      "request_policy_refused",
+      "response_too_large",
+      "timeout"
+    ],
+    "sourceLabels": [
+      "fixture:resolved-article",
+      "fixture:safe-redirect",
+      "fixture:timeout",
+      "fixture:malformed-search-html",
+      "fixture:empty-content",
+      "fixture:blocked-private-url",
+      "fixture:http-404",
+      "fixture:http-500",
+      "fixture:oversized-body"
+    ],
+    "liveNetworkCalls": 0,
+    "maxSnippetChars": 160
+  },
+  "syntheticArticles": [
+    {
+      "articleId": "A1",
+      "caseId": "success_resolved_article",
+      "title": "Fixture refrigeration system upgrade",
+      "sourceLabel": "fixture:resolved-article",
+      "sourceUrlLabel": "fixture-public-success-article",
+      "publishedAt": "2026-06-03T00:00:00.000Z",
+      "resolution": "resolved",
+      "redirected": false,
+      "bodyTrust": "trusted",
+      "bodySource": "article-body",
+      "bodySnippet": "Fixture refrigeration system upgrade gives the local replay enough verified article body text to exercise scraper normalization, source labeling, and trusted..."
+    },
+    {
+      "articleId": "A2",
+      "caseId": "success_safe_redirect",
+      "title": "Fixture redirect cooling plant expansion",
+      "sourceLabel": "fixture:safe-redirect",
+      "sourceUrlLabel": "fixture-public-redirect-final",
+      "publishedAt": "2026-06-03T00:00:00.000Z",
+      "resolution": "not_applicable",
+      "redirected": true,
+      "bodyTrust": "trusted",
+      "bodySource": "article-body",
+      "bodySnippet": "Fixture redirected article body confirms safe redirect handling and deterministic replay output while remaining fully synthetic, public-labeled, and independ..."
+    }
+  ],
+  "leadQuality": {
+    "generatedAt": "2026-06-03T00:00:00.000Z",
+    "dimensions": [
+      "evidenceCompleteness",
+      "confidenceClarity",
+      "assumptionsClarity",
+      "dataGaps",
+      "verificationStatus",
+      "reviewReadiness",
+      "eventTypeClarity"
+    ],
+    "summary": {
+      "total": 2,
+      "ship": 2,
+      "followUp": 0,
+      "hold": 0,
+      "averageScore": 100
+    },
+    "inputs": [
+      {
+        "id": "fixture-lead-success-resolved-article",
+        "caseId": "success_resolved_article",
+        "company": "Fixture Cooling Systems",
+        "product": "Turbocor compressor",
+        "confidence": "MEDIUM",
+        "reviewStatus": "NEEDS_REVIEW",
+        "verificationStatus": "needs_review",
+        "eventType": "fixture_replay_upgrade",
+        "sourceUrlLabel": "fixture-public-success-article",
+        "evidenceQuoteLength": 160
+      },
+      {
+        "id": "fixture-lead-success-safe-redirect",
+        "caseId": "success_safe_redirect",
+        "company": "Fixture Redirect Energy",
+        "product": "VLT HVAC Drive",
+        "confidence": "MEDIUM",
+        "reviewStatus": "NEEDS_REVIEW",
+        "verificationStatus": "needs_review",
+        "eventType": "fixture_replay_redirect",
+        "sourceUrlLabel": "fixture-public-redirect-final",
+        "evidenceQuoteLength": 160
+      }
+    ],
+    "results": [
+      {
+        "id": "fixture-lead-success-resolved-article",
+        "fixtureType": "lead_pipeline_fixture_replay",
+        "company": "Fixture Cooling Systems",
+        "product": "Turbocor compressor",
+        "score": 100,
+        "status": "SHIP",
+        "reviewReady": true,
+        "actions": []
+      },
+      {
+        "id": "fixture-lead-success-safe-redirect",
+        "fixtureType": "lead_pipeline_fixture_replay",
+        "company": "Fixture Redirect Energy",
+        "product": "VLT HVAC Drive",
+        "score": 100,
+        "status": "SHIP",
+        "reviewReady": true,
+        "actions": []
+      }
+    ]
+  },
+  "report": {
+    "profileId": "danfoss",
+    "profileName": "Danfoss",
+    "dateStr": "2026-06-03",
+    "gradeCounts": {
+      "A": 1,
+      "B": 1
+    },
+    "totalLeads": 2,
+    "fieldPresence": {
+      "company": true,
+      "summary": true,
+      "product": true,
+      "roi": true,
+      "salesPitch": true,
+      "globalContext": true
+    }
+  },
+  "publication": {
+    "artifactNames": {
+      "markdownCanonical": "lead-report-2026-06-03.md",
+      "latestCanonical": "latest-leads.json",
+      "historyCanonical": "lead-history.json"
+    },
+    "latestLeads": [
+      {
+        "id": "fixture-published-success-resolved-article",
+        "company": "Fixture Cooling Systems",
+        "status": "NEW",
+        "reviewStatus": "NEEDS_REVIEW",
+        "generationMode": "heuristic",
+        "verificationStatus": "needs_review",
+        "confidence": "MEDIUM",
+        "sourceUrlLabels": [
+          "fixture-public-success-article"
+        ],
+        "dataGapCount": 1,
+        "assumptionCount": 2
+      },
+      {
+        "id": "fixture-published-success-safe-redirect",
+        "company": "Fixture Redirect Energy",
+        "status": "NEW",
+        "reviewStatus": "NEEDS_REVIEW",
+        "generationMode": "heuristic",
+        "verificationStatus": "needs_review",
+        "confidence": "MEDIUM",
+        "sourceUrlLabels": [
+          "fixture-public-redirect-final"
+        ],
+        "dataGapCount": 1,
+        "assumptionCount": 2
+      }
+    ],
+    "historyLeadCount": 2,
+    "historyProtectedFieldsRemoved": true
+  },
+  "evidence": {
+    "packet": {
+      "status": "SHIP",
+      "mode": "RELEASE_TOOLING",
+      "generatedAtUtc": "2026-06-03T00:00:00.000Z",
+      "sourceBoundary": {
+        "localOnly": true,
+        "toolExecutesValidationCommands": false,
+        "toolAccessedProduction": false,
+        "toolGeneratedProductionEvidenceAutomatically": false,
+        "manuallySuppliedProofPacketsAllowed": true
+      },
+      "boundaries": {
+        "toolAccessedProduction": false,
+        "productionEndpointCalledByTool": false,
+        "productionDbAccessedByTool": false,
+        "productionDbWrittenByTool": false,
+        "deployPerformedByTool": false,
+        "productionObservationClaimed": false,
+        "generatedOrStoredProductionEvidenceAutomatically": false,
+        "ciIsProductionEvidence": false,
+        "docsConfigOrSourceAreProductionEvidence": false,
+        "screenshotsAloneSufficient": false
+      },
+      "claims": {
+        "localValidationSummarized": true,
+        "githubMetadataSummarizedOnly": false,
+        "manualProofPacketsSummarizedOnly": false,
+        "productionObservationClaimed": false
+      },
+      "warnings": [],
+      "validations": [
+        {
+          "command": "npm run check:lead-pipeline-replay",
+          "source": "local",
+          "status": "pass",
+          "summary": "Synthetic fixture replay to lead/report/publication/evidence artifact contract."
+        }
+      ],
+      "invalidProductionEvidence": [
+        "CI is not production evidence",
+        "Local tests are not production evidence",
+        "Docs, config, and source code are not production evidence",
+        "D1 config, database names, and database ids are inventory only",
+        "Screenshots alone are insufficient",
+        "Manually supplied proof packets are operator-supplied inputs, not observations made by this tool"
+      ]
+    }
+  },
+  "redaction": {
+    "provesAbsent": [
+      "raw_html",
+      "raw_urls",
+      "headers",
+      "cookies",
+      "tokens",
+      "auth_like_values",
+      "private_urls",
+      "manual_notes",
+      "generated_guidance",
+      "customer_private_data"
+    ],
+    "checkedArtifactSurfaces": [
+      "lead_quality_inputs",
+      "report_summary",
+      "publication_latest",
+      "publication_history",
+      "release_evidence_packet"
+    ],
+    "sourceUrlPolicy": "labels_only_in_serialized_artifacts",
+    "fixtureInputs": "synthetic_only"
+  },
+  "nonClaims": [
+    "This artifact is not production proof.",
+    "This artifact uses only synthetic local fixtures.",
+    "This artifact does not deploy, access D1, call endpoints, read logs or secrets, use customer or private data, touch CRM, send outreach, call LLMs, run automation, or claim production readiness."
+  ]
+}

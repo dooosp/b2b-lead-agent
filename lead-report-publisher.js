@@ -151,10 +151,10 @@ function normalizePublicationTrust(lead = {}) {
   };
 }
 
-function composeLeadReport(leads, profile) {
+function composeLeadReport(leads, profile, options = {}) {
   console.log('[Step 3] 영업용 리포트 생성...');
 
-  const today = new Date();
+  const today = options.now ? new Date(options.now) : new Date();
   const dateStr = today.toISOString().split('T')[0];
   const dateKor = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
 
