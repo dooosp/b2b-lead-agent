@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "level1.production_proof_approval_intake.v1",
+  "documentStatus": "LEVEL1_PRODUCTION_PROOF_APPROVAL_INTAKE_GATE_NON_PRODUCTION",
+  "generatedAt": "2026-06-03T00:00:00.000Z",
+  "repo": "dooosp/b2b-lead-agent",
+  "issue165": {
+    "issue": 165,
+    "url": "https://github.com/dooosp/b2b-lead-agent/issues/165",
+    "status": "OPEN_HOLD_PENDING_MACHINE_CHECKABLE_HUMAN_INPUT"
+  },
+  "baseline": {
+    "branch": "master",
+    "headSha": "808dde2b19a450207499672d05a9ed5d4215ad66",
+    "mergedPrs": [
+      171,
+      172,
+      173,
+      174,
+      175,
+      176,
+      177,
+      178,
+      179,
+      180,
+      181,
+      182,
+      183
+    ],
+    "mergedPrRange": "#171-#183"
+  },
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "notProductionEvidence": true,
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "approvalStatus": "HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL",
+  "proofExecutionApproved": false,
+  "nonExecutable": true,
+  "requiredApprovalFields": [
+    {
+      "id": "target",
+      "label": "Target",
+      "required": true,
+      "valueKey": "target",
+      "instructions": "Non-secret target label only. Do not include private URLs, account IDs, database IDs, secrets, tokens, or customer data."
+    },
+    {
+      "id": "command_allowlist",
+      "label": "Command Allowlist",
+      "required": true,
+      "valueKey": "commandAllowlist",
+      "instructions": "Exact future commands only. This intake template approves no command execution and rejects production-like or destructive commands."
+    },
+    {
+      "id": "endpoint_boundary",
+      "label": "Endpoint Boundary",
+      "required": true,
+      "valueKey": "endpointBoundary",
+      "instructions": "Exact route labels only; broad endpoint patterns such as *, /, /*, all, any, or /api/* are refused."
+    },
+    {
+      "id": "d1_boundary",
+      "label": "D1 Boundary",
+      "required": true,
+      "valueKey": "d1Boundary",
+      "instructions": "State the D1 boundary without private database IDs, account IDs, row data, row counts, writes, migrations, deletes, or repair actions."
+    },
+    {
+      "id": "fixture_non_customer_data_policy",
+      "label": "Fixture / Non-Customer Data Policy",
+      "required": true,
+      "valueKey": "fixtureNonCustomerDataPolicy",
+      "instructions": "Synthetic fixtures or approved non-customer metadata only. Customer rows, payloads, real manual note text, and private lead/person data are refused."
+    },
+    {
+      "id": "evidence_redaction",
+      "label": "Evidence Redaction",
+      "required": true,
+      "valueKey": "evidenceRedaction",
+      "instructions": "Name redaction rules for secrets, auth material, private identifiers, customer/private data, manual note bodies, generated suggestions, logs, CRM/outreach, and private lead/person fields."
+    },
+    {
+      "id": "rollback_owner",
+      "label": "Rollback Owner",
+      "required": true,
+      "valueKey": "rollbackOwner",
+      "instructions": "Human rollback/backout owner for the future proof scope; this does not approve rollback execution."
+    },
+    {
+      "id": "stop_conditions",
+      "label": "Stop Conditions",
+      "required": true,
+      "valueKey": "stopConditions",
+      "instructions": "Explicit abort triggers for boundary uncertainty, production/staging access, D1 access, endpoint calls, logs/secrets, customer data, destructive SQL, CRM/outreach/LLM/automation, and scope drift."
+    },
+    {
+      "id": "approver",
+      "label": "Approver",
+      "required": true,
+      "valueKey": "approver",
+      "instructions": "Authorized human approver. Owner name alone is not approval unless the full scoped request is filled."
+    },
+    {
+      "id": "expires_at",
+      "label": "Expiry",
+      "required": true,
+      "valueKey": "expiresAt",
+      "instructions": "ISO timestamp after the request review date. Expired or invalid timestamps are refused."
+    }
+  ],
+  "copyPasteRequestTemplate": [
+    "schemaVersion: level1.production_proof_approval_intake_request.v1",
+    "repo: dooosp/b2b-lead-agent",
+    "issue: 165",
+    "boundary: NOT_PRODUCTION_EVIDENCE",
+    "notProductionEvidence: true",
+    "productionReady: false",
+    "productionReviewerWorkflowReady: false",
+    "proofExecutionApproved: false",
+    "target:",
+    "commandAllowlist:",
+    "endpointBoundary:",
+    "d1Boundary:",
+    "fixtureNonCustomerDataPolicy:",
+    "evidenceRedaction:",
+    "rollbackOwner:",
+    "stopConditions:",
+    "approver:",
+    "expiresAt:"
+  ],
+  "reviewerChecklist": [
+    "All required Issue #165 fields are filled with exact non-secret values.",
+    "Command allowlist is exact and contains no production-like or destructive commands.",
+    "Endpoint boundary is narrow and contains no broad wildcard endpoint.",
+    "D1 boundary contains no private identifiers, row data, writes, migrations, deletes, or repair actions.",
+    "Fixture policy forbids customer/private data and real manual note body text.",
+    "Evidence redaction covers secrets, auth material, private IDs, customer/private data, manual note bodies, generated suggestions, logs, CRM/outreach, and private lead/person fields.",
+    "Rollback owner and stop conditions are explicit.",
+    "Approver and expiry are present, current, and scoped.",
+    "The request remains non-executable and does not approve production proof."
+  ],
+  "criticChecklist": [
+    "approval_clarity",
+    "no_production",
+    "privacy_pii",
+    "evidence_truth",
+    "ci_safety",
+    "git_pr_merge_safety"
+  ]
+}

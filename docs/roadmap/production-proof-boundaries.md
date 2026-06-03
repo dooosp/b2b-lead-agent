@@ -145,12 +145,13 @@ Post-PR177 operating update:
   complete, leaves staging target selection decision-ready/HOLD, keeps staging
   execution and production proof/deploy on HOLD, and records no mandatory next
   action.
-- The Level 1 non-production gate train through PR #177 is local/test evidence
+- The Level 1 non-production gate train through PR #183 plus the current
+  approval-intake gate is local/test evidence
   only. `npm run check:level1` runs auth adapter/scaffold, route/UI privacy,
   generated-suggestion/manual-note, proof-preflight, approval dry-run,
-  change-control manifest dry-run, operator rehearsal, and local artifact
-  checks in CI without secrets, deploy, Wrangler, D1 bindings, endpoint calls,
-  or production inputs.
+  change-control manifest dry-run, operator rehearsal, closure dashboard,
+  approval intake, and local artifact checks in CI without secrets, deploy,
+  Wrangler, D1 bindings, endpoint calls, or production inputs.
 - The Level 1 change-control manifest packet is local-only and
   non-executable. It writes only a redacted `NOT_PRODUCTION_EVIDENCE` dry-run
   plan, refuses unexpected manifest fields, production/staging URLs, D1 private
@@ -164,6 +165,14 @@ Post-PR177 operating update:
   manifest / rollback / privacy / evidence gates into one sequence, refuses
   accidental proof-start inputs, keeps `proofStartBlocked:true`, and keeps
   Issue #165 on HOLD.
+- The Level 1 approval-intake gate is local-only and non-executable. It writes
+  only redacted `NOT_PRODUCTION_EVIDENCE` JSON/Markdown artifacts and a
+  machine-checkable Issue #165 request template for target, command allowlist,
+  endpoint boundary, D1 boundary, fixture/non-customer data policy, evidence
+  redaction, rollback owner, stop conditions, approver, and expiry. It fails
+  closed for missing, vague, stale, contradictory, production-ready,
+  secret-like, broad endpoint, destructive SQL, and customer-data inputs, but
+  it still does not approve proof execution or production readiness.
 - The current fail-closed matrix refuses malformed synthetic auth claims, mixed
   roles, auth-header / Cloudflare Access / D1 / API-key alias env poison,
   poisoned future evidence fields, bare `notes` / validation-note evidence
@@ -252,6 +261,7 @@ The following support engineering confidence but are not production proof:
 - Production readiness gap packets.
 - Level 1 CI/package gate results and `NOT_PRODUCTION_EVIDENCE` artifacts.
 - Level 1 change-control manifest dry-run plans.
+- Level 1 approval-intake request templates or validator artifacts.
 - Source/config files.
 - D1 binding names, database names, or database IDs.
 - Local fake-D1 or staging observations.
@@ -262,7 +272,10 @@ The following support engineering confidence but are not production proof:
 
 The exact remaining Level 1 human blocker is Issue #165: a separate explicit
 future production proof goal with exact command, endpoint, D1, fixture,
-redaction, evidence, rollback, and stop-condition boundaries.
+redaction, evidence, rollback, and stop-condition boundaries. The current
+machine-checkable intake fields are target, command allowlist, endpoint
+boundary, D1 boundary, fixture/non-customer data policy, evidence redaction,
+rollback owner, stop conditions, approver, and expiry.
 
 ## Minimum Future Approval Packet
 

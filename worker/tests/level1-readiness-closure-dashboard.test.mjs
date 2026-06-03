@@ -15,7 +15,7 @@ import {
 } from '../../scripts/level1-readiness-closure-dashboard.mjs';
 
 const EXPECTED_MERGED_PRS = Object.freeze([
-  171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182,
+  171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183,
 ]);
 
 const EXPECTED_ISSUES = Object.freeze([154, 162, 163, 164, 165, 144]);
@@ -26,6 +26,7 @@ const REQUIRED_COMMANDS = Object.freeze([
   'npm run proof:level1:change-control-manifest',
   'npm run proof:level1:operator-rehearsal',
   'npm run proof:level1:closure-dashboard',
+  'npm run proof:level1:approval-intake',
   'npm run security:audit-triage',
   'npm run check:enrichment-boundary',
   'npm run check:enrichment-replay',
@@ -38,6 +39,9 @@ const REQUIRED_ARTIFACTS = Object.freeze([
   'tmp/codex/level1-production-proof-approval-dry-run-non-production-evidence.json',
   'tmp/codex/level1-production-proof-change-control-manifest-non-production-plan.json',
   'tmp/codex/level1-operator-rehearsal-non-production-runbook.json',
+  'tmp/codex/level1-readiness-closure-dashboard-non-production.json',
+  'tmp/codex/level1-production-proof-approval-intake-gate-non-production.json',
+  'docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json',
   'tmp/codex/security-dependency-audit-triage-non-production.json',
   'tmp/codex/outbound-http-enrichment-boundary-guards-non-production.json',
   'tmp/codex/enrichment-fixture-replay-output-contract-non-production.json',
@@ -90,17 +94,30 @@ test('Level 1 closure dashboard inventories every merged local-only gate and kee
 
   assert.deepEqual(dashboard.baseline, {
     branch: 'master',
-    headSha: '7bc11e398415acdf480641f597eee6e3f4def228',
+    headSha: '808dde2b19a450207499672d05a9ed5d4215ad66',
     mergedPrs: EXPECTED_MERGED_PRS,
-    mergedPrRange: '#171-#182',
+    mergedPrRange: '#171-#183',
   });
 
   assert.deepEqual(dashboard.gates.map((gate) => gate.id), REQUIRED_LEVEL1_CLOSURE_GATE_IDS);
-  assert.equal(dashboard.gates.length, 12);
-  assert.deepEqual(dashboard.gates.map((gate) => gate.sourcePr), EXPECTED_MERGED_PRS);
+  assert.equal(dashboard.gates.length, 14);
+  assert.deepEqual(dashboard.gates.slice(0, 13).map((gate) => gate.sourcePr), EXPECTED_MERGED_PRS);
+  assert.equal(dashboard.gates[13].sourcePr, 184);
   assert.ok(dashboard.gates.every((gate) => gate.boundary === 'NOT_PRODUCTION_EVIDENCE'));
   assert.ok(dashboard.gates.every((gate) => gate.productionReady === false));
   assert.ok(dashboard.gates.every((gate) => ['PASS', 'HOLD'].includes(gate.status)));
+  assert.deepEqual(dashboard.issue165Blocker.remainingApprovalFields, [
+    'target',
+    'command_allowlist',
+    'endpoint_boundary',
+    'd1_boundary',
+    'fixture_non_customer_data_policy',
+    'evidence_redaction',
+    'rollback_owner',
+    'stop_conditions',
+    'approver',
+    'expires_at',
+  ]);
 
   for (const command of REQUIRED_COMMANDS) {
     assert.ok(dashboard.commandList.includes(command), `missing command ${command}`);
@@ -168,7 +185,11 @@ test('Level 1 closure dashboard markdown is reviewer-readable and anti-overclaim
   assert.match(markdown, /Document Status: `LEVEL1_READINESS_CLOSURE_DASHBOARD_NON_PRODUCTION`/);
   assert.match(markdown, /Boundary: `NOT_PRODUCTION_EVIDENCE`/);
   assert.match(markdown, /productionReady: `false`/);
-  assert.match(markdown, /Merged PR Range: `#171-#182`/);
+  assert.match(markdown, /Merged PR Range: `#171-#183`/);
+  assert.match(markdown, /production_proof_approval_intake_gate/);
+  assert.match(markdown, /#184/);
+  assert.match(markdown, /target/);
+  assert.match(markdown, /expires_at/);
   assert.match(markdown, /Issue #165/);
   assert.match(markdown, /HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL/);
   assert.match(markdown, /npm run check:lead-pipeline-replay/);
