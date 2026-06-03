@@ -402,8 +402,8 @@ function buildGateInventory() {
     }),
     gate({
       id: 'production_proof_approval_intake_gate',
-      title: 'Current branch Issue #165 machine-checkable approval intake gate',
-      sourcePr: null,
+      title: 'PR #184 Issue #165 machine-checkable approval intake gate',
+      sourcePr: 184,
       command: 'npm run proof:level1:approval-intake',
       artifacts: [
         LEVEL1_APPROVAL_INTAKE_GATE_JSON_PATH,

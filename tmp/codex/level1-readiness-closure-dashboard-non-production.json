@@ -553,10 +553,10 @@
     },
     {
       "id": "production_proof_approval_intake_gate",
-      "title": "Current branch Issue #165 machine-checkable approval intake gate",
+      "title": "PR #184 Issue #165 machine-checkable approval intake gate",
       "status": "PASS",
-      "sourcePr": null,
-      "sourcePrUrl": null,
+      "sourcePr": 184,
+      "sourcePrUrl": "https://github.com/dooosp/b2b-lead-agent/pull/184",
       "boundary": "NOT_PRODUCTION_EVIDENCE",
       "notProductionEvidence": true,
       "productionReady": false,

@@ -102,7 +102,7 @@ test('Level 1 closure dashboard inventories every merged local-only gate and kee
   assert.deepEqual(dashboard.gates.map((gate) => gate.id), REQUIRED_LEVEL1_CLOSURE_GATE_IDS);
   assert.equal(dashboard.gates.length, 14);
   assert.deepEqual(dashboard.gates.slice(0, 13).map((gate) => gate.sourcePr), EXPECTED_MERGED_PRS);
-  assert.equal(dashboard.gates[13].sourcePr, null);
+  assert.equal(dashboard.gates[13].sourcePr, 184);
   assert.ok(dashboard.gates.every((gate) => gate.boundary === 'NOT_PRODUCTION_EVIDENCE'));
   assert.ok(dashboard.gates.every((gate) => gate.productionReady === false));
   assert.ok(dashboard.gates.every((gate) => ['PASS', 'HOLD'].includes(gate.status)));
@@ -187,6 +187,7 @@ test('Level 1 closure dashboard markdown is reviewer-readable and anti-overclaim
   assert.match(markdown, /productionReady: `false`/);
   assert.match(markdown, /Merged PR Range: `#171-#183`/);
   assert.match(markdown, /production_proof_approval_intake_gate/);
+  assert.match(markdown, /#184/);
   assert.match(markdown, /target/);
   assert.match(markdown, /expires_at/);
   assert.match(markdown, /Issue #165/);

@@ -61,7 +61,7 @@
 | 51 | 2026-06-03 | #181 | `ae14cd9` | Enrichment fixture replay output contract | Added deterministic fixture-only replay for URL resolution, scraping, normalized outputs/failures, redaction, and stable non-production artifacts without live scraping or production/staging calls |
 | 52 | 2026-06-03 | #182 | `7bc11e3` | Lead pipeline fixture replay artifact contract | Added a deterministic local-only contract from enrichment replay outputs into synthetic lead-quality, report, publication, and release-evidence artifact summaries without live network, LLM, CRM, D1, customer data, or production/staging calls |
 | 53 | 2026-06-03 | #183 | `808dde2` | Level 1 readiness closure dashboard | Added a single local-only JSON/Markdown dashboard for PR #171-#183 gate inventory, commands, artifacts, issue map, risks, and future production-proof prerequisites while keeping Issue #165 on HOLD |
-| 54 | 2026-06-03 | current branch | pending | Level 1 production proof approval intake gate | Adds a non-executable Issue #165 approval request template, validator, redacted JSON/Markdown artifacts, reviewer checklist, and dashboard/source-of-truth sync for exact future approval fields while keeping production proof blocked |
+| 54 | 2026-06-03 | PR #184 | pending | Level 1 production proof approval intake gate | Adds a non-executable Issue #165 approval request template, validator, redacted JSON/Markdown artifacts, reviewer checklist, and dashboard/source-of-truth sync for exact future approval fields while keeping production proof blocked |
 
 Post-PR177 update: PR #171 merged at
 `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` with non-production

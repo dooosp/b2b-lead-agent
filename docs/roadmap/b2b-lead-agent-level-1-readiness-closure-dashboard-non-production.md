@@ -36,7 +36,7 @@ Approval Status: `HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL`
 | `enrichment_fixture_replay_output_contract` | #181 | `PASS` | `npm run check:enrichment-replay` | `tmp/codex/enrichment-fixture-replay-output-contract-non-production.json` |
 | `lead_pipeline_fixture_replay_artifact_contract` | #182 | `PASS` | `npm run check:lead-pipeline-replay` | `tmp/codex/lead-pipeline-fixture-replay-artifact-contract-non-production.json` |
 | `readiness_closure_dashboard` | #183 | `PASS` | `npm run proof:level1:closure-dashboard` | `tmp/codex/level1-readiness-closure-dashboard-non-production.json` |
-| `production_proof_approval_intake_gate` | `current branch` | `PASS` | `npm run proof:level1:approval-intake` | `tmp/codex/level1-production-proof-approval-intake-gate-non-production.json` |
+| `production_proof_approval_intake_gate` | #184 | `PASS` | `npm run proof:level1:approval-intake` | `tmp/codex/level1-production-proof-approval-intake-gate-non-production.json` |
 
 ## Command List
 
