@@ -1,0 +1,326 @@
+{
+  "documentStatus": "ENRICHMENT_FIXTURE_REPLAY_OUTPUT_CONTRACT_NON_PRODUCTION",
+  "generatedAt": "2026-06-03T00:00:00.000Z",
+  "repo": "dooosp/b2b-lead-agent",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "notProductionEvidence": true,
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "issueRefs": {
+    "level1ProofHold": "Issue #165"
+  },
+  "summary": {
+    "totalCases": 9,
+    "successCount": 2,
+    "failureCount": 7,
+    "liveNetworkCalls": 0,
+    "maxSnippetChars": 160
+  },
+  "transport": {
+    "localFixtureOnly": true,
+    "liveNetworkAllowed": false,
+    "liveNetworkCalls": 0,
+    "fixtureTransport": "in-memory"
+  },
+  "outputContract": {
+    "normalizedFields": [
+      "caseId",
+      "sourceLabel",
+      "outcome",
+      "resolution",
+      "requestedUrlLabel",
+      "finalUrlLabel",
+      "redirected",
+      "status",
+      "failureCode",
+      "failureReason",
+      "body",
+      "transport"
+    ],
+    "failureTaxonomy": [
+      "empty_content",
+      "http_status",
+      "malformed_html",
+      "request_policy_refused",
+      "response_too_large",
+      "timeout"
+    ],
+    "deterministicOrdering": [
+      "success_resolved_article",
+      "success_safe_redirect",
+      "failure_timeout",
+      "failure_malformed_search_html",
+      "failure_empty_content",
+      "failure_blocked_private_url",
+      "failure_http_404",
+      "failure_http_500",
+      "failure_oversized_body"
+    ],
+    "stableTimestamp": "2026-06-03T00:00:00.000Z",
+    "sourceLabels": [
+      "fixture:resolved-article",
+      "fixture:safe-redirect",
+      "fixture:timeout",
+      "fixture:malformed-search-html",
+      "fixture:empty-content",
+      "fixture:blocked-private-url",
+      "fixture:http-404",
+      "fixture:http-500",
+      "fixture:oversized-body"
+    ]
+  },
+  "redaction": {
+    "provesAbsent": [
+      "raw_html",
+      "headers",
+      "cookies",
+      "tokens",
+      "auth_like_values",
+      "private_urls",
+      "unsafe_payloads",
+      "customer_private_data"
+    ],
+    "sample": "[REDACTED]"
+  },
+  "replay": [
+    {
+      "caseId": "success_resolved_article",
+      "sourceLabel": "fixture:resolved-article",
+      "outcome": "success",
+      "resolution": "resolved",
+      "requestedUrlLabel": "fixture-google-news-discovery",
+      "finalUrlLabel": "fixture-public-success-article",
+      "redirected": false,
+      "status": null,
+      "failureCode": null,
+      "failureReason": null,
+      "body": {
+        "available": true,
+        "source": "article-body",
+        "trust": "trusted",
+        "length": 252,
+        "snippet": "Fixture refrigeration system upgrade gives the local replay enough verified article body text to exercise scraper normalization, source labeling, and trusted..."
+      },
+      "transport": {
+        "requestCount": 2,
+        "requestLabels": [
+          "fixture-search-success",
+          "fixture-public-success-article"
+        ],
+        "liveNetworkCalls": 0
+      }
+    },
+    {
+      "caseId": "success_safe_redirect",
+      "sourceLabel": "fixture:safe-redirect",
+      "outcome": "success",
+      "resolution": "not_applicable",
+      "requestedUrlLabel": "fixture-public-redirect-entry",
+      "finalUrlLabel": "fixture-public-redirect-final",
+      "redirected": true,
+      "status": null,
+      "failureCode": null,
+      "failureReason": null,
+      "body": {
+        "available": true,
+        "source": "article-body",
+        "trust": "trusted",
+        "length": 192,
+        "snippet": "Fixture redirected article body confirms safe redirect handling and deterministic replay output while remaining fully synthetic, public-labeled, and independ..."
+      },
+      "transport": {
+        "requestCount": 1,
+        "requestLabels": [
+          "fixture-public-redirect-entry"
+        ],
+        "liveNetworkCalls": 0
+      }
+    },
+    {
+      "caseId": "failure_timeout",
+      "sourceLabel": "fixture:timeout",
+      "outcome": "failure",
+      "resolution": "not_applicable",
+      "requestedUrlLabel": "fixture-public-timeout",
+      "finalUrlLabel": "fixture-public-timeout",
+      "redirected": false,
+      "status": null,
+      "failureCode": "timeout",
+      "failureReason": null,
+      "body": {
+        "available": false,
+        "source": "missing",
+        "trust": "missing",
+        "length": 0,
+        "snippet": ""
+      },
+      "transport": {
+        "requestCount": 1,
+        "requestLabels": [
+          "fixture-public-timeout"
+        ],
+        "liveNetworkCalls": 0
+      }
+    },
+    {
+      "caseId": "failure_malformed_search_html",
+      "sourceLabel": "fixture:malformed-search-html",
+      "outcome": "failure",
+      "resolution": "unresolved",
+      "requestedUrlLabel": "fixture-search-malformed-primary",
+      "finalUrlLabel": "fixture-search-malformed-fallback",
+      "redirected": false,
+      "status": null,
+      "failureCode": "malformed_html",
+      "failureReason": null,
+      "body": {
+        "available": false,
+        "source": "missing",
+        "trust": "missing",
+        "length": 0,
+        "snippet": ""
+      },
+      "transport": {
+        "requestCount": 2,
+        "requestLabels": [
+          "fixture-search-malformed-primary",
+          "fixture-search-malformed-fallback"
+        ],
+        "liveNetworkCalls": 0
+      }
+    },
+    {
+      "caseId": "failure_empty_content",
+      "sourceLabel": "fixture:empty-content",
+      "outcome": "failure",
+      "resolution": "not_applicable",
+      "requestedUrlLabel": "fixture-public-empty",
+      "finalUrlLabel": "fixture-public-empty",
+      "redirected": false,
+      "status": null,
+      "failureCode": "empty_content",
+      "failureReason": null,
+      "body": {
+        "available": false,
+        "source": "missing",
+        "trust": "missing",
+        "length": 0,
+        "snippet": ""
+      },
+      "transport": {
+        "requestCount": 1,
+        "requestLabels": [
+          "fixture-public-empty"
+        ],
+        "liveNetworkCalls": 0
+      }
+    },
+    {
+      "caseId": "failure_blocked_private_url",
+      "sourceLabel": "fixture:blocked-private-url",
+      "outcome": "failure",
+      "resolution": "not_applicable",
+      "requestedUrlLabel": "fixture-private-blocked-url",
+      "finalUrlLabel": "fixture-private-blocked-url",
+      "redirected": false,
+      "status": null,
+      "failureCode": "request_policy_refused",
+      "failureReason": "blocked_host",
+      "body": {
+        "available": false,
+        "source": "missing",
+        "trust": "missing",
+        "length": 0,
+        "snippet": ""
+      },
+      "transport": {
+        "requestCount": 0,
+        "requestLabels": [],
+        "liveNetworkCalls": 0
+      }
+    },
+    {
+      "caseId": "failure_http_404",
+      "sourceLabel": "fixture:http-404",
+      "outcome": "failure",
+      "resolution": "not_applicable",
+      "requestedUrlLabel": "fixture-public-404",
+      "finalUrlLabel": "fixture-public-404",
+      "redirected": false,
+      "status": 404,
+      "failureCode": "http_status",
+      "failureReason": null,
+      "body": {
+        "available": false,
+        "source": "missing",
+        "trust": "missing",
+        "length": 0,
+        "snippet": ""
+      },
+      "transport": {
+        "requestCount": 1,
+        "requestLabels": [
+          "fixture-public-404"
+        ],
+        "liveNetworkCalls": 0
+      }
+    },
+    {
+      "caseId": "failure_http_500",
+      "sourceLabel": "fixture:http-500",
+      "outcome": "failure",
+      "resolution": "not_applicable",
+      "requestedUrlLabel": "fixture-public-500",
+      "finalUrlLabel": "fixture-public-500",
+      "redirected": false,
+      "status": 500,
+      "failureCode": "http_status",
+      "failureReason": null,
+      "body": {
+        "available": false,
+        "source": "missing",
+        "trust": "missing",
+        "length": 0,
+        "snippet": ""
+      },
+      "transport": {
+        "requestCount": 1,
+        "requestLabels": [
+          "fixture-public-500"
+        ],
+        "liveNetworkCalls": 0
+      }
+    },
+    {
+      "caseId": "failure_oversized_body",
+      "sourceLabel": "fixture:oversized-body",
+      "outcome": "failure",
+      "resolution": "not_applicable",
+      "requestedUrlLabel": "fixture-public-oversized",
+      "finalUrlLabel": "fixture-public-oversized",
+      "redirected": false,
+      "status": null,
+      "failureCode": "response_too_large",
+      "failureReason": null,
+      "body": {
+        "available": false,
+        "source": "missing",
+        "trust": "missing",
+        "length": 0,
+        "snippet": ""
+      },
+      "transport": {
+        "requestCount": 1,
+        "requestLabels": [
+          "fixture-public-oversized"
+        ],
+        "liveNetworkCalls": 0
+      }
+    }
+  ],
+  "nonClaims": [
+    "This artifact is not production proof.",
+    "This artifact uses only synthetic in-memory fixtures.",
+    "This artifact does not deploy, access D1, call endpoints, read logs or secrets, use customer or private data, touch CRM, send outreach, call LLMs, run automation, or claim production readiness."
+  ]
+}

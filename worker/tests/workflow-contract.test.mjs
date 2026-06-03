@@ -85,6 +85,21 @@ test('CI workflow runs the local-only outbound HTTP enrichment boundary guard af
   assert.match(workflow, /run:\s+npm run security:audit-triage[\s\S]*run:\s+npm run check:enrichment-boundary[\s\S]*run:\s+npm run check:schema/);
 });
 
+test('CI workflow runs the local-only enrichment fixture replay output contract after boundary guard', async () => {
+  const [workflow, packageJsonRaw] = await Promise.all([
+    readFile(ciWorkflowPath, 'utf8'),
+    readFile(packageJsonPath, 'utf8'),
+  ]);
+  const packageJson = JSON.parse(packageJsonRaw);
+  const script = packageJson.scripts['check:enrichment-replay'] || '';
+
+  assert.match(script, /node --test tests\/enrichment-fixture-replay\.test\.js/);
+  assert.match(script, /node scripts\/enrichment-fixture-replay\.mjs --json --output tmp\/codex\/enrichment-fixture-replay-output-contract-non-production\.json/);
+  assert.doesNotMatch(script, /npm audit|wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
+  assert.match(workflow, /name:\s+Run enrichment fixture replay output contract\s+run:\s+npm run check:enrichment-replay/);
+  assert.match(workflow, /run:\s+npm run check:enrichment-boundary[\s\S]*run:\s+npm run check:enrichment-replay[\s\S]*run:\s+npm run check:schema/);
+});
+
 test('CI workflow runs the local-only Worker E2E smoke after full tests', async () => {
   const workflow = await readFile(ciWorkflowPath, 'utf8');
 
