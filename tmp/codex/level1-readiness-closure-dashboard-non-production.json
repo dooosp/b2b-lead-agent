@@ -19,7 +19,7 @@
   },
   "baseline": {
     "branch": "master",
-    "headSha": "7bc11e398415acdf480641f597eee6e3f4def228",
+    "headSha": "808dde2b19a450207499672d05a9ed5d4215ad66",
     "mergedPrs": [
       171,
       172,
@@ -32,12 +32,13 @@
       179,
       180,
       181,
-      182
+      182,
+      183
     ],
-    "mergedPrRange": "#171-#182"
+    "mergedPrRange": "#171-#183"
   },
   "summary": {
-    "localGatesClosed": 12,
+    "localGatesClosed": 14,
     "holdGates": 0,
     "blockerIssuesMapped": 6,
     "productionProofStatus": "HOLD",
@@ -494,6 +495,118 @@
       "blocker": "",
       "risk": "Pipeline replay serializes labels and summaries only; it is not a replacement for canonical production lead publication proof.",
       "notes": "Replay links enrichment fixture outputs to lead-quality, report, publication summary, and release-evidence boundaries without raw URLs, live scraping, customer data, D1, CRM, outreach, LLM, or automation."
+    },
+    {
+      "id": "readiness_closure_dashboard",
+      "title": "PR #183 Level 1 readiness closure dashboard",
+      "status": "PASS",
+      "sourcePr": 183,
+      "sourcePrUrl": "https://github.com/dooosp/b2b-lead-agent/pull/183",
+      "boundary": "NOT_PRODUCTION_EVIDENCE",
+      "notProductionEvidence": true,
+      "productionReady": false,
+      "productionReviewerWorkflowReady": false,
+      "command": "npm run proof:level1:closure-dashboard",
+      "artifacts": [
+        "tmp/codex/level1-readiness-closure-dashboard-non-production.json",
+        "docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md"
+      ],
+      "docs": [
+        "docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md",
+        "docs/roadmap/current-pr-train.md"
+      ],
+      "issues": [
+        {
+          "issue": 154,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/154",
+          "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED"
+        },
+        {
+          "issue": 162,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/162",
+          "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED"
+        },
+        {
+          "issue": 163,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/163",
+          "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED"
+        },
+        {
+          "issue": 164,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/164",
+          "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED"
+        },
+        {
+          "issue": 165,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/165",
+          "status": "OPEN_HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL"
+        },
+        {
+          "issue": 144,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/144",
+          "status": "OPEN_OPTIONAL_FEEDBACK_INTAKE_RECORD_001_RECORDED"
+        }
+      ],
+      "blocker": "Dashboard records Issue #165 as the exact remaining blocker after PR #171-#183 local gates.",
+      "risk": "Dashboard evidence is local/non-production only and must not be read as production reviewer workflow readiness.",
+      "notes": "The dashboard inventories merged local-only gate artifacts, command list, issue map, risks, and future proof prerequisites."
+    },
+    {
+      "id": "production_proof_approval_intake_gate",
+      "title": "Current branch Issue #165 machine-checkable approval intake gate",
+      "status": "PASS",
+      "sourcePr": null,
+      "sourcePrUrl": null,
+      "boundary": "NOT_PRODUCTION_EVIDENCE",
+      "notProductionEvidence": true,
+      "productionReady": false,
+      "productionReviewerWorkflowReady": false,
+      "command": "npm run proof:level1:approval-intake",
+      "artifacts": [
+        "tmp/codex/level1-production-proof-approval-intake-gate-non-production.json",
+        "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json",
+        "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md"
+      ],
+      "docs": [
+        "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json",
+        "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md",
+        "docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md"
+      ],
+      "issues": [
+        {
+          "issue": 154,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/154",
+          "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED"
+        },
+        {
+          "issue": 162,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/162",
+          "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED"
+        },
+        {
+          "issue": 163,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/163",
+          "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED"
+        },
+        {
+          "issue": 164,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/164",
+          "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED"
+        },
+        {
+          "issue": 165,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/165",
+          "status": "OPEN_HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL"
+        },
+        {
+          "issue": 144,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/144",
+          "status": "OPEN_OPTIONAL_FEEDBACK_INTAKE_RECORD_001_RECORDED"
+        }
+      ],
+      "blocker": "Issue #165 remains HOLD until the future approval request fills every required field and a separate proof goal is approved.",
+      "risk": "A complete intake request is machine-checkable planning input only; it does not execute or approve production proof.",
+      "notes": "Required approval fields: target, command_allowlist, endpoint_boundary, d1_boundary, fixture_non_customer_data_policy, evidence_redaction, rollback_owner, stop_conditions, approver, expires_at."
     }
   ],
   "commandList": [
@@ -507,6 +620,7 @@
     "npm run check:enrichment-replay",
     "npm run check:lead-pipeline-replay",
     "npm run proof:level1:closure-dashboard",
+    "npm run proof:level1:approval-intake",
     "npm run check:naming",
     "npm run check:schema",
     "npm run eval:lead-quality",
@@ -529,7 +643,12 @@
     "tmp/codex/security-dependency-audit-triage-non-production.json",
     "tmp/codex/outbound-http-enrichment-boundary-guards-non-production.json",
     "tmp/codex/enrichment-fixture-replay-output-contract-non-production.json",
-    "tmp/codex/lead-pipeline-fixture-replay-artifact-contract-non-production.json"
+    "tmp/codex/lead-pipeline-fixture-replay-artifact-contract-non-production.json",
+    "tmp/codex/level1-readiness-closure-dashboard-non-production.json",
+    "docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md",
+    "tmp/codex/level1-production-proof-approval-intake-gate-non-production.json",
+    "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json",
+    "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md"
   ],
   "docList": [
     "docs/roadmap/b2b-lead-agent-level-1-local-proof-simulation-evidence.md",
@@ -544,11 +663,13 @@
     "docs/roadmap/outbound-http-enrichment-boundary-guards-non-production.md",
     "docs/roadmap/enrichment-fixture-replay-output-contract-non-production.md",
     "docs/roadmap/lead-pipeline-fixture-replay-artifact-contract-non-production.md",
+    "docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md",
+    "docs/roadmap/current-pr-train.md",
+    "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json",
+    "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md",
     "AGENTS.md",
     "HARDENING_PLAN.md",
-    "NEXT_SESSION_PROMPT.md",
-    "docs/roadmap/current-pr-train.md",
-    "docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md"
+    "NEXT_SESSION_PROMPT.md"
   ],
   "issueMap": [
     {
@@ -605,7 +726,7 @@
       "id": "production_proof_not_run",
       "status": "HOLD",
       "issue": 165,
-      "risk": "All PR #171-#182 evidence is local/non-production only; production proof execution remains unapproved."
+      "risk": "All PR #171-#183 evidence plus the approval-intake gate are local/non-production only; production proof execution remains unapproved."
     },
     {
       "id": "real_auth_not_implemented",
@@ -643,7 +764,7 @@
       "id": "separate_explicit_future_proof_goal",
       "status": "HOLD",
       "blockedByIssue": 165,
-      "requirement": "A new human-approved production proof goal with exact scope must be opened."
+      "requirement": "A new human-approved production proof goal with exact scope must be opened after the Issue #165 intake fields are machine-checkable and approved."
     },
     {
       "id": "exact_command_allowlist",
@@ -681,7 +802,19 @@
     "status": "HOLD",
     "url": "https://github.com/dooosp/b2b-lead-agent/issues/165",
     "latestRelevantRecord": "https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4586256037",
-    "remainingBlocker": "Issue #165 remains the exact blocker: a separate explicit future production proof goal must approve exact production target, command allowlist, endpoint boundary, D1 boundary, fixture/non-customer data policy, evidence redaction, rollback owner, and stop conditions before any production proof can run."
+    "remainingBlocker": "Issue #165 remains the exact blocker: a separate explicit future production proof goal must approve exact production target, command allowlist, endpoint boundary, D1 boundary, fixture/non-customer data policy, evidence redaction, rollback owner, and stop conditions before any production proof can run.",
+    "remainingApprovalFields": [
+      "target",
+      "command_allowlist",
+      "endpoint_boundary",
+      "d1_boundary",
+      "fixture_non_customer_data_policy",
+      "evidence_redaction",
+      "rollback_owner",
+      "stop_conditions",
+      "approver",
+      "expires_at"
+    ]
   },
   "validationCommands": [
     "git status --short",

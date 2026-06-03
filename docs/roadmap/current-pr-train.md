@@ -5,19 +5,29 @@ This document summarizes the May 2026 PR train, stale PR disposition, and next w
 Evidence baseline:
 
 - Repo default branch: `master`
-- Latest audited source-of-truth `origin/master`: `7bc11e398415acdf480641f597eee6e3f4def228` (PR #182)
+- Latest audited source-of-truth `origin/master`: `808dde2b19a450207499672d05a9ed5d4215ad66` (PR #183)
 - Evidence collected from GitHub PR/issue metadata, PR bodies, current `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md`
-- Scope: documentation synthesis plus local/test-safe Option A manual review notes implementation, edit/clear record, saved/empty state plus timestamp clarity record, Manual Review Notes v1 data semantics decision readiness, the T1 local/test-safe note-specific timestamp implementation, reviewer identity / author attribution decision readiness, generic author-label implementation, H2 metadata-only history implementation, retention/privacy policy decision readiness, static local/test privacy warning implementation, production readiness gap planning, access/visibility/export decision readiness, access-control plan readiness, the C2 opt-in local/test role stub, post-PR135 source-of-truth sync, docs-only Manual Review Notes v1 production proof plan readiness, docs-only Manual Review Notes v1 production D1 migration plan readiness, docs-only Manual Review Notes v1 production rollback/backout plan readiness, docs-only Manual Review Notes v1 local/staging dry-run plan readiness, approved local/fake-D1 dry-run evidence capture, docs-only staging target decision readiness, final non-production cycle closeout, reviewer feedback intake, first feedback record disposition, docs-only staging execution readiness packet preparation, docs-only staging prerequisite classification, docs-only B2B Lead Agent productization roadmap v1 preparation, docs-only Production Reviewer Workflow Readiness Packet preparation, docs-only Auth / Access Control Decision Packet preparation, docs-only Privacy / Retention Decision Packet preparation, docs-only Privacy Owner Input Request Packet preparation, GitHub Privacy Owner Input tracking issue creation/sync, Issue #154 owner authority sync, Issue #154 conservative policy disposition preparation, docs-only Privacy / Retention Implementation Plan preparation, docs-only Auth / Access Control Implementation Plan preparation, merged non-production Auth / Access Control test guard coverage, docs-only Level 1 blocker burn-down packet preparation, GitHub Level 1 owner-input tracking issue creation/sync, PR #171's non-production auth provider/session scaffold and local proof simulation, PR #172's local proof preflight automation, PR #173's local auth adapter route audit, PR #174's approval packet dry-run, PR #175's CI/package regression gate, PR #176's fail-closed fault injection, PR #177's change-control manifest gate, PR #178's operator rehearsal gate, PR #179's axios audit triage, PR #180's outbound HTTP enrichment boundary guards, PR #181's enrichment fixture replay output contract, PR #182's lead pipeline fixture replay artifact contract, and current `LEVEL1_READINESS_CLOSURE_DASHBOARD_NON_PRODUCTION` local/test closure dashboard work
+- Scope: documentation synthesis plus local/test-safe Option A manual review notes implementation, edit/clear record, saved/empty state plus timestamp clarity record, Manual Review Notes v1 data semantics decision readiness, the T1 local/test-safe note-specific timestamp implementation, reviewer identity / author attribution decision readiness, generic author-label implementation, H2 metadata-only history implementation, retention/privacy policy decision readiness, static local/test privacy warning implementation, production readiness gap planning, access/visibility/export decision readiness, access-control plan readiness, the C2 opt-in local/test role stub, post-PR135 source-of-truth sync, docs-only Manual Review Notes v1 production proof plan readiness, docs-only Manual Review Notes v1 production D1 migration plan readiness, docs-only Manual Review Notes v1 production rollback/backout plan readiness, docs-only Manual Review Notes v1 local/staging dry-run plan readiness, approved local/fake-D1 dry-run evidence capture, docs-only staging target decision readiness, final non-production cycle closeout, reviewer feedback intake, first feedback record disposition, docs-only staging execution readiness packet preparation, docs-only staging prerequisite classification, docs-only B2B Lead Agent productization roadmap v1 preparation, docs-only Production Reviewer Workflow Readiness Packet preparation, docs-only Auth / Access Control Decision Packet preparation, docs-only Privacy / Retention Decision Packet preparation, docs-only Privacy Owner Input Request Packet preparation, GitHub Privacy Owner Input tracking issue creation/sync, Issue #154 owner authority sync, Issue #154 conservative policy disposition preparation, docs-only Privacy / Retention Implementation Plan preparation, docs-only Auth / Access Control Implementation Plan preparation, merged non-production Auth / Access Control test guard coverage, docs-only Level 1 blocker burn-down packet preparation, GitHub Level 1 owner-input tracking issue creation/sync, PR #171's non-production auth provider/session scaffold and local proof simulation, PR #172's local proof preflight automation, PR #173's local auth adapter route audit, PR #174's approval packet dry-run, PR #175's CI/package regression gate, PR #176's fail-closed fault injection, PR #177's change-control manifest gate, PR #178's operator rehearsal gate, PR #179's axios audit triage, PR #180's outbound HTTP enrichment boundary guards, PR #181's enrichment fixture replay output contract, PR #182's lead pipeline fixture replay artifact contract, PR #183's Level 1 readiness closure dashboard, and current `LEVEL1_PRODUCTION_PROOF_APPROVAL_INTAKE_GATE_NON_PRODUCTION` local/test approval-intake work
 - Current owner-input response processing: Issues #162, #163, #164, #165, and #154 now have scoped owner confirmations processed as docs-planning `COMPLETE`. Issue #165 explicitly keeps production proof execution unapproved until a separate explicit future proof goal. Production reviewer workflow remains `BLOCKED`.
 - Production actions performed for this synthesis: none
 
 Current follow-up boundary:
 `LEVEL1_READINESS_CLOSURE_DASHBOARD_NON_PRODUCTION` adds only a local/test
-JSON and Markdown closure dashboard for PR #171-#182 gate inventory, commands,
+JSON and Markdown closure dashboard for PR #171-#183 gate inventory, commands,
 artifacts, docs, issue map, risks, and future production-proof prerequisites.
 The dashboard is generated by `npm run proof:level1:closure-dashboard` at
 `tmp/codex/level1-readiness-closure-dashboard-non-production.json` and
 `docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md`.
+Current `LEVEL1_PRODUCTION_PROOF_APPROVAL_INTAKE_GATE_NON_PRODUCTION` work adds
+`npm run proof:level1:approval-intake`,
+`tmp/codex/level1-production-proof-approval-intake-gate-non-production.json`,
+`docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json`,
+and
+`docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md`
+as a non-executable Issue #165 request template and validator. Exact remaining
+approval fields are target, command allowlist, endpoint boundary, D1 boundary,
+fixture/non-customer data policy, evidence redaction, rollback owner, stop
+conditions, approver, and expiry.
 It is **not production evidence** and does not touch Worker runtime.
 Production proof,
 deploy, production/staging D1, endpoints, logs/secrets, live scraping,
@@ -271,17 +281,19 @@ Option A manual review notes update: PR #119 added the plan-only implementation 
 | [#180](https://github.com/dooosp/b2b-lead-agent/pull/180) | Outbound HTTP enrichment boundary guards | Centralized root enrichment axios usage behind `enricher/outbound-http-boundary.js`, added injectable local/test transport, request-policy, failure-mode/redaction coverage, and `npm run check:enrichment-boundary` without live scraping or production/staging calls. |
 | [#181](https://github.com/dooosp/b2b-lead-agent/pull/181) | Enrichment fixture replay output contract | Added deterministic in-memory fixture replay for URL resolution, scraping, redirect, timeout, malformed HTML, empty content, blocked URL, 4xx/5xx, oversized body, normalized outputs, redaction, and `npm run check:enrichment-replay` without live scraping or production/staging calls. |
 | [#182](https://github.com/dooosp/b2b-lead-agent/pull/182) | Lead pipeline fixture replay artifact contract | Added deterministic local replay-to-artifact summaries from PR #181 enrichment outputs into synthetic lead-quality, report, publication, release-evidence, provenance, redaction, and stable artifact shape through `npm run check:lead-pipeline-replay` without live scraping or production/staging calls. |
+| [#183](https://github.com/dooosp/b2b-lead-agent/pull/183) | Level 1 readiness closure dashboard | Added the local-only closure dashboard for PR #171-#183 gates, commands, artifacts, issue map, risks, and future production-proof prerequisites while keeping Issue #165 on HOLD. |
 
 ## Immediate Merge Queue
 
 At this source-of-truth sync preflight, PR #119 through PR #153 plus PR #155
-through PR #182 are merged into `master`. PR #178 added the local-only Level 1
+through PR #183 are merged into `master`. PR #178 added the local-only Level 1
 operator rehearsal gate, PR #179 added axios audit triage, and PR #180 added
 outbound HTTP enrichment boundary guards. PR #181 added the local-only
 enrichment fixture replay output contract. PR #182 added the local-only lead
-pipeline fixture replay artifact contract. The current follow-up boundary is
-`LEVEL1_READINESS_CLOSURE_DASHBOARD_NON_PRODUCTION`: local/test-only closure
-dashboard generation for the PR #171-#182 gate train. The active Privacy Owner Input
+pipeline fixture replay artifact contract. PR #183 added the local-only closure
+dashboard for the PR #171-#183 gate train. The current follow-up boundary is
+`LEVEL1_PRODUCTION_PROOF_APPROVAL_INTAKE_GATE_NON_PRODUCTION`: local/test-only
+Issue #165 approval-intake template/validator generation. The active Privacy Owner Input
 tracking issue is [Issue #154](https://github.com/dooosp/b2b-lead-agent/issues/154),
 status `OPEN`; Issue #154 remains `COMPLETE_FOR_CONSERVATIVE_POLICY` for
 conservative policy values only, with retention duration, metadata retention

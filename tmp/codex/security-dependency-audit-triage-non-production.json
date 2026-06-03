@@ -2,7 +2,7 @@
   "ok": true,
   "schemaVersion": "security.dependency_audit_triage.v1",
   "documentStatus": "SECURITY_DEPENDENCY_AUDIT_TRIAGE_NON_PRODUCTION",
-  "generatedAt": "2026-06-02T13:01:05.793Z",
+  "generatedAt": "2026-06-03T12:49:27.660Z",
   "repo": "dooosp/b2b-lead-agent",
   "packageJsonPath": "package.json",
   "packageLockPath": "package-lock.json",

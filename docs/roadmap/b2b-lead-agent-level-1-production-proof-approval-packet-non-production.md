@@ -28,8 +28,10 @@ BOUNDARY: NOT_PRODUCTION_EVIDENCE
 | PR #175 | `MERGED` | Durable local-only Level 1 regression gate in CI. |
 | PR #176 | `MERGED` | Local-only fail-closed fault injection coverage. |
 | PR #177 | `MERGED` | Local-only change-control manifest gate. |
+| PR #183 | `MERGED` | Local-only readiness closure dashboard for PR #171-#183 gates. |
 | Change-control manifest gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run proof:level1:change-control-manifest` writes a redacted `NOT_PRODUCTION_EVIDENCE` non-executable plan and refuses unsafe manifest values. |
 | Operator rehearsal gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run proof:level1:operator-rehearsal` consumes this packet plus the change-control manifest and writes a redacted non-executable runbook without starting proof. |
+| Approval-intake gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run proof:level1:approval-intake` writes a non-executable Issue #165 request template plus redacted JSON/Markdown validator artifacts. |
 | Level 1 CI/package gate | `PASS_LOCAL`, `HOLD_PRODUCTION` | `npm run check:level1` runs local-only Level 1 tests, release-evidence redaction tests, and proof/approval/change-control dry-runs in CI without secrets, deploy, D1 bindings, endpoints, or production inputs. |
 | Final proof approval | `HOLD` | Issue #165 keeps proof execution blocked until a separate explicit future proof goal. |
 | Production reviewer workflow | `BLOCKED` | No real auth, production D1 observation, endpoint proof, or production evidence exists. |
@@ -68,6 +70,8 @@ D1_BOUNDARY: MISSING
 FIXTURE_OR_NON_CUSTOMER_DATA_POLICY: MISSING
 EVIDENCE_STORAGE_PATH: MISSING
 REDACTION_RULES: MISSING
+APPROVER: MISSING
+EXPIRY: MISSING
 STOP_CONDITIONS: MISSING
 ```
 
@@ -223,6 +227,22 @@ unexpected manifest fields, production/staging URLs, D1 private identifiers or
 binding/id aliases, secrets/raw auth fields, broad endpoints, destructive SQL,
 missing rollback ownership, stale or missing approval records, and evidence
 writes, and emits only `REVIEW_ONLY_DO_NOT_EXECUTE` dry-run steps.
+
+The follow-up approval-intake gate at
+`docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md`
+and
+`docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json`
+adds the local-only machine-checkable Issue #165 request template:
+
+```bash
+npm run proof:level1:approval-intake
+```
+
+It requires target, command allowlist, endpoint boundary, D1 boundary,
+fixture/non-customer data policy, evidence redaction, rollback owner, stop
+conditions, approver, and expiry; fails closed for missing, vague, stale,
+contradictory, production-ready, secret-like, broad endpoint, destructive SQL,
+and customer-data inputs; and keeps proof execution unapproved.
 
 ## Operator Rehearsal Gate
 

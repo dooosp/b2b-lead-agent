@@ -76,8 +76,9 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   production/staging deploy, endpoint calls, D1 access, logs/secrets,
   live scraping, customer/private data, CRM/outreach, LLM, automation, or
   production-readiness claims.
-- Level 1 closure dashboard addendum: current non-production source of truth
-  for the PR #171-#182 Level 1 gate train is
+- Level 1 closure dashboard addendum: `master` includes PR #183 at
+  `808dde2b19a450207499672d05a9ed5d4215ad66`. The current non-production
+  source of truth for the PR #171-#183 Level 1 gate train is
   `docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md`
   plus machine-checkable JSON
   `tmp/codex/level1-readiness-closure-dashboard-non-production.json`,
@@ -88,6 +89,22 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   `productionReady:false`, keeps `productionReviewerWorkflowReady:false`, and
   records Issue #165 as the exact remaining blocker for a separate explicit
   future production proof goal.
+- Current approval-intake gate work adds
+  `LEVEL1_PRODUCTION_PROOF_APPROVAL_INTAKE_GATE_NON_PRODUCTION`,
+  `npm run proof:level1:approval-intake`,
+  `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md`,
+  `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json`,
+  and
+  `tmp/codex/level1-production-proof-approval-intake-gate-non-production.json`.
+  It converts Issue #165's remaining human blocker into a machine-checkable,
+  non-executable request template and validator. Required future approval
+  fields are target, command allowlist, endpoint boundary, D1 boundary,
+  fixture/non-customer data policy, evidence redaction, rollback owner, stop
+  conditions, approver, and expiry. The gate fails closed for missing, vague,
+  stale, contradictory, production-ready, secret-like, broad endpoint,
+  destructive SQL, and customer-data inputs; it remains
+  `NOT_PRODUCTION_EVIDENCE`, keeps `productionReady:false`, and does not
+  approve production proof.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -266,10 +283,11 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - `npm run proof:level1:change-control-manifest` for the local-only Level 1 change-control manifest dry-run gate
 - `npm run proof:level1:operator-rehearsal` for the local-only Level 1 operator rehearsal runbook gate
 - `npm run proof:level1:closure-dashboard` for the local-only Level 1 closure dashboard JSON/Markdown artifact writer
+- `npm run proof:level1:approval-intake` for the local-only Level 1 Issue #165 approval-intake template/validator artifact writer
 - `npm run check:enrichment-boundary` for the local-only outbound HTTP enrichment boundary guard
 - `npm run check:enrichment-replay` for the local-only root enrichment fixture replay output contract
 - `npm run check:lead-pipeline-replay` for the local-only root lead pipeline fixture replay artifact contract
-- `npm run check:level1` for the local-only Level 1 auth/route/privacy/proof/preflight/approval/change-control/operator-rehearsal/closure-dashboard regression gate
+- `npm run check:level1` for the local-only Level 1 auth/route/privacy/proof/preflight/approval/change-control/operator-rehearsal/closure-dashboard/approval-intake regression gate
 - `npm run eval:lead-quality` for synthetic-only LeadBrief quality and review-readiness checks
 - `npm run test:e2e:local` for fake-D1, loopback-only Worker route/page smoke coverage
 - `npm test` for the root gate plus the combined worker gate

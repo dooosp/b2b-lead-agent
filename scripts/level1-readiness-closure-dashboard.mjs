@@ -3,6 +3,13 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
+import {
+  LEVEL1_APPROVAL_INTAKE_GATE_JSON_PATH,
+  LEVEL1_APPROVAL_INTAKE_GATE_MD_PATH,
+  LEVEL1_APPROVAL_INTAKE_TEMPLATE_JSON_PATH,
+  REQUIRED_APPROVAL_INTAKE_FIELD_IDS,
+} from './level1-production-proof-approval-intake-gate.mjs';
+
 export const LEVEL1_READINESS_CLOSURE_DASHBOARD_STATUS =
   'LEVEL1_READINESS_CLOSURE_DASHBOARD_NON_PRODUCTION';
 
@@ -27,9 +34,11 @@ export const REQUIRED_LEVEL1_CLOSURE_GATE_IDS = Object.freeze([
   'outbound_enrichment_http_boundary',
   'enrichment_fixture_replay_output_contract',
   'lead_pipeline_fixture_replay_artifact_contract',
+  'readiness_closure_dashboard',
+  'production_proof_approval_intake_gate',
 ]);
 
-const MERGED_PRS = Object.freeze([171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182]);
+const MERGED_PRS = Object.freeze([171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183]);
 
 const ISSUE_REFS = Object.freeze({
   privacyRetention: {
@@ -121,7 +130,7 @@ function gate({
     title,
     status,
     sourcePr,
-    sourcePrUrl: `https://github.com/dooosp/b2b-lead-agent/pull/${sourcePr}`,
+    sourcePrUrl: sourcePr ? `https://github.com/dooosp/b2b-lead-agent/pull/${sourcePr}` : null,
     boundary: 'NOT_PRODUCTION_EVIDENCE',
     notProductionEvidence: true,
     productionReady: false,
@@ -373,6 +382,44 @@ function buildGateInventory() {
       risk: 'Pipeline replay serializes labels and summaries only; it is not a replacement for canonical production lead publication proof.',
       notes: 'Replay links enrichment fixture outputs to lead-quality, report, publication summary, and release-evidence boundaries without raw URLs, live scraping, customer data, D1, CRM, outreach, LLM, or automation.',
     }),
+    gate({
+      id: 'readiness_closure_dashboard',
+      title: 'PR #183 Level 1 readiness closure dashboard',
+      sourcePr: 183,
+      command: 'npm run proof:level1:closure-dashboard',
+      artifacts: [
+        LEVEL1_READINESS_CLOSURE_DASHBOARD_JSON_PATH,
+        LEVEL1_READINESS_CLOSURE_DASHBOARD_MD_PATH,
+      ],
+      docs: [
+        LEVEL1_READINESS_CLOSURE_DASHBOARD_MD_PATH,
+        'docs/roadmap/current-pr-train.md',
+      ],
+      issueKeys: ['privacyRetention', 'authProviderSession', 'productionD1Observation', 'rollbackStopWrite', 'finalProofApproval', 'reviewerFeedback'],
+      blocker: 'Dashboard records Issue #165 as the exact remaining blocker after PR #171-#183 local gates.',
+      risk: 'Dashboard evidence is local/non-production only and must not be read as production reviewer workflow readiness.',
+      notes: 'The dashboard inventories merged local-only gate artifacts, command list, issue map, risks, and future proof prerequisites.',
+    }),
+    gate({
+      id: 'production_proof_approval_intake_gate',
+      title: 'Current branch Issue #165 machine-checkable approval intake gate',
+      sourcePr: null,
+      command: 'npm run proof:level1:approval-intake',
+      artifacts: [
+        LEVEL1_APPROVAL_INTAKE_GATE_JSON_PATH,
+        LEVEL1_APPROVAL_INTAKE_TEMPLATE_JSON_PATH,
+        LEVEL1_APPROVAL_INTAKE_GATE_MD_PATH,
+      ],
+      docs: [
+        LEVEL1_APPROVAL_INTAKE_TEMPLATE_JSON_PATH,
+        LEVEL1_APPROVAL_INTAKE_GATE_MD_PATH,
+        LEVEL1_READINESS_CLOSURE_DASHBOARD_MD_PATH,
+      ],
+      issueKeys: ['privacyRetention', 'authProviderSession', 'productionD1Observation', 'rollbackStopWrite', 'finalProofApproval', 'reviewerFeedback'],
+      blocker: 'Issue #165 remains HOLD until the future approval request fills every required field and a separate proof goal is approved.',
+      risk: 'A complete intake request is machine-checkable planning input only; it does not execute or approve production proof.',
+      notes: `Required approval fields: ${REQUIRED_APPROVAL_INTAKE_FIELD_IDS.join(', ')}.`,
+    }),
   ];
 }
 
@@ -415,9 +462,9 @@ export function buildLevel1ReadinessClosureDashboard({
     },
     baseline: {
       branch: 'master',
-      headSha: '7bc11e398415acdf480641f597eee6e3f4def228',
+      headSha: '808dde2b19a450207499672d05a9ed5d4215ad66',
       mergedPrs: MERGED_PRS,
-      mergedPrRange: '#171-#182',
+      mergedPrRange: '#171-#183',
     },
     summary: {
       localGatesClosed: gates.filter((item) => item.status === 'PASS').length,
@@ -436,7 +483,7 @@ export function buildLevel1ReadinessClosureDashboard({
         id: 'production_proof_not_run',
         status: 'HOLD',
         issue: 165,
-        risk: 'All PR #171-#182 evidence is local/non-production only; production proof execution remains unapproved.',
+        risk: 'All PR #171-#183 evidence plus the approval-intake gate are local/non-production only; production proof execution remains unapproved.',
       },
       {
         id: 'real_auth_not_implemented',
@@ -474,7 +521,7 @@ export function buildLevel1ReadinessClosureDashboard({
         id: 'separate_explicit_future_proof_goal',
         status: 'HOLD',
         blockedByIssue: 165,
-        requirement: 'A new human-approved production proof goal with exact scope must be opened.',
+        requirement: 'A new human-approved production proof goal with exact scope must be opened after the Issue #165 intake fields are machine-checkable and approved.',
       },
       {
         id: 'exact_command_allowlist',
@@ -513,6 +560,7 @@ export function buildLevel1ReadinessClosureDashboard({
       url: ISSUE_REFS.finalProofApproval.url,
       latestRelevantRecord: ISSUE_REFS.finalProofApproval.currentRecord,
       remainingBlocker: 'Issue #165 remains the exact blocker: a separate explicit future production proof goal must approve exact production target, command allowlist, endpoint boundary, D1 boundary, fixture/non-customer data policy, evidence redaction, rollback owner, and stop conditions before any production proof can run.',
+      remainingApprovalFields: REQUIRED_APPROVAL_INTAKE_FIELD_IDS,
     },
     validationCommands: VALIDATION_COMMANDS,
     nonGoals: [
@@ -561,8 +609,8 @@ export function validateLevel1ReadinessClosureDashboard(dashboard = {}) {
 
   const prs = dashboard.baseline?.mergedPrs || [];
   const prsMatch = JSON.stringify(prs) === JSON.stringify(MERGED_PRS);
-  if (!prsMatch || dashboard.baseline?.headSha !== '7bc11e398415acdf480641f597eee6e3f4def228') {
-    addBlocker(blockers, 'invalid_pr_lineage', 'baseline', 'expected merged PRs #171-#182 at PR #182 merge commit');
+  if (!prsMatch || dashboard.baseline?.headSha !== '808dde2b19a450207499672d05a9ed5d4215ad66') {
+    addBlocker(blockers, 'invalid_pr_lineage', 'baseline', 'expected merged PRs #171-#183 at PR #183 merge commit');
   }
 
   for (const [index, item] of (dashboard.gates || []).entries()) {
@@ -591,6 +639,7 @@ export function validateLevel1ReadinessClosureDashboard(dashboard = {}) {
     'npm run check:enrichment-replay',
     'npm run check:lead-pipeline-replay',
     'npm run check:level1',
+    'npm run proof:level1:approval-intake',
   ]) {
     if (!(dashboard.commandList || []).includes(command)) {
       addBlocker(blockers, 'missing_required_command', `commandList.${command}`, command);
@@ -605,6 +654,10 @@ export function validateLevel1ReadinessClosureDashboard(dashboard = {}) {
 
   if (!(dashboard.futureProductionProofPrerequisites || []).every((item) => item.status === 'HOLD' && item.blockedByIssue === 165)) {
     addBlocker(blockers, 'future_prerequisites_not_hold', 'futureProductionProofPrerequisites', 'all future proof prerequisites must remain blocked by Issue #165');
+  }
+
+  if (JSON.stringify(dashboard.issue165Blocker?.remainingApprovalFields || []) !== JSON.stringify(REQUIRED_APPROVAL_INTAKE_FIELD_IDS)) {
+    addBlocker(blockers, 'issue_165_remaining_fields_invalid', 'issue165Blocker.remainingApprovalFields', 'Issue #165 intake field list changed');
   }
 
   return {
@@ -647,7 +700,7 @@ export function renderLevel1ReadinessClosureMarkdown(dashboard = buildLevel1Read
       '| Gate | PR | Status | Command | Primary Artifact |',
       '| --- | ---: | --- | --- | --- |',
       ...dashboard.gates.map((item) => (
-        `| \`${item.id}\` | #${item.sourcePr} | \`${item.status}\` | \`${item.command}\` | \`${item.artifacts[0] || 'none'}\` |`
+        `| \`${item.id}\` | ${item.sourcePr ? `#${item.sourcePr}` : '`current branch`'} | \`${item.status}\` | \`${item.command}\` | \`${item.artifacts[0] || 'none'}\` |`
       )),
     ]),
     '',
@@ -682,6 +735,10 @@ export function renderLevel1ReadinessClosureMarkdown(dashboard = buildLevel1Read
     '## Issue #165 Blocker',
     '',
     `${dashboard.issue165Blocker.remainingBlocker}`,
+    '',
+    'Remaining approval fields:',
+    '',
+    ...dashboard.issue165Blocker.remainingApprovalFields.map((field) => `- \`${field}\``),
     '',
     '## Non-Goals',
     '',
