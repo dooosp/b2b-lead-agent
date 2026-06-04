@@ -145,13 +145,14 @@ Post-PR177 operating update:
   complete, leaves staging target selection decision-ready/HOLD, keeps staging
   execution and production proof/deploy on HOLD, and records no mandatory next
   action.
-- The Level 1 non-production gate train through PR #183 plus the current
-  approval-intake gate is local/test evidence
+- The Level 1 non-production gate train through PR #184 plus the current
+  post-approval decision simulator is local/test evidence
   only. `npm run check:level1` runs auth adapter/scaffold, route/UI privacy,
   generated-suggestion/manual-note, proof-preflight, approval dry-run,
   change-control manifest dry-run, operator rehearsal, closure dashboard,
-  approval intake, and local artifact checks in CI without secrets, deploy,
-  Wrangler, D1 bindings, endpoint calls, or production inputs.
+  approval intake, post-approval simulator, and local artifact checks in CI
+  without secrets, deploy, Wrangler, D1 bindings, endpoint calls, or production
+  inputs.
 - The Level 1 change-control manifest packet is local-only and
   non-executable. It writes only a redacted `NOT_PRODUCTION_EVIDENCE` dry-run
   plan, refuses unexpected manifest fields, production/staging URLs, D1 private
@@ -173,6 +174,15 @@ Post-PR177 operating update:
   closed for missing, vague, stale, contradictory, production-ready,
   secret-like, broad endpoint, destructive SQL, and customer-data inputs, but
   it still does not approve proof execution or production readiness.
+- The Level 1 post-approval decision simulator is local-only and
+  non-executable. It consumes checked-in synthetic Issue #165 packets only and
+  writes only redacted `NOT_PRODUCTION_EVIDENCE` JSON/Markdown artifacts. It
+  returns `HOLD`, `BLOCKED`, or `READY_FOR_SEPARATE_HUMAN_EXECUTION`; that
+  final status is still not proof execution approval, not production evidence,
+  and not production readiness. Production/staging deploy, D1, endpoints,
+  logs/secrets, smoke tests, customer/private data, live scraping,
+  CRM/outreach/LLM/automation, real auth/session/provider parsing, destructive
+  SQL, and production-readiness claims remain blocked.
 - The current fail-closed matrix refuses malformed synthetic auth claims, mixed
   roles, auth-header / Cloudflare Access / D1 / API-key alias env poison,
   poisoned future evidence fields, bare `notes` / validation-note evidence
@@ -262,6 +272,7 @@ The following support engineering confidence but are not production proof:
 - Level 1 CI/package gate results and `NOT_PRODUCTION_EVIDENCE` artifacts.
 - Level 1 change-control manifest dry-run plans.
 - Level 1 approval-intake request templates or validator artifacts.
+- Level 1 post-approval decision simulator artifacts.
 - Source/config files.
 - D1 binding names, database names, or database IDs.
 - Local fake-D1 or staging observations.
@@ -271,7 +282,7 @@ The following support engineering confidence but are not production proof:
 - Release evidence packets generated from local inputs.
 
 The exact remaining Level 1 human blocker is Issue #165: a separate explicit
-future production proof goal with exact command, endpoint, D1, fixture,
+human production proof execution goal with exact command, endpoint, D1, fixture,
 redaction, evidence, rollback, and stop-condition boundaries. The current
 machine-checkable intake fields are target, command allowlist, endpoint
 boundary, D1 boundary, fixture/non-customer data policy, evidence redaction,

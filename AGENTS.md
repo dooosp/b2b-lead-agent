@@ -78,7 +78,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   production-readiness claims.
 - Level 1 closure dashboard addendum: `master` includes PR #183 at
   `808dde2b19a450207499672d05a9ed5d4215ad66`. The current non-production
-  source of truth for the PR #171-#183 Level 1 gate train is
+  source of truth for the PR #171-#184 Level 1 gate train is
   `docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md`
   plus machine-checkable JSON
   `tmp/codex/level1-readiness-closure-dashboard-non-production.json`,
@@ -88,8 +88,9 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   prerequisites. It is `NOT_PRODUCTION_EVIDENCE`, keeps
   `productionReady:false`, keeps `productionReviewerWorkflowReady:false`, and
   records Issue #165 as the exact remaining blocker for a separate explicit
-  future production proof goal.
-- Current approval-intake gate work adds
+  human production proof execution goal.
+- PR #184 approval-intake gate addendum: `master` includes PR #184 at
+  `bf5a627d2790828fa87ba6ee775e066a15359f20`, which adds
   `LEVEL1_PRODUCTION_PROOF_APPROVAL_INTAKE_GATE_NON_PRODUCTION`,
   `npm run proof:level1:approval-intake`,
   `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md`,
@@ -105,6 +106,20 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   destructive SQL, and customer-data inputs; it remains
   `NOT_PRODUCTION_EVIDENCE`, keeps `productionReady:false`, and does not
   approve production proof.
+- Current post-approval decision simulator work adds
+  `LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_NON_PRODUCTION`,
+  `npm run proof:level1:post-approval-simulator`,
+  `docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-synthetic-packets-non-production.json`,
+  `docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-non-production.md`,
+  and
+  `tmp/codex/level1-post-approval-decision-simulator-non-production.json`.
+  It consumes checked-in synthetic Issue #165 packets only and returns
+  `HOLD`, `BLOCKED`, or `READY_FOR_SEPARATE_HUMAN_EXECUTION`. A
+  `READY_FOR_SEPARATE_HUMAN_EXECUTION` simulator decision is still only
+  `NOT_PRODUCTION_EVIDENCE`; it keeps `productionReady:false`,
+  `productionReviewerWorkflowReady:false`, and `proofExecutionApproved:false`,
+  and the exact remaining human-only action is a separate explicit production
+  proof execution goal.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -284,10 +299,11 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - `npm run proof:level1:operator-rehearsal` for the local-only Level 1 operator rehearsal runbook gate
 - `npm run proof:level1:closure-dashboard` for the local-only Level 1 closure dashboard JSON/Markdown artifact writer
 - `npm run proof:level1:approval-intake` for the local-only Level 1 Issue #165 approval-intake template/validator artifact writer
+- `npm run proof:level1:post-approval-simulator` for the local-only Level 1 Issue #165 post-approval HOLD/BLOCKED/READY simulator artifact writer
 - `npm run check:enrichment-boundary` for the local-only outbound HTTP enrichment boundary guard
 - `npm run check:enrichment-replay` for the local-only root enrichment fixture replay output contract
 - `npm run check:lead-pipeline-replay` for the local-only root lead pipeline fixture replay artifact contract
-- `npm run check:level1` for the local-only Level 1 auth/route/privacy/proof/preflight/approval/change-control/operator-rehearsal/closure-dashboard/approval-intake regression gate
+- `npm run check:level1` for the local-only Level 1 auth/route/privacy/proof/preflight/approval/change-control/operator-rehearsal/closure-dashboard/approval-intake/post-approval-simulator regression gate
 - `npm run eval:lead-quality` for synthetic-only LeadBrief quality and review-readiness checks
 - `npm run test:e2e:local` for fake-D1, loopback-only Worker route/page smoke coverage
 - `npm test` for the root gate plus the combined worker gate

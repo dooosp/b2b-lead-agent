@@ -9,6 +9,11 @@ import {
   LEVEL1_APPROVAL_INTAKE_TEMPLATE_JSON_PATH,
   REQUIRED_APPROVAL_INTAKE_FIELD_IDS,
 } from './level1-production-proof-approval-intake-gate.mjs';
+import {
+  LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_JSON_PATH,
+  LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_MD_PATH,
+  LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_PACKET_PATH,
+} from './level1-post-approval-decision-simulator.mjs';
 
 export const LEVEL1_READINESS_CLOSURE_DASHBOARD_STATUS =
   'LEVEL1_READINESS_CLOSURE_DASHBOARD_NON_PRODUCTION';
@@ -36,9 +41,10 @@ export const REQUIRED_LEVEL1_CLOSURE_GATE_IDS = Object.freeze([
   'lead_pipeline_fixture_replay_artifact_contract',
   'readiness_closure_dashboard',
   'production_proof_approval_intake_gate',
+  'post_approval_decision_simulator',
 ]);
 
-const MERGED_PRS = Object.freeze([171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183]);
+const MERGED_PRS = Object.freeze([171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184]);
 
 const ISSUE_REFS = Object.freeze({
   privacyRetention: {
@@ -94,7 +100,8 @@ const ISSUE_REFS = Object.freeze({
 const VALIDATION_COMMANDS = Object.freeze([
   'git status --short',
   'git diff --check',
-  'node --test worker/tests/level1-readiness-closure-dashboard.test.mjs worker/tests/workflow-contract.test.mjs',
+  'node --test worker/tests/level1-post-approval-decision-simulator.test.mjs worker/tests/level1-readiness-closure-dashboard.test.mjs worker/tests/workflow-contract.test.mjs',
+  'npm run proof:level1:post-approval-simulator',
   'npm run proof:level1:closure-dashboard',
   'npm run check:lead-pipeline-replay',
   'npm run check:enrichment-replay',
@@ -420,6 +427,26 @@ function buildGateInventory() {
       risk: 'A complete intake request is machine-checkable planning input only; it does not execute or approve production proof.',
       notes: `Required approval fields: ${REQUIRED_APPROVAL_INTAKE_FIELD_IDS.join(', ')}.`,
     }),
+    gate({
+      id: 'post_approval_decision_simulator',
+      title: 'Current branch Level 1 post-approval decision simulator',
+      sourcePr: null,
+      command: 'npm run proof:level1:post-approval-simulator',
+      artifacts: [
+        LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_JSON_PATH,
+        LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_PACKET_PATH,
+        LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_MD_PATH,
+      ],
+      docs: [
+        LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_PACKET_PATH,
+        LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_MD_PATH,
+        LEVEL1_READINESS_CLOSURE_DASHBOARD_MD_PATH,
+      ],
+      issueKeys: ['privacyRetention', 'authProviderSession', 'productionD1Observation', 'rollbackStopWrite', 'finalProofApproval', 'reviewerFeedback'],
+      blocker: 'Issue #165 remains HOLD; READY_FOR_SEPARATE_HUMAN_EXECUTION still requires a separate human production proof execution goal.',
+      risk: 'The simulator consumes checked-in synthetic packets only and must never become a proof runner, endpoint caller, D1 accessor, deploy command, or production-ready claim.',
+      notes: 'Complete synthetic packets can reach only `READY_FOR_SEPARATE_HUMAN_EXECUTION`; HOLD and BLOCKED inputs fail closed with redacted NOT_PRODUCTION_EVIDENCE.',
+    }),
   ];
 }
 
@@ -458,20 +485,20 @@ export function buildLevel1ReadinessClosureDashboard({
     productionReviewerWorkflow: {
       status: 'BLOCKED',
       blockedByIssue: 165,
-      reason: 'Production reviewer workflow cannot be marked ready until Issue #165 is satisfied by a separate explicit future production proof goal.',
+      reason: 'Production reviewer workflow cannot be marked ready until Issue #165 is satisfied by a separate explicit human production proof execution goal.',
     },
     baseline: {
       branch: 'master',
-      headSha: '808dde2b19a450207499672d05a9ed5d4215ad66',
+      headSha: 'bf5a627d2790828fa87ba6ee775e066a15359f20',
       mergedPrs: MERGED_PRS,
-      mergedPrRange: '#171-#183',
+      mergedPrRange: '#171-#184',
     },
     summary: {
       localGatesClosed: gates.filter((item) => item.status === 'PASS').length,
       holdGates: gates.filter((item) => item.status === 'HOLD').length,
       blockerIssuesMapped: Object.keys(ISSUE_REFS).length,
       productionProofStatus: 'HOLD',
-      exactRemainingBlocker: 'Issue #165 requires a separate explicit future production proof goal before any production proof execution.',
+      exactRemainingBlocker: 'Issue #165 requires a separate explicit human production proof execution goal before any production proof execution.',
     },
     gates,
     commandList,
@@ -483,7 +510,7 @@ export function buildLevel1ReadinessClosureDashboard({
         id: 'production_proof_not_run',
         status: 'HOLD',
         issue: 165,
-        risk: 'All PR #171-#183 evidence plus the approval-intake gate are local/non-production only; production proof execution remains unapproved.',
+        risk: 'All PR #171-#184 evidence plus the post-approval simulator are local/non-production only; production proof execution remains unapproved.',
       },
       {
         id: 'real_auth_not_implemented',
@@ -521,7 +548,7 @@ export function buildLevel1ReadinessClosureDashboard({
         id: 'separate_explicit_future_proof_goal',
         status: 'HOLD',
         blockedByIssue: 165,
-        requirement: 'A new human-approved production proof goal with exact scope must be opened after the Issue #165 intake fields are machine-checkable and approved.',
+        requirement: 'A new human-approved production proof execution goal with exact scope must be opened after the Issue #165 intake fields are machine-checkable and a simulator decision is reviewed.',
       },
       {
         id: 'exact_command_allowlist',
@@ -559,7 +586,7 @@ export function buildLevel1ReadinessClosureDashboard({
       status: 'HOLD',
       url: ISSUE_REFS.finalProofApproval.url,
       latestRelevantRecord: ISSUE_REFS.finalProofApproval.currentRecord,
-      remainingBlocker: 'Issue #165 remains the exact blocker: a separate explicit future production proof goal must approve exact production target, command allowlist, endpoint boundary, D1 boundary, fixture/non-customer data policy, evidence redaction, rollback owner, and stop conditions before any production proof can run.',
+      remainingBlocker: 'Issue #165 remains the exact blocker: even a READY_FOR_SEPARATE_HUMAN_EXECUTION simulator decision requires a separate explicit human production proof execution goal approving exact target, command allowlist, endpoint boundary, D1 boundary, fixture/non-customer data policy, evidence redaction, rollback owner, and stop conditions before any production proof can run.',
       remainingApprovalFields: REQUIRED_APPROVAL_INTAKE_FIELD_IDS,
     },
     validationCommands: VALIDATION_COMMANDS,
@@ -609,8 +636,8 @@ export function validateLevel1ReadinessClosureDashboard(dashboard = {}) {
 
   const prs = dashboard.baseline?.mergedPrs || [];
   const prsMatch = JSON.stringify(prs) === JSON.stringify(MERGED_PRS);
-  if (!prsMatch || dashboard.baseline?.headSha !== '808dde2b19a450207499672d05a9ed5d4215ad66') {
-    addBlocker(blockers, 'invalid_pr_lineage', 'baseline', 'expected merged PRs #171-#183 at PR #183 merge commit');
+  if (!prsMatch || dashboard.baseline?.headSha !== 'bf5a627d2790828fa87ba6ee775e066a15359f20') {
+    addBlocker(blockers, 'invalid_pr_lineage', 'baseline', 'expected merged PRs #171-#184 at PR #184 merge commit');
   }
 
   for (const [index, item] of (dashboard.gates || []).entries()) {
@@ -634,6 +661,7 @@ export function validateLevel1ReadinessClosureDashboard(dashboard = {}) {
     'npm run proof:level1:change-control-manifest',
     'npm run proof:level1:operator-rehearsal',
     'npm run proof:level1:closure-dashboard',
+    'npm run proof:level1:post-approval-simulator',
     'npm run security:audit-triage',
     'npm run check:enrichment-boundary',
     'npm run check:enrichment-replay',

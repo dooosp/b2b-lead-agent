@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "level1.post_approval_decision_simulator_fixture_set.v1",
+  "documentStatus": "LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_SYNTHETIC_PACKETS_NON_PRODUCTION",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "notProductionEvidence": true,
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "proofExecutionApproved": false,
+  "repo": "dooosp/b2b-lead-agent",
+  "issue": 165,
+  "packets": [
+    {
+      "schemaVersion": "level1.post_approval_decision_simulator_packet.v1",
+      "scenarioId": "complete_synthetic_approval",
+      "repo": "dooosp/b2b-lead-agent",
+      "issue": 165,
+      "boundary": "NOT_PRODUCTION_EVIDENCE",
+      "notProductionEvidence": true,
+      "productionReady": false,
+      "productionReviewerWorkflowReady": false,
+      "proofExecutionApproved": false,
+      "approvalRequest": {
+        "schemaVersion": "level1.production_proof_approval_intake_request.v1",
+        "repo": "dooosp/b2b-lead-agent",
+        "issue": 165,
+        "boundary": "NOT_PRODUCTION_EVIDENCE",
+        "notProductionEvidence": true,
+        "productionReady": false,
+        "productionReviewerWorkflowReady": false,
+        "proofExecutionApproved": false,
+        "target": "Level 1 production reviewer workflow target label planning only",
+        "commandAllowlist": [
+          "REVIEW_ONLY_NON_EXECUTABLE_STEP: confirm redacted approval packet boundaries",
+          "REVIEW_ONLY_NON_EXECUTABLE_STEP: compare synthetic fixture artifact labels"
+        ],
+        "endpointBoundary": [
+          "/leads reviewer workflow route label only if separately approved later",
+          "/api/leads reviewer metadata route label only if separately approved later"
+        ],
+        "d1Boundary": "No D1 access, database id, binding id, row data, row counts, writes, migrations, deletes, or repair action is approved by this packet.",
+        "fixtureNonCustomerDataPolicy": "Synthetic fixtures and approved non-customer metadata only; no customer rows, customer payloads, private lead/person fields, real manual note body text, logs, secrets, CRM, outreach, LLM, or automation data.",
+        "evidenceRedaction": "Redact secrets, tokens, cookies, auth headers, JWT/session claims, account ids, database ids, private URLs, names, emails, user ids, customer payloads, manual note body text, generated suggestion text, CRM/outreach data, logs, and private lead/person fields.",
+        "rollbackOwner": "@dooosp / Taeho Jang",
+        "stopConditions": [
+          "Stop if any request would execute proof, deploy, access staging or production, call endpoints, access D1, read logs or secrets, use customer/private data, run destructive SQL, persist generated suggestions, call CRM/outreach/LLM/automation, parse real auth/session/provider material, or exceed the approved future scope."
+        ],
+        "approver": "@dooosp / Taeho Jang",
+        "expiresAt": "2026-06-10T00:00:00.000Z"
+      },
+      "source": {
+        "issue": 165,
+        "url": "https://github.com/dooosp/b2b-lead-agent/issues/165#synthetic-non-production-packet",
+        "type": "CHECKED_IN_SYNTHETIC_PACKET_ONLY"
+      },
+      "prerequisiteRecords": {
+        "authProviderSession": "https://github.com/dooosp/b2b-lead-agent/issues/162#synthetic-planning-record",
+        "productionD1Observation": "https://github.com/dooosp/b2b-lead-agent/issues/163#synthetic-planning-record",
+        "rollbackBackout": "https://github.com/dooosp/b2b-lead-agent/issues/164#synthetic-planning-record",
+        "privacyRetention": "https://github.com/dooosp/b2b-lead-agent/issues/154#synthetic-planning-record",
+        "localValidation": "tmp/codex/level1-readiness-closure-dashboard-non-production.json"
+      },
+      "evidenceSlots": {
+        "approvalPacket": "synthetic approval packet only",
+        "redactedDecisionArtifact": "tmp/codex/level1-post-approval-decision-simulator-non-production.json",
+        "commandTranscript": "EMPTY_NOT_EXECUTED",
+        "endpointEvidence": "EMPTY_NOT_EXECUTED",
+        "d1Evidence": "EMPTY_NOT_EXECUTED",
+        "rollbackEvidence": "EMPTY_NOT_EXECUTED"
+      },
+      "rollback": {
+        "owner": "@dooosp / Taeho Jang",
+        "nonDestructiveBackoutFirst": true,
+        "stopWriteTrigger": "Stop on boundary drift, redaction failure, D1 access, endpoint calls, customer/private data, generated suggestion persistence, or proof execution uncertainty.",
+        "destructiveDataActionApproved": false
+      },
+      "futureExecution": {
+        "status": "SEPARATE_HUMAN_APPROVAL_REQUIRED",
+        "exactRemainingAction": "Open a separate explicit human production proof execution goal after Issue #165 packet review."
+      }
+    }
+  ],
+  "nonClaims": [
+    "These packets are checked-in synthetic planning inputs only.",
+    "These packets do not approve proof execution, deploy, D1 access, endpoint calls, logs/secrets, customer/private data, CRM/outreach/LLM/automation, real auth/session/provider parsing, or production readiness."
+  ]
+}

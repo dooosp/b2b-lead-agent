@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
-> Status: current hardening source of truth for `master` as of 2026-06-03.
-> Audited against first-parent `master` history through `808dde2b19a450207499672d05a9ed5d4215ad66` (PR #183, `Add Level 1 readiness closure dashboard`) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input, auth scaffold, proof-preflight planning, route/auth-adapter hardening, approval packet dry-run through PR #174, CI/package gate through PR #175, fail-closed fault injection through PR #176, the non-production Level 1 change-control manifest gate packet through PR #177, operator rehearsal through PR #178, axios dependency audit triage through PR #179, outbound HTTP enrichment boundary guards through PR #180, enrichment fixture replay output contract through PR #181, lead pipeline fixture replay artifact contract through PR #182, and the Level 1 readiness closure dashboard through PR #183. Current Level 1 approval-intake gate work is local/test-only and recorded in `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md`, `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json`, and `tmp/codex/level1-production-proof-approval-intake-gate-non-production.json`. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit future production proof goal.
+> Status: current hardening source of truth for `master` as of 2026-06-04.
+> Audited against first-parent `master` history through `bf5a627d2790828fa87ba6ee775e066a15359f20` (PR #184, `Add Level 1 approval intake gate`) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input, auth scaffold, proof-preflight planning, route/auth-adapter hardening, approval packet dry-run through PR #174, CI/package gate through PR #175, fail-closed fault injection through PR #176, the non-production Level 1 change-control manifest gate packet through PR #177, operator rehearsal through PR #178, axios dependency audit triage through PR #179, outbound HTTP enrichment boundary guards through PR #180, enrichment fixture replay output contract through PR #181, lead pipeline fixture replay artifact contract through PR #182, Level 1 readiness closure dashboard through PR #183, and Level 1 approval-intake gate through PR #184. Current Level 1 post-approval decision simulator work is local/test-only and recorded in `docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-non-production.md`, `docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-synthetic-packets-non-production.json`, and `tmp/codex/level1-post-approval-decision-simulator-non-production.json`. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -61,7 +61,8 @@
 | 51 | 2026-06-03 | #181 | `ae14cd9` | Enrichment fixture replay output contract | Added deterministic fixture-only replay for URL resolution, scraping, normalized outputs/failures, redaction, and stable non-production artifacts without live scraping or production/staging calls |
 | 52 | 2026-06-03 | #182 | `7bc11e3` | Lead pipeline fixture replay artifact contract | Added a deterministic local-only contract from enrichment replay outputs into synthetic lead-quality, report, publication, and release-evidence artifact summaries without live network, LLM, CRM, D1, customer data, or production/staging calls |
 | 53 | 2026-06-03 | #183 | `808dde2` | Level 1 readiness closure dashboard | Added a single local-only JSON/Markdown dashboard for PR #171-#183 gate inventory, commands, artifacts, issue map, risks, and future production-proof prerequisites while keeping Issue #165 on HOLD |
-| 54 | 2026-06-03 | PR #184 | pending | Level 1 production proof approval intake gate | Adds a non-executable Issue #165 approval request template, validator, redacted JSON/Markdown artifacts, reviewer checklist, and dashboard/source-of-truth sync for exact future approval fields while keeping production proof blocked |
+| 54 | 2026-06-03 | #184 | `bf5a627` | Level 1 production proof approval intake gate | Added a non-executable Issue #165 approval request template, validator, redacted JSON/Markdown artifacts, reviewer checklist, and dashboard/source-of-truth sync for exact future approval fields while keeping production proof blocked |
+| 55 | 2026-06-04 | current branch | pending | Level 1 post-approval decision simulator | Adds a local-only simulator over checked-in synthetic Issue #165 packets that returns `HOLD`, `BLOCKED`, or `READY_FOR_SEPARATE_HUMAN_EXECUTION` while keeping `productionReady:false`, `productionReviewerWorkflowReady:false`, `proofExecutionApproved:false`, and Issue #165 execution blocked |
 
 Post-PR177 update: PR #171 merged at
 `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` with non-production
@@ -146,8 +147,8 @@ PR #183 merged at `808dde2b19a450207499672d05a9ed5d4215ad66` with
 `docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md`,
 and `tmp/codex/level1-readiness-closure-dashboard-non-production.json` as the
 single reviewer-readable and machine-checkable closure dashboard for the PR
-#171-#183 local gate train. Current
-`LEVEL1_PRODUCTION_PROOF_APPROVAL_INTAKE_GATE_NON_PRODUCTION` work adds
+#171-#184 local gate train. PR #184's
+`LEVEL1_PRODUCTION_PROOF_APPROVAL_INTAKE_GATE_NON_PRODUCTION` adds
 `npm run proof:level1:approval-intake`,
 `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md`,
 `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json`,
@@ -159,6 +160,16 @@ expiry. These are not production evidence and do not call production/staging
 endpoints, perform live scraping, access D1, read logs/secrets, use
 customer/private data, execute proof, approve production action, or change
 Worker runtime behavior.
+Current `LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_NON_PRODUCTION` work adds
+`npm run proof:level1:post-approval-simulator`,
+`docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-synthetic-packets-non-production.json`,
+`docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-non-production.md`,
+and `tmp/codex/level1-post-approval-decision-simulator-non-production.json`.
+It consumes checked-in synthetic Issue #165 packets only and classifies them
+as `HOLD`, `BLOCKED`, or `READY_FOR_SEPARATE_HUMAN_EXECUTION`. That final
+status is still not proof execution approval, production evidence, or a
+production-readiness claim; the remaining action is a separate explicit human
+production proof execution goal.
 
 ## Wave Summary
 
