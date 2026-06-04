@@ -15,11 +15,11 @@
   "productionReviewerWorkflow": {
     "status": "BLOCKED",
     "blockedByIssue": 165,
-    "reason": "Production reviewer workflow cannot be marked ready until Issue #165 is satisfied by a separate explicit future production proof goal."
+    "reason": "Production reviewer workflow cannot be marked ready until Issue #165 is satisfied by a separate explicit human production proof execution goal."
   },
   "baseline": {
     "branch": "master",
-    "headSha": "808dde2b19a450207499672d05a9ed5d4215ad66",
+    "headSha": "bf5a627d2790828fa87ba6ee775e066a15359f20",
     "mergedPrs": [
       171,
       172,
@@ -33,16 +33,17 @@
       180,
       181,
       182,
-      183
+      183,
+      184
     ],
-    "mergedPrRange": "#171-#183"
+    "mergedPrRange": "#171-#184"
   },
   "summary": {
-    "localGatesClosed": 14,
+    "localGatesClosed": 15,
     "holdGates": 0,
     "blockerIssuesMapped": 6,
     "productionProofStatus": "HOLD",
-    "exactRemainingBlocker": "Issue #165 requires a separate explicit future production proof goal before any production proof execution."
+    "exactRemainingBlocker": "Issue #165 requires a separate explicit human production proof execution goal before any production proof execution."
   },
   "gates": [
     {
@@ -607,6 +608,63 @@
       "blocker": "Issue #165 remains HOLD until the future approval request fills every required field and a separate proof goal is approved.",
       "risk": "A complete intake request is machine-checkable planning input only; it does not execute or approve production proof.",
       "notes": "Required approval fields: target, command_allowlist, endpoint_boundary, d1_boundary, fixture_non_customer_data_policy, evidence_redaction, rollback_owner, stop_conditions, approver, expires_at."
+    },
+    {
+      "id": "post_approval_decision_simulator",
+      "title": "Current branch Level 1 post-approval decision simulator",
+      "status": "PASS",
+      "sourcePr": null,
+      "sourcePrUrl": null,
+      "boundary": "NOT_PRODUCTION_EVIDENCE",
+      "notProductionEvidence": true,
+      "productionReady": false,
+      "productionReviewerWorkflowReady": false,
+      "command": "npm run proof:level1:post-approval-simulator",
+      "artifacts": [
+        "tmp/codex/level1-post-approval-decision-simulator-non-production.json",
+        "docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-synthetic-packets-non-production.json",
+        "docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-non-production.md"
+      ],
+      "docs": [
+        "docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-synthetic-packets-non-production.json",
+        "docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-non-production.md",
+        "docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md"
+      ],
+      "issues": [
+        {
+          "issue": 154,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/154",
+          "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED"
+        },
+        {
+          "issue": 162,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/162",
+          "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED"
+        },
+        {
+          "issue": 163,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/163",
+          "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED"
+        },
+        {
+          "issue": 164,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/164",
+          "status": "OPEN_DOCS_PLANNING_INPUT_RECORDED"
+        },
+        {
+          "issue": 165,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/165",
+          "status": "OPEN_HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL"
+        },
+        {
+          "issue": 144,
+          "url": "https://github.com/dooosp/b2b-lead-agent/issues/144",
+          "status": "OPEN_OPTIONAL_FEEDBACK_INTAKE_RECORD_001_RECORDED"
+        }
+      ],
+      "blocker": "Issue #165 remains HOLD; READY_FOR_SEPARATE_HUMAN_EXECUTION still requires a separate human production proof execution goal.",
+      "risk": "The simulator consumes checked-in synthetic packets only and must never become a proof runner, endpoint caller, D1 accessor, deploy command, or production-ready claim.",
+      "notes": "Complete synthetic packets can reach only `READY_FOR_SEPARATE_HUMAN_EXECUTION`; HOLD and BLOCKED inputs fail closed with redacted NOT_PRODUCTION_EVIDENCE."
     }
   ],
   "commandList": [
@@ -621,6 +679,7 @@
     "npm run check:lead-pipeline-replay",
     "npm run proof:level1:closure-dashboard",
     "npm run proof:level1:approval-intake",
+    "npm run proof:level1:post-approval-simulator",
     "npm run check:naming",
     "npm run check:schema",
     "npm run eval:lead-quality",
@@ -648,7 +707,10 @@
     "docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md",
     "tmp/codex/level1-production-proof-approval-intake-gate-non-production.json",
     "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json",
-    "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md"
+    "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md",
+    "tmp/codex/level1-post-approval-decision-simulator-non-production.json",
+    "docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-synthetic-packets-non-production.json",
+    "docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-non-production.md"
   ],
   "docList": [
     "docs/roadmap/b2b-lead-agent-level-1-local-proof-simulation-evidence.md",
@@ -667,6 +729,8 @@
     "docs/roadmap/current-pr-train.md",
     "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json",
     "docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md",
+    "docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-synthetic-packets-non-production.json",
+    "docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-non-production.md",
     "AGENTS.md",
     "HARDENING_PLAN.md",
     "NEXT_SESSION_PROMPT.md"
@@ -726,7 +790,7 @@
       "id": "production_proof_not_run",
       "status": "HOLD",
       "issue": 165,
-      "risk": "All PR #171-#183 evidence plus the approval-intake gate are local/non-production only; production proof execution remains unapproved."
+      "risk": "All PR #171-#184 evidence plus the post-approval simulator are local/non-production only; production proof execution remains unapproved."
     },
     {
       "id": "real_auth_not_implemented",
@@ -764,7 +828,7 @@
       "id": "separate_explicit_future_proof_goal",
       "status": "HOLD",
       "blockedByIssue": 165,
-      "requirement": "A new human-approved production proof goal with exact scope must be opened after the Issue #165 intake fields are machine-checkable and approved."
+      "requirement": "A new human-approved production proof execution goal with exact scope must be opened after the Issue #165 intake fields are machine-checkable and a simulator decision is reviewed."
     },
     {
       "id": "exact_command_allowlist",
@@ -802,7 +866,7 @@
     "status": "HOLD",
     "url": "https://github.com/dooosp/b2b-lead-agent/issues/165",
     "latestRelevantRecord": "https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4586256037",
-    "remainingBlocker": "Issue #165 remains the exact blocker: a separate explicit future production proof goal must approve exact production target, command allowlist, endpoint boundary, D1 boundary, fixture/non-customer data policy, evidence redaction, rollback owner, and stop conditions before any production proof can run.",
+    "remainingBlocker": "Issue #165 remains the exact blocker: even a READY_FOR_SEPARATE_HUMAN_EXECUTION simulator decision requires a separate explicit human production proof execution goal approving exact target, command allowlist, endpoint boundary, D1 boundary, fixture/non-customer data policy, evidence redaction, rollback owner, and stop conditions before any production proof can run.",
     "remainingApprovalFields": [
       "target",
       "command_allowlist",
@@ -819,7 +883,8 @@
   "validationCommands": [
     "git status --short",
     "git diff --check",
-    "node --test worker/tests/level1-readiness-closure-dashboard.test.mjs worker/tests/workflow-contract.test.mjs",
+    "node --test worker/tests/level1-post-approval-decision-simulator.test.mjs worker/tests/level1-readiness-closure-dashboard.test.mjs worker/tests/workflow-contract.test.mjs",
+    "npm run proof:level1:post-approval-simulator",
     "npm run proof:level1:closure-dashboard",
     "npm run check:lead-pipeline-replay",
     "npm run check:enrichment-replay",

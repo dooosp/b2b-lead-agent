@@ -4,8 +4,8 @@ Document Status: `LEVEL1_READINESS_CLOSURE_DASHBOARD_NON_PRODUCTION`
 Boundary: `NOT_PRODUCTION_EVIDENCE`
 Generated At: `2026-06-03T00:00:00.000Z`
 Repo: `dooosp/b2b-lead-agent`
-Baseline: `master@808dde2b19a450207499672d05a9ed5d4215ad66`
-Merged PR Range: `#171-#183`
+Baseline: `master@bf5a627d2790828fa87ba6ee775e066a15359f20`
+Merged PR Range: `#171-#184`
 productionReady: `false`
 productionReviewerWorkflowReady: `false`
 Production Reviewer Workflow: `BLOCKED`
@@ -13,10 +13,10 @@ Approval Status: `HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL`
 
 ## Summary
 
-- Local gates closed: `14`
+- Local gates closed: `15`
 - Hold gates: `0`
 - Production proof: `HOLD`
-- Exact remaining blocker: Issue #165 requires a separate explicit future production proof goal before any production proof execution.
+- Exact remaining blocker: Issue #165 requires a separate explicit human production proof execution goal before any production proof execution.
 - Validation: `PASS`
 
 ## Gate Inventory
@@ -37,6 +37,7 @@ Approval Status: `HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL`
 | `lead_pipeline_fixture_replay_artifact_contract` | #182 | `PASS` | `npm run check:lead-pipeline-replay` | `tmp/codex/lead-pipeline-fixture-replay-artifact-contract-non-production.json` |
 | `readiness_closure_dashboard` | #183 | `PASS` | `npm run proof:level1:closure-dashboard` | `tmp/codex/level1-readiness-closure-dashboard-non-production.json` |
 | `production_proof_approval_intake_gate` | #184 | `PASS` | `npm run proof:level1:approval-intake` | `tmp/codex/level1-production-proof-approval-intake-gate-non-production.json` |
+| `post_approval_decision_simulator` | `current branch` | `PASS` | `npm run proof:level1:post-approval-simulator` | `tmp/codex/level1-post-approval-decision-simulator-non-production.json` |
 
 ## Command List
 
@@ -51,6 +52,7 @@ Approval Status: `HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL`
 - `npm run check:lead-pipeline-replay`
 - `npm run proof:level1:closure-dashboard`
 - `npm run proof:level1:approval-intake`
+- `npm run proof:level1:post-approval-simulator`
 - `npm run check:naming`
 - `npm run check:schema`
 - `npm run eval:lead-quality`
@@ -80,6 +82,9 @@ Approval Status: `HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL`
 - `tmp/codex/level1-production-proof-approval-intake-gate-non-production.json`
 - `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json`
 - `docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md`
+- `tmp/codex/level1-post-approval-decision-simulator-non-production.json`
+- `docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-synthetic-packets-non-production.json`
+- `docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-non-production.md`
 
 ## Issue Map
 
@@ -94,7 +99,7 @@ Approval Status: `HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL`
 
 ## Risks
 
-- `production_proof_not_run` (#165, HOLD): All PR #171-#183 evidence plus the approval-intake gate are local/non-production only; production proof execution remains unapproved.
+- `production_proof_not_run` (#165, HOLD): All PR #171-#184 evidence plus the post-approval simulator are local/non-production only; production proof execution remains unapproved.
 - `real_auth_not_implemented` (#162, HOLD): Synthetic auth scaffold and adapter contracts are not real Cloudflare Access/session/provider parsing.
 - `production_d1_unobserved` (#163, HOLD): Production D1 schema, rows, logs, and writes were not accessed or observed.
 - `privacy_enforcement_not_production_proof` (#154, HOLD): Static privacy/redaction/local fixture checks are not production privacy enforcement or compliance proof.
@@ -103,7 +108,7 @@ Approval Status: `HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL`
 
 ## Future Production-Proof Prerequisites
 
-- `separate_explicit_future_proof_goal` (HOLD, Issue #165): A new human-approved production proof goal with exact scope must be opened after the Issue #165 intake fields are machine-checkable and approved.
+- `separate_explicit_future_proof_goal` (HOLD, Issue #165): A new human-approved production proof execution goal with exact scope must be opened after the Issue #165 intake fields are machine-checkable and a simulator decision is reviewed.
 - `exact_command_allowlist` (HOLD, Issue #165): Exact command allowlist, denylist, operator, execution window, and stop conditions must be approved before execution.
 - `endpoint_boundary` (HOLD, Issue #165): Any endpoint or route scope must be explicitly approved; none is approved now.
 - `d1_boundary` (HOLD, Issue #165): Production D1 observation/write/migration/delete/row access remains unapproved.
@@ -112,7 +117,7 @@ Approval Status: `HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL`
 
 ## Issue #165 Blocker
 
-Issue #165 remains the exact blocker: a separate explicit future production proof goal must approve exact production target, command allowlist, endpoint boundary, D1 boundary, fixture/non-customer data policy, evidence redaction, rollback owner, and stop conditions before any production proof can run.
+Issue #165 remains the exact blocker: even a READY_FOR_SEPARATE_HUMAN_EXECUTION simulator decision requires a separate explicit human production proof execution goal approving exact target, command allowlist, endpoint boundary, D1 boundary, fixture/non-customer data policy, evidence redaction, rollback owner, and stop conditions before any production proof can run.
 
 Remaining approval fields:
 

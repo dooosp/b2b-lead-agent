@@ -15,7 +15,7 @@ import {
 } from '../../scripts/level1-readiness-closure-dashboard.mjs';
 
 const EXPECTED_MERGED_PRS = Object.freeze([
-  171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183,
+  171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184,
 ]);
 
 const EXPECTED_ISSUES = Object.freeze([154, 162, 163, 164, 165, 144]);
@@ -25,8 +25,9 @@ const REQUIRED_COMMANDS = Object.freeze([
   'npm run proof:level1:approval-dry-run',
   'npm run proof:level1:change-control-manifest',
   'npm run proof:level1:operator-rehearsal',
-  'npm run proof:level1:closure-dashboard',
   'npm run proof:level1:approval-intake',
+  'npm run proof:level1:post-approval-simulator',
+  'npm run proof:level1:closure-dashboard',
   'npm run security:audit-triage',
   'npm run check:enrichment-boundary',
   'npm run check:enrichment-replay',
@@ -42,6 +43,8 @@ const REQUIRED_ARTIFACTS = Object.freeze([
   'tmp/codex/level1-readiness-closure-dashboard-non-production.json',
   'tmp/codex/level1-production-proof-approval-intake-gate-non-production.json',
   'docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json',
+  'tmp/codex/level1-post-approval-decision-simulator-non-production.json',
+  'docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-synthetic-packets-non-production.json',
   'tmp/codex/security-dependency-audit-triage-non-production.json',
   'tmp/codex/outbound-http-enrichment-boundary-guards-non-production.json',
   'tmp/codex/enrichment-fixture-replay-output-contract-non-production.json',
@@ -90,19 +93,21 @@ test('Level 1 closure dashboard inventories every merged local-only gate and kee
   assert.equal(dashboard.productionReviewerWorkflow.blockedByIssue, 165);
   assert.equal(dashboard.issue165Blocker.status, 'HOLD');
   assert.equal(dashboard.issue165Blocker.issue, 165);
-  assert.match(dashboard.issue165Blocker.remainingBlocker, /separate explicit future production proof goal/i);
+  assert.match(dashboard.issue165Blocker.remainingBlocker, /separate explicit human production proof execution goal/i);
 
   assert.deepEqual(dashboard.baseline, {
     branch: 'master',
-    headSha: '808dde2b19a450207499672d05a9ed5d4215ad66',
+    headSha: 'bf5a627d2790828fa87ba6ee775e066a15359f20',
     mergedPrs: EXPECTED_MERGED_PRS,
-    mergedPrRange: '#171-#183',
+    mergedPrRange: '#171-#184',
   });
 
   assert.deepEqual(dashboard.gates.map((gate) => gate.id), REQUIRED_LEVEL1_CLOSURE_GATE_IDS);
-  assert.equal(dashboard.gates.length, 14);
-  assert.deepEqual(dashboard.gates.slice(0, 13).map((gate) => gate.sourcePr), EXPECTED_MERGED_PRS);
+  assert.equal(dashboard.gates.length, 15);
+  assert.deepEqual(dashboard.gates.slice(0, 14).map((gate) => gate.sourcePr), EXPECTED_MERGED_PRS);
   assert.equal(dashboard.gates[13].sourcePr, 184);
+  assert.equal(dashboard.gates[14].sourcePr, null);
+  assert.equal(dashboard.gates[14].id, 'post_approval_decision_simulator');
   assert.ok(dashboard.gates.every((gate) => gate.boundary === 'NOT_PRODUCTION_EVIDENCE'));
   assert.ok(dashboard.gates.every((gate) => gate.productionReady === false));
   assert.ok(dashboard.gates.every((gate) => ['PASS', 'HOLD'].includes(gate.status)));
@@ -185,15 +190,19 @@ test('Level 1 closure dashboard markdown is reviewer-readable and anti-overclaim
   assert.match(markdown, /Document Status: `LEVEL1_READINESS_CLOSURE_DASHBOARD_NON_PRODUCTION`/);
   assert.match(markdown, /Boundary: `NOT_PRODUCTION_EVIDENCE`/);
   assert.match(markdown, /productionReady: `false`/);
-  assert.match(markdown, /Merged PR Range: `#171-#183`/);
+  assert.match(markdown, /Merged PR Range: `#171-#184`/);
   assert.match(markdown, /production_proof_approval_intake_gate/);
+  assert.match(markdown, /post_approval_decision_simulator/);
   assert.match(markdown, /#184/);
+  assert.match(markdown, /READY_FOR_SEPARATE_HUMAN_EXECUTION/);
   assert.match(markdown, /target/);
   assert.match(markdown, /expires_at/);
   assert.match(markdown, /Issue #165/);
   assert.match(markdown, /HOLD_PENDING_SEPARATE_EXPLICIT_FUTURE_PROOF_GOAL/);
   assert.match(markdown, /npm run check:lead-pipeline-replay/);
+  assert.match(markdown, /npm run proof:level1:post-approval-simulator/);
   assert.match(markdown, /tmp\/codex\/lead-pipeline-fixture-replay-artifact-contract-non-production\.json/);
+  assert.match(markdown, /tmp\/codex\/level1-post-approval-decision-simulator-non-production\.json/);
   assert.doesNotMatch(markdown, /productionReady: `true`/);
   assert.doesNotMatch(markdown, /production proof executed/i);
 });
