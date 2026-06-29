@@ -106,7 +106,8 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   destructive SQL, and customer-data inputs; it remains
   `NOT_PRODUCTION_EVIDENCE`, keeps `productionReady:false`, and does not
   approve production proof.
-- Current post-approval decision simulator work adds
+- Post-PR185 Level 1 post-approval simulator addendum: `master` includes PR
+  #185 at `134034dcb1744e5bdc2582a1c116575c668b4c0b`, which added
   `LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_NON_PRODUCTION`,
   `npm run proof:level1:post-approval-simulator`,
   `docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-synthetic-packets-non-production.json`,
@@ -120,6 +121,16 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   `productionReviewerWorkflowReady:false`, and `proofExecutionApproved:false`,
   and the exact remaining human-only action is a separate explicit production
   proof execution goal.
+- Post-PR186 refactor/dependency addendum: `master` includes PR #186 at
+  `4d419f3bf771bb0e6ac656eeb2560445edcee4dd`. PR #186 extracted shared
+  Opportunity Workbench reviewer-note rendering into
+  `worker/pages/reviewer-note-renderer.js`, extracted replay/boundary CLI
+  helpers into `scripts/lib/cli-utils.mjs`, and patched audit dependencies to
+  `nodemailer@9.0.1`, `form-data@4.0.6`, `undici@7.28.0`, and
+  `hasown@2.0.4`. It was repo-local refactor/tooling/dependency work only and
+  did not approve production deploy, production D1 access/write/migration,
+  endpoint calls, logs/secrets access, customer-data access/mutation, staging
+  execution, CRM/outreach/LLM/automation, or production-readiness claims.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
