@@ -1,5 +1,6 @@
 import { toLeadBriefV1 } from '../lib/leadbrief-v1.js';
 import { buildLeadActionIntelligence } from '../lib/lead-action-intelligence.js';
+import { renderReviewerNoteTemplates } from './reviewer-note-renderer.js';
 
 const REVIEW_STATUS_LABELS = Object.freeze({
   NEW: '새 검토',
@@ -598,121 +599,6 @@ function renderEvidenceItem(item) {
 function renderTextItems(items, emptyLabel) {
   if (items.length === 0) return `<li class="opportunity-workbench-empty">${escapeHtml(emptyLabel)}</li>`;
   return items.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
-}
-
-function normalizeReviewerNoteSuggestion(intelligence = {}) {
-  const suggestion = intelligence.reviewNoteSuggestion && typeof intelligence.reviewNoteSuggestion === 'object'
-    ? intelligence.reviewNoteSuggestion
-    : {};
-  return {
-    state: cleanText(suggestion.state, 'NEEDS_REVIEW'),
-    label: cleanText(suggestion.label, '검토 필요 노트'),
-    text: cleanText(
-      suggestion.text,
-      'Review note suggestion unavailable. Confirm company, evidence, verification status, and data gaps before writing a review note.'
-    ),
-  };
-}
-
-function truncateSummaryText(value, limit = 120) {
-  const text = cleanText(value);
-  if (text.length <= limit) return text;
-  return `${text.slice(0, Math.max(0, limit - 3)).trim()}...`;
-}
-
-function findReviewNoteSegment(text, prefixes) {
-  const raw = String(text || '');
-  const lines = raw.split(/\n+/).map((line) => cleanText(line)).filter(Boolean);
-  const fromLines = lines.find((line) => prefixes.some((prefix) => line.toLowerCase().startsWith(prefix.toLowerCase())));
-  if (fromLines) return fromLines;
-
-  const normalized = cleanText(raw);
-  const markers = [
-    'Decision:',
-    'Follow-up check:',
-    'Lead:',
-    'Why:',
-    'Reason:',
-    'Evidence status:',
-    'Evidence:',
-    'Review basis:',
-    'Missing/risk check:',
-    'Open items:',
-    'Missing prompts:',
-    'Missing:',
-    'Current state:',
-    'Next:',
-  ];
-  const lower = normalized.toLowerCase();
-  for (const prefix of prefixes) {
-    const start = lower.indexOf(prefix.toLowerCase());
-    if (start === -1) continue;
-    const afterPrefix = start + prefix.length;
-    const next = markers
-      .map((marker) => lower.indexOf(marker.toLowerCase(), afterPrefix))
-      .filter((index) => index > start)
-      .sort((a, b) => a - b)[0];
-    return normalized.slice(start, next || normalized.length).trim();
-  }
-  return '';
-}
-
-function renderReviewerNoteSummary(note = {}) {
-  const text = note.text || '';
-  const decision = findReviewNoteSegment(text, ['Decision:', 'Follow-up check:']) || note.label || note.state || '검토 필요 노트';
-  const lead = findReviewNoteSegment(text, ['Lead:']);
-  const reason = findReviewNoteSegment(text, ['Reason:', 'Review basis:']);
-  const evidence = findReviewNoteSegment(text, ['Evidence status:', 'Evidence:']);
-  const risk = findReviewNoteSegment(text, ['Missing/risk check:', 'Open items:', 'Missing:', 'Missing prompts:']);
-  const items = [decision, lead, reason, evidence || risk]
-    .map((item) => truncateSummaryText(item, 96))
-    .filter(Boolean)
-    .slice(0, 4);
-  const itemHtml = items.length > 0
-    ? items.map((item) => `<span>${escapeHtml(item)}</span>`).join('')
-    : '<span>리뷰 노트 내용을 확인하세요.</span>';
-
-  return `
-              <div class="opportunity-workbench-note-summary" aria-label="검토 메모 제안 요약">
-                <strong>검토 메모 제안 요약</strong>
-                <div class="opportunity-workbench-note-summary-items">${itemHtml}</div>
-                <p>생성된 제안은 복사 전용이며 자동 저장/전송되지 않습니다.</p>
-              </div>`;
-}
-
-function renderReviewerNoteTemplates(intelligence = {}) {
-  const current = normalizeReviewerNoteSuggestion(intelligence);
-  const templates = Array.isArray(intelligence.reviewerNoteTemplates?.templates)
-    ? intelligence.reviewerNoteTemplates.templates
-    : [];
-  const variants = templates.length > 0
-    ? templates.map((template) => `
-              <details class="opportunity-workbench-note-variant">
-                <summary>${escapeHtml(template.label || template.state)}</summary>
-                ${renderReviewerNoteSummary(template)}
-                <pre class="opportunity-workbench-note-copy-target" data-workbench-note-text tabindex="0" aria-label="${escapeHtml(template.label || template.state)} 텍스트">${escapeHtml(template.text)}</pre>
-                <div class="opportunity-workbench-note-copy-actions">
-                  <button class="btn btn-secondary" type="button" data-workbench-note-copy-action="copy-variant-note" aria-label="${escapeHtml(template.label || template.state)} 복사">복사</button>
-                </div>
-              </details>`).join('')
-    : '<p class="opportunity-workbench-caveat">No alternate reviewer note templates are available.</p>';
-
-  return `
-            <div class="opportunity-workbench-review-note" aria-label="생성된 검토 메모 제안">
-              <span class="panel-label">생성된 검토 메모 제안</span>
-              <div class="opportunity-workbench-note-copy-head">
-                <strong>${escapeHtml(current.label)}</strong>
-                <div class="opportunity-workbench-note-copy-actions">
-                  <button class="btn btn-secondary" type="button" data-workbench-note-copy-action="copy-current-note" aria-label="현재 Workbench 리뷰 노트 복사">현재 노트 복사</button>
-                </div>
-              </div>
-              ${renderReviewerNoteSummary(current)}
-              <pre class="opportunity-workbench-note-copy-target" data-workbench-note-text tabindex="0" aria-label="현재 Workbench 리뷰 노트 텍스트">${escapeHtml(current.text)}</pre>
-              <p class="opportunity-workbench-caveat">사람이 저장한 메모가 아닙니다. 복사 후 사람이 직접 검토해 사용하세요.</p>
-              <div class="opportunity-workbench-note-variants">
-                ${variants}
-              </div>
-            </div>`;
 }
 
 function renderStakeholderRole(role) {

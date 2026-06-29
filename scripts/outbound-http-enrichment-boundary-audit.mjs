@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 
 import { createRequire } from 'node:module';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { isDirectCliRun, optionValue, writeJsonArtifact } from './lib/cli-utils.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -13,12 +11,6 @@ const {
 
 export const OUTBOUND_HTTP_ENRICHMENT_BOUNDARY_OUTPUT_PATH =
   'tmp/codex/outbound-http-enrichment-boundary-guards-non-production.json';
-
-function optionValue(flag, argv = process.argv) {
-  const index = argv.indexOf(flag);
-  if (index < 0) return '';
-  return argv[index + 1] || '';
-}
 
 export function evaluateOutboundHttpEnrichmentBoundaryAudit(input = {}) {
   return buildOutboundHttpEnrichmentBoundaryAudit({
@@ -47,14 +39,11 @@ function runCli() {
     ].join('\n');
   const outputPath = optionValue('--output') || '';
 
-  if (outputPath) {
-    mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, `${JSON.stringify(artifact, null, 2)}\n`);
-  }
+  writeJsonArtifact(outputPath, artifact);
 
   console.log(output);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isDirectCliRun(import.meta.url)) {
   runCli();
 }
