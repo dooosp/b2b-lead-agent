@@ -1,11 +1,9 @@
 # Production Proof Boundaries
 
 This document records the production-proof boundary after Issue #34 and the
-Manual Review Notes v1 PR train through PR #142 plus the production D1
-migration plan, production rollback/backout plan, local/staging dry-run plan,
-local/fake-D1 dry-run evidence packet, staging target decision packet, and
-non-production cycle closeout packet. It is a planning and safety document only;
-it is not production evidence.
+Manual Review Notes v1 PR train through PR #142, the Level 1 non-production
+gate train through PR #185, and the post-PR186 refactor/dependency cleanup. It
+is a planning and safety document only; it is not production evidence.
 
 Audited repo baseline for this snapshot:
 
@@ -13,7 +11,7 @@ Audited repo baseline for this snapshot:
 - Previous Manual Review Notes v1 privacy-warning baseline:
   `f2ddf35e828017eec9332dc80876e50bbee2f54a` (PR #130)
 - Current source-of-truth `origin/master`:
-  `c61317144f5adb77516412af30e26925f1a97146` (PR #177)
+  `4d419f3bf771bb0e6ac656eeb2560445edcee4dd` (PR #186)
 - Issue #34 current state: closed as completed after GitHub-only closeout, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -39,10 +37,10 @@ Audited repo baseline for this snapshot:
 - Current Level 1 operator rehearsal packet:
   `docs/roadmap/b2b-lead-agent-level-1-operator-rehearsal-gate-non-production.md`
 
-Post-PR177 operating update:
+Post-PR186 operating update:
 
 - Current source-of-truth `origin/master` for this boundary update:
-  `c61317144f5adb77516412af30e26925f1a97146` (PR #177).
+  `4d419f3bf771bb0e6ac656eeb2560445edcee4dd` (PR #186).
 - Issue #34 is closed as completed after a GitHub-only closeout approval and
   closeout record.
 - Standing approval policy: `docs/standing-approval-policy.md`.
@@ -183,6 +181,13 @@ Post-PR177 operating update:
   logs/secrets, smoke tests, customer/private data, live scraping,
   CRM/outreach/LLM/automation, real auth/session/provider parsing, destructive
   SQL, and production-readiness claims remain blocked.
+- PR #186's reviewer-note renderer / CLI helper refactor and audit dependency
+  patch is repo-local maintenance only. It extracted shared renderer and CLI
+  helper modules and patched `nodemailer`, `form-data`, `undici`, and `hasown`
+  after a clean audit. It does not approve production proof, deploy, production
+  D1 access/write/migration, endpoint calls, logs/secrets access, customer-data
+  access/mutation, staging execution, CRM/outreach, LLM, automation, or
+  production-readiness claims.
 - The current fail-closed matrix refuses malformed synthetic auth claims, mixed
   roles, auth-header / Cloudflare Access / D1 / API-key alias env poison,
   poisoned future evidence fields, bare `notes` / validation-note evidence
@@ -228,8 +233,9 @@ Accepted Issue #34 records:
 Important freshness rule: Issue #34's accepted execution/proof scopes were tied
 to earlier approved SHAs, including the final read-only schema-proof baseline at
 `512b537797fc67d974acf1f1e690bd638de4919b` (PR #106). The latest audited
-source-of-truth `master` baseline is `c61317144f5adb77516412af30e26925f1a97146`
-after PR #177 added the Level 1 change-control manifest gate. Any new
+source-of-truth `master` baseline is `4d419f3bf771bb0e6ac656eeb2560445edcee4dd`
+after PR #186 landed the reviewer-note renderer / CLI helper refactor and audit
+dependency patch. Any new
 production action must refresh the actual current
 `origin/master` SHA, CI metadata, owners, and approval records before
 execution. Issue #34 closeout does not authorize further production proof work.
