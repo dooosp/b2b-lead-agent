@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-06-30.
-> Audited against first-parent `master` history through `55953593088e292f9561e6c3570eae2e29a90ca3` (PR #188, `docs: archive root cycle bootstrap records`) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input, auth scaffold, proof-preflight planning, route/auth-adapter hardening, approval packet dry-run through PR #174, CI/package gate through PR #175, fail-closed fault injection through PR #176, the non-production Level 1 change-control manifest gate packet through PR #177, operator rehearsal through PR #178, axios dependency audit triage through PR #179, outbound HTTP enrichment boundary guards through PR #180, enrichment fixture replay output contract through PR #181, lead pipeline fixture replay artifact contract through PR #182, Level 1 readiness closure dashboard through PR #183, Level 1 approval-intake gate through PR #184, Level 1 post-approval decision simulator through PR #185, reviewer-note/CLI helper refactor plus audit dependency patch through PR #186, post-PR186 source-of-truth sync through PR #187, and archival root-cycle bootstrap record tracking through PR #188. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
+> Audited against first-parent `master` history through `5a3c7c9cfe3068b38d8196d60aaf378adc64da14` (PR #189, `docs: sync source of truth after pr188`) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input, auth scaffold, proof-preflight planning, route/auth-adapter hardening, approval packet dry-run through PR #174, CI/package gate through PR #175, fail-closed fault injection through PR #176, the non-production Level 1 change-control manifest gate packet through PR #177, operator rehearsal through PR #178, axios dependency audit triage through PR #179, outbound HTTP enrichment boundary guards through PR #180, enrichment fixture replay output contract through PR #181, lead pipeline fixture replay artifact contract through PR #182, Level 1 readiness closure dashboard through PR #183, Level 1 approval-intake gate through PR #184, Level 1 post-approval decision simulator through PR #185, reviewer-note/CLI helper refactor plus audit dependency patch through PR #186, post-PR186 source-of-truth sync through PR #187, archival root-cycle bootstrap record tracking through PR #188, and post-PR188 source-of-truth sync through PR #189. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -66,6 +66,7 @@
 | 56 | 2026-06-29 | #186 | `4d419f3` | Reviewer-note renderer / CLI helper refactor and audit dependency patch | Extracted shared Opportunity Workbench reviewer-note rendering, extracted shared replay/boundary CLI helpers, and patched `nodemailer`, `form-data`, `undici`, and `hasown` with clean npm audit evidence; no production/staging action or runtime boundary expansion |
 | 57 | 2026-06-30 | #187 | `c7da118` | Post-PR186 source-of-truth sync | Synced source-of-truth docs after PR #186 without production/staging action or runtime boundary expansion |
 | 58 | 2026-06-30 | #188 | `5595359` | Root-cycle bootstrap archival records | Tracked historical PR #12 root-cycle merge and Wave 2 bootstrap execution/status records as archival docs only, with explicit archive notes pointing back to current source-of-truth docs |
+| 59 | 2026-06-30 | #189 | `5a3c7c9` | Post-PR188 source-of-truth sync | Synced source-of-truth and production-boundary docs after PR #188 without production/staging action or runtime boundary expansion |
 
 Post-PR177 update: PR #171 merged at
 `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` with non-production
@@ -106,13 +107,15 @@ auth/session/provider parsing, Cloudflare Access calls, CRM/outreach, LLM,
 automation, rollback execution, destructive data action, or generated
 suggestion persistence/export/history/attribution.
 
-Post-PR188 source-of-truth update: PR #187 merged the post-PR186
+Post-PR189 source-of-truth update: PR #187 merged the post-PR186
 source-of-truth sync at `c7da118376df889edf5c47ba508fc4f817535ed0`.
 PR #188 then merged archival PR #12 root-cycle merge and Wave 2 bootstrap
 execution/status records at `55953593088e292f9561e6c3570eae2e29a90ca3`.
-Those records are historical execution artifacts only; they do not replace this
-file, `docs/roadmap/current-pr-train.md`, or production-proof boundary docs as
-current source of truth. Production actions performed: none.
+PR #189 then synced source-of-truth and production-boundary docs at
+`5a3c7c9cfe3068b38d8196d60aaf378adc64da14`. The PR #188 records remain
+historical execution artifacts only; they do not replace this file,
+`docs/roadmap/current-pr-train.md`, or production-proof boundary docs as current
+source of truth. Production actions performed: none.
 The Level 1 change-control manifest packet adds only a checked-in
 non-production manifest, schema, local linter/planner, redacted dry-run
 artifact, and `npm run proof:level1:change-control-manifest` gate. It labels
