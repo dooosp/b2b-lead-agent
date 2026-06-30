@@ -2,7 +2,8 @@
 
 This document records the production-proof boundary after Issue #34 and the
 Manual Review Notes v1 PR train through PR #142, the Level 1 non-production
-gate train through PR #185, and the post-PR186 refactor/dependency cleanup. It
+gate train through PR #185, the post-PR186 refactor/dependency cleanup, and
+the post-PR188 source-of-truth/archive sync. It
 is a planning and safety document only; it is not production evidence.
 
 Audited repo baseline for this snapshot:
@@ -11,7 +12,7 @@ Audited repo baseline for this snapshot:
 - Previous Manual Review Notes v1 privacy-warning baseline:
   `f2ddf35e828017eec9332dc80876e50bbee2f54a` (PR #130)
 - Current source-of-truth `origin/master`:
-  `4d419f3bf771bb0e6ac656eeb2560445edcee4dd` (PR #186)
+  `55953593088e292f9561e6c3570eae2e29a90ca3` (PR #188)
 - Issue #34 current state: closed as completed after GitHub-only closeout, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -37,10 +38,13 @@ Audited repo baseline for this snapshot:
 - Current Level 1 operator rehearsal packet:
   `docs/roadmap/b2b-lead-agent-level-1-operator-rehearsal-gate-non-production.md`
 
-Post-PR186 operating update:
+Post-PR188 operating update:
 
 - Current source-of-truth `origin/master` for this boundary update:
-  `4d419f3bf771bb0e6ac656eeb2560445edcee4dd` (PR #186).
+  `55953593088e292f9561e6c3570eae2e29a90ca3` (PR #188).
+- PR #187 only synced source-of-truth docs after PR #186. PR #188 only tracked
+  historical PR #12 root-cycle merge and Wave 2 bootstrap records as archival
+  execution artifacts. Neither PR approves production or staging action.
 - Issue #34 is closed as completed after a GitHub-only closeout approval and
   closeout record.
 - Standing approval policy: `docs/standing-approval-policy.md`.
@@ -233,9 +237,9 @@ Accepted Issue #34 records:
 Important freshness rule: Issue #34's accepted execution/proof scopes were tied
 to earlier approved SHAs, including the final read-only schema-proof baseline at
 `512b537797fc67d974acf1f1e690bd638de4919b` (PR #106). The latest audited
-source-of-truth `master` baseline is `4d419f3bf771bb0e6ac656eeb2560445edcee4dd`
-after PR #186 landed the reviewer-note renderer / CLI helper refactor and audit
-dependency patch. Any new
+source-of-truth `master` baseline is `55953593088e292f9561e6c3570eae2e29a90ca3`
+after PR #188 tracked historical root-cycle bootstrap records as archival docs
+only. Any new
 production action must refresh the actual current
 `origin/master` SHA, CI metadata, owners, and approval records before
 execution. Issue #34 closeout does not authorize further production proof work.
