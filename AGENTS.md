@@ -140,6 +140,12 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   production D1 access/write/migration, endpoint calls, logs/secrets access,
   customer-data access/mutation, CRM/outreach/LLM/automation, or
   production-readiness claims.
+- Post-PR189 source-of-truth addendum: `master` includes PR #189 at
+  `5a3c7c9cfe3068b38d8196d60aaf378adc64da14`. PR #189 synced
+  source-of-truth and production-boundary docs after PR #188. It did not
+  approve production deploy, staging execution, production D1
+  access/write/migration, endpoint calls, logs/secrets access, customer-data
+  access/mutation, CRM/outreach/LLM/automation, or production-readiness claims.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
