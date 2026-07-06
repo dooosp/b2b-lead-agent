@@ -3,7 +3,7 @@
 ## 현재 기준 상태
 
 - 기준 브랜치: `master`
-- 마지막 검증된 post-PR #191 `origin/master` HEAD: `72def61e89b3c2137b13e2a3ce0bbbc58407d8ce` (`Local/test-safe Reviewer Workflow Intelligence v1`)
+- 마지막 검증된 post-PR #192 `origin/master` HEAD: `a1ad439348730f834ae7ce5448750b8a5535f502` (`docs: sync source of truth after PR191`)
 - 다음 세션도 반드시 `git fetch origin master`와 `git rev-parse origin/master`로 실제 최신 HEAD를 다시 기록한다.
 - hardening source of truth: `AGENTS.md`, `HARDENING_PLAN.md`, `docs/architecture/*.md`, `NEXT_SESSION_PROMPT.md`
 - LeadBrief v1 merge baseline: `5776d4a` (`[Product] Freeze LeadBrief v1 review contract (#27)`)
@@ -171,6 +171,8 @@
   - #189 synced source-of-truth and production-boundary docs after PR #188 without production/staging action or runtime boundary expansion.
   - #190 synced source-of-truth docs after PR #189 without production/staging action or runtime boundary expansion.
   - #191 merged local/test-safe Reviewer Workflow Intelligence v1: explicit human-entered `reviewerFeedback`, fixed local/test `manual_reviewer` attribution, metadata-only `reviewer_feedback_events`, additive `reviewerWorkflowSummary`, deterministic `dataGapPrioritization`, schema/fake-D1 contracts, UI controls, and route privacy coverage. It is `NOT_PRODUCTION_EVIDENCE`, keeps `productionReady:false`, and does not approve production/staging action.
+  - #192 synced source-of-truth docs after PR #191 without production/staging action or runtime boundary expansion.
+  - Reviewer Workflow Boundary Audit v1 adds `npm run check:reviewer-workflow-boundary` and `tmp/codex/reviewer-workflow-boundary-audit-non-production.json` to verify reviewer feedback freeform redaction, CSV/export, publication, denied-role summary, and prioritization boundaries. It is `NOT_PRODUCTION_EVIDENCE`, keeps `productionReady:false`, and does not approve production/staging action.
 - Current Level 1 blocker burn-down packet lives at `docs/roadmap/b2b-lead-agent-level-1-blocker-burndown-packet.md`. It classifies remaining blockers for auth provider/session owner input, production D1 schema observation input, rollback/backout owner input, final production proof approval, and privacy residual values. It includes copy-paste owner request templates and keeps `FINAL_STATE: HOLD_PENDING_NEW_EXPLICIT_GOAL`.
 - Reviewer Workflow Final Audit & Demo Packet lives at `docs/reviewer-workflow-final-audit.md` and is the canonical local/test-safe handoff baseline for completed reviewer workflow demo, validation, allowed/forbidden claims, note-persistence wording, and production evidence boundaries.
 - Issue #100 is closed as completed for the recorded local/test-safe Human UX Review findings. Future UX feedback should open a new issue or separately scoped record.
@@ -254,6 +256,7 @@
 - `npm run proof:level1:closure-dashboard` = local-only Level 1 closure dashboard JSON/Markdown writer; inventories PR #171-#185 gate status and keeps Issue #165 on HOLD
 - `npm run proof:level1:approval-intake` = local-only Issue #165 approval-intake template/validator artifact writer; emits redacted `NOT_PRODUCTION_EVIDENCE`, keeps proof blocked, and validates exact future approval fields
 - `npm run proof:level1:post-approval-simulator` = local-only Issue #165 post-approval decision simulator; consumes checked-in synthetic packets only, emits redacted `NOT_PRODUCTION_EVIDENCE`, and never executes proof
+- `npm run check:reviewer-workflow-boundary` = local-only Reviewer Workflow Intelligence boundary audit; verifies reviewer feedback redaction plus CSV, publication, denied-role summary, and prioritization boundaries; writes `tmp/codex/reviewer-workflow-boundary-audit-non-production.json`
 - `npm run check:level1` = local-only Level 1 auth/route/privacy/proof/preflight/approval/change-control/operator-rehearsal/closure-dashboard/approval-intake/post-approval-simulator/evidence-redaction regression gate; writes only redacted `NOT_PRODUCTION_EVIDENCE` artifacts and keeps `productionReady:false`
 - `npm run test:evidence` = release evidence toolkit tests
 - `npm run test:unit` = Worker unit coverage

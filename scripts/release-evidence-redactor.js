@@ -14,7 +14,7 @@ const AUTH_HEADER_KEY_RE = /^authorization$|proxy-authorization|auth[_-]?header/
 const COOKIE_KEY_RE = /^cookie$|^set-cookie$|cookie/i;
 const PRIVATE_URL_KEY_RE = /private[_-]?url|internal[_-]?url|callback[_-]?url|endpoint|webhook/i;
 const PII_KEY_RE = /email|phone|contact|customer|person|user[_-]?name|full[_-]?name|owner|approver|observer|actor|author/i;
-const PROTECTED_TEXT_KEY_RE = /^notes$|manual[_-]?review[_-]?notes|manual[_-]?note(?:[_-]?body)?|note[_-]?body|generated[_-]?suggestion|generated[_-]?helper|review[_-]?note[_-]?suggestion|review[_-]?note[_-]?templates/i;
+const PROTECTED_TEXT_KEY_RE = /^notes$|manual[_-]?review[_-]?notes|manual[_-]?note(?:[_-]?body)?|note[_-]?body|generated[_-]?suggestion|generated[_-]?helper|review[_-]?note[_-]?suggestion|review[_-]?note[_-]?templates|reviewer[_-]?feedback|feedback[_-]?text|next[_-]?reviewer[_-]?action/i;
 
 const AUTH_HEADER_RE = /\b(?:Authorization|Proxy-Authorization)\s*:\s*[^\r\n]+/gi;
 const TOKEN_HEADER_RE = /\b(?:X-API-Key|X-Auth-Token|X-Job-Callback-Token|Callback-Token)\s*:\s*[^\r\n]+/gi;

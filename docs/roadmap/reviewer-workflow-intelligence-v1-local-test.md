@@ -143,9 +143,22 @@ explicit human-approved goal closes them with evidence.
 Local/test coverage includes:
 
 - `worker/tests/reviewer-feedback.test.mjs`
+- `worker/tests/reviewer-workflow-boundary-audit.test.mjs`
 - `worker/tests/lead-action-intelligence.test.mjs`
 - `worker/tests/lead-review-status.test.mjs`
 - `worker/tests/d1-schema-contract.test.mjs`
 - `tests/d1-schema-consistency.test.js`
+- `tests/release-evidence-redaction.test.js`
+- `npm run check:reviewer-workflow-boundary`
 - `npm run check:schema`
 - `npm test`
+
+## Boundary Audit Addendum
+
+`docs/roadmap/reviewer-workflow-boundary-audit-non-production.md` records the
+local/test-safe Reviewer Workflow Boundary Audit v1 gate. It adds a
+machine-checkable `NOT_PRODUCTION_EVIDENCE` artifact at
+`tmp/codex/reviewer-workflow-boundary-audit-non-production.json`, extends
+release evidence redaction for reviewer feedback freeform text, and verifies
+CSV, publication, denied-role summary, and prioritization boundaries without
+approving production/staging execution or production readiness.

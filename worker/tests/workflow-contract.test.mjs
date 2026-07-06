@@ -134,6 +134,7 @@ test('package exposes a local-only Level 1 regression gate', async () => {
   const closureDashboardScript = packageJson.scripts['proof:level1:closure-dashboard'] || '';
   const approvalIntakeScript = packageJson.scripts['proof:level1:approval-intake'] || '';
   const postApprovalSimulatorScript = packageJson.scripts['proof:level1:post-approval-simulator'] || '';
+  const reviewerWorkflowBoundaryScript = packageJson.scripts['check:reviewer-workflow-boundary'] || '';
 
   assert.match(script, /node --test/);
   assert.match(script, /worker\/tests\/local-test-auth-adapter\.test\.mjs/);
@@ -150,6 +151,7 @@ test('package exposes a local-only Level 1 regression gate', async () => {
   assert.match(script, /worker\/tests\/level1-production-proof-approval-intake-gate\.test\.mjs/);
   assert.match(script, /worker\/tests\/level1-post-approval-decision-simulator\.test\.mjs/);
   assert.match(script, /npm run test:evidence/);
+  assert.match(script, /npm run check:reviewer-workflow-boundary/);
   assert.match(script, /npm run proof:level1:preflight/);
   assert.match(script, /npm run proof:level1:approval-dry-run/);
   assert.match(script, /npm run proof:level1:change-control-manifest/);
@@ -168,6 +170,9 @@ test('package exposes a local-only Level 1 regression gate', async () => {
   assert.doesNotMatch(approvalIntakeScript, /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
   assert.match(postApprovalSimulatorScript, /node scripts\/level1-post-approval-decision-simulator\.mjs --json --output tmp\/codex\/level1-post-approval-decision-simulator-non-production\.json --markdown --markdown-output docs\/roadmap\/b2b-lead-agent-level-1-post-approval-decision-simulator-non-production\.md/);
   assert.doesNotMatch(postApprovalSimulatorScript, /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
+  assert.match(reviewerWorkflowBoundaryScript, /node --test worker\/tests\/reviewer-workflow-boundary-audit\.test\.mjs tests\/release-evidence-redaction\.test\.js/);
+  assert.match(reviewerWorkflowBoundaryScript, /node scripts\/reviewer-workflow-boundary-audit\.mjs --json --output tmp\/codex\/reviewer-workflow-boundary-audit-non-production\.json/);
+  assert.doesNotMatch(reviewerWorkflowBoundaryScript, /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
 });
 
 test('CI workflow runs the safe Level 1 regression gate before full tests', async () => {
