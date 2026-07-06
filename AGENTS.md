@@ -161,6 +161,12 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   real reviewer identity, CRM/outreach/LLM/automation, retention/privacy
   enforcement, generated suggestion persistence/export/history/attribution,
   or production-readiness claims.
+- Post-PR192 source-of-truth sync addendum: `master` includes PR #192 at
+  `a1ad439348730f834ae7ce5448750b8a5535f502`, which synced
+  source-of-truth docs after PR #191 without approving production/staging
+  action, production D1, real auth/session, retention/privacy enforcement,
+  generated suggestion persistence/export/history/attribution, or
+  production-readiness claims.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -303,6 +309,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - Reviewer note suggestions are deterministic, read-only helper output. Under Issue #113 Option E and PR #114, generated suggestions are copy-only, not saved, not sent, and not human-authored saved notes; v1 must not persist generated notes, auto-send notes, call LLM/external providers, or change D1 schema.
 - Option A manual review notes are human-entered text only. The explicit local/test-safe API/UI contract is `manualReviewNotes` with derived provenance `human_entered`, backed by the existing `notes` column. T1 local/test-safe timestamp semantics use `manualReviewNotesUpdatedAt` backed by `manual_review_notes_updated_at` for the last accepted human-entered manual note change/save/clear event only. Current generic author-label semantics use `manualReviewNotesAuthorLabel` backed by `manual_review_notes_author_label` with only the fixed non-PII value `manual_reviewer` for accepted manual note create/edit/clear events. H2 metadata-only local/test history uses `manual_review_note_events` and exposes only metadata summary fields: `manualReviewNotesHistoryEventCount`, `manualReviewNotesHistoryLastEventType`, `manualReviewNotesHistoryLastEventAt`, and `manualReviewNotesHistoryLastAuthorLabel`. Old manual note values are not retained in history. Generated suggestion payload fields must be rejected or ignored by persistence paths and must not be stored as manual notes, update the note-specific timestamp, receive reviewer attribution, or become history entries. Lead-level `updatedAt` / `updated_at` may be displayed only as a lead-level "last updated" signal when no note-specific timestamp exists; do not present it as a note-specific save timestamp.
 - Reviewer Workflow Intelligence v1 is local/test-safe only. `reviewerFeedback` is explicit human-entered reviewer feedback stored in `reviewer_feedback` with fixed non-PII `manual_reviewer` attribution and metadata-only `reviewer_feedback_events` history. It follows the same C2 local/test role-stub protection as manual notes. `GET /api/leads` may expose additive `reviewerWorkflowSummary` and `dataGapPrioritization` metadata, but all such evidence is `NOT_PRODUCTION_EVIDENCE` and `productionReady:false`. Generated reviewer suggestions remain copy-only and must not be saved, sent, attributed, history-stored, exported, or mixed into reviewer feedback.
+- Reviewer Workflow Boundary Audit v1 is local/test-safe only. `npm run check:reviewer-workflow-boundary` emits `tmp/codex/reviewer-workflow-boundary-audit-non-production.json` and checks reviewer feedback freeform redaction plus CSV, publication, denied-role summary, and prioritization boundaries. It is `NOT_PRODUCTION_EVIDENCE`, keeps `productionReady:false`, and does not approve production/staging proof, production D1, real auth/session, retention/privacy enforcement, or generated suggestion persistence/export/history/attribution.
 - Managed/self-service upserts preserve existing `review_status` on conflict so refreshes do not erase human review decisions.
 - CSV, browser UI, self-service copy, and downloads must preserve review/trust metadata.
 - D1 trust and review columns are lazy-migration-compatible but not production-observed until the first post-deploy production write is confirmed.

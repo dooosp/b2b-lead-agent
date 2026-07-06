@@ -306,11 +306,12 @@ Option A manual review notes update: PR #119 added the plan-only implementation 
 | [#189](https://github.com/dooosp/b2b-lead-agent/pull/189) | Post-PR188 source-of-truth sync | Synced source-of-truth and production-boundary docs after PR #188 without production/staging action or runtime boundary expansion. |
 | [#190](https://github.com/dooosp/b2b-lead-agent/pull/190) | Post-PR189 source-of-truth sync | Synced source-of-truth docs after PR #189 without production/staging action or runtime boundary expansion. |
 | [#191](https://github.com/dooosp/b2b-lead-agent/pull/191) | Local/test-safe Reviewer Workflow Intelligence v1 | Added explicit human-entered `reviewerFeedback`, fixed local/test `manual_reviewer` attribution, metadata-only `reviewer_feedback_events`, additive `reviewerWorkflowSummary`, deterministic `dataGapPrioritization`, and route privacy coverage without approving production/staging action. |
+| [#192](https://github.com/dooosp/b2b-lead-agent/pull/192) | Post-PR191 source-of-truth sync | Synced source-of-truth docs after Reviewer Workflow Intelligence v1 without production/staging action or runtime boundary expansion. |
 
 ## Immediate Merge Queue
 
 At this source-of-truth sync preflight, PR #119 through PR #153 plus PR #155
-through PR #191 are merged into `master`. PR #178 added the local-only Level 1
+through PR #192 are merged into `master`. PR #178 added the local-only Level 1
 operator rehearsal gate, PR #179 added axios audit triage, and PR #180 added
 outbound HTTP enrichment boundary guards. PR #181 added the local-only
 enrichment fixture replay output contract. PR #182 added the local-only lead
@@ -563,8 +564,10 @@ PR #189 synced source-of-truth and production-boundary docs at
 `5a3c7c9cfe3068b38d8196d60aaf378adc64da14`. PR #190 synced source-of-truth
 docs after PR #189 at `c90eeded7c6d6718482993d5d233ed343aee0771`. PR #191
 merged local/test-safe Reviewer Workflow Intelligence v1 at
-`72def61e89b3c2137b13e2a3ce0bbbc58407d8ce`. The PR #188 records are archival
-only and do not create current execution authority. The latest Issue #165
+`72def61e89b3c2137b13e2a3ce0bbbc58407d8ce`. PR #192 synced source-of-truth
+docs after PR #191 at `a1ad439348730f834ae7ce5448750b8a5535f502`. The PR
+#188 records are archival only and do not create current execution authority.
+The latest Issue #165
 execution attempt remains `HOLD` because the machine-checkable approval request
 was not accepted; required production proof execution approval fields remain
 unmet for execution. Production actions performed: none.
@@ -581,6 +584,18 @@ access/observation/migration/write/delete, logs/secrets access, real
 auth/session/provider parsing, real reviewer identity, CRM/outreach/LLM/
 automation, retention/privacy enforcement, generated suggestion persistence/
 export/history/attribution, or closure of Issues #165/#162/#163/#164/#154.
+
+Reviewer Workflow Boundary Audit v1 update:
+`docs/roadmap/reviewer-workflow-boundary-audit-non-production.md` documents
+the local/test-safe audit gate for Reviewer Workflow Intelligence v1.
+`npm run check:reviewer-workflow-boundary` writes
+`tmp/codex/reviewer-workflow-boundary-audit-non-production.json`, extends
+release evidence redaction for reviewer feedback freeform text, and checks
+CSV, publication, denied-role summary, and prioritization boundaries. It is
+`NOT_PRODUCTION_EVIDENCE`, keeps `productionReady:false`, and does not approve
+production/staging execution, production D1, real auth/session,
+retention/privacy enforcement, generated suggestion persistence/export/history/
+attribution, or closure of Issues #165/#162/#163/#164/#154.
 
 ## Old PR Disposition
 

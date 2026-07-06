@@ -99,3 +99,31 @@ test('redactEvidence removes manual-note and generated-suggestion evidence field
   assert.equal(redacted.safeStatus, 'PASS_LOCAL');
   assert.doesNotMatch(serialized, /Human note body|Generated suggestion|Decision: APPROVED|Template generated helper/);
 });
+
+test('redactEvidence removes reviewer feedback freeform evidence fields', () => {
+  const input = {
+    reviewerFeedback: {
+      actionUsefulness: 'useful',
+      outcomeLabel: 'needs_more_research',
+      feedbackText: 'Reviewer feedback body must not appear.',
+      nextReviewerAction: 'Reviewer next action must not appear.',
+    },
+    reviewer_feedback: {
+      feedback_text: 'Snake reviewer feedback body must not appear.',
+      next_reviewer_action: 'Snake reviewer next action must not appear.',
+    },
+    feedbackText: 'Bare feedback text must not appear.',
+    nextReviewerAction: 'Bare next reviewer action must not appear.',
+    safeStatus: 'PASS_LOCAL',
+  };
+
+  const redacted = redactEvidence(input);
+  const serialized = JSON.stringify(redacted);
+
+  assert.equal(redacted.reviewerFeedback, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.reviewer_feedback, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.feedbackText, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.nextReviewerAction, REDACTION_LABELS.protectedText);
+  assert.equal(redacted.safeStatus, 'PASS_LOCAL');
+  assert.doesNotMatch(serialized, /Reviewer feedback body|Reviewer next action|Snake reviewer feedback|Bare feedback/);
+});

@@ -207,6 +207,12 @@ Post-PR191 operating update:
   auth/session/provider parsing, real reviewer identity, CRM/outreach/LLM/
   automation, retention/privacy enforcement, generated suggestion persistence/
   export/history/attribution, or production readiness.
+- Reviewer Workflow Boundary Audit v1 adds only a local/test-safe audit gate:
+  `npm run check:reviewer-workflow-boundary` and
+  `tmp/codex/reviewer-workflow-boundary-audit-non-production.json`. It verifies
+  reviewer feedback freeform redaction plus CSV, publication, denied-role
+  summary, and prioritization boundaries. It is not production/staging proof
+  and keeps `productionReady:false`.
 - The current fail-closed matrix refuses malformed synthetic auth claims, mixed
   roles, auth-header / Cloudflare Access / D1 / API-key alias env poison,
   poisoned future evidence fields, bare `notes` / validation-note evidence

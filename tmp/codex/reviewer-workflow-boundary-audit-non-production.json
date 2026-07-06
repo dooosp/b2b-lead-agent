@@ -1,0 +1,114 @@
+{
+  "documentStatus": "REVIEWER_WORKFLOW_BOUNDARY_AUDIT_NON_PRODUCTION",
+  "generatedAt": "2026-07-06T00:00:00.000Z",
+  "repo": "dooosp/b2b-lead-agent",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "notProductionEvidence": true,
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "localTestOnly": true,
+  "sourceFeature": "Reviewer Workflow Intelligence v1",
+  "sourcePr": 191,
+  "priorSourceSyncPr": 192,
+  "scope": {
+    "checksReviewerFeedbackFreeformLeakage": true,
+    "checksGeneratedSuggestionPersistenceOrExport": true,
+    "checksReleaseEvidenceRedaction": true,
+    "executesProductionProof": false,
+    "touchesProductionD1": false,
+    "touchesStagingD1": false,
+    "callsProductionOrStagingEndpoints": false,
+    "implementsRealAuthSession": false,
+    "implementsRetentionEnforcement": false
+  },
+  "checks": [
+    {
+      "id": "reviewer_summary_boundary_flags",
+      "status": "PASS",
+      "contract": "REVIEWER_WORKFLOW_INTELLIGENCE_V1",
+      "evidenceKind": "NOT_PRODUCTION_EVIDENCE",
+      "productionReady": false,
+      "withReviewerFeedback": 1,
+      "blockingDataGapCount": 1
+    },
+    {
+      "id": "data_gap_prioritization_boundary_flags",
+      "status": "PASS",
+      "contract": "DATA_GAP_PRIORITIZATION_V1",
+      "evidenceKind": "NOT_PRODUCTION_EVIDENCE",
+      "productionReady": false,
+      "firstBucket": "blocking_data_gap"
+    },
+    {
+      "id": "denied_role_omits_feedback_from_summary_and_queue_metadata",
+      "status": "PASS",
+      "deniedRole": "manager",
+      "deniedSummaryWithReviewerFeedback": 0,
+      "deniedBlockingDataGapCount": 0
+    },
+    {
+      "id": "csv_export_omits_feedback_notes_and_generated_suggestions",
+      "status": "PASS",
+      "csvHeaderColumnCount": 14,
+      "exportExpandedReviewerFeedback": false
+    },
+    {
+      "id": "published_snapshot_omits_reviewer_feedback_and_private_runtime_fields",
+      "status": "PASS",
+      "hasReviewerFeedback": false,
+      "hasGeneratedSuggestion": false
+    },
+    {
+      "id": "release_evidence_redacts_reviewer_feedback_freeform_text",
+      "status": "PASS",
+      "reviewerFeedbackRedacted": true,
+      "feedbackTextRedacted": true,
+      "nextReviewerActionRedacted": true
+    }
+  ],
+  "surfaceSummary": {
+    "reviewerOnlySignalsRemainAvailableLocally": true,
+    "deniedRolesOmitReviewerFeedbackSignals": true,
+    "csvExportIncludesReviewerFeedbackColumns": false,
+    "publishedSnapshotIncludesReviewerFeedback": false,
+    "releaseEvidenceUsesProtectedTextRedaction": true
+  },
+  "validationCommands": [
+    "npm run check:reviewer-workflow-boundary",
+    "npm run check:naming",
+    "npm run check:schema",
+    "npm test"
+  ],
+  "remainingBlockers": [
+    {
+      "issue": 154,
+      "status": "OPEN",
+      "reason": "privacy_retention_enforcement_not_implemented"
+    },
+    {
+      "issue": 162,
+      "status": "OPEN",
+      "reason": "real_auth_session_not_implemented"
+    },
+    {
+      "issue": 163,
+      "status": "OPEN",
+      "reason": "production_d1_observation_not_approved"
+    },
+    {
+      "issue": 164,
+      "status": "OPEN",
+      "reason": "production_rollback_execution_not_approved"
+    },
+    {
+      "issue": 165,
+      "status": "OPEN",
+      "reason": "production_proof_execution_not_approved"
+    }
+  ],
+  "validation": {
+    "ok": true,
+    "blockers": []
+  },
+  "blockers": []
+}
