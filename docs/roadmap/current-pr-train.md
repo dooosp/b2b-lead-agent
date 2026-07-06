@@ -5,9 +5,9 @@ This document summarizes the May 2026 PR train, stale PR disposition, and next w
 Evidence baseline:
 
 - Repo default branch: `master`
-- Latest audited source-of-truth `origin/master`: `5a3c7c9cfe3068b38d8196d60aaf378adc64da14` (PR #189)
+- Latest audited source-of-truth `origin/master`: `72def61e89b3c2137b13e2a3ce0bbbc58407d8ce` (PR #191)
 - Evidence collected from GitHub PR/issue metadata, PR bodies, current `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`, and `docs/architecture/*.md`
-- Scope: documentation synthesis plus local/test-safe Option A manual review notes implementation, edit/clear record, saved/empty state plus timestamp clarity record, Manual Review Notes v1 data semantics decision readiness, the T1 local/test-safe note-specific timestamp implementation, reviewer identity / author attribution decision readiness, generic author-label implementation, H2 metadata-only history implementation, retention/privacy policy decision readiness, static local/test privacy warning implementation, production readiness gap planning, access/visibility/export decision readiness, access-control plan readiness, the C2 opt-in local/test role stub, post-PR135 source-of-truth sync, docs-only Manual Review Notes v1 production proof plan readiness, docs-only Manual Review Notes v1 production D1 migration plan readiness, docs-only Manual Review Notes v1 production rollback/backout plan readiness, docs-only Manual Review Notes v1 local/staging dry-run plan readiness, approved local/fake-D1 dry-run evidence capture, docs-only staging target decision readiness, final non-production cycle closeout, reviewer feedback intake, first feedback record disposition, docs-only staging execution readiness packet preparation, docs-only staging prerequisite classification, docs-only B2B Lead Agent productization roadmap v1 preparation, docs-only Production Reviewer Workflow Readiness Packet preparation, docs-only Auth / Access Control Decision Packet preparation, docs-only Privacy / Retention Decision Packet preparation, docs-only Privacy Owner Input Request Packet preparation, GitHub Privacy Owner Input tracking issue creation/sync, Issue #154 owner authority sync, Issue #154 conservative policy disposition preparation, docs-only Privacy / Retention Implementation Plan preparation, docs-only Auth / Access Control Implementation Plan preparation, merged non-production Auth / Access Control test guard coverage, docs-only Level 1 blocker burn-down packet preparation, GitHub Level 1 owner-input tracking issue creation/sync, PR #171's non-production auth provider/session scaffold and local proof simulation, PR #172's local proof preflight automation, PR #173's local auth adapter route audit, PR #174's approval packet dry-run, PR #175's CI/package regression gate, PR #176's fail-closed fault injection, PR #177's change-control manifest gate, PR #178's operator rehearsal gate, PR #179's axios audit triage, PR #180's outbound HTTP enrichment boundary guards, PR #181's enrichment fixture replay output contract, PR #182's lead pipeline fixture replay artifact contract, PR #183's Level 1 readiness closure dashboard, PR #184's Level 1 approval-intake gate, PR #185's `LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_NON_PRODUCTION` local/test simulator, PR #186's reviewer-note renderer / CLI helper refactor plus audit dependency patch, PR #187's source-of-truth sync, PR #188's archival root-cycle bootstrap record tracking, and PR #189's post-PR188 source-of-truth sync
+- Scope: documentation synthesis plus local/test-safe Option A manual review notes implementation, edit/clear record, saved/empty state plus timestamp clarity record, Manual Review Notes v1 data semantics decision readiness, the T1 local/test-safe note-specific timestamp implementation, reviewer identity / author attribution decision readiness, generic author-label implementation, H2 metadata-only history implementation, retention/privacy policy decision readiness, static local/test privacy warning implementation, production readiness gap planning, access/visibility/export decision readiness, access-control plan readiness, the C2 opt-in local/test role stub, post-PR135 source-of-truth sync, docs-only Manual Review Notes v1 production proof plan readiness, docs-only Manual Review Notes v1 production D1 migration plan readiness, docs-only Manual Review Notes v1 production rollback/backout plan readiness, docs-only Manual Review Notes v1 local/staging dry-run plan readiness, approved local/fake-D1 dry-run evidence capture, docs-only staging target decision readiness, final non-production cycle closeout, reviewer feedback intake, first feedback record disposition, docs-only staging execution readiness packet preparation, docs-only staging prerequisite classification, docs-only B2B Lead Agent productization roadmap v1 preparation, docs-only Production Reviewer Workflow Readiness Packet preparation, docs-only Auth / Access Control Decision Packet preparation, docs-only Privacy / Retention Decision Packet preparation, docs-only Privacy Owner Input Request Packet preparation, GitHub Privacy Owner Input tracking issue creation/sync, Issue #154 owner authority sync, Issue #154 conservative policy disposition preparation, docs-only Privacy / Retention Implementation Plan preparation, docs-only Auth / Access Control Implementation Plan preparation, merged non-production Auth / Access Control test guard coverage, docs-only Level 1 blocker burn-down packet preparation, GitHub Level 1 owner-input tracking issue creation/sync, PR #171's non-production auth provider/session scaffold and local proof simulation, PR #172's local proof preflight automation, PR #173's local auth adapter route audit, PR #174's approval packet dry-run, PR #175's CI/package regression gate, PR #176's fail-closed fault injection, PR #177's change-control manifest gate, PR #178's operator rehearsal gate, PR #179's axios audit triage, PR #180's outbound HTTP enrichment boundary guards, PR #181's enrichment fixture replay output contract, PR #182's lead pipeline fixture replay artifact contract, PR #183's Level 1 readiness closure dashboard, PR #184's Level 1 approval-intake gate, PR #185's `LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_NON_PRODUCTION` local/test simulator, PR #186's reviewer-note renderer / CLI helper refactor plus audit dependency patch, PR #187's source-of-truth sync, PR #188's archival root-cycle bootstrap record tracking, PR #189's post-PR188 source-of-truth sync, PR #190's post-PR189 source-of-truth sync, and PR #191's local/test-safe Reviewer Workflow Intelligence v1
 - Current owner-input response processing: Issues #162, #163, #164, #165, and #154 now have scoped owner confirmations processed as docs-planning `COMPLETE`. Issue #165 explicitly keeps production proof execution unapproved until a separate explicit future proof goal. Production reviewer workflow remains `BLOCKED`.
 - Production actions performed for this synthesis: none
 
@@ -304,11 +304,13 @@ Option A manual review notes update: PR #119 added the plan-only implementation 
 | [#187](https://github.com/dooosp/b2b-lead-agent/pull/187) | Post-PR186 source-of-truth sync | Synced source-of-truth docs after PR #186 without production/staging action or runtime boundary expansion. |
 | [#188](https://github.com/dooosp/b2b-lead-agent/pull/188) | Root-cycle bootstrap archival records | Tracked historical PR #12 root-cycle merge and Wave 2 bootstrap execution/status records as archival docs only. |
 | [#189](https://github.com/dooosp/b2b-lead-agent/pull/189) | Post-PR188 source-of-truth sync | Synced source-of-truth and production-boundary docs after PR #188 without production/staging action or runtime boundary expansion. |
+| [#190](https://github.com/dooosp/b2b-lead-agent/pull/190) | Post-PR189 source-of-truth sync | Synced source-of-truth docs after PR #189 without production/staging action or runtime boundary expansion. |
+| [#191](https://github.com/dooosp/b2b-lead-agent/pull/191) | Local/test-safe Reviewer Workflow Intelligence v1 | Added explicit human-entered `reviewerFeedback`, fixed local/test `manual_reviewer` attribution, metadata-only `reviewer_feedback_events`, additive `reviewerWorkflowSummary`, deterministic `dataGapPrioritization`, and route privacy coverage without approving production/staging action. |
 
 ## Immediate Merge Queue
 
 At this source-of-truth sync preflight, PR #119 through PR #153 plus PR #155
-through PR #189 are merged into `master`. PR #178 added the local-only Level 1
+through PR #191 are merged into `master`. PR #178 added the local-only Level 1
 operator rehearsal gate, PR #179 added axios audit triage, and PR #180 added
 outbound HTTP enrichment boundary guards. PR #181 added the local-only
 enrichment fixture replay output contract. PR #182 added the local-only lead
@@ -319,7 +321,10 @@ post-approval decision simulator. PR #186 added only repo-local refactor,
 tooling, and audit dependency cleanup. PR #187 synced source-of-truth docs after
 PR #186. PR #188 tracked historical root-cycle bootstrap records as archival
 execution artifacts only. PR #189 synced source-of-truth and
-production-boundary docs after PR #188. There is no open PR at this sync point.
+production-boundary docs after PR #188. PR #190 synced source-of-truth docs
+after PR #189. PR #191 added local/test-safe Reviewer Workflow Intelligence v1
+without production/staging action. No feature PR remains required before this
+source-of-truth sync branch.
 The active Privacy Owner Input
 tracking issue is [Issue #154](https://github.com/dooosp/b2b-lead-agent/issues/154),
 status `OPEN`; Issue #154 remains `COMPLETE_FOR_CONSERVATIVE_POLICY` for
@@ -546,7 +551,7 @@ NONE_APPROVED_FOR_EXECUTION_NOW`. Production reviewer workflow remains
 `BLOCKED`, `PRODUCTION_PROOF` remains `HOLD`, and `NEXT_DECISION` remains
 `HOLD_PENDING_NEW_EXPLICIT_GOAL`.
 
-Post-PR189 source-of-truth update: PR #185 merged the local/test-only Level 1
+Post-PR191 source-of-truth update: PR #185 merged the local/test-only Level 1
 post-approval decision simulator at
 `134034dcb1744e5bdc2582a1c116575c668b4c0b`. PR #186 then merged the
 reviewer-note renderer / replay CLI helper refactor plus audit dependency patch
@@ -555,13 +560,16 @@ source-of-truth docs at `c7da118376df889edf5c47ba508fc4f817535ed0`, and
 PR #188 tracked historical PR #12 root-cycle merge and Wave 2 bootstrap
 execution/status records at `55953593088e292f9561e6c3570eae2e29a90ca3`.
 PR #189 synced source-of-truth and production-boundary docs at
-`5a3c7c9cfe3068b38d8196d60aaf378adc64da14`. The PR #188 records are archival
+`5a3c7c9cfe3068b38d8196d60aaf378adc64da14`. PR #190 synced source-of-truth
+docs after PR #189 at `c90eeded7c6d6718482993d5d233ed343aee0771`. PR #191
+merged local/test-safe Reviewer Workflow Intelligence v1 at
+`72def61e89b3c2137b13e2a3ce0bbbc58407d8ce`. The PR #188 records are archival
 only and do not create current execution authority. The latest Issue #165
 execution attempt remains `HOLD` because the machine-checkable approval request
 was not accepted; required production proof execution approval fields remain
 unmet for execution. Production actions performed: none.
 
-Current local/test Reviewer Workflow Intelligence v1 update:
+Post-PR191 local/test Reviewer Workflow Intelligence v1 update:
 `docs/roadmap/reviewer-workflow-intelligence-v1-local-test.md` documents
 explicit human-entered `reviewerFeedback`, fixed local/test `manual_reviewer`
 attribution, metadata-only `reviewer_feedback_events`, additive
