@@ -20,6 +20,45 @@ const GENERATED_REVIEW_NOTE_PATCH_FIELDS = Object.freeze([
 ]);
 
 const MANUAL_REVIEW_NOTE_EVENT_TYPES = Object.freeze(['create', 'edit', 'clear']);
+const REVIEWER_FEEDBACK_EVENT_TYPES = Object.freeze(['create', 'edit', 'clear']);
+const REVIEWER_FEEDBACK_PATCH_FIELDS = Object.freeze([
+  'actionUsefulness',
+  'outcomeLabel',
+  'dataGapPriority',
+  'evidenceConfidenceAdjustment',
+  'feedbackText',
+  'nextReviewerAction',
+]);
+const REVIEWER_FEEDBACK_COLUMN_BY_FIELD = Object.freeze({
+  actionUsefulness: 'action_usefulness',
+  outcomeLabel: 'outcome_label',
+  dataGapPriority: 'data_gap_priority',
+  evidenceConfidenceAdjustment: 'evidence_confidence_adjustment',
+  feedbackText: 'feedback_text',
+  nextReviewerAction: 'next_reviewer_action',
+});
+const REVIEWER_FEEDBACK_FIELD_ALIASES = Object.freeze({
+  actionUsefulness: ['actionUsefulness', 'action_usefulness'],
+  outcomeLabel: ['outcomeLabel', 'outcome_label'],
+  dataGapPriority: ['dataGapPriority', 'data_gap_priority'],
+  evidenceConfidenceAdjustment: ['evidenceConfidenceAdjustment', 'evidence_confidence_adjustment'],
+  feedbackText: ['feedbackText', 'feedback_text'],
+  nextReviewerAction: ['nextReviewerAction', 'next_reviewer_action'],
+});
+const REVIEWER_FEEDBACK_ENUMS = Object.freeze({
+  actionUsefulness: Object.freeze(['useful', 'partially_useful', 'not_useful', 'unclear']),
+  outcomeLabel: Object.freeze(['interested', 'not_fit', 'no_response', 'needs_more_research', 'duplicate', 'deferred', 'unknown']),
+  dataGapPriority: Object.freeze(['none', 'low', 'medium', 'high', 'blocking']),
+  evidenceConfidenceAdjustment: Object.freeze(['increase', 'decrease', 'unchanged', 'unknown']),
+});
+const REVIEWER_FEEDBACK_DEFAULTS = Object.freeze({
+  actionUsefulness: 'unclear',
+  outcomeLabel: 'unknown',
+  dataGapPriority: 'none',
+  evidenceConfidenceAdjustment: 'unknown',
+  feedbackText: '',
+  nextReviewerAction: '',
+});
 
 function hasOwn(object, key) {
   return Object.prototype.hasOwnProperty.call(object, key);
@@ -61,11 +100,94 @@ function withManualReviewNotesHistorySummary(lead, summary = {}) {
   };
 }
 
+function emptyReviewerFeedbackHistorySummary() {
+  return {
+    eventCount: 0,
+    lastEventType: '',
+    lastEventAt: null,
+    lastAuthorLabel: '',
+  };
+}
+
+function normalizeReviewerFeedbackRecord(record = {}) {
+  const hasFeedback = Boolean(record && record.hasFeedback)
+    || Boolean(record && record.lead_id)
+    || Boolean(record && record.updatedAt)
+    || Boolean(record && record.updated_at);
+  const actionUsefulness = REVIEWER_FEEDBACK_ENUMS.actionUsefulness.includes(record.actionUsefulness || record.action_usefulness)
+    ? (record.actionUsefulness || record.action_usefulness)
+    : REVIEWER_FEEDBACK_DEFAULTS.actionUsefulness;
+  const outcomeLabel = REVIEWER_FEEDBACK_ENUMS.outcomeLabel.includes(record.outcomeLabel || record.outcome_label)
+    ? (record.outcomeLabel || record.outcome_label)
+    : REVIEWER_FEEDBACK_DEFAULTS.outcomeLabel;
+  const dataGapPriority = REVIEWER_FEEDBACK_ENUMS.dataGapPriority.includes(record.dataGapPriority || record.data_gap_priority)
+    ? (record.dataGapPriority || record.data_gap_priority)
+    : REVIEWER_FEEDBACK_DEFAULTS.dataGapPriority;
+  const evidenceConfidenceAdjustment = REVIEWER_FEEDBACK_ENUMS.evidenceConfidenceAdjustment.includes(
+    record.evidenceConfidenceAdjustment || record.evidence_confidence_adjustment
+  )
+    ? (record.evidenceConfidenceAdjustment || record.evidence_confidence_adjustment)
+    : REVIEWER_FEEDBACK_DEFAULTS.evidenceConfidenceAdjustment;
+  const authorLabel = (record.authorLabel || record.author_label) === MANUAL_REVIEW_NOTES_AUTHOR_LABEL
+    ? MANUAL_REVIEW_NOTES_AUTHOR_LABEL
+    : '';
+
+  return {
+    hasFeedback,
+    actionUsefulness,
+    outcomeLabel,
+    dataGapPriority,
+    evidenceConfidenceAdjustment,
+    feedbackText: typeof (record.feedbackText ?? record.feedback_text) === 'string'
+      ? (record.feedbackText ?? record.feedback_text)
+      : '',
+    nextReviewerAction: typeof (record.nextReviewerAction ?? record.next_reviewer_action) === 'string'
+      ? (record.nextReviewerAction ?? record.next_reviewer_action)
+      : '',
+    authorLabel,
+    updatedAt: record.updatedAt || record.updated_at || null,
+  };
+}
+
+function withReviewerFeedbackSummary(lead, feedbackRecord = null, historySummary = emptyReviewerFeedbackHistorySummary()) {
+  if (!lead) return lead;
+  const feedback = normalizeReviewerFeedbackRecord(feedbackRecord || {});
+  const eventCount = Number(historySummary.eventCount || 0);
+  const eventType = REVIEWER_FEEDBACK_EVENT_TYPES.includes(historySummary.lastEventType)
+    ? historySummary.lastEventType
+    : '';
+  const authorLabel = historySummary.lastAuthorLabel === MANUAL_REVIEW_NOTES_AUTHOR_LABEL
+    ? MANUAL_REVIEW_NOTES_AUTHOR_LABEL
+    : '';
+
+  return {
+    ...lead,
+    reviewerFeedback: {
+      ...feedback,
+      authorLabel: feedback.authorLabel || authorLabel,
+      historyEventCount: Number.isFinite(eventCount) ? Math.max(0, eventCount) : 0,
+      historyLastEventType: eventType,
+      historyLastEventAt: historySummary.lastEventAt || null,
+      historyLastAuthorLabel: authorLabel,
+    },
+  };
+}
+
 function classifyManualReviewNoteEvent(previousNotes, nextNotes) {
   const previousHasText = String(previousNotes || '').trim().length > 0;
   const nextHasText = String(nextNotes || '').trim().length > 0;
   if (!nextHasText) return 'clear';
   return previousHasText ? 'edit' : 'create';
+}
+
+function reviewerFeedbackHasMeaningfulSignal(feedback = {}) {
+  const normalized = normalizeReviewerFeedbackRecord(feedback);
+  return normalized.actionUsefulness !== REVIEWER_FEEDBACK_DEFAULTS.actionUsefulness
+    || normalized.outcomeLabel !== REVIEWER_FEEDBACK_DEFAULTS.outcomeLabel
+    || normalized.dataGapPriority !== REVIEWER_FEEDBACK_DEFAULTS.dataGapPriority
+    || normalized.evidenceConfidenceAdjustment !== REVIEWER_FEEDBACK_DEFAULTS.evidenceConfidenceAdjustment
+    || String(normalized.feedbackText || '').trim().length > 0
+    || String(normalized.nextReviewerAction || '').trim().length > 0;
 }
 
 async function getManualReviewNotesHistorySummary(db, leadId) {
@@ -84,12 +206,44 @@ async function getManualReviewNotesHistorySummary(db, leadId) {
   };
 }
 
+async function getReviewerFeedbackHistorySummary(db, leadId) {
+  if (!db || !leadId) return emptyReviewerFeedbackHistorySummary();
+  const countRow = await db.prepare(
+    'SELECT COUNT(*) as event_count FROM reviewer_feedback_events WHERE lead_id = ?'
+  ).bind(leadId).first();
+  const lastRow = await db.prepare(
+    'SELECT event_type, changed_at, author_label FROM reviewer_feedback_events WHERE lead_id = ? ORDER BY changed_at DESC, id DESC LIMIT 1'
+  ).bind(leadId).first();
+  return {
+    eventCount: Number(countRow?.event_count || 0),
+    lastEventType: lastRow?.event_type || '',
+    lastEventAt: lastRow?.changed_at || null,
+    lastAuthorLabel: lastRow?.author_label || '',
+  };
+}
+
+async function getReviewerFeedbackRecord(db, leadId) {
+  if (!db || !leadId) return null;
+  return db.prepare('SELECT * FROM reviewer_feedback WHERE lead_id = ?').bind(leadId).first();
+}
+
 async function attachManualReviewNotesHistorySummaries(db, leads) {
   const list = Array.isArray(leads) ? leads : [];
   const decorated = [];
   for (const lead of list) {
     const summary = await getManualReviewNotesHistorySummary(db, lead?.id);
     decorated.push(withManualReviewNotesHistorySummary(lead, summary));
+  }
+  return decorated;
+}
+
+async function attachReviewerFeedbackSummaries(db, leads) {
+  const list = Array.isArray(leads) ? leads : [];
+  const decorated = [];
+  for (const lead of list) {
+    const feedback = await getReviewerFeedbackRecord(db, lead?.id);
+    const history = await getReviewerFeedbackHistorySummary(db, lead?.id);
+    decorated.push(withReviewerFeedbackSummary(lead, feedback, history));
   }
   return decorated;
 }
@@ -133,7 +287,8 @@ export async function getLeadsByProfile(db, profileId, options = {}) {
   sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
   params.push(limit, offset);
   const { results } = await db.prepare(sql).bind(...params).all();
-  return attachManualReviewNotesHistorySummaries(db, (results || []).map(rowToLead));
+  const withManualHistory = await attachManualReviewNotesHistorySummaries(db, (results || []).map(rowToLead));
+  return attachReviewerFeedbackSummaries(db, withManualHistory);
 }
 
 export async function getAllLeads(db, options = {}) {
@@ -146,7 +301,8 @@ export async function getAllLeads(db, options = {}) {
   sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
   params.push(limit, offset);
   const { results } = await db.prepare(sql).bind(...params).all();
-  return attachManualReviewNotesHistorySummaries(db, (results || []).map(rowToLead));
+  const withManualHistory = await attachManualReviewNotesHistorySummaries(db, (results || []).map(rowToLead));
+  return attachReviewerFeedbackSummaries(db, withManualHistory);
 }
 
 export async function getLeadById(db, id) {
@@ -155,8 +311,11 @@ export async function getLeadById(db, id) {
   const row = await db.prepare('SELECT * FROM leads WHERE id = ?').bind(id).first();
   const lead = rowToLead(row);
   if (!lead) return null;
-  const summary = await getManualReviewNotesHistorySummary(db, lead.id);
-  return withManualReviewNotesHistorySummary(lead, summary);
+  const manualSummary = await getManualReviewNotesHistorySummary(db, lead.id);
+  const withManualSummary = withManualReviewNotesHistorySummary(lead, manualSummary);
+  const feedback = await getReviewerFeedbackRecord(db, lead.id);
+  const feedbackSummary = await getReviewerFeedbackHistorySummary(db, lead.id);
+  return withReviewerFeedbackSummary(withManualSummary, feedback, feedbackSummary);
 }
 
 export async function updateLeadStatus(db, id, newStatus, fromStatus) {
@@ -193,11 +352,122 @@ export async function updateLeadNotes(db, id, notes) {
   return true;
 }
 
+function readAliasedPatchValue(payload, field) {
+  const aliases = REVIEWER_FEEDBACK_FIELD_ALIASES[field] || [field];
+  const present = aliases.filter((key) => hasOwn(payload, key));
+  if (present.length === 0) return { present: false, value: undefined };
+  const firstValue = payload[present[0]];
+  for (const key of present.slice(1)) {
+    if (payload[key] !== firstValue) {
+      throw Object.assign(new Error(`reviewerFeedback.${field} aliases must match when provided together.`), { status: 400 });
+    }
+  }
+  return { present: true, value: firstValue };
+}
+
+function normalizeReviewerFeedbackEnum(field, value) {
+  const text = String(value ?? '').trim().toLowerCase();
+  const allowed = REVIEWER_FEEDBACK_ENUMS[field] || [];
+  if (!allowed.includes(text)) {
+    throw Object.assign(
+      new Error(`reviewerFeedback.${field} must be one of: ${allowed.join(', ')}`),
+      { status: 400 }
+    );
+  }
+  return text;
+}
+
+function normalizeReviewerFeedbackText(field, value) {
+  if (typeof value !== 'string') {
+    throw Object.assign(new Error(`reviewerFeedback.${field} must be a string.`), { status: 400 });
+  }
+  const limit = field === 'feedbackText' ? 2000 : 500;
+  return value.slice(0, limit);
+}
+
+function normalizeReviewerFeedbackPatch(lead, patch = {}) {
+  const hasReviewerFeedback = hasOwn(patch, 'reviewerFeedback') || hasOwn(patch, 'reviewer_feedback');
+  if (!hasReviewerFeedback) return null;
+
+  const rawPayload = hasOwn(patch, 'reviewerFeedback') ? patch.reviewerFeedback : patch.reviewer_feedback;
+  const current = normalizeReviewerFeedbackRecord(lead.reviewerFeedback || {});
+  if (rawPayload === null) {
+    return current.hasFeedback
+      ? { changed: true, clear: true, eventType: 'clear', changedFields: ['clear'] }
+      : { changed: false };
+  }
+  if (!rawPayload || typeof rawPayload !== 'object' || Array.isArray(rawPayload)) {
+    throw Object.assign(new Error('reviewerFeedback must be an object or null.'), { status: 400 });
+  }
+
+  const nestedGeneratedField = GENERATED_REVIEW_NOTE_PATCH_FIELDS.find((field) => hasOwn(rawPayload, field));
+  if (nestedGeneratedField) {
+    throw Object.assign(
+      new Error(`Generated reviewer note suggestions are copy-only and cannot be saved through reviewerFeedback.${nestedGeneratedField}.`),
+      { status: 400 }
+    );
+  }
+
+  const allowedKeys = new Set([
+    'clear',
+    ...Object.values(REVIEWER_FEEDBACK_FIELD_ALIASES).flat(),
+  ]);
+  const unknownKey = Object.keys(rawPayload).find((key) => !allowedKeys.has(key));
+  if (unknownKey) {
+    throw Object.assign(new Error(`reviewerFeedback.${unknownKey} is not supported.`), { status: 400 });
+  }
+
+  if (hasOwn(rawPayload, 'clear')) {
+    if (rawPayload.clear !== true && rawPayload.clear !== false) {
+      throw Object.assign(new Error('reviewerFeedback.clear must be true or false.'), { status: 400 });
+    }
+    if (rawPayload.clear === true) {
+      return current.hasFeedback
+        ? { changed: true, clear: true, eventType: 'clear', changedFields: ['clear'] }
+        : { changed: false };
+    }
+  }
+
+  const next = { ...REVIEWER_FEEDBACK_DEFAULTS, ...current };
+  const changedFields = [];
+
+  for (const field of REVIEWER_FEEDBACK_PATCH_FIELDS) {
+    const { present, value } = readAliasedPatchValue(rawPayload, field);
+    if (!present) continue;
+    const normalizedValue = REVIEWER_FEEDBACK_ENUMS[field]
+      ? normalizeReviewerFeedbackEnum(field, value)
+      : normalizeReviewerFeedbackText(field, value);
+    if (normalizedValue !== next[field]) {
+      next[field] = normalizedValue;
+      changedFields.push(field);
+    }
+  }
+
+  if (changedFields.length === 0) return { changed: false };
+  if (!reviewerFeedbackHasMeaningfulSignal(next) && !current.hasFeedback) return { changed: false };
+
+  return {
+    changed: true,
+    clear: false,
+    eventType: current.hasFeedback ? 'edit' : 'create',
+    changedFields,
+    feedback: {
+      action_usefulness: next.actionUsefulness,
+      outcome_label: next.outcomeLabel,
+      data_gap_priority: next.dataGapPriority,
+      evidence_confidence_adjustment: next.evidenceConfidenceAdjustment,
+      feedback_text: next.feedbackText,
+      next_reviewer_action: next.nextReviewerAction,
+    },
+  };
+}
+
 function normalizeLeadPatch(lead, patch) {
   const changedFields = [];
   const leadUpdates = {};
   let statusLogEntry = null;
   let manualReviewNotesChanged = false;
+  let reviewerFeedbackChange = null;
 
   rejectGeneratedReviewNotePersistence(patch);
 
@@ -279,14 +549,25 @@ function normalizeLeadPatch(lead, patch) {
     }
   }
 
-  return { leadUpdates, statusLogEntry, changedFields, manualReviewNotesChanged };
+  reviewerFeedbackChange = normalizeReviewerFeedbackPatch(lead, patch);
+  if (reviewerFeedbackChange?.changed) {
+    changedFields.push('reviewerFeedback');
+  }
+
+  return { leadUpdates, statusLogEntry, changedFields, manualReviewNotesChanged, reviewerFeedbackChange };
 }
 
 export async function updateLeadPatchAtomic(db, lead, patch) {
   if (!db || !lead) return { lead, changedFields: [] };
   await ensureD1Schema(db);
 
-  const { leadUpdates, statusLogEntry, changedFields, manualReviewNotesChanged } = normalizeLeadPatch(lead, patch);
+  const {
+    leadUpdates,
+    statusLogEntry,
+    changedFields,
+    manualReviewNotesChanged,
+    reviewerFeedbackChange,
+  } = normalizeLeadPatch(lead, patch);
   if (changedFields.length === 0) return { lead, changedFields };
 
   const now = new Date().toISOString();
@@ -323,6 +604,52 @@ export async function updateLeadPatchAtomic(db, lead, patch) {
     statements.push(
       db.prepare('INSERT INTO manual_review_note_events (lead_id, event_type, changed_at, author_label) VALUES (?, ?, ?, ?)')
         .bind(lead.id, manualReviewNoteEventType, now, MANUAL_REVIEW_NOTES_AUTHOR_LABEL)
+    );
+  }
+
+  if (reviewerFeedbackChange?.changed) {
+    if (reviewerFeedbackChange.clear) {
+      statements.push(
+        db.prepare('DELETE FROM reviewer_feedback WHERE lead_id = ?')
+          .bind(lead.id)
+      );
+    } else {
+      const feedback = reviewerFeedbackChange.feedback;
+      statements.push(
+        db.prepare(
+          `INSERT INTO reviewer_feedback (lead_id, action_usefulness, outcome_label, data_gap_priority, evidence_confidence_adjustment, feedback_text, next_reviewer_action, author_label, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(lead_id) DO UPDATE SET
+             action_usefulness=excluded.action_usefulness,
+             outcome_label=excluded.outcome_label,
+             data_gap_priority=excluded.data_gap_priority,
+             evidence_confidence_adjustment=excluded.evidence_confidence_adjustment,
+             feedback_text=excluded.feedback_text,
+             next_reviewer_action=excluded.next_reviewer_action,
+             author_label=excluded.author_label,
+             updated_at=excluded.updated_at`
+        ).bind(
+          lead.id,
+          feedback.action_usefulness,
+          feedback.outcome_label,
+          feedback.data_gap_priority,
+          feedback.evidence_confidence_adjustment,
+          feedback.feedback_text,
+          feedback.next_reviewer_action,
+          MANUAL_REVIEW_NOTES_AUTHOR_LABEL,
+          now
+        )
+      );
+    }
+    statements.push(
+      db.prepare('INSERT INTO reviewer_feedback_events (lead_id, event_type, changed_at, author_label, changed_fields) VALUES (?, ?, ?, ?, ?)')
+        .bind(
+          lead.id,
+          reviewerFeedbackChange.eventType,
+          now,
+          MANUAL_REVIEW_NOTES_AUTHOR_LABEL,
+          JSON.stringify(reviewerFeedbackChange.changedFields || [])
+        )
     );
   }
 

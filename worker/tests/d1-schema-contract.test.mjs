@@ -24,6 +24,19 @@ test('D1 schema defaults preserve conservative lead and job-run contracts', asyn
   assert.match(ddl, /author_label TEXT NOT NULL DEFAULT 'manual_reviewer'/);
   assert.match(ddl, /author_label TEXT NOT NULL DEFAULT 'manual_reviewer' CHECK \(author_label = 'manual_reviewer'\)/);
   assert.match(ddl, /idx_manual_review_note_events_lead/);
+  assert.match(ddl, /CREATE TABLE IF NOT EXISTS reviewer_feedback/);
+  assert.match(ddl, /action_usefulness TEXT NOT NULL DEFAULT 'unclear'/);
+  assert.match(ddl, /outcome_label TEXT NOT NULL DEFAULT 'unknown'/);
+  assert.match(ddl, /data_gap_priority TEXT NOT NULL DEFAULT 'none'/);
+  assert.match(ddl, /evidence_confidence_adjustment TEXT NOT NULL DEFAULT 'unknown'/);
+  assert.match(ddl, /feedback_text TEXT NOT NULL DEFAULT ''/);
+  assert.match(ddl, /next_reviewer_action TEXT NOT NULL DEFAULT ''/);
+  assert.match(ddl, /updated_at TEXT NOT NULL/);
+  assert.match(ddl, /CREATE TABLE IF NOT EXISTS reviewer_feedback_events/);
+  assert.match(ddl, /changed_fields TEXT NOT NULL DEFAULT '\[\]'/);
+  assert.match(ddl, /idx_reviewer_feedback_events_lead/);
+  assert.match(ddl, /idx_reviewer_feedback_updated/);
+  assert.doesNotMatch(ddl, /old_feedback|new_feedback|feedback_body|previous_feedback|next_feedback/i);
   assert.doesNotMatch(ddl, /old_note|new_note|note_text|note_body|previous_value|next_value/i);
   assert.match(ddl, /generation_mode TEXT DEFAULT 'llm'/);
   assert.match(ddl, /verification_status TEXT DEFAULT 'needs_review'/);
@@ -57,5 +70,34 @@ test('fake D1 enforces manual note event metadata-only constraints', async () =>
       'INSERT INTO manual_review_note_events (lead_id, event_type, changed_at, author_label) VALUES (?, ?, ?, ?)'
     ).bind('lead-1', 'edit', '2026-05-31T00:00:01.000Z', 'named_reviewer').run(),
     /manual_review_note_events\.author_label/
+  );
+});
+
+test('fake D1 enforces reviewer feedback event metadata-only constraints', async () => {
+  const db = new FakeD1Database();
+
+  await db.prepare(
+    'INSERT INTO reviewer_feedback_events (lead_id, event_type, changed_at, author_label, changed_fields) VALUES (?, ?, ?, ?, ?)'
+  ).bind('lead-1', 'create', '2026-05-31T00:00:00.000Z', 'manual_reviewer', JSON.stringify(['feedbackText'])).run();
+
+  assert.throws(
+    () => new FakeD1Database({
+      reviewerFeedbackEvents: [
+        {
+          lead_id: 'lead-1',
+          event_type: 'restore',
+          changed_at: '2026-05-31T00:00:00.000Z',
+          author_label: 'manual_reviewer',
+          changed_fields: '["feedbackText"]',
+        },
+      ],
+    }),
+    /reviewer_feedback_events\.event_type/
+  );
+  await assert.rejects(
+    db.prepare(
+      'INSERT INTO reviewer_feedback_events (lead_id, event_type, changed_at, author_label, changed_fields) VALUES (?, ?, ?, ?, ?)'
+    ).bind('lead-1', 'edit', '2026-05-31T00:00:01.000Z', 'named_reviewer', JSON.stringify(['outcomeLabel'])).run(),
+    /reviewer_feedback_events\.author_label/
   );
 });

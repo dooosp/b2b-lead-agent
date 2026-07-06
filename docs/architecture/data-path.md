@@ -116,6 +116,9 @@ Runtime D1 setup is owned by `ensureD1Schema(db)` in `worker/db/schema.js`. The 
 | `leads` | `worker/db/schema.js`, `worker/db/leads.js`, `worker/db/transform.js` | Managed and self-service lead records, LeadBrief/trust metadata, enrichment data, pipeline/review state |
 | `analytics` | `worker/db/schema.js`, `worker/db/leads.js` | Self-service and run analytics summaries |
 | `status_log` | `worker/db/schema.js`, `worker/db/leads.js` | Pipeline status transition history |
+| `manual_review_note_events` | `worker/db/schema.js`, `worker/db/leads.js` | Local/test metadata-only manual note create/edit/clear history without note body text |
+| `reviewer_feedback` | `worker/db/schema.js`, `worker/db/leads.js` | Local/test current human-entered reviewer feedback signals by lead |
+| `reviewer_feedback_events` | `worker/db/schema.js`, `worker/db/leads.js` | Local/test metadata-only reviewer feedback create/edit/clear history without feedback body text |
 | `job_runs` | `worker/db/schema.js`, `worker/db/job-runs.js` | Trigger acceptance, idempotency, active-run lock, GitHub/Cloud Run correlation metadata |
 | `reference_library` | `worker/db/schema.js`, `worker/db/references.js` | Reference cases used by prompt/proposal helpers and reference APIs |
 
@@ -124,7 +127,7 @@ Runtime D1 setup is owned by `ensureD1Schema(db)` in `worker/db/schema.js`. The 
 | Group | Columns |
 | --- | --- |
 | Identity and ownership | `id`, `identity_key`, `profile_id`, `source`, `created_at`, `updated_at` |
-| Pipeline and review | `status`, `review_status`, `notes`, `manual_review_notes_updated_at`, `follow_up_date`, `estimated_value` |
+| Pipeline and review | `status`, `review_status`, `notes`, `manual_review_notes_author_label`, `manual_review_notes_updated_at`, `follow_up_date`, `estimated_value` |
 | Core brief | `company`, `summary`, `product`, `score`, `grade`, `roi`, `sales_pitch`, `global_context`, `sources` |
 | LeadBrief and trust | `score_reason`, `urgency`, `urgency_reason`, `buyer_role`, `evidence`, `confidence`, `confidence_reason`, `assumptions`, `generation_mode`, `verification_status`, `data_gaps`, `event_type` |
 | Enrichment | `enriched`, `article_body`, `action_items`, `key_figures`, `pain_points`, `enriched_at`, `meddic`, `competitive`, `buying_signals` |
@@ -137,6 +140,8 @@ Runtime D1 setup is owned by `ensureD1Schema(db)` in `worker/db/schema.js`. The 
 - Attempts `ALTER TABLE leads ADD COLUMN ...` for columns needed by newer trust, LeadBrief, enrichment, and signal metadata.
 - Ignores "column already exists" failures in those lazy column additions.
 - Creates `job_runs` and its indexes again after the lead-column lazy section to support existing databases.
+- Creates `manual_review_note_events`, `reviewer_feedback`, and
+  `reviewer_feedback_events` for local/test human-entered review metadata.
 - Creates `reference_library` and `idx_ref_profile_cat`, which are not present in the baseline `worker/schema.sql`.
 - Uses a module-level promise so concurrent requests share one schema setup operation; the promise resets on setup failure.
 
@@ -146,9 +151,9 @@ Primary lazy lead columns beyond the baseline SQL file include `meddic`, `compet
 
 | Surface | D1 read | D1 write | Notes |
 | --- | --- | --- | --- |
-| `GET /api/leads` | Yes | Possible managed cache write | Self-service profiles do not fall back to GitHub artifacts |
+| `GET /api/leads` | Yes | Possible managed cache write | Self-service profiles do not fall back to GitHub artifacts; returns local/test reviewer workflow summary and data-gap prioritization metadata |
 | `GET /api/history` | Yes | Possible managed cache write | Similar fallback behavior to leads |
-| `PATCH /api/leads/:id` | Yes | Yes | Atomic review/pipeline update path |
+| `PATCH /api/leads/:id` | Yes | Yes | Atomic review/pipeline/manual-note/reviewer-feedback update path |
 | `GET /api/export/csv` | Yes | No | CSV includes review/trust metadata |
 | `GET /api/dashboard` | Yes | No | Aggregates D1 leads, status logs, analytics |
 | `GET /leads/:id` | Yes | No | Authenticated server-rendered detail page |
@@ -163,6 +168,10 @@ Primary lazy lead columns beyond the baseline SQL file include `meddic`, `compet
 - `verificationStatus` is machine/trust metadata, not human approval.
 - Managed profile product canonicalization happens in `worker/lib/profile.js` when Worker APIs return lead collections.
 - Published report artifacts are canonical for managed latest/history fallback, but D1 can hold mutable review, enrichment, notes, and dashboard state.
+- `reviewerFeedback` is local/test human-entered feedback only. Current values
+  live in `reviewer_feedback`; history lives in metadata-only
+  `reviewer_feedback_events`; generated reviewer suggestions must not be
+  stored in either table.
 - The frozen internal CRM report contract is not the same as the full LeadBrief Worker API contract.
 
 ## Product Non-Goals In Data Terms

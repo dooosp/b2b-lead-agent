@@ -2,10 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  buildDataGapPrioritization,
   buildLeadActionIntelligence,
   buildLeadReviewSession,
   buildReviewerNoteTemplates,
   buildReviewerActionQueue,
+  buildReviewerWorkflowSummary,
 } from '../lib/lead-action-intelligence.js';
 
 const evaluationNow = new Date('2026-05-12T00:00:00.000Z');
@@ -524,4 +526,191 @@ test('lead review session reflects queue membership after review status mutation
   assert.equal(after.nextLead.reviewNoteSuggestion.state, 'RISK_CHECK');
   assert.equal(after.approvedCount, 1);
   assert.equal(after.needsReviewCount, 0);
+});
+
+test('reviewer workflow summary v1 aggregates local feedback without production claims', () => {
+  const leads = [
+    strongLead({
+      id: 'approved-interested',
+      company: 'Approved Interested Co',
+      reviewStatus: 'APPROVED',
+      confidence: 'HIGH',
+      manualReviewNotes: 'Human reviewer confirmed buyer context.',
+      reviewerFeedback: {
+        hasFeedback: true,
+        actionUsefulness: 'useful',
+        outcomeLabel: 'interested',
+        dataGapPriority: 'none',
+        evidenceConfidenceAdjustment: 'increase',
+        feedbackText: 'Useful next action for a human reviewer.',
+        nextReviewerAction: 'Prepare the approved follow-up packet.',
+        authorLabel: 'manual_reviewer',
+        updatedAt: '2026-05-12T01:00:00.000Z',
+      },
+    }),
+    strongLead({
+      id: 'blocking-gap',
+      company: 'Blocking Gap Co',
+      reviewStatus: 'NEEDS_REVIEW',
+      verificationStatus: 'needs_review',
+      confidence: 'LOW',
+      sources: [],
+      evidence: [],
+      reviewerFeedback: {
+        hasFeedback: true,
+        actionUsefulness: 'partially_useful',
+        outcomeLabel: 'needs_more_research',
+        dataGapPriority: 'blocking',
+        evidenceConfidenceAdjustment: 'decrease',
+        feedbackText: 'Need a source before this can move.',
+        nextReviewerAction: 'Find public evidence for the facility signal.',
+        authorLabel: 'manual_reviewer',
+        updatedAt: '2026-05-12T02:00:00.000Z',
+      },
+    }),
+    strongLead({
+      id: 'duplicate-lead',
+      company: 'Duplicate Co',
+      reviewStatus: 'REJECTED',
+      confidence: 'MEDIUM',
+      reviewerFeedback: {
+        hasFeedback: true,
+        actionUsefulness: 'not_useful',
+        outcomeLabel: 'duplicate',
+        dataGapPriority: 'low',
+        evidenceConfidenceAdjustment: 'unchanged',
+        feedbackText: 'Same account already reviewed.',
+        nextReviewerAction: 'Keep out of active review queue.',
+        authorLabel: 'manual_reviewer',
+        updatedAt: '2026-05-12T03:00:00.000Z',
+      },
+    }),
+    strongLead({
+      id: 'high-gap-no-feedback',
+      company: 'High Gap Co',
+      reviewStatus: 'NEEDS_REVIEW',
+      confidence: 'LOW',
+      dataGaps: ['Decision owner unknown'],
+      reviewerFeedback: {
+        hasFeedback: true,
+        actionUsefulness: 'unclear',
+        outcomeLabel: 'unknown',
+        dataGapPriority: 'high',
+        evidenceConfidenceAdjustment: 'unknown',
+        feedbackText: '',
+        nextReviewerAction: 'Confirm decision owner.',
+        authorLabel: 'manual_reviewer',
+        updatedAt: '2026-05-12T04:00:00.000Z',
+      },
+    }),
+  ];
+
+  const summary = buildReviewerWorkflowSummary(leads, { now: evaluationNow });
+
+  assert.equal(summary.contract, 'REVIEWER_WORKFLOW_INTELLIGENCE_V1');
+  assert.equal(summary.boundary.evidenceKind, 'NOT_PRODUCTION_EVIDENCE');
+  assert.equal(summary.boundary.productionReady, false);
+  assert.equal(summary.boundary.generatedSuggestionPersistence, false);
+  assert.equal(summary.total, 4);
+  assert.deepEqual(summary.reviewStatusCounts, {
+    NEW: 0,
+    NEEDS_REVIEW: 2,
+    APPROVED: 1,
+    REJECTED: 1,
+    DEFERRED: 0,
+  });
+  assert.deepEqual(summary.confidenceBandCounts, {
+    HIGH: 1,
+    MEDIUM: 1,
+    LOW: 2,
+    UNKNOWN: 0,
+  });
+  assert.equal(summary.dataGapPriorityCounts.none, 1);
+  assert.equal(summary.dataGapPriorityCounts.low, 1);
+  assert.equal(summary.dataGapPriorityCounts.high, 1);
+  assert.equal(summary.dataGapPriorityCounts.blocking, 1);
+  assert.equal(summary.outcomeLabelCounts.interested, 1);
+  assert.equal(summary.outcomeLabelCounts.needs_more_research, 1);
+  assert.equal(summary.outcomeLabelCounts.duplicate, 1);
+  assert.equal(summary.outcomeLabelCounts.unknown, 1);
+  assert.equal(summary.needingHumanReview, 2);
+  assert.equal(summary.blockedByMissingEvidence, 1);
+  assert.equal(summary.withManualNotes, 1);
+  assert.equal(summary.withReviewerFeedback, 4);
+  assert.ok(summary.topReviewRisks.some((risk) => risk.code === 'missing_evidence' && risk.count >= 1));
+  assert.ok(summary.suggestedQueueBuckets.some((bucket) => bucket.id === 'blocking_data_gap' && bucket.count === 2));
+});
+
+test('data gap prioritization v1 buckets reviewer feedback deterministically', () => {
+  const leads = [
+    strongLead({
+      id: 'interested-ready',
+      company: 'Interested Ready Co',
+      reviewStatus: 'APPROVED',
+      confidence: 'HIGH',
+      manualReviewNotes: 'Reviewed human note.',
+      reviewerFeedback: {
+        hasFeedback: true,
+        outcomeLabel: 'interested',
+        dataGapPriority: 'none',
+        updatedAt: '2026-05-12T01:00:00.000Z',
+      },
+    }),
+    strongLead({
+      id: 'duplicate-low',
+      company: 'Duplicate Low Co',
+      reviewStatus: 'REJECTED',
+      confidence: 'MEDIUM',
+      reviewerFeedback: {
+        hasFeedback: true,
+        outcomeLabel: 'duplicate',
+        dataGapPriority: 'low',
+        updatedAt: '2026-05-12T02:00:00.000Z',
+      },
+    }),
+    strongLead({
+      id: 'missing-evidence',
+      company: 'Missing Evidence Co',
+      reviewStatus: 'NEEDS_REVIEW',
+      confidence: 'MEDIUM',
+      sources: [],
+      evidence: [],
+      reviewerFeedback: {
+        hasFeedback: true,
+        outcomeLabel: 'unknown',
+        dataGapPriority: 'medium',
+        updatedAt: '2026-05-12T03:00:00.000Z',
+      },
+    }),
+    strongLead({
+      id: 'blocking-gap',
+      company: 'Blocking Gap Co',
+      reviewStatus: 'NEEDS_REVIEW',
+      confidence: 'LOW',
+      reviewerFeedback: {
+        hasFeedback: true,
+        outcomeLabel: 'needs_more_research',
+        dataGapPriority: 'blocking',
+        nextReviewerAction: 'Find source evidence.',
+        updatedAt: '2026-05-12T04:00:00.000Z',
+      },
+    }),
+  ];
+
+  const prioritization = buildDataGapPrioritization(leads, { now: evaluationNow });
+
+  assert.equal(prioritization.contract, 'DATA_GAP_PRIORITIZATION_V1');
+  assert.equal(prioritization.boundary.evidenceKind, 'NOT_PRODUCTION_EVIDENCE');
+  assert.equal(prioritization.boundary.productionReady, false);
+  assert.equal(prioritization.totalLeads, 4);
+  assert.equal(prioritization.items[0].leadId, 'blocking-gap');
+  assert.equal(prioritization.items[0].bucket, 'blocking_data_gap');
+  assert.ok(prioritization.items[0].reasons.includes('reviewer_feedback_data_gap_priority:blocking'));
+  assert.equal(prioritization.items.find((item) => item.leadId === 'missing-evidence').bucket, 'missing_evidence');
+  assert.equal(prioritization.items.find((item) => item.leadId === 'duplicate-low').bucket, 'closed_by_feedback');
+  assert.equal(prioritization.items.find((item) => item.leadId === 'interested-ready').bucket, 'interested_follow_up_candidate');
+  assert.equal(prioritization.bucketCounts.blocking_data_gap, 1);
+  assert.equal(prioritization.bucketCounts.missing_evidence, 1);
+  assert.equal(prioritization.bucketCounts.closed_by_feedback, 1);
+  assert.equal(prioritization.bucketCounts.interested_follow_up_candidate, 1);
 });

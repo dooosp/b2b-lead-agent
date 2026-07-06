@@ -83,6 +83,27 @@ export async function ensureD1Schema(db) {
         author_label TEXT NOT NULL DEFAULT 'manual_reviewer' CHECK (author_label = 'manual_reviewer')
       )`),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_manual_review_note_events_lead ON manual_review_note_events(lead_id, changed_at DESC)'),
+      db.prepare(`CREATE TABLE IF NOT EXISTS reviewer_feedback (
+        lead_id TEXT PRIMARY KEY,
+        action_usefulness TEXT NOT NULL DEFAULT 'unclear' CHECK (action_usefulness IN ('useful', 'partially_useful', 'not_useful', 'unclear')),
+        outcome_label TEXT NOT NULL DEFAULT 'unknown' CHECK (outcome_label IN ('interested', 'not_fit', 'no_response', 'needs_more_research', 'duplicate', 'deferred', 'unknown')),
+        data_gap_priority TEXT NOT NULL DEFAULT 'none' CHECK (data_gap_priority IN ('none', 'low', 'medium', 'high', 'blocking')),
+        evidence_confidence_adjustment TEXT NOT NULL DEFAULT 'unknown' CHECK (evidence_confidence_adjustment IN ('increase', 'decrease', 'unchanged', 'unknown')),
+        feedback_text TEXT NOT NULL DEFAULT '',
+        next_reviewer_action TEXT NOT NULL DEFAULT '',
+        author_label TEXT NOT NULL DEFAULT 'manual_reviewer' CHECK (author_label = 'manual_reviewer'),
+        updated_at TEXT NOT NULL
+      )`),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_reviewer_feedback_updated ON reviewer_feedback(updated_at DESC)'),
+      db.prepare(`CREATE TABLE IF NOT EXISTS reviewer_feedback_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id TEXT NOT NULL,
+        event_type TEXT NOT NULL CHECK (event_type IN ('create', 'edit', 'clear')),
+        changed_at TEXT NOT NULL,
+        author_label TEXT NOT NULL DEFAULT 'manual_reviewer' CHECK (author_label = 'manual_reviewer'),
+        changed_fields TEXT NOT NULL DEFAULT '[]'
+      )`),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_reviewer_feedback_events_lead ON reviewer_feedback_events(lead_id, changed_at DESC)'),
       db.prepare(`CREATE TABLE IF NOT EXISTS job_runs (
         request_id TEXT PRIMARY KEY,
         profile_id TEXT NOT NULL,
@@ -172,6 +193,27 @@ export async function ensureD1Schema(db) {
         author_label TEXT NOT NULL DEFAULT 'manual_reviewer' CHECK (author_label = 'manual_reviewer')
       )`).run();
       try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_manual_review_note_events_lead ON manual_review_note_events(lead_id, changed_at DESC)').run(); } catch { /* index exists */ }
+      await db.prepare(`CREATE TABLE IF NOT EXISTS reviewer_feedback (
+        lead_id TEXT PRIMARY KEY,
+        action_usefulness TEXT NOT NULL DEFAULT 'unclear' CHECK (action_usefulness IN ('useful', 'partially_useful', 'not_useful', 'unclear')),
+        outcome_label TEXT NOT NULL DEFAULT 'unknown' CHECK (outcome_label IN ('interested', 'not_fit', 'no_response', 'needs_more_research', 'duplicate', 'deferred', 'unknown')),
+        data_gap_priority TEXT NOT NULL DEFAULT 'none' CHECK (data_gap_priority IN ('none', 'low', 'medium', 'high', 'blocking')),
+        evidence_confidence_adjustment TEXT NOT NULL DEFAULT 'unknown' CHECK (evidence_confidence_adjustment IN ('increase', 'decrease', 'unchanged', 'unknown')),
+        feedback_text TEXT NOT NULL DEFAULT '',
+        next_reviewer_action TEXT NOT NULL DEFAULT '',
+        author_label TEXT NOT NULL DEFAULT 'manual_reviewer' CHECK (author_label = 'manual_reviewer'),
+        updated_at TEXT NOT NULL
+      )`).run();
+      try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_reviewer_feedback_updated ON reviewer_feedback(updated_at DESC)').run(); } catch { /* index exists */ }
+      await db.prepare(`CREATE TABLE IF NOT EXISTS reviewer_feedback_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id TEXT NOT NULL,
+        event_type TEXT NOT NULL CHECK (event_type IN ('create', 'edit', 'clear')),
+        changed_at TEXT NOT NULL,
+        author_label TEXT NOT NULL DEFAULT 'manual_reviewer' CHECK (author_label = 'manual_reviewer'),
+        changed_fields TEXT NOT NULL DEFAULT '[]'
+      )`).run();
+      try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_reviewer_feedback_events_lead ON reviewer_feedback_events(lead_id, changed_at DESC)').run(); } catch { /* index exists */ }
       await db.prepare(`CREATE TABLE IF NOT EXISTS reference_library (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         profile_id TEXT NOT NULL,

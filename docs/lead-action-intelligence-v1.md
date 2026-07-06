@@ -97,7 +97,8 @@ The first matching blocker decides the next action:
 
 - Opportunity Workbench renders the full Lead Action Intelligence panel with action, reason, risk flags, missing-info prompts, stakeholder angle, follow-up draft, and generated copy-only reviewer note suggestions. Under Issue #113 Option E and PR #114, generated suggestions are helper text only: copy-only, not saved, not sent, and not treated as human-authored saved notes. The lead-detail Workbench also exposes copy-friendly note controls, manual-copy fallback, non-mutating shortcuts, shortcut help, browser-memory activity feedback for the current page session, and a separate human-entered manual review note control with truthful note-specific timestamp copy when `manualReviewNotesUpdatedAt` exists, a generic local/test author label when `manualReviewNotesAuthorLabel` is `manual_reviewer`, a metadata-only history event count when H2 events exist, and a static local/test privacy warning that manual notes may contain sensitive sales context or PII.
 - `/api/leads` includes additive `reviewerActionQueue` and `leadReviewSession` metadata built from the canonical helper after normal LeadBrief canonicalization, including current reviewer note suggestions for queue/session items. It also exposes saved human-entered manual notes as `manualReviewNotes` with `manualReviewNotesProvenance`, supports editing by saving a changed human-entered value, and supports clearing by saving an empty `manualReviewNotes` value. `manualReviewNotesUpdatedAt` is local/test-safe current-value metadata for the last accepted human-entered manual note change/save/clear event. `manualReviewNotesAuthorLabel`, backed by `manual_review_notes_author_label`, is set to the fixed non-PII value `manual_reviewer` only when the manual note value actually changes or is cleared; unchanged saves do not invent it for older rows. H2 metadata history is stored in `manual_review_note_events` with no note body fields and exposed only through `manualReviewNotesHistoryEventCount`, `manualReviewNotesHistoryLastEventType`, `manualReviewNotesHistoryLastEventAt`, and `manualReviewNotesHistoryLastAuthorLabel`. The opt-in C2 local/test role stub is activated only with `MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB=enabled` plus `X-Manual-Review-Notes-Local-Test-Role`; `reviewer` can use manual notes, while `manager`, `api`, missing, or unknown roles omit protected manual note fields and cannot write them. This is not real auth, session, identity, production access control, export expansion, or production readiness. The privacy warning is UI-only: `/api/leads` does not detect, block, redact, or add sensitive-content warning fields for manual note text. Generated reviewer note suggestions remain response helper text and are rejected as patch persistence fields; they are not persisted, attributed, or allowed to update the note-specific timestamp, author label, or metadata history. Lead-level `updatedAt` / `updated_at` remains available as lead-level state and must not be described as a manual-note-specific saved timestamp.
-- `/leads` renders Reviewer Action Queue lanes, action/priority/risk/missing-info filters, compact card summaries, and a Lead Review Session panel from the queue metadata. The session panel shows a copy-friendly reviewer note suggestion near quick `APPROVED` / `NEEDS_REVIEW` actions.
+- `/api/leads` also exposes local/test-only Reviewer Workflow Intelligence v1 metadata: `reviewerWorkflowSummary` and `dataGapPrioritization`. These are derived from current LeadBrief fields, deterministic review risks, human-entered manual notes, and explicit human-entered `reviewerFeedback`; they are `NOT_PRODUCTION_EVIDENCE`, keep `productionReady:false`, and do not approve outreach, CRM actions, staging, production, or generated suggestion persistence.
+- `/leads` renders Reviewer Action Queue lanes, action/priority/risk/missing-info filters, compact card summaries, a Lead Review Session panel from the queue metadata, and local/test reviewer feedback controls. The session panel shows a copy-friendly reviewer note suggestion near quick `APPROVED` / `NEEDS_REVIEW` actions.
 - Kanban cards render the compact next action below the gate chip.
 - Reviewer Productivity Toolkit v1 layers local-only productivity controls onto `/leads`: visible copy buttons for deterministic session note templates, safe manual-copy fallback when the Clipboard API is unavailable, optional non-mutating keyboard shortcuts, shortcut help, and an in-memory session activity summary. The activity summary resets on page reload and is not written to D1, localStorage, analytics, APIs, or logs.
 - Lead Detail Workbench Productivity Parity v1 mirrors the same safe reviewer affordances into lead detail: visible Workbench note copy controls copy only deterministic note text, manual fallback selects the visible note when the Clipboard API is unavailable, `c`/`w`/`n`/`j`/`?` shortcuts are ignored in form controls and never mutate `reviewStatus`, and current-page activity counts live only in browser memory.
@@ -148,6 +149,27 @@ Reviewer Productivity Toolkit v1 is a browser-only helper for the existing `/lea
 
 The detail implementation keeps a scoped browser helper because the `/leads` helper is coupled to queue/session filters, quick actions, and list-card navigation. The shared product contract is the deterministic Workbench note markup and safe copy/fallback behavior; no API, schema, or storage contract is expanded.
 
+## Reviewer Workflow Intelligence V1
+
+Reviewer Workflow Intelligence v1 is a local/test-safe extension documented in
+`docs/roadmap/reviewer-workflow-intelligence-v1-local-test.md`.
+
+It adds explicit human-entered reviewer feedback through the existing
+`PATCH /api/leads/:id` route. Feedback can record action usefulness, outcome
+label, data-gap priority, evidence-confidence adjustment, freeform feedback,
+and next reviewer action. Current feedback is stored separately from manual
+notes in `reviewer_feedback`; metadata-only create/edit/clear history is stored
+in `reviewer_feedback_events` with no feedback body text.
+
+The `/leads` and `/leads/:id` surfaces show feedback state, outcome label,
+data-gap priority, next reviewer action, fixed local/test `manual_reviewer`
+metadata, and local/test warning copy. The same C2 local/test role stub that
+protects manual notes protects reviewer feedback.
+
+Generated reviewer note suggestions remain copy-only helper text. They are not
+stored in reviewer feedback, manual notes, metadata history, exports,
+attribution fields, or production evidence.
+
 ## Boundaries
 
 - No production deploy.
@@ -163,6 +185,9 @@ The detail implementation keeps a scoped browser helper because the `/leads` hel
 - No automatic sales sending.
 - No note/session activity persistence, browser localStorage, analytics, or network call beyond existing explicit review-status PATCH actions.
 - No keyboard-triggered reviewStatus mutation.
+- No production-readiness claim from `reviewerFeedback`,
+  `reviewerWorkflowSummary`, `dataGapPrioritization`, or
+  `reviewer_feedback_events`.
 
 ## Validation
 
@@ -170,6 +195,8 @@ Coverage is local/test-only:
 
 - `worker/tests/lead-action-intelligence.test.mjs` covers strong, review-ready, missing-evidence, data-gap, low-confidence, stale, conflicting, snake_case fallback leads, and approved/needs-review/risk-check/data-gap reviewer note templates.
 - `worker/tests/lead-action-intelligence.test.mjs` also covers Reviewer Action Queue grouping, sorting, filters, compact counts, Lead Review Session summary counts, next-lead candidate selection, snake_case fallback, note suggestions, and mutation-style reclassification.
+- `worker/tests/lead-action-intelligence.test.mjs` covers Reviewer Workflow Intelligence v1 summary counts and deterministic data-gap prioritization buckets.
+- `worker/tests/reviewer-feedback.test.mjs` covers reviewer feedback create/edit/clear, enum validation, generated suggestion rejection, C2 local/test role-stub access, metadata-only history, and CSV/export omission.
 - `worker/tests/opportunity-workbench.test.mjs` covers Workbench rendering of the new guidance, Option E copy-only reviewer note suggestion labels, and deterministic note copy-control markup.
 - `worker/tests/lead-review-status.test.mjs` covers the `/leads` session panel, next-lead control, quick review actions, bounded failure messaging, status-separation copy, copy-friendly note suggestion rendering near quick actions, manual review note state/timestamp/generic author-label copy, local/test privacy warning copy, copy/manual-copy hooks, shortcut guards, in-memory activity state, roving tablist/tabpanel markup and handlers, and lead-detail Workbench productivity controls that do not introduce shortcut review mutations.
 - `worker/tests/manual-review-notes.test.mjs` covers human-entered manual note create/edit/clear setting `manualReviewNotesAuthorLabel: "manual_reviewer"`, appending metadata-only H2 create/edit/clear events, exposing metadata-only history summaries, unchanged saves not inventing labels or events, warning-only API behavior for sensitive-looking local test text, C2 opt-in local/test reviewer and manager role-stub behavior, generated suggestion non-attribution/non-history, generated batch inserts not creating saved manual notes or author labels, and no old note text retention in history.

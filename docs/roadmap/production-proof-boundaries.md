@@ -284,6 +284,8 @@ The following support engineering confidence but are not production proof:
 - Level 1 change-control manifest dry-run plans.
 - Level 1 approval-intake request templates or validator artifacts.
 - Level 1 post-approval decision simulator artifacts.
+- Reviewer Workflow Intelligence v1 local/test reviewer feedback, summary, and
+  data-gap prioritization artifacts.
 - Source/config files.
 - D1 binding names, database names, or database IDs.
 - Local fake-D1 or staging observations.
@@ -342,3 +344,6 @@ Stop with `HOLD` if any of these are true:
 - The evidence would include secrets, auth headers, cookies, private URLs, customer payloads, PII, or unredacted production payloads.
 - The action would overwrite human review decisions or toggle review state only to manufacture evidence.
 - The request would expand the frozen CRM published-report contract.
+- The request would treat local/test `reviewerFeedback`,
+  `reviewerWorkflowSummary`, `dataGapPrioritization`, or metadata-only
+  `reviewer_feedback_events` as production proof.

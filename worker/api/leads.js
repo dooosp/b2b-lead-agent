@@ -1,14 +1,21 @@
 import { jsonResponse } from '../lib/utils.js';
 import { canonicalizeLeadCollectionForProfile, resolveProfileId } from '../lib/profile.js';
-import { buildLeadReviewSession, buildReviewerActionQueue } from '../lib/lead-action-intelligence.js';
+import {
+  buildDataGapPrioritization,
+  buildLeadReviewSession,
+  buildReviewerActionQueue,
+  buildReviewerWorkflowSummary
+} from '../lib/lead-action-intelligence.js';
 import {
   assertManualReviewNotesWriteAllowed,
+  assertReviewerFeedbackWriteAllowed,
   filterManualReviewNotesForExport,
   filterManualReviewNotesLeadCollection,
   filterManualReviewNotesProtectedFields,
   filterManualReviewNotesLeadReviewSession,
   filterManualReviewNotesReviewerQueue,
   patchTouchesManualReviewNotes,
+  patchTouchesReviewerFeedback,
   resolveManualReviewNotesAccess,
   withManualReviewNotesAccessMetadata
 } from '../lib/manual-review-notes-access.js';
@@ -20,20 +27,22 @@ function canonicalizeLeadPayload(profile, leads) {
 }
 
 function buildLeadListPayload(canonicalized, source, extra = {}, manualReviewNotesAccess = {}) {
+  const leads = filterManualReviewNotesLeadCollection(canonicalized.leads, manualReviewNotesAccess);
   const reviewerActionQueue = filterManualReviewNotesReviewerQueue(
-    buildReviewerActionQueue(canonicalized.leads),
+    buildReviewerActionQueue(leads),
     manualReviewNotesAccess
   );
-  const leads = filterManualReviewNotesLeadCollection(canonicalized.leads, manualReviewNotesAccess);
   return withManualReviewNotesAccessMetadata({
     leads,
     profile: canonicalized.profileId,
     source,
     reviewerActionQueue,
     leadReviewSession: filterManualReviewNotesLeadReviewSession(
-      buildLeadReviewSession(canonicalized.leads, { queue: reviewerActionQueue }),
+      buildLeadReviewSession(leads, { queue: reviewerActionQueue }),
       manualReviewNotesAccess
     ),
+    reviewerWorkflowSummary: buildReviewerWorkflowSummary(leads),
+    dataGapPrioritization: buildDataGapPrioritization(leads),
     ...extra,
   }, manualReviewNotesAccess);
 }
@@ -135,6 +144,9 @@ export async function handleUpdateLead(request, env, leadId) {
   try {
     if (patchTouchesManualReviewNotes(body)) {
       assertManualReviewNotesWriteAllowed(manualReviewNotesAccess);
+    }
+    if (patchTouchesReviewerFeedback(body)) {
+      assertReviewerFeedbackWriteAllowed(manualReviewNotesAccess);
     }
     const result = await updateLeadPatchAtomic(env.DB, lead, body);
     return jsonResponse(withManualReviewNotesAccessMetadata({

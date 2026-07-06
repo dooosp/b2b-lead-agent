@@ -561,6 +561,19 @@ execution attempt remains `HOLD` because the machine-checkable approval request
 was not accepted; required production proof execution approval fields remain
 unmet for execution. Production actions performed: none.
 
+Current local/test Reviewer Workflow Intelligence v1 update:
+`docs/roadmap/reviewer-workflow-intelligence-v1-local-test.md` documents
+explicit human-entered `reviewerFeedback`, fixed local/test `manual_reviewer`
+attribution, metadata-only `reviewer_feedback_events`, additive
+`reviewerWorkflowSummary`, and deterministic `dataGapPrioritization` on the
+existing reviewer workflow. It is `NOT_PRODUCTION_EVIDENCE`, keeps
+`productionReady:false`, uses the same C2 local/test role-stub protection as
+manual notes, and does not approve staging/production endpoint calls, D1
+access/observation/migration/write/delete, logs/secrets access, real
+auth/session/provider parsing, real reviewer identity, CRM/outreach/LLM/
+automation, retention/privacy enforcement, generated suggestion persistence/
+export/history/attribution, or closure of Issues #165/#162/#163/#164/#154.
+
 ## Old PR Disposition
 
 These PRs are closed without merge. Treat them as concept inventory unless explicitly recut from current `master`.
