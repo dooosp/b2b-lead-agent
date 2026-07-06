@@ -267,7 +267,7 @@ export const ROUTE_INVENTORY = Object.freeze([
     auth: 'bearer API token',
     dbAccess: 'read/write',
     writes: true,
-    notes: 'Atomic lead status/manual review notes/review patch. Rejects generated reviewer note suggestion persistence attempts.'
+    notes: 'Atomic lead status/manual review notes/reviewer feedback/review patch. Rejects generated reviewer note suggestion persistence attempts.'
   },
   {
     id: 'api.dashboard',

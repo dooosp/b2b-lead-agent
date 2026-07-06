@@ -14,8 +14,12 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
   const emptyManualReviewNoteStateText = includeGeneratedReviewGuidance
     ? '비어 있음 상태입니다. 생성된 검토 메모 제안은 저장 상태가 아닙니다.'
     : '비어 있음 상태입니다. 권한 없는 역할에는 보호된 수동 메모를 표시하지 않습니다.';
+  const reviewerFeedbackBoundaryText = includeGeneratedReviewGuidance
+    ? '이 피드백은 리뷰 품질 개선용 수동 입력입니다. 생성된 검토 메모 제안은 저장/전송/귀속/이력/내보내기 대상이 아닙니다.'
+    : '권한 없는 역할에는 보호된 리뷰어 피드백 입력을 표시하지 않습니다.';
   const opportunityWorkbenchHtmlJS = JSON.stringify(opportunityWorkbenchHtml).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   const emptyManualReviewNoteStateTextJS = JSON.stringify(emptyManualReviewNoteStateText);
+  const reviewerFeedbackBoundaryTextJS = JSON.stringify(reviewerFeedbackBoundaryText);
   const leadJSON = JSON.stringify(lead).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   const logsJSON = JSON.stringify(statusLogs || []).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   return `<!DOCTYPE html>
@@ -54,6 +58,16 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     .notes-state-meta { color:#8fa4b8; }
     .notes-privacy-warning { background:#1f1c12; border:1px solid #806718; border-radius:8px; color:#ffe58a; font-size:11px; line-height:1.5; margin:8px 0 0; padding:8px; }
     .notes-privacy-warning strong { color:#fff0a8; }
+    .reviewer-feedback-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:8px; }
+    .reviewer-feedback-grid label { color:#9fb0c0; display:grid; gap:4px; font-size:11px; line-height:1.4; }
+    .reviewer-feedback-grid select, .reviewer-feedback-grid input, .reviewer-feedback-textarea { background:#16213e; border:1px solid #444; border-radius:6px; color:#d4deea; font:inherit; font-size:12px; min-width:0; padding:7px 8px; }
+    .reviewer-feedback-textarea { min-height:72px; resize:vertical; width:100%; }
+    .reviewer-feedback-full { grid-column:1 / -1; }
+    .reviewer-feedback-actions { align-items:center; display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; margin-top:8px; }
+    .reviewer-feedback-state { background:#101925; border:1px solid #223447; border-radius:8px; color:#9fb0c0; display:grid; gap:4px; font-size:11px; line-height:1.5; margin-top:8px; padding:8px; }
+    .reviewer-feedback-state.is-saved { background:#101f1a; border-color:#2e7d4f; }
+    .reviewer-feedback-state.is-saved strong { color:#a8efc0; }
+    .reviewer-feedback-state.is-empty { background:#171d25; border-color:#566273; }
     .save-indicator { color: #27ae60; font-size: 11px; opacity: 0; transition: opacity 0.3s; margin-left: 8px; }
     .save-indicator.show { opacity: 1; }
     .status-select-lg { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #16213e; color: #fff; font-size: 14px; cursor: pointer; }
@@ -106,6 +120,7 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
       .top-nav-links { justify-content:flex-start; width:100%; }
       .top-nav-links .btn { flex:1 1 auto; min-width:0; }
       .field-group { grid-template-columns:1fr; }
+      .reviewer-feedback-grid { grid-template-columns:1fr; }
       .detail-row { align-items:flex-start; flex-direction:column; gap:4px; }
       .detail-row .label { min-width:0; }
       .detail-productivity-grid { grid-template-columns:1fr; }
@@ -135,11 +150,19 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     const transitions = ${transitionsJS};
     const reviewStatusLabels = ${reviewStatusLabelsJS};
     const reviewStatuses = Object.keys(reviewStatusLabels);
+    const reviewerFeedbackEnabled = ${includeGeneratedReviewGuidance ? 'true' : 'false'};
     const opportunityWorkbenchHtml = ${opportunityWorkbenchHtmlJS};
     const emptyManualReviewNoteStateText = ${emptyManualReviewNoteStateTextJS};
+    const reviewerFeedbackBoundaryText = ${reviewerFeedbackBoundaryTextJS};
     const verificationStatusLabels = { verified: '검증됨', needs_review: '검증 필요', draft: '초안', unverified: '미검증' };
     const generationModeLabels = { llm: 'LLM 생성', heuristic: '휴리스틱 생성', demo: '데모', unavailable: '생성 불가' };
     const confidenceLabels = { HIGH: '신뢰도 HIGH', MEDIUM: '신뢰도 MEDIUM', LOW: '신뢰도 LOW' };
+    const reviewerFeedbackLabels = {
+      actionUsefulness: { useful: '유용함', partially_useful: '부분 유용', not_useful: '유용하지 않음', unclear: '불명확' },
+      outcomeLabel: { interested: '관심 있음', not_fit: '부적합', no_response: '응답 없음', needs_more_research: '추가 조사 필요', duplicate: '중복', deferred: '보류', unknown: '알 수 없음' },
+      dataGapPriority: { none: '없음', low: '낮음', medium: '중간', high: '높음', blocking: '차단' },
+      evidenceConfidenceAdjustment: { increase: '상향', decrease: '하향', unchanged: '유지', unknown: '알 수 없음' }
+    };
 
     ${getEscScript()}
     ${getSafeUrlScript()}
@@ -277,6 +300,93 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     function updateManualReviewNoteState() {
       const state = document.getElementById('manualReviewNoteState');
       if (state) state.outerHTML = renderManualReviewNoteState(lead);
+    }
+
+    function normalizeReviewerFeedback(lead) {
+      const raw = lead && (lead.reviewerFeedback || lead.reviewer_feedback);
+      const record = raw && typeof raw === 'object' ? raw : {};
+      const feedback = {
+        hasFeedback: record.hasFeedback === true,
+        actionUsefulness: reviewerFeedbackLabels.actionUsefulness[record.actionUsefulness || record.action_usefulness] ? (record.actionUsefulness || record.action_usefulness) : 'unclear',
+        outcomeLabel: reviewerFeedbackLabels.outcomeLabel[record.outcomeLabel || record.outcome_label] ? (record.outcomeLabel || record.outcome_label) : 'unknown',
+        dataGapPriority: reviewerFeedbackLabels.dataGapPriority[record.dataGapPriority || record.data_gap_priority] ? (record.dataGapPriority || record.data_gap_priority) : 'none',
+        evidenceConfidenceAdjustment: reviewerFeedbackLabels.evidenceConfidenceAdjustment[record.evidenceConfidenceAdjustment || record.evidence_confidence_adjustment] ? (record.evidenceConfidenceAdjustment || record.evidence_confidence_adjustment) : 'unknown',
+        feedbackText: String(record.feedbackText || record.feedback_text || ''),
+        nextReviewerAction: String(record.nextReviewerAction || record.next_reviewer_action || ''),
+        authorLabel: String(record.authorLabel || record.author_label || '').trim(),
+        updatedAt: record.updatedAt || record.updated_at || null,
+        historyEventCount: Number(record.historyEventCount || record.history_event_count || 0) || 0,
+        historyLastEventType: String(record.historyLastEventType || record.history_last_event_type || ''),
+        historyLastEventAt: record.historyLastEventAt || record.history_last_event_at || null,
+        historyLastAuthorLabel: String(record.historyLastAuthorLabel || record.history_last_author_label || '').trim()
+      };
+      feedback.hasFeedback = feedback.hasFeedback
+        || Boolean(feedback.updatedAt)
+        || feedback.actionUsefulness !== 'unclear'
+        || feedback.outcomeLabel !== 'unknown'
+        || feedback.dataGapPriority !== 'none'
+        || feedback.evidenceConfidenceAdjustment !== 'unknown'
+        || Boolean(feedback.feedbackText.trim())
+        || Boolean(feedback.nextReviewerAction.trim());
+      return feedback;
+    }
+
+    function getReviewerFeedbackAuthorLabel(feedback) {
+      const label = String((feedback && (feedback.authorLabel || feedback.historyLastAuthorLabel)) || '').trim();
+      return label === 'manual_reviewer' ? '수동 리뷰어' : '';
+    }
+
+    function renderReviewerFeedbackState(lead) {
+      const feedback = normalizeReviewerFeedback(lead);
+      const updatedAt = formatTimestamp(feedback.updatedAt);
+      const historyAt = formatTimestamp(feedback.historyLastEventAt);
+      const authorLabel = getReviewerFeedbackAuthorLabel(feedback);
+      const outcome = reviewerFeedbackLabels.outcomeLabel[feedback.outcomeLabel] || feedback.outcomeLabel;
+      const priority = reviewerFeedbackLabels.dataGapPriority[feedback.dataGapPriority] || feedback.dataGapPriority;
+      return '<div id="reviewerFeedbackState" class="reviewer-feedback-state ' + (feedback.hasFeedback ? 'is-saved' : 'is-empty') + '" data-reviewer-feedback-state="' + (feedback.hasFeedback ? 'saved' : 'empty') + '">' +
+        '<strong>' + (feedback.hasFeedback ? '저장된 리뷰어 피드백 있음' : '저장된 리뷰어 피드백 없음') + '</strong>' +
+        '<span>결과 ' + esc(outcome) + ' · 데이터 공백 우선순위 ' + esc(priority) + '</span>' +
+        (feedback.nextReviewerAction.trim() ? '<span class="notes-state-meta">다음 수동 액션: ' + esc(feedback.nextReviewerAction) + '</span>' : '') +
+        (updatedAt ? '<span class="notes-state-meta">리뷰어 피드백 마지막 변경: ' + esc(updatedAt) + '</span>' : (historyAt ? '<span class="notes-state-meta">최근 메타데이터 이벤트: ' + esc(historyAt) + '</span>' : '')) +
+        (authorLabel ? '<span class="notes-state-meta">최근 수동 변경: ' + esc(authorLabel) + ' (로컬/테스트 일반 라벨)</span>' : '') +
+        (feedback.historyEventCount > 0 ? '<span class="notes-state-meta">피드백 메타데이터 이력 이벤트: ' + feedback.historyEventCount + '건</span>' : '') +
+        '</div>';
+    }
+
+    function renderReviewerFeedbackOptions(group, selected) {
+      const labels = reviewerFeedbackLabels[group] || {};
+      return Object.keys(labels).map((value) => '<option value="' + esc(value) + '"' + (value === selected ? ' selected' : '') + '>' + esc(labels[value]) + '</option>').join('');
+    }
+
+    function renderReviewerFeedbackForm() {
+      const feedback = normalizeReviewerFeedback(lead);
+      return '<div class="detail-section">' +
+        '<h3>리뷰어 피드백</h3>' +
+        renderReviewerFeedbackState(lead) +
+        '<p class="notes-privacy-warning" role="note"><strong>로컬/테스트 사람 판단:</strong> ' + esc(reviewerFeedbackBoundaryText) + '</p>' +
+        '<div class="reviewer-feedback-grid" data-reviewer-feedback-form>' +
+        '<label>액션 유용성<select data-feedback-field="actionUsefulness">' + renderReviewerFeedbackOptions('actionUsefulness', feedback.actionUsefulness) + '</select></label>' +
+        '<label>결과 라벨<select data-feedback-field="outcomeLabel">' + renderReviewerFeedbackOptions('outcomeLabel', feedback.outcomeLabel) + '</select></label>' +
+        '<label>데이터 공백 우선순위<select data-feedback-field="dataGapPriority">' + renderReviewerFeedbackOptions('dataGapPriority', feedback.dataGapPriority) + '</select></label>' +
+        '<label>근거 신뢰도 조정<select data-feedback-field="evidenceConfidenceAdjustment">' + renderReviewerFeedbackOptions('evidenceConfidenceAdjustment', feedback.evidenceConfidenceAdjustment) + '</select></label>' +
+        '<label class="reviewer-feedback-full">다음 리뷰어 액션<input data-feedback-field="nextReviewerAction" value="' + esc(feedback.nextReviewerAction) + '" maxlength="500"></label>' +
+        '<label class="reviewer-feedback-full">피드백<textarea class="reviewer-feedback-textarea" data-feedback-field="feedbackText" maxlength="2000">' + esc(feedback.feedbackText) + '</textarea></label>' +
+        '</div>' +
+        '<div class="reviewer-feedback-actions">' +
+        '<button type="button" class="btn btn-secondary" onclick="saveReviewerFeedback()">피드백 저장</button>' +
+        '<button type="button" class="notes-clear-btn" onclick="clearReviewerFeedback()" ' + (feedback.hasFeedback ? '' : 'disabled') + '>피드백 지우기</button>' +
+        '</div>' +
+        '</div>';
+    }
+
+    function renderReviewerFeedbackProtectedState() {
+      return '<div class="detail-section" data-reviewer-feedback-protected>' +
+        '<h3>리뷰어 피드백</h3>' +
+        '<div class="reviewer-feedback-state is-empty">' +
+        '<strong>보호된 리뷰어 피드백 숨김</strong>' +
+        '<span>' + esc(reviewerFeedbackBoundaryText) + '</span>' +
+        '</div>' +
+        '</div>';
     }
 
     function renderReviewBadge(lead) {
@@ -629,6 +739,8 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
       html += '<span class="save-indicator" id="reviewSaveIndicator">저장됨</span>';
       html += '</div>';
 
+      html += reviewerFeedbackEnabled ? renderReviewerFeedbackForm() : renderReviewerFeedbackProtectedState();
+
       // 후속 조치 + 예상 계약액 섹션
       html += '<div class="detail-section">';
       html += '<h3>영업 관리</h3>';
@@ -864,6 +976,56 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
       textarea.value = '';
       syncManualNoteControls();
       await updateField('manualReviewNotes', '');
+    }
+
+    function collectReviewerFeedbackPayload() {
+      const payload = {};
+      document.querySelectorAll('[data-reviewer-feedback-form] [data-feedback-field]').forEach((field) => {
+        payload[field.dataset.feedbackField] = field.value || '';
+      });
+      return payload;
+    }
+
+    async function saveReviewerFeedback() {
+      try {
+        const res = await fetch('/api/leads/' + encodeURIComponent(lead.id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ reviewerFeedback: collectReviewerFeedbackPayload() })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          alert(data.message || '리뷰어 피드백 저장 실패');
+          return;
+        }
+        if (data.lead) Object.assign(lead, data.lead);
+        showSaved();
+        renderDetail();
+      } catch(e) {
+        alert('리뷰어 피드백 저장 실패: ' + e.message);
+      }
+    }
+
+    async function clearReviewerFeedback() {
+      const confirmed = window.confirm('저장된 리뷰어 피드백을 지울까요? 메타데이터 이력은 본문 없이 남습니다.');
+      if (!confirmed) return;
+      try {
+        const res = await fetch('/api/leads/' + encodeURIComponent(lead.id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ reviewerFeedback: { clear: true } })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          alert(data.message || '리뷰어 피드백 지우기 실패');
+          return;
+        }
+        if (data.lead) Object.assign(lead, data.lead);
+        showSaved();
+        renderDetail();
+      } catch(e) {
+        alert('리뷰어 피드백 지우기 실패: ' + e.message);
+      }
     }
 
     function showSaved() {

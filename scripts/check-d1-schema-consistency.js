@@ -96,6 +96,42 @@ const EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES = Object.freeze([
   }),
 ]);
 
+const EXPECTED_REVIEWER_FEEDBACK_COLUMNS = Object.freeze([
+  'lead_id',
+  'action_usefulness',
+  'outcome_label',
+  'data_gap_priority',
+  'evidence_confidence_adjustment',
+  'feedback_text',
+  'next_reviewer_action',
+  'author_label',
+  'updated_at',
+]);
+
+const EXPECTED_REVIEWER_FEEDBACK_EVENT_COLUMNS = Object.freeze([
+  'id',
+  'lead_id',
+  'event_type',
+  'changed_at',
+  'author_label',
+  'changed_fields',
+]);
+
+const EXPECTED_REVIEWER_FEEDBACK_INDEXES = Object.freeze([
+  Object.freeze({
+    name: 'idx_reviewer_feedback_updated',
+    table: 'reviewer_feedback',
+    columns: 'updated_at DESC',
+    unique: false,
+  }),
+  Object.freeze({
+    name: 'idx_reviewer_feedback_events_lead',
+    table: 'reviewer_feedback_events',
+    columns: 'lead_id, changed_at DESC',
+    unique: false,
+  }),
+]);
+
 const DRIFT_CRITICAL_COLUMNS = Object.freeze([
   'review_status',
   'manual_review_notes_author_label',
@@ -346,11 +382,19 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
   let schemaJsLazyAlterColumns = [];
   let schemaSqlManualReviewNoteEventColumns = [];
   let schemaJsManualReviewNoteEventColumns = [];
+  let schemaSqlReviewerFeedbackColumns = [];
+  let schemaJsReviewerFeedbackColumns = [];
+  let schemaSqlReviewerFeedbackEventColumns = [];
+  let schemaJsReviewerFeedbackEventColumns = [];
   let schemaSqlCreateDefinitions = [];
   let schemaJsCreateDefinitions = [];
   let schemaJsLazyAlterDefinitions = [];
   let schemaSqlManualReviewNoteEventDefinitions = [];
   let schemaJsManualReviewNoteEventDefinitions = [];
+  let schemaSqlReviewerFeedbackDefinitions = [];
+  let schemaJsReviewerFeedbackDefinitions = [];
+  let schemaSqlReviewerFeedbackEventDefinitions = [];
+  let schemaJsReviewerFeedbackEventDefinitions = [];
   let schemaSqlIndexes = [];
   let schemaJsIndexes = [];
 
@@ -387,6 +431,34 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
     schemaJsManualReviewNoteEventColumns = names(schemaJsManualReviewNoteEventDefinitions);
   } catch (err) {
     errors.push(`worker/db/schema.js CREATE TABLE manual_review_note_events parse failed: ${err.message}`);
+  }
+
+  try {
+    schemaSqlReviewerFeedbackDefinitions = parseCreateTableColumns(schemaSql, 'reviewer_feedback');
+    schemaSqlReviewerFeedbackColumns = names(schemaSqlReviewerFeedbackDefinitions);
+  } catch (err) {
+    errors.push(`worker/schema.sql CREATE TABLE reviewer_feedback parse failed: ${err.message}`);
+  }
+
+  try {
+    schemaJsReviewerFeedbackDefinitions = parseCreateTableColumns(schemaJs, 'reviewer_feedback');
+    schemaJsReviewerFeedbackColumns = names(schemaJsReviewerFeedbackDefinitions);
+  } catch (err) {
+    errors.push(`worker/db/schema.js CREATE TABLE reviewer_feedback parse failed: ${err.message}`);
+  }
+
+  try {
+    schemaSqlReviewerFeedbackEventDefinitions = parseCreateTableColumns(schemaSql, 'reviewer_feedback_events');
+    schemaSqlReviewerFeedbackEventColumns = names(schemaSqlReviewerFeedbackEventDefinitions);
+  } catch (err) {
+    errors.push(`worker/schema.sql CREATE TABLE reviewer_feedback_events parse failed: ${err.message}`);
+  }
+
+  try {
+    schemaJsReviewerFeedbackEventDefinitions = parseCreateTableColumns(schemaJs, 'reviewer_feedback_events');
+    schemaJsReviewerFeedbackEventColumns = names(schemaJsReviewerFeedbackEventDefinitions);
+  } catch (err) {
+    errors.push(`worker/db/schema.js CREATE TABLE reviewer_feedback_events parse failed: ${err.message}`);
   }
 
   try {
@@ -436,6 +508,46 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
     'worker/db/schema.js CREATE TABLE manual_review_note_events',
     schemaJsManualReviewNoteEventDefinitions
   );
+  assertColumnSet(
+    errors,
+    'worker/schema.sql CREATE TABLE reviewer_feedback',
+    schemaSqlReviewerFeedbackColumns,
+    EXPECTED_REVIEWER_FEEDBACK_COLUMNS
+  );
+  assertColumnSet(
+    errors,
+    'worker/db/schema.js CREATE TABLE reviewer_feedback',
+    schemaJsReviewerFeedbackColumns,
+    EXPECTED_REVIEWER_FEEDBACK_COLUMNS
+  );
+  assertDefinitionsForColumnsMatch(
+    errors,
+    EXPECTED_REVIEWER_FEEDBACK_COLUMNS,
+    'worker/schema.sql CREATE TABLE reviewer_feedback',
+    schemaSqlReviewerFeedbackDefinitions,
+    'worker/db/schema.js CREATE TABLE reviewer_feedback',
+    schemaJsReviewerFeedbackDefinitions
+  );
+  assertColumnSet(
+    errors,
+    'worker/schema.sql CREATE TABLE reviewer_feedback_events',
+    schemaSqlReviewerFeedbackEventColumns,
+    EXPECTED_REVIEWER_FEEDBACK_EVENT_COLUMNS
+  );
+  assertColumnSet(
+    errors,
+    'worker/db/schema.js CREATE TABLE reviewer_feedback_events',
+    schemaJsReviewerFeedbackEventColumns,
+    EXPECTED_REVIEWER_FEEDBACK_EVENT_COLUMNS
+  );
+  assertDefinitionsForColumnsMatch(
+    errors,
+    EXPECTED_REVIEWER_FEEDBACK_EVENT_COLUMNS,
+    'worker/schema.sql CREATE TABLE reviewer_feedback_events',
+    schemaSqlReviewerFeedbackEventDefinitions,
+    'worker/db/schema.js CREATE TABLE reviewer_feedback_events',
+    schemaJsReviewerFeedbackEventDefinitions
+  );
   assertLazyDefinitionsMatchCreate(errors, schemaJsCreateDefinitions, schemaJsLazyAlterDefinitions);
   assertRequiredIndexes(
     errors,
@@ -448,6 +560,18 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
     'worker/db/schema.js',
     schemaJsIndexes,
     EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES
+  );
+  assertRequiredIndexes(
+    errors,
+    'worker/schema.sql',
+    schemaSqlIndexes,
+    EXPECTED_REVIEWER_FEEDBACK_INDEXES
+  );
+  assertRequiredIndexes(
+    errors,
+    'worker/db/schema.js',
+    schemaJsIndexes,
+    EXPECTED_REVIEWER_FEEDBACK_INDEXES
   );
 
   for (const column of DRIFT_CRITICAL_COLUMNS) {
@@ -471,11 +595,19 @@ function validateSchemaSources({ schemaSql, schemaJs }) {
       schemaJsLazyAlterColumns,
       schemaSqlManualReviewNoteEventColumns,
       schemaJsManualReviewNoteEventColumns,
+      schemaSqlReviewerFeedbackColumns,
+      schemaJsReviewerFeedbackColumns,
+      schemaSqlReviewerFeedbackEventColumns,
+      schemaJsReviewerFeedbackEventColumns,
       schemaSqlCreateDefinitions,
       schemaJsCreateDefinitions,
       schemaJsLazyAlterDefinitions,
       schemaSqlManualReviewNoteEventDefinitions,
       schemaJsManualReviewNoteEventDefinitions,
+      schemaSqlReviewerFeedbackDefinitions,
+      schemaJsReviewerFeedbackDefinitions,
+      schemaSqlReviewerFeedbackEventDefinitions,
+      schemaJsReviewerFeedbackEventDefinitions,
       schemaSqlIndexes,
       schemaJsIndexes,
     },
@@ -506,7 +638,12 @@ function runCli() {
   console.log(`- worker/db/schema.js lazy ALTER leads: ${result.sources.schemaJsLazyAlterColumns.length} columns`);
   console.log(`- worker/schema.sql CREATE TABLE manual_review_note_events: ${result.sources.schemaSqlManualReviewNoteEventColumns.length} columns`);
   console.log(`- worker/db/schema.js CREATE TABLE manual_review_note_events: ${result.sources.schemaJsManualReviewNoteEventColumns.length} columns`);
+  console.log(`- worker/schema.sql CREATE TABLE reviewer_feedback: ${result.sources.schemaSqlReviewerFeedbackColumns.length} columns`);
+  console.log(`- worker/db/schema.js CREATE TABLE reviewer_feedback: ${result.sources.schemaJsReviewerFeedbackColumns.length} columns`);
+  console.log(`- worker/schema.sql CREATE TABLE reviewer_feedback_events: ${result.sources.schemaSqlReviewerFeedbackEventColumns.length} columns`);
+  console.log(`- worker/db/schema.js CREATE TABLE reviewer_feedback_events: ${result.sources.schemaJsReviewerFeedbackEventColumns.length} columns`);
   console.log(`- required manual_review_note_events indexes: ${EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES.length}`);
+  console.log(`- required reviewer_feedback indexes: ${EXPECTED_REVIEWER_FEEDBACK_INDEXES.length}`);
 }
 
 if (require.main === module) {
@@ -519,6 +656,9 @@ module.exports = {
   EXPECTED_LEADS_LAZY_ALTER_COLUMNS,
   EXPECTED_MANUAL_REVIEW_NOTE_EVENT_COLUMNS,
   EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES,
+  EXPECTED_REVIEWER_FEEDBACK_COLUMNS,
+  EXPECTED_REVIEWER_FEEDBACK_EVENT_COLUMNS,
+  EXPECTED_REVIEWER_FEEDBACK_INDEXES,
   parseCreateTableColumns,
   parseCreateIndexes,
   parseLazyAlterColumns,

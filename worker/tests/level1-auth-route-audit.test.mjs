@@ -18,9 +18,13 @@ import { createWorkerRequest } from './helpers/http.mjs';
 
 const API_HEADERS = Object.freeze({ Authorization: 'Bearer api-secret' });
 const PROTECTED_NOTE = 'Synthetic protected manual note body for route audit.';
+const PROTECTED_REVIEWER_FEEDBACK = 'Synthetic protected reviewer feedback body for route audit.';
+const PROTECTED_REVIEWER_NEXT_ACTION = 'Synthetic protected reviewer next action for route audit.';
 const GENERATED_SUGGESTION_FRAGMENT = 'Follow-up check:';
 const DENIED_RENDERED_HTML_FORBIDDEN_FRAGMENTS = Object.freeze([
   PROTECTED_NOTE,
+  PROTECTED_REVIEWER_FEEDBACK,
+  PROTECTED_REVIEWER_NEXT_ACTION,
   GENERATED_SUGGESTION_FRAGMENT,
   '생성된 검토 메모 제안',
   'reviewNoteSuggestion',
@@ -76,6 +80,25 @@ function createAuditEnv(session) {
       },
     ]),
   }));
+  env.DB.reviewerFeedback.set('lead-1', {
+    lead_id: 'lead-1',
+    action_usefulness: 'useful',
+    outcome_label: 'needs_more_research',
+    data_gap_priority: 'blocking',
+    evidence_confidence_adjustment: 'decrease',
+    feedback_text: PROTECTED_REVIEWER_FEEDBACK,
+    next_reviewer_action: PROTECTED_REVIEWER_NEXT_ACTION,
+    author_label: 'manual_reviewer',
+    updated_at: '2026-05-31T00:00:00.000Z',
+  });
+  env.DB.reviewerFeedbackEvents.push({
+    id: 1,
+    lead_id: 'lead-1',
+    event_type: 'create',
+    changed_at: '2026-05-31T00:00:00.000Z',
+    author_label: 'manual_reviewer',
+    changed_fields: JSON.stringify(['feedbackText', 'nextReviewerAction']),
+  });
   return env;
 }
 
@@ -90,6 +113,8 @@ async function text(response) {
 function assertDoesNotLeakProtectedText(payload, { allowStaticAuthorLabelCode = false } = {}) {
   const serialized = typeof payload === 'string' ? payload : JSON.stringify(payload);
   assert.equal(serialized.includes(PROTECTED_NOTE), false);
+  assert.equal(serialized.includes(PROTECTED_REVIEWER_FEEDBACK), false);
+  assert.equal(serialized.includes(PROTECTED_REVIEWER_NEXT_ACTION), false);
   if (!allowStaticAuthorLabelCode) {
     assert.equal(serialized.includes('manual_reviewer'), false);
   }
@@ -191,8 +216,14 @@ test('synthetic reviewer can read and write protected manual notes but export st
   ));
 
   assert.equal(listPayload.leads[0].manualReviewNotes, PROTECTED_NOTE);
+  assert.equal(listPayload.leads[0].reviewerFeedback.feedbackText, PROTECTED_REVIEWER_FEEDBACK);
+  assert.equal(listPayload.leads[0].reviewerFeedback.nextReviewerAction, PROTECTED_REVIEWER_NEXT_ACTION);
   assert.equal(historyPayload.history[0].manualReviewNotes, PROTECTED_NOTE);
+  assert.equal(historyPayload.history[0].reviewerFeedback.feedbackText, PROTECTED_REVIEWER_FEEDBACK);
+  assert.equal(historyPayload.history[0].reviewerFeedback.nextReviewerAction, PROTECTED_REVIEWER_NEXT_ACTION);
   assert.equal(detailHtml.includes(PROTECTED_NOTE), true);
+  assert.equal(detailHtml.includes(PROTECTED_REVIEWER_FEEDBACK), true);
+  assert.equal(detailHtml.includes(PROTECTED_REVIEWER_NEXT_ACTION), true);
   assert.equal(detailHtml.includes(GENERATED_SUGGESTION_FRAGMENT), true);
   assert.equal(detailHtml.includes('생성된 검토 메모 제안'), true);
   assert.equal(leadsPageHtml.includes(GENERATED_SUGGESTION_FRAGMENT), true);

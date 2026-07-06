@@ -116,6 +116,20 @@ PR #189 then synced source-of-truth and production-boundary docs at
 historical execution artifacts only; they do not replace this file,
 `docs/roadmap/current-pr-train.md`, or production-proof boundary docs as current
 source of truth. Production actions performed: none.
+Local/Test Reviewer Workflow Intelligence v1 working-state update:
+`docs/roadmap/reviewer-workflow-intelligence-v1-local-test.md` records the
+local/test-only reviewer feedback, summary, and data-gap prioritization scope.
+It adds explicit human-entered `reviewerFeedback`, fixed non-PII
+`manual_reviewer` attribution, metadata-only `reviewer_feedback_events`,
+additive `reviewerWorkflowSummary`, and deterministic
+`dataGapPrioritization` on existing `/api/leads` and `/api/leads/:id`
+surfaces. This is `NOT_PRODUCTION_EVIDENCE`, keeps `productionReady:false`,
+uses the same C2 local/test role-stub boundary as manual notes, and does not
+approve staging/production endpoint calls, D1 access/observation/migration/
+write/delete, logs/secrets access, real auth/session/provider parsing, real
+reviewer identity, CRM/outreach/LLM/automation, retention/privacy enforcement,
+generated suggestion persistence/export/history/attribution, or closure of
+Issues #165/#162/#163/#164/#154.
 The Level 1 change-control manifest packet adds only a checked-in
 non-production manifest, schema, local linter/planner, redacted dry-run
 artifact, and `npm run proof:level1:change-control-manifest` gate. It labels

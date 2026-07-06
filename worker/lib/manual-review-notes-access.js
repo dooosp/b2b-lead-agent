@@ -36,6 +36,16 @@ const PROTECTED_MANUAL_NOTE_FIELDS = Object.freeze([
   'manual_review_notes_history_last_event_at',
   'manualReviewNotesHistoryLastAuthorLabel',
   'manual_review_notes_history_last_author_label',
+  'reviewerFeedback',
+  'reviewer_feedback',
+  'reviewerFeedbackHistoryEventCount',
+  'reviewer_feedback_history_event_count',
+  'reviewerFeedbackHistoryLastEventType',
+  'reviewer_feedback_history_last_event_type',
+  'reviewerFeedbackHistoryLastEventAt',
+  'reviewer_feedback_history_last_event_at',
+  'reviewerFeedbackHistoryLastAuthorLabel',
+  'reviewer_feedback_history_last_author_label',
 ]);
 
 function hasOwn(object, key) {
@@ -123,6 +133,11 @@ export function patchTouchesManualReviewNotes(patch = {}) {
     || typeof patch.notes === 'string';
 }
 
+export function patchTouchesReviewerFeedback(patch = {}) {
+  return hasOwn(patch, 'reviewerFeedback')
+    || hasOwn(patch, 'reviewer_feedback');
+}
+
 export function assertManualReviewNotesWriteAllowed(access = {}) {
   if (access.stopWrites) {
     throw Object.assign(
@@ -133,6 +148,20 @@ export function assertManualReviewNotesWriteAllowed(access = {}) {
   if (!access.enabled || access.manualNotesWrite) return;
   throw Object.assign(
     new Error(access.denialMessage || 'Manual review notes are restricted by the C2 local/test role stub. Use role "reviewer" for local/test manual note writes; no real auth/session/identity is implemented.'),
+    { status: 403 }
+  );
+}
+
+export function assertReviewerFeedbackWriteAllowed(access = {}) {
+  if (access.stopWrites) {
+    throw Object.assign(
+      new Error('Reviewer feedback writes are stopped by the Level 1 rollback stop-write guard. Existing data must be preserved and owner approval is required before writes resume.'),
+      { status: 423 }
+    );
+  }
+  if (!access.enabled || access.manualNotesWrite) return;
+  throw Object.assign(
+    new Error(access.denialMessage || 'Reviewer feedback is restricted by the C2 local/test role stub. Use role "reviewer" for local/test reviewer feedback writes; no real auth/session/identity is implemented.'),
     { status: 403 }
   );
 }

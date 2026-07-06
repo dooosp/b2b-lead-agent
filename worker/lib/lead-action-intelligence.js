@@ -90,6 +90,39 @@ const REVIEW_NOTE_LABELS = Object.freeze({
 });
 
 const REVIEW_NOTE_FALLBACK_TEXT = 'Review note suggestion unavailable. Confirm company, evidence, verification status, and data gaps before writing a review note.';
+const REVIEWER_FEEDBACK_DEFAULTS = Object.freeze({
+  actionUsefulness: 'unclear',
+  outcomeLabel: 'unknown',
+  dataGapPriority: 'none',
+  evidenceConfidenceAdjustment: 'unknown',
+  feedbackText: '',
+  nextReviewerAction: '',
+});
+const REVIEWER_FEEDBACK_VALUES = Object.freeze({
+  actionUsefulness: Object.freeze(['useful', 'partially_useful', 'not_useful', 'unclear']),
+  outcomeLabel: Object.freeze(['interested', 'not_fit', 'no_response', 'needs_more_research', 'duplicate', 'deferred', 'unknown']),
+  dataGapPriority: Object.freeze(['none', 'low', 'medium', 'high', 'blocking']),
+  evidenceConfidenceAdjustment: Object.freeze(['increase', 'decrease', 'unchanged', 'unknown']),
+});
+const DATA_GAP_BUCKETS = Object.freeze([
+  { id: 'blocking_data_gap', label: 'Blocking data gap', weight: 100 },
+  { id: 'missing_evidence', label: 'Missing evidence', weight: 90 },
+  { id: 'needs_more_research', label: 'Needs more research', weight: 80 },
+  { id: 'low_confidence', label: 'Low confidence', weight: 70 },
+  { id: 'qualification_needs_review', label: 'Qualification needs review', weight: 60 },
+  { id: 'needs_manual_context', label: 'Needs manual context', weight: 50 },
+  { id: 'interested_follow_up_candidate', label: 'Interested follow-up candidate', weight: 40 },
+  { id: 'ready_for_review', label: 'Ready for review', weight: 30 },
+  { id: 'closed_by_feedback', label: 'Closed by feedback', weight: 10 },
+]);
+const DATA_GAP_BUCKET_BY_ID = Object.freeze(Object.fromEntries(DATA_GAP_BUCKETS.map((bucket) => [bucket.id, bucket])));
+const DATA_GAP_PRIORITY_WEIGHT = Object.freeze({
+  blocking: 5,
+  high: 4,
+  medium: 3,
+  low: 2,
+  none: 1,
+});
 
 function cleanText(value, fallback = '') {
   const text = String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -179,6 +212,24 @@ function compareQueueItems(a, b) {
   return `${a.company} ${a.leadId}`.localeCompare(`${b.company} ${b.leadId}`);
 }
 
+function compareDataGapItems(a, b) {
+  const bucketDelta = (DATA_GAP_BUCKET_BY_ID[b.bucket]?.weight || 0) - (DATA_GAP_BUCKET_BY_ID[a.bucket]?.weight || 0);
+  if (bucketDelta !== 0) return bucketDelta;
+
+  const gapDelta = weightFor(DATA_GAP_PRIORITY_WEIGHT, b.dataGapPriority) - weightFor(DATA_GAP_PRIORITY_WEIGHT, a.dataGapPriority);
+  if (gapDelta !== 0) return gapDelta;
+
+  const confidenceDelta = weightFor(LEAD_CONFIDENCE_WEIGHT, a.leadConfidence) - weightFor(LEAD_CONFIDENCE_WEIGHT, b.leadConfidence);
+  if (confidenceDelta !== 0) return confidenceDelta;
+
+  const bTime = Date.parse(b.timestamp || '');
+  const aTime = Date.parse(a.timestamp || '');
+  const timeDelta = (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
+  if (timeDelta !== 0) return timeDelta;
+
+  return `${a.company} ${a.leadId}`.localeCompare(`${b.company} ${b.leadId}`);
+}
+
 function normalizeFilterValue(value) {
   return cleanText(value || 'all');
 }
@@ -217,6 +268,45 @@ function normalizeSessionFilters(filters = {}) {
       .map(([key, value]) => [key, normalizeFilterValue(value)])
       .filter(([, value]) => value && value !== 'all')
   );
+}
+
+function normalizeReviewerFeedback(lead = {}) {
+  const raw = lead.reviewerFeedback || lead.reviewer_feedback || {};
+  const record = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const normalized = {
+    hasFeedback: record.hasFeedback === true,
+    actionUsefulness: REVIEWER_FEEDBACK_VALUES.actionUsefulness.includes(record.actionUsefulness || record.action_usefulness)
+      ? (record.actionUsefulness || record.action_usefulness)
+      : REVIEWER_FEEDBACK_DEFAULTS.actionUsefulness,
+    outcomeLabel: REVIEWER_FEEDBACK_VALUES.outcomeLabel.includes(record.outcomeLabel || record.outcome_label)
+      ? (record.outcomeLabel || record.outcome_label)
+      : REVIEWER_FEEDBACK_DEFAULTS.outcomeLabel,
+    dataGapPriority: REVIEWER_FEEDBACK_VALUES.dataGapPriority.includes(record.dataGapPriority || record.data_gap_priority)
+      ? (record.dataGapPriority || record.data_gap_priority)
+      : REVIEWER_FEEDBACK_DEFAULTS.dataGapPriority,
+    evidenceConfidenceAdjustment: REVIEWER_FEEDBACK_VALUES.evidenceConfidenceAdjustment.includes(
+      record.evidenceConfidenceAdjustment || record.evidence_confidence_adjustment
+    )
+      ? (record.evidenceConfidenceAdjustment || record.evidence_confidence_adjustment)
+      : REVIEWER_FEEDBACK_DEFAULTS.evidenceConfidenceAdjustment,
+    feedbackText: cleanText(record.feedbackText ?? record.feedback_text),
+    nextReviewerAction: cleanText(record.nextReviewerAction ?? record.next_reviewer_action),
+    authorLabel: cleanText(record.authorLabel ?? record.author_label),
+    updatedAt: cleanText(record.updatedAt ?? record.updated_at),
+  };
+  normalized.hasFeedback = normalized.hasFeedback
+    || Boolean(normalized.updatedAt)
+    || normalized.actionUsefulness !== REVIEWER_FEEDBACK_DEFAULTS.actionUsefulness
+    || normalized.outcomeLabel !== REVIEWER_FEEDBACK_DEFAULTS.outcomeLabel
+    || normalized.dataGapPriority !== REVIEWER_FEEDBACK_DEFAULTS.dataGapPriority
+    || normalized.evidenceConfidenceAdjustment !== REVIEWER_FEEDBACK_DEFAULTS.evidenceConfidenceAdjustment
+    || Boolean(normalized.feedbackText)
+    || Boolean(normalized.nextReviewerAction);
+  return normalized;
+}
+
+function hasManualReviewNotes(lead = {}) {
+  return Boolean(cleanText(lead.manualReviewNotes || lead.manual_review_notes || lead.notes));
 }
 
 function buildReviewStatusCounts(leads) {
@@ -798,5 +888,194 @@ export function buildLeadReviewSession(leads = [], options = {}) {
     approvedCount: reviewStatusCounts.APPROVED,
     needsReviewCount: reviewStatusCounts.NEEDS_REVIEW,
     nextLead: summarizeNextLead(visibleItems[0]),
+  };
+}
+
+function classifyDataGapBucket({ brief, feedback, evidence, sources, intelligence, manualNotes }) {
+  const reasons = [];
+  const reviewStatus = brief.reviewStatus;
+  const missingEvidence = evidence.length === 0 || sources.length === 0
+    || intelligence.riskFlags.some((flag) => flag.code === 'missing_evidence' || flag.code === 'verified_without_evidence');
+  const needsQualificationReview = brief.generationMode === 'unavailable'
+    || brief.verificationStatus === 'needs_review'
+    || brief.verificationStatus === 'unverified'
+    || reviewStatus === 'NEEDS_REVIEW'
+    || reviewStatus === 'NEW';
+
+  if (feedback.dataGapPriority === 'blocking' || feedback.dataGapPriority === 'high') {
+    reasons.push(`reviewer_feedback_data_gap_priority:${feedback.dataGapPriority}`);
+    return { bucket: 'blocking_data_gap', reasons };
+  }
+  if (missingEvidence) {
+    reasons.push('missing_source_or_evidence');
+    return { bucket: 'missing_evidence', reasons };
+  }
+  if (feedback.outcomeLabel === 'needs_more_research') {
+    reasons.push('reviewer_feedback_outcome:needs_more_research');
+    return { bucket: 'needs_more_research', reasons };
+  }
+  if (brief.confidence === 'LOW') {
+    reasons.push('low_confidence');
+    return { bucket: 'low_confidence', reasons };
+  }
+  if (needsQualificationReview) {
+    reasons.push(`qualification:${brief.verificationStatus}`);
+    return { bucket: 'qualification_needs_review', reasons };
+  }
+  if (feedback.outcomeLabel === 'duplicate' || feedback.outcomeLabel === 'not_fit') {
+    reasons.push(`reviewer_feedback_outcome:${feedback.outcomeLabel}`);
+    return { bucket: 'closed_by_feedback', reasons };
+  }
+  if (!manualNotes) {
+    reasons.push('missing_manual_note');
+    return { bucket: 'needs_manual_context', reasons };
+  }
+  if (feedback.outcomeLabel === 'interested') {
+    reasons.push('reviewer_feedback_outcome:interested');
+    return { bucket: 'interested_follow_up_candidate', reasons };
+  }
+  return { bucket: 'ready_for_review', reasons: ['ready_for_human_review'] };
+}
+
+export function buildDataGapPrioritization(leads = [], options = {}) {
+  const sourceLeads = Array.isArray(leads) ? leads : [];
+  const bucketCounts = Object.fromEntries(DATA_GAP_BUCKETS.map((bucket) => [bucket.id, 0]));
+  const items = sourceLeads
+    .map((lead, index) => {
+      const brief = toLeadBriefV1(lead);
+      const feedback = normalizeReviewerFeedback(lead);
+      const evidence = normalizeEvidenceItems(brief.evidence);
+      const sources = normalizeSources(brief.sources);
+      const intelligence = buildLeadActionIntelligence(lead, { ...options, includeReviewerNotes: false });
+      const manualNotes = hasManualReviewNotes(lead);
+      const classification = classifyDataGapBucket({
+        brief,
+        feedback,
+        evidence,
+        sources,
+        intelligence,
+        manualNotes,
+      });
+      bucketCounts[classification.bucket] = (bucketCounts[classification.bucket] || 0) + 1;
+      return {
+        leadId: cleanText(brief.id || brief.leadId || brief.lead_id, `lead-${index + 1}`),
+        company: cleanText(brief.company, '리드'),
+        bucket: classification.bucket,
+        bucketLabel: DATA_GAP_BUCKET_BY_ID[classification.bucket]?.label || classification.bucket,
+        reasons: classification.reasons,
+        reviewStatus: brief.reviewStatus,
+        verificationStatus: brief.verificationStatus,
+        generationMode: brief.generationMode,
+        leadConfidence: brief.confidence,
+        dataGapPriority: feedback.dataGapPriority,
+        outcomeLabel: feedback.outcomeLabel,
+        hasManualNotes: manualNotes,
+        hasReviewerFeedback: feedback.hasFeedback,
+        nextReviewerAction: feedback.nextReviewerAction,
+        timestamp: feedback.updatedAt || pickTimestamp(brief),
+      };
+    })
+    .sort(compareDataGapItems);
+  const buckets = DATA_GAP_BUCKETS.map((bucket) => ({
+    id: bucket.id,
+    label: bucket.label,
+    count: bucketCounts[bucket.id] || 0,
+    items: items.filter((item) => item.bucket === bucket.id),
+  }));
+
+  return {
+    contract: 'DATA_GAP_PRIORITIZATION_V1',
+    boundary: {
+      evidenceKind: 'NOT_PRODUCTION_EVIDENCE',
+      localTestOnly: true,
+      productionReady: false,
+      productionReviewerWorkflowReady: false,
+    },
+    totalLeads: sourceLeads.length,
+    bucketCounts,
+    buckets,
+    items,
+  };
+}
+
+export function buildReviewerWorkflowSummary(leads = [], options = {}) {
+  const sourceLeads = Array.isArray(leads) ? leads : [];
+  const reviewStatusCounts = buildReviewStatusCounts(sourceLeads);
+  const confidenceBandCounts = { HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0 };
+  const dataGapPriorityCounts = Object.fromEntries(REVIEWER_FEEDBACK_VALUES.dataGapPriority.map((value) => [value, 0]));
+  const outcomeLabelCounts = Object.fromEntries(REVIEWER_FEEDBACK_VALUES.outcomeLabel.map((value) => [value, 0]));
+  const riskCounts = new Map();
+  let needingHumanReview = 0;
+  let blockedByMissingEvidence = 0;
+  let withManualNotes = 0;
+  let withReviewerFeedback = 0;
+
+  for (const lead of sourceLeads) {
+    const brief = toLeadBriefV1(lead);
+    const feedback = normalizeReviewerFeedback(lead);
+    const evidence = normalizeEvidenceItems(brief.evidence);
+    const sources = normalizeSources(brief.sources);
+    const intelligence = buildLeadActionIntelligence(lead, { ...options, includeReviewerNotes: false });
+
+    if (Object.prototype.hasOwnProperty.call(confidenceBandCounts, brief.confidence)) {
+      confidenceBandCounts[brief.confidence] += 1;
+    } else {
+      confidenceBandCounts.UNKNOWN += 1;
+    }
+    dataGapPriorityCounts[feedback.dataGapPriority] += 1;
+    outcomeLabelCounts[feedback.outcomeLabel] += 1;
+    if (brief.reviewStatus === 'NEW' || brief.reviewStatus === 'NEEDS_REVIEW') needingHumanReview += 1;
+    if (evidence.length === 0 || sources.length === 0) blockedByMissingEvidence += 1;
+    if (hasManualReviewNotes(lead)) withManualNotes += 1;
+    if (feedback.hasFeedback) withReviewerFeedback += 1;
+
+    for (const risk of intelligence.riskFlags) {
+      const current = riskCounts.get(risk.code) || {
+        code: risk.code,
+        label: risk.label,
+        severity: risk.severity,
+        count: 0,
+      };
+      current.count += 1;
+      if (risk.severity === 'high' || current.severity !== 'high') current.severity = risk.severity;
+      riskCounts.set(risk.code, current);
+    }
+  }
+
+  const prioritization = buildDataGapPrioritization(sourceLeads, options);
+  const topReviewRisks = [...riskCounts.values()]
+    .sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.code.localeCompare(b.code);
+    })
+    .slice(0, 8);
+
+  return {
+    contract: 'REVIEWER_WORKFLOW_INTELLIGENCE_V1',
+    boundary: {
+      evidenceKind: 'NOT_PRODUCTION_EVIDENCE',
+      localTestOnly: true,
+      productionReady: false,
+      productionReviewerWorkflowReady: false,
+      generatedSuggestionPersistence: false,
+      generatedSuggestionExport: false,
+      generatedSuggestionHistory: false,
+      generatedSuggestionAttribution: false,
+    },
+    total: sourceLeads.length,
+    reviewStatusCounts,
+    confidenceBandCounts,
+    dataGapPriorityCounts,
+    outcomeLabelCounts,
+    needingHumanReview,
+    blockedByMissingEvidence,
+    withManualNotes,
+    withReviewerFeedback,
+    topReviewRisks,
+    suggestedQueueBuckets: prioritization.buckets.map((bucket) => ({
+      id: bucket.id,
+      label: bucket.label,
+      count: bucket.count,
+    })),
   };
 }

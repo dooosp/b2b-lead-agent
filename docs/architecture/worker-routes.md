@@ -21,9 +21,9 @@
 | `POST` | `/trigger` | `worker/api/trigger.js` | Trigger auth plus rate limit | D1 `job_runs` active/idempotency state | Inserts or reuses accepted job run; dispatches GitHub `repository_dispatch`; returns `202` intake response |
 | `GET` | `/api/jobs/:requestId` | `worker/api/jobs.js` | General API auth | D1 `job_runs` | None |
 | `POST` | `/api/jobs/:requestId/events` | `worker/api/jobs.js` | Callback token | D1 `job_runs` | Updates job state and target-specific metadata |
-| `GET` | `/api/leads` | `worker/api/leads.js` | General API auth | D1 first; GitHub raw report fallback for managed profiles | May cache managed GitHub latest leads into D1 when `DB` exists and rows are missing |
+| `GET` | `/api/leads` | `worker/api/leads.js` | General API auth | D1 first; GitHub raw report fallback for managed profiles | May cache managed GitHub latest leads into D1 when `DB` exists and rows are missing; returns local/test reviewer queue/session plus `reviewerWorkflowSummary` and `dataGapPrioritization` metadata |
 | `GET` | `/api/history` | `worker/api/leads.js` | General API auth | D1 first; GitHub raw history fallback for managed profiles | May cache managed GitHub history into D1 when `DB` exists and rows are missing |
-| `PATCH` | `/api/leads/:id` | `worker/api/leads.js` | General API auth | D1 lead row | Atomically updates pipeline status, review status, notes, follow-up date, estimated value, and status log as applicable |
+| `PATCH` | `/api/leads/:id` | `worker/api/leads.js` | General API auth | D1 lead row | Atomically updates pipeline status, review status, manual notes, local/test reviewer feedback, follow-up date, estimated value, and status log/metadata events as applicable |
 | `POST` | `/api/leads/:id/enrich` | `worker/api/enrichment.js` | General API auth | D1 lead row, article body, LLM provider | Updates enrichment fields on the D1 lead row |
 | `POST` | `/api/leads/batch-enrich` | `worker/api/enrichment.js` | General API auth | D1 lead rows | Updates enrichment fields for selected leads |
 | `GET` | `/api/dashboard` | `worker/api/dashboard.js` | General API auth | D1 dashboard metrics | None |

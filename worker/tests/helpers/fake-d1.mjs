@@ -16,6 +16,12 @@ function constraintError(message) {
 
 const MANUAL_REVIEW_NOTE_EVENT_TYPES = new Set(['create', 'edit', 'clear']);
 const MANUAL_REVIEW_NOTES_AUTHOR_LABEL = 'manual_reviewer';
+const REVIEWER_FEEDBACK_EVENT_TYPES = new Set(['create', 'edit', 'clear']);
+const REVIEWER_FEEDBACK_AUTHOR_LABEL = 'manual_reviewer';
+const REVIEWER_FEEDBACK_ACTION_USEFULNESS = new Set(['useful', 'partially_useful', 'not_useful', 'unclear']);
+const REVIEWER_FEEDBACK_OUTCOME_LABELS = new Set(['interested', 'not_fit', 'no_response', 'needs_more_research', 'duplicate', 'deferred', 'unknown']);
+const REVIEWER_FEEDBACK_DATA_GAP_PRIORITIES = new Set(['none', 'low', 'medium', 'high', 'blocking']);
+const REVIEWER_FEEDBACK_CONFIDENCE_ADJUSTMENTS = new Set(['increase', 'decrease', 'unchanged', 'unknown']);
 
 class FakeStatement {
   constructor(db, sql) {
@@ -52,6 +58,33 @@ function validateManualReviewNoteEvent(row) {
   }
   if ((row.author_label || MANUAL_REVIEW_NOTES_AUTHOR_LABEL) !== MANUAL_REVIEW_NOTES_AUTHOR_LABEL) {
     throw constraintError('CHECK constraint failed: manual_review_note_events.author_label');
+  }
+}
+
+function validateReviewerFeedbackRow(row) {
+  if (!REVIEWER_FEEDBACK_ACTION_USEFULNESS.has(row.action_usefulness || 'unclear')) {
+    throw constraintError('CHECK constraint failed: reviewer_feedback.action_usefulness');
+  }
+  if (!REVIEWER_FEEDBACK_OUTCOME_LABELS.has(row.outcome_label || 'unknown')) {
+    throw constraintError('CHECK constraint failed: reviewer_feedback.outcome_label');
+  }
+  if (!REVIEWER_FEEDBACK_DATA_GAP_PRIORITIES.has(row.data_gap_priority || 'none')) {
+    throw constraintError('CHECK constraint failed: reviewer_feedback.data_gap_priority');
+  }
+  if (!REVIEWER_FEEDBACK_CONFIDENCE_ADJUSTMENTS.has(row.evidence_confidence_adjustment || 'unknown')) {
+    throw constraintError('CHECK constraint failed: reviewer_feedback.evidence_confidence_adjustment');
+  }
+  if ((row.author_label || REVIEWER_FEEDBACK_AUTHOR_LABEL) !== REVIEWER_FEEDBACK_AUTHOR_LABEL) {
+    throw constraintError('CHECK constraint failed: reviewer_feedback.author_label');
+  }
+}
+
+function validateReviewerFeedbackEvent(row) {
+  if (!REVIEWER_FEEDBACK_EVENT_TYPES.has(row.event_type)) {
+    throw constraintError('CHECK constraint failed: reviewer_feedback_events.event_type');
+  }
+  if ((row.author_label || REVIEWER_FEEDBACK_AUTHOR_LABEL) !== REVIEWER_FEEDBACK_AUTHOR_LABEL) {
+    throw constraintError('CHECK constraint failed: reviewer_feedback_events.author_label');
   }
 }
 
@@ -141,7 +174,16 @@ function isTerminalStatus(row) {
 }
 
 export class FakeD1Database {
-  constructor({ leads = [], jobRuns = [], statusLog = [], analytics = [], manualReviewNoteEvents = [], failOnSql } = {}) {
+  constructor({
+    leads = [],
+    jobRuns = [],
+    statusLog = [],
+    analytics = [],
+    manualReviewNoteEvents = [],
+    reviewerFeedback = [],
+    reviewerFeedbackEvents = [],
+    failOnSql
+  } = {}) {
     this.leads = new Map(leads.map((row) => [row.id, { ...row }]));
     this.jobRuns = new Map(jobRuns.map((row) => [row.request_id, { ...row }]));
     this.statusLog = statusLog.map((row, index) => ({ id: index + 1, ...row }));
@@ -152,6 +194,28 @@ export class FakeD1Database {
         ...row,
       };
       validateManualReviewNoteEvent(event);
+      return event;
+    });
+    this.reviewerFeedback = new Map((Array.isArray(reviewerFeedback) ? reviewerFeedback : []).map((row) => {
+      const feedback = {
+        action_usefulness: 'unclear',
+        outcome_label: 'unknown',
+        data_gap_priority: 'none',
+        evidence_confidence_adjustment: 'unknown',
+        feedback_text: '',
+        next_reviewer_action: '',
+        author_label: REVIEWER_FEEDBACK_AUTHOR_LABEL,
+        ...row,
+      };
+      validateReviewerFeedbackRow(feedback);
+      return [feedback.lead_id, feedback];
+    }));
+    this.reviewerFeedbackEvents = reviewerFeedbackEvents.map((row, index) => {
+      const event = {
+        id: row.id || index + 1,
+        ...row,
+      };
+      validateReviewerFeedbackEvent(event);
       return event;
     });
     this.schemaStatements = [];
@@ -277,6 +341,42 @@ export class FakeD1Database {
       };
       validateManualReviewNoteEvent(event);
       this.manualReviewNoteEvents.push(event);
+      return { meta: { changes: 1 }, success: true };
+    }
+
+    if (normalized.startsWith('insert into reviewer_feedback ')) {
+      const row = {
+        lead_id: args[0],
+        action_usefulness: args[1],
+        outcome_label: args[2],
+        data_gap_priority: args[3],
+        evidence_confidence_adjustment: args[4],
+        feedback_text: args[5],
+        next_reviewer_action: args[6],
+        author_label: args[7],
+        updated_at: args[8],
+      };
+      validateReviewerFeedbackRow(row);
+      this.reviewerFeedback.set(row.lead_id, row);
+      return { meta: { changes: 1 }, success: true };
+    }
+
+    if (normalized === 'delete from reviewer_feedback where lead_id = ?') {
+      const deleted = this.reviewerFeedback.delete(args[0]);
+      return { meta: { changes: deleted ? 1 : 0 }, success: true };
+    }
+
+    if (normalized === 'insert into reviewer_feedback_events (lead_id, event_type, changed_at, author_label, changed_fields) values (?, ?, ?, ?, ?)') {
+      const event = {
+        id: this.reviewerFeedbackEvents.length + 1,
+        lead_id: args[0],
+        event_type: args[1],
+        changed_at: args[2],
+        author_label: args[3],
+        changed_fields: args[4],
+      };
+      validateReviewerFeedbackEvent(event);
+      this.reviewerFeedbackEvents.push(event);
       return { meta: { changes: 1 }, success: true };
     }
 
@@ -434,9 +534,35 @@ export class FakeD1Database {
       return clone(this.leads.get(args[0]) || null);
     }
 
+    if (normalized === 'select * from reviewer_feedback where lead_id = ?') {
+      return clone(this.reviewerFeedback.get(args[0]) || null);
+    }
+
     if (normalized === 'select count(*) as event_count from manual_review_note_events where lead_id = ?') {
       return {
         event_count: this.manualReviewNoteEvents.filter((row) => row.lead_id === args[0]).length,
+      };
+    }
+
+    if (normalized === 'select count(*) as event_count from reviewer_feedback_events where lead_id = ?') {
+      return {
+        event_count: this.reviewerFeedbackEvents.filter((row) => row.lead_id === args[0]).length,
+      };
+    }
+
+    if (normalized === 'select event_type, changed_at, author_label from reviewer_feedback_events where lead_id = ? order by changed_at desc, id desc limit 1') {
+      const row = this.reviewerFeedbackEvents
+        .filter((event) => event.lead_id === args[0])
+        .sort((a, b) => {
+          const changedOrder = String(b.changed_at || '').localeCompare(String(a.changed_at || ''));
+          if (changedOrder !== 0) return changedOrder;
+          return Number(b.id || 0) - Number(a.id || 0);
+        })[0];
+      if (!row) return null;
+      return {
+        event_type: row.event_type,
+        changed_at: row.changed_at,
+        author_label: row.author_label,
       };
     }
 

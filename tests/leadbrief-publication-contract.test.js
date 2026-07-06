@@ -72,6 +72,11 @@ test('published snapshots omit manual-note and generated-suggestion fields', () 
     manualReviewNotesUpdatedAt: '2026-05-31T00:00:00.000Z',
     manualReviewNotesAuthorLabel: 'manual_reviewer',
     manualReviewNotesHistoryEventCount: 1,
+    reviewerFeedback: {
+      feedbackText: 'Reviewer feedback must not publish.',
+      nextReviewerAction: 'Reviewer next action must not publish.',
+    },
+    reviewerFeedbackHistoryEventCount: 1,
     reviewNoteSuggestion: {
       text: 'Generated suggestion must not publish.',
     },
@@ -97,6 +102,8 @@ test('published snapshots omit manual-note and generated-suggestion fields', () 
     'manualReviewNotesUpdatedAt',
     'manualReviewNotesAuthorLabel',
     'manualReviewNotesHistoryEventCount',
+    'reviewerFeedback',
+    'reviewerFeedbackHistoryEventCount',
     'reviewNoteSuggestion',
     'reviewNoteTemplates',
     'providerInput',
@@ -106,7 +113,7 @@ test('published snapshots omit manual-note and generated-suggestion fields', () 
   ]) {
     assert.equal(Object.hasOwn(record, field), false, `${field} should not publish`);
   }
-  assert.doesNotMatch(serialized, /Manual note body|manual_reviewer|Generated suggestion|Generated template|Raw provider input|Raw session token|raw auth header|Raw token/);
+  assert.doesNotMatch(serialized, /Manual note body|manual_reviewer|Reviewer feedback|Reviewer next action|Generated suggestion|Generated template|Raw provider input|Raw session token|raw auth header|Raw token/);
 });
 
 test('lead history merge drops stale protected manual-note fields from existing history', () => {
@@ -117,6 +124,7 @@ test('lead history merge drops stale protected manual-note fields from existing 
       summary: '데이터센터 냉각 설비 증설 착공',
       notes: 'Existing history note body must not remain.',
       manualReviewNotesAuthorLabel: 'manual_reviewer',
+      reviewerFeedback: { feedbackText: 'Existing reviewer feedback must not remain.' },
       reviewNoteSuggestion: { text: 'Existing generated suggestion must not remain.' },
       providerInput: 'Existing provider input must not remain.',
       rawSessionClaims: { token: 'Existing raw session must not remain.' },
@@ -131,8 +139,9 @@ test('lead history merge drops stale protected manual-note fields from existing 
 
   assert.equal(Object.hasOwn(record, 'notes'), false);
   assert.equal(Object.hasOwn(record, 'manualReviewNotesAuthorLabel'), false);
+  assert.equal(Object.hasOwn(record, 'reviewerFeedback'), false);
   assert.equal(Object.hasOwn(record, 'reviewNoteSuggestion'), false);
   assert.equal(Object.hasOwn(record, 'providerInput'), false);
   assert.equal(Object.hasOwn(record, 'rawSessionClaims'), false);
-  assert.doesNotMatch(serialized, /Existing history note body|manual_reviewer|Existing generated suggestion|Existing provider input|Existing raw session/);
+  assert.doesNotMatch(serialized, /Existing history note body|manual_reviewer|Existing reviewer feedback|Existing generated suggestion|Existing provider input|Existing raw session/);
 });

@@ -30,6 +30,8 @@ class FakeReviewDb {
     this.row = { ...row };
     this.statusLog = [];
     this.manualReviewNoteEvents = [];
+    this.reviewerFeedback = new Map();
+    this.reviewerFeedbackEvents = [];
   }
 
   prepare(sql) {
@@ -39,6 +41,8 @@ class FakeReviewDb {
   async batch(statements) {
     const snapshot = { ...this.row };
     const logSnapshot = this.statusLog.slice();
+    const reviewerFeedbackSnapshot = new Map(this.reviewerFeedback);
+    const reviewerFeedbackEventsSnapshot = this.reviewerFeedbackEvents.slice();
     try {
       const results = [];
       for (const statement of statements) {
@@ -48,6 +52,8 @@ class FakeReviewDb {
     } catch (error) {
       this.row = snapshot;
       this.statusLog = logSnapshot;
+      this.reviewerFeedback = reviewerFeedbackSnapshot;
+      this.reviewerFeedbackEvents = reviewerFeedbackEventsSnapshot;
       throw error;
     }
   }
@@ -65,13 +71,31 @@ class FakeReviewDb {
     if (normalized === 'SELECT * FROM leads WHERE id = ?') {
       return params[0] === this.row.id ? { ...this.row } : null;
     }
+    if (normalized === 'SELECT * FROM reviewer_feedback WHERE lead_id = ?') {
+      return this.reviewerFeedback.get(params[0]) || null;
+    }
     if (normalized === 'SELECT COUNT(*) as event_count FROM manual_review_note_events WHERE lead_id = ?') {
       return {
         event_count: this.manualReviewNoteEvents.filter((row) => row.lead_id === params[0]).length,
       };
     }
+    if (normalized === 'SELECT COUNT(*) as event_count FROM reviewer_feedback_events WHERE lead_id = ?') {
+      return {
+        event_count: this.reviewerFeedbackEvents.filter((row) => row.lead_id === params[0]).length,
+      };
+    }
     if (normalized === 'SELECT event_type, changed_at, author_label FROM manual_review_note_events WHERE lead_id = ? ORDER BY changed_at DESC, id DESC LIMIT 1') {
       const row = this.manualReviewNoteEvents
+        .filter((event) => event.lead_id === params[0])
+        .sort((a, b) => {
+          const changedOrder = String(b.changed_at || '').localeCompare(String(a.changed_at || ''));
+          if (changedOrder !== 0) return changedOrder;
+          return Number(b.id || 0) - Number(a.id || 0);
+        })[0];
+      return row ? { event_type: row.event_type, changed_at: row.changed_at, author_label: row.author_label } : null;
+    }
+    if (normalized === 'SELECT event_type, changed_at, author_label FROM reviewer_feedback_events WHERE lead_id = ? ORDER BY changed_at DESC, id DESC LIMIT 1') {
+      const row = this.reviewerFeedbackEvents
         .filter((event) => event.lead_id === params[0])
         .sort((a, b) => {
           const changedOrder = String(b.changed_at || '').localeCompare(String(a.changed_at || ''));
@@ -106,6 +130,35 @@ class FakeReviewDb {
         event_type: params[1],
         changed_at: params[2],
         author_label: params[3],
+      });
+      return { meta: { changes: 1 } };
+    }
+    if (normalized.startsWith('INSERT INTO reviewer_feedback ')) {
+      this.reviewerFeedback.set(params[0], {
+        lead_id: params[0],
+        action_usefulness: params[1],
+        outcome_label: params[2],
+        data_gap_priority: params[3],
+        evidence_confidence_adjustment: params[4],
+        feedback_text: params[5],
+        next_reviewer_action: params[6],
+        author_label: params[7],
+        updated_at: params[8],
+      });
+      return { meta: { changes: 1 } };
+    }
+    if (normalized === 'DELETE FROM reviewer_feedback WHERE lead_id = ?') {
+      this.reviewerFeedback.delete(params[0]);
+      return { meta: { changes: 1 } };
+    }
+    if (normalized === 'INSERT INTO reviewer_feedback_events (lead_id, event_type, changed_at, author_label, changed_fields) VALUES (?, ?, ?, ?, ?)') {
+      this.reviewerFeedbackEvents.push({
+        id: this.reviewerFeedbackEvents.length + 1,
+        lead_id: params[0],
+        event_type: params[1],
+        changed_at: params[2],
+        author_label: params[3],
+        changed_fields: params[4],
       });
       return { meta: { changes: 1 } };
     }
@@ -258,6 +311,53 @@ test('lead review pages save explicit human-entered manual review notes only', (
   assert.match(detailHtml, /updateField\('manualReviewNotes', val\)/);
   assert.match(detailHtml, /사람이 입력한 검토 메모/);
   assert.doesNotMatch(detailHtml, /인증된 리뷰어|authenticated reviewer|display name|manualReviewNotesAuthorEmail/i);
+});
+
+test('lead review pages expose local/test reviewer feedback intake controls', () => {
+  const listHtml = getLeadsPage();
+  const detailHtml = getLeadDetailPage({
+    id: 'lead-1',
+    profileId: 'danfoss',
+    status: 'NEW',
+    reviewStatus: 'NEEDS_REVIEW',
+    company: 'DL이앤씨',
+    signal: '데이터센터 냉각 설비 증설 착공',
+    summary: '데이터센터 냉각 설비 증설 착공',
+    recommendedMessage: 'DL이앤씨 데이터센터 운영팀에 냉각 효율 검증 파일럿을 제안합니다.',
+    reviewerFeedback: {
+      hasFeedback: true,
+      actionUsefulness: 'useful',
+      outcomeLabel: 'interested',
+      dataGapPriority: 'high',
+      evidenceConfidenceAdjustment: 'increase',
+      feedbackText: '사람이 입력한 리뷰어 피드백',
+      nextReviewerAction: '근거 보강 후 후속 검토',
+      authorLabel: 'manual_reviewer',
+      updatedAt: '2026-05-12T00:00:00.000Z',
+      historyEventCount: 1,
+      historyLastEventType: 'create',
+      historyLastAuthorLabel: 'manual_reviewer',
+    },
+    sources: [{ title: 'DL이앤씨 데이터센터 증설', url: 'https://example.com/dl' }],
+    product: 'Turbocor 컴프레서',
+    score: 84,
+    grade: 'A'
+  }, []);
+
+  assert.match(listHtml, /리뷰어 피드백/);
+  assert.match(listHtml, /data-feedback-field="actionUsefulness"/);
+  assert.match(listHtml, /data-feedback-field="outcomeLabel"/);
+  assert.match(listHtml, /data-feedback-field="dataGapPriority"/);
+  assert.match(listHtml, /data-feedback-field="evidenceConfidenceAdjustment"/);
+  assert.match(listHtml, /JSON\.stringify\(\{ reviewerFeedback: collectReviewerFeedbackPayload\(section\) \}\)/);
+  assert.match(listHtml, /생성된 검토 메모 제안은 저장\/전송\/귀속\/이력\/내보내기 대상이 아닙니다/);
+  assert.match(detailHtml, /리뷰어 피드백/);
+  assert.match(detailHtml, /사람이 입력한 리뷰어 피드백/);
+  assert.match(detailHtml, /근거 보강 후 후속 검토/);
+  assert.match(detailHtml, /수동 리뷰어/);
+  assert.match(detailHtml, /JSON\.stringify\(\{ reviewerFeedback: collectReviewerFeedbackPayload\(\) \}\)/);
+  assert.match(detailHtml, /생성된 검토 메모 제안은 저장\/전송\/귀속\/이력\/내보내기 대상이 아닙니다/);
+  assert.doesNotMatch(detailHtml, /authenticated reviewer|display name|reviewerEmail|authorEmail/i);
 });
 
 test('lead review pages expose explicit clear controls for saved manual review notes', () => {
