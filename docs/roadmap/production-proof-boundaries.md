@@ -3,7 +3,7 @@
 This document records the production-proof boundary after Issue #34 and the
 Manual Review Notes v1 PR train through PR #142, the Level 1 non-production
 gate train through PR #185, the post-PR186 refactor/dependency cleanup, and
-the post-PR189 source-of-truth/archive sync. It
+the post-PR191 source-of-truth/reviewer-workflow-intelligence sync. It
 is a planning and safety document only; it is not production evidence.
 
 Audited repo baseline for this snapshot:
@@ -12,7 +12,7 @@ Audited repo baseline for this snapshot:
 - Previous Manual Review Notes v1 privacy-warning baseline:
   `f2ddf35e828017eec9332dc80876e50bbee2f54a` (PR #130)
 - Current source-of-truth `origin/master`:
-  `5a3c7c9cfe3068b38d8196d60aaf378adc64da14` (PR #189)
+  `72def61e89b3c2137b13e2a3ce0bbbc58407d8ce` (PR #191)
 - Issue #34 current state: closed as completed after GitHub-only closeout, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -38,15 +38,17 @@ Audited repo baseline for this snapshot:
 - Current Level 1 operator rehearsal packet:
   `docs/roadmap/b2b-lead-agent-level-1-operator-rehearsal-gate-non-production.md`
 
-Post-PR189 operating update:
+Post-PR191 operating update:
 
 - Current source-of-truth `origin/master` for this boundary update:
-  `5a3c7c9cfe3068b38d8196d60aaf378adc64da14` (PR #189).
+  `72def61e89b3c2137b13e2a3ce0bbbc58407d8ce` (PR #191).
 - PR #187 only synced source-of-truth docs after PR #186. PR #188 only tracked
   historical PR #12 root-cycle merge and Wave 2 bootstrap records as archival
   execution artifacts. PR #189 only synced source-of-truth and
-  production-boundary docs after PR #188. None of these PRs approves production
-  or staging action.
+  production-boundary docs after PR #188. PR #190 only synced source-of-truth
+  docs after PR #189. PR #191 added local/test-safe Reviewer Workflow
+  Intelligence v1 on existing reviewer workflow surfaces. None of these PRs
+  approves production or staging action.
 - Issue #34 is closed as completed after a GitHub-only closeout approval and
   closeout record.
 - Standing approval policy: `docs/standing-approval-policy.md`.
@@ -194,6 +196,17 @@ Post-PR189 operating update:
   D1 access/write/migration, endpoint calls, logs/secrets access, customer-data
   access/mutation, staging execution, CRM/outreach, LLM, automation, or
   production-readiness claims.
+- PR #190 only synced source-of-truth docs after PR #189. PR #191 added
+  local/test-safe Reviewer Workflow Intelligence v1: explicit human-entered
+  `reviewerFeedback`, fixed local/test `manual_reviewer` attribution,
+  metadata-only `reviewer_feedback_events`, additive
+  `reviewerWorkflowSummary`, deterministic `dataGapPrioritization`, and route
+  privacy coverage. It is `NOT_PRODUCTION_EVIDENCE`, keeps
+  `productionReady:false`, and does not approve production/staging endpoints,
+  D1 access/observation/migration/write/delete, logs/secrets, real
+  auth/session/provider parsing, real reviewer identity, CRM/outreach/LLM/
+  automation, retention/privacy enforcement, generated suggestion persistence/
+  export/history/attribution, or production readiness.
 - The current fail-closed matrix refuses malformed synthetic auth claims, mixed
   roles, auth-header / Cloudflare Access / D1 / API-key alias env poison,
   poisoned future evidence fields, bare `notes` / validation-note evidence
@@ -240,7 +253,9 @@ Important freshness rule: Issue #34's accepted execution/proof scopes were tied
 to earlier approved SHAs, including the final read-only schema-proof baseline at
 `512b537797fc67d974acf1f1e690bd638de4919b` (PR #106). The latest audited
 source-of-truth `master` baseline is `5a3c7c9cfe3068b38d8196d60aaf378adc64da14`
-after PR #189 synced source-of-truth and production-boundary docs. Any new
+after PR #189 synced source-of-truth and production-boundary docs, and
+`72def61e89b3c2137b13e2a3ce0bbbc58407d8ce` after PR #191 added local/test
+Reviewer Workflow Intelligence v1. Any new
 production action must refresh the actual current
 `origin/master` SHA, CI metadata, owners, and approval records before
 execution. Issue #34 closeout does not authorize further production proof work.

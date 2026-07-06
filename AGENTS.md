@@ -146,6 +146,21 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   approve production deploy, staging execution, production D1
   access/write/migration, endpoint calls, logs/secrets access, customer-data
   access/mutation, CRM/outreach/LLM/automation, or production-readiness claims.
+- Post-PR191 reviewer workflow intelligence addendum: `master` includes PR
+  #190 at `c90eeded7c6d6718482993d5d233ed343aee0771` and PR #191 at
+  `72def61e89b3c2137b13e2a3ce0bbbc58407d8ce`. PR #190 synced
+  source-of-truth docs after PR #189. PR #191 added local/test-safe Reviewer
+  Workflow Intelligence v1: explicit human-entered `reviewerFeedback`, fixed
+  local/test `manual_reviewer` attribution, metadata-only
+  `reviewer_feedback_events`, additive `reviewerWorkflowSummary`,
+  deterministic `dataGapPrioritization`, schema/fake-D1 contracts, UI controls,
+  and route privacy coverage. It remains `NOT_PRODUCTION_EVIDENCE`, keeps
+  `productionReady:false`, follows the C2 local/test role-stub boundary, and
+  does not approve production/staging endpoints, D1 access/observation/
+  migration/write/delete, logs/secrets, real auth/session/provider parsing,
+  real reviewer identity, CRM/outreach/LLM/automation, retention/privacy
+  enforcement, generated suggestion persistence/export/history/attribution,
+  or production-readiness claims.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
