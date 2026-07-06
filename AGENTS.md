@@ -161,12 +161,19 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   real reviewer identity, CRM/outreach/LLM/automation, retention/privacy
   enforcement, generated suggestion persistence/export/history/attribution,
   or production-readiness claims.
-- Post-PR192 source-of-truth sync addendum: `master` includes PR #192 at
-  `a1ad439348730f834ae7ce5448750b8a5535f502`, which synced
-  source-of-truth docs after PR #191 without approving production/staging
-  action, production D1, real auth/session, retention/privacy enforcement,
-  generated suggestion persistence/export/history/attribution, or
-  production-readiness claims.
+- Post-PR193 reviewer workflow boundary-audit addendum: `master` includes PR
+  #192 at `a1ad439348730f834ae7ce5448750b8a5535f502` and PR #193 at
+  `1c4784338853615225d26e6c263e33389cb507fd`. PR #192 synced
+  source-of-truth docs after PR #191. PR #193 added only
+  `npm run check:reviewer-workflow-boundary`,
+  `tmp/codex/reviewer-workflow-boundary-audit-non-production.json`, and
+  release-evidence redaction coverage for reviewer feedback boundaries. These
+  records remain `NOT_PRODUCTION_EVIDENCE`, keep `productionReady:false`, and
+  do not approve production deploy, staging execution, production/staging D1
+  access/write/migration/observation/delete, endpoint calls, logs/secrets
+  access, customer-data access/mutation, real auth/session, retention/privacy
+  enforcement, generated suggestion persistence/export/history/attribution,
+  CRM/outreach/LLM/automation, or production-readiness claims.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -313,7 +320,9 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - Managed/self-service upserts preserve existing `review_status` on conflict so refreshes do not erase human review decisions.
 - CSV, browser UI, self-service copy, and downloads must preserve review/trust metadata.
 - D1 trust and review columns are lazy-migration-compatible but not production-observed until the first post-deploy production write is confirmed.
-- Production deploy and production DB writes were not performed during PR #25, PR #26, PR #27, or the shipped PR #36-#133 local/test/docs/reviewer-UX/product-planning train.
+- Production deploy and production DB writes were not performed during PR #25,
+  PR #26, PR #27, or the shipped PR #36-#193
+  local/test/docs/reviewer-UX/product-planning/proof-gate train.
 
 ## Canonical Repo Rules
 
