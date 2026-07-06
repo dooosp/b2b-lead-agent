@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-07-06.
-> Audited against first-parent `master` history through `a1ad439348730f834ae7ce5448750b8a5535f502` (PR #192, post-PR191 source-of-truth sync) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input, auth scaffold, proof-preflight planning, route/auth-adapter hardening, approval packet dry-run through PR #174, CI/package gate through PR #175, fail-closed fault injection through PR #176, the non-production Level 1 change-control manifest gate packet through PR #177, operator rehearsal through PR #178, axios dependency audit triage through PR #179, outbound HTTP enrichment boundary guards through PR #180, enrichment fixture replay output contract through PR #181, lead pipeline fixture replay artifact contract through PR #182, Level 1 readiness closure dashboard through PR #183, Level 1 approval-intake gate through PR #184, Level 1 post-approval decision simulator through PR #185, reviewer-note/CLI helper refactor plus audit dependency patch through PR #186, post-PR186 source-of-truth sync through PR #187, archival root-cycle bootstrap record tracking through PR #188, post-PR188 source-of-truth sync through PR #189, post-PR189 source-of-truth sync through PR #190, local/test-safe Reviewer Workflow Intelligence v1 through PR #191, and post-PR191 source-of-truth sync through PR #192. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
+> Audited against first-parent `master` history through `1c4784338853615225d26e6c263e33389cb507fd` (PR #193, Reviewer Workflow Boundary Audit v1) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input, auth scaffold, proof-preflight planning, route/auth-adapter hardening, approval packet dry-run through PR #174, CI/package gate through PR #175, fail-closed fault injection through PR #176, the non-production Level 1 change-control manifest gate packet through PR #177, operator rehearsal through PR #178, axios dependency audit triage through PR #179, outbound HTTP enrichment boundary guards through PR #180, enrichment fixture replay output contract through PR #181, lead pipeline fixture replay artifact contract through PR #182, Level 1 readiness closure dashboard through PR #183, Level 1 approval-intake gate through PR #184, Level 1 post-approval decision simulator through PR #185, reviewer-note/CLI helper refactor plus audit dependency patch through PR #186, post-PR186 source-of-truth sync through PR #187, archival root-cycle bootstrap record tracking through PR #188, post-PR188 source-of-truth sync through PR #189, post-PR189 source-of-truth sync through PR #190, local/test-safe Reviewer Workflow Intelligence v1 through PR #191, post-PR191 source-of-truth sync through PR #192, and local/test-safe Reviewer Workflow Boundary Audit v1 through PR #193. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -70,6 +70,7 @@
 | 60 | 2026-06-30 | #190 | `c90eede` | Post-PR189 source-of-truth sync | Synced source-of-truth docs after PR #189 without production/staging action or runtime boundary expansion |
 | 61 | 2026-07-06 | #191 | `72def61` | Local/test-safe Reviewer Workflow Intelligence v1 | Added human-entered reviewer feedback, fixed local/test `manual_reviewer` attribution, metadata-only feedback history, deterministic reviewer workflow summaries/data-gap prioritization, schema/fake-D1 contracts, UI controls, and route privacy coverage without production/staging action |
 | 62 | 2026-07-06 | #192 | `a1ad439` | Post-PR191 source-of-truth sync | Synced source-of-truth docs after Reviewer Workflow Intelligence v1 without production/staging action or runtime boundary expansion |
+| 63 | 2026-07-06 | #193 | `1c47843` | Reviewer Workflow Boundary Audit v1 | Added the local/test-safe `npm run check:reviewer-workflow-boundary` gate, deterministic non-production audit artifact, and reviewer feedback release-evidence redaction coverage without production/staging action |
 
 Post-PR177 update: PR #171 merged at
 `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` with non-production
@@ -110,7 +111,7 @@ auth/session/provider parsing, Cloudflare Access calls, CRM/outreach, LLM,
 automation, rollback execution, destructive data action, or generated
 suggestion persistence/export/history/attribution.
 
-Post-PR191 source-of-truth update: PR #187 merged the post-PR186
+Post-PR193 source-of-truth update: PR #187 merged the post-PR186
 source-of-truth sync at `c7da118376df889edf5c47ba508fc4f817535ed0`.
 PR #188 then merged archival PR #12 root-cycle merge and Wave 2 bootstrap
 execution/status records at `55953593088e292f9561e6c3570eae2e29a90ca3`.
@@ -118,7 +119,10 @@ PR #189 then synced source-of-truth and production-boundary docs at
 `5a3c7c9cfe3068b38d8196d60aaf378adc64da14`. PR #190 synced source-of-truth
 docs after PR #189 at `c90eeded7c6d6718482993d5d233ed343aee0771`. PR #191
 merged local/test-safe Reviewer Workflow Intelligence v1 at
-`72def61e89b3c2137b13e2a3ce0bbbc58407d8ce`. The PR #188 records remain
+`72def61e89b3c2137b13e2a3ce0bbbc58407d8ce`. PR #192 synced source-of-truth
+docs after PR #191 at `a1ad439348730f834ae7ce5448750b8a5535f502`. PR #193
+merged local/test-safe Reviewer Workflow Boundary Audit v1 at
+`1c4784338853615225d26e6c263e33389cb507fd`. The PR #188 records remain
 historical execution artifacts only; they do not replace this file,
 `docs/roadmap/current-pr-train.md`, or production-proof boundary docs as current
 source of truth. Production actions performed: none.
@@ -138,7 +142,8 @@ generated suggestion persistence/export/history/attribution, or closure of
 Issues #165/#162/#163/#164/#154.
 Reviewer Workflow Boundary Audit v1 local/test update:
 `docs/roadmap/reviewer-workflow-boundary-audit-non-production.md` records the
-non-production boundary audit gate for Reviewer Workflow Intelligence v1.
+non-production boundary audit gate merged by PR #193 for Reviewer Workflow
+Intelligence v1.
 `npm run check:reviewer-workflow-boundary` writes
 `tmp/codex/reviewer-workflow-boundary-audit-non-production.json`, extends
 release evidence redaction for `reviewerFeedback` freeform text and
