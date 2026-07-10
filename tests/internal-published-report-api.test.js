@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const contractFixture = require('../docs/exec-plans/internal-api-contract-freeze.fixture.json');
+const { prepareLeadSnapshotRecords } = require('../lead-report-publisher');
 const {
   createRootLeadRow,
   createWorkerApiEnv,
@@ -186,6 +187,52 @@ test('GET /api/internal/profiles/:profileId/latest-published uses the GitHub pub
 
     assert.equal(response.status, 200);
     assert.equal(fetchCalls.length, 1);
+    assert.deepEqual(payload, contractFixture);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('root-published LeadBrief records remain consumable by the internal latest-published contract', async () => {
+  const { default: worker } = await workerModulePromise;
+  const fixtureLead = contractFixture.leads[0];
+  const [publishedLead] = prepareLeadSnapshotRecords([{
+    company: fixtureLead.company,
+    summary: fixtureLead.summary,
+    product: fixtureLead.product,
+    score: fixtureLead.score,
+    grade: fixtureLead.grade,
+    roi: fixtureLead.roi,
+    salesPitch: fixtureLead.salesPitch,
+    globalContext: fixtureLead.globalContext,
+    sources: fixtureLead.sources,
+    evidence: [{
+      field: 'summary',
+      quote: fixtureLead.summary,
+      sourceUrl: fixtureLead.sources[0].url,
+    }],
+    confidence: 'MEDIUM',
+    generationMode: 'llm',
+    verificationStatus: 'verified',
+  }], {
+    now: contractFixture.publishedAt,
+    profileId: contractFixture.profileId,
+    idFactory: () => fixtureLead.id,
+  });
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => jsonFixtureResponse([publishedLead]);
+
+  try {
+    const response = await worker.fetch(
+      createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
+        headers: { Authorization: 'Bearer api-secret' }
+      }),
+      createWorkerApiEnv(),
+      {}
+    );
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
     assert.deepEqual(payload, contractFixture);
   } finally {
     globalThis.fetch = originalFetch;
