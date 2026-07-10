@@ -60,19 +60,27 @@ test('LLM-qualified root leads carry explicit verified generation metadata', asy
           confidence: 'MEDIUM',
           confidenceReason: '본문과 제목 근거가 확인되었습니다.',
           assumptions: ['공개 기사 기준 초도 검토입니다.'],
-          eventType: '투자'
+          eventType: '투자',
+          generationMode: 'heuristic',
+          verificationStatus: 'needs_review',
+          reviewStatus: 'APPROVED',
+          dataGaps: ['Model supplied gap must not be authoritative.']
         }
       ];
     }
   };
 
-  const leads = await qualifyLeads([createRootArticle()], createRootProfile(), { llm });
+  const leads = await qualifyLeads([createRootArticle()], createRootProfile(), {
+    llm,
+    now: '2026-04-08T00:00:00.000Z'
+  });
 
   assert.equal(leads.length, 1);
   assert.equal(leads[0].generationMode, 'llm');
   assert.equal(leads[0].verificationStatus, 'verified');
   assert.equal(leads[0].confidence, 'MEDIUM');
   assert.deepEqual(leads[0].dataGaps, []);
+  assert.equal(leads[0].reviewStatus, 'NEEDS_REVIEW');
 });
 
 test('publisher snapshot preparation refuses demo leads as canonical latest leads', () => {

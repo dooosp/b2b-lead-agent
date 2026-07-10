@@ -8,6 +8,15 @@ const ARTIFACT_NAMES = {
   historyCanonical: 'lead-history.json',
 };
 
+const DEFAULT_SOURCE_FRESHNESS_DAYS = 90;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const UNBOUND_EVIDENCE_GAP = 'Evidence is not bound to a published source';
+const SOURCE_FRESHNESS_GAP = 'Published source freshness missing, invalid, future-dated, or stale';
+const FRESH_BOUND_EVIDENCE_GAP = 'Verified evidence is not bound to a fresh published source';
+const SALES_PIPELINE_STATUSES = new Set(['NEW', 'CONTACTED', 'MEETING', 'PROPOSAL', 'NEGOTIATION', 'WON', 'LOST']);
+const REVIEW_STATUSES = new Set(['NEW', 'NEEDS_REVIEW', 'APPROVED', 'REJECTED', 'DEFERRED']);
+const VERIFICATION_STATUSES = new Set(['verified', 'needs_review', 'draft', 'unverified']);
+
 function normalizeSnapshotText(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
@@ -18,20 +27,22 @@ function normalizeSnapshotUrl(value) {
 
   try {
     const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+    if (parsed.username || parsed.password) return '';
     parsed.hash = '';
     return parsed.toString();
   } catch {
-    return url;
+    return '';
   }
 }
 
 function normalizePublicationSource(source = {}) {
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return null;
   const title = normalizeSnapshotText(source.title);
   const url = normalizeSnapshotUrl(source.url);
-  if (!title && !url) return null;
+  if (!title || !url) return null;
 
   return {
-    ...source,
     sourceId: normalizeSnapshotText(source.sourceId),
     title,
     url,
@@ -50,6 +61,31 @@ function normalizePublicationSources(sources) {
     .filter(Boolean);
 }
 
+function normalizePublicationEvidence(evidence, sources) {
+  const boundUrls = new Set();
+  for (const source of Array.isArray(sources) ? sources : []) {
+    const url = normalizeSnapshotUrl(source && source.url);
+    const originUrl = normalizeSnapshotUrl(source && source.originUrl);
+    if (url) boundUrls.add(url);
+    if (originUrl) boundUrls.add(originUrl);
+  }
+
+  const seen = new Set();
+  const normalized = [];
+  for (const item of Array.isArray(evidence) ? evidence : []) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
+    const field = normalizeSnapshotText(item.field);
+    const quote = normalizeSnapshotText(item.quote);
+    const sourceUrl = normalizeSnapshotUrl(item.sourceUrl || item.source_url);
+    if (!field || !quote || !sourceUrl || !boundUrls.has(sourceUrl)) continue;
+    const key = `${field}|${quote}|${sourceUrl}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    normalized.push({ field, quote, sourceUrl });
+  }
+  return normalized;
+}
+
 function normalizeSnapshotStringList(values) {
   return (Array.isArray(values) ? values : [])
     .map((value) => normalizeSnapshotText(value))
@@ -65,9 +101,53 @@ function normalizePublicationConfidence(value) {
   return confidence === 'HIGH' || confidence === 'MEDIUM' || confidence === 'LOW' ? confidence : 'LOW';
 }
 
-function buildPublicationLeadBriefFields(lead = {}, { profileId = '', sources = [], dataGaps = [] } = {}) {
+function normalizeFreshnessOptions({ now = new Date().toISOString(), staleAfterDays } = {}) {
+  const normalizedNow = now instanceof Date ? now.toISOString() : normalizeSnapshotText(now);
+  return {
+    now: normalizedNow || new Date().toISOString(),
+    staleAfterDays: Number.isFinite(staleAfterDays) && staleAfterDays >= 0
+      ? staleAfterDays
+      : DEFAULT_SOURCE_FRESHNESS_DAYS,
+  };
+}
+
+function isFreshPublicationSource(source, { now, staleAfterDays } = normalizeFreshnessOptions()) {
+  const nowTime = Date.parse(now);
+  const publishedTime = Date.parse(normalizeSnapshotText(source && source.publishedAt));
+  if (!Number.isFinite(nowTime) || !Number.isFinite(publishedTime)) return false;
+  const ageMs = nowTime - publishedTime;
+  return ageMs >= 0 && ageMs <= staleAfterDays * DAY_MS;
+}
+
+function isTraceBoundPublicationSource(source) {
+  const sourceId = normalizeSnapshotText(source && source.sourceId);
+  const resolution = normalizeSnapshotText(source && source.resolution).toLowerCase();
+  return /^A\d+$/.test(sourceId) && resolution !== 'unverified';
+}
+
+function hasFreshBoundPublicationEvidence(sources, evidence, freshnessOptions) {
+  const freshUrls = new Set();
+  for (const source of Array.isArray(sources) ? sources : []) {
+    if (!isTraceBoundPublicationSource(source) || !isFreshPublicationSource(source, freshnessOptions)) continue;
+    const url = normalizeSnapshotUrl(source && source.url);
+    const originUrl = normalizeSnapshotUrl(source && source.originUrl);
+    if (url) freshUrls.add(url);
+    if (originUrl) freshUrls.add(originUrl);
+  }
+  return Array.isArray(evidence) && evidence.some((item) => (
+    normalizeSnapshotText(item && item.field)
+    && normalizeSnapshotText(item && item.quote)
+    && freshUrls.has(normalizeSnapshotUrl(item && item.sourceUrl))
+  ));
+}
+
+function buildPublicationLeadBriefFields(lead = {}, {
+  profileId = '',
+  sources = [],
+  evidence = [],
+  dataGaps = [],
+} = {}) {
   const confidence = normalizePublicationConfidence(lead.confidence);
-  const evidence = Array.isArray(lead.evidence) ? lead.evidence : [];
   const signal = normalizeSnapshotText(lead.signal || lead.summary || lead.project_title || lead.projectTitle);
   const whyNow = normalizeSnapshotText(lead.whyNow || lead.why_now || lead.urgencyReason || lead.urgency_reason || lead.globalContext || lead.global_context || lead.trend);
   const recommendedMessage = normalizeSnapshotText(lead.recommendedMessage || lead.recommended_message || lead.salesPitch || lead.sales_pitch || lead.pitch);
@@ -82,7 +162,7 @@ function buildPublicationLeadBriefFields(lead = {}, { profileId = '', sources = 
   if (!recommendedMessage) addUniqueSnapshotGap(gaps, 'Recommended first message missing');
 
   return {
-    profileId: normalizeSnapshotText(profileId || lead.profileId || lead.profile_id),
+    profileId: normalizeSnapshotText(profileId),
     signal,
     whyNow,
     recommendedMessage,
@@ -99,26 +179,40 @@ function normalizeGenerationMode(value, fallback = 'llm') {
   return fallback;
 }
 
-function normalizeVerificationStatus(value, { generationMode, confidence, sources, evidence } = {}) {
+function normalizeVerificationStatus(value, {
+  generationMode,
+  confidence,
+  sources,
+  evidence,
+  freshnessOptions,
+} = {}) {
   const status = normalizeSnapshotText(value).toLowerCase();
-  if (status === 'verified' || status === 'needs_review' || status === 'draft' || status === 'unverified') {
-    return status;
-  }
   if (generationMode === 'demo') return 'draft';
   if (generationMode === 'heuristic') return 'needs_review';
   const normalizedConfidence = normalizeSnapshotText(confidence).toUpperCase();
-  const hasSources = Array.isArray(sources) && sources.length > 0;
-  const hasEvidence = Array.isArray(evidence) && evidence.some((item) => normalizeSnapshotText(item && item.quote));
-  return hasSources && hasEvidence && (normalizedConfidence === 'HIGH' || normalizedConfidence === 'MEDIUM')
-    ? 'verified'
-    : 'needs_review';
+  if (status === 'verified') {
+    return hasFreshBoundPublicationEvidence(sources, evidence, freshnessOptions)
+      && (normalizedConfidence === 'HIGH' || normalizedConfidence === 'MEDIUM')
+      ? 'verified'
+      : 'needs_review';
+  }
+  if (status === 'draft' || status === 'unverified') return status;
+  return 'needs_review';
 }
 
-function normalizePublicationTrust(lead = {}) {
+function normalizePublicationTrust(lead = {}, {
+  sources = [],
+  evidence = [],
+  now = new Date().toISOString(),
+  staleAfterDays,
+  evidenceInputCount = 0,
+} = {}) {
   const generationMode = normalizeGenerationMode(lead.generationMode);
-  const confidence = normalizeSnapshotText(lead.confidence).toUpperCase();
+  const suppliedConfidence = normalizeSnapshotText(lead.confidence).toUpperCase();
+  const confidence = normalizePublicationConfidence(lead.confidence);
   const assumptions = normalizeSnapshotStringList(lead.assumptions);
   const dataGaps = normalizeSnapshotStringList(lead.dataGaps);
+  const freshnessOptions = normalizeFreshnessOptions({ now, staleAfterDays });
   const addGap = (value) => {
     if (value && !dataGaps.includes(value)) dataGaps.push(value);
   };
@@ -129,11 +223,21 @@ function normalizePublicationTrust(lead = {}) {
   if (generationMode === 'heuristic') {
     addGap('LLM lead qualification not completed');
   }
-  if (!confidence) addGap('Confidence was not provided by the lead generator');
-  if (confidence === 'LOW') addGap('Low-confidence public signal');
-  if (!Array.isArray(lead.sources) || lead.sources.length === 0) addGap('Published source evidence missing');
-  if (!Array.isArray(lead.evidence) || !lead.evidence.some((item) => normalizeSnapshotText(item && item.quote))) {
+  if (!suppliedConfidence || !['HIGH', 'MEDIUM', 'LOW'].includes(suppliedConfidence)) {
+    addGap('Confidence was not provided by the lead generator');
+  }
+  if (sources.length === 0) addGap('Published source evidence missing');
+  if (evidence.length === 0) {
     addGap('Direct evidence quote missing');
+  }
+  if (confidence === 'LOW') addGap('Low-confidence public signal');
+  if (evidenceInputCount > evidence.length) addGap(UNBOUND_EVIDENCE_GAP);
+  const hasFreshTraceSource = sources.some((source) => (
+    isTraceBoundPublicationSource(source) && isFreshPublicationSource(source, freshnessOptions)
+  ));
+  if (!hasFreshTraceSource) addGap(SOURCE_FRESHNESS_GAP);
+  if (evidence.length > 0 && !hasFreshBoundPublicationEvidence(sources, evidence, freshnessOptions)) {
+    addGap(FRESH_BOUND_EVIDENCE_GAP);
   }
 
   return {
@@ -141,8 +245,9 @@ function normalizePublicationTrust(lead = {}) {
     verificationStatus: normalizeVerificationStatus(lead.verificationStatus, {
       generationMode,
       confidence,
-      sources: lead.sources,
-      evidence: lead.evidence,
+      sources,
+      evidence,
+      freshnessOptions,
     }),
     confidence,
     confidenceReason: normalizeSnapshotText(lead.confidenceReason),
@@ -239,87 +344,133 @@ function generateLeadId(lead, { profileId = '' } = {}) {
   return computeStableLeadId(lead, { profileId });
 }
 
-const PROTECTED_PUBLICATION_FIELDS = [
-  'notes',
-  'manualReviewNotes',
-  'manual_review_notes',
-  'manualReviewNotesProvenance',
-  'manual_review_notes_provenance',
-  'manualReviewNotesAuthorLabel',
-  'manual_review_notes_author_label',
-  'manualReviewNotesUpdatedAt',
-  'manual_review_notes_updated_at',
-  'manualReviewNotesHistoryEventCount',
-  'manual_review_notes_history_event_count',
-  'manualReviewNotesHistoryLastEventType',
-  'manual_review_notes_history_last_event_type',
-  'manualReviewNotesHistoryLastEventAt',
-  'manual_review_notes_history_last_event_at',
-  'manualReviewNotesHistoryLastAuthorLabel',
-  'manual_review_notes_history_last_author_label',
-  'reviewerFeedback',
-  'reviewer_feedback',
-  'reviewerFeedbackHistoryEventCount',
-  'reviewer_feedback_history_event_count',
-  'reviewerFeedbackHistoryLastEventType',
-  'reviewer_feedback_history_last_event_type',
-  'reviewerFeedbackHistoryLastEventAt',
-  'reviewer_feedback_history_last_event_at',
-  'reviewerFeedbackHistoryLastAuthorLabel',
-  'reviewer_feedback_history_last_author_label',
-  'reviewNoteSuggestion',
-  'reviewNoteTemplates',
-  'providerInput',
-  'rawSessionClaims',
-  'rawCommandContext',
-  'authHeader',
-  'cookie',
-  'token',
-  'jwt',
-  'sessionClaim',
-  'databaseId',
-  'accountId',
-];
+const OPTIONAL_PUBLICATION_TEXT_FIELDS = Object.freeze([
+  'company',
+  'summary',
+  'product',
+  'grade',
+  'roi',
+  'salesPitch',
+  'globalContext',
+  'eventType',
+]);
 
-function omitProtectedPublicationFields(lead) {
-  const record = { ...(lead || {}) };
-  for (const field of PROTECTED_PUBLICATION_FIELDS) {
-    delete record[field];
+function createInvalidScoreError() {
+  const error = new Error('Lead score must be a finite number between 0 and 100.');
+  error.code = 'ERR_LEAD_SCORE_INVALID';
+  return error;
+}
+
+function projectPublicationBusinessFields(lead = {}, { rejectInvalidScore = true } = {}) {
+  const record = {};
+  for (const field of OPTIONAL_PUBLICATION_TEXT_FIELDS) {
+    if (Object.hasOwn(lead, field)) record[field] = normalizeSnapshotText(lead[field]);
+  }
+  if (Object.hasOwn(lead, 'score')) {
+    if (!Number.isFinite(lead.score) || lead.score < 0 || lead.score > 100) {
+      if (rejectInvalidScore) throw createInvalidScoreError();
+    } else {
+      record.score = lead.score;
+    }
   }
   return record;
 }
 
-function prepareLeadSnapshotRecords(leads, { now = new Date().toISOString(), idFactory = generateLeadId, profileId = '' } = {}) {
+function isValidIsoTimestamp(value) {
+  const normalized = normalizeSnapshotText(value);
+  return normalized && Number.isFinite(Date.parse(normalized)) ? normalized : '';
+}
+
+function projectLegacyHistoryRecord(lead) {
+  if (!lead || typeof lead !== 'object' || Array.isArray(lead)) return null;
+  const record = projectPublicationBusinessFields(lead, { rejectInvalidScore: false });
+
+  for (const field of ['signal', 'whyNow', 'recommendedMessage', 'confidenceReason']) {
+    if (Object.hasOwn(lead, field)) record[field] = normalizeSnapshotText(lead[field]);
+  }
+  if (Object.hasOwn(lead, 'sources')) record.sources = normalizePublicationSources(lead.sources);
+  if (Object.hasOwn(lead, 'evidence')) {
+    record.evidence = normalizePublicationEvidence(lead.evidence, record.sources || []);
+  }
+  if (Object.hasOwn(lead, 'confidence')) {
+    const confidence = normalizeSnapshotText(lead.confidence).toUpperCase();
+    if (confidence === 'HIGH' || confidence === 'MEDIUM' || confidence === 'LOW') record.confidence = confidence;
+  }
+  if (Object.hasOwn(lead, 'assumptions')) record.assumptions = normalizeSnapshotStringList(lead.assumptions);
+  if (Object.hasOwn(lead, 'dataGaps')) record.dataGaps = normalizeSnapshotStringList(lead.dataGaps);
+
+  const generationMode = normalizeSnapshotText(lead.generationMode).toLowerCase();
+  if (generationMode === 'llm' || generationMode === 'heuristic') record.generationMode = generationMode;
+  const verificationStatus = normalizeSnapshotText(lead.verificationStatus).toLowerCase();
+  if (VERIFICATION_STATUSES.has(verificationStatus)) record.verificationStatus = verificationStatus;
+  const reviewStatus = normalizeSnapshotText(lead.reviewStatus).toUpperCase();
+  if (REVIEW_STATUSES.has(reviewStatus)) record.reviewStatus = reviewStatus;
+
+  const id = normalizeSnapshotText(lead.id);
+  if (id) record.id = id;
+  const legacyProfileId = normalizeSnapshotText(lead.profileId);
+  if (legacyProfileId) record.profileId = legacyProfileId;
+  const status = normalizeSnapshotText(lead.status).toUpperCase();
+  if (SALES_PIPELINE_STATUSES.has(status)) record.status = status;
+  const createdAt = isValidIsoTimestamp(lead.createdAt);
+  if (createdAt) record.createdAt = createdAt;
+  const updatedAt = isValidIsoTimestamp(lead.updatedAt);
+  if (updatedAt) record.updatedAt = updatedAt;
+  return record;
+}
+
+function prepareLeadSnapshotRecords(leads, {
+  now = new Date().toISOString(),
+  idFactory = generateLeadId,
+  profileId = '',
+  staleAfterDays,
+} = {}) {
   return (Array.isArray(leads) ? leads : []).map(lead => {
-    const publishableLead = omitProtectedPublicationFields(lead);
-    const trust = normalizePublicationTrust(publishableLead);
-    const sources = normalizePublicationSources(publishableLead && publishableLead.sources);
+    const callerLead = lead && typeof lead === 'object' && !Array.isArray(lead) ? lead : {};
+    const publishableLead = projectPublicationBusinessFields(callerLead);
+    const sources = normalizePublicationSources(callerLead.sources);
+    const evidenceInputCount = Array.isArray(callerLead.evidence) ? callerLead.evidence.length : 0;
+    const evidence = normalizePublicationEvidence(callerLead.evidence, sources);
+    const trust = normalizePublicationTrust(callerLead, {
+      sources,
+      evidence,
+      now,
+      staleAfterDays,
+      evidenceInputCount,
+    });
     const brief = buildPublicationLeadBriefFields({
-      ...publishableLead,
+      ...callerLead,
       generationMode: trust.generationMode,
       verificationStatus: trust.verificationStatus,
       confidence: trust.confidence,
       assumptions: trust.assumptions,
       dataGaps: trust.dataGaps,
-    }, { profileId, sources, dataGaps: trust.dataGaps });
+    }, {
+      profileId,
+      sources,
+      evidence,
+      dataGaps: trust.dataGaps,
+    });
+    const systemId = idFactory(callerLead, { profileId });
     return {
-      id: idFactory(publishableLead, { profileId }),
-      status: 'NEW',
-      createdAt: now,
-      updatedAt: now,
       ...publishableLead,
-      profileId: brief.profileId,
       signal: brief.signal,
       whyNow: brief.whyNow,
       recommendedMessage: brief.recommendedMessage,
-      reviewStatus: brief.reviewStatus,
-      generationMode: trust.generationMode,
-      verificationStatus: trust.verificationStatus,
+      sources,
+      ...(Object.hasOwn(callerLead, 'evidence') ? { evidence } : {}),
       confidence: brief.confidence,
       confidenceReason: trust.confidenceReason,
       assumptions: brief.assumptions,
       dataGaps: brief.dataGaps,
-      sources,
+      generationMode: trust.generationMode,
+      verificationStatus: trust.verificationStatus,
+      reviewStatus: brief.reviewStatus,
+      id: systemId,
+      profileId: brief.profileId,
+      status: 'NEW',
+      createdAt: now,
+      updatedAt: now,
     };
   });
 }
@@ -334,9 +485,15 @@ function findExistingLeadIndex(history, newLead) {
   );
 }
 
-function mergeLeadHistory(history, newLeads, { now = new Date().toISOString(), profileId = '' } = {}) {
-  const nextHistory = Array.isArray(history) ? history.map(omitProtectedPublicationFields) : [];
-  const preparedLeads = prepareLeadSnapshotRecords(newLeads, { now, profileId });
+function mergeLeadHistory(history, newLeads, {
+  now = new Date().toISOString(),
+  profileId = '',
+  staleAfterDays,
+} = {}) {
+  const nextHistory = Array.isArray(history)
+    ? history.map(projectLegacyHistoryRecord).filter(Boolean)
+    : [];
+  const preparedLeads = prepareLeadSnapshotRecords(newLeads, { now, profileId, staleAfterDays });
 
   for (const newLead of preparedLeads) {
     const existingIdx = findExistingLeadIndex(nextHistory, newLead);
@@ -357,38 +514,63 @@ function mergeLeadHistory(history, newLeads, { now = new Date().toISOString(), p
   return nextHistory;
 }
 
-function saveLeadSnapshot(leads, profile) {
+function createInvalidHistoryError() {
+  const error = new Error('Lead history is invalid; publication was aborted.');
+  error.code = 'ERR_LEAD_HISTORY_INVALID';
+  return error;
+}
+
+function readLeadHistoryOrThrow(historyPath) {
+  let serializedHistory;
+  try {
+    serializedHistory = fs.readFileSync(historyPath, 'utf-8');
+  } catch (error) {
+    if (error && error.code === 'ENOENT') return [];
+    throw error;
+  }
+
+  let history;
+  try {
+    history = JSON.parse(serializedHistory);
+  } catch {
+    throw createInvalidHistoryError();
+  }
+  if (!Array.isArray(history)) throw createInvalidHistoryError();
+  return history;
+}
+
+function saveLeadSnapshot(leads, profile, options = {}) {
   const reportsDir = getProfileReportsDir(profile);
-  const now = new Date().toISOString();
+  const now = options.now || new Date().toISOString();
+  const historyCanonicalPath = path.join(reportsDir, ARTIFACT_NAMES.historyCanonical);
+  const history = Object.hasOwn(options, 'history')
+    ? options.history
+    : readLeadHistoryOrThrow(historyCanonicalPath);
+  if (!Array.isArray(history)) throw createInvalidHistoryError();
 
   // 각 리드에 ID, 상태, 생성일 추가
   const enrichedLeads = prepareLeadSnapshotRecords(leads, {
     now,
-    profileId: profile && profile.id
+    profileId: profile && profile.id,
+    staleAfterDays: options.staleAfterDays,
+  });
+
+  const mergedHistory = mergeLeadHistory(history, leads, {
+    now,
+    profileId: profile && profile.id,
+    staleAfterDays: options.staleAfterDays,
   });
 
   // 최신 리드 저장
   const latestCanonicalPath = path.join(reportsDir, ARTIFACT_NAMES.latestCanonical);
   const latestPayload = JSON.stringify(enrichedLeads, null, 2);
+  const historyPayload = JSON.stringify(mergedHistory, null, 2);
   fs.writeFileSync(latestCanonicalPath, latestPayload, 'utf-8');
   console.log(`  리드 JSON 저장: ${latestCanonicalPath}`);
 
   // 히스토리에 추가 (기존 데이터 유지)
-  const historyCanonicalPath = path.join(reportsDir, ARTIFACT_NAMES.historyCanonical);
-  let history = [];
-  if (fs.existsSync(historyCanonicalPath)) {
-    try {
-      history = JSON.parse(fs.readFileSync(historyCanonicalPath, 'utf-8'));
-    } catch (e) {
-      history = [];
-    }
-  }
-
-  history = mergeLeadHistory(history, leads, { now, profileId: profile && profile.id });
-
-  const historyPayload = JSON.stringify(history, null, 2);
   fs.writeFileSync(historyCanonicalPath, historyPayload, 'utf-8');
-  console.log(`  히스토리 저장: ${historyCanonicalPath} (총 ${history.length}개 리드)`);
+  console.log(`  히스토리 저장: ${historyCanonicalPath} (총 ${mergedHistory.length}개 리드)`);
   console.log('');
 
   return latestCanonicalPath;
@@ -396,9 +578,10 @@ function saveLeadSnapshot(leads, profile) {
 
 function publishLeadReport(leadReport, qualifiedLeads, profile) {
   const reportsDir = getProfileReportsDir(profile);
-  const reportPath = saveLeadReport(leadReport, profile);
-  const latestLeadsPath = saveLeadSnapshot(qualifiedLeads, profile);
   const historyPath = path.join(reportsDir, ARTIFACT_NAMES.historyCanonical);
+  const history = readLeadHistoryOrThrow(historyPath);
+  const reportPath = saveLeadReport(leadReport, profile);
+  const latestLeadsPath = saveLeadSnapshot(qualifiedLeads, profile, { history });
   return { reportsDir, reportPath, latestLeadsPath, historyPath };
 }
 

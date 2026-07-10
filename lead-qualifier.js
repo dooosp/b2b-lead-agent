@@ -1,5 +1,23 @@
 const { classifyArticleBody, getArticleContextText, getTrustedArticleBody } = require('./article-trust');
 
+const DEFAULT_SOURCE_FRESHNESS_DAYS = 90;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const UNBOUND_EVIDENCE_GAP = 'Evidence is not bound to a published source';
+const SOURCE_FRESHNESS_GAP = 'Published source freshness missing, invalid, future-dated, or stale';
+const FRESH_BOUND_EVIDENCE_GAP = 'Verified evidence is not bound to a fresh published source';
+const MODEL_CANDIDATE_TEXT_FIELDS = Object.freeze([
+  'company',
+  'summary',
+  'product',
+  'grade',
+  'roi',
+  'salesPitch',
+  'globalContext',
+  'confidence',
+  'confidenceReason',
+  'eventType',
+]);
+
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
@@ -10,11 +28,61 @@ function normalizeSourceUrl(value) {
 
   try {
     const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+    if (parsed.username || parsed.password) return '';
     parsed.hash = '';
     return parsed.toString();
   } catch {
-    return url;
+    return '';
   }
+}
+
+function normalizeCandidateSource(source) {
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return null;
+  const title = normalizeText(source.title);
+  const url = normalizeSourceUrl(source.url);
+  if (!title || !url) return null;
+  return { title, url };
+}
+
+function normalizeCandidateEvidence(item) {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+  const field = normalizeText(item.field);
+  const quote = normalizeText(item.quote);
+  const sourceUrl = normalizeSourceUrl(item.sourceUrl || item.source_url);
+  if (!field || !quote || !sourceUrl) return null;
+  return { field, quote, sourceUrl };
+}
+
+function projectModelLeadCandidate(lead) {
+  if (!lead || typeof lead !== 'object' || Array.isArray(lead)) return null;
+
+  const candidate = {};
+  for (const field of MODEL_CANDIDATE_TEXT_FIELDS) {
+    if (typeof lead[field] === 'string') candidate[field] = normalizeText(lead[field]);
+  }
+  if (typeof lead.score === 'number') candidate.score = lead.score;
+
+  candidate.sourceIds = normalizeLeadSourceIds(lead.sourceIds);
+  candidate.sources = (Array.isArray(lead.sources) ? lead.sources : [])
+    .map(normalizeCandidateSource)
+    .filter(Boolean);
+  candidate.evidence = (Array.isArray(lead.evidence) ? lead.evidence : [])
+    .map(normalizeCandidateEvidence)
+    .filter(Boolean);
+  candidate.assumptions = normalizeStringList(lead.assumptions);
+  candidate.dataGaps = [];
+  return candidate;
+}
+
+function isValidModelLeadCandidate(lead) {
+  return Boolean(
+    lead
+    && typeof lead.company === 'string'
+    && Number.isFinite(lead.score)
+    && lead.score >= 0
+    && lead.score <= 100
+  );
 }
 
 function detectSourceResolution(article = {}) {
@@ -106,41 +174,59 @@ function normalizeLeadSources(lead = {}, traceIndex = buildArticleTraceIndex()) 
 
     if (matched) {
       normalized.push(matched);
-      continue;
-    }
-
-    if (title && url) {
-      normalized.push({
-        sourceId: '',
-        title,
-        url,
-        source: normalizeText(source && source.source),
-        query: normalizeText(source && source.query),
-        publishedAt: normalizeText(source && source.publishedAt),
-        originUrl: normalizeSourceUrl(source && source.originUrl),
-        resolution: normalizeText(source && source.resolution) || 'unverified',
-        contentAvailable: Boolean(source && source.contentAvailable),
-      });
     }
   }
 
   return dedupeSourceTraces(normalized);
 }
 
-function normalizeQualifiedLead(lead, traceIndex) {
-  const sourceIds = normalizeLeadSourceIds(lead && lead.sourceIds);
+function normalizeLeadEvidence(evidence, sources) {
+  const boundUrls = new Set();
+  for (const source of Array.isArray(sources) ? sources : []) {
+    const url = normalizeSourceUrl(source && source.url);
+    const originUrl = normalizeSourceUrl(source && source.originUrl);
+    if (url) boundUrls.add(url);
+    if (originUrl) boundUrls.add(originUrl);
+  }
+
+  const seen = new Set();
+  const normalized = [];
+  for (const item of Array.isArray(evidence) ? evidence : []) {
+    const projected = normalizeCandidateEvidence(item);
+    if (!projected || !boundUrls.has(projected.sourceUrl)) continue;
+    const key = `${projected.field}|${projected.quote}|${projected.sourceUrl}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    normalized.push(projected);
+  }
+  return normalized;
+}
+
+function normalizeQualifiedLead(lead, traceIndex, { evidenceInputCount = 0 } = {}) {
+  const sources = normalizeLeadSources(lead, traceIndex);
+  const evidence = normalizeLeadEvidence(lead && lead.evidence, sources);
+  const dataGaps = normalizeStringList(lead && lead.dataGaps);
+  if (evidenceInputCount > evidence.length && !dataGaps.includes(UNBOUND_EVIDENCE_GAP)) {
+    dataGaps.push(UNBOUND_EVIDENCE_GAP);
+  }
   return {
     ...lead,
-    sourceIds,
-    sources: normalizeLeadSources(lead, traceIndex),
+    sourceIds: sources.map(source => source.sourceId).filter(Boolean),
+    sources,
+    evidence,
+    dataGaps,
   };
 }
 
 function normalizeQualifiedLeads(leads, articles) {
   const traceIndex = buildArticleTraceIndex(articles);
   return (Array.isArray(leads) ? leads : [])
-    .filter(lead => lead && typeof lead.company === 'string' && typeof lead.score === 'number')
-    .map((lead) => normalizeQualifiedLead(lead, traceIndex));
+    .map((lead) => ({
+      candidate: projectModelLeadCandidate(lead),
+      evidenceInputCount: Array.isArray(lead && lead.evidence) ? lead.evidence.length : 0,
+    }))
+    .filter(({ candidate }) => isValidModelLeadCandidate(candidate))
+    .map(({ candidate, evidenceInputCount }) => normalizeQualifiedLead(candidate, traceIndex, { evidenceInputCount }));
 }
 
 function normalizeStringList(values) {
@@ -160,6 +246,41 @@ function normalizeConfidenceValue(value) {
   return confidence === 'HIGH' || confidence === 'MEDIUM' || confidence === 'LOW' ? confidence : '';
 }
 
+function normalizeFreshnessOptions(options = {}) {
+  const now = options.now instanceof Date ? options.now.toISOString() : normalizeText(options.now);
+  const staleAfterDays = Number.isFinite(options.staleAfterDays) && options.staleAfterDays >= 0
+    ? options.staleAfterDays
+    : DEFAULT_SOURCE_FRESHNESS_DAYS;
+  return {
+    now: now || new Date().toISOString(),
+    staleAfterDays,
+  };
+}
+
+function isFreshSource(source, { now, staleAfterDays } = normalizeFreshnessOptions()) {
+  const nowTime = Date.parse(now);
+  const publishedTime = Date.parse(normalizeText(source && source.publishedAt));
+  if (!Number.isFinite(nowTime) || !Number.isFinite(publishedTime)) return false;
+  const ageMs = nowTime - publishedTime;
+  return ageMs >= 0 && ageMs <= staleAfterDays * DAY_MS;
+}
+
+function hasFreshBoundEvidence(lead = {}, freshnessOptions = normalizeFreshnessOptions()) {
+  const freshUrls = new Set();
+  for (const source of Array.isArray(lead.sources) ? lead.sources : []) {
+    if (!isFreshSource(source, freshnessOptions)) continue;
+    const url = normalizeSourceUrl(source && source.url);
+    const originUrl = normalizeSourceUrl(source && source.originUrl);
+    if (url) freshUrls.add(url);
+    if (originUrl) freshUrls.add(originUrl);
+  }
+  return Array.isArray(lead.evidence) && lead.evidence.some((item) => (
+    normalizeText(item && item.field)
+    && normalizeText(item && item.quote)
+    && freshUrls.has(normalizeSourceUrl(item && item.sourceUrl))
+  ));
+}
+
 function normalizeReviewStatusValue() {
   return 'NEEDS_REVIEW';
 }
@@ -172,20 +293,26 @@ function hasEvidenceQuotes(lead = {}) {
   return Array.isArray(lead.evidence) && lead.evidence.some((item) => normalizeText(item && item.quote));
 }
 
-function deriveVerificationStatus(lead = {}, generationMode = 'llm') {
-  const explicit = normalizeText(lead.verificationStatus).toLowerCase();
-  if (['verified', 'needs_review', 'draft', 'unverified'].includes(explicit)) return explicit;
+function deriveVerificationStatus(lead = {}, generationMode = 'llm', options = {}) {
   if (generationMode === 'demo') return 'draft';
   if (generationMode === 'heuristic') return 'needs_review';
 
+  const freshnessOptions = normalizeFreshnessOptions(options);
   const confidence = normalizeConfidenceValue(lead.confidence);
-  if (hasUsableSourceEvidence(lead) && hasEvidenceQuotes(lead) && (confidence === 'HIGH' || confidence === 'MEDIUM')) {
+  const hasRejectedEvidence = normalizeStringList(lead.dataGaps).includes(UNBOUND_EVIDENCE_GAP);
+  if (
+    !hasRejectedEvidence
+    && hasUsableSourceEvidence(lead)
+    && hasEvidenceQuotes(lead)
+    && hasFreshBoundEvidence(lead, freshnessOptions)
+    && (confidence === 'HIGH' || confidence === 'MEDIUM')
+  ) {
     return 'verified';
   }
   return 'needs_review';
 }
 
-function deriveDataGaps(lead = {}, generationMode = 'llm') {
+function deriveDataGaps(lead = {}, generationMode = 'llm', options = {}) {
   const gaps = normalizeStringList(lead.dataGaps);
   const add = (value) => {
     if (value && !gaps.includes(value)) gaps.push(value);
@@ -207,12 +334,19 @@ function deriveDataGaps(lead = {}, generationMode = 'llm') {
   if (!confidence) add('Confidence was not provided by the lead generator');
   if (confidence === 'LOW') add('Low-confidence public signal');
   if (!hasEvidenceQuotes(lead)) add('Direct evidence quote missing');
+  const freshnessOptions = normalizeFreshnessOptions(options);
+  const hasFreshSource = Array.isArray(lead.sources)
+    && lead.sources.some((source) => isFreshSource(source, freshnessOptions));
+  if (!hasFreshSource) add(SOURCE_FRESHNESS_GAP);
+  if (hasEvidenceQuotes(lead) && !hasFreshBoundEvidence(lead, freshnessOptions)) {
+    add(FRESH_BOUND_EVIDENCE_GAP);
+  }
 
   return gaps;
 }
 
-function withGenerationMetadata(lead = {}, generationMode = 'llm') {
-  const mode = normalizeGenerationMode(lead.generationMode, generationMode);
+function withGenerationMetadata(lead = {}, generationMode = 'llm', options = {}) {
+  const mode = normalizeGenerationMode(generationMode, 'llm');
   const confidence = normalizeConfidenceValue(lead.confidence) || (mode === 'llm' ? '' : 'LOW');
   const assumptions = normalizeStringList(lead.assumptions);
   if (mode === 'demo' && assumptions.length === 0) {
@@ -229,18 +363,18 @@ function withGenerationMetadata(lead = {}, generationMode = 'llm') {
     recommendedMessage: normalizeText(lead.recommendedMessage || lead.salesPitch || lead.sales_pitch),
     reviewStatus: normalizeReviewStatusValue(lead.reviewStatus),
     generationMode: mode,
-    verificationStatus: deriveVerificationStatus({ ...lead, confidence }, mode),
+    verificationStatus: deriveVerificationStatus({ ...lead, confidence }, mode, options),
     confidence,
     confidenceReason: normalizeText(lead.confidenceReason) || (mode === 'llm'
       ? 'LLM analysis completed, but confidence rationale was not supplied.'
       : 'Fallback output requires human review.'),
     assumptions,
-    dataGaps: deriveDataGaps({ ...lead, confidence }, mode),
+    dataGaps: deriveDataGaps({ ...lead, confidence }, mode, options),
   };
 }
 
-function withGenerationMetadataForAll(leads, generationMode) {
-  return (Array.isArray(leads) ? leads : []).map((lead) => withGenerationMetadata(lead, generationMode));
+function withGenerationMetadataForAll(leads, generationMode, options = {}) {
+  return (Array.isArray(leads) ? leads : []).map((lead) => withGenerationMetadata(lead, generationMode, options));
 }
 
 function isDemoFallbackAllowed(options = {}) {
@@ -593,12 +727,13 @@ async function qualifyLeads(articles, profile, options = {}) {
   console.log('[Step 2] Gemini API로 리드 분석 시작...');
 
   const llm = options.llm || null;
+  const freshnessOptions = normalizeFreshnessOptions(options);
 
   if (!llm && (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE')) {
     console.error('  [오류] GEMINI_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.');
     if (isDemoFallbackAllowed(options)) {
       console.log('  → 명시적 데모 모드로 실행합니다.\n');
-      return withGenerationMetadataForAll(generateDemoLeads(articles, profile), 'demo');
+      return withGenerationMetadataForAll(generateDemoLeads(articles, profile), 'demo', freshnessOptions);
     }
     throw createQualificationUnavailableError('Lead qualification unavailable: GEMINI_API_KEY is required for managed production runs.');
   }
@@ -626,12 +761,12 @@ async function qualifyLeads(articles, profile, options = {}) {
       console.log(`  회사명 신뢰 필터로 ${rejectedCount}개 리드 제외`);
     }
     console.log(`  분석 완료: ${hardenedLeads.length}개 리드 발견\n`);
-    return withGenerationMetadataForAll(hardenedLeads, 'llm');
+    return withGenerationMetadataForAll(hardenedLeads, 'llm', freshnessOptions);
   } catch (error) {
     console.error('  [오류] Gemini API 분석 실패:', error.message);
     if (isDemoFallbackAllowed(options)) {
       console.log('  → 명시적 데모 모드로 실행합니다.\n');
-      return withGenerationMetadataForAll(generateDemoLeads(articles, profile), 'demo');
+      return withGenerationMetadataForAll(generateDemoLeads(articles, profile), 'demo', freshnessOptions);
     }
     throw createQualificationUnavailableError(`Lead qualification unavailable: ${error.message}`, error);
   }
