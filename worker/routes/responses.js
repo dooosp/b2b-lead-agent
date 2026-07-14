@@ -1,5 +1,7 @@
 import { jsonResponse } from '../lib/utils.js';
 
+const PROTECTED_REVIEWER_VARY = 'Authorization, X-Manual-Review-Notes-Local-Test-Role';
+
 export function isAllowedMethod(method, allowedMethods) {
   return allowedMethods.includes(method);
 }
@@ -28,6 +30,16 @@ export function htmlResponse(html, status = 200) {
     status,
     headers: { 'Content-Type': 'text/html; charset=utf-8' }
   });
+}
+
+export function withProtectedReviewerCachePolicy(response) {
+  response.headers.set('Cache-Control', 'private, no-store');
+  response.headers.set('Vary', PROTECTED_REVIEWER_VARY);
+  return response;
+}
+
+export function protectedReviewerHtmlResponse(html, status = 200) {
+  return withProtectedReviewerCachePolicy(htmlResponse(html, status));
 }
 
 export function textResponse(text, status = 200) {
