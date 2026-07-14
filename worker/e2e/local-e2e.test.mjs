@@ -136,7 +136,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
 
   failingHarness = await createLocalE2EHarness({
     env: createLocalSmokeEnv({
-      DB: new FakeD1Database({ failOnSql: [/SELECT \* FROM leads WHERE profile_id/i] }),
+      DB: new FakeD1Database({
+        failOnSql: [/SELECT\s+h\.snapshot_id\s+AS\s+snapshot_head_id/i],
+      }),
     }),
   });
   const failingResponse = await fetch(`${failingHarness.origin}/api/leads?profile=danfoss`, {

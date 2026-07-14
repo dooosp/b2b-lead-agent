@@ -57,7 +57,7 @@ function createAuditEnv(session) {
     [AUTH_PROVIDER_SESSION_SCAFFOLD_NON_PRODUCTION_ENV]: 'enabled',
     [AUTH_PROVIDER_SESSION_SCAFFOLD_PROVIDER_ENV]: provider,
   });
-  env.DB.leads.set('lead-1', createLeadRow({
+  const lead = createLeadRow({
     enriched: 1,
     notes: PROTECTED_NOTE,
     manual_review_notes_author_label: 'manual_reviewer',
@@ -79,7 +79,10 @@ function createAuditEnv(session) {
         url: 'https://example.test/source',
       },
     ]),
-  }));
+  });
+  env.DB.leads.set('lead-1', lead);
+  env.DB.seedPublishedSnapshot({ profileId: 'danfoss', artifactKind: 'latest', leads: [lead] });
+  env.DB.seedPublishedSnapshot({ profileId: 'danfoss', artifactKind: 'history', leads: [lead] });
   env.DB.reviewerFeedback.set('lead-1', {
     lead_id: 'lead-1',
     action_usefulness: 'useful',

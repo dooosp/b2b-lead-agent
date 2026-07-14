@@ -1,3 +1,27 @@
+import {
+  D1_MAX_STRING_OR_BLOB_BYTES,
+  PUBLISHED_SNAPSHOT_ARTIFACT_MAX_UTF8_BYTES,
+  PUBLISHED_SNAPSHOT_ENTRY_MAX_UTF8_BYTES,
+  PUBLISHED_SNAPSHOT_ENTRY_ROW_MAX_UTF8_BYTES,
+  PUBLISHED_SNAPSHOT_MUTABLE_AGGREGATE_MAX_UTF8_BYTES,
+  PUBLISHED_SNAPSHOT_MUTABLE_JSON_MAX_UTF8_BYTES,
+  PUBLISHED_SNAPSHOT_MUTABLE_RAW_AGGREGATE_MAX_UTF8_BYTES,
+  PUBLISHED_SNAPSHOT_MUTABLE_RAW_MAX_UTF8_BYTES,
+  computePublishedSnapshotId,
+  publishedSnapshotEntryRowUtf8Bytes,
+  toSafePublishedSnapshotLead,
+} from '../../db/published-snapshots.js';
+import {
+  CANONICAL_D1_CRITICAL_COLUMN_SPECS,
+  CANONICAL_D1_INDEX_SPECS,
+  CANONICAL_D1_TABLE_COLUMN_NAMES,
+  CREATE_MIGRATION_LEDGER_SQL,
+  D1_MIGRATION_MANIFEST,
+  V1_CREATE_TABLE_STATEMENTS,
+  V2_CREATE_TABLE_STATEMENTS,
+} from '../../db/migration-manifest.js';
+import { rowToLead } from '../../db/transform.js';
+
 export function normalizeSql(sql) {
   return sql.replace(/\s+/g, ' ').trim().toLowerCase();
 }
@@ -22,6 +46,7 @@ const REVIEWER_FEEDBACK_ACTION_USEFULNESS = new Set(['useful', 'partially_useful
 const REVIEWER_FEEDBACK_OUTCOME_LABELS = new Set(['interested', 'not_fit', 'no_response', 'needs_more_research', 'duplicate', 'deferred', 'unknown']);
 const REVIEWER_FEEDBACK_DATA_GAP_PRIORITIES = new Set(['none', 'low', 'medium', 'high', 'blocking']);
 const REVIEWER_FEEDBACK_CONFIDENCE_ADJUSTMENTS = new Set(['increase', 'decrease', 'unchanged', 'unknown']);
+const UTF8_ENCODER = new TextEncoder();
 
 class FakeStatement {
   constructor(db, sql) {
@@ -36,20 +61,81 @@ class FakeStatement {
   }
 
   async run() {
+    this.db.recordQuery(this.sql, this.args);
     return this.db.executeRun(this.sql, this.args);
   }
 
   async first() {
+    this.db.recordQuery(this.sql, this.args);
     return this.db.executeFirst(this.sql, this.args);
   }
 
   async all() {
+    this.db.recordQuery(this.sql, this.args);
     return { results: await this.db.executeAll(this.sql, this.args) };
   }
 }
 
 function clone(row) {
   return row ? { ...row } : null;
+}
+
+function snapshotKey(profileId, artifactKind) {
+  return `${profileId}\u0000${artifactKind}`;
+}
+
+function toPublishedFixtureLead(lead) {
+  const normalized = lead && (lead.profile_id || lead.identity_key || lead.created_at)
+    ? rowToLead(lead)
+    : lead;
+  return toSafePublishedSnapshotLead(normalized || {});
+}
+
+function canonicalSchemaIntrospectionRows() {
+  return Object.entries(CANONICAL_D1_TABLE_COLUMN_NAMES).flatMap(([tableName, columnNames]) => (
+    columnNames.map((name, cid) => {
+      const spec = CANONICAL_D1_CRITICAL_COLUMN_SPECS[tableName]?.[name] || {};
+      return {
+        table_name: tableName,
+        cid,
+        name,
+        type: spec.type || 'TEXT',
+        not_null: spec.notNull || 0,
+        dflt_value: spec.defaultValue ?? null,
+        pk: spec.pk || 0,
+      };
+    })
+  ));
+}
+
+function canonicalSchemaObjectRows() {
+  const tableRows = [
+    CREATE_MIGRATION_LEDGER_SQL,
+    ...V1_CREATE_TABLE_STATEMENTS,
+    ...V2_CREATE_TABLE_STATEMENTS,
+  ].map((sql) => {
+    const match = /CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS\s+([A-Za-z_][A-Za-z0-9_]*)/i.exec(sql);
+    if (!match) throw new Error(`Invalid canonical fake-D1 table SQL: ${sql}`);
+    return { type: 'table', name: match[1], table_name: match[1], sql };
+  });
+  const indexRows = CANONICAL_D1_INDEX_SPECS.map((index) => ({
+    type: 'index',
+    name: index.name,
+    table_name: index.tableName,
+    sql: index.normalizedSql,
+  }));
+  return [...tableRows, ...indexRows];
+}
+
+export function seedPublishedSnapshotFixtures(
+  db,
+  leads,
+  { profileId = 'danfoss', artifactKinds = ['latest', 'history'] } = {}
+) {
+  for (const artifactKind of artifactKinds) {
+    db.seedPublishedSnapshot({ profileId, artifactKind, leads });
+  }
+  return db;
 }
 
 function validateManualReviewNoteEvent(row) {
@@ -182,6 +268,13 @@ export class FakeD1Database {
     manualReviewNoteEvents = [],
     reviewerFeedback = [],
     reviewerFeedbackEvents = [],
+    publishedSnapshots = [],
+    publishedSnapshotHeads = [],
+    publishedSnapshotEntries = [],
+    schemaVersion = 2,
+    migrationLedgerRows = null,
+    schemaIntrospectionRows = null,
+    schemaObjectRows = null,
     failOnSql
   } = {}) {
     this.leads = new Map(leads.map((row) => [row.id, { ...row }]));
@@ -218,8 +311,69 @@ export class FakeD1Database {
       validateReviewerFeedbackEvent(event);
       return event;
     });
+    this.schemaVersion = schemaVersion;
+    this.migrationLedgerRows = Array.isArray(migrationLedgerRows)
+      ? migrationLedgerRows.map(clone)
+      : D1_MIGRATION_MANIFEST
+        .filter((migration) => migration.version <= Number(schemaVersion || 0))
+        .map(({ version, name }) => ({ version, name }));
+    this.schemaIntrospectionRows = Array.isArray(schemaIntrospectionRows)
+      ? schemaIntrospectionRows.map(clone)
+      : canonicalSchemaIntrospectionRows();
+    this.schemaObjectRows = Array.isArray(schemaObjectRows)
+      ? schemaObjectRows.map(clone)
+      : canonicalSchemaObjectRows();
+    this.publishedSnapshotHeads = new Map(
+      publishedSnapshotHeads.map((head) => [
+        snapshotKey(head.profile_id, head.artifact_kind),
+        { ...head },
+      ])
+    );
+    this.publishedSnapshotEntries = publishedSnapshotEntries.map((entry) => ({ ...entry }));
+    publishedSnapshots.forEach((snapshot) => this.seedPublishedSnapshot(snapshot));
     this.schemaStatements = [];
+    this.batches = [];
+    this.queryCount = 0;
+    this.executedQueries = [];
+    this.batchSizes = [];
+    this.maxBoundParams = 0;
+    this.onPublishedSnapshotRead = null;
     this.failOnSql = failOnSql;
+  }
+
+  seedPublishedSnapshot(snapshot) {
+    const profileId = snapshot.profileId || snapshot.profile_id;
+    const artifactKind = snapshot.artifactKind || snapshot.artifact_kind;
+    const snapshotLeads = snapshot.leads || [];
+    const projectedSnapshotLeads = snapshotLeads.map((lead) => ({
+      ...toPublishedFixtureLead(lead),
+      profileId,
+      source: 'managed',
+    }));
+    const snapshotId = snapshot.snapshotId
+      || snapshot.snapshot_id
+      || computePublishedSnapshotId(profileId, artifactKind, projectedSnapshotLeads);
+    const fetchedAt = snapshot.fetchedAt || snapshot.fetched_at || new Date().toISOString();
+    this.publishedSnapshotHeads.set(snapshotKey(profileId, artifactKind), {
+      profile_id: profileId,
+      artifact_kind: artifactKind,
+      snapshot_id: snapshotId,
+      fetched_at: fetchedAt,
+    });
+    this.publishedSnapshotEntries = this.publishedSnapshotEntries.filter(
+      (entry) => entry.profile_id !== profileId || entry.artifact_kind !== artifactKind
+    );
+    projectedSnapshotLeads.forEach((payload, ordinal) => {
+      this.publishedSnapshotEntries.push({
+        profile_id: profileId,
+        artifact_kind: artifactKind,
+        snapshot_id: snapshotId,
+        ordinal,
+        lead_id: payload.id,
+        payload_json: JSON.stringify(payload),
+      });
+    });
+    return snapshotId;
   }
 
   prepare(sql) {
@@ -229,11 +383,27 @@ export class FakeD1Database {
     return new FakeStatement(this, sql);
   }
 
+  recordQuery(sql, args = []) {
+    this.queryCount += 1;
+    this.maxBoundParams = Math.max(this.maxBoundParams, args.length);
+    this.executedQueries.push({ sql: normalizeSql(sql), bindCount: args.length });
+  }
+
+  resetQueryMetrics() {
+    this.queryCount = 0;
+    this.executedQueries = [];
+    this.batchSizes = [];
+    this.maxBoundParams = 0;
+  }
+
   async batch(statements) {
+    this.batches.push(statements.map((statement) => normalizeSql(statement.sql)));
+    this.batchSizes.push(statements.length);
     const results = [];
     for (const statement of statements) {
       const normalized = normalizeSql(statement.sql);
       if (normalized.startsWith('select ')) {
+        this.recordQuery(statement.sql, statement.args);
         results.push({ results: await this.executeAll(statement.sql, statement.args) });
       } else {
         results.push(await statement.run());
@@ -256,15 +426,20 @@ export class FakeD1Database {
     return { meta: { changes: 0 } };
   }
 
-  upsertLead(row) {
+  upsertLead(row, { overwriteGeneratedFields = true, preserveEnrichment = false } = {}) {
     const existing = this.leads.get(row.id);
     if (!existing) {
       this.leads.set(row.id, row);
       return { meta: { changes: 1 } };
     }
 
-    Object.assign(existing, {
+    if (!overwriteGeneratedFields) return { meta: { changes: 0 } };
+
+    const generatedUpdates = {
       identity_key: row.identity_key,
+      profile_id: row.profile_id,
+      source: row.source,
+      company: row.company,
       summary: row.summary,
       product: row.product,
       score: row.score,
@@ -285,8 +460,13 @@ export class FakeD1Database {
       verification_status: row.verification_status,
       data_gaps: row.data_gaps,
       event_type: row.event_type,
-      updated_at: row.updated_at,
-    });
+    };
+    if (preserveEnrichment && toNumber(existing.enriched) === 1) {
+      for (const field of ['summary', 'roi', 'sales_pitch', 'global_context', 'evidence', 'assumptions']) {
+        delete generatedUpdates[field];
+      }
+    }
+    Object.assign(existing, generatedUpdates);
     return { meta: { changes: 1 } };
   }
 
@@ -303,7 +483,92 @@ export class FakeD1Database {
     }
 
     if (normalized.startsWith('insert into leads ')) {
-      return this.upsertLead(toLeadInsertRow(args));
+      if (args.length % 30 !== 0) throw new Error('Fake D1 lead insert bind count must be divisible by 30');
+      let changes = 0;
+      for (let offset = 0; offset < args.length; offset += 30) {
+        const row = toLeadInsertRow(args.slice(offset, offset + 30));
+        const existing = this.leads.get(row.id);
+        if (existing && normalized.includes('on conflict(id) do nothing')) continue;
+        if (
+          existing
+          && normalized.includes('else null end')
+          && existing.profile_id !== row.profile_id
+        ) {
+          throw constraintError('NOT NULL constraint failed: leads.profile_id');
+        }
+        changes += Number(this.upsertLead(row, {
+          preserveEnrichment: normalized.includes('coalesce(leads.enriched, 0) = 1'),
+        })?.meta?.changes || 0);
+      }
+      return { meta: { changes }, success: true };
+    }
+
+    if (
+      normalized.startsWith('update leads set profile_id = null where profile_id <> ? and id in (')
+    ) {
+      const [profileId, ...leadIds] = args;
+      const collision = leadIds.some((leadId) => {
+        const existing = this.leads.get(leadId);
+        return existing && existing.profile_id !== profileId;
+      });
+      if (collision) throw constraintError('NOT NULL constraint failed: leads.profile_id');
+      return { meta: { changes: 0 }, success: true };
+    }
+
+    if (normalized === 'delete from published_snapshot_entries where profile_id = ? and artifact_kind = ?') {
+      const before = this.publishedSnapshotEntries.length;
+      this.publishedSnapshotEntries = this.publishedSnapshotEntries.filter(
+        (entry) => entry.profile_id !== args[0] || entry.artifact_kind !== args[1]
+      );
+      return { meta: { changes: before - this.publishedSnapshotEntries.length }, success: true };
+    }
+
+    if (normalized.startsWith('insert into published_snapshot_entries ')) {
+      if (args.length % 6 !== 0) throw new Error('Fake D1 snapshot entry bind count must be divisible by 6');
+      let changes = 0;
+      for (let offset = 0; offset < args.length; offset += 6) {
+        const entry = {
+          profile_id: args[offset],
+          artifact_kind: args[offset + 1],
+          snapshot_id: args[offset + 2],
+          ordinal: args[offset + 3],
+          lead_id: args[offset + 4],
+          payload_json: args[offset + 5],
+        };
+        if (UTF8_ENCODER.encode(entry.payload_json).byteLength > D1_MAX_STRING_OR_BLOB_BYTES) {
+          throw constraintError('D1 payload_json exceeds the maximum string/BLOB size');
+        }
+        if (publishedSnapshotEntryRowUtf8Bytes({
+          profileId: entry.profile_id,
+          artifactKind: entry.artifact_kind,
+          snapshotId: entry.snapshot_id,
+          leadId: entry.lead_id,
+          payloadJson: entry.payload_json,
+        }) > PUBLISHED_SNAPSHOT_ENTRY_ROW_MAX_UTF8_BYTES) {
+          throw constraintError('D1 published snapshot entry exceeds the persisted-row budget');
+        }
+        const duplicate = this.publishedSnapshotEntries.some((existing) => (
+          existing.profile_id === entry.profile_id
+          && existing.artifact_kind === entry.artifact_kind
+          && existing.snapshot_id === entry.snapshot_id
+          && (existing.ordinal === entry.ordinal || existing.lead_id === entry.lead_id)
+        ));
+        if (duplicate) throw uniqueConstraintError('UNIQUE constraint failed: published_snapshot_entries');
+        this.publishedSnapshotEntries.push(entry);
+        changes += 1;
+      }
+      return { meta: { changes }, success: true };
+    }
+
+    if (normalized.startsWith('insert into published_snapshot_heads ')) {
+      const head = {
+        profile_id: args[0],
+        artifact_kind: args[1],
+        snapshot_id: args[2],
+        fetched_at: args[3],
+      };
+      this.publishedSnapshotHeads.set(snapshotKey(head.profile_id, head.artifact_kind), head);
+      return { meta: { changes: 1 }, success: true };
     }
 
     if (normalized.startsWith('update leads set ') && normalized.endsWith(' where id = ?')) {
@@ -518,6 +783,212 @@ export class FakeD1Database {
     return grouped;
   }
 
+  latestEventForLead(events, leadId) {
+    return events
+      .filter((event) => event.lead_id === leadId)
+      .sort((a, b) => {
+        const changedOrder = String(b.changed_at || '').localeCompare(String(a.changed_at || ''));
+        if (changedOrder !== 0) return changedOrder;
+        return Number(b.id || 0) - Number(a.id || 0);
+      })[0] || null;
+  }
+
+  async publishedSnapshotJoinedRows(
+    profileId,
+    artifactKind,
+    maxEntries = Number.MAX_SAFE_INTEGER,
+    rowLimit = Number.MAX_SAFE_INTEGER
+  ) {
+    const head = clone(this.publishedSnapshotHeads.get(snapshotKey(profileId, artifactKind)) || null);
+    if (!head) return [];
+
+    const allEntries = this.publishedSnapshotEntries
+      .filter((entry) => (
+        entry.profile_id === profileId
+        && entry.artifact_kind === artifactKind
+        && entry.snapshot_id === head.snapshot_id
+      ))
+      .sort((a, b) => a.ordinal - b.ordinal)
+      .map(clone);
+    const payloadBytesByEntry = allEntries.map(
+      (entry) => UTF8_ENCODER.encode(String(entry.payload_json || '')).byteLength
+    );
+    const persistedRowBytesByEntry = allEntries.map((entry) => (
+      publishedSnapshotEntryRowUtf8Bytes({
+        profileId: entry.profile_id,
+        artifactKind: entry.artifact_kind,
+        snapshotId: entry.snapshot_id,
+        leadId: entry.lead_id,
+        payloadJson: entry.payload_json,
+      })
+    ));
+    const aggregatePayloadBytes = payloadBytesByEntry.reduce((total, bytes) => total + bytes, 0);
+    const maxPayloadBytes = Math.max(0, ...payloadBytesByEntry);
+    const maxPersistedRowBytes = Math.max(0, ...persistedRowBytesByEntry);
+    const entryCount = allEntries.length;
+    const entries = allEntries.slice(0, Number(rowLimit));
+    const leads = new Map([...this.leads.entries()].map(([id, row]) => [id, clone(row)]));
+    const reviewerFeedback = new Map(
+      [...this.reviewerFeedback.entries()].map(([id, row]) => [id, clone(row)])
+    );
+    const manualEvents = this.manualReviewNoteEvents.map(clone);
+    const feedbackEvents = this.reviewerFeedbackEvents.map(clone);
+
+    if (typeof this.onPublishedSnapshotRead === 'function') {
+      await this.onPublishedSnapshotRead(this);
+    }
+
+    const snapshotWithinSqlReadLimits = entryCount <= Number(maxEntries)
+      && maxPayloadBytes <= PUBLISHED_SNAPSHOT_ENTRY_MAX_UTF8_BYTES
+      && aggregatePayloadBytes <= PUBLISHED_SNAPSHOT_ARTIFACT_MAX_UTF8_BYTES
+      && maxPersistedRowBytes <= PUBLISHED_SNAPSHOT_ENTRY_ROW_MAX_UTF8_BYTES;
+    const overlayCandidates = entries.map((entry) => {
+      const candidateLead = leads.get(entry.lead_id);
+      const lead = candidateLead?.profile_id === profileId ? candidateLead : null;
+      const profileCollision = Boolean(candidateLead && candidateLead.profile_id !== profileId);
+      const feedback = lead ? reviewerFeedback.get(lead.id) : null;
+      const manualForLead = lead
+        ? manualEvents.filter((event) => event.lead_id === lead.id)
+        : [];
+      const feedbackForLead = lead
+        ? feedbackEvents.filter((event) => event.lead_id === lead.id)
+        : [];
+      const lastManual = lead ? this.latestEventForLead(manualEvents, lead.id) : null;
+      const lastFeedback = lead ? this.latestEventForLead(feedbackEvents, lead.id) : null;
+      const latest = artifactKind === 'latest';
+      const enriched = latest && toNumber(lead?.enriched) === 1;
+      const mutable = lead ? {
+        id: lead.id,
+        profile_id: lead.profile_id,
+        status: lead.status ?? null,
+        review_status: lead.review_status ?? null,
+        notes: lead.notes ?? null,
+        manual_review_notes_author_label: lead.manual_review_notes_author_label ?? null,
+        manual_review_notes_updated_at: lead.manual_review_notes_updated_at ?? null,
+        follow_up_date: lead.follow_up_date ?? null,
+        estimated_value: lead.estimated_value ?? null,
+        updated_at: latest ? (lead.updated_at ?? null) : null,
+        enriched: latest ? (lead.enriched ?? null) : null,
+        summary: enriched ? (lead.summary ?? null) : null,
+        roi: enriched ? (lead.roi ?? null) : null,
+        sales_pitch: enriched ? (lead.sales_pitch ?? null) : null,
+        global_context: enriched ? (lead.global_context ?? null) : null,
+        urgency_reason: enriched ? (lead.urgency_reason ?? null) : null,
+        evidence: enriched ? (lead.evidence ?? null) : null,
+        assumptions: enriched ? (lead.assumptions ?? null) : null,
+        article_body: enriched ? (lead.article_body ?? null) : null,
+        action_items: enriched ? (lead.action_items ?? null) : null,
+        key_figures: enriched ? (lead.key_figures ?? null) : null,
+        pain_points: enriched ? (lead.pain_points ?? null) : null,
+        meddic: enriched ? (lead.meddic ?? null) : null,
+        competitive: enriched ? (lead.competitive ?? null) : null,
+        buying_signals: enriched ? (lead.buying_signals ?? null) : null,
+        enriched_at: enriched ? (lead.enriched_at ?? null) : null,
+        snapshot_feedback_lead_id: feedback?.lead_id ?? null,
+        snapshot_feedback_action_usefulness: feedback?.action_usefulness ?? null,
+        snapshot_feedback_outcome_label: feedback?.outcome_label ?? null,
+        snapshot_feedback_data_gap_priority: feedback?.data_gap_priority ?? null,
+        snapshot_feedback_confidence_adjustment: feedback?.evidence_confidence_adjustment ?? null,
+        snapshot_feedback_text: feedback?.feedback_text ?? null,
+        snapshot_feedback_next_action: feedback?.next_reviewer_action ?? null,
+        snapshot_feedback_author_label: feedback?.author_label ?? null,
+        snapshot_feedback_updated_at: feedback?.updated_at ?? null,
+        snapshot_manual_event_count: manualForLead.length,
+        snapshot_manual_last_event_type: lastManual?.event_type ?? null,
+        snapshot_manual_last_event_at: lastManual?.changed_at ?? null,
+        snapshot_manual_last_author_label: lastManual?.author_label ?? null,
+        snapshot_feedback_event_count: feedbackForLead.length,
+        snapshot_feedback_last_event_type: lastFeedback?.event_type ?? null,
+        snapshot_feedback_last_event_at: lastFeedback?.changed_at ?? null,
+        snapshot_feedback_last_author_label: lastFeedback?.author_label ?? null,
+      } : null;
+      const mutableRawBytes = mutable && snapshotWithinSqlReadLimits
+        ? Object.values(mutable).reduce(
+          (total, value) => total + UTF8_ENCODER.encode(String(value ?? '')).byteLength,
+          0
+        )
+        : 0;
+      const mutableJson = mutable
+        && snapshotWithinSqlReadLimits
+        && mutableRawBytes <= PUBLISHED_SNAPSHOT_MUTABLE_RAW_MAX_UTF8_BYTES
+        ? JSON.stringify(mutable)
+        : null;
+      const mutableJsonBytes = UTF8_ENCODER.encode(String(mutableJson || '')).byteLength;
+      return {
+        entry,
+        profileCollision,
+        mutableRawBytes,
+        mutableJson,
+        mutableJsonBytes,
+      };
+    });
+    const profileCollisionCount = overlayCandidates.some(({ profileCollision }) => profileCollision)
+      ? 1
+      : 0;
+    const maxMutableRawBytes = Math.max(0, ...overlayCandidates.map(({ mutableRawBytes }) => mutableRawBytes));
+    const aggregateMutableRawBytes = overlayCandidates.reduce(
+      (total, { mutableRawBytes }) => total + mutableRawBytes,
+      0
+    );
+    if (profileCollisionCount > 0 || aggregateMutableRawBytes > PUBLISHED_SNAPSHOT_MUTABLE_RAW_AGGREGATE_MAX_UTF8_BYTES) {
+      for (const candidate of overlayCandidates) {
+        candidate.mutableJson = null;
+        candidate.mutableJsonBytes = 0;
+      }
+    }
+    const maxMutableJsonBytes = Math.max(0, ...overlayCandidates.map(({ mutableJsonBytes }) => mutableJsonBytes));
+    const aggregateMutableJsonBytes = overlayCandidates.reduce(
+      (total, { mutableJsonBytes }) => total + mutableJsonBytes,
+      0
+    );
+    const mutableWithinSqlReadLimits = maxMutableRawBytes <= PUBLISHED_SNAPSHOT_MUTABLE_RAW_MAX_UTF8_BYTES
+      && aggregateMutableRawBytes <= PUBLISHED_SNAPSHOT_MUTABLE_RAW_AGGREGATE_MAX_UTF8_BYTES
+      && maxMutableJsonBytes <= PUBLISHED_SNAPSHOT_MUTABLE_JSON_MAX_UTF8_BYTES
+      && aggregateMutableJsonBytes <= PUBLISHED_SNAPSHOT_MUTABLE_AGGREGATE_MAX_UTF8_BYTES;
+
+    const joinedRow = (candidate) => {
+      const entry = candidate?.entry || null;
+      const payloadBytes = entry
+        ? UTF8_ENCODER.encode(String(entry.payload_json || '')).byteLength
+        : null;
+      const persistedRowBytes = entry
+        ? publishedSnapshotEntryRowUtf8Bytes({
+          profileId: entry.profile_id,
+          artifactKind: entry.artifact_kind,
+          snapshotId: entry.snapshot_id,
+          leadId: entry.lead_id,
+          payloadJson: entry.payload_json,
+        })
+        : null;
+      const payloadVisible = entry && snapshotWithinSqlReadLimits && profileCollisionCount === 0;
+      const mutableVisible = payloadVisible && mutableWithinSqlReadLimits;
+      return {
+        snapshot_head_id: head.snapshot_id,
+        snapshot_fetched_at: head.fetched_at,
+        snapshot_entry_lead_id: entry?.lead_id ?? null,
+        snapshot_payload_json: payloadVisible ? entry.payload_json : null,
+        snapshot_payload_bytes: payloadBytes,
+        snapshot_max_payload_bytes: entry ? maxPayloadBytes : 0,
+        snapshot_persisted_row_bytes: persistedRowBytes,
+        snapshot_max_persisted_row_bytes: entry ? maxPersistedRowBytes : 0,
+        snapshot_aggregate_payload_bytes: entry ? aggregatePayloadBytes : 0,
+        snapshot_entry_count: entryCount,
+        snapshot_entry_ordinal: entry?.ordinal ?? null,
+        snapshot_profile_collision_count: profileCollisionCount,
+        snapshot_max_mutable_raw_bytes: maxMutableRawBytes,
+        snapshot_aggregate_mutable_raw_bytes: aggregateMutableRawBytes,
+        snapshot_max_mutable_json_bytes: maxMutableJsonBytes,
+        snapshot_aggregate_mutable_json_bytes: aggregateMutableJsonBytes,
+        snapshot_mutable_json: mutableVisible ? candidate.mutableJson : null,
+        snapshot_mutable_json_bytes: candidate?.mutableJsonBytes || 0,
+      };
+    };
+
+    return overlayCandidates.length > 0
+      ? overlayCandidates.map(joinedRow)
+      : [joinedRow(null)];
+  }
+
   async executeFirst(sql, args) {
     const normalized = normalizeSql(sql);
 
@@ -528,6 +999,16 @@ export class FakeD1Database {
       normalized.startsWith('alter table')
     ) {
       return null;
+    }
+
+    if (normalized === 'select version from d1_schema_migrations order by version desc limit 1') {
+      return this.schemaVersion === null || this.schemaVersion === undefined
+        ? null
+        : { version: this.schemaVersion };
+    }
+
+    if (normalized === 'select snapshot_id, fetched_at from published_snapshot_heads where profile_id = ? and artifact_kind = ?') {
+      return clone(this.publishedSnapshotHeads.get(snapshotKey(args[0], args[1])) || null);
     }
 
     if (normalized === 'select * from leads where id = ?') {
@@ -613,6 +1094,45 @@ export class FakeD1Database {
       normalized.startsWith('alter table')
     ) {
       return [];
+    }
+
+    if (normalized.startsWith('select version, name from d1_schema_migrations order by version asc limit ')) {
+      return this.migrationLedgerRows
+        .slice(0, D1_MIGRATION_MANIFEST.length + 1)
+        .map(clone);
+    }
+
+    if (
+      normalized.startsWith("select 'd1_schema_migrations' as table_name")
+      && normalized.includes('pragma_table_info')
+      && normalized.includes(' union all ')
+    ) {
+      return this.schemaIntrospectionRows.map(clone);
+    }
+
+    if (
+      normalized.startsWith('select type, name, tbl_name as table_name, sql from sqlite_schema')
+      && normalized.includes("type = 'index' and name in")
+    ) {
+      return this.schemaObjectRows.map(clone);
+    }
+
+    if (
+      normalized.startsWith('with selected_head as')
+      && normalized.includes('from selected_head h')
+    ) {
+      return this.publishedSnapshotJoinedRows(args[0], args[1], args[2], args[3]);
+    }
+
+    if (normalized === 'select lead_id, payload_json from published_snapshot_entries where profile_id = ? and artifact_kind = ? and snapshot_id = ? order by ordinal asc') {
+      return this.publishedSnapshotEntries
+        .filter((entry) => (
+          entry.profile_id === args[0]
+          && entry.artifact_kind === args[1]
+          && entry.snapshot_id === args[2]
+        ))
+        .sort((a, b) => a.ordinal - b.ordinal)
+        .map(({ lead_id, payload_json }) => ({ lead_id, payload_json }));
     }
 
     if (normalized === 'select * from leads where profile_id = ? order by created_at desc limit ? offset ?') {

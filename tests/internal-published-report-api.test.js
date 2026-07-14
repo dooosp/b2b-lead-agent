@@ -10,6 +10,7 @@ const {
 } = require('./helpers/root-fixtures');
 
 const workerModulePromise = import('../worker/index.js');
+const migrationManifestPromise = import('../worker/db/migration-manifest.js');
 
 class FakeStatement {
   constructor(db, sql, args = []) {
@@ -56,6 +57,64 @@ class FakeInternalReportDb {
 
   async execute(sql, args, mode) {
     const normalized = sql.replace(/\s+/g, ' ').trim();
+
+    if (/^SELECT version, name FROM d1_schema_migrations ORDER BY version ASC LIMIT \d+$/.test(normalized)) {
+      const { D1_MIGRATION_MANIFEST } = await migrationManifestPromise;
+      assert.equal(
+        normalized,
+        `SELECT version, name FROM d1_schema_migrations ORDER BY version ASC LIMIT ${D1_MIGRATION_MANIFEST.length + 1}`
+      );
+      const rows = D1_MIGRATION_MANIFEST.map(({ version, name }) => ({ version, name }));
+      return mode === 'all' ? rows : rows[0] || null;
+    }
+
+    if (normalized.startsWith("SELECT 'd1_schema_migrations' AS table_name") && normalized.includes('pragma_table_info')) {
+      const {
+        CANONICAL_D1_CRITICAL_COLUMN_SPECS,
+        CANONICAL_D1_TABLE_COLUMN_NAMES,
+      } = await migrationManifestPromise;
+      const rows = Object.entries(CANONICAL_D1_TABLE_COLUMN_NAMES).flatMap(([tableName, columnNames]) => (
+        columnNames.map((name, cid) => {
+          const spec = CANONICAL_D1_CRITICAL_COLUMN_SPECS[tableName]?.[name] || {};
+          return {
+            table_name: tableName,
+            cid,
+            name,
+            type: spec.type || 'TEXT',
+            not_null: spec.notNull || 0,
+            dflt_value: spec.defaultValue ?? null,
+            pk: spec.pk || 0,
+          };
+        })
+      ));
+      return mode === 'all' ? rows : rows[0] || null;
+    }
+
+    if (normalized.startsWith('SELECT type, name, tbl_name AS table_name, sql FROM sqlite_schema')) {
+      const {
+        CREATE_MIGRATION_LEDGER_SQL,
+        V1_CREATE_TABLE_STATEMENTS,
+        V1_INDEX_STATEMENTS,
+        V2_CREATE_TABLE_STATEMENTS,
+        V2_INDEX_STATEMENTS,
+      } = await migrationManifestPromise;
+      const tableStatements = [
+        CREATE_MIGRATION_LEDGER_SQL,
+        ...V1_CREATE_TABLE_STATEMENTS,
+        ...V2_CREATE_TABLE_STATEMENTS,
+      ];
+      const rows = [
+        ...tableStatements.map((statement) => {
+          const [, name] = /CREATE TABLE IF NOT EXISTS ([A-Za-z_][A-Za-z0-9_]*)/i.exec(statement);
+          return { type: 'table', name, table_name: name, sql: statement };
+        }),
+        ...[...V1_INDEX_STATEMENTS, ...V2_INDEX_STATEMENTS].map((statement) => {
+          const [, name, tableName] = /CREATE (?:UNIQUE )?INDEX IF NOT EXISTS ([A-Za-z_][A-Za-z0-9_]*) ON ([A-Za-z_][A-Za-z0-9_]*)/i.exec(statement);
+          return { type: 'index', name, table_name: tableName, sql: statement };
+        }),
+      ];
+      return mode === 'all' ? rows : rows[0] || null;
+    }
 
     if (
       normalized.startsWith('CREATE TABLE') ||
@@ -188,6 +247,102 @@ test('GET /api/internal/profiles/:profileId/latest-published uses the GitHub pub
     assert.equal(response.status, 200);
     assert.equal(fetchCalls.length, 1);
     assert.deepEqual(payload, contractFixture);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('internal published-report rejects compact JSON amplification before JSON.parse', async () => {
+  const { default: worker } = await workerModulePromise;
+  const rawArtifactText = `[${Array.from({ length: 91 }, () => '{}').join(',')}]`;
+  const originalFetch = globalThis.fetch;
+  const originalJsonParse = JSON.parse;
+  let rawArtifactParseCalls = 0;
+  let response;
+  globalThis.fetch = async () => new Response(rawArtifactText, {
+    status: 200,
+    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+  });
+  JSON.parse = function countedJsonParse(value, ...args) {
+    if (value === rawArtifactText) rawArtifactParseCalls += 1;
+    return originalJsonParse(value, ...args);
+  };
+
+  try {
+    response = await worker.fetch(
+      createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
+        headers: { Authorization: 'Bearer api-secret' }
+      }),
+      createWorkerApiEnv(),
+      {}
+    );
+  } finally {
+    JSON.parse = originalJsonParse;
+    globalThis.fetch = originalFetch;
+  }
+
+  const payload = await response.json();
+  assert.equal(response.status, 503);
+  assert.equal(payload.error.code, 'readiness_unavailable');
+  assert.equal(rawArtifactParseCalls, 0);
+});
+
+test('internal published-report fails closed for duplicate, colliding, or unsafe lead ids', async () => {
+  const { default: worker } = await workerModulePromise;
+  const fixtureLead = contractFixture.leads[0];
+  const scenarios = [
+    [fixtureLead, { ...fixtureLead }],
+    [
+      { ...fixtureLead, id: ` ${fixtureLead.id} ` },
+      { ...fixtureLead, id: fixtureLead.id },
+    ],
+    [{ ...fixtureLead, id: '..' }],
+  ];
+
+  for (const leads of scenarios) {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => jsonFixtureResponse(leads);
+    try {
+      const response = await worker.fetch(
+        createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
+          headers: { Authorization: 'Bearer api-secret' }
+        }),
+        createWorkerApiEnv(),
+        {}
+      );
+      const payload = await response.json();
+      assert.equal(response.status, 503);
+      assert.equal(payload.syncReady, false);
+      assert.equal(payload.error.code, 'readiness_unavailable');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  }
+});
+
+test('internal published-report returns the same normalized lead id projection as managed snapshots', async () => {
+  const { default: worker } = await workerModulePromise;
+  const fixtureLead = contractFixture.leads[0];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => jsonFixtureResponse([{
+    ...fixtureLead,
+    id: 'unsafe\ninternal',
+  }]);
+
+  try {
+    const response = await worker.fetch(
+      createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
+        headers: { Authorization: 'Bearer api-secret' }
+      }),
+      createWorkerApiEnv(),
+      {}
+    );
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.syncReady, true);
+    assert.equal(payload.leads[0].id, 'unsafe internal');
+    assert.equal(payload.leads[0].id.includes('\n'), false);
   } finally {
     globalThis.fetch = originalFetch;
   }

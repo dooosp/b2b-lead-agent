@@ -13,6 +13,9 @@ import {
 export { LOCAL_E2E_TOKEN };
 
 export function createLocalSmokeEnv(overrides = {}) {
+  const leads = createLocalE2ELeadRows();
+  const danfossLeads = leads.filter((lead) => lead.profile_id === 'danfoss');
+  const lsElectricLeads = leads.filter((lead) => lead.profile_id === 'ls-electric');
   return {
     API_TOKEN: LOCAL_E2E_TOKEN,
     TRIGGER_PASSWORD: 'local-e2e-legacy-token',
@@ -25,7 +28,13 @@ export function createLocalSmokeEnv(overrides = {}) {
     REQUIRE_SELF_SERVICE_AUTH: 'true',
     WORKER_ORIGIN: 'http://127.0.0.1',
     DB: new FakeD1Database({
-      leads: createLocalE2ELeadRows(),
+      leads,
+      publishedSnapshots: [
+        { profileId: 'danfoss', artifactKind: 'latest', leads: danfossLeads },
+        { profileId: 'danfoss', artifactKind: 'history', leads: danfossLeads },
+        { profileId: 'ls-electric', artifactKind: 'latest', leads: lsElectricLeads },
+        { profileId: 'ls-electric', artifactKind: 'history', leads: lsElectricLeads },
+      ],
       manualReviewNoteEvents: createLocalE2EManualReviewNoteEventRows(),
       statusLog: createLocalE2EStatusLogRows(),
       analytics: createLocalE2EAnalyticsRows(),

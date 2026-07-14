@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { handleUpdateLead } from '../api/leads.js';
 import { getLeadDetailPage } from '../pages/lead-detail.js';
 import { getLeadsPage } from '../pages/leads.js';
+import { FakeD1Database } from './helpers/fake-d1.mjs';
 
 class FakeStatement {
   constructor(db, sql, params = []) {
@@ -23,6 +24,10 @@ class FakeStatement {
   async first() {
     return this.db.execute(this.sql, this.params, 'first');
   }
+
+  async all() {
+    return { results: await this.db.execute(this.sql, this.params, 'all') };
+  }
 }
 
 class FakeReviewDb {
@@ -32,6 +37,7 @@ class FakeReviewDb {
     this.manualReviewNoteEvents = [];
     this.reviewerFeedback = new Map();
     this.reviewerFeedbackEvents = [];
+    this.readinessDb = new FakeD1Database();
   }
 
   prepare(sql) {
@@ -60,6 +66,13 @@ class FakeReviewDb {
 
   async execute(sql, params, mode) {
     const normalized = sql.replace(/\s+/g, ' ').trim();
+    if (
+      normalized.startsWith('SELECT version, name FROM d1_schema_migrations ORDER BY version ASC LIMIT ')
+      || (normalized.startsWith("SELECT 'd1_schema_migrations' AS table_name") && normalized.includes('pragma_table_info'))
+      || normalized.startsWith('SELECT type, name, tbl_name AS table_name, sql FROM sqlite_schema')
+    ) {
+      return this.readinessDb.executeAll(sql, params);
+    }
     if (
       normalized.startsWith('CREATE TABLE')
       || normalized.startsWith('CREATE INDEX')

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { fetchLeads, handleExportCSV, handleUpdateLead } from '../api/leads.js';
 import { getLeadById } from '../db/leads.js';
-import { FakeD1Database } from './helpers/fake-d1.mjs';
+import { FakeD1Database, seedPublishedSnapshotFixtures } from './helpers/fake-d1.mjs';
 import { createLeadRow } from './helpers/fixtures.mjs';
 import { createWorkerRequest } from './helpers/http.mjs';
 
@@ -253,6 +253,7 @@ test('C2 local/test reviewer role can read and write feedback while manager cann
   assert.equal(managerWritePayload.success, false);
   assert.match(managerWritePayload.message, /local\/test role stub/);
   assert.equal(db.reviewerFeedback.get('lead-1').feedback_text, feedbackText);
+  seedPublishedSnapshotFixtures(db, [...db.leads.values()]);
 
   const managerListResponse = await fetchLeads(
     { DB: db, GITHUB_REPO: 'dooosp/b2b-lead-agent', ...LOCAL_TEST_ROLE_STUB_ENV },

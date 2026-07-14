@@ -21,8 +21,8 @@
 | `POST` | `/trigger` | `worker/api/trigger.js` | Trigger auth plus rate limit | D1 `job_runs` active/idempotency state | Inserts or reuses accepted job run; dispatches GitHub `repository_dispatch`; returns `202` intake response |
 | `GET` | `/api/jobs/:requestId` | `worker/api/jobs.js` | General API auth | D1 `job_runs` | None |
 | `POST` | `/api/jobs/:requestId/events` | `worker/api/jobs.js` | Callback token | D1 `job_runs` | Updates job state and target-specific metadata |
-| `GET` | `/api/leads` | `worker/api/leads.js` | General API auth | D1 first; GitHub raw report fallback for managed profiles | May cache managed GitHub latest leads into D1 when `DB` exists and rows are missing; returns local/test reviewer queue/session plus `reviewerWorkflowSummary` and `dataGapPrioritization` metadata |
-| `GET` | `/api/history` | `worker/api/leads.js` | General API auth | D1 first; GitHub raw history fallback for managed profiles | May cache managed GitHub history into D1 when `DB` exists and rows are missing |
+| `GET` | `/api/leads` | `worker/api/leads.js` | General API auth | One joined typed D1 `latest` snapshot read; GitHub raw latest artifact on missing/expired cache | Atomically refreshes only the `latest` head/entries and returns `snapshotId`, `snapshotFetchedAt`, `snapshotStale`, plus reviewer queue/session metadata |
+| `GET` | `/api/history` | `worker/api/leads.js` | General API auth | One joined typed D1 `history` snapshot read; GitHub raw history artifact on missing/expired cache | Atomically refreshes only the `history` head/entries without upserting working leads; never infers history from working rows or latest membership |
 | `PATCH` | `/api/leads/:id` | `worker/api/leads.js` | General API auth | D1 lead row | Atomically updates pipeline status, review status, manual notes, local/test reviewer feedback, follow-up date, estimated value, and status log/metadata events as applicable |
 | `POST` | `/api/leads/:id/enrich` | `worker/api/enrichment.js` | General API auth | D1 lead row, article body, LLM provider | Updates enrichment fields on the D1 lead row |
 | `POST` | `/api/leads/batch-enrich` | `worker/api/enrichment.js` | General API auth | D1 lead rows | Updates enrichment fields for selected leads |
@@ -62,7 +62,30 @@
 - `/api/references` performs its own `verifyAuth()` checks in each route handler.
 - Unknown `/api/*` paths return JSON `404`; unsupported methods on known static/API routes return JSON `405` with `Allow` when route metadata knows the allowed methods.
 - HTML page shells are mostly public at the router level. Sensitive data requests are expected to go through protected APIs, except `/leads/:id`, which authenticates before server-side D1 reads.
-- `GET /api/leads` and `GET /api/history` can have a D1 write side effect for managed profiles because they cache GitHub report artifacts when D1 is empty.
+- `GET /api/leads` and `GET /api/history` can have a D1 write side effect for
+  managed profiles when a typed cache is missing or expired. Refresh failure
+  can fall back only for network, malformed-artifact, or upstream 5xx failures,
+  only to the same artifact kind, and only within the 24-hour maximum stale
+  window. A malformed artifact includes one whose projected entry or aggregate
+  UTF-8 payload exceeds the bounded D1-safe limits; it is rejected before any
+  write. A 404 never falls back. Both APIs expose snapshot id, fetch time, and
+  stale state. Snapshot reads join the head, entries, mutable lead state, and
+  review summaries in one consistent D1 statement. Remote bodies use one
+  bounded growable buffer and are capped at 10,000,000 bytes before strict
+  UTF-8 decode. Before `JSON.parse`, an escape-aware scan requires one array,
+  applies the 90/500 entry bound, and limits structure to 100,000 punctuation
+  tokens and 32 nesting levels. Managed profile ids must be exact, non-dot
+  ASCII-safe segments before URL encoding. The internal latest-published route
+  shares this reader with the 90-entry bound and proves the same projected
+  payload-byte and unique route-safe lead-id invariants before `syncReady`.
+  Persisted reads use
+  limit-plus-one artifact-wide count/full-row/byte suppression, exact bounded
+  mutable JSON instead of `l.*`, and verify ordinal, normalized route-safe id,
+  ownership/collision, UTF-8 byte, and SHA-256 head integrity. History excludes
+  current enrichment from that mutable JSON. A corrupt cache is not eligible
+  for stale fallback; it gets one bounded upstream repair attempt, and a failed
+  repair including 404 is an error. Refresh batches fail atomically on a
+  cross-profile lead-id collision.
 
 ## External Network Boundaries
 

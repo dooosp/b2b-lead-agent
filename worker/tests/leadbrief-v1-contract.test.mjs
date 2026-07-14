@@ -9,12 +9,10 @@ import { createLeadRow, createWorkerEnv } from './helpers/fixtures.mjs';
 import { createWorkerRequest } from './helpers/http.mjs';
 
 function createGithubResponse(body) {
-  return {
-    ok: true,
-    async json() {
-      return body;
-    }
-  };
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+  });
 }
 
 function createStoredRow(overrides = {}) {
@@ -137,7 +135,13 @@ test('D1 row roundtrip preserves reviewStatus separately from sales pipeline sta
 });
 
 test('/api/leads exposes LeadBrief v1 canonical fields from D1 rows', async () => {
-  const env = createWorkerEnv({ DB: new FakeD1Database({ leads: [createStoredRow()] }) });
+  const row = createStoredRow();
+  const env = createWorkerEnv({
+    DB: new FakeD1Database({
+      leads: [row],
+      publishedSnapshots: [{ profileId: 'danfoss', artifactKind: 'latest', leads: [row] }],
+    }),
+  });
 
   const response = await fetchLeads(env, 'danfoss');
   const payload = await response.json();

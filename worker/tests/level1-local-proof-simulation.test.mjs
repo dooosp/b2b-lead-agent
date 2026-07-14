@@ -22,7 +22,7 @@ function createProofEnv(sessionOptions = { role: 'reviewer' }) {
     ? { role: sessionOptions }
     : sessionOptions;
   const env = createWorkerEnv();
-  env.DB.leads.set('lead-1', createLeadRow({
+  const lead = createLeadRow({
     notes: SYNTHETIC_MANUAL_NOTE,
     manual_review_notes_author_label: 'manual_reviewer',
     manual_review_notes_updated_at: '2026-05-31T00:00:00.000Z',
@@ -44,7 +44,10 @@ function createProofEnv(sessionOptions = { role: 'reviewer' }) {
         url: 'https://example.test/synthetic-source',
       },
     ]),
-  }));
+  });
+  env.DB.leads.set('lead-1', lead);
+  env.DB.seedPublishedSnapshot({ profileId: 'danfoss', artifactKind: 'latest', leads: [lead] });
+  env.DB.seedPublishedSnapshot({ profileId: 'danfoss', artifactKind: 'history', leads: [lead] });
   return {
     ...env,
     [AUTH_PROVIDER_SESSION_SCAFFOLD_NON_PRODUCTION_ENV]: 'enabled',
