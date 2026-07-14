@@ -174,6 +174,38 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   access, customer-data access/mutation, real auth/session, retention/privacy
   enforcement, generated suggestion persistence/export/history/attribution,
   CRM/outreach/LLM/automation, or production-readiness claims.
+- Post-PR197 trust, publication, and D1 contract addendum: `master` includes
+  PR #194's post-PR193 source-of-truth sync at
+  `8065581cb3756b90783b64115d4b09945d2f9c23`, PR #195's test-only P0
+  characterization baseline at `5a4f0eec95f8d4e87ee663987d264caea96666b4`,
+  PR #196's LeadCandidate-to-LeadBrief publication hardening at
+  `09aa3d7b991d4eb20bce822ce69e74044d66dfab`, and PR #197's D1
+  snapshot/migration contract hardening at
+  `1b53aabf917e790d6c05db311c0810b4b3807d95`. PR #196 projects untrusted
+  model output through the public LeadBrief allowlist, binds verification to
+  canonical fresh evidence, rejects invalid scores and non-HTTP(S) sources,
+  assigns identity/status/timestamps from system context, and fails closed on
+  malformed lead history. PR #197 replaces request-path DDL with an exact
+  versioned migration manifest, read-only runtime readiness checks, and an
+  explicitly local/test-only migration simulator. Each typed profile/kind
+  snapshot head and its entries are atomically replaced; reviewer-owned mutable
+  fields remain outside snapshot payloads and are joined through a bounded
+  allowlisted overlay. The shared published-artifact JSON reader is byte,
+  cardinality, depth, and structure bounded, but still has no application-level
+  read deadline. The simulator requires the explicit local/test marker and
+  refuses unmarked/ordinary bindings; policy forbids using it with remote D1.
+  These changes are local/test and
+  repository evidence only: `productionReady:false`; staging and production
+  remain `HOLD`; no deploy, remote D1 action, staging/production endpoint call,
+  production logs/secrets, customer/private data access, CRM/outreach, LLM, or
+  automation was performed.
+  PR #196 remediated the scoped publishing characterization and PR #197
+  remediated the scoped legacy D1 migration/current-history snapshot
+  characterizations. PR #195's Worker outbound network/SSRF, protected
+  reviewer PWA cache, and concurrent PATCH/callback characterization TODOs
+  remain as 18 desired-contract TODOs at the PR #197 baseline and open local
+  hardening lanes; passing characterization tests is not a remediation or
+  production-readiness claim.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -319,9 +351,18 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - Reviewer Workflow Boundary Audit v1 is local/test-safe only. `npm run check:reviewer-workflow-boundary` emits `tmp/codex/reviewer-workflow-boundary-audit-non-production.json` and checks reviewer feedback freeform redaction plus CSV, publication, denied-role summary, and prioritization boundaries. It is `NOT_PRODUCTION_EVIDENCE`, keeps `productionReady:false`, and does not approve production/staging proof, production D1, real auth/session, retention/privacy enforcement, or generated suggestion persistence/export/history/attribution.
 - Managed/self-service upserts preserve existing `review_status` on conflict so refreshes do not erase human review decisions.
 - CSV, browser UI, self-service copy, and downloads must preserve review/trust metadata.
-- D1 trust and review columns are lazy-migration-compatible but not production-observed until the first post-deploy production write is confirmed.
+- All Worker request paths must remain DDL-free. On D1-backed access paths,
+  `ensureD1Schema()` performs a read-only exact-version cold-binding readiness
+  check; schema drift or missing migrations fail closed, and only success is
+  cached per binding. Only the explicitly marked local/test simulator may apply
+  the checked-in manifest. It requires the explicit local/test marker and
+  refuses unmarked/ordinary bindings; policy forbids using it with remote D1.
+  Any staging or
+  production schema change requires a separately approved, versioned Wrangler
+  migration-files/command workflow, target inventory, rollback owner, and stop
+  conditions. No production migration or schema observation is claimed.
 - Production deploy and production DB writes were not performed during PR #25,
-  PR #26, PR #27, or the shipped PR #36-#193
+  PR #26, PR #27, or the shipped PR #36-#197
   local/test/docs/reviewer-UX/product-planning/proof-gate train.
 
 ## Canonical Repo Rules
@@ -349,6 +390,9 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 ## Validation
 
 - `npm run check:naming` for naming and repo contract checks
+- `npm run check:schema` for canonical D1 schema/DDL plus immutable migration,
+  statement, and manifest-binding fingerprints;
+  it does not inspect or migrate remote D1
 - `npm run test:root` for root pipeline coverage only
 - `npm run test:unit` for worker unit coverage only
 - `npm run test:contract` for worker trigger and contract coverage only
