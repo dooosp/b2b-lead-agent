@@ -14,7 +14,14 @@ import { getLeadsPage } from '../pages/leads.js';
 import { getPPTPage } from '../pages/ppt.js';
 import { getProposalPage } from '../pages/proposal.js';
 import { getRoleplayPage } from '../pages/roleplay.js';
-import { htmlResponse, isAllowedMethod, methodNotAllowedResponse, textResponse } from './responses.js';
+import {
+  htmlResponse,
+  isAllowedMethod,
+  methodNotAllowedResponse,
+  protectedReviewerHtmlResponse,
+  textResponse,
+  withProtectedReviewerCachePolicy
+} from './responses.js';
 
 function decodeParam(value) {
   return decodeURIComponent(value);
@@ -41,17 +48,21 @@ export const pageRoutes = Object.freeze([
       const authErr = await verifyAuth(request, env);
       if (authErr) {
         const code = authErr.status || 401;
-        return htmlResponse(getAuthRequiredPage(code), code);
+        return protectedReviewerHtmlResponse(getAuthRequiredPage(code), code);
       }
       if (!env.DB) {
-        return textResponse('시스템 설정이 필요합니다. 관리자에게 문의하세요.', 503);
+        return withProtectedReviewerCachePolicy(
+          textResponse('시스템 설정이 필요합니다. 관리자에게 문의하세요.', 503)
+        );
       }
       const lead = await getLeadById(env.DB, params.leadId);
-      if (!lead) return textResponse('리드를 찾을 수 없습니다.', 404);
+      if (!lead) {
+        return withProtectedReviewerCachePolicy(textResponse('리드를 찾을 수 없습니다.', 404));
+      }
       const manualReviewNotesAccess = await resolveManualReviewNotesAccess(request, env);
       const filteredLead = filterManualReviewNotesProtectedFields(lead, manualReviewNotesAccess);
       const statusLogs = await getStatusLogByLead(env.DB, params.leadId);
-      return htmlResponse(getLeadDetailPage(filteredLead, statusLogs, {
+      return protectedReviewerHtmlResponse(getLeadDetailPage(filteredLead, statusLogs, {
         includeGeneratedReviewGuidance: !manualReviewNotesAccess.enabled || manualReviewNotesAccess.manualNotesRead === true,
       }));
     }
@@ -62,7 +73,7 @@ export const pageRoutes = Object.freeze([
     match: exact('/leads'),
     handle: async ({ request, env }) => {
       const manualReviewNotesAccess = await resolveManualReviewNotesAccess(request, env);
-      return htmlResponse(getLeadsPage({
+      return protectedReviewerHtmlResponse(getLeadsPage({
         includeGeneratedReviewGuidance: !manualReviewNotesAccess.enabled || manualReviewNotesAccess.manualNotesRead === true,
       }));
     }

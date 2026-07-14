@@ -12,16 +12,9 @@ const SYNTHETIC_API_TOKEN = 'synthetic-reviewer-cache-token';
 const REVIEWER_ROLE_HEADER = 'X-Manual-Review-Notes-Local-Test-Role';
 const PROTECTED_PATH = '/leads/lead-cache-characterization';
 const PROTECTED_URL = `https://b2b-lead-trigger.example.workers.dev${PROTECTED_PATH}`;
-const CURRENT_CACHE_NAME = 'b2b-leads-v1';
+const CURRENT_CACHE_NAME = 'b2b-leads-static-v2';
+const LEGACY_CACHE_NAME = 'b2b-leads-v1';
 const PROTECTED_NOTE = 'Synthetic reviewer-only cache characterization note.';
-
-function createDeferred() {
-  let resolve;
-  const promise = new Promise((nextResolve) => {
-    resolve = nextResolve;
-  });
-  return { promise, resolve };
-}
 
 function cacheKey(request) {
   const normalized = request instanceof Request ? request : new Request(request);
@@ -42,8 +35,8 @@ function createServiceWorkerHarness({ initialCaches = {} } = {}) {
   const listeners = new Map();
   const stores = new Map();
   const deletedCaches = [];
+  const fetchCalls = [];
   const putCalls = [];
-  const putObserved = createDeferred();
   let fetchImplementation = async () => {
     throw new Error('No synthetic fetch implementation configured.');
   };
@@ -79,7 +72,6 @@ function createServiceWorkerHarness({ initialCaches = {} } = {}) {
           response: response.clone(),
         });
         putCalls.push({ cacheName, request: normalizedRequest, response });
-        putObserved.resolve();
       },
       async match(request) {
         const normalizedRequest = request instanceof Request ? request : new Request(request);
@@ -111,6 +103,7 @@ function createServiceWorkerHarness({ initialCaches = {} } = {}) {
   };
 
   const self = {
+    location: new URL(PROTECTED_URL),
     addEventListener(type, listener) {
       listeners.set(type, listener);
     },
@@ -121,7 +114,10 @@ function createServiceWorkerHarness({ initialCaches = {} } = {}) {
   vm.runInNewContext(getServiceWorkerJS(), {
     self,
     caches,
-    fetch: (...args) => fetchImplementation(...args),
+    fetch: (...args) => {
+      fetchCalls.push(args);
+      return fetchImplementation(...args);
+    },
     URL,
     Request,
     Response,
@@ -130,8 +126,8 @@ function createServiceWorkerHarness({ initialCaches = {} } = {}) {
 
   return {
     deletedCaches,
+    fetchCalls,
     putCalls,
-    putObserved: putObserved.promise,
     cacheNames: () => [...stores.keys()],
     setFetch(implementation) {
       fetchImplementation = implementation;
@@ -164,7 +160,11 @@ function createServiceWorkerHarness({ initialCaches = {} } = {}) {
   };
 }
 
-async function requestProtectedReviewerPage() {
+async function requestProtectedReviewerPage({
+  path = PROTECTED_PATH,
+  authenticated = true,
+  role = 'reviewer',
+} = {}) {
   const db = new FakeD1Database({
     leads: [createLeadRow({
       id: 'lead-cache-characterization',
@@ -178,34 +178,52 @@ async function requestProtectedReviewerPage() {
     DB: db,
     MANUAL_REVIEW_NOTES_LOCAL_TEST_ROLE_STUB: 'enabled',
   });
-  return worker.fetch(createWorkerRequest(PROTECTED_PATH, {
-    headers: {
-      Authorization: `Bearer ${SYNTHETIC_API_TOKEN}`,
-      [REVIEWER_ROLE_HEADER]: 'reviewer',
-    },
+  const headers = {
+    ...(authenticated ? { Authorization: `Bearer ${SYNTHETIC_API_TOKEN}` } : {}),
+    ...(role ? { [REVIEWER_ROLE_HEADER]: role } : {}),
+  };
+  return worker.fetch(createWorkerRequest(path, {
+    headers,
   }), env, {});
 }
 
-test('characterization: protected reviewer HTML lacks private no-store and auth-role Vary headers', async () => {
-  const response = await requestProtectedReviewerPage();
-  const html = await response.text();
+test('desired contract: protected reviewer HTML sends Cache-Control private, no-store', async () => {
+  const detailResponse = await requestProtectedReviewerPage();
+  const listResponse = await requestProtectedReviewerPage({ path: '/leads' });
+  const html = await detailResponse.text();
 
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get('Content-Type') || '', /text\/html/);
+  assert.equal(detailResponse.status, 200);
+  assert.match(detailResponse.headers.get('Content-Type') || '', /text\/html/);
   assert.match(html, new RegExp(PROTECTED_NOTE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-
-  // These assertions record the current audited behavior. They are not the desired
-  // security contract and are expected to change in the remediation PR.
-  assert.equal(response.headers.get('Cache-Control'), null);
-  assert.equal(response.headers.get('Vary'), null);
+  assert.equal(detailResponse.headers.get('Cache-Control'), 'private, no-store');
+  assert.equal(listResponse.headers.get('Cache-Control'), 'private, no-store');
 });
 
-test('characterization: generated Service Worker caches protected HTML and replays it after reviewer access is removed', async () => {
+test('desired contract: protected reviewer HTML varies on every authentication and role boundary', async () => {
+  const responses = await Promise.all([
+    requestProtectedReviewerPage(),
+    requestProtectedReviewerPage({ role: 'manager' }),
+    requestProtectedReviewerPage({ authenticated: false, role: '' }),
+    requestProtectedReviewerPage({ path: '/leads' }),
+  ]);
+
+  for (const response of responses) {
+    const varyHeaders = new Set((response.headers.get('Vary') || '')
+      .split(',')
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean));
+
+    assert.deepEqual(
+      [...varyHeaders].sort(),
+      ['authorization', REVIEWER_ROLE_HEADER.toLowerCase()].sort()
+    );
+  }
+});
+
+test('desired contract: Service Worker never stores protected HTML responses', async () => {
   const protectedResponse = await requestProtectedReviewerPage();
   const harness = createServiceWorkerHarness();
-  let offline = false;
   harness.setFetch(async () => {
-    if (offline) throw new Error('synthetic offline transition');
     return protectedResponse.clone();
   });
 
@@ -216,27 +234,37 @@ test('characterization: generated Service Worker caches protected HTML and repla
     },
   });
   const onlineResponse = await harness.dispatchFetch(reviewerRequest);
-  // The generated worker starts Cache.put in a detached promise chain. The mock
-  // resolves this explicit barrier from Cache.put itself; no sleep is involved.
-  await harness.putObserved;
   assert.equal(onlineResponse.status, 200);
-  assert.equal(harness.putCalls.length, 1);
-  assert.equal(harness.putCalls[0].cacheName, CURRENT_CACHE_NAME);
-  assert.equal(harness.putCalls[0].request.url, PROTECTED_URL);
-
-  offline = true;
-  const downgradedRequest = new Request(PROTECTED_URL, {
-    headers: { [REVIEWER_ROLE_HEADER]: 'manager' },
-  });
-  const offlineResponse = await harness.dispatchFetch(downgradedRequest);
-  const offlineHtml = await offlineResponse.text();
-
-  // This assertion records the current audited behavior. It is not the desired
-  // security contract and is expected to change in the remediation PR.
-  assert.match(offlineHtml, new RegExp(PROTECTED_NOTE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.equal(harness.fetchCalls[0][1].cache, 'no-store');
+  assert.equal(harness.putCalls.length, 0);
+  assert.deepEqual(harness.cacheNames(), []);
 });
 
-test('characterization: activation keeps an already-deployed v1 cache that can replay protected reviewer HTML', async () => {
+test('desired contract: cache policy changes delete or version-invalidate deployed legacy caches', async () => {
+  const protectedResponse = await requestProtectedReviewerPage();
+  const reviewerRequest = new Request(PROTECTED_URL, {
+    headers: {
+      Authorization: `Bearer ${SYNTHETIC_API_TOKEN}`,
+      [REVIEWER_ROLE_HEADER]: 'reviewer',
+    },
+  });
+  const manifestRequest = new Request('https://b2b-lead-trigger.example.workers.dev/manifest.json');
+  const harness = createServiceWorkerHarness({
+    initialCaches: {
+      [CURRENT_CACHE_NAME]: [[manifestRequest, new Response('{}')]],
+      [LEGACY_CACHE_NAME]: [[reviewerRequest, protectedResponse]],
+      'b2b-leads-v0': [[new Request('https://b2b-lead-trigger.example.workers.dev/'), new Response('legacy shell')]],
+      'unrelated-cache': [[new Request('https://b2b-lead-trigger.example.workers.dev/unrelated'), new Response('unrelated')]],
+    },
+  });
+
+  await harness.dispatchActivate();
+
+  assert.deepEqual(harness.deletedCaches.sort(), ['b2b-leads-v0', LEGACY_CACHE_NAME].sort());
+  assert.deepEqual(harness.cacheNames().sort(), [CURRENT_CACHE_NAME, 'unrelated-cache'].sort());
+});
+
+test('desired contract: anonymous or downgraded-role requests never receive cached reviewer content', async () => {
   const protectedResponse = await requestProtectedReviewerPage();
   const reviewerRequest = new Request(PROTECTED_URL, {
     headers: {
@@ -247,30 +275,19 @@ test('characterization: activation keeps an already-deployed v1 cache that can r
   const harness = createServiceWorkerHarness({
     initialCaches: {
       [CURRENT_CACHE_NAME]: [[reviewerRequest, protectedResponse]],
-      'b2b-leads-v0': [[new Request('https://b2b-lead-trigger.example.workers.dev/'), new Response('legacy shell')]],
     },
   });
   harness.setFetch(async () => {
     throw new Error('synthetic offline transition');
   });
 
-  await harness.dispatchActivate();
-  assert.deepEqual(harness.deletedCaches, ['b2b-leads-v0']);
-  assert.deepEqual(harness.cacheNames(), [CURRENT_CACHE_NAME]);
-
   const downgradedRequest = new Request(PROTECTED_URL, {
     headers: { [REVIEWER_ROLE_HEADER]: 'manager' },
   });
-  const offlineResponse = await harness.dispatchFetch(downgradedRequest);
-  const offlineHtml = await offlineResponse.text();
+  const anonymousRequest = new Request(PROTECTED_URL);
 
-  // This assertion records the current audited behavior. It is not the desired
-  // security contract and is expected to change in the remediation PR.
-  assert.match(offlineHtml, new RegExp(PROTECTED_NOTE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  await assert.rejects(() => harness.dispatchFetch(downgradedRequest), /synthetic offline transition/);
+  await assert.rejects(() => harness.dispatchFetch(anonymousRequest), /synthetic offline transition/);
+  assert.deepEqual(harness.fetchCalls.map(([, init]) => init.cache), ['no-store', 'no-store']);
+  assert.equal(harness.putCalls.length, 0);
 });
-
-test.todo('desired contract: protected reviewer HTML sends Cache-Control private, no-store');
-test.todo('desired contract: protected reviewer HTML varies on every authentication and role boundary');
-test.todo('desired contract: Service Worker never stores protected HTML responses');
-test.todo('desired contract: cache policy changes delete or version-invalidate deployed legacy caches');
-test.todo('desired contract: anonymous or downgraded-role requests never receive cached reviewer content');
