@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
-> Status: current hardening source of truth for `master` as of 2026-07-06.
-> Audited against first-parent `master` history through `1c4784338853615225d26e6c263e33389cb507fd` (PR #193, Reviewer Workflow Boundary Audit v1) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input, auth scaffold, proof-preflight planning, route/auth-adapter hardening, approval packet dry-run through PR #174, CI/package gate through PR #175, fail-closed fault injection through PR #176, the non-production Level 1 change-control manifest gate packet through PR #177, operator rehearsal through PR #178, axios dependency audit triage through PR #179, outbound HTTP enrichment boundary guards through PR #180, enrichment fixture replay output contract through PR #181, lead pipeline fixture replay artifact contract through PR #182, Level 1 readiness closure dashboard through PR #183, Level 1 approval-intake gate through PR #184, Level 1 post-approval decision simulator through PR #185, reviewer-note/CLI helper refactor plus audit dependency patch through PR #186, post-PR186 source-of-truth sync through PR #187, archival root-cycle bootstrap record tracking through PR #188, post-PR188 source-of-truth sync through PR #189, post-PR189 source-of-truth sync through PR #190, local/test-safe Reviewer Workflow Intelligence v1 through PR #191, post-PR191 source-of-truth sync through PR #192, and local/test-safe Reviewer Workflow Boundary Audit v1 through PR #193. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
+> Status: current hardening source of truth for `master` as of 2026-07-14.
+> Audited against first-parent `master` history through `1b53aabf917e790d6c05db311c0810b4b3807d95` (PR #197, D1 snapshot and migration contracts) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input and non-production gates through PR #185, refactor/source-of-truth work through PR #190, Reviewer Workflow Intelligence and boundary audit through PR #193, the post-PR193 source-of-truth sync in PR #194, test-only P0 characterization in PR #195, LeadBrief publication hardening in PR #196, and explicit D1 snapshot/migration hardening in PR #197. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -71,6 +71,10 @@
 | 61 | 2026-07-06 | #191 | `72def61` | Local/test-safe Reviewer Workflow Intelligence v1 | Added human-entered reviewer feedback, fixed local/test `manual_reviewer` attribution, metadata-only feedback history, deterministic reviewer workflow summaries/data-gap prioritization, schema/fake-D1 contracts, UI controls, and route privacy coverage without production/staging action |
 | 62 | 2026-07-06 | #192 | `a1ad439` | Post-PR191 source-of-truth sync | Synced source-of-truth docs after Reviewer Workflow Intelligence v1 without production/staging action or runtime boundary expansion |
 | 63 | 2026-07-06 | #193 | `1c47843` | Reviewer Workflow Boundary Audit v1 | Added the local/test-safe `npm run check:reviewer-workflow-boundary` gate, deterministic non-production audit artifact, and reviewer feedback release-evidence redaction coverage without production/staging action |
+| 64 | 2026-07-06 | #194 | `8065581` | Post-PR193 source-of-truth sync | Synced source-of-truth and production-boundary docs after Reviewer Workflow Boundary Audit v1 without production/staging action |
+| 65 | 2026-07-11 | #195 | `5a4f0ee` | P0 trust and security boundary characterization | Added deterministic local-only characterization tests for publishing, legacy D1 migration, current/history ordering, outbound network, protected PWA cache, and concurrent mutation behavior without changing runtime behavior or claiming remediation |
+| 66 | 2026-07-11 | #196 | `09aa3d7` | LeadBrief publishing contract hardening | Projected untrusted LeadCandidate data through the public LeadBrief allowlist, bound verification to canonical fresh evidence, rejected invalid scores and source schemes, made identity/status/timestamps system-owned, and failed closed on malformed lead history without production action |
+| 67 | 2026-07-14 | #197 | `1b53aab` | D1 snapshot and migration contracts | Replaced request-path DDL with an exact versioned manifest and read-only D1 readiness checks, added a marked local/test-only migration simulator, atomically replaced typed snapshot heads/entries while joining reviewer-owned fields through bounded overlays, and added structure/memory-bounded remote artifact reads while keeping staging/production HOLD |
 
 Post-PR177 update: PR #171 merged at
 `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` with non-production
@@ -111,7 +115,7 @@ auth/session/provider parsing, Cloudflare Access calls, CRM/outreach, LLM,
 automation, rollback execution, destructive data action, or generated
 suggestion persistence/export/history/attribution.
 
-Post-PR193 source-of-truth update: PR #187 merged the post-PR186
+Post-PR197 source-of-truth update: PR #187 merged the post-PR186
 source-of-truth sync at `c7da118376df889edf5c47ba508fc4f817535ed0`.
 PR #188 then merged archival PR #12 root-cycle merge and Wave 2 bootstrap
 execution/status records at `55953593088e292f9561e6c3570eae2e29a90ca3`.
@@ -122,10 +126,39 @@ merged local/test-safe Reviewer Workflow Intelligence v1 at
 `72def61e89b3c2137b13e2a3ce0bbbc58407d8ce`. PR #192 synced source-of-truth
 docs after PR #191 at `a1ad439348730f834ae7ce5448750b8a5535f502`. PR #193
 merged local/test-safe Reviewer Workflow Boundary Audit v1 at
-`1c4784338853615225d26e6c263e33389cb507fd`. The PR #188 records remain
+`1c4784338853615225d26e6c263e33389cb507fd`. PR #194 synced the resulting
+source-of-truth docs at `8065581cb3756b90783b64115d4b09945d2f9c23`. PR #195
+added test-only P0 trust/security characterization at
+`5a4f0eec95f8d4e87ee663987d264caea96666b4`. PR #196 hardened the public
+LeadBrief publication contract at `09aa3d7b991d4eb20bce822ce69e74044d66dfab`.
+PR #197 hardened D1 snapshot, migration, and published-artifact read contracts
+at `1b53aabf917e790d6c05db311c0810b4b3807d95`. The PR #188 records remain
 historical execution artifacts only; they do not replace this file,
 `docs/roadmap/current-pr-train.md`, or production-proof boundary docs as current
 source of truth. Production actions performed: none.
+PR #196 LeadBrief publication update: untrusted model output is projected
+through the public LeadBrief allowlist; score and HTTP(S) source constraints are
+validated; verification is derived only from canonical, fresh, bound evidence;
+identity, status, and timestamps remain system-owned; malformed or non-array
+history fails closed before canonical artifacts change. This closes the scoped
+publishing-contract gap but does not claim cross-artifact atomic publication.
+PR #197 D1 snapshot/migration update: all Worker request paths remain DDL-free;
+D1-backed access paths perform exact, read-only cold-binding schema readiness
+checks and cache only success. The checked-in versioned
+migration manifest may be applied only by the explicitly marked local/test
+simulator, which requires the explicit marker and refuses unmarked/ordinary
+bindings; policy forbids using it with remote D1. Each profile/kind snapshot
+head and its entries are atomically replaced; reviewer-owned mutable fields stay
+outside `payload_json` and are joined through a bounded allowlisted overlay.
+Latest refresh also updates the managed `leads` projection in the same atomic
+batch while preserving reviewer fields; history refresh does not upsert working
+lead rows. The shared published-artifact JSON reader enforces strict UTF-8,
+byte, cardinality, depth, structure, and bounded-storage limits but has no
+application-level read deadline. A real remote D1
+migration still requires separately approved target inventory, versioned
+Wrangler migration files/commands, rollback ownership, stop conditions, and
+redacted evidence. The local simulator is `NOT_PRODUCTION_EVIDENCE` and must
+not be reused as a request-path or remote migration mechanism.
 Local/Test Reviewer Workflow Intelligence v1 shipped update:
 `docs/roadmap/reviewer-workflow-intelligence-v1-local-test.md` records the
 local/test-only reviewer feedback, summary, and data-gap prioritization scope.
@@ -679,7 +712,12 @@ production-readiness claims.
 ## Remaining Open Items
 
 - No new unresolved Wave 1 to Wave 3 runtime or worker blocker was verified during this docs refresh.
-- No new unresolved PR #25 P0 trust-boundary blocker was verified during this docs refresh.
+- PR #196 remediated the scoped LeadCandidate publication characterization and
+  PR #197 remediated the scoped legacy D1 migration/current-history snapshot
+  characterizations from PR #195. PR #195's Worker outbound network/SSRF,
+  protected reviewer PWA cache, and concurrent PATCH/callback characterization
+  lanes retain 18 desired-contract TODOs at the PR #197 baseline; they remain
+  open local hardening work, and characterization is not remediation.
 - No new unresolved PR #27 LeadBrief v1 blocker was verified during this docs refresh.
 - No new unresolved PR #36-#51 route/data/schema/auth/evidence blocker was verified during this docs refresh.
 - Operator cleanup status:
@@ -689,16 +727,30 @@ production-readiness claims.
   - PR #23 is closed without merge and superseded by PR #48 through PR #51.
   - PRs #13, #14, #15, and #17 are already closed without merge because their changes shipped through PRs #16 and #18.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
-- Product next step:
-- Recommended next non-production goal:
-  `LEVEL_1_BLOCKER_OWNER_REQUEST_PACKET_DOCS_ONLY` if a new explicit goal asks
-  to continue Level 1 burn-down. Manual Review Notes v1 local/test cycle is
-  closed; local/test implementation is complete; local/fake-D1 evidence exists;
-  staging target selection is decision-ready/HOLD; PR #160 guard tests cover
-  existing local/test role-stub boundaries; and the Level 1 blocker burn-down
-  packet lists owner-input templates for auth provider/session decisions,
-  production D1 schema observation, rollback/backout ownership, final
-  production proof approval, and privacy residual values. Staging execution,
+- Product next step: no mandatory staging or production action follows this
+  source-of-truth sync. The stable operational default is truthful `HOLD`/no-op.
+- Recommended next local/test hardening lane, if a new goal is selected: recut
+  PR #195's Worker outbound network/SSRF and protected reviewer PWA cache
+  characterization TODOs into narrowly scoped policy/remediation work. Follow
+  separately with concurrent PATCH/callback CAS, idempotency, and monotonic
+  transition hardening. PR #197's missing application-level remote-read
+  deadline is an additional bounded-reader follow-up candidate.
+- Issues #162, #154, #163, and #164 are complete for docs planning only; those
+  records may be reconfirmed in parallel for an exact future SHA/target and do
+  not authorize execution. Before any D1 inventory, Issue #163 must receive a
+  fresh exact target plus command/table/output-field allowlist covering exact
+  `d1_schema_migrations` `version`/`name` ledger rows, column metadata for every
+  canonical table, and `sqlite_schema` table/index/trigger SQL metadata or
+  approved redacted fingerprints; application/customer rows remain forbidden.
+  Its older allowlist covers only `PRAGMA table_info` / `PRAGMA index_list` for
+  `leads` and `manual_review_note_events`, so it cannot authorize those PR #197
+  readiness outputs. Before any migration, Issue #164 must bind the rollback
+  owner, stop-write policy, and abort/recovery criteria. Before final proof,
+  Issue #162 and all applicable privacy/retention inputs from Issue #154 must be
+  reconfirmed. Only then may Issue #165 receive a fresh final approval packet
+  for the exact current SHA, target, command allowlist, endpoint and D1
+  boundaries, fixture/non-customer data policy, redaction, rollback owner, stop
+  conditions, approver, and expiry. Staging execution,
   staging D1 access, staging endpoint calls, staging logs/secrets,
   local/fake-D1 dry-run execution beyond ordinary docs-only PR validation,
   C3-C5, real access control, auth/session, production roles, manager
@@ -722,7 +774,10 @@ production-readiness claims.
 5. Validate inside the owned worktree with the smallest relevant commands, then use a single integration artifact branch or PR if multiple lanes must ship together.
 6. Mark old plans and status files as archival context instead of deleting them.
 7. Refresh these root source-of-truth docs whenever merged reality changes.
-8. Do not claim production D1 trust/review-column migration until a post-deploy production write has been observed.
+8. Keep request paths DDL-free. Do not claim production D1 migration or schema
+   readiness until a separately approved versioned Wrangler migration workflow
+   and read-only postcheck have been executed and their redacted evidence has
+   been reviewed for the exact target and SHA.
 9. Use `docs/standing-approval-policy.md` to avoid unnecessary `HOLD` states
    for routine repo/GitHub/local-only work; keep production deploy, Wrangler,
    production D1, production endpoints, production logs/secrets, smoke tests,

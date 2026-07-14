@@ -3,7 +3,9 @@
 This document records the production-proof boundary after Issue #34 and the
 Manual Review Notes v1 PR train through PR #142, the Level 1 non-production
 gate train through PR #185, the post-PR186 refactor/dependency cleanup, and
-the post-PR193 reviewer-workflow boundary-audit sync. It
+the post-PR193 reviewer-workflow boundary audit plus PR #194-#197
+source-of-truth, P0 characterization, LeadBrief publication, and D1
+snapshot/migration contracts. It
 is a planning and safety document only; it is not production evidence.
 
 Audited repo baseline for this snapshot:
@@ -12,7 +14,7 @@ Audited repo baseline for this snapshot:
 - Previous Manual Review Notes v1 privacy-warning baseline:
   `f2ddf35e828017eec9332dc80876e50bbee2f54a` (PR #130)
 - Current source-of-truth `origin/master`:
-  `1c4784338853615225d26e6c263e33389cb507fd` (PR #193)
+  `1b53aabf917e790d6c05db311c0810b4b3807d95` (PR #197)
 - Issue #34 current state: closed as completed after GitHub-only closeout, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -38,10 +40,10 @@ Audited repo baseline for this snapshot:
 - Current Level 1 operator rehearsal packet:
   `docs/roadmap/b2b-lead-agent-level-1-operator-rehearsal-gate-non-production.md`
 
-Post-PR193 operating update:
+Post-PR197 operating update:
 
 - Current source-of-truth `origin/master` for this boundary update:
-  `1c4784338853615225d26e6c263e33389cb507fd` (PR #193).
+  `1b53aabf917e790d6c05db311c0810b4b3807d95` (PR #197).
 - PR #187 only synced source-of-truth docs after PR #186. PR #188 only tracked
   historical PR #12 root-cycle merge and Wave 2 bootstrap records as archival
   execution artifacts. PR #189 only synced source-of-truth and
@@ -49,7 +51,10 @@ Post-PR193 operating update:
   docs after PR #189. PR #191 added local/test-safe Reviewer Workflow
   Intelligence v1 on existing reviewer workflow surfaces, PR #192 synced
   source-of-truth docs after PR #191, and PR #193 added the local/test-safe
-  Reviewer Workflow Boundary Audit v1 gate. None of these PRs approves
+  Reviewer Workflow Boundary Audit v1 gate. PR #194 synced source-of-truth
+  docs, PR #195 added test-only P0 characterization, PR #196 hardened the
+  LeadBrief publication contract, and PR #197 hardened D1 snapshot/migration
+  and bounded published-artifact read contracts. None of these PRs approves
   production or staging action.
 - Issue #34 is closed as completed after a GitHub-only closeout approval and
   closeout record.
@@ -216,6 +221,21 @@ Post-PR193 operating update:
   reviewer feedback freeform redaction plus CSV, publication, denied-role
   summary, and prioritization boundaries. It is not production/staging proof
   and keeps `productionReady:false`.
+- PR #195 is test-only characterization and not remediation. PR #196 closes
+  only the scoped LeadCandidate-to-LeadBrief publication lane. PR #197 closes
+  only the scoped legacy D1 migration and shared current/history snapshot
+  lanes. The remaining Worker outbound network/SSRF, protected reviewer PWA
+  cache, and concurrent PATCH/callback characterization TODOs remain local
+  hardening follow-ups, not production evidence.
+- PR #197 supersedes historical lazy request-path migration behavior. Worker
+  runtime imports no migration runner: `ensureD1Schema()` performs bounded,
+  exact, read-only readiness checks and otherwise fails closed with
+  `ERR_D1_SCHEMA_NOT_READY`. `applyLocalTestD1Migrations()` requires the
+  explicit local/test marker, refuses ordinary D1 bindings, and must not be
+  repurposed for remote D1. A real rollout requires separately approved target
+  inventory, versioned Wrangler migration files and exact commands,
+  migration-before-runtime ordering, rollback ownership, stop conditions, and
+  redacted evidence.
 - The current fail-closed matrix refuses malformed synthetic auth claims, mixed
   roles, auth-header / Cloudflare Access / D1 / API-key alias env poison,
   poisoned future evidence fields, bare `notes` / validation-note evidence
@@ -266,7 +286,9 @@ after PR #189 synced source-of-truth and production-boundary docs,
 `72def61e89b3c2137b13e2a3ce0bbbc58407d8ce` after PR #191 added local/test
 Reviewer Workflow Intelligence v1, and
 `1c4784338853615225d26e6c263e33389cb507fd` after PR #193 added local/test
-Reviewer Workflow Boundary Audit v1. Any new
+Reviewer Workflow Boundary Audit v1. The current baseline is
+`1b53aabf917e790d6c05db311c0810b4b3807d95` after PR #197 added the explicit
+D1 snapshot/migration and bounded published-artifact read contracts. Any new
 production action must refresh the actual current
 `origin/master` SHA, CI metadata, owners, and approval records before
 execution. Issue #34 closeout does not authorize further production proof work.
@@ -275,10 +297,10 @@ execution. Issue #34 closeout does not authorize further production proof work.
 
 | Surface | Status | Notes |
 | --- | --- | --- |
-| Local schema consistency | Proved locally by repo files and `npm run check:schema` | Local evidence only. Does not inspect production D1. |
+| Local schema consistency and migration readiness | Proved locally by the exact versioned manifest, schema/index/trigger contract checks, read-only readiness tests, local/test-only simulator tests, and `npm run check:schema` | Local evidence only. Does not inspect or migrate production D1; the simulator requires its explicit marker and refuses unmarked/ordinary bindings, and policy forbids remote use. |
 | Production D1 schema remediation and schema metadata proof | Accepted in Issue #34 for prior approved SHAs only | Do not extend these approvals to current `master` without a new explicit production approval. |
 | Static Worker runtime route | One raw `/manifest.json` proof accepted | Proves only the public manifest route response in that approved scope. |
-| D1-backed Worker routes | Unproven in production after current train | Requires separate approval for any endpoint or D1 access. |
+| D1-backed Worker routes | Unproven in production after current train | Requires exact target schema inventory and separate approval for any D1 access, migration, or endpoint call. Request-path DDL is forbidden. |
 | Manual Review Notes v1 saved-note production use | Unproven and not approved after PR #142; docs-only production proof plan, production D1 migration plan, production rollback/backout plan, local/staging dry-run plan, local/fake-D1 dry-run evidence packet, staging target decision packet, and non-production closeout packet prepared | Requires separate approval for staging execution, staging D1 access, staging endpoint calls, staging logs/secrets, any further local/fake-D1 dry-run beyond this approved packet and ordinary docs-only PR validation, migration execution, rollback execution, destructive data action, retention/privacy, access/visibility, observability/evidence, generated suggestion exclusion, customer-data handling, legal/privacy, and production proof execution gates. |
 | Row serialization and roundtrip | Unproven in production | Requires safe real row/action and explicit production write approval. |
 | Product production observation | Unproven | Requires explicit production observation-claim approval after valid evidence exists. |
@@ -290,7 +312,7 @@ execution. Issue #34 closeout does not authorize further production proof work.
 | Deploy Worker or trigger deploy workflow | `ALLOW_DEPLOY=yes`, deploy owner, approved SHA, rollback plan |
 | Run Wrangler deploy or D1 command | Deploy or DB access approval, exact command, owner, evidence policy |
 | Access production D1 | `ALLOW_PRODUCTION_DB_ACCESS=yes`, DB owner, exact read/schema path |
-| Invoke lazy DDL or migration | `ALLOW_PRODUCTION_DB_MIGRATION=yes`, migration owner, rollback/stop criteria |
+| Create or run a versioned Wrangler D1 migration/remediation workflow | `ALLOW_PRODUCTION_DB_MIGRATION=yes`, exact target/files/commands, migration owner, rollback/stop criteria, redacted evidence policy |
 | Read a production row | Row-read approval, safe lead/profile selection, evidence policy |
 | Write or patch a production row | `ALLOW_PRODUCTION_DB_WRITE=yes`, real owner-approved row/action, no-overwrite check |
 | Call production Worker endpoint | Endpoint-call approval, exact method/path, call count, auth/credential policy |
@@ -320,8 +342,22 @@ The following support engineering confidence but are not production proof:
 - Synthetic fixtures.
 - Release evidence packets generated from local inputs.
 
-The exact remaining Level 1 human blocker is Issue #165: a separate explicit
-human production proof execution goal with exact command, endpoint, D1, fixture,
+Issue #165 is the final Level 1 execution-approval gate. Issues #162, #154,
+#163, and #164 already have `COMPLETE_FOR_DOCS_PLANNING_ONLY` owner records;
+they may be reconfirmed in parallel for an exact future SHA and target, but they
+authorize no execution. Before any production D1 inventory, Issue #163 needs a
+fresh exact target plus command/table/output-field allowlist covering exact
+`d1_schema_migrations` `version`/`name` ledger rows, column metadata for every
+canonical table, and `sqlite_schema` table/index/trigger SQL metadata or
+approved redacted fingerprints; application/customer rows remain forbidden.
+Its May 23 planning allowlist covers only `PRAGMA table_info` /
+`PRAGMA index_list` for `leads` and `manual_review_note_events` and sets
+`ROW_DATA_ALLOWED:NO`, so it cannot authorize the additional PR #197 readiness
+outputs. Before any migration, Issue #164 must bind the rollback owner,
+stop-write policy, and abort/recovery criteria for that exact change. Before
+final proof, Issue #162 and the applicable Issue #154 policy inputs must be
+reconfirmed, and a separate explicit Issue #165 human production proof
+execution goal must approve the exact command, endpoint, D1, fixture,
 redaction, evidence, rollback, and stop-condition boundaries. The current
 machine-checkable intake fields are target, command allowlist, endpoint
 boundary, D1 boundary, fixture/non-customer data policy, evidence redaction,
@@ -346,17 +382,34 @@ packet with:
 - No-destructive-data decision and any separately approved destructive-data
   action, if requested.
 - Safe profile, lead, or explicit no-row decision.
+- Exact expected migration ledger/version and an explicit statement that
+  request-path DDL is forbidden.
 - Confirmation that `status` and `reviewStatus` remain separate.
 - Confirmation that the frozen `crm.published-report.v1` contract is not being expanded.
 - Explicit denial of any action not in scope.
 
 ## Recommended Next Production-Proof Sequence
 
-1. Refresh approval baseline to current `master` with `docs/exec-plans/production-proof-readiness-packet.md`.
-2. Review whether production proof is needed before more product UX work. If not, hold.
-3. If needed, request a no-write D1 schema/read proof first.
-4. Only after that, request a row serialization proof with a real safe row/action.
-5. Only after evidence review, request permission to make a production observation claim.
+1. Refresh the baseline to current `master`. Reconfirm the docs-planning records
+   for Issues #162, #154, #163, and #164 in parallel for the exact SHA/target;
+   if production proof is not needed, hold.
+2. Under Issue #163, define but do not run a fresh exact read-only target schema
+   inventory allowlist covering ledger `version`/`name`, every canonical table's
+   column metadata, and canonical table/index/trigger SQL metadata or approved
+   redacted fingerprints. No application/customer rows, request-path DDL, or
+   repair are allowed.
+3. If migration may be required, author and review the versioned Wrangler
+   migration files/commands plus Issue #164 rollback, stop-write, and recovery
+   criteria. Execute nothing.
+4. Obtain a separate explicit Issue #165 approval for the exact first execution
+   phase, including command, target, evidence, redaction, expiry, and stop
+   conditions. Initially that phase should be read-only inventory only.
+5. Execute only the approved read-only inventory. If the schema matches,
+   separately approve any D1-backed route or row serialization proof with a safe
+   row/no-row decision. If drift exists, stop and obtain a separate explicit
+   migration execution approval before any migration or postcheck.
+6. Only after evidence review, request permission to make a production
+   observation claim.
 
 ## Stop Conditions
 
@@ -365,8 +418,11 @@ Stop with `HOLD` if any of these are true:
 - The approved SHA is stale.
 - CI is missing, stale, or failing for the approved SHA.
 - Owner, policy, rollback, evidence, or safe-row fields are missing.
+- Any Worker request path may issue DDL or import a migration runner.
 - The requested path may write but write approval is absent.
-- The requested path may run lazy DDL but migration approval is absent.
+- A migration/remediation lacks the exact target, versioned files, exact command
+  allowlist, migration owner, rollback owner, stop conditions, or redacted
+  evidence policy.
 - The evidence would include secrets, auth headers, cookies, private URLs, customer payloads, PII, or unredacted production payloads.
 - The action would overwrite human review decisions or toggle review state only to manufacture evidence.
 - The request would expand the frozen CRM published-report contract.
