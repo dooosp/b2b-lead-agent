@@ -5,6 +5,7 @@ import { analyzeLeadsWorker, createSelfServiceSchemaPayloadWorker, filterArticle
 import { fetchArticleBodyWorker } from '../api/enrichment.js';
 import { saveLeadsBatch, logAnalyticsRun } from '../db/leads.js';
 import { isValidSelfServiceResponseSchema } from './lead-utils.js';
+import { createWorkerOutboundHttpContext } from '../lib/outbound-http.js';
 
 export async function handleSelfServiceAnalyze(request, env, ctx) {
   const softDeadlineMs = 28500;
@@ -69,13 +70,14 @@ export async function handleSelfServiceAnalyze(request, env, ctx) {
       return jsonResponse({ success: false, message: '시간 초과: 프로필 생성에 시간이 오래 걸렸습니다. 다시 시도하세요.' }, 504);
     }
 
-    articles = await fetchAllNewsWorker(profile.searchQueries);
+    const outboundHttp = createWorkerOutboundHttpContext();
+    articles = await fetchAllNewsWorker(profile.searchQueries, outboundHttp);
     articles = filterArticlesForTargetCompany(articles, company);
     articles = articles.slice(0, 18);
 
     const bodyTargets = articles.slice(0, 10);
     const bodyResults = await Promise.allSettled(
-      bodyTargets.map(a => fetchArticleBodyWorker(a.link))
+      bodyTargets.map(a => fetchArticleBodyWorker(a.link, outboundHttp))
     );
     let bodyHitCount = 0;
     bodyResults.forEach((r, i) => {
