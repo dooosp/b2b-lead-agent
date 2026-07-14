@@ -276,9 +276,14 @@ production-readiness claims.
   - demo leads are refused as canonical published latest leads
   - heuristic/self-service fallback leads are machine-readable and browser-visible as non-verified / needs review
   - self-service UI copy and JSON downloads preserve trust metadata
-  - D1 trust metadata columns are lazy-migration-compatible through `ensureD1Schema()`
-- Production deploy was not performed as part of PR #25 landing.
-- The first production write after deploy should be observed to confirm the lazy D1 trust-column migration in production.
+  - at PR #25 landing, D1 trust metadata columns were compatible with the
+    then-current lazy `ensureD1Schema()` migration path
+- That historical lazy-migration statement is superseded by the current
+  explicit migration-before-runtime contract: request-path
+  `ensureD1Schema()` is read-only and fails closed until the exact versioned
+  schema is already present.
+- Production deploy, schema inventory, migration, and production writes were
+  not performed as part of PR #25 landing or this local/test hardening work.
 
 ### PR #27 LeadBrief v1 Baseline
 
@@ -303,7 +308,10 @@ production-readiness claims.
 - Managed/self-service upserts preserve existing `review_status` on conflict so refreshed generation does not erase human review decisions.
 - `/api/leads`, CSV export, browser UI, self-service copy, and downloads preserve review/trust metadata.
 - The internal latest-published CRM contract remains backward-compatible and does not expose LeadBrief fields unless later scoped.
-- D1 `review_status` is lazy-migration-compatible but not production-observed until a post-deploy production write is confirmed.
+- At PR #27 landing, D1 `review_status` used the then-current lazy migration
+  compatibility path. That historical behavior is superseded by explicit
+  migration-before-runtime readiness; no production D1 migration or
+  observation is claimed here.
 - Production deploy was not performed as part of PR #27 landing.
 - Production DB writes were not performed as part of PR #27 landing.
 

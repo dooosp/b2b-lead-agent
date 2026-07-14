@@ -21,11 +21,11 @@ When runtime behavior changes, update this map from source files, tests, and wor
 | Profiles | `profiles/*.js`, `profile-registry.js` | Managed seller profiles and search/product context |
 | Published artifacts | `reports/<profile>/latest-leads.json`, `reports/<profile>/lead-history.json`, `reports/<profile>/lead-report-YYYY-MM-DD.md` | Canonical managed lead snapshots consumed by the Worker fallback paths |
 | Worker API | `worker/index.js`, `worker/routes/*.js`, `worker/api/*.js` | Route dispatch, route metadata, authenticated APIs, trigger/job ledger, internal report contract |
-| Worker D1 layer | `worker/db/*.js`, `worker/schema.sql` | Lazy D1 schema creation, lead/job/reference persistence, row transforms |
+| Worker D1 layer | `worker/db/*.js`, `worker/schema.sql` | Explicit schema migrations and readiness, typed published snapshots, lead/job/reference persistence, row transforms |
 | Worker self-service | `worker/self-service/*.js` | Authenticated ad hoc company/industry analysis and self-service D1 persistence |
 | Worker UI pages | `worker/pages/*.js` | Browser page shells for leads, dashboard, Opportunity Workbench, Lead Action Intelligence review guidance, proposal/PPT helpers, roleplay, CPA |
 | Tests | `tests/*.test.js`, `worker/tests/*.test.mjs`, `worker/e2e/*.test.mjs` | Root, Worker, local E2E, and contract coverage |
-| Release workflows | `.github/workflows/*.yml`, `docs/exec-plans/d1-lazy-migration-observation-plan.md` | CI gates, report-generation dispatch, production observation planning |
+| Release workflows | `.github/workflows/*.yml`, `docs/d1-schema-drift-hardening.md` | CI gates, report-generation dispatch, explicit local/test D1 migration and readiness boundaries |
 
 ## Root Scripts
 
@@ -34,7 +34,7 @@ When runtime behavior changes, update this map from source files, tests, and wor
 | `start` | `node main.js --profile danfoss` | Local/default managed batch run for the Danfoss profile |
 | `email` | `node main.js --profile danfoss --email` | Managed batch run plus email send path |
 | `check:naming` | `node scripts/check-naming.js` | Canonical path and artifact naming guard |
-| `check:schema` | `node scripts/check-d1-schema-consistency.js` | Local D1 schema drift guard for `worker/schema.sql` and `worker/db/schema.js` |
+| `check:schema` | `node scripts/check-d1-schema-consistency.js` | Local D1 drift guard for `worker/schema.sql` and `worker/db/migration-manifest.js` |
 | `evidence:packet` | `node scripts/generate-release-evidence-packet.js` | Local-only release evidence packet generator |
 | `eval:lead-quality` | `node scripts/evaluate-lead-quality.js --fixtures` | Synthetic-only lead quality evaluator for evidence, confidence, assumptions, gaps, verification, and review readiness |
 | `e2e` | `node e2e-test.mjs` | Browser/end-to-end smoke surface when explicitly needed |
@@ -57,7 +57,7 @@ When runtime behavior changes, update this map from source files, tests, and wor
 
 ## Worker Shape
 
-`worker/index.js` is a small fetch delegate. Route matching and boundary behavior live in `worker/routes/dispatcher.js`, `worker/routes/api.js`, `worker/routes/static.js`, `worker/routes/pages.js`, `worker/routes/responses.js`, and `worker/routes/metadata.js`. Those route modules import handlers from `worker/api/*`, D1 helpers from `worker/db/*`, self-service orchestration from `worker/self-service/*`, and HTML page renderers from `worker/pages/*`.
+`worker/index.js` is a small fetch delegate. Route matching and boundary behavior live in `worker/routes/dispatcher.js`, `worker/routes/api.js`, `worker/routes/static.js`, `worker/routes/pages.js`, `worker/routes/responses.js`, and `worker/routes/metadata.js`. Those route modules import handlers from `worker/api/*`, D1 helpers from `worker/db/*`, self-service orchestration from `worker/self-service/*`, and HTML page renderers from `worker/pages/*`. Shared managed/internal GitHub artifact stream, UTF-8, cardinality, and pre-parse complexity bounds live in `worker/lib/published-artifact-json.js`.
 
 Key bindings in `worker/wrangler.toml`:
 
@@ -77,7 +77,7 @@ Key bindings in `worker/wrangler.toml`:
 | --- | --- | --- |
 | Root runtime | `tests/main.runtime.test.js` | Runtime completion is emitted only after real summary evidence |
 | Root trust and publishing | `tests/source-traceability.test.js`, `tests/company-name-accuracy.test.js`, `tests/root-identity-trust.test.js`, `tests/fallback-publication-guard.test.js`, `tests/leadbrief-publication-contract.test.js` | Source traceability, company-name hardening, stable identity, fallback/demo publication guards, LeadBrief artifact fields |
-| Internal report contract | `tests/internal-published-report-api.test.js` | `/api/internal/profiles/:profileId/latest-published` auth/readiness/frozen contract behavior |
+| Internal report contract | `tests/internal-published-report-api.test.js` | `/api/internal/profiles/:profileId/latest-published` auth/readiness/frozen contract behavior and shared pre-parse artifact bound |
 | Lead quality evaluator | `tests/lead-quality-evaluator.test.js`, `eval/fixtures/synthetic-leads.js` | Synthetic fixture quality scoring, local-only input guards, and review-readiness outcomes |
 | Worker data contracts | `worker/tests/data-contract.test.mjs`, `worker/tests/leadbrief-v1-contract.test.mjs`, `worker/tests/lead-review-status.test.mjs`, `worker/tests/lead-patch-atomicity.test.mjs` | D1 row roundtrip, LeadBrief v1, review status, pipeline status, atomic PATCH behavior |
 | Worker trigger/job contracts | `worker/tests/job-trigger.test.mjs`, `worker/tests/trigger-handler.test.mjs`, `worker/tests/workflow-contract.test.mjs` | Intake-only trigger acceptance, job ledger transitions, workflow callback contract |
@@ -93,9 +93,11 @@ Key bindings in `worker/wrangler.toml`:
 | `.github/workflows/ci.yml` | Pull request and push to `master` or `main` | `npm run check:schema`, `npm run eval:lead-quality`, `npm test`, and `npm run test:e2e:local` pass after dependency install |
 | `.github/workflows/validate-naming.yml` | Pull request and push | `npm run check:naming` and `npm run test:worker` pass |
 | `.github/workflows/generate-report.yml` | `repository_dispatch` event type `generate-report` | Validates managed profile, marks job ledger callbacks, runs `node main.js --profile "$PROFILE" --email`, commits report artifacts, and pushes them |
-| `docs/exec-plans/d1-lazy-migration-observation-plan.md` | Human-approved future operation | Planning checklist for production deploy, lazy D1 DDL observation, safe write approval, rollback owner, and evidence template |
+| `docs/exec-plans/d1-lazy-migration-observation-plan.md` | Historical planning record | Pre-explicit-migration lazy-DDL checklist; it is not execution authority and must be superseded by an approved schema-inventory and explicit-migration rollout plan |
 
-Local tests and docs are not production evidence. The D1 observation plan explicitly says production deploy, lazy DDL, production DB writes, and production-observed claims each require separate human approval.
+Local tests and docs are not production evidence. Production schema inventory,
+explicit migration, deploy, D1 writes, and production-observed claims each
+require separate human approval.
 
 ## Product Boundary
 
@@ -113,5 +115,7 @@ Known non-goals:
 
 - Update `docs/architecture/worker-routes.md` whenever `worker/routes/*` or `worker/index.js` changes route matching, auth boundaries, or handler ownership.
 - Update `docs/architecture/data-path.md` whenever `worker/db/schema.js`, `worker/schema.sql`, `lead-report-publisher.js`, or self-service persistence changes.
-- Treat `worker/db/schema.js` as the runtime D1 schema source because it contains lazy DDL beyond the baseline `worker/schema.sql`.
+- Treat `worker/schema.sql` as the fresh-schema source and
+  `worker/db/migration-manifest.js` as the ordered upgrade source;
+  `worker/db/schema.js` is readiness-only and must remain free of DDL.
 - Keep product boundary language aligned with `AGENTS.md`, `HARDENING_PLAN.md`, and the D1 observation plan.

@@ -9,7 +9,7 @@ import {
   AUTH_PROVIDER_SESSION_SCAFFOLD_PROVIDER_ENV,
   createStaticAuthProviderSessionScaffoldProvider
 } from '../lib/auth-provider-session-scaffold.js';
-import { FakeD1Database } from './helpers/fake-d1.mjs';
+import { FakeD1Database, seedPublishedSnapshotFixtures } from './helpers/fake-d1.mjs';
 import { createLeadRow } from './helpers/fixtures.mjs';
 import { createWorkerRequest } from './helpers/http.mjs';
 
@@ -76,7 +76,11 @@ function assertScaffoldMetadata(metadata, {
 }
 
 test('non-production auth provider/session scaffold lets reviewer read and write without real auth identity', async () => {
-  const db = new FakeD1Database({ leads: [createLeadRow()] });
+  const lead = createLeadRow();
+  const db = new FakeD1Database({
+    leads: [lead],
+    publishedSnapshots: [{ profileId: 'danfoss', artifactKind: 'latest', leads: [lead] }],
+  });
   const env = scaffoldEnv(createStaticAuthProviderSessionScaffoldProvider({ role: 'reviewer' }));
 
   const writeResponse = await patchLead(db, {
@@ -107,14 +111,14 @@ test('non-production auth provider/session scaffold lets reviewer read and write
 
 test('non-production auth provider/session scaffold exposes stop-write rollback metadata', async () => {
   const originalManualNote = 'Existing note preserved by scaffold stop-write.';
+  const lead = createLeadRow({
+    notes: originalManualNote,
+    manual_review_notes_author_label: 'manual_reviewer',
+    manual_review_notes_updated_at: '2026-05-31T00:00:00.000Z',
+  });
   const db = new FakeD1Database({
-    leads: [
-      createLeadRow({
-        notes: originalManualNote,
-        manual_review_notes_author_label: 'manual_reviewer',
-        manual_review_notes_updated_at: '2026-05-31T00:00:00.000Z',
-      }),
-    ],
+    leads: [lead],
+    publishedSnapshots: [{ profileId: 'danfoss', artifactKind: 'latest', leads: [lead] }],
   });
   const env = scaffoldEnv(
     createStaticAuthProviderSessionScaffoldProvider({ role: 'reviewer' }),
@@ -267,6 +271,7 @@ for (const scenario of [
       });
     const env = scaffoldEnv(provider);
     const attemptedNote = `Denied scaffold note for ${scenario.name}.`;
+    seedPublishedSnapshotFixtures(db, [...db.leads.values()]);
 
     const writeResponse = await patchLead(db, { manualReviewNotes: attemptedNote }, env);
     const writePayload = await writeResponse.json();
@@ -339,6 +344,7 @@ test('non-production auth provider/session scaffold fails closed on missing or f
       throw new Error(providerSecret);
     },
   });
+  seedPublishedSnapshotFixtures(db, [...db.leads.values()]);
 
   const writeResponse = await patchLead(db, {
     manualReviewNotes: 'Provider failure must not write.',
@@ -417,6 +423,7 @@ for (const blockedEnv of [
       createStaticAuthProviderSessionScaffoldProvider({ role: 'reviewer' }),
       { [blockedEnv.key]: blockedEnv.value }
     );
+    seedPublishedSnapshotFixtures(db, [...db.leads.values()]);
 
     const writeResponse = await patchLead(db, {
       manualReviewNotes: 'Production-like scaffold attempt must not write.',
@@ -461,6 +468,7 @@ for (const scenario of [
       ],
     });
     const env = scaffoldEnv(scenario.provider);
+    seedPublishedSnapshotFixtures(db, [...db.leads.values()]);
 
     const writeResponse = await patchLead(db, {
       manualReviewNotes: `Denied scaffold note for ${scenario.name}.`,

@@ -84,7 +84,7 @@ function emptyManualReviewNotesHistorySummary() {
   };
 }
 
-function withManualReviewNotesHistorySummary(lead, summary = {}) {
+export function withManualReviewNotesHistorySummary(lead, summary = {}) {
   if (!lead) return lead;
   const eventCount = Number(summary.eventCount || 0);
   const eventType = MANUAL_REVIEW_NOTE_EVENT_TYPES.includes(summary.lastEventType) ? summary.lastEventType : '';
@@ -149,7 +149,7 @@ function normalizeReviewerFeedbackRecord(record = {}) {
   };
 }
 
-function withReviewerFeedbackSummary(lead, feedbackRecord = null, historySummary = emptyReviewerFeedbackHistorySummary()) {
+export function withReviewerFeedbackSummary(lead, feedbackRecord = null, historySummary = emptyReviewerFeedbackHistorySummary()) {
   if (!lead) return lead;
   const feedback = normalizeReviewerFeedbackRecord(feedbackRecord || {});
   const eventCount = Number(historySummary.eventCount || 0);

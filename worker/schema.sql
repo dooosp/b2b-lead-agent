@@ -1,5 +1,12 @@
--- B2B Lead Agent D1 Schema
--- Run: npx wrangler d1 execute b2b-leads-db --file=./schema.sql
+-- B2B Lead Agent canonical fresh local/test D1 schema.
+-- Production remains HOLD. Use the separately approved explicit migration
+-- workflow for an existing database; request handlers never execute this DDL.
+
+CREATE TABLE IF NOT EXISTS d1_schema_migrations (
+  version INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  applied_at TEXT NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS leads (
   id TEXT PRIMARY KEY,
@@ -135,3 +142,44 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_job_runs_idempotency ON job_runs(idempoten
 CREATE UNIQUE INDEX IF NOT EXISTS idx_job_runs_active_profile ON job_runs(profile_id)
   WHERE state IN ('accepted', 'running');
 CREATE INDEX IF NOT EXISTS idx_job_runs_updated ON job_runs(updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS reference_library (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  profile_id TEXT NOT NULL,
+  category TEXT NOT NULL,
+  client TEXT NOT NULL,
+  project TEXT NOT NULL,
+  result TEXT NOT NULL,
+  source_url TEXT DEFAULT '',
+  region TEXT DEFAULT '',
+  verified_at TEXT DEFAULT '',
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ref_profile_cat
+  ON reference_library(profile_id, category);
+
+CREATE TABLE IF NOT EXISTS published_snapshot_heads (
+  profile_id TEXT NOT NULL,
+  artifact_kind TEXT NOT NULL CHECK (artifact_kind IN ('latest', 'history')),
+  snapshot_id TEXT NOT NULL,
+  fetched_at TEXT NOT NULL,
+  PRIMARY KEY (profile_id, artifact_kind)
+);
+
+CREATE TABLE IF NOT EXISTS published_snapshot_entries (
+  profile_id TEXT NOT NULL,
+  artifact_kind TEXT NOT NULL CHECK (artifact_kind IN ('latest', 'history')),
+  snapshot_id TEXT NOT NULL,
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  lead_id TEXT NOT NULL,
+  payload_json TEXT NOT NULL,
+  PRIMARY KEY (profile_id, artifact_kind, snapshot_id, ordinal),
+  UNIQUE (profile_id, artifact_kind, snapshot_id, lead_id)
+);
+CREATE INDEX IF NOT EXISTS idx_published_snapshot_entries_lookup
+  ON published_snapshot_entries(profile_id, artifact_kind, snapshot_id, ordinal);
+
+INSERT OR IGNORE INTO d1_schema_migrations (version, name, applied_at)
+  VALUES (1, 'adopt_canonical_lead_schema', CURRENT_TIMESTAMP);
+INSERT OR IGNORE INTO d1_schema_migrations (version, name, applied_at)
+  VALUES (2, 'separate_published_snapshot_artifacts', CURRENT_TIMESTAMP);

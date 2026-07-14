@@ -8,7 +8,7 @@ import { createWorkerEnv } from './helpers/fixtures.mjs';
 test('fetchLeads returns a bounded JSON error when the D1 lead lookup fails', async () => {
   const env = createWorkerEnv({
     DB: new FakeD1Database({
-      failOnSql: (sql) => /FROM leads/i.test(sql),
+      failOnSql: (sql) => /WITH\s+selected_head\s+AS/i.test(sql),
     }),
   });
 

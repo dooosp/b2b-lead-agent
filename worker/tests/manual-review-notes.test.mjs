@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { fetchHistory, fetchLeads, handleExportCSV, handleUpdateLead } from '../api/leads.js';
 import { getLeadById, saveLeadsBatch } from '../db/leads.js';
-import { FakeD1Database } from './helpers/fake-d1.mjs';
+import { FakeD1Database, seedPublishedSnapshotFixtures } from './helpers/fake-d1.mjs';
 import { createLead, createLeadRow } from './helpers/fixtures.mjs';
 import { createWorkerRequest } from './helpers/http.mjs';
 
@@ -37,6 +37,11 @@ const PROTECTED_MANUAL_NOTE_FIELDS = Object.freeze([
   'manualReviewNotesHistoryLastAuthorLabel',
   'manual_review_notes_history_last_author_label',
 ]);
+
+function seedManagedSnapshots(db) {
+  const leads = [...db.leads.values()].filter((lead) => lead.profile_id === 'danfoss');
+  seedPublishedSnapshotFixtures(db, leads);
+}
 
 async function patchLead(db, payload, leadId = 'lead-1', options = {}) {
   const request = createWorkerRequest(`/api/leads/${leadId}`, {
@@ -369,6 +374,7 @@ test('manualReviewNotes is exposed on local read paths without saving generated 
       },
     ],
   });
+  seedManagedSnapshots(db);
 
   const response = await fetchLeads(
     {
@@ -406,6 +412,7 @@ test('C2 local/test reviewer role stub can read and write manual review notes wi
     { env: LOCAL_TEST_ROLE_STUB_ENV, headers }
   );
   const writePayload = await writeResponse.json();
+  seedManagedSnapshots(db);
 
   assert.equal(writeResponse.status, 200);
   assert.equal(writePayload.success, true);
@@ -540,6 +547,7 @@ test('C2 local/test manager role stub cannot write or read protected manual note
   assert.equal(persistedLead.manualReviewNotes, 'Manager must not receive this manual note.');
   assert.equal(db.leads.get('lead-1').notes, 'Manager must not receive this manual note.');
   assert.equal(db.manualReviewNoteEvents.length, 1);
+  seedManagedSnapshots(db);
 
   const readRequest = createWorkerRequest('/api/leads', { headers });
   const readResponse = await fetchLeads(
@@ -672,6 +680,7 @@ for (const scenario of [
       ],
     });
     const readRequest = createWorkerRequest('/api/leads', { headers: scenario.headers });
+    seedManagedSnapshots(db);
     const listResponse = await fetchLeads(
       { DB: db, GITHUB_REPO: 'dooosp/b2b-lead-agent', ...LOCAL_TEST_ROLE_STUB_ENV },
       'danfoss',

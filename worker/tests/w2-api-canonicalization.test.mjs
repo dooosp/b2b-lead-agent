@@ -43,11 +43,13 @@ test('canonicalizeLeadProductForProfile downgrades cross-profile mismatches and 
 });
 
 test('fetchLeads canonicalizes managed DB lead products and profile IDs', async () => {
+  const row = createLeadRow({
+    profile_id: 'danfoss',
+    product: 'Desigo CC',
+  });
   const db = new FakeD1Database({
-    leads: [createLeadRow({
-      profile_id: 'danfoss',
-      product: 'Desigo CC',
-    })],
+    leads: [row],
+    publishedSnapshots: [{ profileId: 'danfoss', artifactKind: 'latest', leads: [row] }],
   });
 
   const response = await fetchLeads({ DB: db }, 'danfoss');
