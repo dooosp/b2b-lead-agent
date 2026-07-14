@@ -1,23 +1,29 @@
 import { parseRSSItems } from './rss.js';
+import {
+  fetchWorkerOutboundText,
+  WORKER_NEWS_OUTBOUND_POLICY,
+} from '../lib/outbound-http.js';
 
-export async function fetchGoogleNewsWorker(query) {
+export async function fetchGoogleNewsWorker(query, dependencies = {}) {
   const encoded = encodeURIComponent(query);
   const url = `https://news.google.com/rss/search?q=${encoded}+when:3d&hl=ko&gl=KR&ceid=KR:ko`;
   try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; B2BLeadBot/1.0)' }
+    const { response, text } = await fetchWorkerOutboundText(url, {
+      policy: WORKER_NEWS_OUTBOUND_POLICY,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; B2BLeadBot/1.0)' },
+      fetchImpl: dependencies.fetchImpl,
+      resolveHostname: dependencies.resolveHostname,
     });
-    if (!res.ok) return [];
-    const xml = await res.text();
-    return parseRSSItems(xml).slice(0, 5).map(item => ({ ...item, query }));
+    if (!response.ok) return [];
+    return parseRSSItems(text).slice(0, 5).map(item => ({ ...item, query }));
   } catch {
     return [];
   }
 }
 
-export async function fetchAllNewsWorker(queries) {
+export async function fetchAllNewsWorker(queries, dependencies = {}) {
   const results = await Promise.allSettled(
-    queries.map(q => fetchGoogleNewsWorker(q))
+    queries.map(q => fetchGoogleNewsWorker(q, dependencies))
   );
   const allArticles = results
     .filter(r => r.status === 'fulfilled')

@@ -8,6 +8,11 @@ import {
   filterManualReviewNotesProtectedFields,
   resolveManualReviewNotesAccess,
 } from '../lib/manual-review-notes-access.js';
+import {
+  createWorkerOutboundHttpContext,
+  DEFAULT_WORKER_OUTBOUND_POLICY,
+  fetchWorkerOutboundText,
+} from '../lib/outbound-http.js';
 
 const NUMBER_SIGNAL_RE = /(\d|억원|조원|만|%|MW|GW|kW|㎡|m²)/i;
 const NO_BODY_DATA_GAP = '기사 본문 미확보';
@@ -29,25 +34,20 @@ export function hasArticleBody(articleBody) {
   return typeof articleBody === 'string' && articleBody.trim().length > 50;
 }
 
-export async function fetchArticleBodyWorker(url) {
+export async function fetchArticleBodyWorker(url, dependencies = {}) {
   if (!url) return '';
   if (url.includes('news.google.com/')) return '';
-  let timer = null;
   try {
-    const controller = new AbortController();
-    timer = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(url, {
-      signal: controller.signal,
-      redirect: 'follow',
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; B2BLeadBot/1.0)' }
+    const { response, text } = await fetchWorkerOutboundText(url, {
+      policy: DEFAULT_WORKER_OUTBOUND_POLICY,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; B2BLeadBot/1.0)' },
+      fetchImpl: dependencies.fetchImpl,
+      resolveHostname: dependencies.resolveHostname,
     });
-    if (!res.ok) return '';
-    const html = await res.text();
-    return extractBodyFromHTML(html);
+    if (!response.ok) return '';
+    return extractBodyFromHTML(text);
   } catch {
     return '';
-  } finally {
-    if (timer) clearTimeout(timer);
   }
 }
 
@@ -238,7 +238,7 @@ export async function handleEnrichLead(request, env, leadId) {
 
   try {
     const sourceUrl = pickBestSourceUrl(lead.sources);
-    const articleBody = await fetchArticleBodyWorker(sourceUrl);
+    const articleBody = await fetchArticleBodyWorker(sourceUrl, createWorkerOutboundHttpContext());
     const enrichData = normalizeEnrichData(await callGeminiEnrich(lead, articleBody, env), lead, { articleBody });
     await updateLeadEnrichment(env.DB, leadId, enrichData, articleBody);
 
@@ -275,11 +275,12 @@ export async function handleBatchEnrich(request, env) {
     return jsonResponse({ success: true, enriched: 0, remaining: remaining?.[0]?.cnt || 0, message: '분석할 리드가 없습니다.' });
   }
 
+  const outboundHttp = createWorkerOutboundHttpContext();
   const settled = await Promise.allSettled(
     results.map(async (row) => {
       const lead = rowToLead(row);
       const sourceUrl = pickBestSourceUrl(lead.sources);
-      const articleBody = await fetchArticleBodyWorker(sourceUrl);
+      const articleBody = await fetchArticleBodyWorker(sourceUrl, outboundHttp);
       const enrichData = normalizeEnrichData(await callGeminiEnrich(lead, articleBody, env), lead, { articleBody });
       await updateLeadEnrichment(env.DB, lead.id, enrichData, articleBody);
       return { id: lead.id, company: lead.company, success: true };
