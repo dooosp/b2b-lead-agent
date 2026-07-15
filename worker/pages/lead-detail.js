@@ -878,7 +878,7 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
 
     async function updateField(field, value) {
       try {
-        const body = {};
+        const body = { expectedVersion: lead.version };
         body[field] = value;
         if (field === 'status') body.status = value;
         const res = await fetch('/api/leads/' + encodeURIComponent(lead.id), {
@@ -888,6 +888,10 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
         });
         const data = await res.json();
         if (!data.success) {
+          if (data.code === 'LEAD_VERSION_CONFLICT') {
+            await refreshDetailPage();
+            return 'LEAD_VERSION_CONFLICT';
+          }
           if (field === 'reviewStatus' || field === 'status') {
             const label = field === 'reviewStatus' ? '검토 상태' : '영업 상태';
             recordDetailActivity('statusUpdateFailed', label + ' 업데이트 실패');
@@ -942,12 +946,25 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     }
 
     let noteTimer;
+    let noteMutationQueue = Promise.resolve();
+    function enqueueNoteMutation(value) {
+      noteMutationQueue = noteMutationQueue
+        .then(async () => {
+          const outcome = await updateField('manualReviewNotes', value);
+          if (outcome === 'LEAD_VERSION_CONFLICT') {
+            throw Object.assign(new Error('manual note version conflict'), { code: outcome });
+          }
+        });
+      noteMutationQueue.catch(() => {});
+      return noteMutationQueue;
+    }
+
     function scheduleNoteSave() {
       syncManualNoteControls();
       clearTimeout(noteTimer);
       noteTimer = setTimeout(async () => {
         const val = document.getElementById('notesArea').value;
-        await updateField('manualReviewNotes', val);
+        await enqueueNoteMutation(val);
       }, 800);
     }
 
@@ -975,7 +992,11 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
       clearTimeout(noteTimer);
       textarea.value = '';
       syncManualNoteControls();
-      await updateField('manualReviewNotes', '');
+      try {
+        await enqueueNoteMutation('');
+      } catch (error) {
+        if (!error || error.code !== 'LEAD_VERSION_CONFLICT') throw error;
+      }
     }
 
     function collectReviewerFeedbackPayload() {
@@ -991,10 +1012,14 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
         const res = await fetch('/api/leads/' + encodeURIComponent(lead.id), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ reviewerFeedback: collectReviewerFeedbackPayload() })
+          body: JSON.stringify({ reviewerFeedback: collectReviewerFeedbackPayload(), expectedVersion: lead.version })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.success) {
+          if (data.code === 'LEAD_VERSION_CONFLICT') {
+            await refreshDetailPage();
+            return;
+          }
           alert(data.message || '리뷰어 피드백 저장 실패');
           return;
         }
@@ -1013,10 +1038,14 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
         const res = await fetch('/api/leads/' + encodeURIComponent(lead.id), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ reviewerFeedback: { clear: true } })
+          body: JSON.stringify({ reviewerFeedback: { clear: true }, expectedVersion: lead.version })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.success) {
+          if (data.code === 'LEAD_VERSION_CONFLICT') {
+            await refreshDetailPage();
+            return;
+          }
           alert(data.message || '리뷰어 피드백 지우기 실패');
           return;
         }

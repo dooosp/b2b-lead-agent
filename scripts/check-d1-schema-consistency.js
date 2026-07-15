@@ -48,6 +48,8 @@ const EXPECTED_LEADS_COLUMNS = Object.freeze([
   'event_type',
   'created_at',
   'updated_at',
+  'version',
+  'last_patch_mutation_id',
 ]);
 
 const EXPECTED_LEADS_MIGRATION_COLUMNS = Object.freeze(
@@ -90,7 +92,11 @@ const EXPECTED_JOB_RUN_COLUMNS = Object.freeze([
   'github_event_type', 'github_run_id', 'github_run_attempt', 'github_run_url',
   'github_workflow', 'github_sha', 'cloud_run_operation',
   'cloud_run_execution', 'accepted_at', 'started_at', 'completed_at',
-  'last_error', 'updated_at',
+  'last_error', 'updated_at', 'provider_attempt', 'last_callback_event_id',
+]);
+const EXPECTED_JOB_CALLBACK_EVENT_COLUMNS = Object.freeze([
+  'event_id', 'request_id', 'idempotency_key', 'payload_hash', 'target',
+  'provider_attempt', 'state', 'outcome', 'received_at',
 ]);
 
 const EXPECTED_MANUAL_REVIEW_NOTE_EVENT_INDEXES = Object.freeze([
@@ -214,6 +220,8 @@ const DRIFT_CRITICAL_COLUMNS = Object.freeze([
   'generation_mode',
   'verification_status',
   'data_gaps',
+  'version',
+  'last_patch_mutation_id',
 ]);
 
 const TABLE_SPECS = Object.freeze([
@@ -225,6 +233,7 @@ const TABLE_SPECS = Object.freeze([
   Object.freeze({ name: 'reviewer_feedback', columns: EXPECTED_REVIEWER_FEEDBACK_COLUMNS }),
   Object.freeze({ name: 'reviewer_feedback_events', columns: EXPECTED_REVIEWER_FEEDBACK_EVENT_COLUMNS }),
   Object.freeze({ name: 'job_runs', columns: EXPECTED_JOB_RUN_COLUMNS }),
+  Object.freeze({ name: 'job_callback_events', columns: EXPECTED_JOB_CALLBACK_EVENT_COLUMNS }),
   Object.freeze({ name: 'reference_library', columns: EXPECTED_REFERENCE_LIBRARY_COLUMNS }),
   Object.freeze({ name: 'published_snapshot_heads', columns: EXPECTED_SNAPSHOT_HEAD_COLUMNS }),
   Object.freeze({ name: 'published_snapshot_entries', columns: EXPECTED_SNAPSHOT_ENTRY_COLUMNS }),
@@ -353,7 +362,7 @@ function parseCreateTableColumns(sourceText, tableName = 'leads') {
 
 function parseMigrationLeadDefinitions(sourceText) {
   const start = sourceText.indexOf('export const LEADS_COLUMN_DEFINITIONS');
-  const end = sourceText.indexOf('export const CREATE_MIGRATION_LEDGER_SQL');
+  const end = sourceText.indexOf('export const V3_LEADS_COLUMN_DEFINITIONS');
   if (start < 0 || end < 0 || end <= start) {
     throw new Error('LEADS_COLUMN_DEFINITIONS manifest block not found');
   }
@@ -617,9 +626,9 @@ function migrationStatementFingerprint(sourceText, spec) {
   return createHash('sha256').update(JSON.stringify(contract)).digest('hex');
 }
 
-function migrationBindingFingerprint(sourceText) {
+function migrationBindingFingerprint(sourceText, exportName = 'D1_MIGRATION_MANIFEST') {
   const contract = normalizeDefinition(
-    frozenStatementArrayBody(sourceText, 'D1_MIGRATION_MANIFEST')
+    frozenStatementArrayBody(sourceText, exportName)
   );
   return createHash('sha256').update(contract).digest('hex');
 }
@@ -756,8 +765,9 @@ function validateSchemaSources({ schemaSql, migrationManifest }) {
     }
   }
 
-  sources.migrationFingerprints = { schemaSql: {}, migrationManifest: {} };
+  sources.migrationFingerprints = { migrationManifest: {} };
   sources.migrationStatementFingerprints = {};
+  const historicalMigrationDdl = migrationDdlSourceBlock(migrationManifest);
   for (const spec of DEPLOYED_MIGRATION_SPECS) {
     if (!new RegExp(
       `VALUES\\s*\\(\\s*${spec.version}\\s*,\\s*'${spec.name}'\\s*,`,
@@ -774,22 +784,17 @@ function validateSchemaSources({ schemaSql, migrationManifest }) {
         `worker/db/migration-manifest.js missing migration version ${spec.version} name ${spec.name}`
       );
     }
-    for (const [sourceKey, sourceText] of [
-      ['schemaSql', schemaSql],
-      ['migrationManifest', migrationManifest],
-    ]) {
-      try {
-        const fingerprint = schemaVersionFingerprint(sourceText, spec);
-        sources.migrationFingerprints[sourceKey][spec.version] = fingerprint;
-        if (fingerprint !== DEPLOYED_MIGRATION_FINGERPRINTS[spec.version]) {
-          errors.push(
-            `${sourceKey} deployed migration ${spec.version} fingerprint mismatch: `
-            + `${fingerprint} !== ${DEPLOYED_MIGRATION_FINGERPRINTS[spec.version]}`
-          );
-        }
-      } catch (error) {
-        errors.push(`${sourceKey} migration ${spec.version} fingerprint failed: ${error.message}`);
+    try {
+      const fingerprint = schemaVersionFingerprint(historicalMigrationDdl, spec);
+      sources.migrationFingerprints.migrationManifest[spec.version] = fingerprint;
+      if (fingerprint !== DEPLOYED_MIGRATION_FINGERPRINTS[spec.version]) {
+        errors.push(
+          `migrationManifest deployed migration ${spec.version} fingerprint mismatch: `
+          + `${fingerprint} !== ${DEPLOYED_MIGRATION_FINGERPRINTS[spec.version]}`
+        );
       }
+    } catch (error) {
+      errors.push(`migrationManifest migration ${spec.version} fingerprint failed: ${error.message}`);
     }
     try {
       const fingerprint = migrationStatementFingerprint(migrationManifest, spec);
@@ -807,7 +812,10 @@ function validateSchemaSources({ schemaSql, migrationManifest }) {
     }
   }
   try {
-    const fingerprint = migrationBindingFingerprint(migrationManifest);
+    const fingerprint = migrationBindingFingerprint(
+      migrationManifest,
+      'DEPLOYED_D1_MIGRATION_MANIFEST'
+    );
     sources.migrationBindingFingerprint = fingerprint;
     if (fingerprint !== DEPLOYED_MIGRATION_BINDING_FINGERPRINT) {
       errors.push(
@@ -817,6 +825,13 @@ function validateSchemaSources({ schemaSql, migrationManifest }) {
     }
   } catch (error) {
     errors.push(`migrationManifest binding contract failed: ${error.message}`);
+  }
+
+  if (!/VALUES\s*\(\s*3\s*,\s*'lead_cas_and_job_callback_idempotency'\s*,/i.test(schemaSql)) {
+    errors.push('worker/schema.sql missing migration ledger version 3 name lead_cas_and_job_callback_idempotency');
+  }
+  if (!/version:\s*3\b[\s\S]*?name:\s*'lead_cas_and_job_callback_idempotency'/.test(migrationManifest)) {
+    errors.push('worker/db/migration-manifest.js missing migration version 3 name lead_cas_and_job_callback_idempotency');
   }
 
   const expectedSchemaObjects = new Set([
@@ -864,7 +879,7 @@ function runCli() {
   console.log('D1 schema consistency check passed.');
   console.log(`- canonical leads columns: ${EXPECTED_LEADS_COLUMNS.length}`);
   console.log(`- explicit migration lead columns: ${EXPECTED_LEADS_MIGRATION_COLUMNS.length}`);
-  console.log(`- explicit migrations: 2`);
+  console.log(`- explicit migrations: 3`);
   console.log(`- published snapshot tables: 2`);
 }
 
@@ -887,6 +902,7 @@ module.exports = {
   EXPECTED_ANALYTICS_COLUMNS,
   EXPECTED_STATUS_LOG_COLUMNS,
   EXPECTED_JOB_RUN_COLUMNS,
+  EXPECTED_JOB_CALLBACK_EVENT_COLUMNS,
   EXPECTED_CANONICAL_INDEXES,
   EXPECTED_PARTIAL_INDEX_WHERE,
   EXPECTED_SNAPSHOT_HEAD_COLUMNS,

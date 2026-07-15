@@ -1966,11 +1966,12 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
 
     async function updateStatus(leadId, newStatus, fromStatus) {
       if (newStatus === fromStatus) return;
+      const lead = findCachedLead(leadId);
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ status: newStatus })
+          body: JSON.stringify({ status: newStatus, expectedVersion: lead && lead.version })
         });
         const data = await res.json();
         if (!data.success) { alert(data.message); loadLeads(); return; }
@@ -1988,10 +1989,15 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ reviewStatus: newStatus })
+          body: JSON.stringify({ reviewStatus: newStatus, expectedVersion: lead && lead.version })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.success) {
+          if (data.code === 'LEAD_VERSION_CONFLICT') {
+            setReviewSessionStatus('다른 변경이 먼저 저장되어 최신 리드를 불러왔습니다.', 'error');
+            await loadLeads({ focusLeadId: options.focusLeadId || leadId });
+            return;
+          }
           setReviewSessionStatus('검토 상태를 저장하지 못했습니다. 필터와 리드는 그대로 유지됩니다.', 'error');
           recordSessionActivity('reviewUpdateFailed', '검토 상태 변경 실패');
           renderCurrentLeads();
@@ -2011,10 +2017,23 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     }
 
     let saveTimers = {};
+    let noteMutationQueues = {};
     function scheduleNoteSave(leadId, textarea) {
       syncManualNoteControls(textarea);
       clearTimeout(saveTimers[leadId]);
       saveTimers[leadId] = setTimeout(() => saveNotes(leadId, textarea), 800);
+    }
+
+    function enqueueNoteMutation(leadId, mutation) {
+      const previous = noteMutationQueues[leadId] || Promise.resolve();
+      const next = previous.then(mutation);
+      noteMutationQueues[leadId] = next;
+      const cleanup = () => {
+        if (noteMutationQueues[leadId] === next) delete noteMutationQueues[leadId];
+      };
+      next.then(cleanup, cleanup);
+      next.catch(() => {});
+      return next;
     }
 
     function showManualNoteIndicator(indicator, message) {
@@ -2031,25 +2050,38 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       if (clearButton) clearButton.disabled = !String(textarea.value || '').trim();
     }
 
-    async function saveNotes(leadId, textarea, options = {}) {
+    function saveNotes(leadId, textarea, options = {}) {
+      clearTimeout(saveTimers[leadId]);
+      const value = textarea.value;
+      return enqueueNoteMutation(leadId, () => persistNotes(leadId, textarea, value, options));
+    }
+
+    async function persistNotes(leadId, textarea, value, options = {}) {
       const indicator = textarea.parentElement.querySelector('.notes-saved');
       const section = textarea ? textarea.closest('.notes-section') : null;
+      const cachedLead = findCachedLead(leadId);
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ manualReviewNotes: textarea.value })
+          body: JSON.stringify({ manualReviewNotes: value, expectedVersion: cachedLead && cachedLead.version })
         });
         const data = await res.json();
         const lead = findCachedLead(leadId);
+        if (data.code === 'LEAD_VERSION_CONFLICT') {
+          await loadLeads({ focusLeadId: leadId });
+          throw Object.assign(new Error('manual note version conflict'), { code: data.code });
+        }
         if (data.success && data.lead && lead) Object.assign(lead, data.lead);
         if (data.success && indicator) {
-          const message = options.cleared || !String(textarea.value || '').trim() ? '지워짐' : '저장됨';
+          const message = options.cleared || !String(value || '').trim() ? '지워짐' : '저장됨';
           showManualNoteIndicator(indicator, message);
         }
         if (data.success) updateManualReviewNoteState(section, lead);
         if (data.success) syncManualNoteControls(textarea);
-      } catch { /* silent */ }
+      } catch (error) {
+        if (error && error.code === 'LEAD_VERSION_CONFLICT') throw error;
+      }
     }
 
     async function clearManualReviewNotes(leadId, button) {
@@ -2063,26 +2095,38 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       textarea.value = '';
       button.disabled = true;
       try {
-        const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ manualReviewNotes: '' })
+        await enqueueNoteMutation(leadId, async () => {
+          const cachedLead = findCachedLead(leadId);
+          try {
+            const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', ...authHeaders() },
+              body: JSON.stringify({ manualReviewNotes: '', expectedVersion: cachedLead && cachedLead.version })
+            });
+            const data = await res.json();
+            const lead = findCachedLead(leadId);
+            if (!res.ok || !data.success) {
+              if (data.code === 'LEAD_VERSION_CONFLICT') {
+                await loadLeads({ focusLeadId: leadId });
+                throw Object.assign(new Error('manual note version conflict'), { code: data.code });
+              }
+              if (lead) textarea.value = lead.manualReviewNotes || lead.notes || '';
+              syncManualNoteControls(textarea);
+              return;
+            }
+            if (data.lead && lead) Object.assign(lead, data.lead);
+            showManualNoteIndicator(indicator, '지워짐');
+            updateManualReviewNoteState(section, lead);
+            syncManualNoteControls(textarea);
+          } catch (error) {
+            if (error && error.code === 'LEAD_VERSION_CONFLICT') throw error;
+            const lead = findCachedLead(leadId);
+            if (lead) textarea.value = lead.manualReviewNotes || lead.notes || '';
+            syncManualNoteControls(textarea);
+          }
         });
-        const data = await res.json();
-        const lead = findCachedLead(leadId);
-        if (!res.ok || !data.success) {
-          if (lead) textarea.value = lead.manualReviewNotes || lead.notes || '';
-          syncManualNoteControls(textarea);
-          return;
-        }
-        if (data.lead && lead) Object.assign(lead, data.lead);
-        showManualNoteIndicator(indicator, '지워짐');
-        updateManualReviewNoteState(section, lead);
-        syncManualNoteControls(textarea);
-      } catch {
-        const lead = findCachedLead(leadId);
-        if (lead) textarea.value = lead.manualReviewNotes || lead.notes || '';
-        syncManualNoteControls(textarea);
+      } catch (error) {
+        if (!error || error.code !== 'LEAD_VERSION_CONFLICT') throw error;
       }
     }
 
@@ -2099,15 +2143,20 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       const section = button ? button.closest('.reviewer-feedback-section') : null;
       if (!section || !leadId) return;
       button.disabled = true;
+      const cachedLead = findCachedLead(leadId);
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ reviewerFeedback: collectReviewerFeedbackPayload(section) })
+          body: JSON.stringify({ reviewerFeedback: collectReviewerFeedbackPayload(section), expectedVersion: cachedLead && cachedLead.version })
         });
         const data = await res.json().catch(() => ({}));
         const lead = findCachedLead(leadId);
         if (!res.ok || !data.success) {
+          if (data.code === 'LEAD_VERSION_CONFLICT') {
+            await loadLeads({ focusLeadId: leadId });
+            return;
+          }
           alert(data.message || '리뷰어 피드백 저장 실패');
           return;
         }
@@ -2125,15 +2174,20 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       const confirmed = window.confirm('저장된 리뷰어 피드백을 지울까요? 메타데이터 이력은 본문 없이 남습니다.');
       if (!confirmed) return;
       button.disabled = true;
+      const cachedLead = findCachedLead(leadId);
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ reviewerFeedback: { clear: true } })
+          body: JSON.stringify({ reviewerFeedback: { clear: true }, expectedVersion: cachedLead && cachedLead.version })
         });
         const data = await res.json().catch(() => ({}));
         const lead = findCachedLead(leadId);
         if (!res.ok || !data.success) {
+          if (data.code === 'LEAD_VERSION_CONFLICT') {
+            await loadLeads({ focusLeadId: leadId });
+            return;
+          }
           alert(data.message || '리뷰어 피드백 지우기 실패');
           return;
         }

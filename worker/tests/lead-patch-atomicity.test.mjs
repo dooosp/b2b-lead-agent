@@ -8,7 +8,10 @@ import { createLeadRow } from './helpers/fixtures.mjs';
 import { createWorkerRequest } from './helpers/http.mjs';
 
 async function patchLead(db, payload, leadId = 'lead-1') {
-  const request = createWorkerRequest(`/api/leads/${leadId}`, { method: 'PATCH', json: payload });
+  const request = createWorkerRequest(`/api/leads/${leadId}`, {
+    method: 'PATCH',
+    json: { expectedVersion: db.leads.get(leadId)?.version || 1, ...payload },
+  });
   return handleUpdateLead(request, { DB: db }, leadId);
 }
 

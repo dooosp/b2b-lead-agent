@@ -212,7 +212,7 @@ test('synthetic reviewer can read and write protected manual notes but export st
     createWorkerRequest('/api/leads/lead-1', {
       method: 'PATCH',
       headers: API_HEADERS,
-      json: { manualReviewNotes: 'Synthetic reviewer route audit write.' },
+      json: { manualReviewNotes: 'Synthetic reviewer route audit write.', expectedVersion: 1 },
     }),
     env,
     {}
@@ -318,7 +318,7 @@ for (const scenario of [
       createWorkerRequest('/api/leads/lead-1', {
         method: 'PATCH',
         headers: API_HEADERS,
-        json: { manualReviewNotes: `Denied ${scenario.name} write.` },
+        json: { manualReviewNotes: `Denied ${scenario.name} write.`, expectedVersion: 1 },
       }),
       env,
       {}
@@ -328,7 +328,10 @@ for (const scenario of [
       createWorkerRequest('/api/leads/lead-1', {
         method: 'PATCH',
         headers: API_HEADERS,
-        json: { reviewStatus: 'APPROVED' },
+        json: {
+          reviewStatus: 'APPROVED',
+          expectedVersion: env.DB.leads.get('lead-1')?.version || 1,
+        },
       }),
       env,
       {}

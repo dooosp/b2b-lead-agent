@@ -291,6 +291,7 @@ function normalizePersistedLead(lead = {}, { profileId = '', source = '', rowId 
     enrichedAt: lead.enrichedAt ?? lead.enriched_at ?? null,
     followUpDate: stringOrEmpty(lead.followUpDate ?? lead.follow_up_date),
     estimatedValue: Math.max(0, Math.floor(toFiniteNumber(lead.estimatedValue ?? lead.estimated_value, 0))),
+    version: Math.max(1, Math.floor(toFiniteNumber(lead.version, 1))),
     createdAt: lead.createdAt ?? lead.created_at ?? null,
     updatedAt: lead.updatedAt ?? lead.updated_at ?? null,
   };
@@ -343,6 +344,7 @@ export function rowToLead(row) {
     enriched_at: row.enriched_at,
     follow_up_date: row.follow_up_date,
     estimated_value: row.estimated_value,
+    version: row.version,
     created_at: row.created_at,
     updated_at: row.updated_at,
   }, {
@@ -398,6 +400,7 @@ export function rowToLead(row) {
     enrichedAt: normalized.enrichedAt,
     followUpDate: normalized.followUpDate,
     estimatedValue: normalized.estimatedValue,
+    version: normalized.version,
     createdAt: normalized.createdAt,
     updatedAt: normalized.updatedAt
   };
@@ -437,6 +440,7 @@ export function leadToRow(lead, profileId, source) {
     verification_status: normalized.verificationStatus,
     data_gaps: JSON.stringify(normalized.dataGaps),
     event_type: normalized.eventType,
+    version: normalized.version,
     created_at: normalized.createdAt || now,
     updated_at: normalized.updatedAt || now
   };

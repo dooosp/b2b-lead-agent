@@ -167,7 +167,7 @@ export const ROUTE_INVENTORY = Object.freeze([
     auth: 'job callback token',
     dbAccess: 'write',
     writes: true,
-    notes: 'Executor callback endpoint; validates callback token inside the job handler.'
+    notes: 'Executor callback endpoint; requires callback token plus callback Idempotency-Key and applies provider-attempt-aware monotonic transitions.'
   },
   {
     id: 'api.leads.list',
@@ -267,7 +267,7 @@ export const ROUTE_INVENTORY = Object.freeze([
     auth: 'bearer API token',
     dbAccess: 'read/write',
     writes: true,
-    notes: 'Atomic lead status/manual review notes/reviewer feedback/review patch. Rejects generated reviewer note suggestion persistence attempts.'
+    notes: 'Atomic CAS lead status/manual review notes/reviewer feedback/review patch; requires expectedVersion and rejects generated reviewer note suggestion persistence attempts.'
   },
   {
     id: 'api.dashboard',

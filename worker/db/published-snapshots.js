@@ -102,7 +102,7 @@ const MUTABLE_LEAD_FIELDS = Object.freeze([
   'estimatedValue',
 ]);
 
-const CURRENT_MUTABLE_LEAD_FIELDS = Object.freeze(['updatedAt']);
+const CURRENT_MUTABLE_LEAD_FIELDS = Object.freeze(['updatedAt', 'version']);
 
 const CURRENT_ENRICHMENT_FIELDS = Object.freeze([
   'summary',
@@ -184,7 +184,8 @@ const LATEST_LEAD_CONFLICT_SQL = `ON CONFLICT(id) DO UPDATE SET
   generation_mode=excluded.generation_mode,
   verification_status=excluded.verification_status,
   data_gaps=excluded.data_gaps,
-  event_type=excluded.event_type`;
+  event_type=excluded.event_type,
+  version=leads.version+1`;
 
 const MUTABLE_OVERLAY_SQL_FIELDS = Object.freeze([
   ['id', 'l.id', 'mutable_id'],
@@ -196,6 +197,7 @@ const MUTABLE_OVERLAY_SQL_FIELDS = Object.freeze([
   ['manual_review_notes_updated_at', 'l.manual_review_notes_updated_at', 'mutable_manual_updated_at'],
   ['follow_up_date', 'l.follow_up_date', 'mutable_follow_up_date'],
   ['estimated_value', 'l.estimated_value', 'mutable_estimated_value'],
+  ['version', "CASE WHEN e.artifact_kind = 'latest' THEN l.version ELSE NULL END", 'mutable_version'],
   ['updated_at', "CASE WHEN e.artifact_kind = 'latest' THEN l.updated_at ELSE NULL END", 'mutable_updated_at'],
   ['enriched', "CASE WHEN e.artifact_kind = 'latest' THEN l.enriched ELSE NULL END", 'mutable_enriched'],
   ['summary', "CASE WHEN e.artifact_kind = 'latest' AND COALESCE(l.enriched, 0) = 1 THEN l.summary ELSE NULL END", 'mutable_summary'],

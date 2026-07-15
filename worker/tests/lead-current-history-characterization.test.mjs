@@ -307,6 +307,9 @@ test('desired contract: current and history responses are order-independent type
     assert.deepEqual(ids(result.payloads.current.leads), ['current-snapshot-only', 'shared-snapshot-lead']);
     assert.deepEqual(ids(result.payloads.history.history), ['history-snapshot-only', 'shared-snapshot-lead']);
     assert.equal(leadById(result.payloads.current.leads, 'shared-snapshot-lead').summary, 'CURRENT SNAPSHOT MARKER');
+    assert.equal(Number.isSafeInteger(
+      leadById(result.payloads.current.leads, 'shared-snapshot-lead').version
+    ), true);
     assert.equal(leadById(result.payloads.history.history, 'shared-snapshot-lead').summary, 'HISTORY SNAPSHOT MARKER');
     assert.match(result.payloads.current.snapshotId, /^[a-f0-9]{64}$/);
     assert.match(result.payloads.history.snapshotId, /^[a-f0-9]{64}$/);
@@ -812,7 +815,7 @@ for (const scenario of [
     assert.ok(db.maxBoundParams <= 100, `max bind count was ${db.maxBoundParams}`);
     assert.equal(
       db.executedQueries.some((query) => (
-        query.sql === 'select version, name from d1_schema_migrations order by version asc limit 3'
+        query.sql === 'select version, name from d1_schema_migrations order by version asc limit 4'
       )),
       true,
       'query budget must include the cold migration-ledger readiness read'

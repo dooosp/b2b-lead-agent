@@ -49,6 +49,7 @@ jobs:
           EOF
           curl -fsS -X POST "$STATUS_EVENT_URL" \
             -H "X-Job-Callback-Token: $CALLBACK_TOKEN" \
+            -H "Idempotency-Key: gh-${REQUEST_ID}-${{ github.run_id }}-${{ github.run_attempt }}-running" \
             -H "Content-Type: application/json" \
             --data @/tmp/job-running.json || true
 
@@ -93,5 +94,6 @@ jobs:
           EOF
           curl -fsS -X POST "$STATUS_EVENT_URL" \
             -H "X-Job-Callback-Token: $CALLBACK_TOKEN" \
+            -H "Idempotency-Key: gh-${REQUEST_ID}-${{ github.run_id }}-${{ github.run_attempt }}-terminal" \
             -H "Content-Type: application/json" \
             --data @/tmp/job-complete.json || true

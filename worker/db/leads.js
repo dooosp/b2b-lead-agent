@@ -60,6 +60,19 @@ const REVIEWER_FEEDBACK_DEFAULTS = Object.freeze({
   nextReviewerAction: '',
 });
 
+export const LEAD_VERSION_CONFLICT_CODE = 'LEAD_VERSION_CONFLICT';
+
+function leadVersionConflict(currentVersion) {
+  return Object.assign(
+    new Error('리드가 다른 요청에서 변경되었습니다. 최신 데이터를 새로고침한 뒤 다시 시도하세요.'),
+    {
+      status: 409,
+      code: LEAD_VERSION_CONFLICT_CODE,
+      currentVersion: Number.isSafeInteger(currentVersion) ? currentVersion : null,
+    }
+  );
+}
+
 function hasOwn(object, key) {
   return Object.prototype.hasOwnProperty.call(object, key);
 }
@@ -266,7 +279,8 @@ export async function saveLeadsBatch(db, leads, profileId, source) {
        generation_mode=excluded.generation_mode,
        verification_status=excluded.verification_status,
        data_gaps=excluded.data_gaps,
-       event_type=excluded.event_type, updated_at=excluded.updated_at`
+       event_type=excluded.event_type, updated_at=excluded.updated_at,
+       version=leads.version+1`
   );
   const batch = leads.map(lead => {
     const r = leadToRow(lead, profileId, source);
@@ -323,7 +337,7 @@ export async function updateLeadStatus(db, id, newStatus, fromStatus) {
   await ensureD1Schema(db);
   const now = new Date().toISOString();
   await db.batch([
-    db.prepare('UPDATE leads SET status = ?, updated_at = ? WHERE id = ?').bind(newStatus, now, id),
+    db.prepare('UPDATE leads SET status = ?, updated_at = ?, version = version + 1 WHERE id = ?').bind(newStatus, now, id),
     db.prepare('INSERT INTO status_log (lead_id, from_status, to_status, changed_at) VALUES (?, ?, ?, ?)').bind(id, fromStatus, newStatus, now)
   ]);
   return true;
@@ -339,7 +353,7 @@ export async function updateLeadNotes(db, id, notes) {
     ? classifyManualReviewNoteEvent(existingLead.notes, notes)
     : null;
   const statements = [
-    db.prepare('UPDATE leads SET notes = ?, manual_review_notes_author_label = ?, manual_review_notes_updated_at = ?, updated_at = ? WHERE id = ?')
+    db.prepare('UPDATE leads SET notes = ?, manual_review_notes_author_label = ?, manual_review_notes_updated_at = ?, updated_at = ?, version = version + 1 WHERE id = ?')
       .bind(notes, MANUAL_REVIEW_NOTES_AUTHOR_LABEL, now, now, id),
   ];
   if (eventType) {
@@ -557,9 +571,13 @@ function normalizeLeadPatch(lead, patch) {
   return { leadUpdates, statusLogEntry, changedFields, manualReviewNotesChanged, reviewerFeedbackChange };
 }
 
-export async function updateLeadPatchAtomic(db, lead, patch) {
+export async function updateLeadPatchAtomic(db, lead, patch, { expectedVersion } = {}) {
   if (!db || !lead) return { lead, changedFields: [] };
   await ensureD1Schema(db);
+
+  if (lead.version !== expectedVersion) {
+    throw leadVersionConflict(lead.version);
+  }
 
   const {
     leadUpdates,
@@ -568,9 +586,21 @@ export async function updateLeadPatchAtomic(db, lead, patch) {
     manualReviewNotesChanged,
     reviewerFeedbackChange,
   } = normalizeLeadPatch(lead, patch);
-  if (changedFields.length === 0) return { lead, changedFields };
+  if (changedFields.length === 0) {
+    const [casResult] = await db.batch([
+      db.prepare('UPDATE leads SET version = version WHERE id = ? AND version = ?')
+        .bind(lead.id, expectedVersion),
+    ]);
+    if ((casResult?.meta?.changes ?? 0) === 0) {
+      const current = await getLeadById(db, lead.id);
+      throw leadVersionConflict(current?.version);
+    }
+    return { lead, changedFields };
+  }
 
   const now = new Date().toISOString();
+  const nextVersion = expectedVersion + 1;
+  const mutationId = `lead_patch_${globalThis.crypto.randomUUID()}`;
   if (manualReviewNotesChanged) {
     leadUpdates.manual_review_notes_author_label = MANUAL_REVIEW_NOTES_AUTHOR_LABEL;
     leadUpdates.manual_review_notes_updated_at = now;
@@ -582,43 +612,71 @@ export async function updateLeadPatchAtomic(db, lead, patch) {
   const setClause = [
     ...updateFields.map((field) => `${field} = ?`),
     'updated_at = ?',
+    'version = version + 1',
+    'last_patch_mutation_id = ?',
   ].join(', ');
   const updateValues = [
     ...updateFields.map((field) => leadUpdates[field]),
     now,
+    mutationId,
     lead.id,
+    expectedVersion,
   ];
 
   const statements = [
-    db.prepare(`UPDATE leads SET ${setClause} WHERE id = ?`).bind(...updateValues),
+    db.prepare(`UPDATE leads SET ${setClause} WHERE id = ? AND version = ?`).bind(...updateValues),
   ];
 
   if (statusLogEntry) {
     statements.push(
-      db.prepare('INSERT INTO status_log (lead_id, from_status, to_status, changed_at) VALUES (?, ?, ?, ?)')
-        .bind(lead.id, statusLogEntry.fromStatus, statusLogEntry.toStatus, now)
+      db.prepare(
+        `INSERT INTO status_log (lead_id, from_status, to_status, changed_at)
+         SELECT ?, ?, ?, ?
+         WHERE EXISTS (
+           SELECT 1 FROM leads WHERE id = ? AND version = ? AND last_patch_mutation_id = ?
+         )`
+      ).bind(
+        lead.id, statusLogEntry.fromStatus, statusLogEntry.toStatus, now,
+        lead.id, nextVersion, mutationId
+      )
     );
   }
 
   if (manualReviewNoteEventType) {
     statements.push(
-      db.prepare('INSERT INTO manual_review_note_events (lead_id, event_type, changed_at, author_label) VALUES (?, ?, ?, ?)')
-        .bind(lead.id, manualReviewNoteEventType, now, MANUAL_REVIEW_NOTES_AUTHOR_LABEL)
+      db.prepare(
+        `INSERT INTO manual_review_note_events (lead_id, event_type, changed_at, author_label)
+         SELECT ?, ?, ?, ?
+         WHERE EXISTS (
+           SELECT 1 FROM leads WHERE id = ? AND version = ? AND last_patch_mutation_id = ?
+         )`
+      ).bind(
+        lead.id, manualReviewNoteEventType, now, MANUAL_REVIEW_NOTES_AUTHOR_LABEL,
+        lead.id, nextVersion, mutationId
+      )
     );
   }
 
   if (reviewerFeedbackChange?.changed) {
     if (reviewerFeedbackChange.clear) {
       statements.push(
-        db.prepare('DELETE FROM reviewer_feedback WHERE lead_id = ?')
-          .bind(lead.id)
+        db.prepare(
+          `DELETE FROM reviewer_feedback
+           WHERE lead_id = ?
+             AND EXISTS (
+               SELECT 1 FROM leads WHERE id = ? AND version = ? AND last_patch_mutation_id = ?
+             )`
+        ).bind(lead.id, lead.id, nextVersion, mutationId)
       );
     } else {
       const feedback = reviewerFeedbackChange.feedback;
       statements.push(
         db.prepare(
           `INSERT INTO reviewer_feedback (lead_id, action_usefulness, outcome_label, data_gap_priority, evidence_confidence_adjustment, feedback_text, next_reviewer_action, author_label, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
+           WHERE EXISTS (
+             SELECT 1 FROM leads WHERE id = ? AND version = ? AND last_patch_mutation_id = ?
+           )
            ON CONFLICT(lead_id) DO UPDATE SET
              action_usefulness=excluded.action_usefulness,
              outcome_label=excluded.outcome_label,
@@ -637,23 +695,39 @@ export async function updateLeadPatchAtomic(db, lead, patch) {
           feedback.feedback_text,
           feedback.next_reviewer_action,
           MANUAL_REVIEW_NOTES_AUTHOR_LABEL,
-          now
+          now,
+          lead.id,
+          nextVersion,
+          mutationId
         )
       );
     }
     statements.push(
-      db.prepare('INSERT INTO reviewer_feedback_events (lead_id, event_type, changed_at, author_label, changed_fields) VALUES (?, ?, ?, ?, ?)')
+      db.prepare(
+        `INSERT INTO reviewer_feedback_events (lead_id, event_type, changed_at, author_label, changed_fields)
+         SELECT ?, ?, ?, ?, ?
+         WHERE EXISTS (
+           SELECT 1 FROM leads WHERE id = ? AND version = ? AND last_patch_mutation_id = ?
+         )`
+      )
         .bind(
           lead.id,
           reviewerFeedbackChange.eventType,
           now,
           MANUAL_REVIEW_NOTES_AUTHOR_LABEL,
-          JSON.stringify(reviewerFeedbackChange.changedFields || [])
+          JSON.stringify(reviewerFeedbackChange.changedFields || []),
+          lead.id,
+          nextVersion,
+          mutationId
         )
     );
   }
 
-  await db.batch(statements);
+  const [casResult] = await db.batch(statements);
+  if ((casResult?.meta?.changes ?? 0) === 0) {
+    const current = await getLeadById(db, lead.id);
+    throw leadVersionConflict(current?.version);
+  }
   const updatedLead = await getLeadById(db, lead.id);
   return { lead: updatedLead, changedFields };
 }
@@ -680,7 +754,7 @@ export async function updateLeadEnrichment(db, id, enrichData, articleBody) {
       article_body = ?, action_items = ?, key_figures = ?, pain_points = ?,
       meddic = ?, competitive = ?, buying_signals = ?,
       evidence = ?, assumptions = ?,
-      enriched_at = ?, updated_at = ?
+      enriched_at = ?, updated_at = ?, version = version + 1
     WHERE id = ?`
   ).bind(
     enrichData.summary || '', enrichData.roi || '', enrichData.salesPitch || '', enrichData.globalContext || '',

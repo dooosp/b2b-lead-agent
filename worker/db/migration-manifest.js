@@ -1,5 +1,51 @@
 export const D1_SCHEMA_MIGRATION_TABLE = 'd1_schema_migrations';
-export const LATEST_D1_SCHEMA_VERSION = 2;
+export const LATEST_D1_SCHEMA_VERSION = 3;
+
+export const V1_LEADS_COLUMN_DEFINITIONS = Object.freeze([
+  Object.freeze({ name: 'id', definition: 'TEXT PRIMARY KEY' }),
+  Object.freeze({ name: 'identity_key', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'profile_id', definition: "TEXT NOT NULL DEFAULT 'self-service'" }),
+  Object.freeze({ name: 'source', definition: "TEXT NOT NULL DEFAULT 'managed'" }),
+  Object.freeze({ name: 'status', definition: "TEXT NOT NULL DEFAULT 'NEW'" }),
+  Object.freeze({ name: 'review_status', definition: "TEXT NOT NULL DEFAULT 'NEEDS_REVIEW'" }),
+  Object.freeze({ name: 'company', definition: 'TEXT NOT NULL' }),
+  Object.freeze({ name: 'summary', definition: 'TEXT' }),
+  Object.freeze({ name: 'product', definition: 'TEXT' }),
+  Object.freeze({ name: 'score', definition: 'INTEGER DEFAULT 0' }),
+  Object.freeze({ name: 'grade', definition: "TEXT DEFAULT 'B'" }),
+  Object.freeze({ name: 'roi', definition: 'TEXT' }),
+  Object.freeze({ name: 'sales_pitch', definition: 'TEXT' }),
+  Object.freeze({ name: 'global_context', definition: 'TEXT' }),
+  Object.freeze({ name: 'sources', definition: "TEXT DEFAULT '[]'" }),
+  Object.freeze({ name: 'notes', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'manual_review_notes_author_label', definition: 'TEXT' }),
+  Object.freeze({ name: 'manual_review_notes_updated_at', definition: 'TEXT' }),
+  Object.freeze({ name: 'enriched', definition: 'INTEGER DEFAULT 0' }),
+  Object.freeze({ name: 'article_body', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'action_items', definition: "TEXT DEFAULT '[]'" }),
+  Object.freeze({ name: 'key_figures', definition: "TEXT DEFAULT '[]'" }),
+  Object.freeze({ name: 'pain_points', definition: "TEXT DEFAULT '[]'" }),
+  Object.freeze({ name: 'enriched_at', definition: 'TEXT' }),
+  Object.freeze({ name: 'follow_up_date', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'estimated_value', definition: 'INTEGER DEFAULT 0' }),
+  Object.freeze({ name: 'meddic', definition: "TEXT DEFAULT '{}'" }),
+  Object.freeze({ name: 'competitive', definition: "TEXT DEFAULT '{}'" }),
+  Object.freeze({ name: 'buying_signals', definition: "TEXT DEFAULT '[]'" }),
+  Object.freeze({ name: 'score_reason', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'urgency', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'urgency_reason', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'buyer_role', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'evidence', definition: "TEXT DEFAULT '[]'" }),
+  Object.freeze({ name: 'confidence', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'confidence_reason', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'assumptions', definition: "TEXT DEFAULT '[]'" }),
+  Object.freeze({ name: 'generation_mode', definition: "TEXT DEFAULT 'llm'" }),
+  Object.freeze({ name: 'verification_status', definition: "TEXT DEFAULT 'needs_review'" }),
+  Object.freeze({ name: 'data_gaps', definition: "TEXT DEFAULT '[]'" }),
+  Object.freeze({ name: 'event_type', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'created_at', definition: 'TEXT NOT NULL' }),
+  Object.freeze({ name: 'updated_at', definition: 'TEXT NOT NULL' }),
+]);
 
 export const LEADS_COLUMN_DEFINITIONS = Object.freeze([
   Object.freeze({ name: 'id', definition: 'TEXT PRIMARY KEY' }),
@@ -45,7 +91,111 @@ export const LEADS_COLUMN_DEFINITIONS = Object.freeze([
   Object.freeze({ name: 'event_type', definition: "TEXT DEFAULT ''" }),
   Object.freeze({ name: 'created_at', definition: 'TEXT NOT NULL' }),
   Object.freeze({ name: 'updated_at', definition: 'TEXT NOT NULL' }),
+  Object.freeze({ name: 'version', definition: 'INTEGER NOT NULL DEFAULT 1 CHECK (version >= 1)' }),
+  Object.freeze({ name: 'last_patch_mutation_id', definition: "TEXT NOT NULL DEFAULT ''" }),
 ]);
+
+export const V3_LEADS_COLUMN_DEFINITIONS = Object.freeze(
+  LEADS_COLUMN_DEFINITIONS.slice(V1_LEADS_COLUMN_DEFINITIONS.length)
+);
+
+export const V3_JOB_RUN_COLUMN_DEFINITIONS = Object.freeze([
+  Object.freeze({ name: 'provider_attempt', definition: 'INTEGER NOT NULL DEFAULT 0 CHECK (provider_attempt >= 0)' }),
+  Object.freeze({ name: 'last_callback_event_id', definition: "TEXT NOT NULL DEFAULT ''" }),
+]);
+
+const JOB_RUN_COLUMN_DEFINITIONS = Object.freeze([
+  Object.freeze({ name: 'request_id', definition: 'TEXT PRIMARY KEY' }),
+  Object.freeze({ name: 'profile_id', definition: 'TEXT NOT NULL' }),
+  Object.freeze({ name: 'target', definition: "TEXT NOT NULL DEFAULT 'github-actions'" }),
+  Object.freeze({ name: 'state', definition: 'TEXT NOT NULL' }),
+  Object.freeze({ name: 'idempotency_key', definition: 'TEXT' }),
+  Object.freeze({ name: 'github_event_type', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'github_run_id', definition: 'INTEGER' }),
+  Object.freeze({ name: 'github_run_attempt', definition: 'INTEGER' }),
+  Object.freeze({ name: 'github_run_url', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'github_workflow', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'github_sha', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'cloud_run_operation', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'cloud_run_execution', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'accepted_at', definition: 'TEXT NOT NULL' }),
+  Object.freeze({ name: 'started_at', definition: 'TEXT' }),
+  Object.freeze({ name: 'completed_at', definition: 'TEXT' }),
+  Object.freeze({ name: 'last_error', definition: "TEXT DEFAULT ''" }),
+  Object.freeze({ name: 'updated_at', definition: 'TEXT NOT NULL' }),
+  ...V3_JOB_RUN_COLUMN_DEFINITIONS,
+]);
+
+export const CREATE_CANONICAL_LEADS_TABLE_SQL = `CREATE TABLE IF NOT EXISTS leads (
+  id TEXT PRIMARY KEY,
+  identity_key TEXT DEFAULT '',
+  profile_id TEXT NOT NULL DEFAULT 'self-service',
+  source TEXT NOT NULL DEFAULT 'managed',
+  status TEXT NOT NULL DEFAULT 'NEW',
+  review_status TEXT NOT NULL DEFAULT 'NEEDS_REVIEW',
+  company TEXT NOT NULL,
+  summary TEXT,
+  product TEXT,
+  score INTEGER DEFAULT 0,
+  grade TEXT DEFAULT 'B',
+  roi TEXT,
+  sales_pitch TEXT,
+  global_context TEXT,
+  sources TEXT DEFAULT '[]',
+  notes TEXT DEFAULT '',
+  manual_review_notes_author_label TEXT,
+  manual_review_notes_updated_at TEXT,
+  enriched INTEGER DEFAULT 0,
+  article_body TEXT DEFAULT '',
+  action_items TEXT DEFAULT '[]',
+  key_figures TEXT DEFAULT '[]',
+  pain_points TEXT DEFAULT '[]',
+  enriched_at TEXT,
+  follow_up_date TEXT DEFAULT '',
+  estimated_value INTEGER DEFAULT 0,
+  meddic TEXT DEFAULT '{}',
+  competitive TEXT DEFAULT '{}',
+  buying_signals TEXT DEFAULT '[]',
+  score_reason TEXT DEFAULT '',
+  urgency TEXT DEFAULT '',
+  urgency_reason TEXT DEFAULT '',
+  buyer_role TEXT DEFAULT '',
+  evidence TEXT DEFAULT '[]',
+  confidence TEXT DEFAULT '',
+  confidence_reason TEXT DEFAULT '',
+  assumptions TEXT DEFAULT '[]',
+  generation_mode TEXT DEFAULT 'llm',
+  verification_status TEXT DEFAULT 'needs_review',
+  data_gaps TEXT DEFAULT '[]',
+  event_type TEXT DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1 CHECK (version >= 1),
+  last_patch_mutation_id TEXT NOT NULL DEFAULT ''
+)`;
+
+export const CREATE_CANONICAL_JOB_RUNS_TABLE_SQL = `CREATE TABLE IF NOT EXISTS job_runs (
+  request_id TEXT PRIMARY KEY,
+  profile_id TEXT NOT NULL,
+  target TEXT NOT NULL DEFAULT 'github-actions',
+  state TEXT NOT NULL,
+  idempotency_key TEXT,
+  github_event_type TEXT DEFAULT '',
+  github_run_id INTEGER,
+  github_run_attempt INTEGER,
+  github_run_url TEXT DEFAULT '',
+  github_workflow TEXT DEFAULT '',
+  github_sha TEXT DEFAULT '',
+  cloud_run_operation TEXT DEFAULT '',
+  cloud_run_execution TEXT DEFAULT '',
+  accepted_at TEXT NOT NULL,
+  started_at TEXT,
+  completed_at TEXT,
+  last_error TEXT DEFAULT '',
+  updated_at TEXT NOT NULL,
+  provider_attempt INTEGER NOT NULL DEFAULT 0 CHECK (provider_attempt >= 0),
+  last_callback_event_id TEXT NOT NULL DEFAULT ''
+)`;
 
 export const CREATE_MIGRATION_LEDGER_SQL = `CREATE TABLE IF NOT EXISTS d1_schema_migrations (
   version INTEGER PRIMARY KEY,
@@ -221,6 +371,23 @@ export const V2_INDEX_STATEMENTS = Object.freeze([
   'CREATE INDEX IF NOT EXISTS idx_published_snapshot_entries_lookup ON published_snapshot_entries(profile_id, artifact_kind, snapshot_id, ordinal)',
 ]);
 
+export const V3_CREATE_TABLE_STATEMENTS = Object.freeze([
+  `CREATE TABLE IF NOT EXISTS job_callback_events (
+    event_id TEXT PRIMARY KEY,
+    request_id TEXT NOT NULL,
+    idempotency_key TEXT NOT NULL,
+    payload_hash TEXT NOT NULL,
+    target TEXT NOT NULL,
+    provider_attempt INTEGER NOT NULL CHECK (provider_attempt >= 1),
+    state TEXT NOT NULL CHECK (state IN ('running', 'succeeded', 'failed', 'cancelled')),
+    outcome TEXT NOT NULL CHECK (outcome IN ('applied', 'rejected')),
+    received_at TEXT NOT NULL,
+    UNIQUE (request_id, idempotency_key)
+  )`,
+]);
+
+export const V3_INDEX_STATEMENTS = Object.freeze([]);
+
 export function normalizeD1SchemaSql(sql) {
   return String(sql || '')
     .replace(/\bIF\s+NOT\s+EXISTS\b/gi, '')
@@ -242,9 +409,17 @@ function indexSpec(sql) {
 
 export const V1_INDEX_SPECS = Object.freeze(V1_INDEX_STATEMENTS.map(indexSpec));
 export const V2_INDEX_SPECS = Object.freeze(V2_INDEX_STATEMENTS.map(indexSpec));
-export const CANONICAL_D1_INDEX_SPECS = Object.freeze([...V1_INDEX_SPECS, ...V2_INDEX_SPECS]);
+export const V3_INDEX_SPECS = Object.freeze(V3_INDEX_STATEMENTS.map(indexSpec));
+export const CANONICAL_D1_INDEX_SPECS = Object.freeze([
+  ...V1_INDEX_SPECS,
+  ...V2_INDEX_SPECS,
+  ...V3_INDEX_SPECS,
+]);
 
 export const CANONICAL_D1_TABLE_SQL_FRAGMENTS = Object.freeze({
+  leads: Object.freeze([
+    'CHECK (version >= 1)',
+  ]),
   manual_review_note_events: Object.freeze([
     "CHECK (event_type IN ('create', 'edit', 'clear'))",
     "CHECK (author_label = 'manual_reviewer')",
@@ -259,6 +434,15 @@ export const CANONICAL_D1_TABLE_SQL_FRAGMENTS = Object.freeze({
   reviewer_feedback_events: Object.freeze([
     "CHECK (event_type IN ('create', 'edit', 'clear'))",
     "CHECK (author_label = 'manual_reviewer')",
+  ]),
+  job_runs: Object.freeze([
+    'CHECK (provider_attempt >= 0)',
+  ]),
+  job_callback_events: Object.freeze([
+    'CHECK (provider_attempt >= 1)',
+    "CHECK (state IN ('running', 'succeeded', 'failed', 'cancelled'))",
+    "CHECK (outcome IN ('applied', 'rejected'))",
+    'UNIQUE (request_id, idempotency_key)',
   ]),
   published_snapshot_heads: Object.freeze([
     "CHECK (artifact_kind IN ('latest', 'history'))",
@@ -280,7 +464,14 @@ function createTableSpec(sql) {
 }
 
 export const CANONICAL_D1_TABLE_SPECS = Object.freeze(
-  [CREATE_MIGRATION_LEDGER_SQL, ...V1_CREATE_TABLE_STATEMENTS, ...V2_CREATE_TABLE_STATEMENTS]
+  [
+    CREATE_MIGRATION_LEDGER_SQL,
+    CREATE_CANONICAL_LEADS_TABLE_SQL,
+    CREATE_CANONICAL_JOB_RUNS_TABLE_SQL,
+    ...V1_CREATE_TABLE_STATEMENTS.filter((sql) => !/CREATE TABLE IF NOT EXISTS (?:leads|job_runs)\b/i.test(sql)),
+    ...V2_CREATE_TABLE_STATEMENTS,
+    ...V3_CREATE_TABLE_STATEMENTS,
+  ]
     .map(createTableSpec)
 );
 
@@ -290,7 +481,7 @@ function columnSpec(type, notNull = 0, pk = 0, defaultValue = null) {
 
 function leadColumnSpec(definition) {
   const type = definition.trim().split(/\s+/, 1)[0].toUpperCase();
-  const defaultMatch = /\bDEFAULT\s+(.+)$/i.exec(definition);
+  const defaultMatch = /\bDEFAULT\s+((?:'[^']*')|(?:"[^"]*")|[^\s]+)/i.exec(definition);
   return columnSpec(
     type,
     /\bNOT\s+NULL\b/i.test(definition) ? 1 : 0,
@@ -323,7 +514,11 @@ export const CANONICAL_D1_TABLE_COLUMN_NAMES = Object.freeze({
     'github_event_type', 'github_run_id', 'github_run_attempt', 'github_run_url',
     'github_workflow', 'github_sha', 'cloud_run_operation',
     'cloud_run_execution', 'accepted_at', 'started_at', 'completed_at',
-    'last_error', 'updated_at',
+    'last_error', 'updated_at', 'provider_attempt', 'last_callback_event_id',
+  ]),
+  job_callback_events: Object.freeze([
+    'event_id', 'request_id', 'idempotency_key', 'payload_hash', 'target',
+    'provider_attempt', 'state', 'outcome', 'received_at',
   ]),
   reference_library: Object.freeze([
     'id', 'profile_id', 'category', 'client', 'project', 'result', 'source_url',
@@ -410,6 +605,19 @@ export const CANONICAL_D1_CRITICAL_COLUMN_SPECS = Object.freeze({
     completed_at: columnSpec('TEXT'),
     last_error: columnSpec('TEXT', 0, 0, "''"),
     updated_at: columnSpec('TEXT', 1),
+    provider_attempt: columnSpec('INTEGER', 1, 0, '0'),
+    last_callback_event_id: columnSpec('TEXT', 1, 0, "''"),
+  }),
+  job_callback_events: Object.freeze({
+    event_id: columnSpec('TEXT', 0, 1),
+    request_id: columnSpec('TEXT', 1),
+    idempotency_key: columnSpec('TEXT', 1),
+    payload_hash: columnSpec('TEXT', 1),
+    target: columnSpec('TEXT', 1),
+    provider_attempt: columnSpec('INTEGER', 1),
+    state: columnSpec('TEXT', 1),
+    outcome: columnSpec('TEXT', 1),
+    received_at: columnSpec('TEXT', 1),
   }),
   reference_library: Object.freeze({
     id: columnSpec('INTEGER', 0, 1),
@@ -462,10 +670,14 @@ export function validateD1SchemaIntrospection(rows, {
   tableNames = Object.keys(CANONICAL_D1_TABLE_COLUMN_NAMES),
   allowMissingTables = false,
   allowLegacyLeadSubset = false,
+  expectedColumnNamesByTable = CANONICAL_D1_TABLE_COLUMN_NAMES,
+  allowedExtraColumnNamesByTable = {},
+  allowedMissingColumnNamesByTable = {},
 } = {}) {
   const errors = [];
   for (const tableName of tableNames) {
-    const expectedNames = CANONICAL_D1_TABLE_COLUMN_NAMES[tableName];
+    const expectedNames = expectedColumnNamesByTable[tableName]
+      || CANONICAL_D1_TABLE_COLUMN_NAMES[tableName];
     if (!expectedNames) {
       errors.push(`unknown canonical table ${tableName}`);
       continue;
@@ -477,8 +689,10 @@ export function validateD1SchemaIntrospection(rows, {
     }
 
     const actualNames = tableRows.map((row) => String(row.name || ''));
-    const unexpected = actualNames.filter((name) => !expectedNames.includes(name));
-    const missing = expectedNames.filter((name) => !actualNames.includes(name));
+    const allowedExtra = new Set(allowedExtraColumnNamesByTable[tableName] || []);
+    const allowedMissing = new Set(allowedMissingColumnNamesByTable[tableName] || []);
+    const unexpected = actualNames.filter((name) => !expectedNames.includes(name) && !allowedExtra.has(name));
+    const missing = expectedNames.filter((name) => !actualNames.includes(name) && !allowedMissing.has(name));
     if (unexpected.length > 0) {
       errors.push(`${tableName} has unexpected columns: ${unexpected.join(', ')}`);
     }
@@ -491,6 +705,7 @@ export function validateD1SchemaIntrospection(rows, {
 
     const criticalSpecs = CANONICAL_D1_CRITICAL_COLUMN_SPECS[tableName] || {};
     for (const [columnName, expected] of Object.entries(criticalSpecs)) {
+      if (!expectedNames.includes(columnName) && !allowedExtra.has(columnName)) continue;
       const actual = tableRows.find((row) => row.name === columnName);
       if (!actual) continue;
       const actualShape = {
@@ -536,6 +751,9 @@ export function buildD1SchemaObjectIntrospectionQuery(
 const LEADS_COLUMN_DEFINITION_BY_NAME = new Map(
   LEADS_COLUMN_DEFINITIONS.map(({ name, definition }) => [name, definition])
 );
+const JOB_RUN_COLUMN_DEFINITION_BY_NAME = new Map(
+  JOB_RUN_COLUMN_DEFINITIONS.map(({ name, definition }) => [name, definition])
+);
 
 function canonicalLeadsCreateSql(schemaColumnRows = []) {
   const orderedNames = schemaColumnRows
@@ -557,6 +775,26 @@ function canonicalLeadsCreateSql(schemaColumnRows = []) {
   return normalizeD1SchemaSql(`CREATE TABLE leads (${definitions.join(', ')})`);
 }
 
+function canonicalJobRunsCreateSql(schemaColumnRows = []) {
+  const orderedNames = schemaColumnRows
+    .filter((row) => row.table_name === 'job_runs')
+    .map((row, index) => ({
+      name: String(row.name || ''),
+      cid: Number.isInteger(Number(row.cid)) ? Number(row.cid) : index,
+    }))
+    .sort((left, right) => left.cid - right.cid)
+    .map(({ name }) => name);
+  const names = orderedNames.length > 0
+    ? orderedNames
+    : CANONICAL_D1_TABLE_COLUMN_NAMES.job_runs;
+  const definitions = names.map((name) => {
+    const definition = JOB_RUN_COLUMN_DEFINITION_BY_NAME.get(name);
+    return definition ? `${name} ${definition}` : null;
+  });
+  if (definitions.some((definition) => !definition)) return null;
+  return normalizeD1SchemaSql(`CREATE TABLE job_runs (${definitions.join(', ')})`);
+}
+
 export function validateD1SchemaObjects(rows, {
   tableNames = Object.keys(CANONICAL_D1_TABLE_COLUMN_NAMES),
   indexSpecs = CANONICAL_D1_INDEX_SPECS,
@@ -574,6 +812,16 @@ export function validateD1SchemaObjects(rows, {
     }
     const normalizedTableSql = normalizeD1SchemaSql(tableRow.sql);
     for (const fragment of fragments) {
+      if (
+        tableName === 'leads'
+        && fragment === 'CHECK (version >= 1)'
+        && !schemaColumnRows.some((row) => row.table_name === 'leads' && row.name === 'version')
+      ) continue;
+      if (
+        tableName === 'job_runs'
+        && fragment === 'CHECK (provider_attempt >= 0)'
+        && !schemaColumnRows.some((row) => row.table_name === 'job_runs' && row.name === 'provider_attempt')
+      ) continue;
       const normalizedFragment = normalizeD1SchemaSql(fragment);
       if (!normalizedTableSql.includes(normalizedFragment)) {
         errors.push(`${tableName} is missing canonical constraint: ${fragment}`);
@@ -586,6 +834,11 @@ export function validateD1SchemaObjects(rows, {
       const expectedLeadsSql = canonicalLeadsCreateSql(schemaColumnRows);
       if (!expectedLeadsSql || normalizedTableSql !== expectedLeadsSql) {
         errors.push('leads canonical per-column CREATE TABLE SQL mismatch');
+      }
+    } else if (tableName === 'job_runs') {
+      const expectedJobRunsSql = canonicalJobRunsCreateSql(schemaColumnRows);
+      if (!expectedJobRunsSql || normalizedTableSql !== expectedJobRunsSql) {
+        errors.push('job_runs canonical per-version CREATE TABLE SQL mismatch');
       }
     } else if (expectedTable && normalizedTableSql !== expectedTable.normalizedSql) {
       errors.push(`${tableName} canonical CREATE TABLE SQL mismatch`);
@@ -627,7 +880,7 @@ export function validateD1SchemaObjects(rows, {
   return errors;
 }
 
-export const D1_MIGRATION_MANIFEST = Object.freeze([
+export const DEPLOYED_D1_MIGRATION_MANIFEST = Object.freeze([
   Object.freeze({
     version: 1,
     name: 'adopt_canonical_lead_schema',
@@ -648,6 +901,21 @@ export const D1_MIGRATION_MANIFEST = Object.freeze([
     indexSpecs: V2_INDEX_SPECS,
     introspectLeads: false,
     tables: Object.freeze(['published_snapshot_heads', 'published_snapshot_entries']),
+  }),
+]);
+
+export const D1_MIGRATION_MANIFEST = Object.freeze([
+  ...DEPLOYED_D1_MIGRATION_MANIFEST,
+  Object.freeze({
+    version: 3,
+    name: 'lead_cas_and_job_callback_idempotency',
+    createTables: V3_CREATE_TABLE_STATEMENTS,
+    indexes: V3_INDEX_STATEMENTS,
+    indexSpecs: V3_INDEX_SPECS,
+    introspectLeads: true,
+    addLeadColumns: V3_LEADS_COLUMN_DEFINITIONS,
+    addJobRunColumns: V3_JOB_RUN_COLUMN_DEFINITIONS,
+    tables: Object.freeze(['leads', 'job_runs', 'job_callback_events']),
   }),
 ]);
 

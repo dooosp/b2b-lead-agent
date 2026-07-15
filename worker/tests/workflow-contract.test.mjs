@@ -20,6 +20,8 @@ test('generate-report workflow keeps requestId callback contract fields', async 
   assert.match(workflow, /"state":"running"/);
   assert.match(workflow, /"state":"\$JOB_STATE"/);
   assert.match(workflow, /X-Job-Callback-Token: \$CALLBACK_TOKEN/);
+  assert.match(workflow, /Idempotency-Key: gh-\$\{REQUEST_ID\}-\$\{\{ github\.run_id \}\}-\$\{\{ github\.run_attempt \}\}-running/);
+  assert.match(workflow, /Idempotency-Key: gh-\$\{REQUEST_ID\}-\$\{\{ github\.run_id \}\}-\$\{\{ github\.run_attempt \}\}-terminal/);
 });
 
 test('workflows use Node 24 compatible GitHub Actions runtime versions', async () => {

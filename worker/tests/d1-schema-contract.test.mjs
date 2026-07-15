@@ -11,10 +11,13 @@ import {
   D1_MIGRATION_MANIFEST,
   LEADS_COLUMN_DEFINITIONS,
   LATEST_D1_SCHEMA_VERSION,
+  V1_LEADS_COLUMN_DEFINITIONS,
   V1_CREATE_TABLE_STATEMENTS,
   V1_INDEX_STATEMENTS,
   V2_CREATE_TABLE_STATEMENTS,
   V2_INDEX_STATEMENTS,
+  V3_CREATE_TABLE_STATEMENTS,
+  V3_INDEX_STATEMENTS,
   buildD1SchemaIntrospectionQuery,
   buildD1SchemaObjectIntrospectionQuery,
 } from '../db/migration-manifest.js';
@@ -24,6 +27,7 @@ import { FakeD1Database } from './helpers/fake-d1.mjs';
 const DEPLOYED_RUNTIME_MIGRATION_FINGERPRINTS = Object.freeze({
   1: '168d82f3d640db2d1a74e3450060ef56840efc777f1cdbf4078abd4c07eb58c1',
   2: '5f606cbb454cb8ff1786edd1a6408ec4bd5e219a55de3f4b96628bb6993c0783',
+  3: '6585dccd70d7686795bdc6203ad4e260e1ea99713d3927a5ae36c04f62e92737',
 });
 
 function runtimeMigrationFingerprint(migration) {
@@ -35,7 +39,11 @@ function runtimeMigrationFingerprint(migration) {
     createTables: migration.createTables,
     indexes: migration.indexes,
     ledgerSql: migration.version === 1 ? CREATE_MIGRATION_LEDGER_SQL : null,
-    leadColumnDefinitions: migration.version === 1 ? LEADS_COLUMN_DEFINITIONS : null,
+    leadColumnDefinitions: migration.version === 1 ? V1_LEADS_COLUMN_DEFINITIONS : null,
+    ...(migration.version === 3 ? {
+      addLeadColumns: migration.addLeadColumns,
+      addJobRunColumns: migration.addJobRunColumns,
+    } : {}),
   };
   return createHash('sha256').update(JSON.stringify(contract)).digest('hex');
 }
@@ -68,6 +76,8 @@ test('explicit D1 manifest preserves conservative lead, review, and snapshot con
     ...V1_INDEX_STATEMENTS,
     ...V2_CREATE_TABLE_STATEMENTS,
     ...V2_INDEX_STATEMENTS,
+    ...V3_CREATE_TABLE_STATEMENTS,
+    ...V3_INDEX_STATEMENTS,
   ].join('\n');
 
   assert.match(CREATE_LEADS_TABLE_SQL, /identity_key TEXT DEFAULT ''/);
@@ -114,8 +124,8 @@ test('explicit D1 manifest preserves conservative lead, review, and snapshot con
   assert.equal(CANONICAL_D1_CRITICAL_COLUMN_SPECS.published_snapshot_entries.ordinal.pk, 4);
 
   const introspectionSql = buildD1SchemaIntrospectionQuery();
-  assert.equal((introspectionSql.match(/FROM pragma_table_info\('/g) || []).length, 11);
-  assert.equal((introspectionSql.match(/ UNION ALL /g) || []).length, 10);
+  assert.equal((introspectionSql.match(/FROM pragma_table_info\('/g) || []).length, 12);
+  assert.equal((introspectionSql.match(/ UNION ALL /g) || []).length, 11);
   assert.match(introspectionSql, /table_name, cid, name, type/);
   assert.match(introspectionSql, /LIMIT \d+$/);
   assert.doesNotMatch(introspectionSql, /CREATE|ALTER|INSERT|UPDATE|DELETE/i);
@@ -123,7 +133,7 @@ test('explicit D1 manifest preserves conservative lead, review, and snapshot con
   const schemaObjectSql = buildD1SchemaObjectIntrospectionQuery();
   assert.match(schemaObjectSql, /FROM sqlite_schema/i);
   assert.match(schemaObjectSql, /type = 'index' AND name IN \(/i);
-  assert.match(schemaObjectSql, /LIMIT 27$/i);
+  assert.match(schemaObjectSql, /LIMIT 28$/i);
   assert.doesNotMatch(schemaObjectSql, /type = 'index'\s+OR/i);
   for (const index of CANONICAL_D1_INDEX_SPECS) {
     assert.match(schemaObjectSql, new RegExp(`'${index.name}'`));
@@ -144,7 +154,7 @@ test('request-path D1 readiness check is read-only and fails closed by exact ver
   assert.deepEqual(db.batches, []);
   assert.equal(
     db.executedQueries.filter(({ sql }) => (
-      sql === 'select version, name from d1_schema_migrations order by version asc limit 3'
+      sql === 'select version, name from d1_schema_migrations order by version asc limit 4'
     )).length,
     1
   );
@@ -155,7 +165,8 @@ test('request-path D1 readiness check is read-only and fails closed by exact ver
     [
       { version: 1, name: 'adopt_canonical_lead_schema' },
       { version: 2, name: 'separate_published_snapshot_artifacts' },
-      { version: 3, name: 'future' },
+      { version: 3, name: 'lead_cas_and_job_callback_idempotency' },
+      { version: 4, name: 'future' },
     ],
   ];
   for (const migrationLedgerRows of invalidLedgers) {
