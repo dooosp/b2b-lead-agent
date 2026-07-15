@@ -1,9 +1,14 @@
 import {
   CREATE_MIGRATION_LEDGER_SQL,
+  CANONICAL_D1_INDEX_SPECS,
+  CANONICAL_D1_TABLE_COLUMN_NAMES,
   D1_MIGRATION_MANIFEST,
   D1_SCHEMA_MIGRATION_TABLE,
   LATEST_D1_SCHEMA_VERSION,
   LEADS_COLUMN_DEFINITIONS,
+  V1_LEADS_COLUMN_DEFINITIONS,
+  V3_JOB_RUN_COLUMN_DEFINITIONS,
+  V3_LEADS_COLUMN_DEFINITIONS,
   buildD1SchemaIntrospectionQuery,
   buildD1SchemaObjectIntrospectionQuery,
   validateD1MigrationChain,
@@ -33,23 +38,44 @@ function schemaIncompatible(errors, cause) {
 async function inspectMigrationTables(db, migration, { alreadyApplied = false } = {}) {
   let columnRows;
   let schemaObjectRows;
+  const inspectionIndexSpecs = migration.version === 3
+    ? CANONICAL_D1_INDEX_SPECS.filter(({ tableName }) => migration.tables.includes(tableName))
+    : migration.indexSpecs;
   try {
     columnRows = await queryRows(db, buildD1SchemaIntrospectionQuery(migration.tables));
     schemaObjectRows = await queryRows(
       db,
-      buildD1SchemaObjectIntrospectionQuery(migration.tables, migration.indexSpecs)
+      buildD1SchemaObjectIntrospectionQuery(migration.tables, inspectionIndexSpecs)
     );
   } catch (cause) {
     throw schemaIncompatible('schema introspection failed', cause);
   }
+  const expectedColumnNamesByTable = { ...CANONICAL_D1_TABLE_COLUMN_NAMES };
+  const allowedExtraColumnNamesByTable = {};
+  const allowedMissingColumnNamesByTable = {};
+  if (migration.version === 1) {
+    expectedColumnNamesByTable.leads = V1_LEADS_COLUMN_DEFINITIONS.map(({ name }) => name);
+    expectedColumnNamesByTable.job_runs = CANONICAL_D1_TABLE_COLUMN_NAMES.job_runs.filter(
+      (name) => !V3_JOB_RUN_COLUMN_DEFINITIONS.some((column) => column.name === name)
+    );
+    allowedExtraColumnNamesByTable.leads = V3_LEADS_COLUMN_DEFINITIONS.map(({ name }) => name);
+    allowedExtraColumnNamesByTable.job_runs = V3_JOB_RUN_COLUMN_DEFINITIONS.map(({ name }) => name);
+  }
+  if (migration.version === 3 && !alreadyApplied) {
+    allowedMissingColumnNamesByTable.leads = V3_LEADS_COLUMN_DEFINITIONS.map(({ name }) => name);
+    allowedMissingColumnNamesByTable.job_runs = V3_JOB_RUN_COLUMN_DEFINITIONS.map(({ name }) => name);
+  }
   const errors = validateD1SchemaIntrospection(columnRows, {
     tableNames: migration.tables,
     allowMissingTables: !alreadyApplied,
-    allowLegacyLeadSubset: !alreadyApplied && migration.introspectLeads,
+    allowLegacyLeadSubset: !alreadyApplied && migration.version === 1,
+    expectedColumnNamesByTable,
+    allowedExtraColumnNamesByTable,
+    allowedMissingColumnNamesByTable,
   });
   errors.push(...validateD1SchemaObjects(schemaObjectRows, {
     tableNames: migration.tables,
-    indexSpecs: migration.indexSpecs,
+    indexSpecs: inspectionIndexSpecs,
     schemaColumnRows: columnRows,
     allowMissingTables: !alreadyApplied,
     allowMissingIndexes: !alreadyApplied,
@@ -75,11 +101,27 @@ function buildMigrationStatements(migration, inspection) {
         .map((row) => String(row.name || ''))
     );
     if (existingColumns.size > 0) {
-      for (const column of LEADS_COLUMN_DEFINITIONS) {
+      const leadColumns = migration.version === 1
+        ? V1_LEADS_COLUMN_DEFINITIONS
+        : (migration.addLeadColumns || LEADS_COLUMN_DEFINITIONS);
+      for (const column of leadColumns) {
         if (column.name === 'id' || existingColumns.has(column.name)) continue;
-        alteredColumns.push(column.name);
+        alteredColumns.push({ table: 'leads', name: column.name });
         statements.push(`ALTER TABLE leads ADD COLUMN ${column.name} ${column.definition}`);
       }
+    }
+  }
+
+  if (migration.addJobRunColumns) {
+    const existingColumns = new Set(
+      inspection.columnRows
+        .filter((row) => row.table_name === 'job_runs')
+        .map((row) => String(row.name || ''))
+    );
+    for (const column of migration.addJobRunColumns) {
+      if (existingColumns.has(column.name)) continue;
+      alteredColumns.push({ table: 'job_runs', name: column.name });
+      statements.push(`ALTER TABLE job_runs ADD COLUMN ${column.name} ${column.definition}`);
     }
   }
 
@@ -101,14 +143,15 @@ async function runMigrationBatch(db, migration, allowDuplicateRetry = true, insp
     await db.batch(plan.statements.map((sql) => db.prepare(sql)));
   } catch (error) {
     const duplicateColumn = duplicateColumnName(error);
-    if (!allowDuplicateRetry || !duplicateColumn || !plan.alteredColumns.includes(duplicateColumn)) {
+    const duplicateTarget = plan.alteredColumns.find(({ name }) => name === duplicateColumn);
+    if (!allowDuplicateRetry || !duplicateTarget) {
       throw error;
     }
 
     const retryRows = await inspectMigrationTables(db, migration);
     const currentColumns = new Set(
       retryRows.columnRows
-        .filter((row) => row.table_name === 'leads')
+        .filter((row) => row.table_name === duplicateTarget.table)
         .map((row) => String(row.name || ''))
     );
     if (!currentColumns.has(duplicateColumn)) throw error;

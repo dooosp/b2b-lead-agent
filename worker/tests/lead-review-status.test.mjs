@@ -117,6 +117,27 @@ class FakeReviewDb {
         })[0];
       return row ? { event_type: row.event_type, changed_at: row.changed_at, author_label: row.author_label } : null;
     }
+    if (normalized.startsWith('UPDATE leads SET ') && normalized.endsWith(' WHERE id = ? AND version = ?')) {
+      const id = params.at(-2);
+      const expectedVersion = params.at(-1);
+      assert.equal(id, this.row.id);
+      if (this.row.version !== expectedVersion) return { meta: { changes: 0 } };
+      const setClause = normalized.slice(
+        'UPDATE leads SET '.length,
+        normalized.lastIndexOf(' WHERE id = ? AND version = ?')
+      );
+      let paramIndex = 0;
+      for (const assignment of setClause.split(', ')) {
+        const [field, expression] = assignment.split(' = ');
+        if (expression === 'version + 1') this.row.version += 1;
+        else if (expression === 'version') this.row.version = expectedVersion;
+        else {
+          this.row[field] = params[paramIndex];
+          paramIndex += 1;
+        }
+      }
+      return { meta: { changes: 1 } };
+    }
     if (normalized.startsWith('UPDATE leads SET ') && normalized.endsWith(' WHERE id = ?')) {
       const id = params[params.length - 1];
       assert.equal(id, this.row.id);
@@ -212,6 +233,8 @@ function createRow(overrides = {}) {
     enriched_at: null,
     follow_up_date: '',
     estimated_value: 0,
+    version: 1,
+    last_patch_mutation_id: '',
     created_at: '2026-05-05T00:00:00.000Z',
     updated_at: '2026-05-05T00:00:00.000Z',
     ...overrides
@@ -222,7 +245,7 @@ function patchLead(db, body) {
   const request = new Request('https://example.com/api/leads/lead-1', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
+    body: JSON.stringify({ expectedVersion: db.row.version || 1, ...body })
   });
   return handleUpdateLead(request, { DB: db }, 'lead-1');
 }
@@ -315,13 +338,17 @@ test('lead review pages save explicit human-entered manual review notes only', (
 
   assert.match(listHtml, /수동 리뷰 메모/);
   assert.match(listHtml, /aria-label="수동 리뷰 메모 입력"/);
-  assert.match(listHtml, /JSON\.stringify\(\{ manualReviewNotes: textarea\.value \}\)/);
+  assert.match(listHtml, /JSON\.stringify\(\{ manualReviewNotes: value, expectedVersion: cachedLead && cachedLead\.version \}\)/);
+  assert.match(listHtml, /function enqueueNoteMutation\(leadId, mutation\)/);
+  assert.match(listHtml, /const next = previous\.then\(mutation\)/);
+  assert.match(listHtml, /throw Object\.assign\(new Error\('manual note version conflict'\)/);
   assert.doesNotMatch(listHtml, /JSON\.stringify\(\{ notes: textarea\.value \}\)/);
   assert.match(detailHtml, /수동 리뷰 메모/);
   assert.match(detailHtml, /최근 수동 변경/);
   assert.match(detailHtml, /수동 리뷰어/);
   assert.match(detailHtml, /로컬\/테스트 일반 라벨/);
-  assert.match(detailHtml, /updateField\('manualReviewNotes', val\)/);
+  assert.match(detailHtml, /enqueueNoteMutation\(val\)/);
+  assert.match(detailHtml, /const outcome = await updateField\('manualReviewNotes', value\)/);
   assert.match(detailHtml, /사람이 입력한 검토 메모/);
   assert.doesNotMatch(detailHtml, /인증된 리뷰어|authenticated reviewer|display name|manualReviewNotesAuthorEmail/i);
 });
@@ -362,13 +389,13 @@ test('lead review pages expose local/test reviewer feedback intake controls', ()
   assert.match(listHtml, /data-feedback-field="outcomeLabel"/);
   assert.match(listHtml, /data-feedback-field="dataGapPriority"/);
   assert.match(listHtml, /data-feedback-field="evidenceConfidenceAdjustment"/);
-  assert.match(listHtml, /JSON\.stringify\(\{ reviewerFeedback: collectReviewerFeedbackPayload\(section\) \}\)/);
+  assert.match(listHtml, /JSON\.stringify\(\{ reviewerFeedback: collectReviewerFeedbackPayload\(section\), expectedVersion: cachedLead && cachedLead\.version \}\)/);
   assert.match(listHtml, /생성된 검토 메모 제안은 저장\/전송\/귀속\/이력\/내보내기 대상이 아닙니다/);
   assert.match(detailHtml, /리뷰어 피드백/);
   assert.match(detailHtml, /사람이 입력한 리뷰어 피드백/);
   assert.match(detailHtml, /근거 보강 후 후속 검토/);
   assert.match(detailHtml, /수동 리뷰어/);
-  assert.match(detailHtml, /JSON\.stringify\(\{ reviewerFeedback: collectReviewerFeedbackPayload\(\) \}\)/);
+  assert.match(detailHtml, /JSON\.stringify\(\{ reviewerFeedback: collectReviewerFeedbackPayload\(\), expectedVersion: lead\.version \}\)/);
   assert.match(detailHtml, /생성된 검토 메모 제안은 저장\/전송\/귀속\/이력\/내보내기 대상이 아닙니다/);
   assert.doesNotMatch(detailHtml, /authenticated reviewer|display name|reviewerEmail|authorEmail/i);
 });
@@ -396,11 +423,11 @@ test('lead review pages expose explicit clear controls for saved manual review n
   assert.match(listHtml, /function clearManualReviewNotes\(leadId, button\)/);
   assert.match(listHtml, /aria-label="저장된 수동 리뷰 메모 지우기"/);
   assert.match(listHtml, /저장된 수동 리뷰 메모를 지울까요/);
-  assert.match(listHtml, /JSON\.stringify\(\{ manualReviewNotes: '' \}\)/);
+  assert.match(listHtml, /JSON\.stringify\(\{ manualReviewNotes: '', expectedVersion: cachedLead && cachedLead\.version \}\)/);
   assert.match(detailHtml, /function clearManualReviewNotes\(\)/);
   assert.match(detailHtml, /aria-label="저장된 수동 리뷰 메모 지우기"/);
   assert.match(detailHtml, /저장된 수동 리뷰 메모를 지울까요/);
-  assert.match(detailHtml, /updateField\('manualReviewNotes', ''\)/);
+  assert.match(detailHtml, /enqueueNoteMutation\(''\)/);
 });
 
 test('lead review pages render local test privacy warning for manual review notes', () => {

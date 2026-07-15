@@ -15,10 +15,14 @@ import {
   CANONICAL_D1_CRITICAL_COLUMN_SPECS,
   CANONICAL_D1_INDEX_SPECS,
   CANONICAL_D1_TABLE_COLUMN_NAMES,
+  CREATE_CANONICAL_JOB_RUNS_TABLE_SQL,
+  CREATE_CANONICAL_LEADS_TABLE_SQL,
   CREATE_MIGRATION_LEDGER_SQL,
   D1_MIGRATION_MANIFEST,
+  LATEST_D1_SCHEMA_VERSION,
   V1_CREATE_TABLE_STATEMENTS,
   V2_CREATE_TABLE_STATEMENTS,
+  V3_CREATE_TABLE_STATEMENTS,
 } from '../../db/migration-manifest.js';
 import { rowToLead } from '../../db/transform.js';
 
@@ -111,8 +115,11 @@ function canonicalSchemaIntrospectionRows() {
 function canonicalSchemaObjectRows() {
   const tableRows = [
     CREATE_MIGRATION_LEDGER_SQL,
-    ...V1_CREATE_TABLE_STATEMENTS,
+    CREATE_CANONICAL_LEADS_TABLE_SQL,
+    CREATE_CANONICAL_JOB_RUNS_TABLE_SQL,
+    ...V1_CREATE_TABLE_STATEMENTS.filter((sql) => !/CREATE TABLE IF NOT EXISTS (?:leads|job_runs)\b/i.test(sql)),
     ...V2_CREATE_TABLE_STATEMENTS,
+    ...V3_CREATE_TABLE_STATEMENTS,
   ].map((sql) => {
     const match = /CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS\s+([A-Za-z_][A-Za-z0-9_]*)/i.exec(sql);
     if (!match) throw new Error(`Invalid canonical fake-D1 table SQL: ${sql}`);
@@ -268,17 +275,26 @@ export class FakeD1Database {
     manualReviewNoteEvents = [],
     reviewerFeedback = [],
     reviewerFeedbackEvents = [],
+    jobCallbackEvents = [],
     publishedSnapshots = [],
     publishedSnapshotHeads = [],
     publishedSnapshotEntries = [],
-    schemaVersion = 2,
+    schemaVersion = LATEST_D1_SCHEMA_VERSION,
     migrationLedgerRows = null,
     schemaIntrospectionRows = null,
     schemaObjectRows = null,
     failOnSql
   } = {}) {
-    this.leads = new Map(leads.map((row) => [row.id, { ...row }]));
-    this.jobRuns = new Map(jobRuns.map((row) => [row.request_id, { ...row }]));
+    this.leads = new Map(leads.map((row) => [row.id, {
+      version: 1,
+      last_patch_mutation_id: '',
+      ...row,
+    }]));
+    this.jobRuns = new Map(jobRuns.map((row) => [row.request_id, {
+      provider_attempt: 0,
+      last_callback_event_id: '',
+      ...row,
+    }]));
     this.statusLog = statusLog.map((row, index) => ({ id: index + 1, ...row }));
     this.analytics = analytics.map((row) => ({ ...row }));
     this.manualReviewNoteEvents = manualReviewNoteEvents.map((row, index) => {
@@ -311,6 +327,7 @@ export class FakeD1Database {
       validateReviewerFeedbackEvent(event);
       return event;
     });
+    this.jobCallbackEvents = jobCallbackEvents.map((row) => ({ ...row }));
     this.schemaVersion = schemaVersion;
     this.migrationLedgerRows = Array.isArray(migrationLedgerRows)
       ? migrationLedgerRows.map(clone)
@@ -339,6 +356,7 @@ export class FakeD1Database {
     this.maxBoundParams = 0;
     this.onPublishedSnapshotRead = null;
     this.failOnSql = failOnSql;
+    this.batchTail = Promise.resolve();
   }
 
   seedPublishedSnapshot(snapshot) {
@@ -397,19 +415,42 @@ export class FakeD1Database {
   }
 
   async batch(statements) {
-    this.batches.push(statements.map((statement) => normalizeSql(statement.sql)));
-    this.batchSizes.push(statements.length);
-    const results = [];
-    for (const statement of statements) {
-      const normalized = normalizeSql(statement.sql);
-      if (normalized.startsWith('select ')) {
-        this.recordQuery(statement.sql, statement.args);
-        results.push({ results: await this.executeAll(statement.sql, statement.args) });
-      } else {
-        results.push(await statement.run());
+    let releaseBatch;
+    const previousBatch = this.batchTail;
+    this.batchTail = new Promise((resolve) => { releaseBatch = resolve; });
+    await previousBatch;
+    const snapshot = {
+      leads: new Map([...this.leads].map(([key, row]) => [key, clone(row)])),
+      jobRuns: new Map([...this.jobRuns].map(([key, row]) => [key, clone(row)])),
+      statusLog: this.statusLog.map(clone),
+      analytics: this.analytics.map(clone),
+      manualReviewNoteEvents: this.manualReviewNoteEvents.map(clone),
+      reviewerFeedback: new Map([...this.reviewerFeedback].map(([key, row]) => [key, clone(row)])),
+      reviewerFeedbackEvents: this.reviewerFeedbackEvents.map(clone),
+      jobCallbackEvents: this.jobCallbackEvents.map(clone),
+      publishedSnapshotHeads: new Map([...this.publishedSnapshotHeads].map(([key, row]) => [key, clone(row)])),
+      publishedSnapshotEntries: this.publishedSnapshotEntries.map(clone),
+    };
+    try {
+      this.batches.push(statements.map((statement) => normalizeSql(statement.sql)));
+      this.batchSizes.push(statements.length);
+      const results = [];
+      for (const statement of statements) {
+        const normalized = normalizeSql(statement.sql);
+        if (normalized.startsWith('select ')) {
+          this.recordQuery(statement.sql, statement.args);
+          results.push({ results: await this.executeAll(statement.sql, statement.args) });
+        } else {
+          results.push(await statement.run());
+        }
       }
+      return results;
+    } catch (error) {
+      Object.assign(this, snapshot);
+      throw error;
+    } finally {
+      releaseBatch();
     }
-    return results;
   }
 
   shouldFail(sql) {
@@ -426,10 +467,10 @@ export class FakeD1Database {
     return { meta: { changes: 0 } };
   }
 
-  upsertLead(row, { overwriteGeneratedFields = true, preserveEnrichment = false } = {}) {
+  upsertLead(row, { overwriteGeneratedFields = true, preserveEnrichment = false, incrementVersion = false } = {}) {
     const existing = this.leads.get(row.id);
     if (!existing) {
-      this.leads.set(row.id, row);
+      this.leads.set(row.id, { version: 1, last_patch_mutation_id: '', ...row });
       return { meta: { changes: 1 } };
     }
 
@@ -467,6 +508,7 @@ export class FakeD1Database {
       }
     }
     Object.assign(existing, generatedUpdates);
+    if (incrementVersion) existing.version = Number(existing.version || 1) + 1;
     return { meta: { changes: 1 } };
   }
 
@@ -498,6 +540,7 @@ export class FakeD1Database {
         }
         changes += Number(this.upsertLead(row, {
           preserveEnrichment: normalized.includes('coalesce(leads.enriched, 0) = 1'),
+          incrementVersion: normalized.includes('version=leads.version+1'),
         })?.meta?.changes || 0);
       }
       return { meta: { changes }, success: true };
@@ -571,17 +614,70 @@ export class FakeD1Database {
       return { meta: { changes: 1 }, success: true };
     }
 
+    if (normalized.startsWith('update leads set ') && normalized.endsWith(' where id = ? and version = ?')) {
+      const id = args.at(-2);
+      const expectedVersion = Number(args.at(-1));
+      const row = this.leads.get(id);
+      if (!row || Number(row.version || 1) !== expectedVersion) {
+        return { meta: { changes: 0 }, success: true };
+      }
+
+      const setClause = normalized.slice(
+        'update leads set '.length,
+        normalized.lastIndexOf(' where id = ? and version = ?')
+      );
+      const assignments = setClause.split(',').map((part) => part.trim());
+      let argIndex = 0;
+      for (const assignment of assignments) {
+        const [column, expression] = assignment.split(' = ').map((part) => part.trim());
+        if (expression === 'version + 1') {
+          row.version = Number(row.version || 1) + 1;
+        } else if (expression === 'version') {
+          row.version = Number(row.version || 1);
+        } else if (expression === '?') {
+          row[column] = args[argIndex];
+          argIndex += 1;
+        } else {
+          throw new Error(`Unsupported fake D1 lead CAS assignment: ${assignment}`);
+        }
+      }
+      this.leads.set(id, row);
+      return { meta: { changes: 1 }, success: true };
+    }
+
     if (normalized.startsWith('update leads set ') && normalized.endsWith(' where id = ?')) {
       const id = args.at(-1);
       const row = this.leads.get(id);
       if (!row) return { meta: { changes: 0 }, success: false };
 
       const setClause = normalized.slice('update leads set '.length, normalized.lastIndexOf(' where id = ?'));
-      const columns = setClause.split(',').map((part) => part.trim().split(' = ')[0]);
-      columns.forEach((column, index) => {
-        row[column] = args[index];
-      });
+      let argIndex = 0;
+      for (const assignment of setClause.split(',').map((part) => part.trim())) {
+        const [column, expression] = assignment.split(' = ').map((part) => part.trim());
+        if (expression === 'version + 1') row.version = Number(row.version || 1) + 1;
+        else {
+          row[column] = args[argIndex];
+          argIndex += 1;
+        }
+      }
       this.leads.set(id, row);
+      return { meta: { changes: 1 }, success: true };
+    }
+
+    if (normalized.startsWith('insert into status_log (lead_id, from_status, to_status, changed_at) select ')) {
+      const [leadId, fromStatus, toStatus, changedAt, guardLeadId, guardVersion, mutationId] = args;
+      const guard = this.leads.get(guardLeadId);
+      if (!guard || guard.id !== leadId || Number(guard.version) !== Number(guardVersion)
+        || guard.last_patch_mutation_id !== mutationId) {
+        return { meta: { changes: 0 }, success: true };
+      }
+      this.statusLog.push({
+        id: this.statusLog.length + 1,
+        lead_id: leadId,
+        from_status: fromStatus,
+        to_status: toStatus,
+        changed_at: changedAt,
+      });
       return { meta: { changes: 1 }, success: true };
     }
 
@@ -593,6 +689,25 @@ export class FakeD1Database {
         to_status: args[2],
         changed_at: args[3],
       });
+      return { meta: { changes: 1 }, success: true };
+    }
+
+    if (normalized.startsWith('insert into manual_review_note_events (lead_id, event_type, changed_at, author_label) select ')) {
+      const [leadId, eventType, changedAt, authorLabel, guardLeadId, guardVersion, mutationId] = args;
+      const guard = this.leads.get(guardLeadId);
+      if (!guard || guard.id !== leadId || Number(guard.version) !== Number(guardVersion)
+        || guard.last_patch_mutation_id !== mutationId) {
+        return { meta: { changes: 0 }, success: true };
+      }
+      const event = {
+        id: this.manualReviewNoteEvents.length + 1,
+        lead_id: leadId,
+        event_type: eventType,
+        changed_at: changedAt,
+        author_label: authorLabel,
+      };
+      validateManualReviewNoteEvent(event);
+      this.manualReviewNoteEvents.push(event);
       return { meta: { changes: 1 }, success: true };
     }
 
@@ -610,6 +725,14 @@ export class FakeD1Database {
     }
 
     if (normalized.startsWith('insert into reviewer_feedback ')) {
+      const guarded = normalized.includes(' where exists ( select 1 from leads where id = ? and version = ? and last_patch_mutation_id = ? )');
+      if (guarded) {
+        const guard = this.leads.get(args[9]);
+        if (!guard || guard.id !== args[0] || Number(guard.version) !== Number(args[10])
+          || guard.last_patch_mutation_id !== args[11]) {
+          return { meta: { changes: 0 }, success: true };
+        }
+      }
       const row = {
         lead_id: args[0],
         action_usefulness: args[1],
@@ -626,9 +749,38 @@ export class FakeD1Database {
       return { meta: { changes: 1 }, success: true };
     }
 
+    if (normalized.startsWith('delete from reviewer_feedback where lead_id = ? and exists (')) {
+      const guard = this.leads.get(args[1]);
+      if (!guard || guard.id !== args[0] || Number(guard.version) !== Number(args[2])
+        || guard.last_patch_mutation_id !== args[3]) {
+        return { meta: { changes: 0 }, success: true };
+      }
+      const deleted = this.reviewerFeedback.delete(args[0]);
+      return { meta: { changes: deleted ? 1 : 0 }, success: true };
+    }
+
     if (normalized === 'delete from reviewer_feedback where lead_id = ?') {
       const deleted = this.reviewerFeedback.delete(args[0]);
       return { meta: { changes: deleted ? 1 : 0 }, success: true };
+    }
+
+    if (normalized.startsWith('insert into reviewer_feedback_events (lead_id, event_type, changed_at, author_label, changed_fields) select ')) {
+      const guard = this.leads.get(args[5]);
+      if (!guard || guard.id !== args[0] || Number(guard.version) !== Number(args[6])
+        || guard.last_patch_mutation_id !== args[7]) {
+        return { meta: { changes: 0 }, success: true };
+      }
+      const event = {
+        id: this.reviewerFeedbackEvents.length + 1,
+        lead_id: args[0],
+        event_type: args[1],
+        changed_at: args[2],
+        author_label: args[3],
+        changed_fields: args[4],
+      };
+      validateReviewerFeedbackEvent(event);
+      this.reviewerFeedbackEvents.push(event);
+      return { meta: { changes: 1 }, success: true };
     }
 
     if (normalized === 'insert into reviewer_feedback_events (lead_id, event_type, changed_at, author_label, changed_fields) values (?, ?, ?, ?, ?)') {
@@ -686,6 +838,8 @@ export class FakeD1Database {
         started_at: null,
         completed_at: null,
         last_error: '',
+        provider_attempt: 0,
+        last_callback_event_id: '',
         updated_at: updatedAt
       });
 
@@ -708,6 +862,83 @@ export class FakeD1Database {
       return { meta: { changes: 1 } };
     }
 
+    if (normalized.startsWith('update job_runs set') && normalized.includes('last_callback_event_id = ?')) {
+      const state = args[0];
+      const providerAttempt = Number(args[21]);
+      const eventId = args[22];
+      const requestId = args[24];
+      const row = this.jobRuns.get(requestId);
+      const currentAttempt = Number(row?.provider_attempt || 0);
+      const higherAttempt = providerAttempt > currentAttempt;
+      const active = row && (row.state === 'accepted' || row.state === 'running');
+      const sameAttemptIdentity = row?.target === 'github-actions'
+        ? (row.github_run_id === null || row.github_run_id === undefined || row.github_run_id === args[30])
+        : (!row?.cloud_run_execution || row.cloud_run_execution === args[31]);
+      const sameAttemptAdvance = providerAttempt === currentAttempt && sameAttemptIdentity && (
+        row?.state === 'accepted'
+        || (row?.state === 'running' && ['succeeded', 'failed', 'cancelled'].includes(args[32]))
+      );
+      const existingEvent = this.jobCallbackEvents.find((event) => (
+        event.request_id === args[26] && event.idempotency_key === args[27]
+      ));
+      if (!active || row.last_callback_event_id === eventId
+        || existingEvent || !(higherAttempt || sameAttemptAdvance)) {
+        return { meta: { changes: 0 }, success: true };
+      }
+
+      row.state = state;
+      row.started_at = args[2] || row.started_at;
+      row.completed_at = args[4] || null;
+      row.last_error = args[5] || '';
+      row.github_run_id = args[6] ?? row.github_run_id;
+      row.github_run_attempt = args[7] ?? row.github_run_attempt;
+      row.github_run_url = higherAttempt ? (args[9] || '') : (args[10] || row.github_run_url);
+      row.github_workflow = higherAttempt ? (args[12] || '') : (args[13] || row.github_workflow);
+      row.github_sha = higherAttempt ? (args[15] || '') : (args[16] || row.github_sha);
+      row.cloud_run_operation = higherAttempt ? (args[18] || '') : (args[19] || row.cloud_run_operation);
+      row.cloud_run_execution = args[20] || row.cloud_run_execution;
+      row.provider_attempt = providerAttempt;
+      row.last_callback_event_id = eventId;
+      row.updated_at = args[23];
+      return { meta: { changes: 1 }, success: true };
+    }
+
+    if (normalized.startsWith('insert into job_callback_events ')) {
+      const [
+        eventId,
+        requestId,
+        idempotencyKey,
+        payloadHash,
+        target,
+        providerAttempt,
+        state,
+        guardRequestId,
+        guardEventId,
+        receivedAt,
+      ] = args;
+      const job = this.jobRuns.get(guardRequestId);
+      if (!job || guardRequestId !== requestId) {
+        return { meta: { changes: 0 }, success: true };
+      }
+      const duplicate = this.jobCallbackEvents.find((event) => (
+        event.event_id === eventId
+        || (event.request_id === requestId && event.idempotency_key === idempotencyKey)
+      ));
+      if (duplicate) return { meta: { changes: 0 }, success: true };
+      this.jobCallbackEvents.push({
+        event_id: eventId,
+        request_id: requestId,
+        idempotency_key: idempotencyKey,
+        payload_hash: payloadHash,
+        target,
+        provider_attempt: providerAttempt,
+        state,
+        outcome: job.last_callback_event_id === guardEventId ? 'applied' : 'rejected',
+        received_at: receivedAt,
+      });
+      return { meta: { changes: 1 }, success: true };
+    }
+
     if (normalized.startsWith('update job_runs set')) {
       const [
         state,
@@ -726,7 +957,8 @@ export class FakeD1Database {
       ] = args;
 
       const row = this.jobRuns.get(requestId);
-      if (!row) {
+      if (!row || (normalized.includes("state in ('accepted', 'running')")
+        && row.state !== 'accepted' && row.state !== 'running')) {
         return { meta: { changes: 0 } };
       }
 
@@ -867,6 +1099,7 @@ export class FakeD1Database {
         manual_review_notes_updated_at: lead.manual_review_notes_updated_at ?? null,
         follow_up_date: lead.follow_up_date ?? null,
         estimated_value: lead.estimated_value ?? null,
+        version: latest ? (lead.version ?? 1) : null,
         updated_at: latest ? (lead.updated_at ?? null) : null,
         enriched: latest ? (lead.enriched ?? null) : null,
         summary: enriched ? (lead.summary ?? null) : null,
@@ -1013,6 +1246,12 @@ export class FakeD1Database {
 
     if (normalized === 'select * from leads where id = ?') {
       return clone(this.leads.get(args[0]) || null);
+    }
+
+    if (normalized === 'select * from job_callback_events where request_id = ? and idempotency_key = ? limit 1') {
+      return clone(this.jobCallbackEvents.find((event) => (
+        event.request_id === args[0] && event.idempotency_key === args[1]
+      )) || null);
     }
 
     if (normalized === 'select * from reviewer_feedback where lead_id = ?') {

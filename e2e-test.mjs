@@ -188,11 +188,11 @@ async function testInvalidTransition() {
     const patchResp = await apiRequest('/api/leads/' + encodeURIComponent(lead.id), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: invalidTarget })
+      body: JSON.stringify({ status: invalidTarget, expectedVersion: lead.version })
     });
     const patchRes = await patchResp.json();
 
-    log('T7 잘못된 상태 전환 거부', patchRes.success === false, patchRes.message);
+    log('T7 잘못된 상태 전환 거부', patchResp.status === 400 && patchRes.success === false, patchRes.message);
   } else {
     log('T7 잘못된 상태 전환', false, '리드 없음');
   }

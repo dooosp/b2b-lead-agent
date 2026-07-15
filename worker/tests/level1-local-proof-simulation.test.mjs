@@ -107,6 +107,7 @@ test('Level 1 local proof simulation covers /leads page, reviewer API queue, det
           state: 'APPROVED',
           text: SYNTHETIC_GENERATED_SUGGESTION,
         },
+        expectedVersion: 1,
       },
     }),
     env,

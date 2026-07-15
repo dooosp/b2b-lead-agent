@@ -6,10 +6,13 @@ import { createJobCallbackToken } from '../lib/job-trigger.js';
 import { createWorkerEnv } from './helpers/fixtures.mjs';
 import { createWorkerRequest, readJson } from './helpers/http.mjs';
 
+let callbackKeySequence = 0;
+
 async function callbackHeaders(env, requestId, extra = {}) {
   return {
     'Content-Type': 'application/json',
     'X-Job-Callback-Token': await createJobCallbackToken(env, requestId),
+    'Idempotency-Key': `synthetic-${requestId}-${++callbackKeySequence}`,
     ...extra
   };
 }
@@ -196,7 +199,7 @@ test('status endpoint shows honest accepted -> running -> succeeded transitions'
     const succeeded = await worker.fetch(createWorkerRequest(`/api/jobs/${triggerPayload.requestId}/events`, {
       method: 'POST',
       headers: await callbackHeaders(env, triggerPayload.requestId),
-      body: JSON.stringify({ state: 'succeeded' })
+      body: JSON.stringify({ state: 'succeeded', githubRunId: 101, githubRunAttempt: 1 })
     }), env, {});
     const succeededPayload = await readJson(succeeded);
     assert.equal(succeededPayload.job.state, 'succeeded');
@@ -268,19 +271,19 @@ test('late running callbacks do not move a completed job backward', async () => 
     await worker.fetch(createWorkerRequest(`/api/jobs/${requestId}/events`, {
       method: 'POST',
       headers: await callbackHeaders(env, requestId),
-      body: JSON.stringify({ state: 'succeeded' })
+      body: JSON.stringify({ state: 'succeeded', githubRunId: 700, githubRunAttempt: 1 })
     }), env, {});
 
     const stale = await worker.fetch(createWorkerRequest(`/api/jobs/${requestId}/events`, {
       method: 'POST',
       headers: await callbackHeaders(env, requestId),
-      body: JSON.stringify({ state: 'running', githubRunId: 777 })
+      body: JSON.stringify({ state: 'running', githubRunId: 777, githubRunAttempt: 1 })
     }), env, {});
     const stalePayload = await readJson(stale);
 
-    assert.equal(stale.status, 200);
+    assert.equal(stale.status, 409);
     assert.equal(stalePayload.job.state, 'succeeded');
-    assert.equal(stalePayload.job.run.id, null);
+    assert.equal(stalePayload.job.run.id, 700);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -338,7 +341,12 @@ test('job event endpoint accepts failed and cancelled terminal states', async ()
     const failedEvent = await worker.fetch(createWorkerRequest(`/api/jobs/${failedJob.requestId}/events`, {
       method: 'POST',
       headers: await callbackHeaders(env, failedJob.requestId),
-      body: JSON.stringify({ state: 'failed', lastError: 'GitHub job failed.' })
+      body: JSON.stringify({
+        state: 'failed',
+        githubRunId: 801,
+        githubRunAttempt: 1,
+        lastError: 'GitHub job failed.',
+      })
     }), env, {});
     const failedPayload = await readJson(failedEvent);
     assert.equal(failedPayload.job.state, 'failed');
@@ -356,7 +364,12 @@ test('job event endpoint accepts failed and cancelled terminal states', async ()
     const cancelledEvent = await worker.fetch(createWorkerRequest(`/api/jobs/${cancelledJob.requestId}/events`, {
       method: 'POST',
       headers: await callbackHeaders(env, cancelledJob.requestId),
-      body: JSON.stringify({ state: 'cancelled', lastError: 'GitHub job was cancelled.' })
+      body: JSON.stringify({
+        state: 'cancelled',
+        githubRunId: 802,
+        githubRunAttempt: 1,
+        lastError: 'GitHub job was cancelled.',
+      })
     }), env, {});
     const cancelledPayload = await readJson(cancelledEvent);
     assert.equal(cancelledPayload.job.state, 'cancelled');

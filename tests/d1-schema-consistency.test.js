@@ -215,7 +215,7 @@ test('checker reports critical lead-column and definition drift in either source
     missingResult.errors.join('\n')
   );
 
-  const driftedManifest = migrationManifest.replace(
+  const driftedManifest = migrationManifest.replaceAll(
     "Object.freeze({ name: 'generation_mode', definition: \"TEXT DEFAULT 'llm'\" })",
     "Object.freeze({ name: 'generation_mode', definition: \"TEXT DEFAULT 'heuristic'\" })"
   );
@@ -227,7 +227,7 @@ test('checker reports critical lead-column and definition drift in either source
   );
 });
 
-test('checker requires both explicit migration versions in fresh SQL and manifest', () => {
+test('checker requires every explicit migration version in fresh SQL and manifest', () => {
   const missingSqlVersion = schemaSql.replace(
     /INSERT OR IGNORE INTO d1_schema_migrations \(version, name, applied_at\)\n  VALUES \(2,[\s\S]*?;\n/,
     ''
@@ -243,6 +243,29 @@ test('checker requires both explicit migration versions in fresh SQL and manifes
   assert.equal(manifestResult.ok, false);
   assert.ok(manifestResult.errors.includes(
     'worker/db/migration-manifest.js missing migration version 2 name separate_published_snapshot_artifacts'
+  ));
+
+  const missingSqlVersionThree = schemaSql.replace(
+    /INSERT OR IGNORE INTO d1_schema_migrations \(version, name, applied_at\)\n  VALUES \(3,[\s\S]*?;\n/,
+    ''
+  );
+  const sqlVersionThreeResult = validateSchemaSources({
+    schemaSql: missingSqlVersionThree,
+    migrationManifest,
+  });
+  assert.equal(sqlVersionThreeResult.ok, false);
+  assert.ok(sqlVersionThreeResult.errors.includes(
+    'worker/schema.sql missing migration ledger version 3 name lead_cas_and_job_callback_idempotency'
+  ));
+
+  const missingManifestVersionThree = migrationManifest.replace('    version: 3,', '    schemaVersion: 3,');
+  const manifestVersionThreeResult = validateSchemaSources({
+    schemaSql,
+    migrationManifest: missingManifestVersionThree,
+  });
+  assert.equal(manifestVersionThreeResult.ok, false);
+  assert.ok(manifestVersionThreeResult.errors.includes(
+    'worker/db/migration-manifest.js missing migration version 3 name lead_cas_and_job_callback_idempotency'
   ));
 });
 

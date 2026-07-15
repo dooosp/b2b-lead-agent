@@ -72,6 +72,8 @@ export function createLeadRow(overrides = {}) {
     enriched_at: null,
     follow_up_date: '',
     estimated_value: 0,
+    version: 1,
+    last_patch_mutation_id: '',
     created_at: timestamp,
     updated_at: timestamp,
     ...overrides,

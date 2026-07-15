@@ -36,7 +36,7 @@ function scaffoldEnv(provider, extra = {}) {
 async function patchLead(db, payload, env) {
   const request = createWorkerRequest('/api/leads/lead-1', {
     method: 'PATCH',
-    json: payload,
+    json: { expectedVersion: db.leads.get('lead-1')?.version || 1, ...payload },
   });
   return handleUpdateLead(request, { DB: db, ...env }, 'lead-1');
 }

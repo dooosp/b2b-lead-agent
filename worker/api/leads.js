@@ -36,6 +36,46 @@ import {
 import { createLeadsCsvFilename, serializeLeadsCsv } from './serializers/lead-csv.js';
 import { readBoundedPublishedArtifactJson } from '../lib/published-artifact-json.js';
 
+const LEAD_VERSION_REQUIRED_CODE = 'LEAD_VERSION_REQUIRED';
+const LEAD_VERSION_INVALID_CODE = 'LEAD_VERSION_INVALID';
+
+function assertLeadPatchObject(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    throw Object.assign(new Error('PATCH 본문은 JSON 객체여야 합니다.'), {
+      status: 400,
+      code: LEAD_VERSION_INVALID_CODE,
+    });
+  }
+}
+
+function parseExpectedLeadVersion(body) {
+  assertLeadPatchObject(body);
+  if (
+    Object.prototype.hasOwnProperty.call(body, 'version')
+    || Object.prototype.hasOwnProperty.call(body, 'expected_version')
+    || Object.prototype.hasOwnProperty.call(body, 'rowVersion')
+    || Object.prototype.hasOwnProperty.call(body, 'row_version')
+  ) {
+    throw Object.assign(new Error('version은 읽기 전용이며 precondition 필드는 expectedVersion만 지원합니다.'), {
+      status: 400,
+      code: LEAD_VERSION_INVALID_CODE,
+    });
+  }
+  if (!Object.prototype.hasOwnProperty.call(body, 'expectedVersion')) {
+    throw Object.assign(new Error('리드 변경에는 expectedVersion이 필요합니다.'), {
+      status: 428,
+      code: LEAD_VERSION_REQUIRED_CODE,
+    });
+  }
+  if (!Number.isSafeInteger(body.expectedVersion) || body.expectedVersion < 1) {
+    throw Object.assign(new Error('expectedVersion은 1 이상의 안전한 정수여야 합니다.'), {
+      status: 400,
+      code: LEAD_VERSION_INVALID_CODE,
+    });
+  }
+  return body.expectedVersion;
+}
+
 export {
   PUBLISHED_ARTIFACT_REMOTE_BYTES_CODE,
   PUBLISHED_ARTIFACT_REMOTE_CARDINALITY_CODE,
@@ -294,18 +334,32 @@ export async function fetchHistory(env, profile, request) {
 export async function handleUpdateLead(request, env, leadId) {
   if (!env.DB) return jsonResponse({ success: false, message: '시스템 설정이 필요합니다. 관리자에게 문의하세요.' }, 503);
   const manualReviewNotesAccess = await resolveManualReviewNotesAccess(request, env);
-  const body = await request.json().catch(() => ({}));
-  const lead = await getLeadById(env.DB, leadId);
-  if (!lead) return jsonResponse({ success: false, message: '리드를 찾을 수 없습니다.' }, 404);
+  let body;
+  let bodyParseFailed = false;
+  try {
+    body = await request.json();
+  } catch {
+    bodyParseFailed = true;
+  }
 
   try {
+    if (bodyParseFailed) {
+      throw Object.assign(new Error('PATCH 본문은 올바른 JSON 객체여야 합니다.'), {
+        status: 400,
+        code: LEAD_VERSION_INVALID_CODE,
+      });
+    }
+    assertLeadPatchObject(body);
     if (patchTouchesManualReviewNotes(body)) {
       assertManualReviewNotesWriteAllowed(manualReviewNotesAccess);
     }
     if (patchTouchesReviewerFeedback(body)) {
       assertReviewerFeedbackWriteAllowed(manualReviewNotesAccess);
     }
-    const result = await updateLeadPatchAtomic(env.DB, lead, body);
+    const expectedVersion = parseExpectedLeadVersion(body);
+    const lead = await getLeadById(env.DB, leadId);
+    if (!lead) return jsonResponse({ success: false, message: '리드를 찾을 수 없습니다.' }, 404);
+    const result = await updateLeadPatchAtomic(env.DB, lead, body, { expectedVersion });
     return jsonResponse(withManualReviewNotesAccessMetadata({
       success: true,
       lead: filterManualReviewNotesProtectedFields(result.lead, manualReviewNotesAccess),
@@ -313,7 +367,12 @@ export async function handleUpdateLead(request, env, leadId) {
     }, manualReviewNotesAccess));
   } catch (error) {
     if (error?.status) {
-      return jsonResponse({ success: false, message: error.message }, error.status);
+      return jsonResponse({
+        success: false,
+        ...(error.code ? { code: error.code } : {}),
+        ...(Number.isSafeInteger(error.currentVersion) ? { currentVersion: error.currentVersion } : {}),
+        message: error.message,
+      }, error.status);
     }
     throw error;
   }

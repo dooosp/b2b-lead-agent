@@ -149,8 +149,8 @@ test('explicit versioned migrations replace opportunistic request-path migration
   assert.deepEqual(database.batchAttempts, []);
 
   const result = await applyLocalTestD1Migrations(database);
-  assert.deepEqual(result.appliedVersions, [1, 2]);
-  assert.deepEqual(migrationVersions(database), [1, 2]);
+  assert.deepEqual(result.appliedVersions, [1, 2, 3]);
+  assert.deepEqual(migrationVersions(database), [1, 2, 3]);
   await ensureD1Schema(database);
   assert.deepEqual([...columnNames(database)].sort(), [...EXPECTED_LEADS_COLUMNS].sort());
   assert.deepEqual(columnNames(database, 'reference_library'), [
@@ -220,10 +220,10 @@ test('migration retries one narrowly recognized concurrent duplicate-column race
 
   await applyLocalTestD1Migrations(database);
   assert.equal(raced, true);
-  assert.equal(database.batchAttempts.length, 3);
+  assert.equal(database.batchAttempts.length, 4);
   assert.ok(database.batchAttempts[0].some((sql) => targetAlter.test(sql)));
   assert.equal(database.batchAttempts[1].some((sql) => targetAlter.test(sql)), false);
-  assert.deepEqual(migrationVersions(database), [1, 2]);
+  assert.deepEqual(migrationVersions(database), [1, 2, 3]);
 
   let attempts = 0;
   const retryOnceDatabase = createLegacyDatabase(t, 'legacy-leads-leadbrief.sql', {
@@ -297,11 +297,11 @@ test('request-path readiness is read-only, cached per DB, and rejects future sch
   const futureDatabase = createLegacyDatabase(t, 'legacy-leads-v1.sql');
   await applyLocalTestD1Migrations(futureDatabase);
   futureDatabase.execute(
-    "INSERT INTO d1_schema_migrations (version, name, applied_at) VALUES (3, 'future', CURRENT_TIMESTAMP)"
+    "INSERT INTO d1_schema_migrations (version, name, applied_at) VALUES (4, 'future', CURRENT_TIMESTAMP)"
   );
   await assert.rejects(
     ensureD1Schema(futureDatabase),
-    (error) => error.code === D1_SCHEMA_NOT_READY_CODE && /unsupported version 3/.test(error.message)
+    (error) => error.code === D1_SCHEMA_NOT_READY_CODE && /unsupported version 4/.test(error.message)
   );
 });
 
@@ -314,7 +314,8 @@ test('readiness rejects an exact-looking ledger without canonical tables', async
     );
     INSERT INTO d1_schema_migrations VALUES
       (1, 'adopt_canonical_lead_schema', CURRENT_TIMESTAMP),
-      (2, 'separate_published_snapshot_artifacts', CURRENT_TIMESTAMP);
+      (2, 'separate_published_snapshot_artifacts', CURRENT_TIMESTAMP),
+      (3, 'lead_cas_and_job_callback_idempotency', CURRENT_TIMESTAMP);
   `);
 
   await assert.rejects(
@@ -447,8 +448,8 @@ test('readiness and adoption reject non-lead column and constraint drift', async
     {
       label: 'job_runs',
       sql: canonicalSchema.replace(
-        "last_error TEXT DEFAULT '',\n  updated_at TEXT NOT NULL\n);",
-        "last_error TEXT DEFAULT '',\n  updated_at TEXT NOT NULL,\n  CHECK (state = 'accepted')\n);"
+        "last_callback_event_id TEXT NOT NULL DEFAULT ''\n);",
+        "last_callback_event_id TEXT NOT NULL DEFAULT '',\n  CHECK (state = 'accepted')\n);"
       ),
     },
     {
@@ -491,7 +492,7 @@ test('readiness and adoption reject non-lead column and constraint drift', async
         && error.message.includes(mutation.label),
       mutation.label
     );
-    assert.deepEqual(migrationVersions(database), [1, 2]);
+    assert.deepEqual(migrationVersions(database), [1, 2, 3]);
   }
 });
 
@@ -503,10 +504,45 @@ test('fresh, v1, and LeadBrief-era databases all reach the canonical ready state
   ];
   for (const database of databases) {
     const result = await applyLocalTestD1Migrations(database);
-    assert.deepEqual(result.appliedVersions, [1, 2]);
+    assert.deepEqual(result.appliedVersions, [1, 2, 3]);
     await ensureD1Schema(database);
-    assert.deepEqual(migrationVersions(database), [1, 2]);
+    assert.deepEqual(migrationVersions(database), [1, 2, 3]);
   }
+});
+
+test('v3 migration deterministically adopts an exact partial local schema and rejects malformed callback storage', async (t) => {
+  const canonicalSchema = fs.readFileSync(new URL('../schema.sql', import.meta.url), 'utf8');
+  const partial = createDatabaseFromSql(t, canonicalSchema);
+  partial.execute(`
+    DELETE FROM d1_schema_migrations WHERE version = 3;
+    DROP TABLE job_callback_events;
+    ALTER TABLE leads DROP COLUMN last_patch_mutation_id;
+    ALTER TABLE job_runs DROP COLUMN last_callback_event_id;
+  `);
+
+  const result = await applyLocalTestD1Migrations(partial);
+  assert.deepEqual(result.appliedVersions, [3]);
+  assert.deepEqual(migrationVersions(partial), [1, 2, 3]);
+  assert.ok(columnNames(partial).includes('last_patch_mutation_id'));
+  assert.ok(columnNames(partial, 'job_runs').includes('last_callback_event_id'));
+  assert.deepEqual(columnNames(partial, 'job_callback_events'), [
+    'event_id', 'request_id', 'idempotency_key', 'payload_hash', 'target',
+    'provider_attempt', 'state', 'outcome', 'received_at',
+  ]);
+  await ensureD1Schema(partial);
+
+  const malformed = createDatabaseFromSql(t, canonicalSchema);
+  malformed.execute(`
+    DELETE FROM d1_schema_migrations WHERE version = 3;
+    DROP TABLE job_callback_events;
+    CREATE TABLE job_callback_events (event_id TEXT PRIMARY KEY);
+  `);
+  await assert.rejects(
+    applyLocalTestD1Migrations(malformed),
+    (error) => error.code === 'ERR_D1_SCHEMA_INCOMPATIBLE'
+      && error.message.includes('job_callback_events')
+  );
+  assert.deepEqual(migrationVersions(malformed), [1, 2]);
 });
 
 test('readiness and applied-migration adoption reject missing or altered canonical indexes', async (t) => {
@@ -551,7 +587,7 @@ test('readiness and applied-migration adoption reject missing or altered canonic
       (error) => error.code === 'ERR_D1_SCHEMA_INCOMPATIBLE'
         && error.message.includes(mutation.label)
     );
-    assert.deepEqual(migrationVersions(database), [1, 2]);
+    assert.deepEqual(migrationVersions(database), [1, 2, 3]);
   }
 });
 
@@ -571,7 +607,7 @@ test('migration helper is local/test-only and records its over-50-query legacy b
   const statementCount = legacy.runStatements.length
     + legacy.queryStatements.length
     + legacy.batchAttempts.reduce((total, statements) => total + statements.length, 0);
-  assert.equal(statementCount, 61);
+  assert.equal(statementCount, 69);
   assert.ok(statementCount > 50);
 });
 
@@ -640,9 +676,9 @@ test('migration-ledger readiness reads only the expected chain plus one excess s
   const canonicalSql = fs.readFileSync(new URL('../schema.sql', import.meta.url), 'utf8');
   const database = createDatabaseFromSql(t, canonicalSql);
   database.execute(`INSERT INTO d1_schema_migrations (version, name, applied_at) VALUES
-    (3, 'unexpected-three', CURRENT_TIMESTAMP),
     (4, 'unexpected-four', CURRENT_TIMESTAMP),
-    (5, 'unexpected-five', CURRENT_TIMESTAMP)`);
+    (5, 'unexpected-five', CURRENT_TIMESTAMP),
+    (6, 'unexpected-six', CURRENT_TIMESTAMP)`);
   database.queryStatements = [];
 
   await assert.rejects(
@@ -652,5 +688,5 @@ test('migration-ledger readiness reads only the expected chain plus one excess s
   const ledgerQuery = database.queryStatements.find((sql) => (
     /FROM d1_schema_migrations ORDER BY version ASC/i.test(sql)
   ));
-  assert.match(ledgerQuery, /LIMIT 3$/i);
+  assert.match(ledgerQuery, /LIMIT 4$/i);
 });

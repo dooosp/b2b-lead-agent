@@ -92,23 +92,32 @@ class FakeInternalReportDb {
 
     if (normalized.startsWith('SELECT type, name, tbl_name AS table_name, sql FROM sqlite_schema')) {
       const {
+        CREATE_CANONICAL_JOB_RUNS_TABLE_SQL,
+        CREATE_CANONICAL_LEADS_TABLE_SQL,
         CREATE_MIGRATION_LEDGER_SQL,
         V1_CREATE_TABLE_STATEMENTS,
         V1_INDEX_STATEMENTS,
         V2_CREATE_TABLE_STATEMENTS,
         V2_INDEX_STATEMENTS,
+        V3_CREATE_TABLE_STATEMENTS,
+        V3_INDEX_STATEMENTS,
       } = await migrationManifestPromise;
       const tableStatements = [
         CREATE_MIGRATION_LEDGER_SQL,
-        ...V1_CREATE_TABLE_STATEMENTS,
+        CREATE_CANONICAL_LEADS_TABLE_SQL,
+        CREATE_CANONICAL_JOB_RUNS_TABLE_SQL,
+        ...V1_CREATE_TABLE_STATEMENTS.filter((statement) => (
+          !/CREATE TABLE IF NOT EXISTS (?:leads|job_runs)\b/i.test(statement)
+        )),
         ...V2_CREATE_TABLE_STATEMENTS,
+        ...V3_CREATE_TABLE_STATEMENTS,
       ];
       const rows = [
         ...tableStatements.map((statement) => {
           const [, name] = /CREATE TABLE IF NOT EXISTS ([A-Za-z_][A-Za-z0-9_]*)/i.exec(statement);
           return { type: 'table', name, table_name: name, sql: statement };
         }),
-        ...[...V1_INDEX_STATEMENTS, ...V2_INDEX_STATEMENTS].map((statement) => {
+        ...[...V1_INDEX_STATEMENTS, ...V2_INDEX_STATEMENTS, ...V3_INDEX_STATEMENTS].map((statement) => {
           const [, name, tableName] = /CREATE (?:UNIQUE )?INDEX IF NOT EXISTS ([A-Za-z_][A-Za-z0-9_]*) ON ([A-Za-z_][A-Za-z0-9_]*)/i.exec(statement);
           return { type: 'index', name, table_name: tableName, sql: statement };
         }),

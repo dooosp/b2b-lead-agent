@@ -51,7 +51,9 @@ CREATE TABLE IF NOT EXISTS leads (
   data_gaps TEXT DEFAULT '[]',
   event_type TEXT DEFAULT '',
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1 CHECK (version >= 1),
+  last_patch_mutation_id TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_leads_identity_key ON leads(identity_key);
 CREATE INDEX IF NOT EXISTS idx_leads_profile ON leads(profile_id);
@@ -135,13 +137,28 @@ CREATE TABLE IF NOT EXISTS job_runs (
   started_at TEXT,
   completed_at TEXT,
   last_error TEXT DEFAULT '',
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  provider_attempt INTEGER NOT NULL DEFAULT 0 CHECK (provider_attempt >= 0),
+  last_callback_event_id TEXT NOT NULL DEFAULT ''
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_job_runs_idempotency ON job_runs(idempotency_key)
   WHERE idempotency_key IS NOT NULL AND idempotency_key != '';
 CREATE UNIQUE INDEX IF NOT EXISTS idx_job_runs_active_profile ON job_runs(profile_id)
   WHERE state IN ('accepted', 'running');
 CREATE INDEX IF NOT EXISTS idx_job_runs_updated ON job_runs(updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS job_callback_events (
+  event_id TEXT PRIMARY KEY,
+  request_id TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL,
+  payload_hash TEXT NOT NULL,
+  target TEXT NOT NULL,
+  provider_attempt INTEGER NOT NULL CHECK (provider_attempt >= 1),
+  state TEXT NOT NULL CHECK (state IN ('running', 'succeeded', 'failed', 'cancelled')),
+  outcome TEXT NOT NULL CHECK (outcome IN ('applied', 'rejected')),
+  received_at TEXT NOT NULL,
+  UNIQUE (request_id, idempotency_key)
+);
 
 CREATE TABLE IF NOT EXISTS reference_library (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -183,3 +200,5 @@ INSERT OR IGNORE INTO d1_schema_migrations (version, name, applied_at)
   VALUES (1, 'adopt_canonical_lead_schema', CURRENT_TIMESTAMP);
 INSERT OR IGNORE INTO d1_schema_migrations (version, name, applied_at)
   VALUES (2, 'separate_published_snapshot_artifacts', CURRENT_TIMESTAMP);
+INSERT OR IGNORE INTO d1_schema_migrations (version, name, applied_at)
+  VALUES (3, 'lead_cas_and_job_callback_idempotency', CURRENT_TIMESTAMP);
