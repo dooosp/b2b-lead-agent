@@ -10,6 +10,7 @@ profiles/*.js
   -> orchestrator/news-orchestrator.js
   -> lead-qualifier.js
   -> lead-report-publisher.js
+  -> reports/<profile>/publication-manifest.json
   -> reports/<profile>/{latest-leads.json,lead-history.json,lead-report-YYYY-MM-DD.md}
   -> Worker /api/leads or /api/history managed artifact loader
   -> typed D1 cache through savePublishedSnapshot()
@@ -17,11 +18,22 @@ profiles/*.js
 
 Key details:
 
-- `main.js` owns the CLI contract: `node main.js --profile <profileId> [--email]`.
+- `main.js` owns generation and local transaction preparation:
+  `node main.js --profile <profileId> --result-file <path> --notification-requested`.
+  The legacy `--email` flag is rejected because a
+  local generator cannot prove remote publication.
 - `orchestrator/news-orchestrator.js` gathers and enriches articles before qualification.
 - `lead-qualifier.js` normalizes sources and generation trust metadata; demo fallback is not allowed unless explicitly configured.
-- `lead-report-publisher.js` writes canonical report artifacts and refuses demo leads as canonical latest leads.
-- `.github/workflows/generate-report.yml` is the automated managed-run workflow. It receives `repository_dispatch`, runs the root CLI, commits report artifacts, and pushes them.
+- `lead-report-publisher.js` writes immutable generations selected by
+  `publication-manifest.json`, preserves the established fixed artifact names
+  as compatibility paths, and refuses demo leads as published latest leads.
+- `.github/workflows/generate-report.yml` is the automated managed-run workflow.
+  It receives `repository_dispatch`, runs the root CLI, commits the exact
+  manifest-derived artifact set, verifies the remote commit, and only then
+  invokes the notification runner.
+- `npm run email -- --profile <profileId> --result-file <path>` is
+  notification-only. The result must already prove `PUBLISHED`; retries additionally require
+  `--retry-notification`. It never regenerates or republishes artifacts.
 - Worker managed reads use separate `latest` and `history` snapshot heads. A
   fresh typed head is served from D1; a missing, expired, or future-dated head
   triggers GitHub revalidation. The remote response body is streamed into one

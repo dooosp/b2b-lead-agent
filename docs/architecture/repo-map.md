@@ -17,9 +17,9 @@ When runtime behavior changes, update this map from source files, tests, and wor
 
 | Area | Primary files | Responsibility |
 | --- | --- | --- |
-| Root pipeline | `main.js`, `orchestrator/news-orchestrator.js`, `lead-qualifier.js`, `lead-report-publisher.js`, `profile-registry.js` | Batch news collection, lead qualification, canonical report artifact publishing, optional email |
+| Root pipeline | `main.js`, `orchestrator/news-orchestrator.js`, `lead-qualifier.js`, `lead-report-publisher.js`, `pipeline-run-state.js`, `git-publication.js`, `notification-runner.js`, `profile-registry.js` | Batch news collection, lead qualification, typed local publication, verified Git publication, and post-publication notification |
 | Profiles | `profiles/*.js`, `profile-registry.js` | Managed seller profiles and search/product context |
-| Published artifacts | `reports/<profile>/latest-leads.json`, `reports/<profile>/lead-history.json`, `reports/<profile>/lead-report-YYYY-MM-DD.md` | Canonical managed lead snapshots consumed by the Worker fallback paths |
+| Published artifacts | `reports/<profile>/publication-manifest.json`, `reports/<profile>/publications/<publicationId>/*`, and the established fixed report/latest/history paths | Immutable manifest-selected publication plus fixed-path Git compatibility artifacts consumed by Worker fallback paths |
 | Worker API | `worker/index.js`, `worker/routes/*.js`, `worker/api/*.js` | Route dispatch, route metadata, authenticated APIs, trigger/job ledger, internal report contract |
 | Worker D1 layer | `worker/db/*.js`, `worker/schema.sql` | Explicit schema migrations and readiness, typed published snapshots, lead/job/reference persistence, row transforms |
 | Worker self-service | `worker/self-service/*.js` | Authenticated ad hoc company/industry analysis and self-service D1 persistence |
@@ -32,7 +32,7 @@ When runtime behavior changes, update this map from source files, tests, and wor
 | Script | Command | What it covers |
 | --- | --- | --- |
 | `start` | `node main.js --profile danfoss` | Local/default managed batch run for the Danfoss profile |
-| `email` | `node main.js --profile danfoss --email` | Managed batch run plus email send path |
+| `email` | `node scripts/notify-lead-publication.mjs` | Notification-only runner; requires `-- --profile <id> --result-file <verified-result>` and never generates or publishes |
 | `check:naming` | `node scripts/check-naming.js` | Canonical path and artifact naming guard |
 | `check:schema` | `node scripts/check-d1-schema-consistency.js` | Local D1 drift guard for `worker/schema.sql` and `worker/db/migration-manifest.js` |
 | `evidence:packet` | `node scripts/generate-release-evidence-packet.js` | Local-only release evidence packet generator |
@@ -49,11 +49,12 @@ When runtime behavior changes, update this map from source files, tests, and wor
 
 ## Root Pipeline Flow
 
-1. `main.js` parses `--profile <profileId>` and optional `--email`, loads a managed profile from `profile-registry.js`, and creates an observation run with `lib/obs.js`.
+1. `main.js` parses `--profile <profileId>`, typed-result, and notification-intent flags, loads a managed profile from `profile-registry.js`, and creates an observation run with `lib/obs.js`. Legacy `--email` is rejected.
 2. `orchestrator/news-orchestrator.js` fetches Google News plus Korean RSS sources, deduplicates articles, and enriches article bodies.
 3. `lead-qualifier.js` builds traceable source evidence, calls the LLM qualification path, normalizes lead trust metadata, and fails closed when configured LLM execution is unavailable unless explicit demo mode is enabled.
-4. `lead-report-publisher.js` composes the Markdown report, prepares stable lead snapshots, refuses demo leads in canonical latest artifacts, and writes the canonical `reports/<profile>/...` files.
-5. `email-sender.js` runs only when `--email` is provided.
+4. `lead-report-publisher.js` validates public fields before rendering, writes an immutable generation, and atomically selects it with `publication-manifest.json`; established fixed names remain Git compatibility artifacts.
+5. `git-publication.js` stages the exact manifest-derived path set, normally pushes without force, and verifies the publication commit at the selected remote ref.
+6. `notification-runner.js` reloads checksum-verified public artifacts and may invoke `email-sender.js` only after remote publication is proven. Retry is explicit and provider acceptance is not delivery or exactly-once proof.
 
 ## Worker Shape
 
@@ -92,7 +93,7 @@ Key bindings in `worker/wrangler.toml`:
 | --- | --- | --- |
 | `.github/workflows/ci.yml` | Pull request and push to `master` or `main` | `npm run check:schema`, `npm run eval:lead-quality`, `npm test`, and `npm run test:e2e:local` pass after dependency install |
 | `.github/workflows/validate-naming.yml` | Pull request and push | `npm run check:naming` and `npm run test:worker` pass |
-| `.github/workflows/generate-report.yml` | `repository_dispatch` event type `generate-report` | Validates managed profile, marks job ledger callbacks, runs `node main.js --profile "$PROFILE" --email`, commits report artifacts, and pushes them |
+| `.github/workflows/generate-report.yml` | `repository_dispatch` event type `generate-report` | Validates the managed profile, records callbacks, emits a typed result, commits and verifies the exact Git publication, recovers interrupted publication evidence, and only then runs notification |
 | `docs/exec-plans/d1-lazy-migration-observation-plan.md` | Historical planning record | Pre-explicit-migration lazy-DDL checklist; it is not execution authority and must be superseded by an approved schema-inventory and explicit-migration rollout plan |
 
 Local tests and docs are not production evidence. Production schema inventory,

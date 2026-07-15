@@ -208,7 +208,14 @@
     "artifactNames": {
       "markdownCanonical": "lead-report-2026-06-03.md",
       "latestCanonical": "latest-leads.json",
-      "historyCanonical": "lead-history.json"
+      "historyCanonical": "lead-history.json",
+      "manifestCanonical": "publication-manifest.json"
+    },
+    "lifecycle": {
+      "localState": "VALIDATED",
+      "localOutcome": "READY_FOR_REMOTE_PUBLICATION",
+      "remotePublished": false,
+      "notificationState": "NOT_REQUESTED"
     },
     "latestLeads": [
       {

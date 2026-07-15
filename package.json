@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "node main.js --profile danfoss",
-    "email": "node main.js --profile danfoss --email",
+    "email": "node scripts/notify-lead-publication.mjs",
     "check:naming": "node scripts/check-naming.js",
     "check:schema": "node scripts/check-d1-schema-consistency.js",
     "evidence:packet": "node scripts/generate-release-evidence-packet.js",

@@ -6,3 +6,6 @@ reports/**/*.md
 !reports/*/latest-leads.json
 !reports/*/lead-history.json
 !reports/*/lead-report-*.md
+!reports/*/publications/
+!reports/*/publications/**/
+!reports/*/publications/**/lead-report-*.md
