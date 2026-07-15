@@ -12,6 +12,15 @@ const {
 const workerModulePromise = import('../worker/index.js');
 const migrationManifestPromise = import('../worker/db/migration-manifest.js');
 
+function legacyPublishedFetch(handler) {
+  return async (url, ...args) => {
+    if (new URL(String(url)).pathname.endsWith('/publication-manifest.json')) {
+      return jsonFixtureResponse({ message: 'legacy fixture has no manifest' }, 404);
+    }
+    return handler(url, ...args);
+  };
+}
+
 class FakeStatement {
   constructor(db, sql, args = []) {
     this.db = db;
@@ -234,10 +243,10 @@ test('GET /api/internal/profiles/:profileId/latest-published uses the GitHub pub
   const { default: worker } = await workerModulePromise;
   const originalFetch = globalThis.fetch;
   const fetchCalls = [];
-  globalThis.fetch = async (url) => {
+  globalThis.fetch = legacyPublishedFetch(async (url) => {
     fetchCalls.push(String(url));
     return jsonFixtureResponse(contractFixture.leads);
-  };
+  });
 
   try {
     const response = await worker.fetch(
@@ -268,10 +277,10 @@ test('internal published-report rejects compact JSON amplification before JSON.p
   const originalJsonParse = JSON.parse;
   let rawArtifactParseCalls = 0;
   let response;
-  globalThis.fetch = async () => new Response(rawArtifactText, {
+  globalThis.fetch = legacyPublishedFetch(async () => new Response(rawArtifactText, {
     status: 200,
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
-  });
+  }));
   JSON.parse = function countedJsonParse(value, ...args) {
     if (value === rawArtifactText) rawArtifactParseCalls += 1;
     return originalJsonParse(value, ...args);
@@ -310,7 +319,7 @@ test('internal published-report fails closed for duplicate, colliding, or unsafe
 
   for (const leads of scenarios) {
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = async () => jsonFixtureResponse(leads);
+    globalThis.fetch = legacyPublishedFetch(async () => jsonFixtureResponse(leads));
     try {
       const response = await worker.fetch(
         createWorkerApiRequest('/api/internal/profiles/danfoss/latest-published', {
@@ -333,10 +342,10 @@ test('internal published-report returns the same normalized lead id projection a
   const { default: worker } = await workerModulePromise;
   const fixtureLead = contractFixture.leads[0];
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => jsonFixtureResponse([{
+  globalThis.fetch = legacyPublishedFetch(async () => jsonFixtureResponse([{
     ...fixtureLead,
     id: 'unsafe\ninternal',
-  }]);
+  }]));
 
   try {
     const response = await worker.fetch(
@@ -384,7 +393,7 @@ test('root-published LeadBrief records remain consumable by the internal latest-
     idFactory: () => fixtureLead.id,
   });
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => jsonFixtureResponse([publishedLead]);
+  globalThis.fetch = legacyPublishedFetch(async () => jsonFixtureResponse([publishedLead]));
 
   try {
     const response = await worker.fetch(
@@ -548,7 +557,7 @@ test('GET /api/internal/profiles/:profileId/latest-published does not fall back 
 test('GET /api/internal/profiles/:profileId/latest-published returns 409 not_finalized for an empty published artifact', async () => {
   const { default: worker } = await workerModulePromise;
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => jsonFixtureResponse([]);
+  globalThis.fetch = legacyPublishedFetch(async () => jsonFixtureResponse([]));
 
   try {
     const response = await worker.fetch(
@@ -571,7 +580,7 @@ test('GET /api/internal/profiles/:profileId/latest-published returns 409 not_fin
 test('GET /api/internal/profiles/:profileId/latest-published returns 409 not_finalized when required lead fields are missing', async () => {
   const { default: worker } = await workerModulePromise;
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => jsonFixtureResponse([
+  globalThis.fetch = legacyPublishedFetch(async () => jsonFixtureResponse([
     {
       id: 'lead-1',
       status: 'NEW',
@@ -591,7 +600,7 @@ test('GET /api/internal/profiles/:profileId/latest-published returns 409 not_fin
         }
       ]
     }
-  ]);
+  ]));
 
   try {
     const response = await worker.fetch(

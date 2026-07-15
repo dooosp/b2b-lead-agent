@@ -10,9 +10,15 @@ const ARTIFACT_NAMES = {
   manifestCanonical: 'publication-manifest.json',
 };
 
-const PUBLICATION_SCHEMA_VERSION = 1;
+const LEGACY_PUBLICATION_SCHEMA_VERSION = 1;
+const PUBLICATION_SCHEMA_VERSION = 2;
 const PUBLICATION_RENDER_VERSION = 1;
 const PUBLICATION_ARTIFACT_KINDS = Object.freeze(['report', 'latest', 'history']);
+const PUBLICATION_LATEST_MAX_RECORDS = 90;
+const PUBLICATION_HISTORY_MAX_RECORDS = 500;
+const PUBLICATION_JSON_MAX_BYTES = 8_000_000;
+const PUBLICATION_ENTRY_MAX_BYTES = 1_900_000;
+const PUBLICATION_LEAD_ID_MAX_BYTES = 256;
 const PUBLICATION_LOCK_NAME = '.publication-lock';
 const PUBLICATION_LOCK_STALE_MS = 15 * 60 * 1000;
 
@@ -27,6 +33,37 @@ const VERIFICATION_STATUSES = new Set(['verified', 'needs_review', 'draft', 'unv
 
 function normalizeSnapshotText(value) {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function isWellFormedUnicode(value) {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = value.charCodeAt(index + 1);
+      if (!(next >= 0xdc00 && next <= 0xdfff)) return false;
+      index += 1;
+    } else if (code >= 0xdc00 && code <= 0xdfff) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function assertPublishedLeadId(value, createError = createPublicationValidationError) {
+  const normalized = normalizeSnapshotText(value);
+  if (
+    typeof value !== 'string'
+    || !normalized
+    || normalized === '.'
+    || normalized === '..'
+    || !isWellFormedUnicode(value)
+    || /[\\/?#%]/u.test(normalized)
+    || /[\u0000-\u001f\u007f]/u.test(value)
+    || Buffer.byteLength(normalized, 'utf8') > PUBLICATION_LEAD_ID_MAX_BYTES
+  ) {
+    throw createError();
+  }
+  return normalized;
 }
 
 function isPrivatePublicationHostname(hostname) {
@@ -319,13 +356,13 @@ function composeLeadReport(leads, profile, options = {}) {
 
   const today = options.now ? new Date(options.now) : new Date();
   const dateStr = today.toISOString().split('T')[0];
-  const dateKor = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+  const dateKor = `${today.getUTCFullYear()}년 ${today.getUTCMonth() + 1}월 ${today.getUTCDate()}일`;
 
   const gradeALeads = leads.filter(l => l.grade === 'A').sort((a, b) => b.score - a.score);
   const gradeBLeads = leads.filter(l => l.grade === 'B').sort((a, b) => b.score - a.score);
 
   let reportMarkdown = `# [${escapeMarkdownText(profile.name)}] B2B 리드 리포트 - ${dateKor}\n\n`;
-  reportMarkdown += `> 생성 시각: ${today.toLocaleString('ko-KR')}\n`;
+  reportMarkdown += `> 생성 시각 (UTC): ${today.toISOString()}\n`;
   reportMarkdown += `> 분석 대상: ${leads.length}개 리드\n\n`;
 
   // Grade A
@@ -398,6 +435,7 @@ function getProfileReportsDir(profile, { reportsRoot = path.join(__dirname, 'rep
 
 function saveLeadReport(report, profile, options = {}) {
   const reportsDir = getProfileReportsDir(profile, options);
+  assertLegacyPublicationWriterAllowed(reportsDir);
   const canonicalPath = path.join(reportsDir, ARTIFACT_NAMES.markdownCanonical(report.dateStr));
 
   fs.writeFileSync(canonicalPath, report.content, 'utf-8');
@@ -519,7 +557,7 @@ function prepareLeadSnapshotRecords(leads, {
       evidence,
       dataGaps: trust.dataGaps,
     });
-    const systemId = idFactory(callerLead, { profileId });
+    const systemId = assertPublishedLeadId(idFactory(callerLead, { profileId }));
     return {
       ...publishableLead,
       signal: brief.signal,
@@ -559,7 +597,7 @@ function mergeLeadHistory(history, newLeads, {
   staleAfterDays,
 } = {}) {
   const nextHistory = Array.isArray(history)
-    ? history.map(projectLegacyHistoryRecord).filter(Boolean)
+    ? history.map(assertLegacyHistoryRecord)
     : [];
   const preparedLeads = prepareLeadSnapshotRecords(newLeads, { now, profileId, staleAfterDays });
 
@@ -588,6 +626,80 @@ function createInvalidHistoryError() {
   return error;
 }
 
+function assertLegacyHistoryRecord(record) {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) {
+    throw createInvalidHistoryError();
+  }
+  try {
+    assertCandidatePublicValuesSafe(record);
+    if (Object.hasOwn(record, 'id')) {
+      assertPublishedLeadId(record.id, createInvalidHistoryError);
+    }
+  } catch {
+    throw createInvalidHistoryError();
+  }
+  for (const field of [
+    ...OPTIONAL_PUBLICATION_TEXT_FIELDS,
+    'signal', 'whyNow', 'recommendedMessage', 'confidenceReason',
+    'id', 'profileId', 'status', 'createdAt', 'updatedAt',
+    'generationMode', 'verificationStatus', 'reviewStatus', 'confidence',
+  ]) {
+    if (Object.hasOwn(record, field) && typeof record[field] !== 'string') {
+      throw createInvalidHistoryError();
+    }
+  }
+  if (
+    Object.hasOwn(record, 'score')
+    && (!Number.isFinite(record.score) || record.score < 0 || record.score > 100)
+  ) {
+    throw createInvalidHistoryError();
+  }
+  for (const field of ['sources', 'evidence', 'assumptions', 'dataGaps']) {
+    if (Object.hasOwn(record, field) && !Array.isArray(record[field])) {
+      throw createInvalidHistoryError();
+    }
+  }
+  for (const field of ['assumptions', 'dataGaps']) {
+    if (
+      Object.hasOwn(record, field)
+      && record[field].some((value) => typeof value !== 'string' || !value.trim())
+    ) {
+      throw createInvalidHistoryError();
+    }
+  }
+  if (
+    (Object.hasOwn(record, 'generationMode') && !['llm', 'heuristic'].includes(record.generationMode))
+    || (Object.hasOwn(record, 'verificationStatus')
+      && !VERIFICATION_STATUSES.has(record.verificationStatus))
+    || (Object.hasOwn(record, 'reviewStatus') && !REVIEW_STATUSES.has(record.reviewStatus))
+    || (Object.hasOwn(record, 'status') && !SALES_PIPELINE_STATUSES.has(record.status))
+    || (Object.hasOwn(record, 'confidence')
+      && !['HIGH', 'MEDIUM', 'LOW'].includes(record.confidence.toUpperCase()))
+    || (Object.hasOwn(record, 'grade') && !['A', 'B'].includes(record.grade.toUpperCase()))
+  ) {
+    throw createInvalidHistoryError();
+  }
+  for (const field of ['createdAt', 'updatedAt']) {
+    if (Object.hasOwn(record, field) && record[field] && !isValidIsoTimestamp(record[field])) {
+      throw createInvalidHistoryError();
+    }
+  }
+  const projected = projectLegacyHistoryRecord(record);
+  if (!projected || !normalizeSnapshotText(projected.id) || !normalizeSnapshotText(projected.company)) {
+    throw createInvalidHistoryError();
+  }
+  if (
+    (Object.hasOwn(record, 'sources')
+      && normalizePublicationSources(record.sources).length !== record.sources.length)
+    || (Object.hasOwn(record, 'evidence')
+      && normalizePublicationEvidence(record.evidence, projected.sources || []).length
+        !== record.evidence.length)
+  ) {
+    throw createInvalidHistoryError();
+  }
+  return projected;
+}
+
 function readLeadHistoryOrThrow(historyPath) {
   let serializedHistory;
   try {
@@ -604,11 +716,12 @@ function readLeadHistoryOrThrow(historyPath) {
     throw createInvalidHistoryError();
   }
   if (!Array.isArray(history)) throw createInvalidHistoryError();
-  return history;
+  return history.map(assertLegacyHistoryRecord);
 }
 
 function saveLeadSnapshot(leads, profile, options = {}) {
   const reportsDir = getProfileReportsDir(profile, options);
+  assertLegacyPublicationWriterAllowed(reportsDir);
   const now = options.now || new Date().toISOString();
   const historyCanonicalPath = path.join(reportsDir, ARTIFACT_NAMES.historyCanonical);
   const history = Object.hasOwn(options, 'history')
@@ -656,6 +769,14 @@ function sha256(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
 
+function assertLegacyPublicationWriterAllowed(reportsDir) {
+  if (fs.existsSync(path.join(reportsDir, ARTIFACT_NAMES.manifestCanonical))) {
+    throw Object.assign(new Error('Manifest-backed publications require the atomic publication transaction.'), {
+      code: 'ERR_PUBLICATION_MANAGED_WRITER_REQUIRED',
+    });
+  }
+}
+
 function createPublicationValidationError() {
   return Object.assign(new Error('Lead candidate did not satisfy the public publication contract.'), {
     code: 'ERR_LEAD_PUBLICATION_INVALID',
@@ -692,7 +813,9 @@ function candidatePublicTextValues(candidate) {
   }
   for (const source of Array.isArray(candidate.sources) ? candidate.sources : []) {
     if (!source || typeof source !== 'object') continue;
-    for (const field of ['title', 'url', 'source', 'query', 'originUrl']) {
+    for (const field of [
+      'sourceId', 'title', 'url', 'source', 'query', 'publishedAt', 'originUrl', 'resolution',
+    ]) {
       if (typeof source[field] === 'string') values.push(source[field]);
     }
   }
@@ -749,7 +872,7 @@ function prepareValidatedLeadRecords(leads, options = {}) {
 
 function mergePreparedLeadHistory(history, preparedLeads, { now = new Date().toISOString() } = {}) {
   const nextHistory = Array.isArray(history)
-    ? history.map(projectLegacyHistoryRecord).filter(Boolean)
+    ? history.map(assertLegacyHistoryRecord)
     : [];
   for (const lead of preparedLeads) {
     const existingIdx = findExistingLeadIndex(nextHistory, lead);
@@ -788,6 +911,18 @@ function artifactDescriptor(kind, relativePath, canonicalPath, payload, records 
   };
 }
 
+function manifestRepositoryArtifactPaths(profileId, manifest) {
+  const repositoryPrefix = `reports/${profileId}`;
+  return [
+    `${repositoryPrefix}/${ARTIFACT_NAMES.manifestCanonical}`,
+    ...(manifest.schemaVersion === PUBLICATION_SCHEMA_VERSION
+      ? [`${repositoryPrefix}/publications/${manifest.publicationId}/${ARTIFACT_NAMES.manifestCanonical}`]
+      : []),
+    ...PUBLICATION_ARTIFACT_KINDS.map((kind) => `${repositoryPrefix}/${manifest.artifacts[kind].path}`),
+    ...PUBLICATION_ARTIFACT_KINDS.map((kind) => `${repositoryPrefix}/${manifest.artifacts[kind].canonicalPath}`),
+  ];
+}
+
 function assertSafePublicationRelativePath(relativePath, publicationId) {
   if (
     typeof relativePath !== 'string'
@@ -806,28 +941,57 @@ function assertSafePublicationRelativePath(relativePath, publicationId) {
 
 function assertPublicationManifest(manifest, profile) {
   const profileId = normalizeProfileId(profile);
+  const schemaVersion = manifest && manifest.schemaVersion;
+  const expectedTopLevelKeys = schemaVersion === LEGACY_PUBLICATION_SCHEMA_VERSION
+    ? [
+        'artifacts',
+        'counts',
+        'generatedAt',
+        'inputDigest',
+        'previousPublicationId',
+        'profileId',
+        'publicationId',
+        'renderVersion',
+        'reportDate',
+        'schemaVersion',
+      ]
+    : [
+        'artifacts',
+        'counts',
+        'generatedAt',
+        'inputDigest',
+        'previousManifestSchemaVersion',
+        'previousPublicationId',
+        'profileId',
+        'publicationId',
+        'renderVersion',
+        'reportDate',
+        'runId',
+        'schemaVersion',
+      ];
   const topLevelKeys = manifest && typeof manifest === 'object'
     ? Object.keys(manifest).sort()
     : [];
   if (
     !manifest
-    || JSON.stringify(topLevelKeys) !== JSON.stringify([
-      'artifacts',
-      'counts',
-      'generatedAt',
-      'inputDigest',
-      'previousPublicationId',
-      'profileId',
-      'publicationId',
-      'renderVersion',
-      'reportDate',
-      'schemaVersion',
-    ])
-    || manifest.schemaVersion !== PUBLICATION_SCHEMA_VERSION
+    || ![LEGACY_PUBLICATION_SCHEMA_VERSION, PUBLICATION_SCHEMA_VERSION].includes(schemaVersion)
+    || JSON.stringify(topLevelKeys) !== JSON.stringify(expectedTopLevelKeys)
     || manifest.renderVersion !== PUBLICATION_RENDER_VERSION
     || manifest.profileId !== profileId
     || !/^pub-[a-f0-9]{32}$/.test(manifest.publicationId || '')
     || !(manifest.previousPublicationId === null || /^pub-[a-f0-9]{32}$/.test(manifest.previousPublicationId || ''))
+    || (
+      schemaVersion === PUBLICATION_SCHEMA_VERSION
+      && !(
+        (manifest.previousPublicationId === null && manifest.previousManifestSchemaVersion === null)
+        || (
+          manifest.previousPublicationId !== null
+          && [LEGACY_PUBLICATION_SCHEMA_VERSION, PUBLICATION_SCHEMA_VERSION]
+            .includes(manifest.previousManifestSchemaVersion)
+        )
+      )
+    )
+    || (schemaVersion === PUBLICATION_SCHEMA_VERSION && !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(manifest.runId || ''))
     || !/^[a-f0-9]{64}$/.test(manifest.inputDigest || '')
     || !isValidIsoTimestamp(manifest.generatedAt)
     || !/^\d{4}-\d{2}-\d{2}$/.test(manifest.reportDate || '')
@@ -871,6 +1035,12 @@ function assertPublicationManifest(manifest, profile) {
     manifest.artifacts.latest.canonicalPath !== ARTIFACT_NAMES.latestCanonical
     || manifest.artifacts.history.canonicalPath !== ARTIFACT_NAMES.historyCanonical
     || manifest.artifacts.report.canonicalPath !== ARTIFACT_NAMES.markdownCanonical(manifest.reportDate)
+    || manifest.artifacts.latest.records !== manifest.counts.leads
+    || manifest.artifacts.history.records !== manifest.counts.history
+    || PUBLICATION_ARTIFACT_KINDS.some((kind) => (
+      manifest.artifacts[kind].path
+      !== `publications/${manifest.publicationId}/${manifest.artifacts[kind].canonicalPath}`
+    ))
   ) {
     throw Object.assign(new Error('Publication manifest canonical paths are invalid.'), {
       code: 'ERR_PUBLICATION_MANIFEST_INVALID',
@@ -914,6 +1084,22 @@ function readCommittedPublication(profile, options = {}) {
   const manifestPath = path.join(reportsDir, ARTIFACT_NAMES.manifestCanonical);
   const manifest = readManifestOrNull(manifestPath, profile);
   if (!manifest) return null;
+  if (manifest.schemaVersion === PUBLICATION_SCHEMA_VERSION) {
+    try {
+      const pointerPayload = fs.readFileSync(manifestPath);
+      const generationManifestPayload = fs.readFileSync(path.join(
+        reportsDir,
+        'publications',
+        manifest.publicationId,
+        ARTIFACT_NAMES.manifestCanonical,
+      ));
+      if (!pointerPayload.equals(generationManifestPayload)) throw new Error('manifest copies differ');
+    } catch {
+      throw Object.assign(new Error('Publication generation manifest is unavailable or inconsistent.'), {
+        code: 'ERR_PUBLICATION_MANIFEST_INVALID',
+      });
+    }
+  }
 
   const buffers = {};
   for (const kind of PUBLICATION_ARTIFACT_KINDS) {
@@ -975,6 +1161,46 @@ function readCommittedPublication(profile, options = {}) {
   };
 }
 
+function findHistoricalRunManifest(committed, runId) {
+  if (!committed) return null;
+  const seen = new Set();
+  let manifest = committed.manifest;
+  for (let depth = 0; manifest && depth < 10000; depth += 1) {
+    if (seen.has(manifest.publicationId)) {
+      throw Object.assign(new Error('Publication manifest history contains a cycle.'), {
+        code: 'ERR_PUBLICATION_MANIFEST_INVALID',
+      });
+    }
+    seen.add(manifest.publicationId);
+    if (manifest.schemaVersion === PUBLICATION_SCHEMA_VERSION) {
+      if (manifest.runId === runId) return manifest;
+      if (manifest.previousPublicationId === null) return null;
+      if (manifest.previousManifestSchemaVersion === LEGACY_PUBLICATION_SCHEMA_VERSION) return null;
+      const previousPath = path.join(
+        committed.reportsDir,
+        'publications',
+        manifest.previousPublicationId,
+        ARTIFACT_NAMES.manifestCanonical,
+      );
+      const previous = readManifestOrNull(previousPath, { id: manifest.profileId });
+      if (!previous || previous.publicationId !== manifest.previousPublicationId) {
+        throw Object.assign(new Error('Publication manifest history is incomplete.'), {
+          code: 'ERR_PUBLICATION_MANIFEST_INVALID',
+        });
+      }
+      manifest = previous;
+      continue;
+    }
+    return null;
+  }
+  if (manifest) {
+    throw Object.assign(new Error('Publication manifest history exceeds its traversal limit.'), {
+      code: 'ERR_PUBLICATION_MANIFEST_INVALID',
+    });
+  }
+  return null;
+}
+
 function prepareLeadPublication(qualifiedLeads, profile, options = {}) {
   const profileId = normalizeProfileId(profile);
   const reportsRoot = options.reportsRoot || path.join(__dirname, 'reports');
@@ -986,6 +1212,17 @@ function prepareLeadPublication(qualifiedLeads, profile, options = {}) {
     staleAfterDays: options.staleAfterDays,
     idFactory: options.idFactory || generateLeadId,
   });
+
+  if (new Set(validLeads.map((lead) => lead.id)).size !== validLeads.length) {
+    throw Object.assign(new Error('Published lead identities must be unique.'), {
+      code: 'ERR_LEAD_PUBLICATION_DUPLICATE_ID',
+    });
+  }
+  if (validLeads.length > PUBLICATION_LATEST_MAX_RECORDS) {
+    throw Object.assign(new Error('Published latest-lead cardinality exceeds the consumer contract.'), {
+      code: 'ERR_LEAD_PUBLICATION_LIMIT',
+    });
+  }
 
   if (validLeads.length === 0) {
     return {
@@ -1010,6 +1247,43 @@ function prepareLeadPublication(qualifiedLeads, profile, options = {}) {
     profileId,
     leads: orderedSemanticLeads,
   })), 'utf8'));
+  const runId = typeof options.runId === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(options.runId)
+    ? options.runId
+    : `local-${inputDigest.slice(0, 32)}`;
+  const historicalRunManifest = findHistoricalRunManifest(committed, runId);
+
+  if (historicalRunManifest && historicalRunManifest.inputDigest !== inputDigest) {
+    throw Object.assign(new Error('One run id cannot publish two different artifact sets.'), {
+      code: 'ERR_RUN_ID_CONFLICT',
+      stage: 'replay',
+      retryable: false,
+      safeMessage: 'Run identity conflicts with an existing publication.',
+    });
+  }
+
+  if (
+    historicalRunManifest
+    && historicalRunManifest.publicationId !== committed.manifest.publicationId
+  ) {
+    return {
+      profileId,
+      reportsDir,
+      validLeads,
+      rejectedCount,
+      noChange: true,
+      sameRunReplay: true,
+      historicalRunReplay: true,
+      compatibilityIntact: true,
+      publicationId: historicalRunManifest.publicationId,
+      previousPublicationId: historicalRunManifest.previousPublicationId || null,
+      inputDigest,
+      manifest: historicalRunManifest,
+      manifestPath: committed.manifestPath,
+      artifactCount: PUBLICATION_ARTIFACT_KINDS.length,
+      artifactPaths: [],
+      repairArtifactPaths: [],
+    };
+  }
 
   if (committed && committed.manifest.inputDigest === inputDigest) {
     return {
@@ -1018,6 +1292,7 @@ function prepareLeadPublication(qualifiedLeads, profile, options = {}) {
       validLeads,
       rejectedCount,
       noChange: true,
+      sameRunReplay: Boolean(historicalRunManifest),
       compatibilityIntact: committed.compatibilityIntact,
       publicationId: committed.manifest.publicationId,
       previousPublicationId: committed.manifest.previousPublicationId || null,
@@ -1026,23 +1301,60 @@ function prepareLeadPublication(qualifiedLeads, profile, options = {}) {
       manifestPath: committed.manifestPath,
       artifactCount: PUBLICATION_ARTIFACT_KINDS.length,
       artifactPaths: [],
+      repairArtifactPaths: manifestRepositoryArtifactPaths(profileId, committed.manifest),
     };
   }
 
   const previousPublicationId = committed ? committed.manifest.publicationId : null;
-  const publicationId = `pub-${sha256(Buffer.from(JSON.stringify({
-    profileId,
-    inputDigest,
-    previousPublicationId,
-    renderVersion: PUBLICATION_RENDER_VERSION,
-  }), 'utf8')).slice(0, 32)}`;
+  const previousManifestSchemaVersion = committed ? committed.manifest.schemaVersion : null;
   const mergedHistory = mergePreparedLeadHistory(history, validLeads, { now });
+  if (new Set(mergedHistory.map((lead) => lead.id)).size !== mergedHistory.length) {
+    throw Object.assign(new Error('Published history lead identities must be unique.'), {
+      code: 'ERR_LEAD_PUBLICATION_DUPLICATE_ID',
+    });
+  }
+  if (mergedHistory.length > PUBLICATION_HISTORY_MAX_RECORDS) {
+    throw Object.assign(new Error('Published lead history exceeds the consumer contract.'), {
+      code: 'ERR_LEAD_PUBLICATION_LIMIT',
+    });
+  }
+  if (
+    [...validLeads, ...mergedHistory]
+      .some((lead) => Buffer.byteLength(JSON.stringify(lead), 'utf8') > PUBLICATION_ENTRY_MAX_BYTES)
+  ) {
+    throw Object.assign(new Error('Published lead bytes exceed the consumer entry contract.'), {
+      code: 'ERR_LEAD_PUBLICATION_LIMIT',
+    });
+  }
   const report = composeLeadReport(validLeads, profile, { now });
   const payloads = {
     report: Buffer.from(report.content, 'utf8'),
     latest: Buffer.from(JSON.stringify(validLeads, null, 2), 'utf8'),
     history: Buffer.from(JSON.stringify(mergedHistory, null, 2), 'utf8'),
   };
+  if (['latest', 'history'].some((kind) => payloads[kind].byteLength > PUBLICATION_JSON_MAX_BYTES)) {
+    throw Object.assign(new Error('Published JSON bytes exceed the consumer contract.'), {
+      code: 'ERR_LEAD_PUBLICATION_LIMIT',
+    });
+  }
+  // Bind the immutable generation name to the exact bytes and manifest inputs.
+  // A hard exit after the generation rename but before the pointer commit can
+  // otherwise leave an orphan with the same logical-input id but different
+  // timestamp-derived bytes, permanently blocking a later retry.
+  const publicationId = `pub-${sha256(Buffer.from(JSON.stringify({
+    profileId,
+    inputDigest,
+    previousPublicationId,
+    previousManifestSchemaVersion,
+    renderVersion: PUBLICATION_RENDER_VERSION,
+    runId,
+    generatedAt: now,
+    reportDate: report.dateStr,
+    artifacts: Object.fromEntries(PUBLICATION_ARTIFACT_KINDS.map((kind) => [kind, {
+      bytes: payloads[kind].byteLength,
+      sha256: sha256(payloads[kind]),
+    }])),
+  }), 'utf8')).slice(0, 32)}`;
   const generationPrefix = `publications/${publicationId}`;
   const artifacts = {
     report: artifactDescriptor(
@@ -1070,8 +1382,10 @@ function prepareLeadPublication(qualifiedLeads, profile, options = {}) {
     schemaVersion: PUBLICATION_SCHEMA_VERSION,
     renderVersion: PUBLICATION_RENDER_VERSION,
     profileId,
+    runId,
     publicationId,
     previousPublicationId,
+    previousManifestSchemaVersion,
     inputDigest,
     generatedAt: now,
     reportDate: report.dateStr,
@@ -1083,13 +1397,9 @@ function prepareLeadPublication(qualifiedLeads, profile, options = {}) {
     artifacts,
   };
   assertPublicationManifest(manifest, profile);
+  const manifestPayload = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 
-  const repositoryPrefix = `reports/${profileId}`;
-  const artifactPaths = [
-    `${repositoryPrefix}/${ARTIFACT_NAMES.manifestCanonical}`,
-    ...PUBLICATION_ARTIFACT_KINDS.map((kind) => `${repositoryPrefix}/${artifacts[kind].path}`),
-    ...PUBLICATION_ARTIFACT_KINDS.map((kind) => `${repositoryPrefix}/${artifacts[kind].canonicalPath}`),
-  ];
+  const artifactPaths = manifestRepositoryArtifactPaths(profileId, manifest);
 
   return {
     profileId,
@@ -1102,6 +1412,7 @@ function prepareLeadPublication(qualifiedLeads, profile, options = {}) {
     previousPublicationId,
     inputDigest,
     manifest,
+    manifestPayload,
     manifestPath: path.join(reportsDir, ARTIFACT_NAMES.manifestCanonical),
     payloads,
     artifactCount: PUBLICATION_ARTIFACT_KINDS.length,
@@ -1187,6 +1498,24 @@ function restoreFileSnapshots(snapshots) {
   }
 }
 
+function authoritativeCompatibilitySnapshots(reportsDir, targetManifest, committed) {
+  return new Map(PUBLICATION_ARTIFACT_KINDS.map((kind) => {
+    const targetPath = path.join(reportsDir, targetManifest.artifacts[kind].canonicalPath);
+    if (
+      committed
+      && committed.manifest.artifacts[kind].canonicalPath === targetManifest.artifacts[kind].canonicalPath
+    ) {
+      return [targetPath, { exists: true, payload: committed.buffers[kind] }];
+    }
+    try {
+      return [targetPath, { exists: true, payload: fs.readFileSync(targetPath) }];
+    } catch (error) {
+      if (error && error.code === 'ENOENT') return [targetPath, { exists: false, payload: null }];
+      throw error;
+    }
+  }));
+}
+
 function publicationLockCanRecover(lockPath) {
   try {
     const owner = JSON.parse(fs.readFileSync(path.join(lockPath, 'owner.json'), 'utf8'));
@@ -1209,25 +1538,96 @@ function publicationLockCanRecover(lockPath) {
   }
 }
 
-function acquirePublicationLock(reportsDir, { recovered = false } = {}) {
+function createPublicationLockedError() {
+  return Object.assign(new Error('Another local publication holds the profile lock.'), {
+    code: 'ERR_PUBLICATION_LOCKED',
+    retryable: true,
+  });
+}
+
+function recoveryClaimCanRecover(claimPath) {
+  try {
+    const claim = JSON.parse(fs.readFileSync(claimPath, 'utf8'));
+    if (Number.isSafeInteger(claim.pid) && claim.pid > 0) {
+      try {
+        process.kill(claim.pid, 0);
+        return false;
+      } catch (error) {
+        return Boolean(error && error.code === 'ESRCH');
+      }
+    }
+  } catch {
+    // A malformed claim is recoverable only after the stale-time bound.
+  }
+  try {
+    return Date.now() - fs.statSync(claimPath).mtimeMs >= PUBLICATION_LOCK_STALE_MS;
+  } catch {
+    return false;
+  }
+}
+
+function createPublicationRecoveryClaim(recoveryClaimPath, ownerId) {
+  const payload = JSON.stringify({
+    pid: process.pid,
+    ownerId,
+    createdAt: new Date().toISOString(),
+  });
+  try {
+    fs.writeFileSync(recoveryClaimPath, payload, { flag: 'wx', mode: 0o600 });
+    return;
+  } catch (error) {
+    if (!error || error.code !== 'EEXIST' || !recoveryClaimCanRecover(recoveryClaimPath)) {
+      throw createPublicationLockedError();
+    }
+  }
+  try {
+    fs.rmSync(recoveryClaimPath);
+    fs.writeFileSync(recoveryClaimPath, payload, { flag: 'wx', mode: 0o600 });
+  } catch {
+    throw createPublicationLockedError();
+  }
+}
+
+function acquirePublicationLock(reportsDir, { recoveryAttempted = false, faultInjector } = {}) {
   const lockPath = path.join(reportsDir, PUBLICATION_LOCK_NAME);
+  const ownerId = crypto.randomBytes(16).toString('hex');
   let created = false;
   try {
     fs.mkdirSync(lockPath);
     created = true;
     fs.writeFileSync(path.join(lockPath, 'owner.json'), JSON.stringify({
       pid: process.pid,
+      ownerId,
       createdAt: new Date().toISOString(),
     }), { mode: 0o600 });
   } catch (error) {
     if (error && error.code === 'EEXIST') {
-      if (!recovered && publicationLockCanRecover(lockPath)) {
-        fs.rmSync(lockPath, { recursive: true, force: true });
-        return acquirePublicationLock(reportsDir, { recovered: true });
+      if (recoveryAttempted || !publicationLockCanRecover(lockPath)) {
+        throw createPublicationLockedError();
       }
-      throw Object.assign(new Error('Another local publication holds the profile lock.'), {
-        code: 'ERR_PUBLICATION_LOCKED',
-        retryable: true,
+      const recoveryClaimPath = path.join(lockPath, '.recovery-claim');
+      try {
+        createPublicationRecoveryClaim(recoveryClaimPath, ownerId);
+      } catch {
+        throw createPublicationLockedError();
+      }
+      try {
+        callPublicationFault(faultInjector, 'lock:recovery-claimed');
+        if (!publicationLockCanRecover(lockPath)) throw createPublicationLockedError();
+        const quarantinePath = `${lockPath}.stale-${process.pid}-${ownerId}`;
+        fs.renameSync(lockPath, quarantinePath);
+        fs.rmSync(quarantinePath, { recursive: true, force: true });
+      } catch (recoveryError) {
+        try {
+          fs.rmSync(recoveryClaimPath, { force: true });
+        } catch {
+          // Preserve the lock recovery result.
+        }
+        throw recoveryError;
+      }
+      return acquirePublicationLock(reportsDir, {
+        recoveryAttempted: true,
+        faultInjector,
       });
     }
     if (created) {
@@ -1239,12 +1639,12 @@ function acquirePublicationLock(reportsDir, { recovered = false } = {}) {
     }
     throw error;
   }
-  return lockPath;
+  return { lockPath, ownerId };
 }
 
 function generationMatchesPrepared(generationDir, prepared) {
   try {
-    return PUBLICATION_ARTIFACT_KINDS.every((kind) => {
+    const artifactsMatch = PUBLICATION_ARTIFACT_KINDS.every((kind) => {
       const descriptor = prepared.manifest.artifacts[kind];
       const artifactPath = path.join(generationDir, path.basename(descriptor.path));
       const stat = fs.lstatSync(artifactPath);
@@ -1252,14 +1652,22 @@ function generationMatchesPrepared(generationDir, prepared) {
       const buffer = fs.readFileSync(artifactPath);
       return buffer.byteLength === descriptor.bytes && sha256(buffer) === descriptor.sha256;
     });
+    if (!artifactsMatch) return false;
+    const generationManifest = fs.readFileSync(
+      path.join(generationDir, ARTIFACT_NAMES.manifestCanonical),
+    );
+    return generationManifest.equals(prepared.manifestPayload);
   } catch {
     return false;
   }
 }
 
-function releasePublicationLock(lockPath) {
+function releasePublicationLock(lockHandle) {
+  if (!lockHandle || !lockHandle.lockPath || !lockHandle.ownerId) return;
   try {
-    fs.rmSync(lockPath, { recursive: true, force: true });
+    const owner = JSON.parse(fs.readFileSync(path.join(lockHandle.lockPath, 'owner.json'), 'utf8'));
+    if (owner.ownerId !== lockHandle.ownerId) return;
+    fs.rmSync(lockHandle.lockPath, { recursive: true, force: true });
   } catch {
     // The publication result must not be reversed by best-effort lock cleanup.
   }
@@ -1274,17 +1682,30 @@ function cleanupAbandonedPublicationTransactions(reportsDir) {
 }
 
 function repairPublicationCompatibilityMirrors(profile, options = {}) {
-  const committed = readCommittedPublication(profile, options);
-  if (!committed || committed.compatibilityIntact) return false;
-  for (const kind of PUBLICATION_ARTIFACT_KINDS) {
-    atomicReplaceFile(
-      path.join(committed.reportsDir, committed.manifest.artifacts[kind].canonicalPath),
-      committed.buffers[kind],
-      `repair:${kind}`,
-      options.faultInjector,
-    );
+  const reportsRoot = options.reportsRoot || path.join(__dirname, 'reports');
+  const reportsDir = path.join(reportsRoot, normalizeProfileId(profile));
+  const lockHandle = acquirePublicationLock(reportsDir, { faultInjector: options.faultInjector });
+  try {
+    const committed = readCommittedPublication(profile, options);
+    if (!committed || committed.compatibilityIntact) return false;
+    for (const kind of PUBLICATION_ARTIFACT_KINDS) {
+      atomicReplaceFile(
+        path.join(committed.reportsDir, committed.manifest.artifacts[kind].canonicalPath),
+        committed.buffers[kind],
+        `repair:${kind}`,
+        options.faultInjector,
+      );
+    }
+    const repaired = readCommittedPublication(profile, options);
+    if (!repaired || !repaired.compatibilityIntact) {
+      throw Object.assign(new Error('Compatibility mirror repair could not be verified.'), {
+        code: 'ERR_PUBLICATION_REPAIR_FAILED',
+      });
+    }
+    return true;
+  } finally {
+    releasePublicationLock(lockHandle);
   }
-  return true;
 }
 
 function localPublicationCommitResult(prepared, reportsDir) {
@@ -1311,7 +1732,7 @@ function commitLeadPublication(prepared, profile, options = {}) {
   const reportsDir = prepared.reportsDir;
   fs.mkdirSync(reportsDir, { recursive: true });
   fs.mkdirSync(path.join(reportsDir, 'publications'), { recursive: true });
-  const lockPath = acquirePublicationLock(reportsDir);
+  const lockHandle = acquirePublicationLock(reportsDir, { faultInjector: options.faultInjector });
   let transactionDir = null;
   let generationStageDir = null;
   const generationFinalDir = path.join(reportsDir, 'publications', prepared.publicationId);
@@ -1323,10 +1744,6 @@ function commitLeadPublication(prepared, profile, options = {}) {
     cleanupAbandonedPublicationTransactions(reportsDir);
     transactionDir = fs.mkdtempSync(path.join(reportsDir, '.publication-txn-'));
     generationStageDir = path.join(transactionDir, prepared.publicationId);
-    const canonicalPaths = PUBLICATION_ARTIFACT_KINDS.map((kind) => (
-      path.join(reportsDir, prepared.manifest.artifacts[kind].canonicalPath)
-    ));
-    snapshots = snapshotFiles(canonicalPaths);
     callPublicationFault(options.faultInjector, 'lock:acquired');
     const currentManifest = readManifestOrNull(
       path.join(reportsDir, ARTIFACT_NAMES.manifestCanonical),
@@ -1338,6 +1755,10 @@ function commitLeadPublication(prepared, profile, options = {}) {
         retryable: true,
       });
     }
+    const currentCommitted = currentManifest
+      ? readCommittedPublication(profile, { reportsRoot: path.dirname(reportsDir) })
+      : null;
+    snapshots = authoritativeCompatibilitySnapshots(reportsDir, prepared.manifest, currentCommitted);
 
     fs.mkdirSync(generationStageDir, { recursive: true });
     callPublicationFault(options.faultInjector, 'generation:mkdir');
@@ -1350,6 +1771,12 @@ function commitLeadPublication(prepared, profile, options = {}) {
         options.faultInjector,
       );
     }
+    writeStagedFile(
+      path.join(generationStageDir, ARTIFACT_NAMES.manifestCanonical),
+      prepared.manifestPayload,
+      'generation:manifest',
+      options.faultInjector,
+    );
     syncDirectory(generationStageDir);
     callPublicationFault(options.faultInjector, 'generation:sync-directory');
     if (fs.existsSync(generationFinalDir)) {
@@ -1375,14 +1802,22 @@ function commitLeadPublication(prepared, profile, options = {}) {
       );
     }
 
-    const manifestPayload = Buffer.from(`${JSON.stringify(prepared.manifest, null, 2)}\n`, 'utf8');
     atomicReplaceFile(
       path.join(reportsDir, ARTIFACT_NAMES.manifestCanonical),
-      manifestPayload,
+      prepared.manifestPayload,
       'pointer',
       options.faultInjector,
       { onRename() { pointerCommitted = true; } },
     );
+
+    const verified = readCommittedPublication(profile, {
+      reportsRoot: path.dirname(reportsDir),
+    });
+    if (!verified || verified.manifest.publicationId !== prepared.publicationId || !verified.compatibilityIntact) {
+      throw Object.assign(new Error('Publication commit could not be verified.'), {
+        code: 'ERR_PUBLICATION_COMMIT_UNKNOWN',
+      });
+    }
 
     return localPublicationCommitResult(prepared, reportsDir);
   } catch (error) {
@@ -1426,7 +1861,7 @@ function commitLeadPublication(prepared, profile, options = {}) {
         // Transaction directories are non-authoritative cleanup state.
       }
     }
-    releasePublicationLock(lockPath);
+    releasePublicationLock(lockHandle);
   }
 }
 
@@ -1478,6 +1913,10 @@ module.exports = {
   ARTIFACT_NAMES,
   PUBLICATION_SCHEMA_VERSION,
   PUBLICATION_RENDER_VERSION,
+  PUBLICATION_LATEST_MAX_RECORDS,
+  PUBLICATION_HISTORY_MAX_RECORDS,
+  PUBLICATION_JSON_MAX_BYTES,
+  PUBLICATION_ENTRY_MAX_BYTES,
   mergeLeadHistory,
   prepareLeadSnapshotRecords,
   normalizePublicationSources,

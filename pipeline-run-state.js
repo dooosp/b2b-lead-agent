@@ -15,7 +15,10 @@ const PIPELINE_OUTCOMES = Object.freeze([
   'NO_ARTICLES',
   'NO_CANDIDATES',
   'NO_VALID_LEADS',
+  'NO_ARTIFACT_CHANGE',
+  // Accepted only so retained schema-v1 results from the first release remain readable.
   'NO_CHANGE',
+  'RUN_REPLAY_REQUIRES_RESUME',
   'READY_FOR_REMOTE_PUBLICATION',
   'PUBLISHED',
   'NOTIFIED',
@@ -26,6 +29,36 @@ const PIPELINE_OUTCOMES = Object.freeze([
 ]);
 
 const STATE_RANK = new Map(PIPELINE_STATES.map((state, index) => [state, index]));
+const STATE_OUTCOMES = Object.freeze({
+  STARTED: new Set(['IN_PROGRESS', 'NO_ARTICLES', 'FAILED']),
+  GENERATED: new Set(['IN_PROGRESS', 'NO_CANDIDATES', 'FAILED']),
+  VALIDATED: new Set([
+    'IN_PROGRESS',
+    'NO_VALID_LEADS',
+    'NO_ARTIFACT_CHANGE',
+    'NO_CHANGE',
+    'RUN_REPLAY_REQUIRES_RESUME',
+    'READY_FOR_REMOTE_PUBLICATION',
+    'FAILED',
+  ]),
+  PUBLISHED: new Set([
+    'IN_PROGRESS',
+    'PUBLISHED',
+    'NOTIFICATION_FAILED',
+    'NOTIFICATION_PARTIAL',
+    'NOTIFICATION_UNKNOWN',
+  ]),
+  // NOTIFIED/IN_PROGRESS exists only between the state transition and receipt completion.
+  NOTIFIED: new Set(['IN_PROGRESS', 'NOTIFIED']),
+});
+const FAILURE_OUTCOMES = new Set([
+  'FAILED',
+  'NO_VALID_LEADS',
+  'RUN_REPLAY_REQUIRES_RESUME',
+  'NOTIFICATION_FAILED',
+  'NOTIFICATION_PARTIAL',
+  'NOTIFICATION_UNKNOWN',
+]);
 
 function isoNow(clock = () => new Date()) {
   const value = clock();
@@ -93,7 +126,9 @@ function createPipelineRun({
       acceptedRecipientCount: 0,
       rejectedRecipientCount: 0,
       attempts: 0,
+      acceptance: 'NOT_ATTEMPTED',
       retryable: null,
+      recipientDeliveryConfirmed: false,
       retryRequiresExplicitCommand: true,
       deliveryGuarantee: 'PROVIDER_ACCEPTANCE_ONLY',
     },
@@ -112,10 +147,171 @@ function assertPipelineRun(result) {
       code: 'ERR_PIPELINE_RESULT_INVALID',
     });
   }
+  const isInProgress = result.outcome === 'IN_PROGRESS';
+  const hasValidFailure = Boolean(
+    result.failure
+    && /^ERR_[A-Z0-9_]+$/.test(result.failure.code || '')
+    && typeof result.failure.stage === 'string'
+    && typeof result.failure.safeMessage === 'string'
+    && (typeof result.failure.retryable === 'boolean' || result.failure.retryable === null)
+    && typeof result.failure.deliveryUnknown === 'boolean'
+  );
+  const stateRequiresRemote = result.state === 'PUBLISHED' || result.state === 'NOTIFIED';
+  const remoteEvidenceValid = Boolean(
+    result.publication
+    && result.publication.remotePublished === true
+    && /^[a-f0-9]{40}$/.test(result.publication.commitSha || '')
+    && /^refs\/heads\/[A-Za-z0-9._/-]+$/.test(result.publication.remoteRef || '')
+  );
+  const notification = result.notification;
+  const notificationCountsValid = Boolean(
+    notification
+    && ['intendedRecipientCount', 'acceptedRecipientCount', 'rejectedRecipientCount']
+      .every((field) => Number.isSafeInteger(notification[field]) && notification[field] >= 0)
+    && notification.acceptedRecipientCount + notification.rejectedRecipientCount
+      <= notification.intendedRecipientCount
+    && Number.isSafeInteger(notification.attempts)
+    && notification.attempts >= 0
+    && notification.retryRequiresExplicitCommand === true
+    && notification.deliveryGuarantee === 'PROVIDER_ACCEPTANCE_ONLY'
+    && notification.recipientDeliveryConfirmed === false
+  );
+  const hasNotificationAttemptIdentity = Boolean(
+    notification
+    && notification.attempts > 0
+    && /^[a-f0-9]{64}$/.test(notification.notificationKey || '')
+    && /^<lead-report-[a-f0-9]{40}@b2b-lead-agent\.local>$/.test(notification.messageId || '')
+    && notification.messageId
+      === `<lead-report-${notification.notificationKey.slice(0, 40)}@b2b-lead-agent.local>`
+    && notification.intendedRecipientCount > 0
+  );
+  const hasNoNotificationAttempt = Boolean(
+    notification
+    && notification.attempts === 0
+    && notification.notificationKey === null
+    && notification.messageId === null
+    && notification.intendedRecipientCount === 0
+    && notification.acceptedRecipientCount === 0
+    && notification.rejectedRecipientCount === 0
+  );
+  let notificationStateConsistent = notificationCountsValid;
+  if (notificationStateConsistent && notification.requested === false) {
+    notificationStateConsistent = notification.state === 'NOT_REQUESTED'
+      && hasNoNotificationAttempt
+      && notification.acceptance === 'NOT_ATTEMPTED'
+      && notification.retryable === null
+      && notification.recipientDeliveryConfirmed === false;
+  } else if (notificationStateConsistent && notification.requested === true) {
+    if (result.state === 'PUBLISHED') {
+      const expectedState = {
+        PUBLISHED: 'PENDING',
+        IN_PROGRESS: 'PENDING',
+        NOTIFICATION_FAILED: 'FAILED',
+        NOTIFICATION_PARTIAL: 'PARTIAL',
+        NOTIFICATION_UNKNOWN: 'UNKNOWN',
+      }[result.outcome];
+      notificationStateConsistent = notification.state === expectedState;
+      if (result.outcome === 'PUBLISHED') {
+        notificationStateConsistent = notificationStateConsistent
+          && hasNoNotificationAttempt
+          && notification.acceptance === 'NOT_ATTEMPTED'
+          && notification.retryable === null
+          && notification.recipientDeliveryConfirmed === false;
+      } else if (result.outcome === 'IN_PROGRESS') {
+        notificationStateConsistent = notificationStateConsistent
+          && hasNotificationAttemptIdentity
+          && notification.acceptance === 'UNKNOWN'
+          && notification.retryable === null
+          && notification.recipientDeliveryConfirmed === false;
+      } else if (result.outcome === 'NOTIFICATION_FAILED') {
+        notificationStateConsistent = notificationStateConsistent
+          && (hasNoNotificationAttempt || hasNotificationAttemptIdentity)
+          && ['NOT_ATTEMPTED', 'NOT_ACCEPTED'].includes(notification.acceptance)
+          && typeof notification.retryable === 'boolean'
+          && notification.recipientDeliveryConfirmed === false;
+      } else if (result.outcome === 'NOTIFICATION_PARTIAL') {
+        notificationStateConsistent = notificationStateConsistent
+          && hasNotificationAttemptIdentity
+          && notification.acceptance === 'PARTIAL'
+          && notification.retryable === false
+          && notification.recipientDeliveryConfirmed === false
+          && notification.acceptedRecipientCount + notification.rejectedRecipientCount
+            === notification.intendedRecipientCount;
+      } else if (result.outcome === 'NOTIFICATION_UNKNOWN') {
+        notificationStateConsistent = notificationStateConsistent
+          && hasNotificationAttemptIdentity
+          && notification.acceptance === 'UNKNOWN'
+          && notification.retryable === null
+          && notification.recipientDeliveryConfirmed === false;
+      }
+    } else if (result.state === 'NOTIFIED') {
+      notificationStateConsistent = ['IN_PROGRESS', 'NOTIFIED'].includes(result.outcome)
+        && notification.state === 'ACCEPTED'
+        && hasNotificationAttemptIdentity
+        && notification.acceptance === 'ACCEPTED'
+        && notification.acceptedRecipientCount === notification.intendedRecipientCount
+        && notification.rejectedRecipientCount === 0
+        && notification.retryable === false
+        && notification.recipientDeliveryConfirmed === false
+        && notification.deliveryGuarantee === 'PROVIDER_ACCEPTANCE_ONLY';
+    } else {
+      notificationStateConsistent = notification.state === 'BLOCKED'
+        && hasNoNotificationAttempt
+        && notification.acceptance === 'NOT_ATTEMPTED'
+        && notification.retryable === null
+        && notification.recipientDeliveryConfirmed === false;
+    }
+  } else {
+    notificationStateConsistent = false;
+  }
+  if (notificationStateConsistent && result.outcome === 'NOTIFICATION_UNKNOWN') {
+    notificationStateConsistent = notification.retryable === null
+      && hasValidFailure
+      && result.failure.deliveryUnknown === true;
+  }
+  if (
+    notificationStateConsistent
+    && ['NOTIFICATION_FAILED', 'NOTIFICATION_PARTIAL'].includes(result.outcome)
+  ) {
+    notificationStateConsistent = hasValidFailure && result.failure.deliveryUnknown === false;
+  }
+  if (notificationStateConsistent && FAILURE_OUTCOMES.has(result.outcome) && result.outcome.startsWith('NOTIFICATION_')) {
+    notificationStateConsistent = hasValidFailure
+      && result.failure.stage === 'notification'
+      && result.failure.retryable === notification.retryable;
+  }
+  if (
+    !STATE_OUTCOMES[result.state].has(result.outcome)
+    || typeof result.terminal !== 'boolean'
+    || result.terminal !== !isInProgress
+    || (isInProgress ? result.completedAt !== null : !isValidIsoTimestamp(result.completedAt))
+    || (FAILURE_OUTCOMES.has(result.outcome) ? !hasValidFailure : result.failure !== null)
+    || (stateRequiresRemote ? !remoteEvidenceValid : Boolean(result.publication && result.publication.remotePublished))
+    || !notificationStateConsistent
+    || (
+      ['READY_FOR_REMOTE_PUBLICATION', 'NO_ARTIFACT_CHANGE', 'NO_CHANGE', 'RUN_REPLAY_REQUIRES_RESUME'].includes(result.outcome)
+      && (!result.publication.localCommitted || !/^pub-[a-f0-9]{32}$/.test(result.publication.publicationId || ''))
+    )
+    || (
+      result.state === 'NOTIFIED'
+      && result.outcome === 'NOTIFIED'
+      && (!result.notification || result.notification.state !== 'ACCEPTED')
+    )
+  ) {
+    throw Object.assign(new Error('Pipeline run state and outcome are inconsistent.'), {
+      code: 'ERR_PIPELINE_RESULT_INVALID',
+    });
+  }
   return result;
 }
 
-function transitionPipelineRun(result, nextState, { clock } = {}) {
+function isValidIsoTimestamp(value) {
+  return typeof value === 'string'
+    && Number.isFinite(Date.parse(value))
+    && new Date(value).toISOString() === value;
+}
+
+function transitionPipelineRun(result, nextState, { clock, notificationPatch = null } = {}) {
   assertPipelineRun(result);
   if (!STATE_RANK.has(nextState)) {
     throw Object.assign(new Error('Pipeline state transition is invalid.'), {
@@ -131,6 +327,7 @@ function transitionPipelineRun(result, nextState, { clock } = {}) {
   }
   result.state = nextState;
   result.updatedAt = isoNow(clock);
+  if (notificationPatch) Object.assign(result.notification, notificationPatch);
   return result;
 }
 
@@ -146,17 +343,29 @@ function completePipelineRun(result, outcome, { clock } = {}) {
   result.terminal = true;
   result.updatedAt = now;
   result.completedAt = now;
-  return result;
+  return assertPipelineRun(result);
 }
 
-function reopenPipelineRun(result, { clock } = {}) {
+function reopenPipelineRun(result, { clock, notificationAttempt = null } = {}) {
   assertPipelineRun(result);
   result.outcome = 'IN_PROGRESS';
   result.terminal = false;
   result.completedAt = null;
   result.updatedAt = isoNow(clock);
   result.failure = null;
-  return result;
+  if (notificationAttempt) {
+    result.notification.state = 'PENDING';
+    result.notification.notificationKey = notificationAttempt.notificationKey;
+    result.notification.messageId = notificationAttempt.messageId;
+    result.notification.intendedRecipientCount = notificationAttempt.intendedRecipientCount;
+    result.notification.acceptedRecipientCount = 0;
+    result.notification.rejectedRecipientCount = 0;
+    result.notification.attempts += 1;
+    result.notification.acceptance = 'UNKNOWN';
+    result.notification.retryable = null;
+    result.notification.recipientDeliveryConfirmed = false;
+  }
+  return assertPipelineRun(result);
 }
 
 function failPipelineRun(result, {
@@ -166,7 +375,9 @@ function failPipelineRun(result, {
   safeMessage = 'Pipeline execution failed.',
   outcome = 'FAILED',
   deliveryUnknown = false,
+  notificationPatch = null,
 } = {}, { clock } = {}) {
+  assertPipelineRun(result);
   result.failure = {
     code,
     stage,
@@ -174,7 +385,13 @@ function failPipelineRun(result, {
     safeMessage,
     deliveryUnknown: Boolean(deliveryUnknown),
   };
-  return completePipelineRun(result, outcome, { clock });
+  if (notificationPatch) Object.assign(result.notification, notificationPatch);
+  const now = isoNow(clock);
+  result.outcome = outcome;
+  result.terminal = true;
+  result.updatedAt = now;
+  result.completedAt = now;
+  return assertPipelineRun(result);
 }
 
 function writePipelineRunResult(filePath, result, { fsImpl = fs } = {}) {
@@ -211,7 +428,7 @@ function readPipelineRunResult(filePath, { fsImpl = fs } = {}) {
 
 function exitCodeForPipelineRun(result) {
   assertPipelineRun(result);
-  if (['FAILED', 'NO_VALID_LEADS', 'NOTIFICATION_FAILED', 'NOTIFICATION_PARTIAL', 'NOTIFICATION_UNKNOWN'].includes(result.outcome)) {
+  if (['FAILED', 'NO_VALID_LEADS', 'RUN_REPLAY_REQUIRES_RESUME', 'NOTIFICATION_FAILED', 'NOTIFICATION_PARTIAL', 'NOTIFICATION_UNKNOWN'].includes(result.outcome)) {
     return 1;
   }
   return 0;

@@ -19,7 +19,7 @@ When runtime behavior changes, update this map from source files, tests, and wor
 | --- | --- | --- |
 | Root pipeline | `main.js`, `orchestrator/news-orchestrator.js`, `lead-qualifier.js`, `lead-report-publisher.js`, `pipeline-run-state.js`, `git-publication.js`, `notification-runner.js`, `profile-registry.js` | Batch news collection, lead qualification, typed local publication, verified Git publication, and post-publication notification |
 | Profiles | `profiles/*.js`, `profile-registry.js` | Managed seller profiles and search/product context |
-| Published artifacts | `reports/<profile>/publication-manifest.json`, `reports/<profile>/publications/<publicationId>/*`, and the established fixed report/latest/history paths | Immutable manifest-selected publication plus fixed-path Git compatibility artifacts consumed by Worker fallback paths |
+| Published artifacts | `reports/<profile>/publication-manifest.json`, `reports/<profile>/publications/<publicationId>/*`, and the established fixed report/latest/history paths | Immutable manifest-selected publication plus fixed-path Git compatibility artifacts used only when a legacy publication has no manifest |
 | Worker API | `worker/index.js`, `worker/routes/*.js`, `worker/api/*.js` | Route dispatch, route metadata, authenticated APIs, trigger/job ledger, internal report contract |
 | Worker D1 layer | `worker/db/*.js`, `worker/schema.sql` | Explicit schema migrations and readiness, typed published snapshots, lead/job/reference persistence, row transforms |
 | Worker self-service | `worker/self-service/*.js` | Authenticated ad hoc company/industry analysis and self-service D1 persistence |
@@ -49,16 +49,20 @@ When runtime behavior changes, update this map from source files, tests, and wor
 
 ## Root Pipeline Flow
 
-1. `main.js` parses `--profile <profileId>`, typed-result, and notification-intent flags, loads a managed profile from `profile-registry.js`, and creates an observation run with `lib/obs.js`. Legacy `--email` is rejected.
+1. `main.js` parses `--profile <profileId>`, optional stable `--run-id`, typed-result, and notification-intent flags, loads a managed profile from `profile-registry.js`, and creates an observation run with `lib/obs.js`. Legacy `--email` is rejected.
 2. `orchestrator/news-orchestrator.js` fetches Google News plus Korean RSS sources, deduplicates articles, and enriches article bodies.
 3. `lead-qualifier.js` builds traceable source evidence, calls the LLM qualification path, normalizes lead trust metadata, and fails closed when configured LLM execution is unavailable unless explicit demo mode is enabled.
 4. `lead-report-publisher.js` validates public fields before rendering, writes an immutable generation, and atomically selects it with `publication-manifest.json`; established fixed names remain Git compatibility artifacts.
 5. `git-publication.js` stages the exact manifest-derived path set, normally pushes without force, and verifies the publication commit at the selected remote ref.
-6. `notification-runner.js` reloads checksum-verified public artifacts and may invoke `email-sender.js` only after remote publication is proven. Retry is explicit and provider acceptance is not delivery or exactly-once proof.
+6. `notification-runner.js` loads checksum-verified public artifacts directly
+   from the retained result's exact Git commit and serializes result-specific
+   attempts before it may invoke `email-sender.js`. Retry is explicit,
+   recipient-set drift is refused, and provider acceptance is not delivery or
+   exactly-once proof.
 
 ## Worker Shape
 
-`worker/index.js` is a small fetch delegate. Route matching and boundary behavior live in `worker/routes/dispatcher.js`, `worker/routes/api.js`, `worker/routes/static.js`, `worker/routes/pages.js`, `worker/routes/responses.js`, and `worker/routes/metadata.js`. Those route modules import handlers from `worker/api/*`, D1 helpers from `worker/db/*`, self-service orchestration from `worker/self-service/*`, and HTML page renderers from `worker/pages/*`. Shared managed/internal GitHub artifact stream, UTF-8, cardinality, and pre-parse complexity bounds live in `worker/lib/published-artifact-json.js`.
+`worker/index.js` is a small fetch delegate. Route matching and boundary behavior live in `worker/routes/dispatcher.js`, `worker/routes/api.js`, `worker/routes/static.js`, `worker/routes/pages.js`, `worker/routes/responses.js`, and `worker/routes/metadata.js`. Those route modules import handlers from `worker/api/*`, D1 helpers from `worker/db/*`, self-service orchestration from `worker/self-service/*`, and HTML page renderers from `worker/pages/*`. Shared managed/internal GitHub artifact stream, UTF-8, cardinality, and pre-parse complexity bounds live in `worker/lib/published-artifact-json.js`; pointer selection and checksum enforcement live in `worker/lib/manifest-published-artifact.js`.
 
 Key bindings in `worker/wrangler.toml`:
 

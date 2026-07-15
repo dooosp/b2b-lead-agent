@@ -34,7 +34,7 @@ import {
   toPublishedSnapshotResponseLead,
 } from '../db/published-snapshots.js';
 import { createLeadsCsvFilename, serializeLeadsCsv } from './serializers/lead-csv.js';
-import { readBoundedPublishedArtifactJson } from '../lib/published-artifact-json.js';
+import { fetchManifestSelectedArtifactJson } from '../lib/manifest-published-artifact.js';
 
 const LEAD_VERSION_REQUIRED_CODE = 'LEAD_VERSION_REQUIRED';
 const LEAD_VERSION_INVALID_CODE = 'LEAD_VERSION_INVALID';
@@ -163,18 +163,19 @@ async function loadManagedPublishedArtifact(env, profile, artifactKind, filename
   let response;
   let publishedLeads;
   try {
-    response = await fetch(
-      `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/`
-      + `${encodeURIComponent(normalizedProfile)}/${filename}?t=${Date.now()}`,
-      { headers: { 'User-Agent': 'B2B-Lead-Worker', 'Cache-Control': 'no-cache' } }
+    const selected = await fetchManifestSelectedArtifactJson(
+      env,
+      normalizedProfile,
+      artifactKind,
+      filename,
+      { maxTopLevelEntries: PUBLISHED_SNAPSHOT_MAX_LEADS[artifactKind] },
     );
-    if (response.ok) {
-      publishedLeads = await readBoundedPublishedArtifactJson(response, {
-        maxTopLevelEntries: PUBLISHED_SNAPSHOT_MAX_LEADS[artifactKind],
-      });
-    }
+    response = selected.response;
+    publishedLeads = selected.payload;
   } catch (error) {
-    const fallback = staleSnapshotFallback(cached);
+    const fallback = error?.staleFallbackEligible === false
+      ? null
+      : staleSnapshotFallback(cached);
     if (fallback) return fallback;
     throw error;
   }

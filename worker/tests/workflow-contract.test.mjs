@@ -12,11 +12,25 @@ const validateNamingWorkflowPath = path.resolve(__dirname, '../../.github/workfl
 
 test('generate-report workflow keeps requestId callback contract fields', async () => {
   const workflow = await readFile(workflowPath, 'utf8');
+  const jobEnv = workflow.slice(
+    workflow.indexOf('jobs:'),
+    workflow.indexOf('steps:'),
+  );
+  const runningCallback = workflow.slice(
+    workflow.indexOf('name: Mark run running'),
+    workflow.indexOf('name: Generate and locally commit publication'),
+  );
+  const completionCallback = workflow.slice(
+    workflow.indexOf('name: Mark run completion'),
+  );
 
   assert.match(workflow, /run-name:\s+Generate report/i);
   assert.match(workflow, /REQUEST_ID:\s+\$\{\{\s*github\.event\.client_payload\.requestId/i);
-  assert.match(workflow, /STATUS_EVENT_URL:\s+\$\{\{\s*github\.event\.client_payload\.statusEventUrl/i);
-  assert.match(workflow, /CALLBACK_TOKEN:\s+\$\{\{\s*github\.event\.client_payload\.callbackToken/i);
+  assert.doesNotMatch(jobEnv, /STATUS_EVENT_URL|CALLBACK_TOKEN/);
+  for (const callbackStep of [runningCallback, completionCallback]) {
+    assert.match(callbackStep, /STATUS_EVENT_URL:\s+\$\{\{\s*github\.event\.client_payload\.statusEventUrl/i);
+    assert.match(callbackStep, /CALLBACK_TOKEN:\s+\$\{\{\s*github\.event\.client_payload\.callbackToken/i);
+  }
   assert.match(workflow, /"state":"running"/);
   assert.match(workflow, /"state":"\$JOB_STATE"/);
   assert.match(workflow, /X-Job-Callback-Token: \$CALLBACK_TOKEN/);
@@ -35,6 +49,7 @@ test('generate-report serializes publication and notifies only after verified re
   const callbackIndex = workflow.indexOf('name: Mark run completion');
 
   assert.match(workflow, /concurrency:\s+group:\s+lead-report-publication\s+queue:\s+max/);
+  assert.match(workflow, /uses:\s+actions\/checkout@v5\s+with:\s+ref:\s+master\s+fetch-depth:\s+0/);
   assert.match(workflow, /name:\s+Install dependencies\s+run:\s+npm ci/);
   assert.ok(generationIndex > 0);
   assert.ok(generationIndex < resultIndex);
@@ -50,22 +65,28 @@ test('generate-report serializes publication and notifies only after verified re
   const recoveryStep = workflow.slice(recoveryIndex, notificationIndex);
   const notificationStep = workflow.slice(notificationIndex, workflow.indexOf('name: Record final typed pipeline result'));
   assert.match(generationStep, /--notification-requested/);
+  assert.match(generationStep, /--run-id "github-\$\{\{ github\.run_id \}\}"/);
   assert.match(generationStep, /--result-file \/tmp\/lead-pipeline-result\.json/);
   assert.doesNotMatch(generationStep, /GMAIL|--email/);
+  assert.doesNotMatch(generationStep, /STATUS_EVENT_URL|CALLBACK_TOKEN/);
   assert.match(publicationStep, /scripts\/publish-lead-pipeline\.mjs/);
   assert.match(publicationStep, /continue-on-error:\s+true/);
   assert.doesNotMatch(publicationStep, /lead-report-\*|git add|git push/);
+  assert.doesNotMatch(publicationStep, /STATUS_EVENT_URL|CALLBACK_TOKEN/);
   assert.match(recoveryStep, /if:\s+\$\{\{ always\(\) \}\}/);
   assert.match(recoveryStep, /--recover-only/);
   assert.doesNotMatch(recoveryStep, /GMAIL|secrets\./);
+  assert.doesNotMatch(recoveryStep, /STATUS_EVENT_URL|CALLBACK_TOKEN/);
   assert.match(notificationStep, /scripts\/notify-lead-publication\.mjs/);
   assert.match(notificationStep, /if:\s+\$\{\{ always\(\) \}\}/);
   assert.match(notificationStep, /GMAIL_USER/);
   assert.match(notificationStep, /GMAIL_PASS/);
   assert.match(notificationStep, /GMAIL_RECIPIENT/);
+  assert.doesNotMatch(notificationStep, /STATUS_EVENT_URL|CALLBACK_TOKEN/);
   assert.match(workflow, /uses:\s+actions\/upload-artifact@v4/);
   assert.match(workflow, /path:\s+\/tmp\/lead-pipeline-result\.json/);
   assert.match(workflow, /RESULT_SHA=.*lead-pipeline-result\.json/);
+  assert.match(workflow, /publication\.remotePublished/);
   assert.match(workflow, /"githubSha":"\$RESULT_SHA"/);
 });
 

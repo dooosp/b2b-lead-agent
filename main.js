@@ -22,6 +22,7 @@ function parseCliArgs(args = []) {
     notificationRequested: false,
     legacyEmailRequested: false,
     attempt: null,
+    runId: null,
   };
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
@@ -30,6 +31,7 @@ function parseCliArgs(args = []) {
     else if (argument === '--notification-requested') parsed.notificationRequested = true;
     else if (argument === '--email') parsed.legacyEmailRequested = true;
     else if (argument === '--attempt') parsed.attempt = Number(args[++index]);
+    else if (argument === '--run-id') parsed.runId = args[++index] || null;
     else {
       throw Object.assign(new Error(`Unknown argument: ${argument}`), { code: 'ERR_CLI_USAGE' });
     }
@@ -39,6 +41,9 @@ function parseCliArgs(args = []) {
   }
   if (parsed.resultFile && typeof parsed.resultFile !== 'string') {
     throw Object.assign(new Error('Result file is invalid.'), { code: 'ERR_CLI_USAGE' });
+  }
+  if (parsed.runId && !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(parsed.runId)) {
+    throw Object.assign(new Error('Run id is invalid.'), { code: 'ERR_CLI_USAGE' });
   }
   return parsed;
 }
@@ -53,14 +58,54 @@ function safePipelineFailure(error) {
   ]);
   return {
     code,
-    stage: code.startsWith('ERR_PUBLICATION_') ? 'publication' : 'pipeline',
+    stage: error && typeof error.stage === 'string'
+      ? error.stage
+      : code.startsWith('ERR_PUBLICATION_') ? 'publication' : 'pipeline',
     retryable: error && typeof error.retryable === 'boolean'
       ? error.retryable
       : retryableCodes.has(code),
-    safeMessage: code.startsWith('ERR_PUBLICATION_')
-      ? 'Local publication did not commit.'
-      : 'Pipeline execution failed.',
+    safeMessage: error && typeof error.safeMessage === 'string'
+      ? error.safeMessage
+      : code.startsWith('ERR_PUBLICATION_')
+        ? 'Local publication did not commit.'
+        : 'Pipeline execution failed.',
   };
+}
+
+function createStageError(code, stage, safeMessage, { retryable = false, cause } = {}) {
+  return Object.assign(new Error(safeMessage), {
+    code,
+    stage,
+    safeMessage,
+    retryable,
+    ...(cause ? { cause } : {}),
+  });
+}
+
+function normalizeQualificationResult(value) {
+  if (Array.isArray(value)) {
+    return {
+      leads: value,
+      candidatesGenerated: value.length,
+      candidatesRejected: 0,
+    };
+  }
+  if (
+    value
+    && Array.isArray(value.leads)
+    && Number.isSafeInteger(value.candidatesGenerated)
+    && value.candidatesGenerated >= value.leads.length
+    && Number.isSafeInteger(value.candidatesRejected)
+    && value.candidatesRejected >= 0
+    && value.candidatesGenerated === value.leads.length + value.candidatesRejected
+  ) {
+    return value;
+  }
+  throw createStageError(
+    'ERR_GENERATION_FAILED',
+    'generation',
+    'Lead generation returned an invalid result contract.',
+  );
 }
 
 function publicationResultPath(profileId) {
@@ -70,6 +115,7 @@ function publicationResultPath(profileId) {
 async function runLeadPipeline({
   profile,
   requestId = process.env.REQUEST_ID,
+  runId = null,
   attempt = null,
   notificationRequested = false,
   resultFile = null,
@@ -84,8 +130,19 @@ async function runLeadPipeline({
   const publisher = deps.publisher || leadReportPublisher;
   const clock = deps.clock || (() => new Date());
   const stateClock = () => clock();
-  const runIdFactory = deps.runIdFactory || (() => crypto.randomUUID());
-  const obs = deps.obs || createRun({ runId: requestId || undefined });
+  const normalizedRequestId = typeof requestId === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(requestId.trim())
+    ? requestId.trim()
+    : null;
+  const normalizedRunId = typeof runId === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(runId.trim())
+    ? runId.trim()
+    : null;
+  const runIdFactory = normalizedRunId
+    ? () => normalizedRunId
+    : deps.runIdFactory || (() => (
+      normalizedRequestId
+      ? `run-${crypto.createHash('sha256').update(`${profile.id}\0${normalizedRequestId}`).digest('hex').slice(0, 32)}`
+      : crypto.randomUUID()
+    ));
   const result = createPipelineRun({
     profileId: profile.id,
     requestId,
@@ -94,6 +151,7 @@ async function runLeadPipeline({
     clock: stateClock,
     runIdFactory,
   });
+  const obs = deps.obs || createRun({ runId: result.runId });
   const persist = () => writePipelineRunResult(resultFile, result);
 
   obs.log('pipeline', 'info', `B2B 리드 발굴 에이전트 시작 [${profile.name}]`);
@@ -101,9 +159,27 @@ async function runLeadPipeline({
 
   try {
     const tScout = obs.time('scout');
-    const rawArticles = await collector.fetchIndustryNews(profile);
+    let rawArticles;
+    try {
+      rawArticles = await collector.fetchIndustryNews(profile);
+    } catch (error) {
+      throw createStageError(
+        'ERR_COLLECTION_FAILED',
+        'collection',
+        'Article collection did not produce a trustworthy result.',
+        { retryable: true, cause: error },
+      );
+    }
+    if (!Array.isArray(rawArticles)) {
+      throw createStageError(
+        'ERR_COLLECTION_FAILED',
+        'collection',
+        'Article collection returned an invalid result contract.',
+        { retryable: true },
+      );
+    }
     tScout.end();
-    result.counts.articlesCollected = Array.isArray(rawArticles) ? rawArticles.length : 0;
+    result.counts.articlesCollected = rawArticles.length;
     obs.count('articles_raw', result.counts.articlesCollected);
 
     if (result.counts.articlesCollected === 0) {
@@ -115,9 +191,26 @@ async function runLeadPipeline({
     }
 
     const tQualify = obs.time('qualify');
-    const qualifiedLeads = await qualifier.qualifyLeads(rawArticles, profile);
+    let qualification;
+    try {
+      qualification = normalizeQualificationResult(
+        typeof qualifier.qualifyLeadsWithDiagnostics === 'function'
+          ? await qualifier.qualifyLeadsWithDiagnostics(rawArticles, profile)
+          : await qualifier.qualifyLeads(rawArticles, profile),
+      );
+    } catch (error) {
+      if (error && error.code === 'ERR_GENERATION_FAILED') throw error;
+      throw createStageError(
+        'ERR_GENERATION_FAILED',
+        'generation',
+        'Lead generation did not produce a trustworthy result.',
+        { retryable: true, cause: error },
+      );
+    }
+    const qualifiedLeads = qualification.leads;
     tQualify.end();
-    result.counts.candidatesGenerated = Array.isArray(qualifiedLeads) ? qualifiedLeads.length : 0;
+    result.counts.candidatesGenerated = qualification.candidatesGenerated;
+    result.counts.leadsRejected = qualification.candidatesRejected;
     obs.count('leads', result.counts.candidatesGenerated);
     transitionPipelineRun(result, 'GENERATED', { clock: stateClock });
     persist();
@@ -136,9 +229,10 @@ async function runLeadPipeline({
       now,
       reportsRoot,
       idFactory: deps.idFactory,
+      runId: result.runId,
     });
     result.counts.leadsValidated = prepared.validLeads.length;
-    result.counts.leadsRejected = prepared.rejectedCount;
+    result.counts.leadsRejected += prepared.rejectedCount;
     result.counts.artifactsPrepared = prepared.artifactCount;
     transitionPipelineRun(result, 'VALIDATED', { clock: stateClock });
     persist();
@@ -169,11 +263,36 @@ async function runLeadPipeline({
     if (prepared.noChange) {
       if (!prepared.compatibilityIntact && publisher.repairPublicationCompatibilityMirrors) {
         publisher.repairPublicationCompatibilityMirrors(profile, { reportsRoot });
+        result.operation = 'PUBLICATION_REPAIR';
+        result.publication.disposition = 'LOCAL_COMMITTED';
+        result.publication.localCommitted = true;
+        result.publication.artifactPaths = prepared.repairArtifactPaths;
+        result.notification.requested = false;
+        result.notification.state = 'NOT_REQUESTED';
+        completePipelineRun(result, 'READY_FOR_REMOTE_PUBLICATION', { clock: stateClock });
+        persist();
+        obs.summary();
+        return result;
+      }
+      if (prepared.sameRunReplay) {
+        result.publication.disposition = 'REUSED';
+        result.publication.localCommitted = true;
+        result.notification.state = 'BLOCKED';
+        failPipelineRun(result, {
+          code: 'ERR_RUN_REPLAY_REQUIRES_RESUME',
+          stage: 'replay',
+          retryable: false,
+          safeMessage: 'This run was already published; resume notification from its retained result.',
+          outcome: 'RUN_REPLAY_REQUIRES_RESUME',
+        }, { clock: stateClock });
+        persist();
+        obs.summary();
+        return result;
       }
       result.publication.disposition = 'REUSED';
       result.publication.localCommitted = true;
       result.notification.state = notificationRequested ? 'BLOCKED' : 'NOT_REQUESTED';
-      completePipelineRun(result, 'NO_CHANGE', { clock: stateClock });
+      completePipelineRun(result, 'NO_ARTIFACT_CHANGE', { clock: stateClock });
       persist();
       obs.summary();
       return result;
@@ -210,7 +329,7 @@ async function runLeadPipeline({
 }
 
 function printUsage() {
-  console.log('사용법: node main.js --profile <profileId> [--notification-requested] [--result-file <path>]\n');
+  console.log('사용법: node main.js --profile <profileId> [--run-id <stableRunId>] [--notification-requested] [--result-file <path>]\n');
   console.log('사용 가능한 프로필:');
   for (const profile of listAgentProfiles()) {
     console.log(`  ${profile.id} — ${profile.name} (${profile.industry})`);
@@ -248,6 +367,7 @@ async function runCli(args = process.argv.slice(2), deps = {}) {
   }
   const result = await runLeadPipeline({
     profile,
+    runId: parsed.runId,
     requestId: deps.requestId === undefined ? process.env.REQUEST_ID : deps.requestId,
     attempt: parsed.attempt,
     notificationRequested: parsed.notificationRequested,

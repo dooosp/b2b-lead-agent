@@ -175,15 +175,15 @@ export function assertPublishedArtifactJsonComplexity(text, {
   return { topLevelEntries, structuralTokens, maxDepthObserved };
 }
 
-export async function readBoundedPublishedArtifactJson(response, {
-  maxTopLevelEntries,
+export async function readBoundedResponseBytes(response, {
+  maxBytes = PUBLISHED_ARTIFACT_REMOTE_MAX_BYTES,
 } = {}) {
-  assertScannerLimit('maxTopLevelEntries', maxTopLevelEntries);
+  assertScannerLimit('maxBytes', maxBytes, { allowZero: false });
   const contentLengthHeader = response.headers?.get?.('content-length');
   const contentLength = contentLengthHeader === null || contentLengthHeader === undefined
     ? null
     : Number(contentLengthHeader);
-  if (Number.isFinite(contentLength) && contentLength > PUBLISHED_ARTIFACT_REMOTE_MAX_BYTES) {
+  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
     throw remoteArtifactError(
       'Published artifact response exceeds the remote byte limit',
       PUBLISHED_ARTIFACT_REMOTE_BYTES_CODE
@@ -195,8 +195,8 @@ export async function readBoundedPublishedArtifactJson(response, {
 
   const reader = response.body.getReader();
   const initialCapacity = Number.isFinite(contentLength) && contentLength >= 0
-    ? Math.min(contentLength, PUBLISHED_ARTIFACT_REMOTE_MAX_BYTES)
-    : Math.min(64 * 1024, PUBLISHED_ARTIFACT_REMOTE_MAX_BYTES);
+    ? Math.min(contentLength, maxBytes)
+    : Math.min(64 * 1024, maxBytes);
   let bytes = new Uint8Array(initialCapacity);
   let totalBytes = 0;
   while (true) {
@@ -204,7 +204,7 @@ export async function readBoundedPublishedArtifactJson(response, {
     if (done) break;
     const chunk = value instanceof Uint8Array ? value : new Uint8Array(value);
     const nextTotalBytes = totalBytes + chunk.byteLength;
-    if (nextTotalBytes > PUBLISHED_ARTIFACT_REMOTE_MAX_BYTES) {
+    if (nextTotalBytes > maxBytes) {
       await Promise.resolve(reader.cancel()).catch(() => {});
       throw remoteArtifactError(
         'Published artifact response exceeds the remote byte limit',
@@ -214,7 +214,7 @@ export async function readBoundedPublishedArtifactJson(response, {
     if (nextTotalBytes > bytes.byteLength) {
       let nextCapacity = Math.max(bytes.byteLength || 1, 64 * 1024);
       while (nextCapacity < nextTotalBytes) {
-        nextCapacity = Math.min(nextCapacity * 2, PUBLISHED_ARTIFACT_REMOTE_MAX_BYTES);
+        nextCapacity = Math.min(nextCapacity * 2, maxBytes);
       }
       const grown = new Uint8Array(nextCapacity);
       grown.set(bytes.subarray(0, totalBytes));
@@ -224,8 +224,14 @@ export async function readBoundedPublishedArtifactJson(response, {
     totalBytes = nextTotalBytes;
   }
 
-  const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes.subarray(0, totalBytes));
-  bytes = null;
+  return bytes.subarray(0, totalBytes);
+}
+
+export function parseBoundedPublishedArtifactJson(bytes, {
+  maxTopLevelEntries,
+} = {}) {
+  assertScannerLimit('maxTopLevelEntries', maxTopLevelEntries);
+  const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
   const scan = assertPublishedArtifactJsonComplexity(text, { maxTopLevelEntries });
   const parsed = JSON.parse(text);
   if (!Array.isArray(parsed) || parsed.length !== scan.topLevelEntries) {
@@ -235,4 +241,9 @@ export async function readBoundedPublishedArtifactJson(response, {
     );
   }
   return parsed;
+}
+
+export async function readBoundedPublishedArtifactJson(response, options = {}) {
+  const bytes = await readBoundedResponseBytes(response);
+  return parseBoundedPublishedArtifactJson(bytes, options);
 }

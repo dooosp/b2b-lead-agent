@@ -723,7 +723,7 @@ function postProcessQualifiedLeads(leads) {
     .filter(Boolean);
 }
 
-async function qualifyLeads(articles, profile, options = {}) {
+async function qualifyLeadsWithDiagnostics(articles, profile, options = {}) {
   console.log('[Step 2] Gemini API로 리드 분석 시작...');
 
   const llm = options.llm || null;
@@ -733,7 +733,12 @@ async function qualifyLeads(articles, profile, options = {}) {
     console.error('  [오류] GEMINI_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.');
     if (isDemoFallbackAllowed(options)) {
       console.log('  → 명시적 데모 모드로 실행합니다.\n');
-      return withGenerationMetadataForAll(generateDemoLeads(articles, profile), 'demo', freshnessOptions);
+      const leads = withGenerationMetadataForAll(generateDemoLeads(articles, profile), 'demo', freshnessOptions);
+      return {
+        leads,
+        candidatesGenerated: leads.length,
+        candidatesRejected: 0,
+      };
     }
     throw createQualificationUnavailableError('Lead qualification unavailable: GEMINI_API_KEY is required for managed production runs.');
   }
@@ -753,6 +758,11 @@ async function qualifyLeads(articles, profile, options = {}) {
 
   try {
     const qualifiedLeads = await activeLlm.chatJSON(prompt, { label: 'Gemini-qualify' });
+    if (!Array.isArray(qualifiedLeads)) {
+      throw Object.assign(new Error('Lead qualification response must be an array.'), {
+        code: 'LEAD_QUALIFICATION_INVALID_OUTPUT',
+      });
+    }
     const validLeads = normalizeQualifiedLeads(qualifiedLeads, articles);
 
     const hardenedLeads = postProcessQualifiedLeads(validLeads);
@@ -761,15 +771,28 @@ async function qualifyLeads(articles, profile, options = {}) {
       console.log(`  회사명 신뢰 필터로 ${rejectedCount}개 리드 제외`);
     }
     console.log(`  분석 완료: ${hardenedLeads.length}개 리드 발견\n`);
-    return withGenerationMetadataForAll(hardenedLeads, 'llm', freshnessOptions);
+    return {
+      leads: withGenerationMetadataForAll(hardenedLeads, 'llm', freshnessOptions),
+      candidatesGenerated: qualifiedLeads.length,
+      candidatesRejected: qualifiedLeads.length - hardenedLeads.length,
+    };
   } catch (error) {
-    console.error('  [오류] Gemini API 분석 실패:', error.message);
+    console.error('  [오류] Gemini API 분석 실패: 안전한 생성 결과를 확인할 수 없습니다.');
     if (isDemoFallbackAllowed(options)) {
       console.log('  → 명시적 데모 모드로 실행합니다.\n');
-      return withGenerationMetadataForAll(generateDemoLeads(articles, profile), 'demo', freshnessOptions);
+      const leads = withGenerationMetadataForAll(generateDemoLeads(articles, profile), 'demo', freshnessOptions);
+      return {
+        leads,
+        candidatesGenerated: leads.length,
+        candidatesRejected: 0,
+      };
     }
-    throw createQualificationUnavailableError(`Lead qualification unavailable: ${error.message}`, error);
+    throw createQualificationUnavailableError('Lead qualification unavailable: model request or output failed.', error);
   }
+}
+
+async function qualifyLeads(articles, profile, options = {}) {
+  return (await qualifyLeadsWithDiagnostics(articles, profile, options)).leads;
 }
 
 // 회사명 추출 (NER 개선)
@@ -893,6 +916,7 @@ const analyzeLeads = qualifyLeads;
 module.exports = {
   analyzeLeads,
   qualifyLeads,
+  qualifyLeadsWithDiagnostics,
   buildArticlePromptList,
   buildLeadAnalysisPrompt,
   buildArticleTraceIndex,

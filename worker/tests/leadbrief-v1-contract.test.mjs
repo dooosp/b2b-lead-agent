@@ -172,8 +172,11 @@ test('/api/leads exposes LeadBrief v1 canonical fields from D1 rows', async () =
 
 test('/api/leads applies LeadBrief defaults to GitHub published records before serialization', async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => createGithubResponse([
-    {
+  globalThis.fetch = async (url) => {
+    if (new URL(String(url)).pathname.endsWith('/publication-manifest.json')) {
+      return new Response('not found', { status: 404 });
+    }
+    return createGithubResponse([{
       id: 'github-lead-1',
       company: 'LG전자',
       summary: '스마트팩토리 증설 프로젝트',
@@ -187,8 +190,8 @@ test('/api/leads applies LeadBrief defaults to GitHub published records before s
       confidence: 'MEDIUM',
       confidenceReason: '공개 기사 출처가 확인되었습니다.',
       eventType: '증설'
-    }
-  ]);
+    }]);
+  };
 
   try {
     const response = await fetchLeads({

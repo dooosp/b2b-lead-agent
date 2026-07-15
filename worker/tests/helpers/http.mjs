@@ -31,7 +31,16 @@ export function jsonFixtureResponse(body, status = 200) {
 
 export async function withMockedFetch(handler, fn) {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = handler;
+  globalThis.fetch = (input, ...args) => {
+    const pathname = new URL(String(input)).pathname;
+    if (
+      pathname.endsWith('/publication-manifest.json')
+      && handler.publicationManifestAware !== true
+    ) {
+      return jsonFixtureResponse({ message: 'legacy fixture has no manifest' }, 404);
+    }
+    return handler(input, ...args);
+  };
   try {
     return await fn();
   } finally {
