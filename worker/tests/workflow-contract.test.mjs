@@ -24,6 +24,51 @@ test('generate-report workflow keeps requestId callback contract fields', async 
   assert.match(workflow, /Idempotency-Key: gh-\$\{REQUEST_ID\}-\$\{\{ github\.run_id \}\}-\$\{\{ github\.run_attempt \}\}-terminal/);
 });
 
+test('generate-report serializes publication and notifies only after verified remote push', async () => {
+  const workflow = await readFile(workflowPath, 'utf8');
+  const generationIndex = workflow.indexOf('name: Generate and locally commit publication');
+  const resultIndex = workflow.indexOf('name: Validate typed pipeline result');
+  const publicationIndex = workflow.indexOf('name: Commit, push, and verify remote publication');
+  const recoveryIndex = workflow.indexOf('name: Recover verified publication state after publisher interruption');
+  const notificationIndex = workflow.indexOf('name: Notify only after verified remote publication');
+  const persistenceIndex = workflow.indexOf('name: Persist typed pipeline result');
+  const callbackIndex = workflow.indexOf('name: Mark run completion');
+
+  assert.match(workflow, /concurrency:\s+group:\s+lead-report-publication\s+queue:\s+max/);
+  assert.match(workflow, /name:\s+Install dependencies\s+run:\s+npm ci/);
+  assert.ok(generationIndex > 0);
+  assert.ok(generationIndex < resultIndex);
+  assert.ok(resultIndex < publicationIndex);
+  assert.ok(publicationIndex < recoveryIndex);
+  assert.ok(recoveryIndex < notificationIndex);
+  assert.ok(publicationIndex < notificationIndex);
+  assert.ok(notificationIndex < persistenceIndex);
+  assert.ok(persistenceIndex < callbackIndex);
+
+  const generationStep = workflow.slice(generationIndex, resultIndex);
+  const publicationStep = workflow.slice(publicationIndex, recoveryIndex);
+  const recoveryStep = workflow.slice(recoveryIndex, notificationIndex);
+  const notificationStep = workflow.slice(notificationIndex, workflow.indexOf('name: Record final typed pipeline result'));
+  assert.match(generationStep, /--notification-requested/);
+  assert.match(generationStep, /--result-file \/tmp\/lead-pipeline-result\.json/);
+  assert.doesNotMatch(generationStep, /GMAIL|--email/);
+  assert.match(publicationStep, /scripts\/publish-lead-pipeline\.mjs/);
+  assert.match(publicationStep, /continue-on-error:\s+true/);
+  assert.doesNotMatch(publicationStep, /lead-report-\*|git add|git push/);
+  assert.match(recoveryStep, /if:\s+\$\{\{ always\(\) \}\}/);
+  assert.match(recoveryStep, /--recover-only/);
+  assert.doesNotMatch(recoveryStep, /GMAIL|secrets\./);
+  assert.match(notificationStep, /scripts\/notify-lead-publication\.mjs/);
+  assert.match(notificationStep, /if:\s+\$\{\{ always\(\) \}\}/);
+  assert.match(notificationStep, /GMAIL_USER/);
+  assert.match(notificationStep, /GMAIL_PASS/);
+  assert.match(notificationStep, /GMAIL_RECIPIENT/);
+  assert.match(workflow, /uses:\s+actions\/upload-artifact@v4/);
+  assert.match(workflow, /path:\s+\/tmp\/lead-pipeline-result\.json/);
+  assert.match(workflow, /RESULT_SHA=.*lead-pipeline-result\.json/);
+  assert.match(workflow, /"githubSha":"\$RESULT_SHA"/);
+});
+
 test('workflows use Node 24 compatible GitHub Actions runtime versions', async () => {
   const [generateWorkflow, ciWorkflow, validateNamingWorkflow] = await Promise.all([
     readFile(workflowPath, 'utf8'),

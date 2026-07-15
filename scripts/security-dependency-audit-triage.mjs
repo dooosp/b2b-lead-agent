@@ -165,8 +165,7 @@ export function evaluateSecurityDependencyAuditTriage(input = {}) {
       ],
       affectedScriptsAndWorkflows: [
         'npm start',
-        'npm run email',
-        '.github/workflows/generate-report.yml node main.js --profile "$PROFILE" --email',
+        '.github/workflows/generate-report.yml node main.js --profile "$PROFILE" --notification-requested',
       ],
       exploitSurface:
         'Outbound HTTP GET requests for public article and DuckDuckGo HTML lookup URLs in the root lead-generation pipeline.',

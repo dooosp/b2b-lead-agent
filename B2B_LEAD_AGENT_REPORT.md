@@ -311,8 +311,12 @@ https://github.com/dooosp/b2b-lead-agent
 # 1. 로컬 개발 서버
 cd worker && npx wrangler dev --port 8787
 
-# 2. CLI 파이프라인 (GitHub Actions와 동일)
-node main.js --profile danfoss --email
+# 2. CLI 파이프라인: 생성과 로컬 publication 준비
+node main.js --profile danfoss --notification-requested --result-file /tmp/lead-pipeline-result.json
+
+# 아래 알림 명령은 관리 workflow/publisher가 같은 결과를 PUBLISHED로
+# 원격 검증한 후에만 실행 가능
+npm run email -- --profile danfoss --result-file /tmp/lead-pipeline-result.json
 
 # 3. E2E 테스트
 node e2e-test.mjs

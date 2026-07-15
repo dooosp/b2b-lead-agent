@@ -155,6 +155,13 @@ test('lead pipeline fixture replay maps enrichment replay outputs into quality r
     markdownCanonical: 'lead-report-2026-06-03.md',
     latestCanonical: 'latest-leads.json',
     historyCanonical: 'lead-history.json',
+    manifestCanonical: 'publication-manifest.json',
+  });
+  assert.deepEqual(artifact.publication.lifecycle, {
+    localState: 'VALIDATED',
+    localOutcome: 'READY_FOR_REMOTE_PUBLICATION',
+    remotePublished: false,
+    notificationState: 'NOT_REQUESTED',
   });
   assert.deepEqual(artifact.publication.latestLeads.map((lead) => ({
     id: lead.id,

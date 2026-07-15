@@ -316,6 +316,13 @@ function buildPublicationContract(leads) {
       markdownCanonical: ARTIFACT_NAMES.markdownCanonical('2026-06-03'),
       latestCanonical: ARTIFACT_NAMES.latestCanonical,
       historyCanonical: ARTIFACT_NAMES.historyCanonical,
+      manifestCanonical: ARTIFACT_NAMES.manifestCanonical,
+    },
+    lifecycle: {
+      localState: 'VALIDATED',
+      localOutcome: 'READY_FOR_REMOTE_PUBLICATION',
+      remotePublished: false,
+      notificationState: 'NOT_REQUESTED',
     },
     latestLeads,
     historyLeadCount: history.length,

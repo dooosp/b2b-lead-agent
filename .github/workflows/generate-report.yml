@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: lead-report-publication
+  queue: max
+
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -25,7 +29,7 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Validate dispatch inputs
         run: |
@@ -53,24 +57,68 @@ jobs:
             -H "Content-Type: application/json" \
             --data @/tmp/job-running.json || true
 
-      - name: Run pipeline and send email
+      - name: Generate and locally commit publication
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_PASS: ${{ secrets.GMAIL_PASS }}
-          GMAIL_RECIPIENT: ${{ secrets.GMAIL_RECIPIENT }}
-        run: node main.js --profile "$PROFILE" --email
+        run: >-
+          node main.js
+          --profile "$PROFILE"
+          --notification-requested
+          --attempt "${{ github.run_attempt }}"
+          --result-file /tmp/lead-pipeline-result.json
 
-      - name: Commit leads data
+      - name: Validate typed pipeline result
+        run: >-
+          node scripts/inspect-lead-pipeline-result.mjs
+          --result-file /tmp/lead-pipeline-result.json
+          --summary-file "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit, push, and verify remote publication
+        continue-on-error: true
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -- \
-            "reports/$PROFILE/latest-leads.json" \
-            "reports/$PROFILE/lead-history.json" \
-            "reports/$PROFILE"/lead-report-*.md
-          git diff --cached --quiet || git commit -m "Update $PROFILE leads data"
-          git push
+          node scripts/publish-lead-pipeline.mjs \
+            --result-file /tmp/lead-pipeline-result.json \
+            --remote origin \
+            --branch master
+
+      - name: Recover verified publication state after publisher interruption
+        if: ${{ always() }}
+        run: >-
+          node scripts/publish-lead-pipeline.mjs
+          --recover-only
+          --result-file /tmp/lead-pipeline-result.json
+          --remote origin
+          --branch master
+
+      - name: Notify only after verified remote publication
+        if: ${{ always() }}
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_PASS: ${{ secrets.GMAIL_PASS }}
+          GMAIL_RECIPIENT: ${{ secrets.GMAIL_RECIPIENT }}
+        run: >-
+          node scripts/notify-lead-publication.mjs
+          --result-file /tmp/lead-pipeline-result.json
+          --profile "$PROFILE"
+          --remote origin
+
+      - name: Record final typed pipeline result
+        if: ${{ always() }}
+        run: >-
+          node scripts/inspect-lead-pipeline-result.mjs
+          --result-file /tmp/lead-pipeline-result.json
+          --summary-file "$GITHUB_STEP_SUMMARY"
+
+      - name: Persist typed pipeline result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lead-pipeline-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/lead-pipeline-result.json
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Mark run completion
         if: ${{ always() }}
@@ -89,8 +137,10 @@ jobs:
             JOB_STATE="cancelled"
             LAST_ERROR="GitHub job was cancelled."
           fi
+          RESULT_SHA="$(node -e 'try { const result = require("/tmp/lead-pipeline-result.json"); process.stdout.write(result.publication.commitSha || ""); } catch {}')"
+          RESULT_SHA="${RESULT_SHA:-${{ github.sha }}}"
           cat <<EOF >/tmp/job-complete.json
-          {"state":"$JOB_STATE","githubRunId":"${{ github.run_id }}","githubRunAttempt":"${{ github.run_attempt }}","githubRunUrl":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}","githubWorkflow":"${{ github.workflow }}","githubSha":"${{ github.sha }}","lastError":"$LAST_ERROR"}
+          {"state":"$JOB_STATE","githubRunId":"${{ github.run_id }}","githubRunAttempt":"${{ github.run_attempt }}","githubRunUrl":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}","githubWorkflow":"${{ github.workflow }}","githubSha":"$RESULT_SHA","lastError":"$LAST_ERROR"}
           EOF
           curl -fsS -X POST "$STATUS_EVENT_URL" \
             -H "X-Job-Callback-Token: $CALLBACK_TOKEN" \

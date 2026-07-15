@@ -66,9 +66,11 @@ central outbound enrichment boundary:
 Affected local/runtime commands and workflows:
 
 - `npm start`
-- `npm run email`
 - `.github/workflows/generate-report.yml`, which runs
-  `node main.js --profile "$PROFILE" --email`
+  `node main.js --profile "$PROFILE" --notification-requested`
+
+`npm run email` is now notification-only and does not traverse the axios-backed
+generation/enrichment path.
 
 Worker runtime entrypoint `worker/index.js` does not import `axios`; Worker
 enrichment uses Worker-native `fetch` paths instead. This triage still treats
