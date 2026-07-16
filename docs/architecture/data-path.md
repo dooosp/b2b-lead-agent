@@ -19,11 +19,15 @@ profiles/*.js
 Key details:
 
 - `main.js` owns generation and local transaction preparation:
-  `node main.js --profile <profileId> --result-file <path> --notification-requested`.
+  `node main.js --profile <profileId> --run-id <stableRunId> --result-file <path> --notification-requested`.
   The legacy `--email` flag is rejected because a
   local generator cannot prove remote publication.
-- `orchestrator/news-orchestrator.js` gathers and enriches articles before qualification.
-- `lead-qualifier.js` normalizes sources and generation trust metadata; demo fallback is not allowed unless explicitly configured.
+- `orchestrator/news-orchestrator.js` gathers and enriches articles before
+  qualification. A fully successful empty collection is `NO_ARTICLES`; a
+  zero-result source outage is a typed retryable collection failure.
+- `lead-qualifier.js` normalizes sources and generation trust metadata, returns
+  raw generated/rejected candidate counts, and fails typed generation errors;
+  demo fallback is not allowed unless explicitly configured.
 - `lead-report-publisher.js` writes immutable generations selected by
   `publication-manifest.json`, preserves the established fixed artifact names
   as compatibility paths, and refuses demo leads as published latest leads.
@@ -33,10 +37,17 @@ Key details:
   invokes the notification runner.
 - `npm run email -- --profile <profileId> --result-file <path>` is
   notification-only. The result must already prove `PUBLISHED`; retries additionally require
-  `--retry-notification`. It never regenerates or republishes artifacts.
+  `--retry-notification`. It never regenerates or republishes artifacts, sends
+  only bytes matching the verified commit, serializes attempts per result, and
+  rejects recipient-set drift.
 - Worker managed reads use separate `latest` and `history` snapshot heads. A
   fresh typed head is served from D1; a missing, expired, or future-dated head
-  triggers GitHub revalidation. The remote response body is streamed into one
+  triggers GitHub revalidation. GitHub revalidation first reads
+  `publication-manifest.json` and, when present, fetches only its selected
+  immutable artifact and verifies byte length, SHA-256, path confinement, and
+  record count. A 404 manifest preserves the legacy fixed-path reader; a
+  present malformed or checksum-invalid manifest cannot fall back to that
+  fixed path. The remote response body is streamed into one
   bounded growable buffer with a 10,000,000-byte cap and strict UTF-8 decoding.
   Before `JSON.parse`, a string/escape-aware linear scan requires one array,
   enforces the 90/500 kind-specific top-level count, and caps structure at

@@ -250,9 +250,16 @@ async function sendPublicationNotification({
   const rejectedAddresses = Array.isArray(info && info.rejected)
     ? new Set(info.rejected.map(normalizeEnvelopeAddress).filter(Boolean))
     : new Set();
-  const acceptedCount = acceptedAddresses
-    ? [...intendedRecipients].filter((recipient) => acceptedAddresses.has(recipient)).length
-    : recipients.length;
+  if (!acceptedAddresses) {
+    throw createNotificationError({
+      code: 'ERR_NOTIFICATION_ACCEPTANCE_UNKNOWN',
+      retryable: null,
+      acceptance: 'UNKNOWN',
+      safeMessage: 'Notification provider acceptance is unknown.',
+    });
+  }
+  const acceptedCount = [...intendedRecipients]
+    .filter((recipient) => acceptedAddresses.has(recipient)).length;
   const rejectedCount = [...intendedRecipients]
     .filter((recipient) => rejectedAddresses.has(recipient))
     .length;

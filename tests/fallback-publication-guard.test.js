@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { qualifyLeads } = require('../lead-qualifier');
+const { qualifyLeads, qualifyLeadsWithDiagnostics } = require('../lead-qualifier');
 const { prepareLeadSnapshotRecords } = require('../lead-report-publisher');
 const { createRootArticle, createRootProfile } = require('./helpers/root-fixtures');
 
@@ -37,8 +37,28 @@ test('root qualifier fails closed instead of returning demo leads when LLM analy
 
   await assert.rejects(
     () => qualifyLeads([createRootArticle()], createRootProfile(), { llm: failingLlm }),
-    /model unavailable|lead qualification/i
+    /lead qualification/i
   );
+});
+
+test('qualifier diagnostics count malformed model candidates without publishing them', async () => {
+  const diagnostics = await qualifyLeadsWithDiagnostics(
+    [createRootArticle()],
+    createRootProfile(),
+    {
+      llm: {
+        async chatJSON() {
+          return [
+            { company: 'Missing score' },
+            { company: 'Invalid score', score: 1000 },
+          ];
+        },
+      },
+    },
+  );
+  assert.deepEqual(diagnostics.leads, []);
+  assert.equal(diagnostics.candidatesGenerated, 2);
+  assert.equal(diagnostics.candidatesRejected, 2);
 });
 
 test('LLM-qualified root leads carry explicit verified generation metadata', async () => {

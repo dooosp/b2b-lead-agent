@@ -121,6 +121,17 @@ test('partial and ambiguous provider outcomes remain distinct from accepted noti
   assert.equal(unknown.acceptance, 'UNKNOWN');
   assert.equal(unknown.retryable, null);
   assert.doesNotMatch(unknown.message, /secret/i);
+
+  await assert.rejects(
+    () => emailSender.sendPublicationNotification({
+      ...fixture,
+      transporter: { async sendMail() { return { messageId: 'ambiguous' }; } },
+      config: { user: 'sender@example.com', recipients: 'reviewer@example.com' },
+    }),
+    (error) => error.code === 'ERR_NOTIFICATION_ACCEPTANCE_UNKNOWN'
+      && error.acceptance === 'UNKNOWN'
+      && error.retryable === null,
+  );
 });
 
 test('successful multi-recipient BCC ignores the accepted sender envelope entry', async (t) => {

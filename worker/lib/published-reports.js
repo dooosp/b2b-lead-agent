@@ -6,26 +6,18 @@ import {
   normalizePublishedLeadId,
   normalizePublishedProfileId,
 } from '../db/published-snapshots.js';
-import { readBoundedPublishedArtifactJson } from './published-artifact-json.js';
-
-const GITHUB_FETCH_OPTIONS = {
-  headers: {
-    'User-Agent': 'B2B-Lead-Worker',
-    'Cache-Control': 'no-cache'
-  }
-};
-
-function buildPublishedSnapshotUrl(env, profileId) {
-  return `https://raw.githubusercontent.com/${env.GITHUB_REPO}/master/reports/`
-    + `${encodeURIComponent(profileId)}/latest-leads.json?t=${Date.now()}`;
-}
+import { fetchManifestSelectedArtifactJson } from './manifest-published-artifact.js';
 
 export async function loadPublishedLatestSnapshot(env, profileId) {
   const normalizedProfileId = normalizePublishedProfileId(profileId);
-  const response = await fetch(
-    buildPublishedSnapshotUrl(env, normalizedProfileId),
-    GITHUB_FETCH_OPTIONS
+  const selected = await fetchManifestSelectedArtifactJson(
+    env,
+    normalizedProfileId,
+    PUBLISHED_ARTIFACT_KINDS.latest,
+    'latest-leads.json',
+    { maxTopLevelEntries: PUBLISHED_SNAPSHOT_MAX_LEADS.latest },
   );
+  const { response } = selected;
   if (response.status === 404) {
     return {
       found: false,
@@ -37,9 +29,7 @@ export async function loadPublishedLatestSnapshot(env, profileId) {
     throw new Error(`Published snapshot fetch failed with status ${response.status}`);
   }
 
-  const payload = await readBoundedPublishedArtifactJson(response, {
-    maxTopLevelEntries: PUBLISHED_SNAPSHOT_MAX_LEADS.latest,
-  });
+  const payload = selected.payload;
   const canonicalized = canonicalizeLeadCollectionForProfile(normalizedProfileId, payload);
   const leads = canonicalized.leads.map((lead) => ({
     ...lead,

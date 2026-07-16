@@ -18,11 +18,12 @@ jobs:
     env:
       PROFILE: ${{ github.event.client_payload.profile || 'danfoss' }}
       REQUEST_ID: ${{ github.event.client_payload.requestId || '' }}
-      STATUS_EVENT_URL: ${{ github.event.client_payload.statusEventUrl || '' }}
-      CALLBACK_TOKEN: ${{ github.event.client_payload.callbackToken || '' }}
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: master
+          fetch-depth: 0
 
       - uses: actions/setup-node@v5
         with:
@@ -43,6 +44,9 @@ jobs:
 
       - name: Mark run running
         continue-on-error: true
+        env:
+          STATUS_EVENT_URL: ${{ github.event.client_payload.statusEventUrl || '' }}
+          CALLBACK_TOKEN: ${{ github.event.client_payload.callbackToken || '' }}
         run: |
           if [ -z "$REQUEST_ID" ] || [ -z "$STATUS_EVENT_URL" ] || [ -z "$CALLBACK_TOKEN" ]; then
             echo "Skipping status callback; requestId, callback URL, or callback token missing."
@@ -63,6 +67,7 @@ jobs:
         run: >-
           node main.js
           --profile "$PROFILE"
+          --run-id "github-${{ github.run_id }}"
           --notification-requested
           --attempt "${{ github.run_attempt }}"
           --result-file /tmp/lead-pipeline-result.json
@@ -123,6 +128,9 @@ jobs:
       - name: Mark run completion
         if: ${{ always() }}
         continue-on-error: true
+        env:
+          STATUS_EVENT_URL: ${{ github.event.client_payload.statusEventUrl || '' }}
+          CALLBACK_TOKEN: ${{ github.event.client_payload.callbackToken || '' }}
         run: |
           if [ -z "$REQUEST_ID" ] || [ -z "$STATUS_EVENT_URL" ] || [ -z "$CALLBACK_TOKEN" ]; then
             echo "Skipping status callback; requestId, callback URL, or callback token missing."
@@ -137,7 +145,7 @@ jobs:
             JOB_STATE="cancelled"
             LAST_ERROR="GitHub job was cancelled."
           fi
-          RESULT_SHA="$(node -e 'try { const result = require("/tmp/lead-pipeline-result.json"); process.stdout.write(result.publication.commitSha || ""); } catch {}')"
+          RESULT_SHA="$(node -e 'try { const result = require("/tmp/lead-pipeline-result.json"); const sha = result.publication && result.publication.remotePublished && result.publication.commitSha; if (/^[a-f0-9]{40}$/.test(sha || "")) process.stdout.write(sha); } catch {}')"
           RESULT_SHA="${RESULT_SHA:-${{ github.sha }}}"
           cat <<EOF >/tmp/job-complete.json
           {"state":"$JOB_STATE","githubRunId":"${{ github.run_id }}","githubRunAttempt":"${{ github.run_attempt }}","githubRunUrl":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}","githubWorkflow":"${{ github.workflow }}","githubSha":"$RESULT_SHA","lastError":"$LAST_ERROR"}
