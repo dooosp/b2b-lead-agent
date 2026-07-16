@@ -696,7 +696,11 @@ async function publishPipelineRunToGit({
 
     let pushError = null;
     try {
-      await runGit(['push', remote, `HEAD:refs/heads/${branch}`], { cwd, execFileImpl });
+      await runGit([
+        'push',
+        remote,
+        `${commitSha}:refs/heads/${branch}`,
+      ], { cwd, execFileImpl });
     } catch (error) {
       pushError = error;
     }

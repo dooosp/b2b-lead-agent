@@ -229,6 +229,43 @@ test('commit-boundary staging cannot add an unrelated path to the pushed publica
   assert.equal(git(fixture.local, 'diff', '--cached', '--name-only'), 'unrelated-secret.txt');
 });
 
+test('publication pushes the validated commit instead of a later unrelated HEAD', async (t) => {
+  const fixture = createGitFixture(t);
+  const prepared = await prepareRun(fixture, 'pre-push-head-race.json');
+  const unrelatedPath = path.join(fixture.local, 'unrelated-after-validation.txt');
+  let injected = false;
+  const execFileImpl = (file, args, options, callback) => {
+    if (!injected && file === 'git' && args[0] === 'push') {
+      injected = true;
+      fs.writeFileSync(unrelatedPath, 'must remain local\n', 'utf8');
+      git(fixture.local, 'add', 'unrelated-after-validation.txt');
+      git(fixture.local, 'commit', '-m', 'unrelated commit after publication validation');
+    }
+    execFile(file, args, options, callback);
+  };
+
+  const published = await publishPipelineRunToGit({
+    resultFile: prepared.resultFile,
+    cwd: fixture.local,
+    execFileImpl,
+  });
+  const remoteTip = git(
+    fixture.local,
+    'ls-remote',
+    'origin',
+    'refs/heads/master',
+  ).split(/\s+/)[0];
+
+  assert.equal(injected, true);
+  assert.equal(published.result.state, 'PUBLISHED');
+  assert.equal(published.result.publication.commitSha, remoteTip);
+  assert.notEqual(git(fixture.local, 'rev-parse', 'HEAD'), remoteTip);
+  assert.throws(
+    () => git(fixture.local, 'show', 'origin/master:unrelated-after-validation.txt'),
+    /exists on disk, but not in|does not exist in|invalid object name|path .* not exist/i,
+  );
+});
+
 test('a pushed commit recovers after transient remote verification failure', async (t) => {
   const fixture = createGitFixture(t);
   const prepared = await prepareRun(fixture, 'verify-transient.json');
