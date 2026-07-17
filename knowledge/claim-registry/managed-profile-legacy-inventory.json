@@ -1,0 +1,3116 @@
+{
+  "schemaVersion": "legacy-claim-inventory-v1",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "issue165Status": "HOLD",
+  "generatedFromCommit": "d52b2f11a9f7342d91fed7431664083b3d95a537",
+  "generatedAt": null,
+  "summary": {
+    "totalClaimCandidates": 160,
+    "byProfile": {
+      "danfoss": 52,
+      "ls-electric": 53,
+      "siemens": 55
+    },
+    "byType": {
+      "CERTIFICATION": 8,
+      "COMPETITOR": 11,
+      "PERFORMANCE": 56,
+      "PRODUCT_CAPABILITY": 10,
+      "PROJECT_FACT": 21,
+      "REFERENCE_CASE": 14,
+      "REGULATION": 18,
+      "ROI": 22
+    },
+    "verified": 0,
+    "unverified": 139,
+    "assumption": 21,
+    "missingSource": 160,
+    "missingQuote": 160,
+    "missingVerificationDate": 160,
+    "customerUseBlocked": 160,
+    "referenceSeedObjectCount": 36
+  },
+  "candidates": [
+    {
+      "candidateId": "legacy_008e67797e6fdfbb8416c3627c22fd6b8f29fcfa174eb20a5deae02599317c9a",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "globalReferences.coldchain",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "CJ대한통운 (한국): 신선식품 물류센터 현대화 -> 냉각 효율 30% 개선, 식품 손실률 50% 감소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_0136b32722e6165297ecf4272582ca70e727eace717493c9345dfd1b2a7cb8ae",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "globalReferences.green",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "SK E&S (한국): EV 충전 인프라 350kW 급속충전 -> 충전 시간 18분, 가동률 99.5%",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_037386b2195881ee789ea2ed52f2c2ea08372bea829fc553da31f95620070fc4",
+      "profileId": "danfoss",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.danfoss.datacenter",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "NTT (일본): 도쿄 DC 오일리스 칠러 도입 -> 유지보수 비용 60% 감소, 가동률 99.99%",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/danfoss.js globalReferences.datacenter[2]."
+      ]
+    },
+    {
+      "candidateId": "legacy_03f5d402513e1a5a3438e313e531f6edfd2a7fb1e65a13ddd14b0f8819d36269",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 0,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "빌딩 자동화 BMS 구축",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_0587e8d2ffc7ecb95201e37e6e2a34841f3eafcfe15198e54ed1432ca767da96",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "categoryConfig.power.pitch",
+      "sourceIndex": null,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "{company}의 전력 인프라 프로젝트에 Saudi Aramco가 검증한 {product}로 설치면적 60% 축소와 유지비 40% 절감을 제안합니다.",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_070235b636226511d8ae9020791ced9819647af631f5d9bd3a67298810d43823",
+      "profileId": "ls-electric",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.ls-electric.green",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Hanwha Q Cells (한국): 100MW 태양광 발전소 인버터 공급 -> 변환효율 98.6%, 10년 무상 보증",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/ls-electric.js globalReferences.green[0]."
+      ]
+    },
+    {
+      "candidateId": "legacy_0ba26c6e03a6ff450dd10e5182d046ddd290796da2d8fc1356dad3d827d41e2e",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "productKnowledge.XGT PLC/서보 시스템.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "생산성 20% 향상, 불량률 30% 감소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy quantitative text cannot support VERIFIED or FIT."
+      ]
+    },
+    {
+      "candidateId": "legacy_0f70b31aaf53f58e29139ddadafa38ed48d9eb9a4db90d02f703c54b6144f8c9",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "categoryConfig.automation.pitch",
+      "sourceIndex": null,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "{company} 스마트 팩토리에 LG에너지솔루션이 표준으로 채택한 {product}로 생산성 20% 향상을 제안합니다.",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_134fb7118f9dc90c5c55e2a7ee43df0bde1a3f1f8ba23ea97da05a89920b9f65",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "globalReferences.fire",
+      "sourceIndex": 1,
+      "claimType": "CERTIFICATION",
+      "normalizedText": "Heathrow Airport (영국): 터미널 전체 Sinteso 화재시스템 -> EN54 인증, 대피 시간 40% 단축",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_13d4380b419ac3c18ec8e446a7c7519d564521bb58cf5e0829f56a52f289f69c",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "globalReferences.fire",
+      "sourceIndex": 2,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "Samsung 평택 반도체 (한국): 클린룸 특수 화재감지 -> 초미세 연기 감지, 생산라인 보호",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_14ceab15aabc5a10dd33fe9f6b6ee3a9364172977d7a376766743b206ceb88c3",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "categoryConfig.factory.pitch",
+      "sourceIndex": null,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "{company} 스마트 팩토리에 Volkswagen EV공장이 적용한 {product}로 에너지 35% 절감을 제안합니다.",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_172404e4a14c9dec04e00010298d2db325b3fbe1c17bd084b47a0bb3a13f991c",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "competitors",
+      "sourceIndex": 0,
+      "claimType": "COMPETITOR",
+      "normalizedText": "ABB",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ENRICHMENT_PROMPT_INTERNAL_REVIEW",
+      "risk": "CRITICAL",
+      "notes": [
+        "A profile label is not evidence of a project-specific incumbent or competitor."
+      ]
+    },
+    {
+      "candidateId": "legacy_17e483aea3ea3e4db5108c1befd9edcc8ddf8ec70f3729b92ee65c215de0d770",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "categoryConfig.fire.pitch",
+      "sourceIndex": null,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "{company}에 Lotte World Tower가 적용한 {product}로 오보율 95% 감소와 인명 안전을 확보하세요.",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_1b44698e8a1c0db0e39850c32cd740f9071f622a13d994712c99a83787af63af",
+      "profileId": "siemens",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.siemens.security",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Hyundai Motor 울산공장 (한국): 스마트 팩토리 보안 시스템 -> 300개 구역 차등 출입통제, 안전사고 60% 감소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/siemens.js globalReferences.security[2]."
+      ]
+    },
+    {
+      "candidateId": "legacy_1fe7830fe63438f016a9a4845584473b116f0135f58d36713a6e7d5b64e63e69",
+      "profileId": "ls-electric",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.ls-electric.automation",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Hyundai Motors (한국): EV 조립 라인 자동화 -> UPH 20% 향상, 다품종 유연 생산",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/ls-electric.js globalReferences.automation[2]."
+      ]
+    },
+    {
+      "candidateId": "legacy_20ceae221b7f655bf20cbe7c7e782b8baa07562c9d462ed83852a9ff74c25757",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "categoryConfig.power.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "설치면적 60% 축소, 유지보수비 40% 절감, 수명 30년+",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_227bec0bada459a6cbedc9fac907993b7e4b2b9f46766e632da26d29c61781aa",
+      "profileId": "ls-electric",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.ls-electric.grid",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "EGAT (태국): 방콕 전력망 SVC 설치 -> 역률 0.99 달성, 계통 안정성 확보",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/ls-electric.js globalReferences.grid[2]."
+      ]
+    },
+    {
+      "candidateId": "legacy_235da03bd7d2ff4c9f792873932973283571f9b4810d162ffc8053425509113f",
+      "profileId": "danfoss",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.danfoss.datacenter",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Equinix (미국): 글로벌 데이터센터 Turbocor 표준화 -> PUE 1.58→1.25 개선, 냉각 전력 40% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/danfoss.js globalReferences.datacenter[0]."
+      ]
+    },
+    {
+      "candidateId": "legacy_23f11c87e8a856a5d9a84b45fd2bbf56c7e71b59a63057280dad38ec0ff61a37",
+      "profileId": "ls-electric",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.ls-electric.grid",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "State Grid (중국): HVDC 송전 프로젝트 -> 전력 손실 3% 미만, 500km 장거리 송전",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/ls-electric.js globalReferences.grid[0]."
+      ]
+    },
+    {
+      "candidateId": "legacy_23f45c5d5458ad1a6b1f3ece3614a43e97dddecf55e794f92bbd2317360580f4",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 3,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "ESS 에너지저장장치 설치",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_25cbeb37852ae539d2a323c1fd88c29cf9c5e73f1c16389332501295c59eb501",
+      "profileId": "danfoss",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.danfoss.factory",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "TSMC (대만): 반도체 클린룸 HVAC 최적화 -> 공조 전력 28% 절감, 정밀 온습도 제어",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/danfoss.js globalReferences.factory[1]."
+      ]
+    },
+    {
+      "candidateId": "legacy_26fdff6f12f3244f1be574e3b7cc70b9d9721522e668df2176f890ecb0c043e7",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 4,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "스마트 그리드 사업",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_29de17d99272e93221df29e8b34f3dae3983baa9359cfc265a62d7474d518194",
+      "profileId": "siemens",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.siemens.esco",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Dubai Mall (UAE): 세계 최대 쇼핑몰 에너지 최적화 -> 냉방 에너지 32% 절감, ROI 4.2년",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/siemens.js globalReferences.esco[2]."
+      ]
+    },
+    {
+      "candidateId": "legacy_2a8551fec26ed11e43b77335ddfcc147c722fb164a7b2257191a4ffffcd71fe2",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "productKnowledge.Turbocor 컴프레서.value",
+      "sourceIndex": null,
+      "claimType": "PRODUCT_CAPABILITY",
+      "normalizedText": "오일리스 기술로 효율 40% 향상, 유지보수비 급감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy profile text has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_2e782ed07274702826d391af07f8170643e1f83e768c3190e8158b822b81ac6c",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "globalReferences.bms",
+      "sourceIndex": 2,
+      "claimType": "CERTIFICATION",
+      "normalizedText": "Deutsche Bank HQ (독일): 본사 빌딩 BMS 현대화 -> 에너지 효율 40% 개선, LEED Platinum 인증",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_30a6735bf0343d11ec3cb5174ff4a8a1c3938c48ba5758179179336d1afcd247",
+      "profileId": "siemens",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.siemens.esco",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Siemens HQ (독일): 뮌헨 본사 넷제로 리노베이션 -> 탄소배출 90% 감축, 에너지 자립률 75%",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/siemens.js globalReferences.esco[1]."
+      ]
+    },
+    {
+      "candidateId": "legacy_30a9ae2e7e372b810aba616f80e6ae65d7c7045d772c5fa84bfab494e445caeb",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "globalReferences.factory",
+      "sourceIndex": 2,
+      "claimType": "REGULATION",
+      "normalizedText": "Samsung SDI (한국): 헝가리 배터리 공장 자동화 -> 모터 효율 25% 향상, RE100 달성 기여",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_30e55d3f0935b854c3c5d7d44d151e04532fc3f93fb1f76c7c548733620f3349",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "categoryConfig.datacenter.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "냉각 전력 35~40% 절감, PUE 1.25 달성",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_3215d1d975f86bc63fd51144bb46616ff1d9a4a204d00537af524390ca2cddd8",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 3,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "ESCO 에너지절감 사업",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_323f4ae614f8d150fcb9475b22fd53a6e20ad23d157e0ac84479ee48b06f91f0",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "categoryConfig.fire.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "오보율 90% 감소, 보험료 15% 절감, EN54/UL 글로벌 인증",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_354ec0ba59ab1b4de9ccb27f8058848b2c3d7ac983542c0d3f1b519390dc8a2a",
+      "profileId": "ls-electric",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.ls-electric.green",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "한국전력 (한국): 제주 ESS 실증 프로젝트 -> 신재생 출력 변동 80% 안정화",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/ls-electric.js globalReferences.green[1]."
+      ]
+    },
+    {
+      "candidateId": "legacy_36cd0b8e0d0a207e80fe3ff4e56003e252c373af7db57379089d038a7504302a",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "competitors",
+      "sourceIndex": 1,
+      "claimType": "COMPETITOR",
+      "normalizedText": "Johnson Controls",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ENRICHMENT_PROMPT_INTERNAL_REVIEW",
+      "risk": "CRITICAL",
+      "notes": [
+        "A profile label is not evidence of a project-specific incumbent or competitor."
+      ]
+    },
+    {
+      "candidateId": "legacy_38ebb0751a5dd5649e470131d16178342143dade2d6e312e6118e455d434c0c1",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 1,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "데이터센터 신축 착공",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_39c4467ac9aac8fc57a5f564e3f074762446ce6517c2318bf52350e10e21bbe6",
+      "profileId": "danfoss",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.danfoss.marine",
+      "sourceIndex": 2,
+      "claimType": "REGULATION",
+      "normalizedText": "NYK Line (일본): 친환경 선박 플릿 현대화 -> EEXI 규제 100% 충족, 연간 $2M 연료비 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/danfoss.js globalReferences.marine[2]."
+      ]
+    },
+    {
+      "candidateId": "legacy_3c5f61d6ec033ba5d7fa2de878ab553da26ecfb250fabd687c0359fc9bba4749",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "productKnowledge.Desigo CC.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "에너지 비용 25~40% 절감, 운영인력 30% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy quantitative text cannot support VERIFIED or FIT."
+      ]
+    },
+    {
+      "candidateId": "legacy_3de4fd0c76754517e660e26c28c59b902ff46b2f5e008c3d7c3769869463d674",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "categoryConfig.factory.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "생산라인 에너지 25~35% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_3e48e0707d64c0e3099ecd232fd3efa9d224b626e4356716dfb9f9d48d7bbb96",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "globalReferences.coldchain",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Lineage Logistics (미국): 세계 최대 냉동창고 Turbocor 도입 -> 에너지 비용 32% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_3e4d56327ce4e72992b2e35a094746f22269a529bf08d6718f0aecea3cbd85df",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "productKnowledge.Turbocor 컴프레서.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "데이터센터/냉동창고 전력비 35% 절감 가정",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy quantitative text cannot support VERIFIED or FIT."
+      ]
+    },
+    {
+      "candidateId": "legacy_3e5c026bf89ddfbbfca5fe5798272440c8c0923fd4c8cb19608b556c16d8679d",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "categoryConfig.coldchain.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "에너지 비용 30~32% 절감, 유지보수비 60% 감소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_3fe7f26958aa50b5a4ce26b21708cc07f1c908056f2a0fde93089eeae456d155",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "categoryConfig.green.policy",
+      "sourceIndex": null,
+      "claimType": "REGULATION",
+      "normalizedText": "RE100 의무화 확대, 2030 NDC 온실가스 40% 감축 목표",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_40596a03200bdf47a04a5167fdb599bf7c39b7b8bfbcdc003a6a7b10539e9340",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 6,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "제로에너지 건축물 인증",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_4090751f7149d2b8fed346e23777ad17ec921092a9af0b9b4c5442bfb139ba5e",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "globalReferences.grid",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "State Grid (중국): HVDC 송전 프로젝트 -> 전력 손실 3% 미만, 500km 장거리 송전",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_40d1e37e962c93af0275539d7368aa5a8b3c11979bd03b297d50e753b4a59692",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 4,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "데이터센터 냉각 관리",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_41781071c739cfb6ab34dc8e194c81d5323bd7a335491166714f85eda0456346",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "competitors",
+      "sourceIndex": 2,
+      "claimType": "COMPETITOR",
+      "normalizedText": "Schneider Electric",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ENRICHMENT_PROMPT_INTERNAL_REVIEW",
+      "risk": "CRITICAL",
+      "notes": [
+        "A profile label is not evidence of a project-specific incumbent or competitor."
+      ]
+    },
+    {
+      "candidateId": "legacy_42a4f8157910bdb8d1fbdf95f780e7481f9e4dcd7eb9656a7e5d6ab693339834",
+      "profileId": "danfoss",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.danfoss.datacenter",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Digital Realty (미국): 아시아 데이터센터 냉각 시스템 교체 -> 연간 운영비 $1.5M 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/danfoss.js globalReferences.datacenter[1]."
+      ]
+    },
+    {
+      "candidateId": "legacy_43519a377e28ed0632f29a33c7331033dd459d49a22fd487626f770ae4ff2c78",
+      "profileId": "siemens",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.siemens.fire",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Lotte World Tower (한국): Cerberus PRO 초고층 화재감지 -> 555m 123층 완벽 커버, 오보율 95% 감소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/siemens.js globalReferences.fire[0]."
+      ]
+    },
+    {
+      "candidateId": "legacy_4359aa8dec181f61d2e7229d3fa42ee5009f07b149f3c02323929f379366a4c8",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "globalReferences.green",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "한국전력 (한국): 제주 ESS 실증 프로젝트 -> 신재생 출력 변동 80% 안정화",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_451ea6b9277176725c9ef79a212f53da63d7cd5fa9292ce44839220d737419ab",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 2,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "태양광 발전소 수주",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_4735dca1410e567c9b55bbab8edd7d12d0499ce4f445914ea8a2e98ce774454f",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "categoryConfig.marine.policy",
+      "sourceIndex": null,
+      "claimType": "REGULATION",
+      "normalizedText": "IMO 2030 탄소중립 규제 (EEXI/CII 등급제)",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_476442b933797b5abdbffdac430a67e40704ced2e1c66e6473b52515f047b5b6",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "competitors",
+      "sourceIndex": 2,
+      "claimType": "COMPETITOR",
+      "normalizedText": "Schneider Electric",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ENRICHMENT_PROMPT_INTERNAL_REVIEW",
+      "risk": "CRITICAL",
+      "notes": [
+        "A profile label is not evidence of a project-specific incumbent or competitor."
+      ]
+    },
+    {
+      "candidateId": "legacy_478612797bf89ccd9f2083d7c1d71d089484fb82f7256dc887f4c702d6f505b7",
+      "profileId": "danfoss",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.danfoss.marine",
+      "sourceIndex": 0,
+      "claimType": "REGULATION",
+      "normalizedText": "Maersk (덴마크): 컨테이너선 300척 하이브리드 추진 시스템 도입 -> 연료비 18% 절감, IMO 2030 규제 선제 대응",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/danfoss.js globalReferences.marine[0]."
+      ]
+    },
+    {
+      "candidateId": "legacy_4972949ebfccd100fafb18e820e5e38d07ec38f692273298eaf10f13cb921bc8",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "globalReferences.marine",
+      "sourceIndex": 0,
+      "claimType": "REGULATION",
+      "normalizedText": "Maersk (덴마크): 컨테이너선 300척 하이브리드 추진 시스템 도입 -> 연료비 18% 절감, IMO 2030 규제 선제 대응",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_49b9df9fdbcc131551dd3895a58555e18729e6a76df438daf5b45f24bab023e1",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 5,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "냉동냉장 설비 투자",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_4a431dd318b97fa023ff4973964b36adf7ac81fe3b12b8becc2b60590742002c",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "globalReferences.grid",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "KEPCO (한국): STATCOM 전력품질 개선 -> 전압 변동 90% 감소, 플리커 해소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_4cae2c4af9bfed43f3f6eed0ad3916401297c53acb5ff23154e74120dfae369a",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "categoryConfig.factory.policy",
+      "sourceIndex": null,
+      "claimType": "REGULATION",
+      "normalizedText": "EU CBAM 탄소국경세 (2026 본격 시행) + 산업용 모터 IE4 의무화",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_4f90f9a766fcfed95d2ac55bc3e5c649428be33bcafeec1830f96fd2cc4ef767",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "productKnowledge.선박용 하이브리드.value",
+      "sourceIndex": null,
+      "claimType": "PRODUCT_CAPABILITY",
+      "normalizedText": "탄소 배출 규제(EEXI/CII) 완벽 대응",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy profile text has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_50c8521c599b7cac3a8042152495e0b6db0c06885ad978fd086e3fcf6693683b",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "competitors",
+      "sourceIndex": 2,
+      "claimType": "COMPETITOR",
+      "normalizedText": "Schneider Electric",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ENRICHMENT_PROMPT_INTERNAL_REVIEW",
+      "risk": "CRITICAL",
+      "notes": [
+        "A profile label is not evidence of a project-specific incumbent or competitor."
+      ]
+    },
+    {
+      "candidateId": "legacy_524dde5e12f329b4de1da69fc22b1d04d283750d06c9abea2c22925f47361f4b",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "globalReferences.power",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "PLN (인도네시아): 자카르타 배전망 현대화 -> 정전율 35% 감소, 전력손실 8% 개선",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_529afaf4a07e3b027b5f98792896a93f291190e01e11e8a3ab2b6059e199380b",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "productKnowledge.GSIS 가스절연개폐장치.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "기존 AIS 대비 유지보수비 40% 절감, 수명 30년+",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy quantitative text cannot support VERIFIED or FIT."
+      ]
+    },
+    {
+      "candidateId": "legacy_566d31d0ff69e1debab76783b43b30b14c7734afd90d0821e7660237f6321585",
+      "profileId": "siemens",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.siemens.security",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Incheon Airport (한국): Siveillance 통합 보안 시스템 -> 출입 통제 + 영상감시 + BMS 통합, 보안 인력 25% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/siemens.js globalReferences.security[0]."
+      ]
+    },
+    {
+      "candidateId": "legacy_57a06a9735d771add169160dd25ca95b1e56a70d26b9cf1279d301fbc1cd6f2b",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "globalReferences.automation",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "포스코 (한국): 제철소 서보 드라이브 교체 -> 정밀도 향상, 에너지 22% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_59dd315824a2b93fe8e4312aff93665979b5f87da885f7752656b8910f9f9390",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "categoryConfig.coldchain.policy",
+      "sourceIndex": null,
+      "claimType": "REGULATION",
+      "normalizedText": "RE100 이행 + 글로벌 식품/의약 콜드체인 인증 강화",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_5a123d59ed537884b86a3f724fb0e7d55758bbd6ac27953e66dc21b31728a7a7",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "globalReferences.automation",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "LG에너지솔루션 (한국): 배터리 공장 XGT PLC 표준화 -> 생산 사이클 15% 단축, 불량률 절반",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_5dfe2be8d139dbd2ce5515b2c6d4fd11c3d7b1b2cacbafc6f026438d37b33698",
+      "profileId": "siemens",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.siemens.security",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "FIFA World Cup Qatar (카타르): 스타디움 8개 통합 보안 -> 40만명 동시 출입통제, 무사고 운영",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/siemens.js globalReferences.security[1]."
+      ]
+    },
+    {
+      "candidateId": "legacy_5e800c90c7d89632e55bdfa8ca867576c99eb0d00e7f131be06ac6a1c969ff90",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "globalReferences.automation",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Hyundai Motors (한국): EV 조립 라인 자동화 -> UPH 20% 향상, 다품종 유연 생산",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_608252d0f054a5600a08d385e0bf7a0fc9ceba5d5a26a5f420740c7ea43aeece",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 2,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "스마트 팩토리 증설",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_614fa3cfb7ed5674fa5a169056aaa5b14ccf6cef02942343a9cb357fdfef8b94",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "categoryConfig.esco.policy",
+      "sourceIndex": null,
+      "claimType": "REGULATION",
+      "normalizedText": "공공기관 ESCO 의무 도입, 탄소중립 기본법 시행",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_62ad6cb236262c308721ad24f6e806c86612b7e0c97b9d3ba241113a5e1ddcc5",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 5,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "EV 충전 인프라 구축",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_653c799062af3df79c1e707e69a805ac0f0ff7c7d65a0ac795f884f32705c935",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "categoryConfig.marine.pitch",
+      "sourceIndex": null,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "{company}의 친환경 선박 프로젝트에 Maersk 300척이 검증한 {product}로 연료비 18% 절감을 제안합니다.",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_65ec957e340e2641fa949f448a0a115ca0f83eadd77ff77a59b57f21e646fa87",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "categoryConfig.coldchain.pitch",
+      "sourceIndex": null,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "{company} 냉동/냉장 설비에 Lineage Logistics가 검증한 {product}로 에너지 32% 절감을 실현하세요.",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_66aa4d3e9313bd810c8b9acfcdc47f116db1b7cbf2e77440b5b4d3079a463d55",
+      "profileId": "danfoss",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.danfoss.coldchain",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Lineage Logistics (미국): 세계 최대 냉동창고 Turbocor 도입 -> 에너지 비용 32% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/danfoss.js globalReferences.coldchain[0]."
+      ]
+    },
+    {
+      "candidateId": "legacy_69e0f47a9ef563fc73bdae3b95dd88404d60ba4c462d1fcef52f898ffe628425",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "globalReferences.marine",
+      "sourceIndex": 1,
+      "claimType": "CERTIFICATION",
+      "normalizedText": "MSC (스위스): LNG 운반선 iC7 드라이브 적용 -> 탄소 배출 25% 감소, CII 등급 A 달성",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_69e5b0dd09dca91580d9cb950b48bc3c9b4f64c8e13df9e3df9925f0ff5dec10",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "globalReferences.factory",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "TSMC (대만): 반도체 클린룸 HVAC 최적화 -> 공조 전력 28% 절감, 정밀 온습도 제어",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_6a89b4d2fecef21fe24b8510625cd4fcabd756f7af7a5f54041c638201683722",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "globalReferences.marine",
+      "sourceIndex": 2,
+      "claimType": "REGULATION",
+      "normalizedText": "NYK Line (일본): 친환경 선박 플릿 현대화 -> EEXI 규제 100% 충족, 연간 $2M 연료비 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_6d21e394f43bd2baf42d42e03b6f2ec9a1298a6af6b3bdf93f0b79a9aaf2aa44",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "categoryConfig.security.policy",
+      "sourceIndex": null,
+      "claimType": "REGULATION",
+      "normalizedText": "개인정보보호법 강화, 스마트시티 보안 표준화, AI 영상분석 규제",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_6e6a5d3ac3baa7daf07cecf618ee978ad57f69c05f912c1b0226b3248b32b1c5",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "categoryConfig.power.policy",
+      "sourceIndex": null,
+      "claimType": "REGULATION",
+      "normalizedText": "SF6 가스 규제 강화 (EU F-Gas 규정), 노후 변전소 교체 수요",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_71b5b8eb68ae5ccd4314e7e67c88889cfb3537aa011fdb6b8dff414598c2339e",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "globalReferences.bms",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Mercedes-Benz Factory 56 (독일): Digital Energy Twin 적용 -> 운영비 28% 절감, 탄소중립 달성",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_72164c91fcb5d12185b82ca91220ae5ef72867400ccd44ab442c0fc2cef90641",
+      "profileId": "siemens",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.siemens.bms",
+      "sourceIndex": 2,
+      "claimType": "CERTIFICATION",
+      "normalizedText": "Deutsche Bank HQ (독일): 본사 빌딩 BMS 현대화 -> 에너지 효율 40% 개선, LEED Platinum 인증",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/siemens.js globalReferences.bms[2]."
+      ]
+    },
+    {
+      "candidateId": "legacy_73b716ced677261eff01eca35a69a12944ba0024f50eff9152e4672bd1eb04ae",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 6,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "ESG 탄소중립 설비",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_74dd8f1a42f00f66b698d51557551ffe51df12db38fd1d0f95af0963a0f1bc27",
+      "profileId": "siemens",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.siemens.fire",
+      "sourceIndex": 2,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "Samsung 평택 반도체 (한국): 클린룸 특수 화재감지 -> 초미세 연기 감지, 생산라인 보호",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/siemens.js globalReferences.fire[2]."
+      ]
+    },
+    {
+      "candidateId": "legacy_79bb2efcd416ec23ba65abb3f721d8124bebe12cc26f42f0a1c28e9d05029819",
+      "profileId": "siemens",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.siemens.bms",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Changi Airport (싱가포르): 터미널 4 Desigo CC 통합 BMS 구축 -> 에너지 35% 절감, 500개 포인트 통합 관제",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/siemens.js globalReferences.bms[0]."
+      ]
+    },
+    {
+      "candidateId": "legacy_7b1666a862b85d3c89760e88567d57fc74d10c8c8749f71a19ef0613d5494f28",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "globalReferences.green",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Hanwha Q Cells (한국): 100MW 태양광 발전소 인버터 공급 -> 변환효율 98.6%, 10년 무상 보증",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_7f8a629e1dcf7bc32d2946f1fd487a10d093991306fe9aae960a6bee37d0d64f",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "productKnowledge.XGT PLC/서보 시스템.value",
+      "sourceIndex": null,
+      "claimType": "PRODUCT_CAPABILITY",
+      "normalizedText": "EtherCAT 기반 고속제어, 사이클타임 250us",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy profile text has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_8015fb452f6064edd6d534035b2a5cc4c523c3b05b659c258be42e6c995170b2",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 0,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "친환경 선박 수주",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_8244e33c81571e502969b668c3a6188b2336bce30031be9402c673dc1fc0edd4",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "globalReferences.esco",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "서울특별시 (한국): 공공건물 200동 ESCO 에너지 절감 -> 연간 ₩150억 에너지비 절감, 10년 계약",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_8823797ec4fc48e179274a5365be1c889ba8b93ba3df3ad7c321bcee8d541d34",
+      "profileId": "siemens",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.siemens.fire",
+      "sourceIndex": 1,
+      "claimType": "CERTIFICATION",
+      "normalizedText": "Heathrow Airport (영국): 터미널 전체 Sinteso 화재시스템 -> EN54 인증, 대피 시간 40% 단축",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/siemens.js globalReferences.fire[1]."
+      ]
+    },
+    {
+      "candidateId": "legacy_887701afca50a80f918b00c72470c6e66dbc63bb37728f18a24efc6840436194",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "categoryConfig.grid.policy",
+      "sourceIndex": null,
+      "claimType": "REGULATION",
+      "normalizedText": "신재생 확대에 따른 계통 안정성 문제, 전력품질 기준 강화",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_89e46f2b4e89b6a1b4d491f2154a76b386303502abc0e3500aae4382574a2247",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "categoryConfig.security.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "보안 인력 25% 절감, 통합 관제로 대응시간 50% 단축",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_8cc01c4f3443b38a473a84e3a28f19846f0d17c9775501a2d56cc051fbc4401e",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "globalReferences.esco",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Siemens HQ (독일): 뮌헨 본사 넷제로 리노베이션 -> 탄소배출 90% 감축, 에너지 자립률 75%",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_8d4e02386fa59ee5ab0c9c75ec6ec70b48ba2ca8c254100bae85219df6d97823",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "productKnowledge.Building X.value",
+      "sourceIndex": null,
+      "claimType": "PRODUCT_CAPABILITY",
+      "normalizedText": "클라우드 기반 디지털 트윈, AI 에너지 최적화",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy profile text has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_8eaf6bf9a10550fc10937da9c143fc4ad938bc531adf292501343a2f2c58a4b4",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "productKnowledge.Cerberus PRO.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "인명안전 + 보험료 15% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy quantitative text cannot support VERIFIED or FIT."
+      ]
+    },
+    {
+      "candidateId": "legacy_9218a605609454fc4f8baf4af5b2604f8bd54d7024bec9c9769c8d3c5b688994",
+      "profileId": "siemens",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.siemens.esco",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "서울특별시 (한국): 공공건물 200동 ESCO 에너지 절감 -> 연간 ₩150억 에너지비 절감, 10년 계약",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/siemens.js globalReferences.esco[0]."
+      ]
+    },
+    {
+      "candidateId": "legacy_940f9f5971843205672e5b2cf03e1369c7c382edf10a2f0ab01e442dcb1a318c",
+      "profileId": "danfoss",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.danfoss.coldchain",
+      "sourceIndex": 1,
+      "claimType": "CERTIFICATION",
+      "normalizedText": "Pfizer (미국): 백신 콜드체인 정밀 온도 제어 -> -70°C 유지 안정성 99.9%, FDA 승인",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/danfoss.js globalReferences.coldchain[1]."
+      ]
+    },
+    {
+      "candidateId": "legacy_9694360217c0bf305a88b733b1189e65521908918afd400f2c1f6c197e99a0af",
+      "profileId": "danfoss",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.danfoss.factory",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Volkswagen (독일): EV 배터리 공장 VLT 드라이브 적용 -> 생산 라인 에너지 35% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/danfoss.js globalReferences.factory[0]."
+      ]
+    },
+    {
+      "candidateId": "legacy_96c788310517cfdba8f264b24b0b64e1e26558748dabe3c6d504b5144d87707a",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "globalReferences.power",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "KEPCO (한국): 345kV 변전소 현대화 -> 설치면적 60% 축소, 연간 유지비 40% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_97c4eab323be936698c93027787f15a7ce960a5b8f549f293ca58bedeb952acc",
+      "profileId": "siemens",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.siemens.bms",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Mercedes-Benz Factory 56 (독일): Digital Energy Twin 적용 -> 운영비 28% 절감, 탄소중립 달성",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/siemens.js globalReferences.bms[1]."
+      ]
+    },
+    {
+      "candidateId": "legacy_9873eef1df1e9ffc60a16d2b50eee23d16cfe0d9980bcfb789c4614f4aa4c817",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 6,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "산업 자동화 PLC",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_9986ff71165fc1198ebf7c60bd085e3938f65864a871f939b9f6b206e589f9a2",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "categoryConfig.green.pitch",
+      "sourceIndex": null,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "{company}의 RE100 이행에 한국전력 실증 프로젝트가 검증한 {product}로 전기요금 20% 절감을 실현하세요.",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_99a1e36b910a63ed36f7c24190d7f441774ba4b0ff51acd9a14d40af86288d59",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "categoryConfig.green.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "전력 피크 저감 25%, 전기요금 15~20% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_99b6d9840161377b29b8fe8d5a95f56e0c2833e43a1b54fc09f5c4a3e544465a",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "productKnowledge.ESCO 모델.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "5~10년 계약, 절감 보장 20~35%, 리스크 제로",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy quantitative text cannot support VERIFIED or FIT."
+      ]
+    },
+    {
+      "candidateId": "legacy_9bde79974307ee519224b09223495c302f8af627ee4386ef9b5cbee0d0c1a841",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "categoryConfig.bms.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "에너지 25~40% 절감, 운영인력 30% 절감, LEED/G-SEED 인증 지원",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_9e6cf0d023ec3dc1f4bb5909c7f7da963c6f4e644b3e553a5131752de68c1f3b",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "categoryConfig.esco.pitch",
+      "sourceIndex": null,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "{company}에 초기 투자 없이 에너지 30% 절감을 보장하는 {product}를 제안합니다. 서울시 200동 실적이 검증합니다.",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_9f36d983c744389dbd1252b3d33e51fa0bae8f118be19c82fb19739790f92a3e",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 4,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "HVAC 시스템 교체",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_a222e51146414696614b2efc8c7635fe0fafdff3b61691d40f86f0a5d7583e0f",
+      "profileId": "ls-electric",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.ls-electric.automation",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "LG에너지솔루션 (한국): 배터리 공장 XGT PLC 표준화 -> 생산 사이클 15% 단축, 불량률 절반",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/ls-electric.js globalReferences.automation[0]."
+      ]
+    },
+    {
+      "candidateId": "legacy_a32ad3be913b865e1e0c73873f3b72181adfc6c5c2ca827334db8cc97d7adbf6",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "categoryConfig.bms.pitch",
+      "sourceIndex": null,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "{company}의 빌딩 프로젝트에 Changi Airport가 검증한 {product}로 에너지 35% 절감과 통합 관제를 제안합니다.",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_a335d94150f95473e8ca6ba4be045867ab694741e7cd2e2ec58c0611390eb7d4",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "competitors",
+      "sourceIndex": 3,
+      "claimType": "COMPETITOR",
+      "normalizedText": "현대일렉트릭",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ENRICHMENT_PROMPT_INTERNAL_REVIEW",
+      "risk": "CRITICAL",
+      "notes": [
+        "A profile label is not evidence of a project-specific incumbent or competitor."
+      ]
+    },
+    {
+      "candidateId": "legacy_a3a25198a92affcd5c122b2bff5c8347f21bc3ae5d6c7eccde57756517002b39",
+      "profileId": "danfoss",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.danfoss.marine",
+      "sourceIndex": 1,
+      "claimType": "CERTIFICATION",
+      "normalizedText": "MSC (스위스): LNG 운반선 iC7 드라이브 적용 -> 탄소 배출 25% 감소, CII 등급 A 달성",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/danfoss.js globalReferences.marine[1]."
+      ]
+    },
+    {
+      "candidateId": "legacy_a58abd8f0158e639050e063e586268401042fbc85d4e441b82294cab0466598a",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "globalReferences.datacenter",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "NTT (일본): 도쿄 DC 오일리스 칠러 도입 -> 유지보수 비용 60% 감소, 가동률 99.99%",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_a5f30d4bae9621f2fe9b6fb796340cff4d1082c708d5ddd3f968a03759fbb7cb",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "globalReferences.power",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Saudi Aramco (사우디): 자나인 변전소 GIS 공급 -> 중동 최대 154kV GIS 납품, 3년 무장애 운영",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_a682edf79af4b39defe67afd138ab7e8fb1c5bcb5ae76278b0d79f6c8b853164",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "categoryConfig.automation.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "생산성 20% 향상, 불량률 30% 감소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_a6d8644da70ee2be48caf975e4e22470aad261603c62b3331824266842e77e4a",
+      "profileId": "danfoss",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.danfoss.coldchain",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "CJ대한통운 (한국): 신선식품 물류센터 현대화 -> 냉각 효율 30% 개선, 식품 손실률 50% 감소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/danfoss.js globalReferences.coldchain[2]."
+      ]
+    },
+    {
+      "candidateId": "legacy_a79fdef830d3fc4ae239ef7ec3ed1f7c4dc768f22cfb144852818ecf7bdc2c48",
+      "profileId": "ls-electric",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.ls-electric.power",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "PLN (인도네시아): 자카르타 배전망 현대화 -> 정전율 35% 감소, 전력손실 8% 개선",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/ls-electric.js globalReferences.power[2]."
+      ]
+    },
+    {
+      "candidateId": "legacy_aa54f1bdc012fb63dfc629b9164d1415c840568eb0b5f41218bdc01b897a6360",
+      "profileId": "danfoss",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.danfoss.factory",
+      "sourceIndex": 2,
+      "claimType": "REGULATION",
+      "normalizedText": "Samsung SDI (한국): 헝가리 배터리 공장 자동화 -> 모터 효율 25% 향상, RE100 달성 기여",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/danfoss.js globalReferences.factory[2]."
+      ]
+    },
+    {
+      "candidateId": "legacy_abec36fbbf5075ff838f6ee0bdbe8f433313f856f438947b740bab80116b9955",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "globalReferences.datacenter",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Equinix (미국): 글로벌 데이터센터 Turbocor 표준화 -> PUE 1.58→1.25 개선, 냉각 전력 40% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_ad999981db6c1b0b5c3c0933260058cdf211d2a487c7a479ceca04dcd86ebc90",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 1,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "변전소 신축 착공",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_b0b9d503a3f817c32d6b247917fbfca57fad2e27f035c4df8887d4072676d2d3",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "categoryConfig.automation.policy",
+      "sourceIndex": null,
+      "claimType": "REGULATION",
+      "normalizedText": "Industry 4.0 전환 가속, 스마트 제조 혁신법 시행",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_b289d0c6e5d63646159e0525c81845928225885d7da4d6da6fbbeab4c5ef888e",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 0,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "전력 인프라 투자",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_b379c772b5b01fd259a6c780e0877929b1287070a3c6ac5d46065ebe3ca638dc",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 1,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "스마트 빌딩 에너지 관리",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_b81ccee9d503854bd8ceb5a365a2b60ffc17a24a2faa6bc4b2bf1b5e0f6c420b",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "competitors",
+      "sourceIndex": 3,
+      "claimType": "COMPETITOR",
+      "normalizedText": "ABB",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ENRICHMENT_PROMPT_INTERNAL_REVIEW",
+      "risk": "CRITICAL",
+      "notes": [
+        "A profile label is not evidence of a project-specific incumbent or competitor."
+      ]
+    },
+    {
+      "candidateId": "legacy_b9b069aaedcfd6791a2673b2a4a310eb5776a77c17d6c2d9db290baf7974463d",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 2,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "BEMS 에너지관리시스템",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_bb2507a02e9f6db3bd03ec5d0064b90a9db30f789318dc47f20893c44afb8d4b",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "categoryConfig.grid.pitch",
+      "sourceIndex": null,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "{company} 전력계통에 KEPCO가 적용한 {product}로 전압 안정성과 역률을 획기적으로 개선하세요.",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_c21c854128680113aac2012665581b166f9ba55b2218a0a824db0185e852aa4b",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "globalReferences.factory",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Volkswagen (독일): EV 배터리 공장 VLT 드라이브 적용 -> 생산 라인 에너지 35% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_c483dcd92633683662205ae55e72120566afd3052cd8d0e8cd07613478153018",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "productKnowledge.ESS/태양광 인버터.value",
+      "sourceIndex": null,
+      "claimType": "PRODUCT_CAPABILITY",
+      "normalizedText": "RE100 이행 핵심 인프라, 계통연계 기술 보유",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy profile text has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_c79f982ae6889bd7c02913f170e04856f5d78d36dc135dd878083b440c30fa61",
+      "profileId": "ls-electric",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.ls-electric.power",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "KEPCO (한국): 345kV 변전소 현대화 -> 설치면적 60% 축소, 연간 유지비 40% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/ls-electric.js globalReferences.power[1]."
+      ]
+    },
+    {
+      "candidateId": "legacy_c7a71119e0f1174c858d2c4bcf8a9ee0eae65fa784c19d599a51b26aeaecfeb5",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "globalReferences.security",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "FIFA World Cup Qatar (카타르): 스타디움 8개 통합 보안 -> 40만명 동시 출입통제, 무사고 운영",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_c94abc199de1f1d39b1e314aa501bde918925b3cede8be3208d4bad43155a7d1",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "categoryConfig.datacenter.policy",
+      "sourceIndex": null,
+      "claimType": "REGULATION",
+      "normalizedText": "EU 데이터센터 에너지효율 지침 (2027 시행)",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_ca5b984d9ced25d27ce030dbc0bcebee9f71761fc8d7c1d3231c3e8cb8ed934c",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "categoryConfig.fire.policy",
+      "sourceIndex": null,
+      "claimType": "REGULATION",
+      "normalizedText": "소방시설법 강화 (2025), 초고층 빌딩 특별법, ESG 안전 경영",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_cbc2e6a24caa1e5592d1a7b6e09b5b9fd708631be22323098c4fa96d934a2d11",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "categoryConfig.grid.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "전압 변동 90% 감소, 역률 0.99 달성",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_cbc4f7641035b957d2aa1d2e330887efd1967fdc481384bfb16575d80aaf0d9b",
+      "profileId": "ls-electric",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.ls-electric.automation",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "포스코 (한국): 제철소 서보 드라이브 교체 -> 정밀도 향상, 에너지 22% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/ls-electric.js globalReferences.automation[1]."
+      ]
+    },
+    {
+      "candidateId": "legacy_cf2ff55c7ef61664e6e51dca29000fa5b51e60fc8693b2102b8e19629500d96d",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "productKnowledge.ESCO 모델.value",
+      "sourceIndex": null,
+      "claimType": "PRODUCT_CAPABILITY",
+      "normalizedText": "초기 투자 없이 에너지 절감분으로 비용 상환",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy profile text has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_d0d44a4399f73a0e7e4fc98ab14355e1d13bfdbc5c4fb65a73bc659826ec4c68",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "competitors",
+      "sourceIndex": 0,
+      "claimType": "COMPETITOR",
+      "normalizedText": "Honeywell",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ENRICHMENT_PROMPT_INTERNAL_REVIEW",
+      "risk": "CRITICAL",
+      "notes": [
+        "A profile label is not evidence of a project-specific incumbent or competitor."
+      ]
+    },
+    {
+      "candidateId": "legacy_d146a5d185f4166f413cde772fd70e869c586c5de25fcd8f89d285ce7fcc5ca0",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "globalReferences.esco",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Dubai Mall (UAE): 세계 최대 쇼핑몰 에너지 최적화 -> 냉방 에너지 32% 절감, ROI 4.2년",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_d21d5bdd12769fc72475449a349784aa7d2e4cbc4fb48503cf77f5739131ae58",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 5,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "화재감지 소방설비 교체",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_d23e2b9ed620d9f00da29b63ef448052531337c9de3fecec91d995b26ce0470e",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "productKnowledge.GSIS 가스절연개폐장치.value",
+      "sourceIndex": null,
+      "claimType": "PRODUCT_CAPABILITY",
+      "normalizedText": "SF6 가스 사용량 50% 저감, 설치면적 60% 축소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy profile text has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_d5e9a46ac931de3de680d3c284d98ee7182e64a35cfe4c89d5c6a16dd31df915",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "categoryConfig.datacenter.pitch",
+      "sourceIndex": null,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "{company} 데이터센터에 Equinix가 글로벌 표준으로 채택한 {product}로 PUE 1.25를 달성하세요.",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_d6c2d947e3b4588f4d2827b87eee85e18a532356abb62dc06232e3d8282ffbe5",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "globalReferences.bms",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Changi Airport (싱가포르): 터미널 4 Desigo CC 통합 BMS 구축 -> 에너지 35% 절감, 500개 포인트 통합 관제",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_d8ccbe2516dcfc0a9e0f141155c6c92b70b730608f6e7ced1179b194cd43dfb4",
+      "profileId": "ls-electric",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.ls-electric.green",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "SK E&S (한국): EV 충전 인프라 350kW 급속충전 -> 충전 시간 18분, 가동률 99.5%",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/ls-electric.js globalReferences.green[2]."
+      ]
+    },
+    {
+      "candidateId": "legacy_dabaa952facabf0ea2a6f4eb713a2e71d15e7493bcc138f7f731ed5a757e66cb",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "globalReferences.fire",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Lotte World Tower (한국): Cerberus PRO 초고층 화재감지 -> 555m 123층 완벽 커버, 오보율 95% 감소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_dd0d3426e356b7ad6405c0341cdbbc9d2e39ae5304ea63aca5cee0833f740f91",
+      "profileId": "ls-electric",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.ls-electric.grid",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "KEPCO (한국): STATCOM 전력품질 개선 -> 전압 변동 90% 감소, 플리커 해소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/ls-electric.js globalReferences.grid[1]."
+      ]
+    },
+    {
+      "candidateId": "legacy_dd2cae159122f2e123566f9f7fc4903d11914eda6d708678b164326a255733d7",
+      "profileId": "ls-electric",
+      "sourcePath": "worker/db/references.js",
+      "sourceField": "reference_library.seed.ls-electric.power",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Saudi Aramco (사우디): 자나인 변전소 GIS 공급 -> 중동 최대 154kV GIS 납품, 3년 무장애 운영",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "WORKER_PROPOSAL_CUSTOMER_OUTPUT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Seeded reference rows store source_url and verified_at as empty strings.",
+        "Mirrors profiles/ls-electric.js globalReferences.power[0]."
+      ]
+    },
+    {
+      "candidateId": "legacy_dd735187ed88d32aa01a92f86dcdeec4291cb24b467699dee504daf8798f7892",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "globalReferences.grid",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "EGAT (태국): 방콕 전력망 SVC 설치 -> 역률 0.99 달성, 계통 안정성 확보",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_ddc295d2c45d627e81df558612941f1ad26d536b48e79a0b7a5d0d47a8774d8b",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "categoryConfig.marine.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "연료 소비 15~18% 절감 + IMO EEXI/CII 규제 벌금 회피",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_dfca7f3aae6291c59dea3e74f8710a0af57acb74486ec8aacf0184dcf160b6bb",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "categoryConfig.security.pitch",
+      "sourceIndex": null,
+      "claimType": "REFERENCE_CASE",
+      "normalizedText": "{company}에 인천공항이 채택한 {product}로 통합 보안 관제와 인력 25% 절감을 제안합니다.",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_e1a36af45d5f46ef2c951d7190f2e2b7d53adedcb3f2b68d9e0154c6a353ec89",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "productKnowledge.iC7 / VLT Drives.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "기존 정속 모터 대비 전력 소비 30% 감소 가정",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy quantitative text cannot support VERIFIED or FIT."
+      ]
+    },
+    {
+      "candidateId": "legacy_e2cee4130f95fa7bd411891a5d6e456c191a01f37cd7ae4a19de5c97f22b8160",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "globalReferences.security",
+      "sourceIndex": 2,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Hyundai Motor 울산공장 (한국): 스마트 팩토리 보안 시스템 -> 300개 구역 차등 출입통제, 안전사고 60% 감소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_e36f45a33b9f17607a8b51878186e785cefa69f9b2d20ac7259f8828ec9b8525",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "competitors",
+      "sourceIndex": 1,
+      "claimType": "COMPETITOR",
+      "normalizedText": "Siemens",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ENRICHMENT_PROMPT_INTERNAL_REVIEW",
+      "risk": "CRITICAL",
+      "notes": [
+        "A profile label is not evidence of a project-specific incumbent or competitor."
+      ]
+    },
+    {
+      "candidateId": "legacy_e87818264044313780ace486272ef7b4b0d69392b015157f937ecfa44b9fe0bd",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "globalReferences.coldchain",
+      "sourceIndex": 1,
+      "claimType": "CERTIFICATION",
+      "normalizedText": "Pfizer (미국): 백신 콜드체인 정밀 온도 제어 -> -70°C 유지 안정성 99.9%, FDA 승인",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_e93af4b9cffb0bfddd73edfbc5d4862fa8d14ca5950ad1bcaca2a84b7709b6c0",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "globalReferences.security",
+      "sourceIndex": 0,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Incheon Airport (한국): Siveillance 통합 보안 시스템 -> 출입 통제 + 영상감시 + BMS 통합, 보안 인력 25% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_e950f41ca872cceb922b5e640634641e8a0ce607cc6a8a0dc866f02c8225f82b",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "categoryConfig.esco.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "초기투자 제로, 절감분 보장 20~35%, 계약기간 5~10년",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_ea394106665fe3450b6cfb4182360028c70b4b2842d6154dd0ec2291f3033339",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "productKnowledge.ESS/태양광 인버터.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "전력 피크 저감 25%, 전기요금 연 15~20% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy quantitative text cannot support VERIFIED or FIT."
+      ]
+    },
+    {
+      "candidateId": "legacy_eb2f3bdba7b98dad4404a0eec5528c2c5a74fb7d13e347c44371bfb631b468c1",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "productKnowledge.선박용 하이브리드.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "연료 소비 15% 절감 및 규제 벌금 회피 비용 산출",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy quantitative text cannot support VERIFIED or FIT."
+      ]
+    },
+    {
+      "candidateId": "legacy_eda90c260f27bdbbf6c8efe8dc30a4a9b5533dd512185c4a05094b15931a09cf",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "competitors",
+      "sourceIndex": 1,
+      "claimType": "COMPETITOR",
+      "normalizedText": "ABB",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ENRICHMENT_PROMPT_INTERNAL_REVIEW",
+      "risk": "CRITICAL",
+      "notes": [
+        "A profile label is not evidence of a project-specific incumbent or competitor."
+      ]
+    },
+    {
+      "candidateId": "legacy_ee820ff1c6bcb66c6b8b4ee0a16d7518053d142859bcdd89801ff529ef94900f",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "globalReferences.datacenter",
+      "sourceIndex": 1,
+      "claimType": "PERFORMANCE",
+      "normalizedText": "Digital Realty (미국): 아시아 데이터센터 냉각 시스템 교체 -> 연간 운영비 $1.5M 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy reference case has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_efdcb7fc32b157e8dfaf77c3eea4e7912e8b55a2cd76f60a2539a25893755b47",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "productKnowledge.Building X.roi",
+      "sourceIndex": null,
+      "claimType": "ROI",
+      "normalizedText": "탄소배출 20% 감축, 운영비 15% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy quantitative text cannot support VERIFIED or FIT."
+      ]
+    },
+    {
+      "candidateId": "legacy_eff3dc4a31c805deeeeb599e8eca86a54a4c730906f82a95abb143aded8cff7d",
+      "profileId": "ls-electric",
+      "sourcePath": "profiles/ls-electric.js",
+      "sourceField": "competitors",
+      "sourceIndex": 0,
+      "claimType": "COMPETITOR",
+      "normalizedText": "Siemens",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ENRICHMENT_PROMPT_INTERNAL_REVIEW",
+      "risk": "CRITICAL",
+      "notes": [
+        "A profile label is not evidence of a project-specific incumbent or competitor."
+      ]
+    },
+    {
+      "candidateId": "legacy_f06e5fef8a2781dff557a6839eadcc468d4fcc73aca2889ed5b669fcaeca1409",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "searchQueries",
+      "sourceIndex": 3,
+      "claimType": "PROJECT_FACT",
+      "normalizedText": "공장 자동화 투자",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "ASSUMPTION",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "DISCOVERY_ONLY",
+      "risk": "MEDIUM",
+      "notes": [
+        "Discovery query only; it is not evidence that a project exists."
+      ]
+    },
+    {
+      "candidateId": "legacy_f2e4e39d990dc7dbaf5650e0824ebcede166508885b767d9cd01c35555c83570",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "productKnowledge.Desigo CC.value",
+      "sourceIndex": null,
+      "claimType": "PRODUCT_CAPABILITY",
+      "normalizedText": "통합 빌딩관리 플랫폼, HVAC/조명/전력/방재 원스톱 제어",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy profile text has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_f35c0350ffb17f3ebd8105ead4c6c1b4063ffe322b476a0be242f09b7a9e1c35",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "categoryConfig.bms.policy",
+      "sourceIndex": null,
+      "claimType": "REGULATION",
+      "normalizedText": "제로에너지건축물 인증 의무화 (2025~ 공공 1,000m2↑), EU EPBD 개정",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "FALLBACK_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy fallback text has no claim-level evidence binding."
+      ]
+    },
+    {
+      "candidateId": "legacy_fc5a3b867be4766130e7d8dcb9fe56f8f44f63735b7fb394c786fb28b58513a6",
+      "profileId": "siemens",
+      "sourcePath": "profiles/siemens.js",
+      "sourceField": "productKnowledge.Cerberus PRO.value",
+      "sourceIndex": null,
+      "claimType": "PRODUCT_CAPABILITY",
+      "normalizedText": "EN54/UL 인증 화재감지, 오보율 90% 감소",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy profile text has no bound source, quote, or verification record."
+      ]
+    },
+    {
+      "candidateId": "legacy_feb4f3a82a5f47a85d430e482a18b830cba4d27a83c246693128599a4b6607e1",
+      "profileId": "danfoss",
+      "sourcePath": "profiles/danfoss.js",
+      "sourceField": "productKnowledge.iC7 / VLT Drives.value",
+      "sourceIndex": null,
+      "claimType": "PRODUCT_CAPABILITY",
+      "normalizedText": "모터 속도 제어로 에너지 20~50% 절감",
+      "sourceAvailability": false,
+      "directQuoteAvailability": false,
+      "verificationDateAvailability": false,
+      "currentTrustClassification": "UNVERIFIED",
+      "derivedCustomerUse": "BLOCKED",
+      "currentCustomerFacingReachability": "ROOT_PROMPT_LEADBRIEF_REPORT_EMAIL_PPT_CSV",
+      "risk": "CRITICAL",
+      "notes": [
+        "Legacy profile text has no bound source, quote, or verification record."
+      ]
+    }
+  ],
+  "nonClaims": [
+    "This inventory does not verify any legacy profile or reference assertion.",
+    "This inventory is not production evidence and does not authorize customer use."
+  ]
+}

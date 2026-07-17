@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "datacenter-vertical-pack-v0",
+  "verticalId": "datacenter_infrastructure",
+  "evidenceKind": "POLICY_GUIDANCE",
+  "localTestOnly": true,
+  "productionReady": false,
+  "marketTruthVerified": false,
+  "requirementCategories": ["electrical_power", "cooling", "controls_bms", "energy_management", "fire_detection", "physical_security", "commissioning"],
+  "requirementValueTypes": ["BOOLEAN", "ENUM", "STRING", "STRING_SET", "QUANTITY", "RANGE"],
+  "requirementValueStates": ["KNOWN", "UNKNOWN", "CONFLICTED", "NOT_APPLICABLE"],
+  "requirementPriorities": ["HARD", "SOFT"],
+  "hardDisqualifierPolicy": [
+    { "id": "project_cancelled", "trigger": "VERIFIED_STAGE_CANCELLED", "result": "NOT_EVALUATED" },
+    { "id": "verified_hard_requirement_mismatch", "trigger": "HARD_REQUIREMENT_MISMATCH", "result": "NOT_FIT" },
+    { "id": "mandatory_certification_unmet", "trigger": "VERIFIED_MANDATORY_CERTIFICATION_MISMATCH", "result": "NOT_FIT" }
+  ],
+  "projectStages": [
+    "UNKNOWN",
+    "SIGNAL",
+    "ANNOUNCED",
+    "FEASIBILITY",
+    "BASIC_DESIGN",
+    "DETAILED_DESIGN",
+    "SPECIFICATION",
+    "TENDER",
+    "AWARD",
+    "CONSTRUCTION",
+    "COMMISSIONING",
+    "OPERATION",
+    "RETROFIT",
+    "CANCELLED"
+  ],
+  "specificationWindows": {
+    "hvac_drive": { "firstInfluenceStage": "FEASIBILITY", "finalOpenStage": "SPECIFICATION", "closingStage": "TENDER", "retrofitApplicable": true },
+    "oil_free_compressor": { "firstInfluenceStage": "FEASIBILITY", "finalOpenStage": "SPECIFICATION", "closingStage": "TENDER", "retrofitApplicable": true },
+    "medium_voltage_switchgear": { "firstInfluenceStage": "FEASIBILITY", "finalOpenStage": "SPECIFICATION", "closingStage": "TENDER", "retrofitApplicable": true },
+    "transformer": { "firstInfluenceStage": "FEASIBILITY", "finalOpenStage": "SPECIFICATION", "closingStage": "TENDER", "retrofitApplicable": true },
+    "energy_storage": { "firstInfluenceStage": "FEASIBILITY", "finalOpenStage": "SPECIFICATION", "closingStage": "TENDER", "retrofitApplicable": true },
+    "power_quality": { "firstInfluenceStage": "FEASIBILITY", "finalOpenStage": "SPECIFICATION", "closingStage": "TENDER", "retrofitApplicable": true },
+    "building_management": { "firstInfluenceStage": "BASIC_DESIGN", "finalOpenStage": "SPECIFICATION", "closingStage": "TENDER", "retrofitApplicable": true },
+    "energy_analytics": { "firstInfluenceStage": "BASIC_DESIGN", "finalOpenStage": "SPECIFICATION", "closingStage": "TENDER", "retrofitApplicable": true },
+    "fire_detection": { "firstInfluenceStage": "BASIC_DESIGN", "finalOpenStage": "SPECIFICATION", "closingStage": "TENDER", "retrofitApplicable": true },
+    "physical_security": { "firstInfluenceStage": "BASIC_DESIGN", "finalOpenStage": "SPECIFICATION", "closingStage": "TENDER", "retrofitApplicable": true }
+  },
+  "questionPolicies": {
+    "incoming_voltage": { "questionId": "q_incoming_voltage", "text": "What incoming voltage class is shown on the approved single-line diagram?", "requestedArtifact": "electrical_single_line", "ownerRole": "electrical_application_engineering", "actionCode": "REQUEST_ELECTRICAL_SINGLE_LINE" },
+    "design_it_load": { "questionId": "q_design_it_load", "text": "What total and phased IT load is approved for this project?", "requestedArtifact": "approved_load_schedule", "ownerRole": "electrical_design", "actionCode": "REQUEST_DESIGN_IT_LOAD" },
+    "redundancy_topology": { "questionId": "q_redundancy", "text": "What electrical and cooling redundancy target is approved?", "requestedArtifact": "basis_of_design", "ownerRole": "project_engineering", "actionCode": "REQUEST_REDUNDANCY_TARGET" },
+    "cooling_architecture": { "questionId": "q_cooling_architecture", "text": "What cooling architecture is fixed in the current Basis of Design?", "requestedArtifact": "cooling_basis_of_design", "ownerRole": "mechanical_application_engineering", "actionCode": "REQUEST_COOLING_BASIS_OF_DESIGN" },
+    "required_protocols": { "questionId": "q_control_protocol", "text": "Which control protocols and integration boundaries are mandatory?", "requestedArtifact": "controls_points_list", "ownerRole": "controls_engineering", "actionCode": "VERIFY_CONTROL_PROTOCOL" },
+    "required_certifications": { "questionId": "q_certification", "text": "Which certifications are contractually required for the selected package?", "requestedArtifact": "technical_specification", "ownerRole": "compliance_engineering", "actionCode": "VERIFY_CERTIFICATION_REQUIREMENT" },
+    "commissioning_target_date": { "questionId": "q_commissioning", "text": "What is the approved commissioning and integrated-system-test schedule?", "requestedArtifact": "commissioning_schedule", "ownerRole": "commissioning_management", "actionCode": "VERIFY_COMMISSIONING_SCHEDULE" }
+  },
+  "unitDimensions": {
+    "voltage": ["V", "kV"],
+    "active_power": ["kW", "MW"],
+    "apparent_power": ["kVA", "MVA"],
+    "energy": ["kWh", "MWh"],
+    "thermal_power": ["kW_th", "MW_th"],
+    "duration": ["min", "h", "d"],
+    "temperature": ["degC"],
+    "percentage": ["percent"],
+    "ratio": ["ratio"],
+    "count": ["count"]
+  }
+}

@@ -92,6 +92,17 @@ function normalizeBullet(text) {
     .trim();
 }
 
+function escapeMarkdownInline(text) {
+  return String(text || '').replace(/([\\`*_[\]{}()<>#+\-.!|])/g, '\\$1');
+}
+
+function normalizeReferenceField(text) {
+  return String(text || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function fallbackNarrative(sectionNo) {
   switch (sectionNo) {
     case 1:
@@ -137,13 +148,14 @@ function sanitizeNarrativeBullets(bullets, sectionNo, allowNumbers = true, minCo
 
 function normalizeReferenceItem(item) {
   if (!item || typeof item !== 'object') return null;
-  const client = normalizeBullet(item.client);
-  const project = normalizeBullet(item.project);
-  const result = normalizeBullet(item.result);
-  const region = normalizeBullet(item.region);
-  const sourceUrl = normalizeBullet(item.sourceUrl || item.source_url || '');
-  if (!client || !project || !result) return null;
-  return { client, project, result, region, sourceUrl };
+  const claimId = normalizeReferenceField(item.claimId);
+  const statement = normalizeReferenceField(item.statement);
+  const sourceTitle = normalizeReferenceField(item.sourceTitle);
+  const sourceUrl = normalizeReferenceField(item.sourceUrl || item.source_url || '');
+  const directQuote = normalizeReferenceField(item.directQuote);
+  const verifiedAt = normalizeReferenceField(item.verifiedAt);
+  if (!claimId || !statement || !sourceTitle || !sourceUrl || !directQuote || !verifiedAt) return null;
+  return { claimId, statement, sourceTitle, sourceUrl, directQuote, verifiedAt };
 }
 
 function normalizeReferences(references) {
@@ -297,17 +309,12 @@ export function buildEscoSection(cpaEstimate, narrativeBullets = []) {
 function buildReferenceSection(references, narrativeBullets = []) {
   const normalizedRefs = normalizeReferences(references);
   if (normalizedRefs.length === 0) {
-    return buildBulletSection(5, PROPOSAL_SECTION_HEADINGS[5], ['유사 사례: (참고용) - 자료 부족']);
+    return buildBulletSection(5, PROPOSAL_SECTION_HEADINGS[5], ['N/A — Evidence Claim Registry에서 고객 사용이 허가된 유사 사례 없음']);
   }
-  const deterministicBullets = normalizedRefs.map((ref) => {
-    const sourceNote = ref.sourceUrl ? ` / 출처 ${ref.sourceUrl}` : '';
-    const regionNote = ref.region ? ` / 지역 ${ref.region}` : '';
-    return `${ref.client} - ${ref.project} / 결과 ${ref.result}${regionNote}${sourceNote}`;
-  });
-  return buildBulletSection(5, PROPOSAL_SECTION_HEADINGS[5], [
-    ...deterministicBullets,
-    ...extractNarrativeBullets(narrativeBullets, false)
-  ]);
+  const deterministicBullets = normalizedRefs.map((ref) => (
+    `${escapeMarkdownInline(ref.statement)} / claimId ${escapeMarkdownInline(ref.claimId)} / 출처 ${escapeMarkdownInline(ref.sourceTitle)} ${escapeMarkdownInline(ref.sourceUrl)} / 직접 인용 ${escapeMarkdownInline(ref.directQuote)} / 검증일 ${escapeMarkdownInline(ref.verifiedAt)}`
+  ));
+  return buildBulletSection(5, PROPOSAL_SECTION_HEADINGS[5], deterministicBullets);
 }
 
 function buildTimelineSection(narrativeBullets = []) {

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "datacenter-technical-aliases-v0",
+  "verticalId": "datacenter_infrastructure",
+  "aliases": [
+    { "conceptId": "data_center", "terms": ["data center", "datacenter", "데이터센터", "IDC"] },
+    { "conceptId": "medium_voltage_switchgear", "terms": ["medium-voltage switchgear", "중전압 개폐장치", "가스절연개폐장치", "gas-insulated switchgear"] },
+    { "conceptId": "transformer", "terms": ["transformer", "변압기"] },
+    { "conceptId": "variable_frequency_drive", "terms": ["variable frequency drive", "variable speed drive", "VFD", "VSD", "가변속 드라이브"] },
+    { "conceptId": "building_management", "terms": ["building management system", "빌딩관리시스템", "BMS"] },
+    { "conceptId": "building_energy_management", "terms": ["building energy management system", "빌딩에너지관리시스템", "BEMS"] },
+    { "conceptId": "energy_storage", "terms": ["energy storage system", "에너지저장장치", "ESS"] },
+    { "conceptId": "uninterruptible_power_supply", "terms": ["uninterruptible power supply", "무정전전원", "UPS"] },
+    { "conceptId": "power_quality", "terms": ["power quality", "전력품질"] },
+    { "conceptId": "fire_detection", "terms": ["fire detection", "화재감지"] },
+    { "conceptId": "access_control", "terms": ["access control", "출입통제"] }
+  ],
+  "ambiguousTerms": [
+    { "term": "inverter", "reason": "May mean a motor drive or a power-conversion inverter." },
+    { "term": "인버터", "reason": "모터 드라이브 또는 전력변환 인버터를 뜻할 수 있습니다." },
+    { "term": "GIS", "reason": "May mean gas-insulated switchgear or geographic information system." }
+  ]
+}

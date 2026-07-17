@@ -185,6 +185,24 @@ test('CI workflow runs the local-only lead pipeline replay artifact contract aft
   assert.doesNotMatch(workflow, /wrangler|curl|deploy|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL/i);
 });
 
+test('CI runs claim audit, spec-fit evaluation, and focused tests before lead replay', async () => {
+  const [workflow, packageJsonRaw] = await Promise.all([
+    readFile(ciWorkflowPath, 'utf8'),
+    readFile(packageJsonPath, 'utf8'),
+  ]);
+  const scripts = JSON.parse(packageJsonRaw).scripts;
+  assert.equal(scripts['audit:claims'], 'node scripts/audit-evidence-claims.mjs --json --fail-on-violations');
+  assert.equal(scripts['eval:spec-fit'], 'node scripts/evaluate-spec-fit.mjs --fixtures --json --repeat 2');
+  assert.match(scripts['test:claim-spec-fit'], /tests\/evidence-claim-registry\.test\.js/);
+  assert.match(scripts['test:claim-spec-fit'], /tests\/specification-fit-engine\.test\.js/);
+  assert.match(scripts['test:claim-spec-fit'], /tests\/pursuit-dossier\.test\.js/);
+  assert.match(workflow, /run:\s+npm run check:enrichment-replay[\s\S]*run:\s+npm run audit:claims[\s\S]*run:\s+npm run eval:spec-fit[\s\S]*run:\s+npm run test:claim-spec-fit[\s\S]*run:\s+npm run check:lead-pipeline-replay/);
+  for (const scriptName of ['audit:claims', 'eval:spec-fit', 'test:claim-spec-fit']) {
+    assert.doesNotMatch(scripts[scriptName], /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
+  }
+  assert.doesNotMatch(workflow, /secrets\./);
+});
+
 test('CI workflow runs the local-only Worker E2E smoke after full tests', async () => {
   const workflow = await readFile(ciWorkflowPath, 'utf8');
 

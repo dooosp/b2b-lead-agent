@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "project-opportunity-contract-v0",
+  "boundary": "LOCAL_TEST_SYNTHETIC_ONLY",
+  "productionReady": false,
+  "authoritativeEvaluator": "verticals/datacenter/index.mjs#evaluateSpecificationFit",
+  "modelOwnedDecisionFieldsAllowed": false,
+  "identityFields": ["opportunityId", "accountDisplayName", "facilityDisplayName", "projectDisplayName", "verticalId", "jurisdiction"],
+  "projectStage": {
+    "valueStates": ["UNKNOWN", "SIGNAL", "ANNOUNCED", "FEASIBILITY", "BASIC_DESIGN", "DETAILED_DESIGN", "SPECIFICATION", "TENDER", "AWARD", "CONSTRUCTION", "COMMISSIONING", "OPERATION", "RETROFIT", "CANCELLED"],
+    "requiresEvidenceClaimRefsForKnownStage": true
+  },
+  "technicalRequirement": {
+    "valueTypes": ["BOOLEAN", "ENUM", "STRING", "STRING_SET", "QUANTITY", "RANGE"],
+    "valueStates": ["KNOWN", "UNKNOWN", "CONFLICTED", "NOT_APPLICABLE"],
+    "priorities": ["HARD", "SOFT"],
+    "operators": ["EQ", "GTE", "LTE", "IN", "CONTAINS_ALL", "BETWEEN"],
+    "evidenceBound": true
+  },
+  "limits": {
+    "productFamilies": 20,
+    "requirements": 100,
+    "evidenceRefsPerRequirement": 10,
+    "conditions": 20
+  },
+  "nonClaims": [
+    "A project opportunity is not one company or account.",
+    "No model-provided field can decide fit, verification status, customer use, or final pursuit."
+  ]
+}

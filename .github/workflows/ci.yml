@@ -31,6 +31,15 @@ jobs:
       - name: Run enrichment fixture replay output contract
         run: npm run check:enrichment-replay
 
+      - name: Audit evidence claims
+        run: npm run audit:claims
+
+      - name: Evaluate data-center specification fit
+        run: npm run eval:spec-fit
+
+      - name: Run focused claim and specification-fit tests
+        run: npm run test:claim-spec-fit
+
       - name: Run lead pipeline fixture replay artifact contract
         run: npm run check:lead-pipeline-replay
 

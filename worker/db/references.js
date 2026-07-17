@@ -1,4 +1,5 @@
 import { ensureD1Schema } from './schema.js';
+import { projectTrustedReferences } from '../../knowledge/claim-registry/index.mjs';
 
 export async function getReferencesByProfileCategory(db, profileId, category) {
   if (!db) return [];
@@ -146,22 +147,12 @@ export async function getReferencesForPrompt(db, profileId, categories) {
   }
 }
 
-export async function getReferencesForProposal(db, profileId, categories) {
-  if (!db || !profileId) return [];
+export async function getReferencesForProposal(db, profileId, categories, claimRegistry = null, claimContext = null) {
+  if (!profileId || !claimRegistry || !claimContext) return [];
   try {
-    await seedReferencesFromProfiles(db);
-    const refs = [];
-    for (const category of Array.isArray(categories) ? categories : []) {
-      const items = await getReferencesByProfileCategory(db, profileId, category);
-      refs.push(...items.slice(0, 2).map((item) => ({
-        client: item.client,
-        project: item.project,
-        result: item.result,
-        region: item.region,
-        sourceUrl: item.source_url || ''
-      })));
-    }
-    return refs.slice(0, 3);
+    return projectTrustedReferences(claimRegistry, claimContext)
+      .filter((reference) => !reference.provenanceProfileId || reference.provenanceProfileId === profileId)
+      .slice(0, 3);
   } catch {
     return [];
   }
