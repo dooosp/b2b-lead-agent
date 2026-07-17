@@ -129,6 +129,6 @@ The audit and evaluation are local, deterministic, network-free CI gates. They r
 
 ## Non-goals and follow-up
 
-Not included: real datasheet ingestion, real regulation/reference verification, live research, customer/private data, D1 registry persistence, claim editing UI, auth/RBAC, CRM, contact enrichment, email, outreach, automatic approval, production proof, account timeline persistence, or a Workbench redesign.
+Not included: real datasheet ingestion, real regulation/reference verification, live research, customer/private data, D1 registry persistence, claim editing UI, auth/RBAC, CRM, contact enrichment, email, outreach, automatic approval, production proof, account timeline persistence, or a persisted Workbench workflow.
 
-The next bounded PR is Data Center Pursuit Workbench v0: display a synthetic/local dossier, collect structured reviewer fit reasons, and connect synthetic/local signals into a project timeline. That work must remain separately scoped and approved.
+Data Center Pursuit Workbench v0 is now the bounded local-only follow-up in this draft branch: it displays synthetic dossiers and project timelines and produces an unsigned, no-persistence structured technical-review packet. It remains `NOT_PRODUCTION_EVIDENCE`, keeps Issue #165 `HOLD`, and does not establish production or human workflow readiness. The next decision after this draft is human product review against the review guide; further implementation or any production proof remains separately scoped and approved.

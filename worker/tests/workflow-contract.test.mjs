@@ -203,6 +203,16 @@ test('CI runs claim audit, spec-fit evaluation, and focused tests before lead re
   assert.doesNotMatch(workflow, /secrets\./);
 });
 
+test('CI runs deterministic local-only Pursuit Workbench tests and evaluation before lead replay', async () => {
+  const workflow = await readFile(ciWorkflowPath, 'utf8');
+  const pkg = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+  assert.equal(pkg.scripts['demo:pursuit-workbench'], 'node pursuit-workbench/server.mjs');
+  assert.equal(pkg.scripts['test:pursuit-workbench'], 'node --test tests/pursuit-workbench-*.test.js');
+  assert.equal(pkg.scripts['eval:pursuit-workbench'], 'node scripts/evaluate-pursuit-workbench.mjs --json --repeat 2');
+  assert.equal(pkg.scripts['test:pursuit-workbench:e2e'], 'node --test pursuit-workbench/e2e/pursuit-workbench.e2e.test.mjs');
+  assert.match(workflow, /run:\s+npm run test:claim-spec-fit[\s\S]*run:\s+npm run test:pursuit-workbench[\s\S]*run:\s+npm run eval:pursuit-workbench[\s\S]*run:\s+npm run check:lead-pipeline-replay/);
+});
+
 test('CI workflow runs the local-only Worker E2E smoke after full tests', async () => {
   const workflow = await readFile(ciWorkflowPath, 'utf8');
 
@@ -210,6 +220,11 @@ test('CI workflow runs the local-only Worker E2E smoke after full tests', async 
   assert.match(workflow, /name:\s+Install Playwright Chromium\s+run:\s+npx playwright install --with-deps chromium/);
   assert.match(workflow, /run:\s+npm test[\s\S]*run:\s+npm run test:e2e:local/);
   assert.match(workflow, /run:\s+npx playwright install --with-deps chromium[\s\S]*run:\s+npm run test:e2e:local/);
+});
+
+test('CI workflow runs the local-only Pursuit Workbench E2E after Chromium installation', async () => {
+  const workflow = await readFile(ciWorkflowPath, 'utf8');
+  assert.match(workflow, /run:\s+npx playwright install --with-deps chromium[\s\S]*run:\s+npm run test:e2e:local[\s\S]*name:\s+Run local-only Pursuit Workbench E2E\s+run:\s+npm run test:pursuit-workbench:e2e/);
 });
 
 test('package exposes a local-only Level 1 regression gate', async () => {

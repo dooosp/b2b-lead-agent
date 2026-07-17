@@ -247,14 +247,70 @@ function runScenario(scenario, inputs) {
   throw new Error(`Unsupported scenario kind: ${scenario.kind}`);
 }
 
+export function assertCanonicalSpecFitFixture(fixture) {
+  if (!fixture
+    || fixture.schemaVersion !== 'datacenter-spec-fit-fixtures-v0'
+    || fixture.boundary !== 'NOT_PRODUCTION_EVIDENCE'
+    || fixture.productionReady !== false
+    || fixture.synthetic !== true
+    || typeof fixture.evaluationAsOf !== 'string'
+    || !Array.isArray(fixture.scenarios)
+    || !Array.isArray(fixture.scenarioOrder)
+    || fixture.scenarios.length !== 30
+    || fixture.scenarioOrder.length !== 30) {
+    throw new ClaimValidationError('SPEC_FIT_FIXTURE_INVENTORY_INVALID', '$.fixture');
+  }
+  const scenarioIds = fixture.scenarios.map((scenario) => scenario?.id);
+  if (scenarioIds.some((id) => typeof id !== 'string' || !/^[a-z0-9_]{1,64}$/.test(id))) {
+    throw new ClaimValidationError('SPEC_FIT_FIXTURE_ID_INVALID', '$.fixture.scenarios');
+  }
+  if (new Set(scenarioIds).size !== scenarioIds.length || new Set(fixture.scenarioOrder).size !== fixture.scenarioOrder.length) {
+    throw new ClaimValidationError('SPEC_FIT_FIXTURE_ID_DUPLICATE', '$.fixture');
+  }
+  const ordered = [...fixture.scenarioOrder].sort(compareAscii);
+  const declared = [...scenarioIds].sort(compareAscii);
+  if (canonicalStringify(ordered) !== canonicalStringify(declared)) {
+    throw new ClaimValidationError('SPEC_FIT_FIXTURE_ORDER_MISMATCH', '$.fixture.scenarioOrder');
+  }
+  return true;
+}
+
+export function materializeSpecFitScenario({ scenarioId, fixture, rawRegistry, verticalPack }) {
+  assertCanonicalSpecFitFixture(fixture);
+  if (rawRegistry?.evaluationAsOf !== fixture.evaluationAsOf) {
+    throw new ClaimValidationError('SPEC_FIT_CONTROLLED_CLOCK_MISMATCH', '$.rawRegistry.evaluationAsOf');
+  }
+  if (typeof scenarioId !== 'string' || !/^[a-z0-9_]{1,64}$/.test(scenarioId)) {
+    throw new ClaimValidationError('SPEC_FIT_SCENARIO_ID_INVALID', '$.scenarioId');
+  }
+  const scenario = fixture.scenarios.find((item) => item.id === scenarioId);
+  if (!scenario) throw new ClaimValidationError('MISSING_SCENARIO', `$.fixture.scenarios.${scenarioId}`);
+  if (scenario.kind !== 'FIT') throw new ClaimValidationError('WORKBENCH_FIT_SCENARIO_REQUIRED', `$.fixture.scenarios.${scenarioId}`);
+  const execution = runFitVariant(scenario.variant, rawRegistry, verticalPack);
+  const evaluation = evaluateSpecificationFit(execution.input, execution.registry, verticalPack);
+  const observed = summarizeEvaluation(evaluation, { aggregate: scenario.variant === 'MULTI_FAMILY' });
+  if (canonicalStringify(observed) !== canonicalStringify(scenario.expected)) {
+    throw new ClaimValidationError('SPEC_FIT_SCENARIO_DRIFT', `$.fixture.scenarios.${scenarioId}`);
+  }
+  const dossier = buildPursuitDossier(execution.input, evaluation, execution.registry, verticalPack);
+  return {
+    scenario: clone(scenario),
+    expected: clone(scenario.expected),
+    observed,
+    opportunity: execution.input,
+    registry: execution.registry,
+    evaluation,
+    dossier,
+    dossierHashes: dossierHashes(dossier)
+  };
+}
+
 function basisPoints(numerator, denominator) {
   return denominator === 0 ? 10_000 : Math.round((numerator * 10_000) / denominator);
 }
 
 export function evaluateSpecFitSuite({ fixture, rawRegistry, verticalPack, aliases, inventory }) {
-  if (!fixture.synthetic || fixture.scenarios.length !== 30 || fixture.scenarioOrder.length !== 30) {
-    throw new ClaimValidationError('SPEC_FIT_FIXTURE_INVENTORY_INVALID', '$.fixture');
-  }
+  assertCanonicalSpecFitFixture(fixture);
   const scenariosById = new Map(fixture.scenarios.map((scenario) => [scenario.id, scenario]));
   const scenarioResults = [];
   let fitTraceabilityTotal = 0;

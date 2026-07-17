@@ -40,6 +40,12 @@ jobs:
       - name: Run focused claim and specification-fit tests
         run: npm run test:claim-spec-fit
 
+      - name: Run local-only Pursuit Workbench domain tests
+        run: npm run test:pursuit-workbench
+
+      - name: Evaluate local-only Pursuit Workbench scenarios
+        run: npm run eval:pursuit-workbench
+
       - name: Run lead pipeline fixture replay artifact contract
         run: npm run check:lead-pipeline-replay
 
@@ -60,3 +66,6 @@ jobs:
 
       - name: Run local-only Worker E2E smoke
         run: npm run test:e2e:local
+
+      - name: Run local-only Pursuit Workbench E2E
+        run: npm run test:pursuit-workbench:e2e
