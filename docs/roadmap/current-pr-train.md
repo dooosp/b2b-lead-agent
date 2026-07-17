@@ -5,7 +5,7 @@ This document summarizes the May 2026 PR train, stale PR disposition, and next w
 Evidence baseline:
 
 - Repo default branch: `master`
-- Latest audited source-of-truth `origin/master`: `1b53aabf917e790d6c05db311c0810b4b3807d95` (PR #197)
+- Latest audited source-of-truth `origin/master`: `19ca3d31c771bd59ae89699f930737a43311b93f` (PR #203)
 - Evidence collected from GitHub PR/issue metadata, PR bodies, current
   `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`,
   `docs/d1-schema-drift-hardening.md`, and `docs/architecture/*.md`
@@ -13,6 +13,10 @@ Evidence baseline:
 - Post-PR193 scope extension: PR #194 source-of-truth sync, PR #195 test-only
   P0 characterization, PR #196 LeadBrief publishing hardening, and PR #197 D1
   snapshot/migration plus bounded published-artifact read contracts.
+- Post-PR197 scope extension: PR #198 source-of-truth sync, PR #199 Worker
+  outbound HTTP/SSRF hardening, PR #200 protected reviewer PWA cache hardening,
+  PR #201 Lead PATCH CAS and monotonic callback hardening, and PRs #202-#203
+  typed atomic publication, recovery, consumer, and notification hardening.
 - Current owner-input response processing: Issues #162, #163, #164, #165, and #154 now have scoped owner confirmations processed as docs-planning `COMPLETE`. Issue #165 explicitly keeps production proof execution unapproved until a separate explicit future proof goal. Production reviewer workflow remains `BLOCKED`.
 - Production actions performed for this synthesis: none
 
@@ -317,11 +321,17 @@ Option A manual review notes update: PR #119 added the plan-only implementation 
 | [#195](https://github.com/dooosp/b2b-lead-agent/pull/195) | P0 trust and security boundary characterization | Added local-only characterization tests for unsafe publishing/history behavior, legacy D1 migration, current/history ordering, Worker outbound network, protected reviewer PWA cache, and concurrent PATCH/callback behavior without runtime fixes or production claims. |
 | [#196](https://github.com/dooosp/b2b-lead-agent/pull/196) | LeadBrief publishing contract hardening | Projected untrusted candidate fields through the public LeadBrief allowlist, bound verification to canonical fresh evidence, made identity/status/timestamps system-owned, and failed closed on malformed history without production action. |
 | [#197](https://github.com/dooosp/b2b-lead-agent/pull/197) | D1 snapshot and migration contracts | Replaced request-path DDL with an exact versioned manifest and read-only readiness checks, added a marked local/test-only migration simulator, atomically replaced typed snapshot heads/entries while joining reviewer-owned fields through bounded overlays, and added structure/memory-bounded remote JSON reads while preserving production/staging HOLD. |
+| [#198](https://github.com/dooosp/b2b-lead-agent/pull/198) | Post-PR197 source-of-truth sync | Synced source-of-truth and production-boundary docs after PR #197 without production/staging action. |
+| [#199](https://github.com/dooosp/b2b-lead-agent/pull/199) | Worker outbound HTTP/SSRF hardening | Added a bounded redirect-aware outbound policy with public A/AAAA validation, content-type/body limits, and one request deadline, closing all eight scoped network TODOs. |
+| [#200](https://github.com/dooosp/b2b-lead-agent/pull/200) | Protected reviewer PWA cache hardening | Made reviewer HTML private/no-store and network-only, restricted Service Worker caching to the public manifest, removed legacy caches, and closed all five scoped cache TODOs. |
+| [#201](https://github.com/dooosp/b2b-lead-agent/pull/201) | Lead PATCH CAS and monotonic callbacks | Added compare-and-swap Lead writes, atomic mutation side effects, callback payload idempotency, provider-attempt ordering, and terminal absorption, closing the five remaining concurrency TODOs. |
+| [#202](https://github.com/dooosp/b2b-lead-agent/pull/202) | Atomic publication and notification-safe baseline | Added typed pipeline results, immutable manifest-selected publication, exact Git staging and verified push, notification after publication, explicit retry semantics, and workflow serialization. |
+| [#203](https://github.com/dooosp/b2b-lead-agent/pull/203) | Atomic publication recovery and consumer hardening | Hardened recovery, manifest-primary Worker consumers, commit/path/byte ownership, repository-wide notification identity locks, producer/consumer budgets, callback credential scope, and exact validated-commit push behavior. |
 
 ## Immediate Merge Queue
 
 At this source-of-truth sync preflight, PR #119 through PR #153 plus PR #155
-through PR #197 are merged into `master`. PR #178 added the local-only Level 1
+through PR #203 are merged into `master`. PR #178 added the local-only Level 1
 operator rehearsal gate, PR #179 added axios audit triage, and PR #180 added
 outbound HTTP enrichment boundary guards. PR #181 added the local-only
 enrichment fixture replay output contract. PR #182 added the local-only lead
@@ -338,9 +348,11 @@ without production/staging action. PR #192 synced source-of-truth docs after PR
 #191. PR #193 added the local/test-safe Reviewer Workflow Boundary Audit v1 gate
 without production/staging action. PR #194 synced source-of-truth docs, PR #195
 recorded six test-only P0 characterization lanes, PR #196 hardened LeadBrief
-publication, and PR #197 hardened D1 snapshots/migrations plus bounded remote
-artifact reads. No additional feature PR is required before this
-source-of-truth sync branch.
+publication, PR #197 hardened D1 snapshots/migrations plus bounded remote
+artifact reads, PR #198 synced source of truth, PRs #199-#201 closed the
+remaining network/cache/concurrency lanes, and PRs #202-#203 added and hardened
+typed atomic publication plus notification-safe behavior. No additional
+feature PR is required before this source-of-truth sync branch.
 The active Privacy Owner Input
 tracking issue is [Issue #154](https://github.com/dooosp/b2b-lead-agent/issues/154),
 status `OPEN`. PR #157 recorded `COMPLETE_FOR_CONSERVATIVE_POLICY`; the later
@@ -579,7 +591,7 @@ NONE_APPROVED_FOR_EXECUTION_NOW`. Production reviewer workflow remains
 `BLOCKED`, `PRODUCTION_PROOF` remains `HOLD`, and `NEXT_DECISION` remains
 `HOLD_PENDING_NEW_EXPLICIT_GOAL`.
 
-Post-PR197 source-of-truth update: PR #185 merged the local/test-only Level 1
+Post-PR203 source-of-truth update: PR #185 merged the local/test-only Level 1
 post-approval decision simulator at
 `134034dcb1744e5bdc2582a1c116575c668b4c0b`. PR #186 then merged the
 reviewer-note renderer / replay CLI helper refactor plus audit dependency patch
@@ -599,7 +611,16 @@ docs at `8065581cb3756b90783b64115d4b09945d2f9c23`. PR #195 added test-only P0
 characterization at `5a4f0eec95f8d4e87ee663987d264caea96666b4`. PR #196
 hardened LeadBrief publication at `09aa3d7b991d4eb20bce822ce69e74044d66dfab`.
 PR #197 hardened D1 snapshot/migration and bounded published-artifact read
-contracts at `1b53aabf917e790d6c05db311c0810b4b3807d95`. The PR
+contracts at `1b53aabf917e790d6c05db311c0810b4b3807d95`. PR #198 synced that source of
+truth at `4ec9e58d8da760653ffb50148c4f59cfbc58e5fa`. PRs #199-#201 remediated the
+remaining network/cache/concurrency characterization lanes at
+`4a9054badf329023950747394e96f7aa7634d23b`,
+`5d9208234bd07d57044a433a558aa0e12bf62f8b`, and
+`88fa3ba7bbcd12b95e97ef45c7bb9ccb73e50eb1`. PR #202 established typed atomic
+publication and notification-safe workflow behavior at
+`a180e751ecd7ee98cedcbd146beaf99d90c88904`; PR #203 hardened recovery,
+manifest-aware consumers, notification identity, and exact validated-commit
+push behavior at `19ca3d31c771bd59ae89699f930737a43311b93f`. The PR
 #188 records are archival only and do not create current execution authority.
 The latest Issue #165
 execution attempt remains `HOLD` because the machine-checkable approval request
@@ -632,11 +653,14 @@ production/staging execution, production D1, real auth/session,
 retention/privacy enforcement, generated suggestion persistence/export/history/
 attribution, or closure of Issues #165/#162/#163/#164/#154.
 
-Post-PR197 trust, publication, and D1 update:
+Post-PR203 trust, publication, D1, network, cache, and concurrency update:
 
 - PR #195 is test-only characterization, not remediation. PR #196 closes the
-  scoped LeadCandidate-to-LeadBrief publication lane, and PR #197 closes the
-  scoped legacy D1 migration/current-history snapshot lanes.
+  scoped LeadCandidate-to-LeadBrief publication lane, PR #197 closes the
+  scoped legacy D1 migration/current-history snapshot lanes, and PRs #199-#201
+  close all 18 remaining outbound-network, protected-cache, and
+  concurrency/callback TODOs. PRs #202-#203 close the scoped cross-artifact
+  atomic publication and notification-ordering gap.
 - All Worker request paths issue no DDL; D1-backed access paths perform exact
   read-only cold-binding readiness checks and cache only success. The checked-in
   migration runner is a local SQLite simulator that requires the explicit
@@ -645,12 +669,9 @@ Post-PR197 trust, publication, and D1 update:
   requires separately approved target inventory, versioned Wrangler migration
   files and exact commands, migration-before-runtime ordering, rollback owner,
   stop conditions, and redacted evidence.
-- PR #197 is `NOT_PRODUCTION_EVIDENCE`; `productionReady:false`; production and
-  staging remain `HOLD`. The remaining PR #195 characterization lanes are
-  Worker outbound network/SSRF, protected reviewer PWA cache, and concurrent
-  PATCH/callback state behavior: 18 desired-contract TODOs at the PR #197
-  baseline. They are local hardening follow-ups and do not create production
-  authority.
+- PRs #197-#203 are `NOT_PRODUCTION_EVIDENCE`; `productionReady:false`;
+  production and staging remain `HOLD`. Their executable local/test contracts
+  do not create production authority.
 - Existing Issue #162/#154/#163/#164 records are docs-planning input only and
   may be reconfirmed in parallel for an exact future SHA/target. Before D1
   inventory, Issue #163 needs a fresh command/table/output-field allowlist for

@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
-> Status: current hardening source of truth for `master` as of 2026-07-14.
-> Audited against first-parent `master` history through `1b53aabf917e790d6c05db311c0810b4b3807d95` (PR #197, D1 snapshot and migration contracts) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input and non-production gates through PR #185, refactor/source-of-truth work through PR #190, Reviewer Workflow Intelligence and boundary audit through PR #193, the post-PR193 source-of-truth sync in PR #194, test-only P0 characterization in PR #195, LeadBrief publication hardening in PR #196, and explicit D1 snapshot/migration hardening in PR #197. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
+> Status: current hardening source of truth for `master` as of 2026-07-17.
+> Audited against first-parent `master` history through `19ca3d31c771bd59ae89699f930737a43311b93f` (PR #203, atomic publication recovery and consumer hardening) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input and non-production gates through PR #185, refactor/source-of-truth work through PR #190, Reviewer Workflow Intelligence and boundary audit through PR #193, the post-PR193 source-of-truth sync in PR #194, test-only P0 characterization in PR #195, LeadBrief publication hardening in PR #196, D1 snapshot/migration hardening in PR #197, the post-PR197 sync in PR #198, Worker outbound and protected-cache remediation in PRs #199-#200, concurrency/callback hardening in PR #201, and atomic publication/notification hardening in PRs #202-#203. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -75,6 +75,12 @@
 | 65 | 2026-07-11 | #195 | `5a4f0ee` | P0 trust and security boundary characterization | Added deterministic local-only characterization tests for publishing, legacy D1 migration, current/history ordering, outbound network, protected PWA cache, and concurrent mutation behavior without changing runtime behavior or claiming remediation |
 | 66 | 2026-07-11 | #196 | `09aa3d7` | LeadBrief publishing contract hardening | Projected untrusted LeadCandidate data through the public LeadBrief allowlist, bound verification to canonical fresh evidence, rejected invalid scores and source schemes, made identity/status/timestamps system-owned, and failed closed on malformed lead history without production action |
 | 67 | 2026-07-14 | #197 | `1b53aab` | D1 snapshot and migration contracts | Replaced request-path DDL with an exact versioned manifest and read-only D1 readiness checks, added a marked local/test-only migration simulator, atomically replaced typed snapshot heads/entries while joining reviewer-owned fields through bounded overlays, and added structure/memory-bounded remote artifact reads while keeping staging/production HOLD |
+| 68 | 2026-07-14 | #198 | `4ec9e58` | Post-PR197 source-of-truth sync | Synced source-of-truth and production-boundary docs after PR #197 without production/staging action |
+| 69 | 2026-07-14 | #199 | `4a9054b` | Worker outbound HTTP/SSRF hardening | Centralized Worker enrichment fetches behind a bounded redirect-aware outbound policy with public A/AAAA validation, content-type and body limits, and one request deadline, closing all eight scoped characterization TODOs |
+| 70 | 2026-07-15 | #200 | `5d92082` | Protected reviewer PWA cache hardening | Made protected reviewer HTML private/no-store and network-only, limited Service Worker caching to the public manifest, removed legacy caches, and closed all five scoped cache TODOs |
+| 71 | 2026-07-15 | #201 | `88fa3ba` | Lead PATCH CAS and monotonic callbacks | Added `version` / `expectedVersion` compare-and-swap writes, atomic side effects, callback payload idempotency, provider-attempt ordering, and terminal absorption, closing the five remaining concurrency TODOs |
+| 72 | 2026-07-15 | #202 | `a180e75` | Atomic publication and notification-safe baseline | Added typed pipeline state/outcomes, immutable manifest-selected publication, exact Git staging and verified push, post-publication notification, retry semantics, workflow serialization, and failure-injection coverage |
+| 73 | 2026-07-17 | #203 | `19ca3d3` | Atomic publication recovery and consumer hardening | Hardened transaction recovery, manifest-primary Worker consumers, commit/path/byte ownership, repository-wide notification identity locking, producer/consumer budgets, callback credential scope, and exact validated-commit push behavior |
 
 Post-PR177 update: PR #171 merged at
 `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` with non-production
@@ -115,7 +121,7 @@ auth/session/provider parsing, Cloudflare Access calls, CRM/outreach, LLM,
 automation, rollback execution, destructive data action, or generated
 suggestion persistence/export/history/attribution.
 
-Post-PR197 source-of-truth update: PR #187 merged the post-PR186
+Post-PR203 source-of-truth update: PR #187 merged the post-PR186
 source-of-truth sync at `c7da118376df889edf5c47ba508fc4f817535ed0`.
 PR #188 then merged archival PR #12 root-cycle merge and Wave 2 bootstrap
 execution/status records at `55953593088e292f9561e6c3570eae2e29a90ca3`.
@@ -132,7 +138,16 @@ added test-only P0 trust/security characterization at
 `5a4f0eec95f8d4e87ee663987d264caea96666b4`. PR #196 hardened the public
 LeadBrief publication contract at `09aa3d7b991d4eb20bce822ce69e74044d66dfab`.
 PR #197 hardened D1 snapshot, migration, and published-artifact read contracts
-at `1b53aabf917e790d6c05db311c0810b4b3807d95`. The PR #188 records remain
+at `1b53aabf917e790d6c05db311c0810b4b3807d95`. PR #198 synced that source of
+truth at `4ec9e58d8da760653ffb50148c4f59cfbc58e5fa`. PRs #199-#201 closed the
+remaining outbound-network, protected-cache, and concurrency/callback
+characterization lanes at `4a9054badf329023950747394e96f7aa7634d23b`,
+`5d9208234bd07d57044a433a558aa0e12bf62f8b`, and
+`88fa3ba7bbcd12b95e97ef45c7bb9ccb73e50eb1`. PR #202 established typed atomic
+publication and notification-safe workflow behavior at
+`a180e751ecd7ee98cedcbd146beaf99d90c88904`; PR #203 hardened recovery,
+manifest-aware consumers, notification identity, and the exact Git commit push
+boundary at `19ca3d31c771bd59ae89699f930737a43311b93f`. The PR #188 records remain
 historical execution artifacts only; they do not replace this file,
 `docs/roadmap/current-pr-train.md`, or production-proof boundary docs as current
 source of truth. Production actions performed: none.
@@ -714,10 +729,12 @@ production-readiness claims.
 - No new unresolved Wave 1 to Wave 3 runtime or worker blocker was verified during this docs refresh.
 - PR #196 remediated the scoped LeadCandidate publication characterization and
   PR #197 remediated the scoped legacy D1 migration/current-history snapshot
-  characterizations from PR #195. PR #195's Worker outbound network/SSRF,
-  protected reviewer PWA cache, and concurrent PATCH/callback characterization
-  lanes retain 18 desired-contract TODOs at the PR #197 baseline; they remain
-  open local hardening work, and characterization is not remediation.
+  characterizations from PR #195. PRs #199-#201 remediated the remaining
+  Worker outbound network/SSRF, protected reviewer PWA cache, and concurrent
+  PATCH/callback lanes; all 18 desired-contract TODOs from those three lanes are
+  now executable passing coverage. PRs #202-#203 additionally close the scoped
+  cross-artifact atomic publication and notification-ordering gap. These remain
+  local/test contracts, not production evidence.
 - No new unresolved PR #27 LeadBrief v1 blocker was verified during this docs refresh.
 - No new unresolved PR #36-#51 route/data/schema/auth/evidence blocker was verified during this docs refresh.
 - Operator cleanup status:
@@ -729,12 +746,10 @@ production-readiness claims.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step: no mandatory staging or production action follows this
   source-of-truth sync. The stable operational default is truthful `HOLD`/no-op.
-- Recommended next local/test hardening lane, if a new goal is selected: recut
-  PR #195's Worker outbound network/SSRF and protected reviewer PWA cache
-  characterization TODOs into narrowly scoped policy/remediation work. Follow
-  separately with concurrent PATCH/callback CAS, idempotency, and monotonic
-  transition hardening. PR #197's missing application-level remote-read
-  deadline is an additional bounded-reader follow-up candidate.
+- No mandatory local hardening action follows PR #203. If a new bounded goal is
+  selected, the remaining application-level remote-read deadline identified in
+  PR #197 is a candidate; real auth/RBAC/privacy implementation and production
+  proof remain separately approval-gated goals.
 - Issues #162, #154, #163, and #164 are complete for docs planning only; those
   records may be reconfirmed in parallel for an exact future SHA/target and do
   not authorize execution. Before any D1 inventory, Issue #163 must receive a
