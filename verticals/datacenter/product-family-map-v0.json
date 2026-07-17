@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "datacenter-product-family-map-v0",
+  "verticalId": "datacenter_infrastructure",
+  "synthetic": false,
+  "mappingsAreVerifiedCapabilities": false,
+  "families": [
+    { "id": "hvac_drive", "displayNameKo": "HVAC 드라이브", "displayNameEn": "HVAC Drive", "profileMappings": [{ "profileId": "danfoss", "aliases": ["VLT HVAC Drive", "HVAC 인버터"], "mappingBasis": "PROFILE_DECLARED_UNVERIFIED" }] },
+    { "id": "oil_free_compressor", "displayNameKo": "오일프리 컴프레서", "displayNameEn": "Oil-free Compressor", "profileMappings": [{ "profileId": "danfoss", "aliases": ["Turbocor 컴프레서"], "mappingBasis": "EXPLICIT_PROFILE_MAPPING_UNVERIFIED" }] },
+    { "id": "medium_voltage_switchgear", "displayNameKo": "중전압 개폐장치", "displayNameEn": "Medium-voltage Switchgear", "profileMappings": [{ "profileId": "ls-electric", "aliases": ["GSIS 가스절연개폐장치"], "mappingBasis": "CAPABILITY_INFERENCE_UNVERIFIED" }] },
+    { "id": "transformer", "displayNameKo": "변압기", "displayNameEn": "Transformer", "profileMappings": [{ "profileId": "ls-electric", "aliases": ["MV 변압기"], "mappingBasis": "CAPABILITY_INFERENCE_UNVERIFIED" }] },
+    { "id": "energy_storage", "displayNameKo": "에너지저장장치", "displayNameEn": "Energy Storage", "profileMappings": [{ "profileId": "ls-electric", "aliases": ["ESS(에너지저장장치)"], "mappingBasis": "CAPABILITY_INFERENCE_UNVERIFIED" }] },
+    { "id": "power_quality", "displayNameKo": "전력품질", "displayNameEn": "Power Quality", "profileMappings": [{ "profileId": "ls-electric", "aliases": ["STATCOM", "SVC", "전력품질 솔루션"], "mappingBasis": "CAPABILITY_INFERENCE_UNVERIFIED" }] },
+    { "id": "building_management", "displayNameKo": "빌딩관리시스템", "displayNameEn": "Building Management System", "profileMappings": [{ "profileId": "siemens", "aliases": ["Desigo CC", "Building X", "APOGEE", "Climatix"], "mappingBasis": "PROFILE_SIGNAL_INFERENCE_UNVERIFIED" }] },
+    { "id": "energy_analytics", "displayNameKo": "에너지 분석", "displayNameEn": "Energy Analytics", "profileMappings": [{ "profileId": "siemens", "aliases": ["Energy Analytics", "Building Performance"], "mappingBasis": "CAPABILITY_INFERENCE_UNVERIFIED" }] },
+    { "id": "fire_detection", "displayNameKo": "화재감지", "displayNameEn": "Fire Detection", "profileMappings": [{ "profileId": "siemens", "aliases": ["Cerberus PRO", "Sinteso", "FC726 화재감지기"], "mappingBasis": "CAPABILITY_INFERENCE_UNVERIFIED" }] },
+    { "id": "physical_security", "displayNameKo": "물리 보안", "displayNameEn": "Physical Security", "profileMappings": [{ "profileId": "siemens", "aliases": ["Siveillance", "Access Control", "Video Surveillance"], "mappingBasis": "CAPABILITY_INFERENCE_UNVERIFIED" }] }
+  ]
+}

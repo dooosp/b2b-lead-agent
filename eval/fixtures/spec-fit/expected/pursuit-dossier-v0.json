@@ -1,0 +1,116 @@
+{
+  "assumptions": [],
+  "blockedClaims": [],
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "candidateProductFamilyIds": [
+    "oil_free_compressor"
+  ],
+  "conflictingClaims": [],
+  "customerUsableClaims": [
+    {
+      "applicability": "datacenter_infrastructure / project",
+      "claimId": "clm_759dea12d905d24335655fb708b061d85f1c0d113c539b439751e9b9e6042b7b",
+      "directQuote": "The project has entered basic design.",
+      "sourceTitle": "Synthetic Project Stage Record",
+      "sourceUrl": "https://synthetic.example/projects/alpha-stage",
+      "statement": "Synthetic DC Alpha is in basic design.",
+      "verifiedAt": "2026-03-01T00:00:00.000Z"
+    },
+    {
+      "applicability": "datacenter_infrastructure / oil_free_compressor",
+      "claimId": "clm_b175146fb8a919b0bed0827ae3023f5838c542141c51d888b211a400a52bc94d",
+      "directQuote": "The cooling plant architecture shall be water cooled.",
+      "sourceTitle": "Synthetic Cooling Basis of Design",
+      "sourceUrl": "https://synthetic.example/projects/alpha-cooling",
+      "statement": "The synthetic cooling package requires a water-cooled architecture.",
+      "verifiedAt": "2026-03-01T00:00:00.000Z"
+    },
+    {
+      "applicability": "datacenter_infrastructure / oil_free_compressor",
+      "claimId": "clm_c514c05eb98ec56564831735a04972d7a910d71e37aac80936bfbb4efd27fdc4",
+      "directQuote": "The synthetic compressor is designed for water-cooled systems.",
+      "sourceTitle": "Synthetic Compressor Datasheet",
+      "sourceUrl": "https://synthetic.example/products/compressor-water",
+      "statement": "The synthetic compressor family supports water-cooled architecture.",
+      "verifiedAt": "2026-03-01T00:00:00.000Z"
+    }
+  ],
+  "decision": {
+    "decisionScope": "TECHNICAL_FIT_AND_SPEC_WINDOW_ONLY",
+    "finalHumanPursuitDecision": "NOT_MADE",
+    "holdProductFamilyIds": [],
+    "noGoProductFamilyIds": [],
+    "pursueProductFamilyIds": [
+      "oil_free_compressor"
+    ],
+    "technicalPursuitState": "PURSUE"
+  },
+  "explicitNonClaims": [
+    "No final commercial pursuit decision was made.",
+    "Pricing, availability, delivery lead time, budget, procurement access, competitive position, and win probability were not evaluated.",
+    "No outreach, deployment, production access, or automatic approval was performed."
+  ],
+  "issue165Status": "HOLD",
+  "missingTechnicalRequirements": [],
+  "opportunity": {
+    "accountDisplayName": "Synthetic Metro Compute",
+    "facilityDisplayName": "Alpha DC",
+    "jurisdiction": "KR",
+    "opportunityId": "syn_dc_alpha",
+    "projectDisplayName": "Campus Alpha Phase 1",
+    "verticalId": "datacenter_infrastructure"
+  },
+  "productionReady": false,
+  "projectFacts": [
+    {
+      "claimId": "clm_759dea12d905d24335655fb708b061d85f1c0d113c539b439751e9b9e6042b7b",
+      "statement": "Synthetic DC Alpha is in basic design."
+    },
+    {
+      "claimId": "clm_b175146fb8a919b0bed0827ae3023f5838c542141c51d888b211a400a52bc94d",
+      "statement": "The synthetic cooling package requires a water-cooled architecture."
+    }
+  ],
+  "projectStage": {
+    "claimIds": [
+      "clm_759dea12d905d24335655fb708b061d85f1c0d113c539b439751e9b9e6042b7b"
+    ],
+    "value": "BASIC_DESIGN"
+  },
+  "recommendedTechnicalQuestions": [],
+  "reviewerNextAction": {
+    "primary": "READY_FOR_TECHNICAL_REVIEW",
+    "scopedActions": []
+  },
+  "schemaVersion": "pursuit-dossier-v0",
+  "specificationFitMatrix": [
+    {
+      "capabilityClaimIds": [
+        "clm_c514c05eb98ec56564831735a04972d7a910d71e37aac80936bfbb4efd27fdc4"
+      ],
+      "matchedRequirementIds": [
+        "req_cooling_architecture"
+      ],
+      "missingRequirementIds": [],
+      "productFamilyId": "oil_free_compressor",
+      "projectClaimIds": [
+        "clm_b175146fb8a919b0bed0827ae3023f5838c542141c51d888b211a400a52bc94d"
+      ],
+      "reasonCodes": [
+        "HARD_REQUIREMENT_MATCH"
+      ],
+      "result": "FIT",
+      "specificationWindow": {
+        "policyId": "oil_free_compressor_window_v0",
+        "reasonCodes": [
+          "SPEC_WINDOW_OPEN"
+        ],
+        "stageClaimIds": [
+          "clm_759dea12d905d24335655fb708b061d85f1c0d113c539b439751e9b9e6042b7b"
+        ],
+        "state": "OPEN"
+      }
+    }
+  ],
+  "synthetic": true
+}
