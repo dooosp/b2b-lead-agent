@@ -201,11 +201,30 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   automation was performed.
   PR #196 remediated the scoped publishing characterization and PR #197
   remediated the scoped legacy D1 migration/current-history snapshot
-  characterizations. PR #195's Worker outbound network/SSRF, protected
-  reviewer PWA cache, and concurrent PATCH/callback characterization TODOs
-  remain as 18 desired-contract TODOs at the PR #197 baseline and open local
-  hardening lanes; passing characterization tests is not a remediation or
-  production-readiness claim.
+  characterizations. PRs #199-#201 subsequently remediated all 18 remaining
+  Worker outbound network/SSRF, protected reviewer PWA cache, and concurrent
+  PATCH/callback characterization TODOs; the characterization baseline itself
+  remains only local/test evidence.
+- Post-PR203 local hardening addendum: `master` includes PR #198's post-PR197
+  source-of-truth sync at `4ec9e58d8da760653ffb50148c4f59cfbc58e5fa`,
+  PR #199's Worker outbound HTTP/SSRF hardening at
+  `4a9054badf329023950747394e96f7aa7634d23b`, PR #200's protected reviewer
+  PWA cache hardening at `5d9208234bd07d57044a433a558aa0e12bf62f8b`,
+  PR #201's Lead PATCH compare-and-swap and monotonic callback hardening at
+  `88fa3ba7bbcd12b95e97ef45c7bb9ccb73e50eb1`, PR #202's typed atomic
+  publication and notification-safe baseline at
+  `a180e751ecd7ee98cedcbd146beaf99d90c88904`, and PR #203's follow-up at
+  `19ca3d31c771bd59ae89699f930737a43311b93f`. The current local/test contract
+  validates every outbound hop before bounded reads, keeps protected reviewer
+  HTML network-only and `private, no-store`, serializes lead mutations through
+  `version` / `expectedVersion`, absorbs stale or duplicate callbacks, publishes
+  one manifest-selected immutable artifact generation, pushes the exact
+  validated Git commit, and starts notification only after verified remote
+  reachability. These PRs are repository/local/test evidence only; they do not
+  approve or perform production/staging deploy, remote D1 access or migration,
+  production endpoint/log/secret access, customer/private data use, real email
+  or callbacks, CRM/outreach/LLM automation, or production-readiness claims.
+  Issue #165 remains `HOLD`, and `productionReady:false` remains required.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -362,7 +381,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   migration-files/command workflow, target inventory, rollback owner, and stop
   conditions. No production migration or schema observation is claimed.
 - Production deploy and production DB writes were not performed during PR #25,
-  PR #26, PR #27, or the shipped PR #36-#197
+  PR #26, PR #27, or the shipped PR #36-#203
   local/test/docs/reviewer-UX/product-planning/proof-gate train.
 
 ## Canonical Repo Rules

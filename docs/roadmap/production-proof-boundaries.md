@@ -3,9 +3,10 @@
 This document records the production-proof boundary after Issue #34 and the
 Manual Review Notes v1 PR train through PR #142, the Level 1 non-production
 gate train through PR #185, the post-PR186 refactor/dependency cleanup, and
-the post-PR193 reviewer-workflow boundary audit plus PR #194-#197
-source-of-truth, P0 characterization, LeadBrief publication, and D1
-snapshot/migration contracts. It
+the post-PR193 reviewer-workflow boundary audit plus PR #194-#203
+source-of-truth, P0 characterization, LeadBrief publication, D1
+snapshot/migration, Worker outbound/cache/concurrency, and atomic publication
+contracts. It
 is a planning and safety document only; it is not production evidence.
 
 Audited repo baseline for this snapshot:
@@ -14,7 +15,7 @@ Audited repo baseline for this snapshot:
 - Previous Manual Review Notes v1 privacy-warning baseline:
   `f2ddf35e828017eec9332dc80876e50bbee2f54a` (PR #130)
 - Current source-of-truth `origin/master`:
-  `1b53aabf917e790d6c05db311c0810b4b3807d95` (PR #197)
+  `19ca3d31c771bd59ae89699f930737a43311b93f` (PR #203)
 - Issue #34 current state: closed as completed after GitHub-only closeout, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -40,10 +41,10 @@ Audited repo baseline for this snapshot:
 - Current Level 1 operator rehearsal packet:
   `docs/roadmap/b2b-lead-agent-level-1-operator-rehearsal-gate-non-production.md`
 
-Post-PR197 operating update:
+Post-PR203 operating update:
 
 - Current source-of-truth `origin/master` for this boundary update:
-  `1b53aabf917e790d6c05db311c0810b4b3807d95` (PR #197).
+  `19ca3d31c771bd59ae89699f930737a43311b93f` (PR #203).
 - PR #187 only synced source-of-truth docs after PR #186. PR #188 only tracked
   historical PR #12 root-cycle merge and Wave 2 bootstrap records as archival
   execution artifacts. PR #189 only synced source-of-truth and
@@ -53,8 +54,11 @@ Post-PR197 operating update:
   source-of-truth docs after PR #191, and PR #193 added the local/test-safe
   Reviewer Workflow Boundary Audit v1 gate. PR #194 synced source-of-truth
   docs, PR #195 added test-only P0 characterization, PR #196 hardened the
-  LeadBrief publication contract, and PR #197 hardened D1 snapshot/migration
-  and bounded published-artifact read contracts. None of these PRs approves
+  LeadBrief publication contract, PR #197 hardened D1 snapshot/migration and
+  bounded published-artifact read contracts, PR #198 synced source-of-truth,
+  PRs #199-#201 remediated Worker outbound, protected cache, and concurrent
+  mutation/callback lanes, and PRs #202-#203 added and hardened typed atomic
+  publication plus notification-safe behavior. None of these PRs approves
   production or staging action.
 - Issue #34 is closed as completed after a GitHub-only closeout approval and
   closeout record.
@@ -222,11 +226,12 @@ Post-PR197 operating update:
   summary, and prioritization boundaries. It is not production/staging proof
   and keeps `productionReady:false`.
 - PR #195 is test-only characterization and not remediation. PR #196 closes
-  only the scoped LeadCandidate-to-LeadBrief publication lane. PR #197 closes
-  only the scoped legacy D1 migration and shared current/history snapshot
-  lanes. The remaining Worker outbound network/SSRF, protected reviewer PWA
-  cache, and concurrent PATCH/callback characterization TODOs remain local
-  hardening follow-ups, not production evidence.
+  the scoped LeadCandidate-to-LeadBrief publication lane, PR #197 closes the
+  scoped legacy D1 migration and shared current/history snapshot lanes, and
+  PRs #199-#201 close all 18 remaining Worker outbound network/SSRF, protected
+  reviewer PWA cache, and concurrent PATCH/callback TODOs. PRs #202-#203 close
+  the scoped cross-artifact atomic publication and notification-ordering gap.
+  These are local/test contracts, not production evidence.
 - PR #197 supersedes historical lazy request-path migration behavior. Worker
   runtime imports no migration runner: `ensureD1Schema()` performs bounded,
   exact, read-only readiness checks and otherwise fails closed with
@@ -286,9 +291,12 @@ after PR #189 synced source-of-truth and production-boundary docs,
 `72def61e89b3c2137b13e2a3ce0bbbc58407d8ce` after PR #191 added local/test
 Reviewer Workflow Intelligence v1, and
 `1c4784338853615225d26e6c263e33389cb507fd` after PR #193 added local/test
-Reviewer Workflow Boundary Audit v1. The current baseline is
+Reviewer Workflow Boundary Audit v1. A later audited baseline was
 `1b53aabf917e790d6c05db311c0810b4b3807d95` after PR #197 added the explicit
-D1 snapshot/migration and bounded published-artifact read contracts. Any new
+D1 snapshot/migration and bounded published-artifact read contracts. The
+current baseline is `19ca3d31c771bd59ae89699f930737a43311b93f` after PRs #198-#203 synced
+source of truth, remediated the remaining network/cache/concurrency lanes, and
+added typed atomic publication plus notification-safe recovery. Any new
 production action must refresh the actual current
 `origin/master` SHA, CI metadata, owners, and approval records before
 execution. Issue #34 closeout does not authorize further production proof work.
