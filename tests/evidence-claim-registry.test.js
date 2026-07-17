@@ -109,6 +109,10 @@ test('source URL and evidence date boundaries fail closed', async () => {
     ['http://100.64.0.1/source', 'PRIVATE_SOURCE_URL_REFUSED'],
     ['http://[::1]/source', 'PRIVATE_SOURCE_URL_REFUSED'],
     ['http://[fd00::1]/source', 'PRIVATE_SOURCE_URL_REFUSED'],
+    ['http://[::ffff:172.16.0.1]/source', 'PRIVATE_SOURCE_URL_REFUSED'],
+    ['http://[::ffff:169.254.1.1]/source', 'PRIVATE_SOURCE_URL_REFUSED'],
+    ['http://[::ffff:100.64.0.1]/source', 'PRIVATE_SOURCE_URL_REFUSED'],
+    ['http://[::ffff:0.1.2.3]/source', 'PRIVATE_SOURCE_URL_REFUSED'],
     ['https://evidence.internal/source', 'PRIVATE_SOURCE_URL_REFUSED'],
     ['not a url', 'MALFORMED_SOURCE_URL']
   ]) {

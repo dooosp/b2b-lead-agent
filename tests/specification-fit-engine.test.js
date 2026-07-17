@@ -57,6 +57,27 @@ test('FIT contains exact project and capability claim traces in deterministic or
   assert.deepEqual(evaluation, domain.evaluateSpecificationFit(clone(opportunity), registry, verticalPack));
 });
 
+test('fit and window evaluation require the exact validated registry instance', async () => {
+  const { core, evaluator, domain } = await inputs();
+  const registry = core.createValidatedClaimRegistry(rawRegistry, { asOf: rawRegistry.evaluationAsOf });
+  const forgedRegistry = {
+    schemaVersion: registry.schemaVersion,
+    asOf: registry.asOf,
+    claims: clone(registry.claims),
+    byId: new Map(registry.byId),
+    byKey: new Map(registry.byKey)
+  };
+  const opportunity = evaluator.createStrongCoolingOpportunity();
+  assert.throws(
+    () => domain.evaluateSpecificationFit(opportunity, forgedRegistry, verticalPack),
+    (error) => error.code === 'UNVALIDATED_REGISTRY'
+  );
+  assert.throws(
+    () => domain.evaluateSpecificationWindow(opportunity, 'oil_free_compressor', forgedRegistry, verticalPack),
+    (error) => error.code === 'UNVALIDATED_REGISTRY'
+  );
+});
+
 test('project evidence must bind the exact semantic requirement and applicable jurisdiction', async () => {
   const { core, evaluator, domain } = await inputs();
   const registry = core.createValidatedClaimRegistry(rawRegistry, { asOf: rawRegistry.evaluationAsOf });

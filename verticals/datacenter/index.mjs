@@ -1,5 +1,6 @@
 import {
   assertSafeArtifact,
+  assertValidatedClaimRegistry,
   CLAIM_LIMITS,
   ClaimValidationError,
   canonicalStringify,
@@ -22,6 +23,7 @@ const REQUIREMENT_PRIORITIES = new Set(['HARD', 'SOFT']);
 const REQUIREMENT_VALUE_STATES = new Set(['KNOWN', 'UNKNOWN', 'CONFLICTED', 'NOT_APPLICABLE']);
 const REQUIREMENT_OPERATORS = new Set(['EQ', 'GTE', 'LTE', 'IN', 'CONTAINS_ALL', 'BETWEEN']);
 const REQUIREMENT_CATEGORIES = new Set(['electrical_power', 'cooling', 'controls_bms', 'energy_management', 'fire_detection', 'physical_security', 'commissioning']);
+const VALIDATED_FIT_EVALUATIONS = new WeakMap();
 
 const REASON_ORDER = Object.freeze([
   'PROJECT_CANCELLED',
@@ -343,6 +345,7 @@ function evaluateRequirement(requirement, productFamilyId, opportunity, registry
 }
 
 export function evaluateSpecificationWindow(opportunity, productFamilyId, registry, verticalPack) {
+  assertValidatedClaimRegistry(registry);
   const policy = verticalPack.specificationWindows?.[productFamilyId];
   if (!policy) return { state: 'UNKNOWN', reasonCodes: ['PROJECT_STAGE_UNKNOWN'], stageClaimIds: [], policyId: null };
   const stageClaims = getClaims(registry, opportunity.stage?.evidenceClaimRefs || []);
@@ -382,6 +385,7 @@ export function evaluateSpecificationWindow(opportunity, productFamilyId, regist
 }
 
 export function evaluateSpecificationFit(opportunity, registry, verticalPack) {
+  assertValidatedClaimRegistry(registry);
   validateProjectOpportunity(opportunity, verticalPack);
   const results = [];
   for (const productFamilyId of [...new Set(opportunity.candidateProductFamilyIds)].sort(compareAscii)) {
@@ -440,7 +444,13 @@ export function evaluateSpecificationFit(opportunity, registry, verticalPack) {
       return compareAscii(left.productFamilyId, right.productFamilyId);
     })
   };
-  return JSON.parse(canonicalStringify(evaluation));
+  const validatedEvaluation = JSON.parse(canonicalStringify(evaluation));
+  VALIDATED_FIT_EVALUATIONS.set(validatedEvaluation, {
+    registry,
+    opportunitySha256: sha256(opportunity),
+    evaluationSha256: sha256(validatedEvaluation)
+  });
+  return validatedEvaluation;
 }
 
 export function resolveTechnicalAlias(input, aliasPack) {
@@ -482,6 +492,14 @@ function buildDecision(evaluation) {
 }
 
 export function buildPursuitDossier(opportunity, evaluation, registry, verticalPack) {
+  assertValidatedClaimRegistry(registry);
+  const validation = evaluation && VALIDATED_FIT_EVALUATIONS.get(evaluation);
+  if (!validation
+    || validation.registry !== registry
+    || validation.opportunitySha256 !== sha256(opportunity)
+    || validation.evaluationSha256 !== sha256(evaluation)) {
+    throw new ClaimValidationError('UNVALIDATED_FIT_EVALUATION', '$.evaluation');
+  }
   const claims = referencedClaims(opportunity, evaluation, registry);
   const projectFacts = claims.filter((claim) => ['PROJECT_FACT', 'TECHNICAL_REQUIREMENT', 'PROJECT_STAGE'].includes(claim.claimType) && claim.status === 'VERIFIED')
     .map((claim) => ({ claimId: claim.claimId, statement: claim.statement }));

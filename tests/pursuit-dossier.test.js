@@ -41,6 +41,30 @@ test('JSON and Markdown dossiers are byte-stable, scoped, and provenance-complet
   assert.doesNotMatch(markdownOne, /send email now/i);
 });
 
+test('dossier accepts only an unmodified evaluation bound to its registry and opportunity', async () => {
+  const { evaluator, domain, registry } = await setup();
+  const opportunity = evaluator.createStrongCoolingOpportunity();
+  const evaluation = domain.evaluateSpecificationFit(opportunity, registry, verticalPack);
+  assert.throws(
+    () => domain.buildPursuitDossier(opportunity, clone(evaluation), registry, verticalPack),
+    (error) => error.code === 'UNVALIDATED_FIT_EVALUATION'
+  );
+
+  evaluation.results[0].result = 'NOT_FIT';
+  assert.throws(
+    () => domain.buildPursuitDossier(opportunity, evaluation, registry, verticalPack),
+    (error) => error.code === 'UNVALIDATED_FIT_EVALUATION'
+  );
+
+  const freshEvaluation = domain.evaluateSpecificationFit(opportunity, registry, verticalPack);
+  const changedOpportunity = clone(opportunity);
+  changedOpportunity.identity.projectDisplayName = 'Forged project';
+  assert.throws(
+    () => domain.buildPursuitDossier(changedOpportunity, freshEvaluation, registry, verticalPack),
+    (error) => error.code === 'UNVALIDATED_FIT_EVALUATION'
+  );
+});
+
 test('dossier ordering is stable under registry and input permutation', async () => {
   const { evaluator, domain } = await setup();
   const core = await import(path.resolve(__dirname, '../knowledge/claim-registry/index.mjs'));

@@ -156,14 +156,22 @@ function isPrivateIpv4(hostname) {
 
 function isPrivateIpv6(hostname) {
   const normalized = hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  const mappedIpv4 = (() => {
+    if (!normalized.startsWith('::ffff:')) return '';
+    const tail = normalized.slice('::ffff:'.length);
+    if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(tail)) return tail;
+    const groups = tail.match(/^([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+    if (!groups) return '';
+    const high = Number.parseInt(groups[1], 16);
+    const low = Number.parseInt(groups[2], 16);
+    return `${high >> 8}.${high & 0xff}.${low >> 8}.${low & 0xff}`;
+  })();
   return normalized === '::'
     || normalized === '::1'
     || normalized.startsWith('fc')
     || normalized.startsWith('fd')
     || /^fe[89ab]/.test(normalized)
-    || normalized.startsWith('::ffff:127.')
-    || normalized.startsWith('::ffff:10.')
-    || normalized.startsWith('::ffff:192.168.');
+    || (mappedIpv4 !== '' && isPrivateIpv4(mappedIpv4));
 }
 
 export function normalizeEvidenceUrl(value, { synthetic = false, path = '$.sourceUrl' } = {}) {
@@ -489,10 +497,15 @@ export function createValidatedClaimRegistry(rawRegistry, { asOf } = {}) {
   return frozenRegistry;
 }
 
-export function projectTrustedReferences(registry, context) {
+export function assertValidatedClaimRegistry(registry, path = '$.registry') {
   if (!registry || !VALIDATED_REGISTRIES.has(registry)) {
-    throw new ClaimValidationError('UNVALIDATED_REGISTRY', '$.registry');
+    throw new ClaimValidationError('UNVALIDATED_REGISTRY', path);
   }
+  return registry;
+}
+
+export function projectTrustedReferences(registry, context) {
+  assertValidatedClaimRegistry(registry);
   return registry.claims
     .filter((claim) => claim.claimType === 'REFERENCE_CASE')
     .map((claim) => ({ claim, customerUse: deriveCustomerUse(claim, context) }))
