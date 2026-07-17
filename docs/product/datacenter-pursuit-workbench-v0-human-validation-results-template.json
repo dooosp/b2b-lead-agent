@@ -1,0 +1,240 @@
+{
+  "schemaVersion": "datacenter-pursuit-workbench-human-validation-results-v0",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "issue165Status": "HOLD",
+  "containsRealCustomerData": false,
+  "reviewBuild": {
+    "repository": "dooosp/b2b-lead-agent",
+    "pullRequest": 206,
+    "baseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+    "headSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+    "verifiedDate": "2026-07-17",
+    "expectedPrState": "DRAFT",
+    "artifactSha256": {
+      "package-lock.json": "a14f41c200c480e20b1f3e3ef1ccedf48155e274888b4716aeb2e1b1ba4d97cc",
+      "pursuit-workbench/fixtures/datacenter-workbench-v0.json": "08ec7591cfd89d8af33a2ca613df8762c2a852d8946f36379dc0aaabfc365d41",
+      "docs/product/datacenter-pursuit-workbench-v0-review-guide.md": "3000973dab91408d6e360363872e43398228d39a88d010d21d6c5803d28b366a"
+    }
+  },
+  "thresholds": {
+    "eligibleReviewerCount": 5,
+    "independentTaskCompletionRateMinimum": 0.8,
+    "fitAgreementRateMinimum": 0.8,
+    "claimBoundarySuccessRateMinimum": 0.9,
+    "seriousMisunderstandingCountMaximum": 0,
+    "internalPursuitUsefulReviewerCountMinimum": 3,
+    "medianReviewDurationSecondsMaximum": 900,
+    "pairedBaselineCountMinimum": 3,
+    "medianTimeReductionRateMinimum": 0.3,
+    "unresolvedP0CountMaximum": 0,
+    "unresolvedP1CountMaximum": 0
+  },
+  "reviewerRoster": [
+    {
+      "reviewerId": "R1",
+      "targetRole": "INDUSTRIAL_TECHNICAL_SALES"
+    },
+    {
+      "reviewerId": "R2",
+      "targetRole": "INDUSTRIAL_TECHNICAL_SALES"
+    },
+    {
+      "reviewerId": "R3",
+      "targetRole": "APPLICATION_ENGINEER"
+    },
+    {
+      "reviewerId": "R4",
+      "targetRole": "APPLICATION_ENGINEER"
+    },
+    {
+      "reviewerId": "R5",
+      "targetRole": "TENDER_SPEC_DESIGN_SUPPORT"
+    }
+  ],
+  "scenarioCatalog": {
+    "S1": {
+      "scenarioId": "strong_verified_electrical_fit",
+      "systemOutcome": "FIT",
+      "specificationWindow": "OPEN"
+    },
+    "S2": {
+      "scenarioId": "hard_voltage_mismatch",
+      "systemOutcome": "NOT_FIT",
+      "specificationWindow": "OPEN"
+    },
+    "S3": {
+      "scenarioId": "conflicting_capability_claims",
+      "systemOutcome": "INSUFFICIENT_EVIDENCE",
+      "specificationWindow": "OPEN"
+    }
+  },
+  "taskCatalog": {
+    "T1": {
+      "scenarioIds": [
+        "strong_verified_electrical_fit"
+      ],
+      "decision": "PROJECT_STAGE_AND_EVIDENCE"
+    },
+    "T2": {
+      "scenarioIds": [
+        "strong_verified_electrical_fit"
+      ],
+      "decision": "PRODUCT_FAMILY_FIT_AND_WINDOW"
+    },
+    "T3": {
+      "scenarioIds": [
+        "hard_voltage_mismatch"
+      ],
+      "decision": "HARD_TECHNICAL_MISMATCH"
+    },
+    "T4": {
+      "scenarioIds": [
+        "strong_verified_electrical_fit",
+        "conflicting_capability_claims"
+      ],
+      "decision": "ALLOWED_AND_BLOCKED_CLAIMS"
+    },
+    "T5": {
+      "scenarioIds": [
+        "conflicting_capability_claims"
+      ],
+      "decision": "NEXT_TECHNICAL_QUESTION"
+    },
+    "T6": {
+      "scenarioIds": [
+        "conflicting_capability_claims"
+      ],
+      "decision": "STRUCTURED_REVIEW_PACKET"
+    }
+  },
+  "sessionRecordTemplate": {
+    "reviewerId": null,
+    "actualRole": null,
+    "experienceBand": null,
+    "sessionDate": null,
+    "facilitatorId": "F1",
+    "eligible": null,
+    "ineligibilityReason": null,
+    "buildShaConfirmed": false,
+    "cleanWorktreeConfirmed": false,
+    "syntheticOnlyBoundaryConfirmed": false,
+    "productionOrRealDataActionPerformed": false,
+    "taskResults": {
+      "T1": {
+        "outcome": null,
+        "timeToFirstCorrectInterpretationSeconds": null,
+        "totalTimeSeconds": null,
+        "helpGiven": null,
+        "findingIds": []
+      },
+      "T2": {
+        "outcome": null,
+        "timeToFirstCorrectInterpretationSeconds": null,
+        "totalTimeSeconds": null,
+        "helpGiven": null,
+        "fitTreatedAsCommercialApproval": null,
+        "findingIds": []
+      },
+      "T3": {
+        "outcome": null,
+        "timeToFirstCorrectInterpretationSeconds": null,
+        "totalTimeSeconds": null,
+        "helpGiven": null,
+        "findingIds": []
+      },
+      "T4": {
+        "outcome": null,
+        "timeToFirstCorrectInterpretationSeconds": null,
+        "totalTimeSeconds": null,
+        "helpGiven": null,
+        "allowedClaimCheckPassed": null,
+        "blockedClaimCheckPassed": null,
+        "favorableConflictedValueSelected": null,
+        "findingIds": []
+      },
+      "T5": {
+        "outcome": null,
+        "timeToFirstCorrectInterpretationSeconds": null,
+        "totalTimeSeconds": null,
+        "helpGiven": null,
+        "technicalQuestionUsefulness": null,
+        "findingIds": []
+      },
+      "T6": {
+        "outcome": null,
+        "timeToFirstCorrectInterpretationSeconds": null,
+        "totalTimeSeconds": null,
+        "helpGiven": null,
+        "packetUnderstoodAsLocalNotSaved": null,
+        "packetUnderstoodAsNotSentOrApproved": null,
+        "findingIds": []
+      }
+    },
+    "scenarioJudgments": [
+      {
+        "scenarioId": "strong_verified_electrical_fit",
+        "reviewerOutcome": null,
+        "exactAgreement": null
+      },
+      {
+        "scenarioId": "hard_voltage_mismatch",
+        "reviewerOutcome": null,
+        "exactAgreement": null
+      },
+      {
+        "scenarioId": "conflicting_capability_claims",
+        "reviewerOutcome": null,
+        "exactAgreement": null
+      }
+    ],
+    "postSession": {
+      "specificationWindowDistinguishedFromFit": null,
+      "claimBoundaryReliablyDistinguished": null,
+      "technicalQuestionUsefulness": null,
+      "wouldUseInInternalPursuitReview": null,
+      "mostConfusingArea": null,
+      "mostImportantMissingInformation": null,
+      "totalReviewDurationSeconds": null,
+      "credibleCurrentMethodBaselineSeconds": null,
+      "accessibilityOrInteractionFriction": null,
+      "additionalProductValueObservation": null
+    }
+  },
+  "sessionRecords": [],
+  "findingRecordTemplate": {
+    "findingId": null,
+    "reviewerId": null,
+    "taskId": null,
+    "scenarioId": null,
+    "severity": null,
+    "category": null,
+    "observationType": null,
+    "reasonCode": null,
+    "observedEvidence": null,
+    "expectedInterpretationOrBehavior": null,
+    "candidateCorrection": null,
+    "evidenceBackedP0P1FixCandidate": null,
+    "requiresSeparateProductDecision": null,
+    "resolved": false
+  },
+  "findings": [],
+  "aggregate": {
+    "eligibleReviewerCount": null,
+    "independentTaskCompletionRate": null,
+    "assistedTaskCompletionRate": null,
+    "fitAgreementRate": null,
+    "claimBoundarySuccessRate": null,
+    "seriousMisunderstandingCount": null,
+    "internalPursuitUsefulReviewerCount": null,
+    "medianReviewDurationSeconds": null,
+    "pairedBaselineCount": null,
+    "medianTimeReductionRate": null,
+    "unresolvedP0Count": null,
+    "unresolvedP1Count": null,
+    "allMergeThresholdsPassed": null,
+    "decision": "INCOMPLETE",
+    "decisionRationale": null
+  }
+}
