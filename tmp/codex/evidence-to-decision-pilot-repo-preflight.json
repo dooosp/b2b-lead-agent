@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "repo-preflight-v1",
+  "recordedAt": "2026-07-18",
+  "repoRoot": ".",
+  "workspaceLabel": "b2b-lead-agent-evidence-to-decision-pilot-20260718",
+  "repoIdentityOk": true,
+  "identityEvidence": {
+    "packageName": "b2b-lead-agent",
+    "remote": "https://github.com/dooosp/b2b-lead-agent.git",
+    "defaultBranch": "master",
+    "batchEntrypoint": "main.js",
+    "workerEntrypoint": "worker/index.js"
+  },
+  "currentBranch": "codex/evidence-to-decision-pilot-20260718",
+  "headSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+  "localBaseCandidates": [
+    "master",
+    "origin/master"
+  ],
+  "remoteNames": [
+    "origin"
+  ],
+  "pinnedBaseRef": "origin/master",
+  "pinnedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+  "worktreeCleanBeforeArtifacts": true,
+  "dirtyPathsBeforeArtifacts": [],
+  "evaluatedWorktrees": [
+    {
+      "purpose": "PR_206",
+      "headSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+      "cleanBeforeValidation": true
+    },
+    {
+      "purpose": "PR_206_HUMAN_VALIDATION_PACKET",
+      "headSha": "1f84cc044e0aac1147a841568b40a5241c5659bc",
+      "cleanBeforeValidation": true
+    },
+    {
+      "purpose": "PR_207",
+      "headSha": "1206b8979b1ee1d1b2e0089de20fdcac2a005799",
+      "cleanBeforeValidation": true
+    }
+  ],
+  "requiredCommands": {
+    "pr206": [
+      "npm ci",
+      "npm run test:pursuit-workbench",
+      "npm run eval:pursuit-workbench",
+      "npm run test:pursuit-workbench:e2e",
+      "npm run test:claim-spec-fit",
+      "npm test",
+      "npm run check:naming",
+      "npm run check:schema",
+      "npm run test:e2e:local",
+      "npm run test:evidence",
+      "npm run check:lead-pipeline-replay",
+      "git diff --check"
+    ],
+    "pr207": [
+      "npm ci",
+      "npm run test:evidence-claim-workbench",
+      "npm run test:evidence-claim-workbench:e2e",
+      "npm run eval:evidence-claim-workbench",
+      "npm run audit:evidence-documents",
+      "npm run measure:evidence-claim-workbench",
+      "npm run test:claim-spec-fit",
+      "npm test",
+      "npm run check:naming",
+      "npm run check:schema",
+      "npm run test:e2e:local",
+      "npm run test:evidence",
+      "npm run check:lead-pipeline-replay",
+      "git diff --check"
+    ]
+  },
+  "canProceed": true,
+  "stopReasons": [],
+  "pilotInputBlockers": [
+    "PR206_R1_R5_SESSIONS_MISSING",
+    "PR207_OFFICIAL_DOCUMENT_INBOX_MISSING",
+    "PR207_HUMAN_CANDIDATE_DECISIONS_MISSING"
+  ]
+}

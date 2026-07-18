@@ -1,0 +1,157 @@
+{
+  "schemaVersion": "pr207-real-evidence-pilot-decision-v1",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "sourcePr": 207,
+  "evaluatedHeadSha": "1206b8979b1ee1d1b2e0089de20fdcac2a005799",
+  "baseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+  "baseIsCurrentOriginMasterAtEvaluation": true,
+  "githubState": {
+    "state": "OPEN",
+    "draft": true,
+    "mergeable": true,
+    "checks": "PASS"
+  },
+  "inputCounts": {
+    "documentsSupplied": 0,
+    "documentsAccepted": 0,
+    "documentsRefused": 0,
+    "requiredDocuments": 8,
+    "acceptedByFamily": {
+      "medium_voltage_switchgear": 0,
+      "transformer": 0
+    },
+    "languageCoverage": {
+      "ko": 0,
+      "en": 0
+    },
+    "humanCandidateReviewSessions": 0
+  },
+  "candidateCounts": {
+    "suggested": 0,
+    "approvedForRepositoryReview": 0,
+    "rejected": 0,
+    "deferred": 0,
+    "approvedByFamily": {
+      "medium_voltage_switchgear": 0,
+      "transformer": 0
+    },
+    "automaticVerified": 0,
+    "automaticAllowed": 0
+  },
+  "metrics": {
+    "quoteToPageTraceability": null,
+    "pageLocatorAccuracy": null,
+    "documentHashMismatchEscapes": null,
+    "revisionDetection": null,
+    "conflictDetection": null,
+    "supersessionDetection": null,
+    "reviewedSuggestionPrecision": null,
+    "falsePositiveCount": null,
+    "medianReviewTimePerCandidateSeconds": null,
+    "patchDeterminism": null,
+    "automaticVerifiedLeakage": 0,
+    "automaticAllowedLeakage": 0,
+    "fullDocumentLeakage": 0,
+    "secretPrivateLeakage": 0,
+    "unresolvedP0": null,
+    "reviewerPatchSuitability": null
+  },
+  "thresholdResults": {
+    "acceptedDocumentsAtLeast8": false,
+    "acceptedSwitchgearAtLeast4": false,
+    "acceptedTransformerAtLeast4": false,
+    "koreanAndEnglishRepresented": false,
+    "quoteToPageTraceabilityEquals100Percent": null,
+    "approvedCandidatesAtLeast25": false,
+    "approvedCandidatesPerFamilyAtLeast10": false,
+    "reviewedSuggestionPrecisionAtLeast80Percent": null,
+    "materialConflictsVisiblyBlocking": null,
+    "automaticVerifiedLeakageEquals0": true,
+    "automaticAllowedLeakageEquals0": true,
+    "fullDocumentLeakageEquals0": true,
+    "secretPrivateLeakageEquals0": true,
+    "unresolvedP0Equals0": null,
+    "reviewersJudgePatchSuitable": null
+  },
+  "syntheticRegressionEvidence": {
+    "scenarioCount": 35,
+    "scenarioPassCount": 35,
+    "syntheticCandidateCount": 28,
+    "realDocumentPopulation": "BLOCKED_INPUT_MISSING",
+    "realDocumentCount": 0,
+    "humanValidationClaimed": false
+  },
+  "documents": [],
+  "candidates": [],
+  "findings": [
+    {
+      "code": "DOCUMENT_VALIDITY_JUDGMENTS_NOT_SEPARATELY_CAPTURED",
+      "severity": "P1",
+      "affectedPr": 207,
+      "document": null,
+      "candidate": null,
+      "workflowStep": "document_validity_review",
+      "evidence": "The current structured review outcome does not separately preserve human judgments for publisher officiality, revision currentness, and redistribution/use rights; source metadata remains UNREVIEWED.",
+      "recurrenceCount": 1,
+      "proposedCorrection": "Define a bounded external pilot ledger or narrowly scoped schema that records each document-level judgment independently before real intake begins.",
+      "blocksMerge": true,
+      "fixStatus": "NOT_IMPLEMENTED_TRACK_INCOMPLETE"
+    },
+    {
+      "code": "ELECTRICAL_EVIDENCE_LOSS_MODES_NOT_STRUCTURED",
+      "severity": "P1",
+      "affectedPr": 207,
+      "document": null,
+      "candidate": null,
+      "workflowStep": "candidate_adjudication",
+      "evidence": "The current structured reason taxonomy cannot independently record table-structure, product-variant, condition-dimension, project-stage, comparison/tolerance, or duration-semantic loss.",
+      "recurrenceCount": 1,
+      "proposedCorrection": "Add bounded pilot-ledger fields or reason codes for each required loss mode before real-document scoring.",
+      "blocksMerge": true,
+      "fixStatus": "NOT_IMPLEMENTED_TRACK_INCOMPLETE"
+    }
+  ],
+  "inputBlockers": [
+    {
+      "code": "OFFICIAL_DOCUMENT_INBOX_MISSING",
+      "severity": "BLOCKER",
+      "affectedPr": 207,
+      "scope": "real_document_intake",
+      "evidence": "The fixed repository-root evidence-inbox directory, manifest, and normalized source bundles were absent.",
+      "blocksMerge": true
+    },
+    {
+      "code": "HUMAN_CANDIDATE_DECISIONS_MISSING",
+      "severity": "BLOCKER",
+      "affectedPr": 207,
+      "scope": "candidate_review",
+      "evidence": "No real candidate review decision, review duration, usefulness result, or repository-review suitability judgment was supplied.",
+      "blocksMerge": true
+    }
+  ],
+  "methodologyRisks": [
+    "URL shape and hashes establish bounded identity and stability, not publisher officiality, currentness, technical truth, applicability, or legal use rights.",
+    "Normalized page-text quote binding does not prove fidelity to the original PDF page, table structure, or printed locator.",
+    "The runtime decision and patch artifacts do not preserve a complete rejected/deferred candidate ledger, human timing, or usefulness metrics.",
+    "A real audit PASS can coexist with BLOCKED_INPUT_MISSING and must not be treated as Gate B success.",
+    "One intake is capped at 10 documents; an 11-12 document pilot needs predeclared multi-batch deduplication or a cap of 8-10.",
+    "Reviewed-suggestion precision must measure semantic source support, separately from repository-review approval yield.",
+    "Conflict and supersession accuracy require a human gold list of expected material relationships.",
+    "The pilot needs a separate bounded ledger for per-document authenticity, revision-currentness, redistribution/use disposition, and every candidate decision."
+  ],
+  "fixes": [],
+  "pilotExecutionStatus": "HOLD_UNTIL_SEPARATE_SCOPED_REVIEW_LEDGER_EXISTS",
+  "nextActionOwnerOnly": "Do not begin the real-document pilot. A separate explicitly scoped change must first provide a bounded ledger/schema for document validity, original-source fidelity, every candidate decision, loss modes, timing, usefulness, conflicts, supersessions, and patch suitability.",
+  "decision": "INCOMPLETE",
+  "decisionReason": "Fewer than eight valid official documents and no human candidate decisions exist, and the current review artifacts cannot preserve every required document-validity and electrical-evidence loss judgment; real-document metrics cannot be computed without fabrication.",
+  "updatedHeadSha": "1206b8979b1ee1d1b2e0089de20fdcac2a005799",
+  "productionReady": false,
+  "issue165Status": "HOLD",
+  "nonClaims": [
+    "Synthetic evaluation and audit success do not establish real-document utility, authenticity, currentness, or legal use rights.",
+    "No real source is classified as official from a hostname, URL, hash, sourceClass, or synthetic fixture.",
+    "Normalized page text and a thin patch do not preserve or replay original PDF table geometry or other layout-dependent meaning.",
+    "No claim was automatically VERIFIED or customer-use ALLOWED.",
+    "No production, staging, D1, endpoint, log, secret, customer-data, scraping, CRM, outreach, email, LLM, or automation action occurred."
+  ]
+}

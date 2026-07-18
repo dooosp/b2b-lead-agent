@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "evidence-to-decision-next-gate-v1",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+  "evaluatedBaseWasCurrentOriginMaster": true,
+  "pr206": {
+    "evaluatedHeadSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+    "updatedHeadSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+    "decision": "INCOMPLETE",
+    "draft": true,
+    "unmerged": true,
+    "fixCount": 0
+  },
+  "pr207": {
+    "evaluatedHeadSha": "1206b8979b1ee1d1b2e0089de20fdcac2a005799",
+    "updatedHeadSha": "1206b8979b1ee1d1b2e0089de20fdcac2a005799",
+    "decision": "INCOMPLETE",
+    "draft": true,
+    "unmerged": true,
+    "fixCount": 0
+  },
+  "overallStatus": "BLOCKED_BOTH",
+  "mergeTrainRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
+  "mergeTrainReason": "Neither PR has completed its required external validation gate; no merge order or restack execution is currently justified.",
+  "tenderMatrixEntryGate": "BLOCKED_BOTH",
+  "tenderMatrixBlockers": [
+    "PR206_DECISION_NOT_MERGE",
+    "PR207_DECISION_NOT_MERGE",
+    "APPROVED_REPOSITORY_REVIEW_CANDIDATES_BELOW_25",
+    "CANONICAL_VERIFIED_CLAIMS_BELOW_20",
+    "BOTH_PRODUCT_FAMILIES_LACK_VERIFIED_REAL_CAPABILITY_COVERAGE",
+    "HUMAN_FIT_WINDOW_DOSSIER_USEFULNESS_NOT_ESTABLISHED",
+    "OFFICIAL_SOURCE_QUOTE_REVISION_TRACEABILITY_NOT_ESTABLISHED",
+    "REVIEWER_PATCH_SUITABILITY_NOT_ESTABLISHED"
+  ],
+  "missingExternalInputs": [
+    "Five complete anonymized R1-R5 technical-sales validation sessions bound to the exact PR206 head and frozen artifacts.",
+    "At least eight intentional official-document bundles, at least four per product family, with Korean and English represented.",
+    "Human authenticity, revision-currentness, redistribution/use, source-fidelity, candidate, conflict, supersession, timing, usefulness, and patch-suitability decisions.",
+    "After a successful pilot, at least twenty separately repository-reviewed canonical VERIFIED claims with complete provenance."
+  ],
+  "residualRisks": [
+    "PR206 raw session capture currently targets tracked free-text templates without an ignored local-only results path; do not collect R1-R5 under that workflow.",
+    "Do not share complete worktree snapshots as pilot evidence because historical tmp artifacts may contain local filesystem paths.",
+    "PR207 redistribution/use rights require a separate human signoff per real document.",
+    "PR207 condition and project-stage review round-tripping is narrower than the candidate model and needs real-document validation before any correction is justified.",
+    "PR207 normalized line-based extraction may lose multi-column table, variant, comparison, tolerance, and duration semantics."
+  ],
+  "testSummary": {
+    "pr206Focused": "PASS",
+    "pr207Focused": "PASS",
+    "pr206FullRegression": "PASS",
+    "pr207FullRegression": "PASS",
+    "githubChecks": "PASS",
+    "meaning": "Code safety and deterministic synthetic behavior only; not human or real-document product validation."
+  },
+  "freshReadOnlyReviewSummary": [
+    {
+      "role": "technical_sales_product",
+      "initialResult": "FAIL",
+      "finding": "The PR206 next step was not an operationally safe facilitator handoff.",
+      "resolution": "Changed to an owner HOLD until a separately scoped ignored intake path and validator exist.",
+      "decisionChanged": false
+    },
+    {
+      "role": "application_engineering_evidence",
+      "initialResult": "FAIL",
+      "finding": "PR207 cannot preserve separate document-validity judgments or required electrical-evidence loss modes.",
+      "resolution": "Added two P1 protocol findings and an owner HOLD until a separately scoped bounded ledger/schema exists.",
+      "decisionChanged": false
+    },
+    {
+      "role": "quantitative_methodology",
+      "initialResult": "FAIL",
+      "finding": "Tender blockers, unresolved-P1 threshold reporting, and an unobserved finding count were incomplete.",
+      "resolution": "Added traceability and patch blockers, the unresolved-P1 threshold, and not-collected wording.",
+      "decisionChanged": false
+    },
+    {
+      "role": "security_privacy_copyright",
+      "result": "PASS",
+      "evidence": "All new artifacts are text/JSON, contain no local absolute paths, identity fields, email addresses, source binaries, source excerpts, private URLs, or secret-shaped values."
+    },
+    {
+      "role": "skeptical_product_merge_gate",
+      "result": "PASS",
+      "evidence": "Fresh GitHub state, exact heads/bases, Draft status, green checks, Issue165 HOLD, decisions, and boundary flags agree."
+    }
+  ],
+  "prohibitedActionsPerformed": [],
+  "issue165Status": "HOLD",
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "bothPrsRemainDraft": true,
+  "bothPrsRemainUnmerged": true,
+  "nextAction": "Owner HOLD: first authorize separately scoped safe PR206 session-intake and PR207 document/candidate-review ledger protocols. Then collect the missing external inputs without changing either product thesis or creating a third major product foundation."
+}
