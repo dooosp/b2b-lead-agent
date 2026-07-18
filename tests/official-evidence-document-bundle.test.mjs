@@ -104,6 +104,23 @@ test('normalizes and freezes a deterministic exact-scope source-document bundle'
   assert.ok(Object.isFrozen(first.pages[0].locator));
 });
 
+test('keeps publisher-domain-associated real input explicitly unreviewed', () => {
+  const raw = makeBundle();
+  raw.synthetic = false;
+  raw.source = {
+    ...raw.source,
+    sourceClass: 'PUBLISHER_DOMAIN_ASSOCIATED_UNREVIEWED',
+    publisher: 'Example Manufacturer',
+    sourceUrl: 'https://manufacturer.example/evidence/mvs-001',
+    redistributionStatus: 'METADATA_AND_BOUNDED_EXCERPTS_ONLY'
+  };
+
+  const normalized = normalizeSourceDocumentBundle(raw, { asOf: AS_OF });
+  assert.equal(normalized.synthetic, false);
+  assert.equal(normalized.source.sourceClass, 'PUBLISHER_DOMAIN_ASSOCIATED_UNREVIEWED');
+  assert.equal(normalized.source.authenticityStatus, 'UNREVIEWED');
+});
+
 test('document identity binds source metadata, document number, revision, source hash, and normalized content hash', () => {
   const baseline = normalizeSourceDocumentBundle(makeBundle(), { asOf: AS_OF });
   for (const mutate of [

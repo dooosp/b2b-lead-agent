@@ -20,6 +20,7 @@ export const OFFICIAL_EVIDENCE_SCOPE = Object.freeze({
 export const CLAIM_REGISTRY_VERTICAL_ID = 'datacenter_infrastructure';
 
 export const SOURCE_CLASSES = Object.freeze([
+  'PUBLISHER_DOMAIN_ASSOCIATED_UNREVIEWED',
   'OFFICIAL_MANUFACTURER',
   'OFFICIAL_REGULATOR',
   'OFFICIAL_STANDARDS_BODY',

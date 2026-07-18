@@ -19,6 +19,7 @@ import {
   EVIDENCE_DOCUMENT_LIMITS,
   PAGE_EVIDENCE_ANCHOR_SCHEMA_VERSION,
   PAGE_TEXT_NORMALIZATION_VERSION,
+  SOURCE_CLASSES,
   SOURCE_DOCUMENT_BUNDLE_SCHEMA_VERSION
 } from './constants.mjs';
 import {
@@ -631,7 +632,7 @@ function validateProjectedSourceDocuments(sourceDocuments, generatedAt) {
       : 'METADATA_AND_BOUNDED_EXCERPTS_ONLY';
     if (document.redistributionStatus !== expectedRedistribution) throw new ReviewPatchValidationError('REDISTRIBUTION_STATUS_MODE_MISMATCH', `${path}.redistributionStatus`);
     if (document.synthetic !== (document.sourceClass === 'SYNTHETIC_FIXTURE')) throw new ReviewPatchValidationError('SOURCE_CLASS_MODE_MISMATCH', `${path}.sourceClass`);
-    if (!['OFFICIAL_MANUFACTURER', 'OFFICIAL_REGULATOR', 'OFFICIAL_STANDARDS_BODY', 'SYNTHETIC_FIXTURE'].includes(document.sourceClass)) {
+    if (!SOURCE_CLASSES.includes(document.sourceClass)) {
       throw new ReviewPatchValidationError('UNSUPPORTED_SOURCE_CLASS', `${path}.sourceClass`);
     }
     let normalizedUrl;
