@@ -1,0 +1,359 @@
+{
+  "schemaVersion": "pr207-real-evidence-input-ledger-v1",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "sourcePr": 207,
+  "asOf": "2026-07-18T13:00:48.000Z",
+  "acceptanceDefinition": "PR207_MACHINE_INTAKE_ONLY_NOT_HUMAN_AUTHENTICITY_OR_USE_APPROVAL",
+  "sourceProvenanceStatus": "PUBLISHER_DOMAIN_ASSOCIATED_AUTHENTICITY_UNREVIEWED",
+  "acceptedSourceHashCheckAtBuild": "EXPECTED_SHA256_BOUND_TO_NOFOLLOW_SINGLE_LINK_DESCRIPTOR_SNAPSHOT",
+  "machineRunArtifact": "tmp/codex/pr207-real-evidence-pilot-run-non-production.json",
+  "counts": {
+    "documentsEvaluated": 11,
+    "machineIntakeAccepted": 8,
+    "refusedBeforeIntake": 3,
+    "acceptedByFamily": {
+      "medium_voltage_switchgear": 4,
+      "transformer": 4
+    },
+    "acceptedByLanguage": {
+      "ko": 4,
+      "en": 4
+    }
+  },
+  "documents": [
+    {
+      "documentId": "doc_8df54fb1053641ae8dc3566354dda86fc8d02b577942fc0df3b006eac72bf910",
+      "productFamily": "medium_voltage_switchgear",
+      "publisher": "LS ELECTRIC Co., Ltd.",
+      "title": "고압 일반배전반",
+      "sourceUrl": "https://www.ls-electric.com/ko/product/view/P01100",
+      "documentType": "OFFICIAL_PRODUCT_PAGE_HTML_TO_NORMALIZED_PAGE_TEXT_JSON",
+      "documentNumber": "P01100",
+      "revision": {
+        "revisionId": "2022-12-14",
+        "sequence": 1,
+        "publishedAt": "2016-11-26T00:14:09.000Z",
+        "effectiveAt": "2022-12-13T15:33:49.000Z",
+        "retrievedAt": "2026-07-18T13:00:48.000Z"
+      },
+      "language": "ko",
+      "jurisdiction": "KR",
+      "sourceFileSha256": "5b56ee75613d57faad09dd42d2d0dd344b679554e87ee4a33c038d64a9005dfd",
+      "sourceByteLength": 97756,
+      "normalizedContentSha256": "cefd1fd33332d7a8a5358fe4a6a78b55e6a363073855557e8846ffad2c0c1cb9",
+      "selectedPageCount": 2,
+      "selectedLocators": [
+        "official-product-page:overview",
+        "official-product-page:technical-content"
+      ],
+      "redistributionUseStatus": "METADATA_AND_BOUNDED_EXCERPTS_ONLY",
+      "authenticityReviewState": "UNREVIEWED",
+      "revisionCurrentnessState": "UNREVIEWED",
+      "intakeDecision": "ACCEPTED",
+      "intakeReason": "MANIFEST_HASH_SCOPE_AND_NORMALIZED_BUNDLE_VALIDATION_PASSED"
+    },
+    {
+      "documentId": "doc_09562233be297deb1ce1fb9f9cdef960a15c2071baebc78888561f8383d00ca5",
+      "productFamily": "medium_voltage_switchgear",
+      "publisher": "LS ELECTRIC Co., Ltd.",
+      "title": "C-GIS 큐비클 가스절연개폐장치",
+      "sourceUrl": "https://www.ls-electric.com/ko/product/view/P02201",
+      "documentType": "OFFICIAL_PRODUCT_PAGE_HTML_TO_NORMALIZED_PAGE_TEXT_JSON",
+      "documentNumber": "P02201",
+      "revision": {
+        "revisionId": "2022-12-21",
+        "sequence": 1,
+        "publishedAt": "2021-01-11T05:03:33.000Z",
+        "effectiveAt": "2022-12-21T13:23:27.000Z",
+        "retrievedAt": "2026-07-18T13:00:48.000Z"
+      },
+      "language": "ko",
+      "jurisdiction": "KR",
+      "sourceFileSha256": "4889d94784f7c933b524a8260024ec9cf978a1f0a39fda3137750690867f68c2",
+      "sourceByteLength": 97098,
+      "normalizedContentSha256": "7260cfce363a42f6473e220eccf4d5419e3b2e34f323779dfb53238185be38d4",
+      "selectedPageCount": 2,
+      "selectedLocators": [
+        "official-product-page:overview",
+        "official-product-page:technical-content"
+      ],
+      "redistributionUseStatus": "METADATA_AND_BOUNDED_EXCERPTS_ONLY",
+      "authenticityReviewState": "UNREVIEWED",
+      "revisionCurrentnessState": "UNREVIEWED",
+      "intakeDecision": "ACCEPTED",
+      "intakeReason": "MANIFEST_HASH_SCOPE_AND_NORMALIZED_BUNDLE_VALIDATION_PASSED"
+    },
+    {
+      "documentId": "doc_fd19b30086595dd7823cb3cc73eadd165ea6ccefa433f141b6e529f54f2690ba",
+      "productFamily": "medium_voltage_switchgear",
+      "publisher": "LS ELECTRIC Co., Ltd.",
+      "title": "Medium Voltage Metal Clad Switchgear",
+      "sourceUrl": "https://www.ls-electric.com/upload/customer/download/2619/Medium%20Voltage%20Metal%20Clad%20Swichgear_E.pdf",
+      "documentType": "CATALOG_PDF_TO_NORMALIZED_PAGE_TEXT_JSON",
+      "documentNumber": "LS-MV-MCSG-EN-201112",
+      "revision": {
+        "revisionId": "2011.12-01",
+        "sequence": 1,
+        "publishedAt": "2011-12-01T00:00:00.000Z",
+        "effectiveAt": "2011-12-01T00:00:00.000Z",
+        "retrievedAt": "2026-07-18T13:00:48.000Z"
+      },
+      "language": "en",
+      "jurisdiction": "KR",
+      "sourceFileSha256": "190708b9d00cadbe7aa9b6ccb78afe6220d834b00d2d3330644b138cc22de6da",
+      "sourceByteLength": 3724655,
+      "normalizedContentSha256": "6def2b3fd214275f7dc99871f4ecea30b35b0c2fdc17310c6218b4ebbb725c27",
+      "selectedPageCount": 3,
+      "selectedLocators": [
+        "14",
+        "15",
+        "20"
+      ],
+      "redistributionUseStatus": "METADATA_AND_BOUNDED_EXCERPTS_ONLY",
+      "authenticityReviewState": "UNREVIEWED",
+      "revisionCurrentnessState": "UNREVIEWED",
+      "intakeDecision": "ACCEPTED",
+      "intakeReason": "MANIFEST_HASH_SCOPE_AND_NORMALIZED_BUNDLE_VALIDATION_PASSED"
+    },
+    {
+      "documentId": "doc_861872a410d76aad725dc6faab7fc796542282876573144160ce5cdb81cadfe7",
+      "productFamily": "medium_voltage_switchgear",
+      "publisher": "Schneider Electric",
+      "title": "27 kV Masterclad Medium Voltage Metal-Clad Switchgear Catalog",
+      "sourceUrl": "https://productinfo.se.com/6055ct9901_masterclad_mvmc_sg_catalog/6055ct9901-masterclad-mvmc-switchgear-catalog/English/6055CT9901.pdf",
+      "documentType": "CATALOG_PDF_TO_NORMALIZED_PAGE_TEXT_JSON",
+      "documentNumber": "6055CT9901",
+      "revision": {
+        "revisionId": "R05-2024",
+        "sequence": 5,
+        "publishedAt": "2024-05-21T11:07:45.000Z",
+        "effectiveAt": "2024-05-21T11:07:45.000Z",
+        "retrievedAt": "2026-07-18T13:00:48.000Z"
+      },
+      "language": "en",
+      "jurisdiction": "KR",
+      "sourceFileSha256": "3aef01e0ff85000bff61c327b09ecfa02e65b7e1ba2d1a4fd0f22cba2203a7ae",
+      "sourceByteLength": 3874679,
+      "normalizedContentSha256": "d090cc349cf3814f86c8a53f018db28e0a62d103850c04ff33717089478e0ee2",
+      "selectedPageCount": 3,
+      "selectedLocators": [
+        "5",
+        "6",
+        "8"
+      ],
+      "redistributionUseStatus": "METADATA_AND_BOUNDED_EXCERPTS_ONLY",
+      "authenticityReviewState": "UNREVIEWED",
+      "revisionCurrentnessState": "UNREVIEWED",
+      "intakeDecision": "ACCEPTED",
+      "intakeReason": "MANIFEST_HASH_SCOPE_AND_NORMALIZED_BUNDLE_VALIDATION_PASSED"
+    },
+    {
+      "documentId": "doc_c04c686810504dc3c3feb2d36233496b66b9347551d860859adb33e032fee3d8",
+      "productFamily": "transformer",
+      "publisher": "LS ELECTRIC Co., Ltd.",
+      "title": "몰드변압기 Premium Type 카탈로그",
+      "sourceUrl": "https://www.ls-electric.com/ko/product/view/P01109",
+      "documentType": "CATALOG_PDF_TO_NORMALIZED_PAGE_TEXT_JSON",
+      "documentNumber": "C84001-9-202601",
+      "revision": {
+        "revisionId": "C84001-9-202601",
+        "sequence": 9,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "effectiveAt": "2026-01-01T00:00:00.000Z",
+        "retrievedAt": "2026-07-18T13:00:48.000Z"
+      },
+      "language": "ko",
+      "jurisdiction": "KR",
+      "sourceFileSha256": "b2156454bb94ee12526fe6a77b717bcc7363cb2f5b1d68e05866b412d268ad2a",
+      "sourceByteLength": 3244620,
+      "normalizedContentSha256": "cdd6f0b97610bf4033628328d749dc969823478c7976bdfaac9c5f3c2e77ecf4",
+      "selectedPageCount": 2,
+      "selectedLocators": [
+        "3",
+        "15"
+      ],
+      "redistributionUseStatus": "METADATA_AND_BOUNDED_EXCERPTS_ONLY",
+      "authenticityReviewState": "UNREVIEWED",
+      "revisionCurrentnessState": "UNREVIEWED",
+      "intakeDecision": "ACCEPTED",
+      "intakeReason": "MANIFEST_HASH_SCOPE_AND_NORMALIZED_BUNDLE_VALIDATION_PASSED"
+    },
+    {
+      "documentId": "doc_bc7593f6493eac069bcc39710cde16924ec24a0ea1c1a76f3544f92fa827e41f",
+      "productFamily": "transformer",
+      "publisher": "LS ELECTRIC Co., Ltd.",
+      "title": "몰드변압기 사용설명서",
+      "sourceUrl": "https://www.ls-electric.com/ko/product/view/P01109",
+      "documentType": "MANUAL_PDF_TO_NORMALIZED_PAGE_TEXT_JSON",
+      "documentNumber": "LS-CAST-RESIN-MANUAL-KO-202204",
+      "revision": {
+        "revisionId": "2022.04-03",
+        "sequence": 3,
+        "publishedAt": "2022-04-01T00:00:00.000Z",
+        "effectiveAt": "2022-04-01T00:00:00.000Z",
+        "retrievedAt": "2026-07-18T13:00:48.000Z"
+      },
+      "language": "ko",
+      "jurisdiction": "KR",
+      "sourceFileSha256": "0b286384a90e6d44d3959441a449cf69c1b6922ba302a96345999a1c8a7c0481",
+      "sourceByteLength": 1195114,
+      "normalizedContentSha256": "780ada8f19f66649c9c82bca3a8c0d960dc80a49be64a04a8db0374f4a3a3bad",
+      "selectedPageCount": 4,
+      "selectedLocators": [
+        "13",
+        "14",
+        "20",
+        "26"
+      ],
+      "redistributionUseStatus": "METADATA_AND_BOUNDED_EXCERPTS_ONLY",
+      "authenticityReviewState": "UNREVIEWED",
+      "revisionCurrentnessState": "UNREVIEWED",
+      "intakeDecision": "ACCEPTED",
+      "intakeReason": "MANIFEST_HASH_SCOPE_AND_NORMALIZED_BUNDLE_VALIDATION_PASSED"
+    },
+    {
+      "documentId": "doc_e294794e3edb6c22d81c74e5113c3ec9ae90d74ffd7a53e2604cf80bcf683c0a",
+      "productFamily": "transformer",
+      "publisher": "LS ELECTRIC Co., Ltd.",
+      "title": "Transformer Catalog",
+      "sourceUrl": "https://www.ls-electric.com/products/category/Smart_Power_Solution/Power_Distribution/Transformer",
+      "documentType": "CATALOG_PDF_TO_NORMALIZED_PAGE_TEXT_JSON",
+      "documentNumber": "LS-TRANSFORMER-EN-201803",
+      "revision": {
+        "revisionId": "2018.03-02",
+        "sequence": 2,
+        "publishedAt": "2018-03-01T00:00:00.000Z",
+        "effectiveAt": "2018-03-01T00:00:00.000Z",
+        "retrievedAt": "2026-07-18T13:00:48.000Z"
+      },
+      "language": "en",
+      "jurisdiction": "KR",
+      "sourceFileSha256": "fc44eabb92b864c45c2c6279c7f753be1c99958da283eb18651fea3a4323a689",
+      "sourceByteLength": 3519644,
+      "normalizedContentSha256": "725f9c6fa1c1450c5972d6ca789b4c364366ae2466640a70d75f709eaf33d83a",
+      "selectedPageCount": 2,
+      "selectedLocators": [
+        "19",
+        "23"
+      ],
+      "redistributionUseStatus": "METADATA_AND_BOUNDED_EXCERPTS_ONLY",
+      "authenticityReviewState": "UNREVIEWED",
+      "revisionCurrentnessState": "UNREVIEWED",
+      "intakeDecision": "ACCEPTED",
+      "intakeReason": "MANIFEST_HASH_SCOPE_AND_NORMALIZED_BUNDLE_VALIDATION_PASSED"
+    },
+    {
+      "documentId": "doc_c749f31749ef747fde7ec00bfd66ca019eea6c6430f164e2f7bc423cf777ef2a",
+      "productFamily": "transformer",
+      "publisher": "Schneider Electric",
+      "title": "Trihal Cast Resin Dry Type Transformers up to 15 MVA - 36 kV",
+      "sourceUrl": "https://www.se.com/sg/en/download/document/NRJED315663EN/",
+      "documentType": "CATALOG_PDF_TO_NORMALIZED_PAGE_TEXT_JSON",
+      "documentNumber": "NRJED315663EN",
+      "revision": {
+        "revisionId": "3.1",
+        "sequence": 31,
+        "publishedAt": "2018-04-03T00:00:00.000Z",
+        "effectiveAt": "2018-04-03T00:00:00.000Z",
+        "retrievedAt": "2026-07-18T13:00:48.000Z"
+      },
+      "language": "en",
+      "jurisdiction": "KR",
+      "sourceFileSha256": "04faa079a37613b076404c033c715d019bd7a77237b190301caddef85055726b",
+      "sourceByteLength": 5799937,
+      "normalizedContentSha256": "3e293762e73a44b0dcabbc35d1532af4f820d0f0e24c17a7d9989127d57481ba",
+      "selectedPageCount": 4,
+      "selectedLocators": [
+        "18",
+        "28",
+        "31",
+        "33"
+      ],
+      "redistributionUseStatus": "METADATA_AND_BOUNDED_EXCERPTS_ONLY",
+      "authenticityReviewState": "UNREVIEWED",
+      "revisionCurrentnessState": "UNREVIEWED",
+      "intakeDecision": "ACCEPTED",
+      "intakeReason": "MANIFEST_HASH_SCOPE_AND_NORMALIZED_BUNDLE_VALIDATION_PASSED"
+    },
+    {
+      "documentId": null,
+      "productFamily": "medium_voltage_switchgear",
+      "publisher": "LS ELECTRIC Co., Ltd.",
+      "title": "MCSG Metal Clad Switchgear 카탈로그",
+      "sourceUrl": "https://www.ls-electric.com/ko/product/view/P01100",
+      "documentType": "CATALOG_PDF",
+      "documentNumber": "C80051-11-202605",
+      "revision": {
+        "revisionId": "C80051-11-202605",
+        "sequence": 11,
+        "publishedAt": "2026-05-08T00:00:00.000Z"
+      },
+      "language": "ko",
+      "jurisdiction": "KR",
+      "sourceFileSha256": "1d8b97980391574bb34d616f62beeebf4a45a74d54553a102116599ec530c370",
+      "sourceHashCheckAtMachineRun": "NOT_RECOMPUTED_REFUSED_BEFORE_READ",
+      "sourceByteLength": 47116934,
+      "sourcePageCount": 48,
+      "redistributionUseStatus": "UNREVIEWED",
+      "authenticityReviewState": "UNREVIEWED",
+      "revisionCurrentnessState": "UNREVIEWED",
+      "intakeDecision": "REFUSED",
+      "intakeReason": "SOURCE_FILE_SIZE_OUT_OF_BOUNDS_MAX_25000000_BYTES"
+    },
+    {
+      "documentId": null,
+      "productFamily": "medium_voltage_switchgear",
+      "publisher": "Schneider Electric",
+      "title": "MCSet 17.5 Air-Insulated Switchgear Catalog",
+      "sourceUrl": "https://www.se.com/eg/en/download/document/NRJED312404EN/",
+      "documentType": "CATALOG_PDF",
+      "documentNumber": "NRJED312404EN",
+      "revision": {
+        "revisionId": "02",
+        "sequence": 2,
+        "publishedAt": "2026-05-30T00:00:00.000Z"
+      },
+      "language": "en",
+      "jurisdiction": "KR",
+      "sourceFileSha256": "f52f559efdb2d5603b3d366d3680f38257a0f70da5709ca652ee153f7b5432b1",
+      "sourceHashCheckAtMachineRun": "NOT_RECOMPUTED_REFUSED_BEFORE_READ",
+      "sourceByteLength": 42927512,
+      "sourcePageCount": 96,
+      "redistributionUseStatus": "UNREVIEWED",
+      "authenticityReviewState": "UNREVIEWED",
+      "revisionCurrentnessState": "UNREVIEWED",
+      "intakeDecision": "REFUSED",
+      "intakeReason": "SOURCE_FILE_SIZE_OUT_OF_BOUNDS_MAX_25000000_BYTES"
+    },
+    {
+      "documentId": null,
+      "productFamily": "transformer",
+      "publisher": "Schneider Electric",
+      "title": "Trihal",
+      "sourceUrl": "https://www.se.com/kr/ko/download/document/954503439/",
+      "documentType": "CATALOG_PDF",
+      "documentNumber": "954503439",
+      "revision": {
+        "revisionId": "1.0",
+        "sequence": 10,
+        "publishedAt": "2024-01-09T00:00:00.000Z"
+      },
+      "language": "ko",
+      "observedBodyLanguage": "en",
+      "jurisdiction": "KR",
+      "sourceFileSha256": "71a0d59adee1c2176d29b75d7594e13efc601b55a4f176bc55ac9fb6dc615cbc",
+      "sourceHashCheckAtMachineRun": "RECOMPUTED_FROM_BOUNDED_IMMUTABLE_SNAPSHOT",
+      "sourceByteLength": 6143616,
+      "sourcePageCount": 32,
+      "redistributionUseStatus": "UNREVIEWED",
+      "authenticityReviewState": "UNREVIEWED",
+      "revisionCurrentnessState": "UNREVIEWED",
+      "intakeDecision": "REFUSED",
+      "intakeReason": "DOCUMENT_LANGUAGE_MISMATCH_METADATA_KO_BODY_EN"
+    }
+  ],
+  "sourceBinariesCommitted": false,
+  "fullDocumentLeakage": 0,
+  "productionReady": false,
+  "issue165Status": "HOLD"
+}

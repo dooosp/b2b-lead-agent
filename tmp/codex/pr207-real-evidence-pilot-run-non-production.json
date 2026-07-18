@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-07-18T13:00:48.000Z",
+  "artifactClass": "NOT_PRODUCTION_EVIDENCE",
+  "executionBoundary": {
+    "sourceScope": "BOUNDED_PUBLISHER_DOMAIN_ASSOCIATED_FILES_AUTHENTICITY_UNREVIEWED",
+    "targetScope": "LOCAL_IGNORED_EVIDENCE_INBOX_ONLY",
+    "refusalInspectionAuthority": "MACHINE_FILE_SIZE_HASH_AND_REPRESENTATIVE_PAGE_SCRIPT_NOT_HUMAN_VALIDITY_REVIEW",
+    "fullSourceDocumentsCommitted": false,
+    "customerOrPrivateDataUsed": false,
+    "productionOrStagingAccessed": false,
+    "productionReady": false
+  },
+  "evaluatedSourceCount": 11,
+  "acceptedSourceCount": 8,
+  "refusedSourceCount": 3,
+  "acceptedByFamily": {
+    "switchgear": 4,
+    "transformer": 4
+  },
+  "acceptedByLanguage": {
+    "ko": 4,
+    "en": 4
+  },
+  "manifestSha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953",
+  "acceptedDocuments": [
+    {
+      "documentId": "doc_09562233be297deb1ce1fb9f9cdef960a15c2071baebc78888561f8383d00ca5",
+      "family": "switchgear",
+      "language": "ko",
+      "candidateCount": 0
+    },
+    {
+      "documentId": "doc_861872a410d76aad725dc6faab7fc796542282876573144160ce5cdb81cadfe7",
+      "family": "switchgear",
+      "language": "en",
+      "candidateCount": 0
+    },
+    {
+      "documentId": "doc_8df54fb1053641ae8dc3566354dda86fc8d02b577942fc0df3b006eac72bf910",
+      "family": "switchgear",
+      "language": "ko",
+      "candidateCount": 0
+    },
+    {
+      "documentId": "doc_bc7593f6493eac069bcc39710cde16924ec24a0ea1c1a76f3544f92fa827e41f",
+      "family": "transformer",
+      "language": "ko",
+      "candidateCount": 0
+    },
+    {
+      "documentId": "doc_c04c686810504dc3c3feb2d36233496b66b9347551d860859adb33e032fee3d8",
+      "family": "transformer",
+      "language": "ko",
+      "candidateCount": 0
+    },
+    {
+      "documentId": "doc_c749f31749ef747fde7ec00bfd66ca019eea6c6430f164e2f7bc423cf777ef2a",
+      "family": "transformer",
+      "language": "en",
+      "candidateCount": 0
+    },
+    {
+      "documentId": "doc_e294794e3edb6c22d81c74e5113c3ec9ae90d74ffd7a53e2604cf80bcf683c0a",
+      "family": "transformer",
+      "language": "en",
+      "candidateCount": 0
+    },
+    {
+      "documentId": "doc_fd19b30086595dd7823cb3cc73eadd165ea6ccefa433f141b6e529f54f2690ba",
+      "family": "switchgear",
+      "language": "en",
+      "candidateCount": 0
+    }
+  ],
+  "refusedSources": [
+    {
+      "sourceId": "switchgear-ls-mcsg-ko-c80051-11-202605",
+      "sizeBytes": 47116934,
+      "refusalReason": "SOURCE_SIZE_EXCEEDS_25000000_BYTE_INTAKE_LIMIT",
+      "refusalCheckPassed": true,
+      "intakeLimitBytes": 25000000,
+      "sha256Recomputed": false,
+      "sha256Check": "NOT_COMPUTED_SOURCE_REFUSED_BEFORE_READ"
+    },
+    {
+      "sourceId": "switchgear-schneider-mcset-en-nrjed312404en-02",
+      "sizeBytes": 42927512,
+      "refusalReason": "SOURCE_SIZE_EXCEEDS_25000000_BYTE_INTAKE_LIMIT",
+      "refusalCheckPassed": true,
+      "intakeLimitBytes": 25000000,
+      "sha256Recomputed": false,
+      "sha256Check": "NOT_COMPUTED_SOURCE_REFUSED_BEFORE_READ"
+    },
+    {
+      "sourceId": "transformer-schneider-trihal-ko-954503439",
+      "sizeBytes": 6143616,
+      "refusalReason": "DOCUMENT_LANGUAGE_MISMATCH_DECLARED_KO_REPRESENTATIVE_PAGES_ZERO_HANGUL",
+      "refusalCheckPassed": true,
+      "sha256": "71a0d59adee1c2176d29b75d7594e13efc601b55a4f176bc55ac9fb6dc615cbc",
+      "sha256Recomputed": true,
+      "declaredLanguage": "ko",
+      "representativePageChecks": [
+        {
+          "page": 18,
+          "hangulCharacterCount": 0,
+          "latinCharacterCount": 699,
+          "transformerMarkerCount": 1
+        },
+        {
+          "page": 28,
+          "hangulCharacterCount": 0,
+          "latinCharacterCount": 1074,
+          "transformerMarkerCount": 1
+        }
+      ]
+    }
+  ],
+  "postFixCandidateCount": 0,
+  "automaticVerificationEnabled": false,
+  "verifiedClaimCount": 0,
+  "customerUseAllowedCount": 0,
+  "humanAuthenticityDecisionCount": 0,
+  "humanCandidateDecisionCount": 0,
+  "decision": "INCOMPLETE",
+  "decisionReason": "Human authenticity, validity, rights, and candidate review decisions are absent; the safe post-fix candidate count is zero."
+}

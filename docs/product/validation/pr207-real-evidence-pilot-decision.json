@@ -1,36 +1,61 @@
 {
-  "schemaVersion": "pr207-real-evidence-pilot-decision-v1",
+  "schemaVersion": "pr207-real-evidence-pilot-decision-v2",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "sourcePr": 207,
   "evaluatedHeadSha": "1206b8979b1ee1d1b2e0089de20fdcac2a005799",
+  "updatedHeadSha": "0b0aff64aad36743c2cd1ccb7b5c9b2ee57c7718",
   "baseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
   "baseIsCurrentOriginMasterAtEvaluation": true,
-  "githubState": {
+  "artifactStorage": {
+    "branch": "codex/evidence-to-decision-pilot-20260718",
+    "purpose": "SEPARATE_CROSS_PR_EVALUATION_ARTIFACT",
+    "evaluatedTargetHeadContainsThisArtifact": false,
+    "headBindingSemantics": "UPDATED_HEAD_SHA_IDENTIFIES_THE_EVALUATED_PR207_TARGET_NOT_THE_ARTIFACT_STORAGE_COMMIT"
+  },
+  "githubStateBeforeFix": {
     "state": "OPEN",
     "draft": true,
     "mergeable": true,
     "checks": "PASS"
   },
+  "githubStateAfterFix": {
+    "state": "OPEN",
+    "draft": true,
+    "mergeable": true,
+    "checks": "PASS"
+  },
+  "inputLedger": "docs/product/validation/pr207-real-evidence-input-ledger.json",
+  "machineRunArtifact": "tmp/codex/pr207-real-evidence-pilot-run-non-production.json",
+  "observationAuthority": "CODEX_BOUNDED_PILOT_OBSERVATION_NOT_HUMAN_DOCUMENT_OR_CANDIDATE_REVIEW",
   "inputCounts": {
-    "documentsSupplied": 0,
-    "documentsAccepted": 0,
-    "documentsRefused": 0,
+    "countEvidence": "BOUNDED_LEDGER_PLUS_MACHINE_RUN_ARTIFACT_BUILDER_AND_INBOX_RECONSTRUCT_ACCEPTED_8_ONLY",
+    "documentsEvaluated": 11,
+    "documentsAcceptedByMachineIntake": 8,
+    "documentsRefusedBeforeIntake": 3,
     "requiredDocuments": 8,
     "acceptedByFamily": {
-      "medium_voltage_switchgear": 0,
-      "transformer": 0
+      "medium_voltage_switchgear": 4,
+      "transformer": 4
     },
     "languageCoverage": {
-      "ko": 0,
-      "en": 0
+      "ko": 4,
+      "en": 4
+    },
+    "refusalReasons": {
+      "SOURCE_FILE_SIZE_OUT_OF_BOUNDS": 2,
+      "DOCUMENT_LANGUAGE_MISMATCH": 1
     },
     "humanCandidateReviewSessions": 0
   },
   "candidateCounts": {
-    "suggested": 0,
+    "preFixDocumentIdNamespace": "PR207_CFA7535_PRE_NEUTRAL_SOURCE_CLASS_RUN",
+    "postFixDocumentIdNamespace": "PR207_9EF1F94_NEUTRAL_SOURCE_CLASS_RUN",
+    "suggestedBeforeP1Fix": 2,
+    "machineSuppressedByP1Fix": 2,
+    "suggestedAfterP1Fix": 0,
     "approvedForRepositoryReview": 0,
-    "rejected": 0,
-    "deferred": 0,
+    "humanRejected": 0,
+    "humanDeferred": 0,
     "approvedByFamily": {
       "medium_voltage_switchgear": 0,
       "transformer": 0
@@ -38,29 +63,95 @@
     "automaticVerified": 0,
     "automaticAllowed": 0
   },
+  "suppressedCandidates": [
+    {
+      "candidateId": "cand_585235eb44d7f2ac9528cb403cdcc047b1840a6e795183dc2e2bd31c25434edb",
+      "documentIdNamespace": "PR207_CFA7535_PRE_NEUTRAL_SOURCE_CLASS_RUN",
+      "documentId": "doc_afe2ef4721bbdd6b1cee8f86cbe4fb35798a9f7a2ff1156c94824771eeea82c0",
+      "pageLocator": {
+        "type": "DOCUMENT_PAGE",
+        "value": "18"
+      },
+      "quoteAnchorId": "anc_c63cfb7863584065c5cdbf56b3e985b50a726fa58d7e4f938e2e95d22fc5134e",
+      "quoteSha256": "f186b2c1a3b95cbc0a734217c17d9bf65f5fa68c9119e939e4a117c7108b0a94",
+      "quoteCharacterCount": 30,
+      "quoteWordCount": 7,
+      "claimType": "PRODUCT_CAPABILITY",
+      "capabilityKey": "frequency",
+      "value": 50,
+      "unit": "Hz",
+      "conditions": [],
+      "productVariant": "MISSING",
+      "jurisdiction": "KR",
+      "projectStages": [
+        "SPECIFICATION",
+        "TENDER"
+      ],
+      "decision": "MACHINE_SUPPRESSED_AFTER_P1_FIX_NOT_HUMAN_REVIEWED",
+      "decisionReason": "The quote contains two compatible frequency quantities, but the pre-fix scalar candidate retained only the first.",
+      "conflictSupersessionReferences": [],
+      "reviewDurationSeconds": null,
+      "reviewerUsefulnessResult": null
+    },
+    {
+      "candidateId": "cand_2fd3771d49710837167a65dc4c53a8ee73db67cabb179fed151b745176767aab",
+      "documentIdNamespace": "PR207_CFA7535_PRE_NEUTRAL_SOURCE_CLASS_RUN",
+      "documentId": "doc_afe2ef4721bbdd6b1cee8f86cbe4fb35798a9f7a2ff1156c94824771eeea82c0",
+      "pageLocator": {
+        "type": "DOCUMENT_PAGE",
+        "value": "33"
+      },
+      "quoteAnchorId": "anc_65f0495b0d77eaadd059f45e8568473aa217925ea114bf3efba541d2768a265f",
+      "quoteSha256": "ab9f6c38d65c6da247425acfbdbc3cc0587a318333a053ad2e8643c46d350666",
+      "quoteCharacterCount": 73,
+      "quoteWordCount": 12,
+      "claimType": "PRODUCT_CAPABILITY",
+      "capabilityKey": "secondary_voltage",
+      "value": 400,
+      "unit": "V",
+      "conditions": [],
+      "productVariant": "MISSING",
+      "jurisdiction": "KR",
+      "projectStages": [
+        "SPECIFICATION",
+        "TENDER"
+      ],
+      "decision": "MACHINE_SUPPRESSED_AFTER_P1_FIX_NOT_HUMAN_REVIEWED",
+      "decisionReason": "The quote contains phase-to-phase and phase-to-neutral quantities, but the pre-fix scalar candidate retained only the first without its condition.",
+      "conflictSupersessionReferences": [],
+      "reviewDurationSeconds": null,
+      "reviewerUsefulnessResult": null
+    }
+  ],
   "metrics": {
+    "manifestBoundDocumentValidation": {
+      "passed": 8,
+      "failed": 0,
+      "manifestSha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953"
+    },
     "quoteToPageTraceability": null,
     "pageLocatorAccuracy": null,
-    "documentHashMismatchEscapes": null,
+    "documentHashMismatchEscapes": 0,
     "revisionDetection": null,
     "conflictDetection": null,
     "supersessionDetection": null,
     "reviewedSuggestionPrecision": null,
-    "falsePositiveCount": null,
+    "humanFalsePositiveCount": null,
     "medianReviewTimePerCandidateSeconds": null,
     "patchDeterminism": null,
     "automaticVerifiedLeakage": 0,
     "automaticAllowedLeakage": 0,
     "fullDocumentLeakage": 0,
-    "secretPrivateLeakage": 0,
-    "unresolvedP0": null,
+    "forbiddenDataExposureCount": 0,
+    "unresolvedP0": 0,
+    "unresolvedP1": 5,
     "reviewerPatchSuitability": null
   },
   "thresholdResults": {
-    "acceptedDocumentsAtLeast8": false,
-    "acceptedSwitchgearAtLeast4": false,
-    "acceptedTransformerAtLeast4": false,
-    "koreanAndEnglishRepresented": false,
+    "acceptedDocumentsAtLeast8": true,
+    "acceptedSwitchgearAtLeast4": true,
+    "acceptedTransformerAtLeast4": true,
+    "koreanAndEnglishRepresented": true,
     "quoteToPageTraceabilityEquals100Percent": null,
     "approvedCandidatesAtLeast25": false,
     "approvedCandidatesPerFamilyAtLeast10": false,
@@ -69,89 +160,168 @@
     "automaticVerifiedLeakageEquals0": true,
     "automaticAllowedLeakageEquals0": true,
     "fullDocumentLeakageEquals0": true,
-    "secretPrivateLeakageEquals0": true,
-    "unresolvedP0Equals0": null,
+    "forbiddenDataExposureEquals0": true,
+    "unresolvedP0Equals0": true,
     "reviewersJudgePatchSuitable": null
   },
-  "syntheticRegressionEvidence": {
-    "scenarioCount": 35,
-    "scenarioPassCount": 35,
-    "syntheticCandidateCount": 28,
-    "realDocumentPopulation": "BLOCKED_INPUT_MISSING",
-    "realDocumentCount": 0,
-    "humanValidationClaimed": false
-  },
-  "documents": [],
-  "candidates": [],
   "findings": [
     {
-      "code": "DOCUMENT_VALIDITY_JUDGMENTS_NOT_SEPARATELY_CAPTURED",
+      "code": "PARTIAL_MULTI_QUANTITY_SCALAR_CANDIDATE",
       "severity": "P1",
       "affectedPr": 207,
-      "document": null,
-      "candidate": null,
-      "workflowStep": "document_validity_review",
-      "evidence": "The current structured review outcome does not separately preserve human judgments for publisher officiality, revision currentness, and redistribution/use rights; source metadata remains UNREVIEWED.",
-      "recurrenceCount": 1,
-      "proposedCorrection": "Define a bounded external pilot ledger or narrowly scoped schema that records each document-level judgment independently before real intake begins.",
+      "recurrenceCount": 2,
+      "workflowStep": "deterministic_candidate_extraction",
+      "evidence": "Two real Trihal lines containing multiple compatible quantities produced scalar candidates that retained only the first quantity and omitted the alternative or dimensional condition.",
+      "correction": "Require exactly one compatible quantity in the quote before emitting a scalar numeric candidate.",
+      "blocksMerge": false,
+      "fixStatus": "FIXED_AT_CFA753591F06584C7091BBC122844766B33CBB01"
+    },
+    {
+      "code": "UNREVIEWED_SOURCE_PROVENANCE_CLASSIFIED_OFFICIAL",
+      "severity": "P1",
+      "affectedPr": 207,
+      "recurrenceCount": 8,
+      "workflowStep": "document_source_classification",
+      "evidence": "The bounded pilot could associate files with publisher-domain URLs but had no human acquisition-provenance or authenticity decisions, while the prior intake enum required an official source class.",
+      "correction": "Represent the pilot inputs as PUBLISHER_DOMAIN_ASSOCIATED_UNREVIEWED and keep authenticityStatus UNREVIEWED.",
+      "blocksMerge": false,
+      "fixStatus": "FIXED_AT_9EF1F94FED500A0FED3D478EB2BB0710BAECB861"
+    },
+    {
+      "code": "REAL_DOCUMENT_CANDIDATE_RECALL_COLLAPSE",
+      "severity": "P1",
+      "affectedPr": 207,
+      "recurrenceCount": 8,
+      "workflowStep": "deterministic_candidate_extraction",
+      "evidence": "Eight machine-accepted documents across both product families produced zero post-fix review-ready candidates against a gate requiring at least 25 total and 10 per family.",
+      "proposedCorrection": "Make an explicit product decision on a variant-aware table extraction architecture before repeating human candidate review.",
       "blocksMerge": true,
-      "fixStatus": "NOT_IMPLEMENTED_TRACK_INCOMPLETE"
+      "fixStatus": "NOT_FIXED_REQUIRES_ARCHITECTURE_DECISION"
+    },
+    {
+      "code": "NORMALIZED_TABLE_VARIANT_ASSOCIATION_LOSS",
+      "severity": "P1",
+      "affectedPr": 207,
+      "recurrenceCount": 6,
+      "workflowStep": "pdf_or_html_to_page_text",
+      "evidence": "At least six accepted product catalogs place multiple models, ratings, or dimensional contexts in table columns that normalized line text does not represent as structured product-variant associations.",
+      "proposedCorrection": "Preserve row, column, header, footnote, and product-variant identity in a separately reviewed extraction format; do not infer associations from flattened text.",
+      "blocksMerge": true,
+      "fixStatus": "NOT_FIXED_PIVOT_SIGNAL"
+    },
+    {
+      "code": "TECHNICAL_TAP_SEQUENCE_FALSE_PRIVATE_DATA_MATCH",
+      "severity": "P1",
+      "affectedPr": 207,
+      "recurrenceCount": 2,
+      "workflowStep": "page_text_safety_validation",
+      "evidence": "Two technical transformer tap-voltage rows were refused because hyphenated voltage sequences matched the Korean phone-number safety pattern.",
+      "proposedCorrection": "Do not weaken the private-data guard in isolation; distinguish table cells and typed electrical quantities before safety classification.",
+      "blocksMerge": true,
+      "fixStatus": "NOT_FIXED_SECURITY_GUARD_PRESERVED"
+    },
+    {
+      "code": "DOCUMENT_VALIDITY_JUDGMENTS_NOT_HUMAN_REVIEWED",
+      "severity": "P1",
+      "affectedPr": 207,
+      "recurrenceCount": 11,
+      "workflowStep": "document_validity_review",
+      "evidence": "All document authenticity, revision-currentness, and redistribution/use judgments remain UNREVIEWED; machine intake acceptance is not a human validity decision.",
+      "proposedCorrection": "Collect bounded human decisions for each document before any MERGE or authenticity claim.",
+      "blocksMerge": true,
+      "fixStatus": "EXTERNAL_HUMAN_INPUT_MISSING"
+    },
+    {
+      "code": "DOCUMENT_LANGUAGE_METADATA_MISMATCH",
+      "severity": "P2",
+      "affectedPr": 207,
+      "recurrenceCount": 1,
+      "workflowStep": "document_pre_intake",
+      "evidence": "One publisher metadata page labeled a Trihal PDF Korean while representative technical pages in the supplied PDF were English.",
+      "correction": "Refuse the input instead of trusting metadata language.",
+      "blocksMerge": false,
+      "fixStatus": "INPUT_REFUSED"
+    },
+    {
+      "code": "PUBLISHER_DOMAIN_ASSOCIATED_CATALOG_EXCEEDS_SOURCE_SIZE_CAP",
+      "severity": "P2",
+      "affectedPr": 207,
+      "recurrenceCount": 2,
+      "workflowStep": "document_pre_intake",
+      "evidence": "Two publisher-hosted switchgear catalogs were 47116934 and 42927512 bytes, above the 25000000-byte source limit.",
+      "correction": "Refuse the inputs and use bounded smaller publisher documents; do not raise the safety cap without a separate resource analysis.",
+      "blocksMerge": false,
+      "fixStatus": "INPUTS_REFUSED_SMALLER_DOCUMENT_SUBSTITUTED"
     },
     {
       "code": "ELECTRICAL_EVIDENCE_LOSS_MODES_NOT_STRUCTURED",
       "severity": "P1",
       "affectedPr": 207,
-      "document": null,
-      "candidate": null,
-      "workflowStep": "candidate_adjudication",
-      "evidence": "The current structured reason taxonomy cannot independently record table-structure, product-variant, condition-dimension, project-stage, comparison/tolerance, or duration-semantic loss.",
       "recurrenceCount": 1,
-      "proposedCorrection": "Add bounded pilot-ledger fields or reason codes for each required loss mode before real-document scoring.",
+      "workflowStep": "candidate_adjudication",
+      "evidence": "The structured reason taxonomy still cannot independently record table, variant, condition-dimension, comparison, tolerance, or duration-semantic loss.",
+      "proposedCorrection": "Add bounded loss-mode decisions only together with a variant-aware evidence architecture and human review protocol.",
       "blocksMerge": true,
-      "fixStatus": "NOT_IMPLEMENTED_TRACK_INCOMPLETE"
+      "fixStatus": "NOT_FIXED"
     }
+  ],
+  "fixes": [
+    {
+      "commitSha": "cfa753591f06584c7091bbc122844766b33cbb01",
+      "findingCode": "PARTIAL_MULTI_QUANTITY_SCALAR_CANDIDATE",
+      "files": [
+        "evidence-claim-workbench/domain/candidates.mjs",
+        "tests/official-evidence-candidate.test.mjs"
+      ],
+      "result": "The two partial scalar candidates are no longer emitted; distinct quantities with different unit kinds remain extractable."
+    },
+    {
+      "commitSha": "9ef1f94fed500a0fed3d478eb2bb0710baecb861",
+      "documentationCommitSha": "0b0aff64aad36743c2cd1ccb7b5c9b2ee57c7718",
+      "findingCode": "UNREVIEWED_SOURCE_PROVENANCE_CLASSIFIED_OFFICIAL",
+      "files": [
+        "evidence-claim-workbench/domain/constants.mjs",
+        "evidence-claim-workbench/domain/review-patch.mjs",
+        "tests/official-evidence-document-bundle.test.mjs"
+      ],
+      "result": "Real pilot bundles use a neutral publisher-domain-associated class and retain explicit UNREVIEWED authenticity."
+    }
+  ],
+  "pilotTooling": [
+    "scripts/build-pr207-real-intake-pilot.mjs",
+    "scripts/evaluate-pr207-real-intake-pilot.mjs",
+    "tmp/codex/pr207-real-evidence-pilot-run-non-production.json"
   ],
   "inputBlockers": [
     {
-      "code": "OFFICIAL_DOCUMENT_INBOX_MISSING",
-      "severity": "BLOCKER",
-      "affectedPr": 207,
-      "scope": "real_document_intake",
-      "evidence": "The fixed repository-root evidence-inbox directory, manifest, and normalized source bundles were absent.",
+      "code": "HUMAN_CANDIDATE_DECISIONS_MISSING",
+      "evidence": "No candidate review decision, review duration, usefulness result, or patch-suitability judgment was supplied.",
       "blocksMerge": true
     },
     {
-      "code": "HUMAN_CANDIDATE_DECISIONS_MISSING",
-      "severity": "BLOCKER",
-      "affectedPr": 207,
-      "scope": "candidate_review",
-      "evidence": "No real candidate review decision, review duration, usefulness result, or repository-review suitability judgment was supplied.",
+      "code": "HUMAN_DOCUMENT_VALIDITY_DECISIONS_MISSING",
+      "evidence": "Authenticity, currentness, and redistribution/use remain UNREVIEWED for every evaluated input.",
+      "blocksMerge": true
+    },
+    {
+      "code": "POST_FIX_REVIEW_READY_CANDIDATE_COUNT_ZERO",
+      "evidence": "There is no safe candidate population for a 25-candidate human review after the P1 precision fix.",
       "blocksMerge": true
     }
   ],
-  "methodologyRisks": [
-    "URL shape and hashes establish bounded identity and stability, not publisher officiality, currentness, technical truth, applicability, or legal use rights.",
-    "Normalized page-text quote binding does not prove fidelity to the original PDF page, table structure, or printed locator.",
-    "The runtime decision and patch artifacts do not preserve a complete rejected/deferred candidate ledger, human timing, or usefulness metrics.",
-    "A real audit PASS can coexist with BLOCKED_INPUT_MISSING and must not be treated as Gate B success.",
-    "One intake is capped at 10 documents; an 11-12 document pilot needs predeclared multi-batch deduplication or a cap of 8-10.",
-    "Reviewed-suggestion precision must measure semantic source support, separately from repository-review approval yield.",
-    "Conflict and supersession accuracy require a human gold list of expected material relationships.",
-    "The pilot needs a separate bounded ledger for per-document authenticity, revision-currentness, redistribution/use disposition, and every candidate decision."
-  ],
-  "fixes": [],
-  "pilotExecutionStatus": "HOLD_UNTIL_SEPARATE_SCOPED_REVIEW_LEDGER_EXISTS",
-  "nextActionOwnerOnly": "Do not begin the real-document pilot. A separate explicitly scoped change must first provide a bounded ledger/schema for document validity, original-source fidelity, every candidate decision, loss modes, timing, usefulness, conflicts, supersessions, and patch suitability.",
+  "architectureSignal": "PIVOT_REQUIRED_FOR_VARIANT_AWARE_TABLE_EVIDENCE_BEFORE_REPEAT",
+  "architectureSignalAuthority": "CODEX_PILOT_OBSERVATION_OUTSIDE_PR207_HUMAN_REVIEW_PROTOCOL",
+  "pilotExecutionStatus": "REAL_INPUT_PROCESSED_HUMAN_REVIEW_BLOCKED",
   "decision": "INCOMPLETE",
-  "decisionReason": "Fewer than eight valid official documents and no human candidate decisions exist, and the current review artifacts cannot preserve every required document-validity and electrical-evidence loss judgment; real-document metrics cannot be computed without fabrication.",
-  "updatedHeadSha": "1206b8979b1ee1d1b2e0089de20fdcac2a005799",
+  "decisionReason": "Machine intake accepted eight documents with the required family and language distribution, but post-fix candidate count is zero, human candidate decisions are absent, and authenticity/currentness/redistribution judgments remain unresolved. The repeated table-association loss separately triggers a PIVOT_REQUIRED architecture signal.",
+  "mergeRecommendation": "DO_NOT_MERGE",
   "productionReady": false,
   "issue165Status": "HOLD",
   "nonClaims": [
-    "Synthetic evaluation and audit success do not establish real-document utility, authenticity, currentness, or legal use rights.",
-    "No real source is classified as official from a hostname, URL, hash, sourceClass, or synthetic fixture.",
-    "Normalized page text and a thin patch do not preserve or replay original PDF table geometry or other layout-dependent meaning.",
+    "Machine intake acceptance does not establish source authenticity, revision currentness, technical truth, applicability, or legal redistribution/use rights.",
+    "The two pre-fix suggestions were not human-reviewed rejections and are not counted as reviewed precision evidence.",
     "No claim was automatically VERIFIED or customer-use ALLOWED.",
-    "No production, staging, D1, endpoint, log, secret, customer-data, scraping, CRM, outreach, email, LLM, or automation action occurred."
+    "No source PDF or full document was committed.",
+    "No production, staging, D1, production endpoint, log, secret, customer-data, CRM, outreach, email, callback, product LLM, or automation action occurred."
   ]
 }

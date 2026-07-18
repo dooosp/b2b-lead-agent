@@ -1,8 +1,13 @@
 {
-  "schemaVersion": "evidence-to-decision-next-gate-v1",
+  "schemaVersion": "evidence-to-decision-next-gate-v2",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
   "evaluatedBaseWasCurrentOriginMaster": true,
+  "artifactStorage": {
+    "branch": "codex/evidence-to-decision-pilot-20260718",
+    "purpose": "SEPARATE_CROSS_PR_EVALUATION_ARTIFACT",
+    "evaluatedPrHeadsContainThisArtifact": false
+  },
   "pr206": {
     "evaluatedHeadSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
     "updatedHeadSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
@@ -13,11 +18,12 @@
   },
   "pr207": {
     "evaluatedHeadSha": "1206b8979b1ee1d1b2e0089de20fdcac2a005799",
-    "updatedHeadSha": "1206b8979b1ee1d1b2e0089de20fdcac2a005799",
+    "updatedHeadSha": "0b0aff64aad36743c2cd1ccb7b5c9b2ee57c7718",
     "decision": "INCOMPLETE",
+    "architectureSignal": "PIVOT_REQUIRED_FOR_VARIANT_AWARE_TABLE_EVIDENCE_BEFORE_REPEAT",
     "draft": true,
     "unmerged": true,
-    "fixCount": 0
+    "fixCount": 2
   },
   "overallStatus": "BLOCKED_BOTH",
   "mergeTrainRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
@@ -35,56 +41,64 @@
   ],
   "missingExternalInputs": [
     "Five complete anonymized R1-R5 technical-sales validation sessions bound to the exact PR206 head and frozen artifacts.",
-    "At least eight intentional official-document bundles, at least four per product family, with Korean and English represented.",
-    "Human authenticity, revision-currentness, redistribution/use, source-fidelity, candidate, conflict, supersession, timing, usefulness, and patch-suitability decisions.",
+    "Human authenticity, revision-currentness, redistribution/use, and original-source fidelity decisions for the eleven evaluated PR207 inputs.",
+    "An explicit owner decision on whether to pursue a bounded variant-aware table evidence architecture before repeating candidate review.",
+    "After any approved architecture correction, at least twenty-five human candidate decisions with timing, usefulness, conflict, supersession, and patch-suitability judgments.",
     "After a successful pilot, at least twenty separately repository-reviewed canonical VERIFIED claims with complete provenance."
   ],
   "residualRisks": [
     "PR206 raw session capture currently targets tracked free-text templates without an ignored local-only results path; do not collect R1-R5 under that workflow.",
     "Do not share complete worktree snapshots as pilot evidence because historical tmp artifacts may contain local filesystem paths.",
     "PR207 redistribution/use rights require a separate human signoff per real document.",
-    "PR207 condition and project-stage review round-tripping is narrower than the candidate model and needs real-document validation before any correction is justified.",
-    "PR207 normalized line-based extraction may lose multi-column table, variant, comparison, tolerance, and duration semantics."
+    "Eight machine-accepted documents emitted zero safe candidates after the partial multi-quantity P1 fix.",
+    "PR207 normalized line-based extraction repeatedly loses multi-column table, variant, comparison, tolerance, condition-dimension, and duration semantics.",
+    "Two real transformer tap-voltage rows collide with the conservative private-data pattern; the guard was not weakened."
   ],
   "testSummary": {
     "pr206Focused": "PASS",
-    "pr207Focused": "PASS",
+    "pr207Focused": "PASS_8_OF_8",
     "pr206FullRegression": "PASS",
-    "pr207FullRegression": "PASS",
+    "pr207FullRegression": "PASS_105_OF_105_WITH_INTENTIONAL_REAL_INBOX_TEMPORARILY_ISOLATED",
+    "pr207RealIntake": "PASS_8_DOCUMENTS_POST_FIX_CANDIDATES_0",
     "githubChecks": "PASS",
-    "meaning": "Code safety and deterministic synthetic behavior only; not human or real-document product validation."
+    "meaning": "Synthetic regression is green and the real inbox is machine-loadable, but human validity/candidate review is absent and real candidate recall is zero."
   },
   "freshReadOnlyReviewSummary": [
     {
       "role": "technical_sales_product",
-      "initialResult": "FAIL",
-      "finding": "The PR206 next step was not an operationally safe facilitator handoff.",
-      "resolution": "Changed to an owner HOLD until a separately scoped ignored intake path and validator exist.",
+      "initialResult": "PASS_WITH_P2",
+      "finding": "The 11/8/3 provenance was not initially reproducible from the accepted-only builder and ignored inbox.",
+      "resolution": "Added a separate machine-run artifact for all 11 decisions and stated that the builder/inbox reconstruct only the accepted 8.",
       "decisionChanged": false
     },
     {
       "role": "application_engineering_evidence",
       "initialResult": "FAIL",
-      "finding": "PR207 cannot preserve separate document-validity judgments or required electrical-evidence loss modes.",
-      "resolution": "Added two P1 protocol findings and an owner HOLD until a separately scoped bounded ledger/schema exists.",
+      "finding": "Refusal rows and the zero-candidate run lacked a machine artifact, and PIVOT authority was initially ambiguous.",
+      "resolution": "Added the machine-run artifact and bounded PIVOT to a Codex pilot observation outside PR207's human protocol. A follow-up objection that the separate cross-PR report must be inside the evaluated target commit was rejected; explicit artifact-storage semantics avoid that impossible self-reference.",
+      "followupResult": "CONTENT_FINDINGS_RESOLVED_STORAGE_OBJECTION_NOT_ACCEPTED",
       "decisionChanged": false
     },
     {
       "role": "quantitative_methodology",
       "initialResult": "FAIL",
-      "finding": "Tender blockers, unresolved-P1 threshold reporting, and an unobserved finding count were incomplete.",
-      "resolution": "Added traceability and patch blockers, the unresolved-P1 threshold, and not-collected wording.",
+      "finding": "The unresolved P1 total was 4 while five unresolved P1 findings were enumerated.",
+      "resolution": "Corrected unresolvedP1 to 5 and documented the pre-neutral versus neutral document-ID namespaces.",
+      "finalResult": "PASS",
       "decisionChanged": false
     },
     {
       "role": "security_privacy_copyright",
-      "result": "PASS",
-      "evidence": "All new artifacts are text/JSON, contain no local absolute paths, identity fields, email addresses, source binaries, source excerpts, private URLs, or secret-shaped values."
+      "initialResult": "FAIL",
+      "finding": "Source provenance wording, descriptor/snapshot binding, oversize-before-read handling, excerpt disclosure, safe-artifact naming, and a growing-file read bound required correction.",
+      "resolution": "Neutralized source class, bound hashes/extraction to no-follow single-link descriptor snapshots, refused oversized bodies before reading, added a 25000000+1 sentinel read cap, removed excerpts, and passed assertSafeArtifact 4/4.",
+      "finalResult": "PASS",
+      "decisionChanged": false
     },
     {
       "role": "skeptical_product_merge_gate",
       "result": "PASS",
-      "evidence": "Fresh GitHub state, exact heads/bases, Draft status, green checks, Issue165 HOLD, decisions, and boundary flags agree."
+      "evidence": "Fresh GitHub state, exact heads/bases, Draft/open status, zero human input, 11/8/3 intake, 2-to-0 candidates, Issue165 HOLD, and NO_MERGE_INPUT_INCOMPLETE agree."
     }
   ],
   "prohibitedActionsPerformed": [],
@@ -93,5 +107,5 @@
   "productionReviewerWorkflowReady": false,
   "bothPrsRemainDraft": true,
   "bothPrsRemainUnmerged": true,
-  "nextAction": "Owner HOLD: first authorize separately scoped safe PR206 session-intake and PR207 document/candidate-review ledger protocols. Then collect the missing external inputs without changing either product thesis or creating a third major product foundation."
+  "nextAction": "Owner HOLD: add a safe PR206 session-intake protocol, obtain human PR207 document-validity decisions, and make an explicit go/no-go decision on variant-aware table evidence before any repeated candidate pilot. Do not merge either PR or start the Tender Matrix."
 }
