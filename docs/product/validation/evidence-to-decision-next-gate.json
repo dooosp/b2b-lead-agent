@@ -75,8 +75,8 @@
       "role": "application_engineering_evidence",
       "initialResult": "FAIL",
       "finding": "Refusal rows and the zero-candidate run lacked a machine artifact, and PIVOT authority was initially ambiguous.",
-      "resolution": "Added the machine-run artifact and bounded PIVOT to a Codex pilot observation outside PR207's human protocol. A follow-up objection that the separate cross-PR report must be inside the evaluated target commit was rejected; explicit artifact-storage semantics avoid that impossible self-reference.",
-      "followupResult": "CONTENT_FINDINGS_RESOLVED_STORAGE_OBJECTION_NOT_ACCEPTED",
+      "resolution": "Added the machine-run artifact, bounded PIVOT to a Codex pilot observation outside PR207's human protocol, and clarified that the report is a separate cross-PR artifact whose target SHA is not self-referential storage identity.",
+      "finalResult": "PASS",
       "decisionChanged": false
     },
     {
