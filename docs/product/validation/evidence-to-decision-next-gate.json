@@ -55,7 +55,8 @@
     "Two real transformer tap-voltage rows collide with the conservative private-data pattern; the guard was not weakened."
   ],
   "testSummary": {
-    "pr206Focused": "PASS",
+    "pr206Focused": "PASS_65_OF_65",
+    "pr206SyntheticEvaluation": "PASS_12_OF_12_TWO_REPEAT_RUNS",
     "pr207Focused": "PASS_8_OF_8",
     "pr206FullRegression": "PASS",
     "pr207FullRegression": "PASS_105_OF_105_WITH_INTENTIONAL_REAL_INBOX_TEMPORARILY_ISOLATED",
