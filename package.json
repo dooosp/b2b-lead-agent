@@ -22,6 +22,8 @@
     "audit:claims": "node scripts/audit-evidence-claims.mjs --json --fail-on-violations",
     "eval:spec-fit": "node scripts/evaluate-spec-fit.mjs --fixtures --json --repeat 2",
     "demo:pursuit-workbench": "node pursuit-workbench/server.mjs",
+    "prepare:pursuit-workbench-human-validation": "node scripts/prepare-pursuit-workbench-human-validation.mjs",
+    "validate:pursuit-workbench-human-validation": "node scripts/validate-pursuit-workbench-human-validation.mjs",
     "test:pursuit-workbench": "node --test tests/pursuit-workbench-*.test.js",
     "test:pursuit-workbench:e2e": "node --test pursuit-workbench/e2e/pursuit-workbench.e2e.test.mjs",
     "eval:pursuit-workbench": "node scripts/evaluate-pursuit-workbench.mjs --json --repeat 2",
