@@ -515,6 +515,8 @@ function extractNumericCandidates(document, anchor, quote, productFamily) {
     const expression = new RegExp(`(?:${label})\\s*(?::|=|is|은|는)?\\s*([+-]?\\d+(?:[.,]\\d+)?)\\s*(${rule.units})(?![A-Za-z])`, 'giu');
     const matches = [...quote.matchAll(expression)];
     if (matches.length !== 1 || matches[0][1].includes(',')) continue;
+    const compatibleQuantities = [...quote.matchAll(new RegExp(`[+-]?\\d+(?:[.,]\\d+)?\\s*(?:${rule.units})(?![A-Za-z])`, 'giu'))];
+    if (compatibleQuantities.length !== 1) continue;
     const value = Number(matches[0][1]);
     if (!Number.isFinite(value)) continue;
     candidates.push(createRuleCandidate({

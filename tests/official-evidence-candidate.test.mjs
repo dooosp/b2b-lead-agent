@@ -154,6 +154,41 @@ test('ambiguous units and marketing text make no candidate; ambiguous families f
   );
 });
 
+test('real-document multi-quantity lines never become partial scalar candidates', () => {
+  const cases = [
+    [
+      'candidate-real-frequency-alternatives',
+      'Rated frequency             50 Hz or 60 Hz',
+      ['transformer']
+    ],
+    [
+      'candidate-real-secondary-voltage-contexts',
+      'Secondary voltage 400V between phases, 231V phase to neutral (at no load)',
+      ['transformer']
+    ]
+  ];
+  for (const [key, quote, family] of cases) {
+    const document = normalizedDocument(key, `Context. ${quote}. End.`, family);
+    assert.deepEqual(
+      extractDeterministicCandidates({ document, anchors: [anchorFor(document, quote)] }),
+      [],
+      key
+    );
+  }
+
+  const distinctQuantityQuote = 'Rated voltage: 24 kV, rated current: 630 A.';
+  const distinctQuantityDocument = normalizedDocument(
+    'candidate-real-distinct-quantities',
+    `Context. ${distinctQuantityQuote} End.`,
+    ['medium_voltage_switchgear']
+  );
+  const candidates = extractDeterministicCandidates({
+    document: distinctQuantityDocument,
+    anchors: [anchorFor(distinctQuantityDocument, distinctQuantityQuote)]
+  });
+  assert.deepEqual(candidates.map(({ value }) => value.key).sort(), ['rated_current', 'rated_voltage']);
+});
+
 test('negated English and Korean evidence never becomes a positive capability or inverted condition', () => {
   const cases = [
     ['candidate-negated-protocol', 'Context. This model does not support IEC 61850. End.', 'This model does not support IEC 61850.', 'en'],
