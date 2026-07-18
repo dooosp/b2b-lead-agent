@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "review-decision-validation-oracle-v0",
+  "cases": [
+    {
+      "id": "valid_precommitted_approval",
+      "artifact": {
+        "schemaVersion": "evidence-claim-review-decision-v0",
+        "decisionId": "dec_6a2a2600f6ba455a82f6f2cc218a5b2a4d2df203f77e7b8372913a7845d639f7",
+        "candidateId": "cand_3e9454210e4851a4e8c44d2662051aafaafb3b654d6a51dc8d941cf5e18d023f",
+        "documentId": "doc_4d8ec17a2fb18a35a654a2ea2fa3d836367709a7a170fe11440e067dc09df3b2",
+        "evidenceAnchorId": "anc_85ea8542c2689f3ecfbd19f524b8eb442b7e96032ce3262e1aa65c9f7f4fea45",
+        "decision": "APPROVE_FOR_REPOSITORY_REVIEW",
+        "reasonCodes": [
+          "EVIDENCE_QUOTE_CONFIRMED",
+          "STRUCTURED_MEANING_CONFIRMED"
+        ],
+        "relatedCandidateIds": [],
+        "candidateSnapshot": {
+          "claimType": "PRODUCT_CAPABILITY",
+          "productFamily": "medium_voltage_switchgear",
+          "capabilityKey": "rated_voltage",
+          "value": {
+            "type": "QUANTITY",
+            "key": "rated_voltage",
+            "value": 24,
+            "unit": "kV",
+            "quantityKind": "voltage"
+          },
+          "applicability": {
+            "vertical": "datacenter",
+            "domain": "electrical_power",
+            "productFamily": "medium_voltage_switchgear",
+            "jurisdiction": "KR",
+            "projectStages": [
+              "SPECIFICATION",
+              "TENDER"
+            ],
+            "conditions": []
+          },
+          "validity": {
+            "type": "NOT_STATED",
+            "validUntil": null
+          }
+        },
+        "acknowledgements": {
+          "notVerified": true,
+          "repositoryReviewRequired": true,
+          "customerUseNotAllowed": true
+        },
+        "reviewerIdentity": "NOT_COLLECTED",
+        "reviewerLabel": "repository_reviewer_pending"
+      },
+      "expected": {
+        "accepted": true,
+        "errorCode": ""
+      }
+    },
+    {
+      "id": "invalid_precommitted_approval_acknowledgement",
+      "artifact": {
+        "schemaVersion": "evidence-claim-review-decision-v0",
+        "decisionId": "dec_dc7240e6056228609887b16463bd6b002ae39054df8f632c84765023b6e34436",
+        "candidateId": "cand_3e9454210e4851a4e8c44d2662051aafaafb3b654d6a51dc8d941cf5e18d023f",
+        "documentId": "doc_4d8ec17a2fb18a35a654a2ea2fa3d836367709a7a170fe11440e067dc09df3b2",
+        "evidenceAnchorId": "anc_85ea8542c2689f3ecfbd19f524b8eb442b7e96032ce3262e1aa65c9f7f4fea45",
+        "decision": "APPROVE_FOR_REPOSITORY_REVIEW",
+        "reasonCodes": [
+          "EVIDENCE_QUOTE_CONFIRMED",
+          "STRUCTURED_MEANING_CONFIRMED"
+        ],
+        "relatedCandidateIds": [],
+        "candidateSnapshot": {
+          "claimType": "PRODUCT_CAPABILITY",
+          "productFamily": "medium_voltage_switchgear",
+          "capabilityKey": "rated_voltage",
+          "value": {
+            "type": "QUANTITY",
+            "key": "rated_voltage",
+            "value": 24,
+            "unit": "kV",
+            "quantityKind": "voltage"
+          },
+          "applicability": {
+            "vertical": "datacenter",
+            "domain": "electrical_power",
+            "productFamily": "medium_voltage_switchgear",
+            "jurisdiction": "KR",
+            "projectStages": [
+              "SPECIFICATION",
+              "TENDER"
+            ],
+            "conditions": []
+          },
+          "validity": {
+            "type": "NOT_STATED",
+            "validUntil": null
+          }
+        },
+        "acknowledgements": {
+          "notVerified": true,
+          "repositoryReviewRequired": true,
+          "customerUseNotAllowed": false
+        },
+        "reviewerIdentity": "NOT_COLLECTED",
+        "reviewerLabel": "repository_reviewer_pending"
+      },
+      "expected": {
+        "accepted": false,
+        "errorCode": "ACKNOWLEDGEMENTS_REQUIRED"
+      }
+    }
+  ]
+}
