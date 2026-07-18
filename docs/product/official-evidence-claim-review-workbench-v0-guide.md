@@ -143,3 +143,8 @@ rights, visual-table fidelity, latest revision, engineering suitability, or
 compliance. It has no raw-PDF parser, OCR, live research, outbound network,
 persistence, identity, production database, CRM, outreach, email, or LLM. Exact
 rules trade recall for traceability; manual structured review is still required.
+
+The separate
+[`official-evidence-variant-table-spike-v0.md`](official-evidence-variant-table-spike-v0.md)
+records a local-only experiment for preserving explicit table structure. Its
+propositions are not connected to this Workbench's canonical patch exporter.
