@@ -42,7 +42,9 @@ Use the actual review date/time instead of copying the example timestamp.
 
 ## Ten review tasks
 
-1. Confirm document identity, official source location, revision, and digest.
+1. Confirm document identity, acquisition provenance, publisher-domain location,
+   revision, and digest. `PUBLISHER_DOMAIN_ASSOCIATED_UNREVIEWED` is a neutral
+   intake class, not an officiality or authenticity decision.
 2. Locate the exact supporting page; do not rely on a search-result snippet.
 3. Confirm that the direct quote exactly matches the selected page offsets and
    that the correct occurrence is selected when text repeats. Use the bounded

@@ -78,10 +78,15 @@ extensions, invalid UTF-8, and mismatched hashes. Descriptor device, inode,
 link-count, size, mtime, and ctime are checked before/open/after the bounded
 read; same-inode substitution fails even when size and mtime are restored.
 
-The manifest identifies a local relative file, official source URL, publisher,
+The manifest identifies a local relative file, declared source URL, publisher,
 title, document type, revision, language, jurisdiction, product family,
 redistribution status, and optional expected hash. Real intake is processed
 only after the synthetic suite passes. Absence is a normal state reported as:
+
+`PUBLISHER_DOMAIN_ASSOCIATED_UNREVIEWED` is available for a file associated
+with publisher-domain metadata when acquisition provenance and authenticity
+have not received a human decision. It must remain `UNREVIEWED` and must not be
+reported as an officiality claim.
 
 ```text
 REAL_DOCUMENT_POPULATION: BLOCKED_INPUT_MISSING
