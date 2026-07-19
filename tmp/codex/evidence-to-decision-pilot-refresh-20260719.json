@@ -5,7 +5,7 @@
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
   "refreshLineage": {
     "artifactParentSha": "5caa852",
-    "refreshInputCommitSha": "994cb51f670631dafcc3b129956cae095b156846",
+    "refreshInputCommitSha": "e020fcc60d10fc4d51fbefa4e9cd69f761601047",
     "verificationInputSha256": {
       "docs/product/validation/pr206-human-validation-decision.json": "543d97c3cf3a9b51292a71baf310efa9fdda00772ef638e113aef53c33b45b21",
       "docs/product/validation/pr206-human-validation-summary.md": "2c72d7ce3313c4f1e1923c6846324e96fff862fee7e720fc24580f116976177b",
@@ -18,7 +18,7 @@
       "tmp/codex/evidence-to-decision-initial-investigation-ledger-20260719.json": "2239731c615d027d3da0342830ddd592f1cfbf1685221ffba787ddc87ef4c6f3",
       "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json": "abe02db96a38168c4b2aee305fdc6513b200b7a41bcc338909e84ad1eebdd444",
       "tmp/codex/pr207-real-evidence-pilot-run-non-production.json": "b2d333d324d2005f6c8965d84ff0b3f02d4d00c0064b102b9f5ca9bd64a3e9e2",
-      "scripts/verify-evidence-to-decision-pilot-refresh.mjs": "74df572463ae5d7cffc996f6448eb1bff0dfd76225af3891dd10e2bee7e637c3",
+      "scripts/verify-evidence-to-decision-pilot-refresh.mjs": "21948ec0da8c66bb141c71329ccb6f609f2ed8afdf4ab57d3ce5f5cb88ebbf6f",
       "scripts/lib/safe-local-artifact-writer.mjs": "e0d441359140011f9f11c8846a6c8afc44fb0d850c85ccd2fc9aeafdb854f0e7",
       "tests/evidence-to-decision-pilot-artifacts.test.mjs": "9c7af6e58ec4259a797156ee74fb719a04d8744641380ca77e06dcc8ec562b2c",
       "package.json": "f4f58d324efa7661c57acc33d75d57f23bc3ca1577a4f438c319740a27999154",
