@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "pr206-human-validation-decision-v3",
+  "schemaVersion": "pr206-human-validation-decision-v4",
   "asOf": "2026-07-19",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "sourcePr": 206,
@@ -122,23 +122,25 @@
       "status": "RESOLVED_BEFORE_THIS_EVALUATION",
       "headSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
       "effect": "Five private ignored skeletons and a fail-closed validator now exist.",
-      "changeAuthorityStatus": "HOLD_OWNER_DISPOSITION_REQUIRED"
+      "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS"
     }
   ],
   "postInitialIncompleteImplementationCommitsPresent": [
     {
       "commitSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
       "classification": "VALIDATION_INTAKE_IMPLEMENTATION",
-      "changeAuthorityStatus": "HOLD_OWNER_DISPOSITION_REQUIRED"
+      "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS"
     }
   ],
   "changeAuthorityAudit": "tmp/codex/evidence-to-decision-change-authority-audit-20260719.json",
+  "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS",
+  "ownerRetentionExceptionScope": "EXACT_LISTED_COMMIT_ONLY_NO_FURTHER_IMPLEMENTATION_AUTHORITY",
   "implementationChangesPerformedIn20260719Refresh": 0,
   "collectionStatus": "PRIVATE_INPUT_PATH_READY_AUTOMATED_MERGE_GATE_NOT_DECISION_CAPABLE",
   "decision": "INCOMPLETE",
   "decisionReason": "Fewer than five valid completed R1-R5 sessions exist, so the Goal's Track A rule requires INCOMPLETE. No MERGE, REVISE, or PIVOT decision may be inferred from blank skeletons or synthetic regression.",
   "mergeRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
-  "nextExternalInput": "First, a change owner must explicitly authorize retaining b5570e182c8ab6515c0f09272d22d7121518f134 as an exception to the post-INCOMPLETE fix rule or provide a revert/restack instruction. Before treating any aggregate as merge evidence, a human validation-method owner must then explicitly accept or separately authorize correction of the recorded gate defects. Five qualified reviewers must complete R1-R5 against the frozen runtime and artifacts, with de-identified task-level evidence and manual per-task, comprehension, and timing consistency review; the validator result remains advisory.",
+  "nextExternalInput": "Before treating any aggregate as merge evidence, a human validation-method owner must explicitly accept or separately authorize correction of the recorded gate defects. Five qualified reviewers must then complete R1-R5 against the frozen runtime and artifacts, with de-identified task-level evidence and manual per-task, comprehension, and timing consistency review; the validator result remains advisory. The explicit owner exception authorizes retaining b5570e182c8ab6515c0f09272d22d7121518f134 only and does not satisfy these inputs.",
   "productionReady": false,
   "productionReviewerWorkflowReady": false,
   "issue165Status": "HOLD",

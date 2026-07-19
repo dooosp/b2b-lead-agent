@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "pr207-real-evidence-pilot-decision-v5",
+  "schemaVersion": "pr207-real-evidence-pilot-decision-v6",
   "asOf": "2026-07-19T00:00:00.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "sourcePr": 207,
@@ -177,22 +177,24 @@
       "commitSha": "cfa753591f06584c7091bbc122844766b33cbb01",
       "classification": "PRODUCT_CODE_FIX",
       "findingCode": "PARTIAL_MULTI_QUANTITY_SCALAR_CANDIDATE",
-      "changeAuthorityStatus": "HOLD_OWNER_DISPOSITION_REQUIRED"
+      "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS"
     },
     {
       "commitSha": "9ef1f94fed500a0fed3d478eb2bb0710baecb861",
       "classification": "PRODUCT_CODE_FIX",
       "findingCode": "UNREVIEWED_SOURCE_PROVENANCE_CLASSIFIED_OFFICIAL",
-      "changeAuthorityStatus": "HOLD_OWNER_DISPOSITION_REQUIRED"
+      "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS"
     },
     {
       "commitSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
       "classification": "EXPERIMENTAL_EVIDENCE_ARCHITECTURE_IMPLEMENTATION",
       "findingCode": "VARIANT_AND_MAXIMUM_SEMANTICS_NOT_REPRESENTABLE",
-      "changeAuthorityStatus": "HOLD_OWNER_DISPOSITION_REQUIRED"
+      "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS"
     }
   ],
   "changeAuthorityAudit": "tmp/codex/evidence-to-decision-change-authority-audit-20260719.json",
+  "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS",
+  "ownerRetentionExceptionScope": "EXACT_LISTED_COMMITS_ONLY_NO_FURTHER_IMPLEMENTATION_AUTHORITY",
   "implementationChangesPerformedIn20260719Refresh": 0,
   "architectureSignal": "PIVOT_REQUIRED_FOR_VARIANT_AWARE_TABLE_EVIDENCE_BEFORE_REPEAT",
   "architectureSignalScope": "Bounded to two mapped rows across the eight supplied normalized documents. It proves current coverage is insufficient, not the prevalence of every unsupported table form. The reported reason is only the first blocker; latent footnote, geometry, column, condition, and configuration semantics remain unresolved.",
@@ -200,7 +202,6 @@
   "decisionReason": "The Goal requires resolved document authenticity/use status, human candidate decisions, at least 25 candidates approved for repository review, and at least 10 approved per product family. Current inputs contain zero safe proposals, zero validity decisions, zero candidate decisions, and zero approved candidates, so Track B must remain INCOMPLETE even though fail-closed abstention is correct.",
   "mergeRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
   "nextExternalInputs": [
-    "A change owner must explicitly authorize retaining cfa753591f06584c7091bbc122844766b33cbb01, 9ef1f94fed500a0fed3d478eb2bb0710baecb861, and c6a5469338999097acd5de7c5a12c827d27d4540 under a documented exception to the post-INCOMPLETE fix rule, or provide exact revert/restack instructions.",
     "A qualified human must decide authenticity, revision currentness, original-source fidelity, and redistribution/use status for each of the eight normalized document bundles.",
     "An evidence-architecture owner must make a bounded go/no-go decision on representing product variants, semantic operators such as maximum, units, conditions, footnotes, and row/header relationships.",
     "A rights/security owner must keep the real-intake UI blocked until full normalized page-text transport is removed or explicitly approved under a documented rights boundary.",

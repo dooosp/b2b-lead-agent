@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "evidence-to-decision-change-authority-audit-v1",
+  "schemaVersion": "evidence-to-decision-change-authority-audit-v2",
   "observedAtDate": "2026-07-19",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "goalRule": "ONLY_PERFORM_FIXES_WHEN_THE_RELEVANT_TRACK_IS_REVISE",
@@ -18,7 +18,8 @@
       "title": "feat: add safe pursuit workbench human validation intake",
       "classification": "VALIDATION_INTAKE_IMPLEMENTATION",
       "productOrValidationCodeChanged": true,
-      "explicitRetentionAuthorityRecordFound": false
+      "explicitRetentionAuthorityRecordFound": true,
+      "retentionDisposition": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS"
     },
     {
       "pr": 207,
@@ -27,7 +28,8 @@
       "title": "fix: reject partial multi-quantity evidence candidates",
       "classification": "PRODUCT_CODE_FIX",
       "productOrValidationCodeChanged": true,
-      "explicitRetentionAuthorityRecordFound": false
+      "explicitRetentionAuthorityRecordFound": true,
+      "retentionDisposition": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS"
     },
     {
       "pr": 207,
@@ -36,7 +38,8 @@
       "title": "fix: keep unreviewed source provenance neutral",
       "classification": "PRODUCT_CODE_FIX",
       "productOrValidationCodeChanged": true,
-      "explicitRetentionAuthorityRecordFound": false
+      "explicitRetentionAuthorityRecordFound": true,
+      "retentionDisposition": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS"
     },
     {
       "pr": 207,
@@ -45,24 +48,40 @@
       "title": "feat: add variant-aware evidence table spike",
       "classification": "EXPERIMENTAL_EVIDENCE_ARCHITECTURE_IMPLEMENTATION",
       "productOrValidationCodeChanged": true,
-      "explicitRetentionAuthorityRecordFound": false
+      "explicitRetentionAuthorityRecordFound": true,
+      "retentionDisposition": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS"
     }
   ],
   "counts": {
     "postIncompleteImplementationCommits": 4,
     "explicitProductCodeFixCommits": 2,
     "validationOrExperimentalImplementationCommits": 2,
-    "commitsWithExplicitRetentionAuthorityRecord": 0
+    "commitsWithExplicitRetentionAuthorityRecord": 4
   },
-  "changeAuthorityStatus": "HOLD_OWNER_DISPOSITION_REQUIRED",
-  "requiredOwnerDisposition": [
-    "Explicitly authorize retaining each listed commit under a documented exception to the Goal rule, with exact scope and non-claims.",
-    "Or provide an explicit revert/restack instruction identifying which commits must be removed from each Draft PR."
-  ],
+  "ownerDispositionRecord": {
+    "recordedAtDate": "2026-07-19",
+    "source": "EXPLICIT_USER_INSTRUCTION_IN_CURRENT_CODEX_TASK",
+    "exactInstruction": "네 커밋 모두 유지 승인",
+    "disposition": "RETAIN_ALL_FOUR_COMMITS_AS_DOCUMENTED_EXCEPTION",
+    "appliesToCommitShas": [
+      "b5570e182c8ab6515c0f09272d22d7121518f134",
+      "cfa753591f06584c7091bbc122844766b33cbb01",
+      "9ef1f94fed500a0fed3d478eb2bb0710baecb861",
+      "c6a5469338999097acd5de7c5a12c827d27d4540"
+    ],
+    "scope": "RETENTION_OF_THE_FOUR_LISTED_DRAFT_PR_COMMITS_ONLY",
+    "nonClaims": [
+      "This disposition does not classify either pilot as MERGE or REVISE.",
+      "This disposition does not approve new product changes, PR Ready conversion, merge, Tender Matrix work, or production action.",
+      "All required human-session, document-validity, rights, architecture, review-retention, and candidate-approval inputs remain required."
+    ]
+  },
+  "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS",
+  "requiredOwnerDisposition": [],
   "actionsNotTaken": [
     "No commit was reverted.",
     "No PR branch was rewritten or force-pushed.",
     "No Draft PR was marked Ready or merged."
   ],
-  "interpretation": "The evaluated behavior and INCOMPLETE decisions remain evidence-backed, but merge or further product work is blocked until the change owner dispositions these post-INCOMPLETE implementation commits. This audit does not infer that missing tracked authority never existed elsewhere."
+  "interpretation": "The explicit owner instruction resolves retention authority for the four listed commits only. Both pilot decisions remain INCOMPLETE, merge and further unapproved product work remain blocked, and this disposition is not human usability, document validity, rights, candidate, production, or Tender Matrix evidence."
 }

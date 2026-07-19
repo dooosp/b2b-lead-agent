@@ -1,26 +1,26 @@
 {
-  "schemaVersion": "evidence-to-decision-pilot-refresh-run-v2",
+  "schemaVersion": "evidence-to-decision-pilot-refresh-run-v3",
   "asOf": "2026-07-19T00:00:00.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
   "refreshLineage": {
     "artifactParentSha": "5caa852",
-    "reportParentCommitSha": "82f08f5005f0507ec18dd69ab1a0885c7d1d8ade",
+    "reportParentCommitSha": "e4cd248a286b5f419c84b79b421eb685e6f8f479",
     "finalArtifactCommitSha": "EXCLUDED_TO_AVOID_SELF_REFERENCE_VERIFY_GIT_PARENT_EQUALS_REPORT_PARENT",
     "verificationInputSha256": {
-      "docs/product/validation/pr206-human-validation-decision.json": "a50c180515cc5c511e4fb9009f497de94aff2ad2552bb4907f84dee79bada096",
-      "docs/product/validation/pr206-human-validation-summary.md": "9e7ed0217ed42f776eed2feaef7717fe7a05d04b0668af6a0f1fa86d8a634ba6",
+      "docs/product/validation/pr206-human-validation-decision.json": "b71ceddba081ee0df7342c66e553bab5cf5ddb1116b24c6c569f05b426d550e1",
+      "docs/product/validation/pr206-human-validation-summary.md": "b329aebb6f808733e2fb81eeefc1087952d8c3aad39b236839df1cc259fa17ec",
       "docs/product/validation/pr207-real-evidence-input-ledger.json": "81a9e2e28c1cbff6dd998d57054c80cc5a999b126555405182769d7a9c30b429",
-      "docs/product/validation/pr207-real-evidence-pilot-decision.json": "58662564615190b71e75a4f3692266d9740312e4af71b52c255d60365b36e30e",
-      "docs/product/validation/pr207-real-evidence-pilot-summary.md": "ce48bbe223691d5e4bcab2d50ae1762fea309d5a0966c2201ed8a89c961236c3",
-      "docs/product/validation/evidence-to-decision-next-gate.json": "140e9cb1ec4ddae444d203f2e00c1dffc6d2206ba39e953ce9f00d80873517b1",
+      "docs/product/validation/pr207-real-evidence-pilot-decision.json": "54d60c6e384a81d1c3452bbd12364df3e919f32085d99600e5843868ebe6d4ae",
+      "docs/product/validation/pr207-real-evidence-pilot-summary.md": "9c79eb8cafc212f3c1c8fafe8f612d417aa6295b120fd9a72ef00cbd766a6461",
+      "docs/product/validation/evidence-to-decision-next-gate.json": "c56b8af418851382202e9b8a87712445ae042b6c5150fbc1ee92c4d16513e377",
       "tmp/codex/evidence-to-decision-pilot-repo-preflight.json": "39224c08df1715a980d202d1b551ee72b93e8e8b8bc0d9e83d5ab58884577a37",
       "tmp/codex/evidence-to-decision-github-state-20260719.json": "a9c2e4b389761a85782e72e2f636fd9c1c6cc3ec5ec59f1299df41907000e0bd",
       "tmp/codex/evidence-to-decision-initial-investigation-ledger-20260719.json": "2239731c615d027d3da0342830ddd592f1cfbf1685221ffba787ddc87ef4c6f3",
-      "tmp/codex/evidence-to-decision-change-authority-audit-20260719.json": "cde219c31c1921bba167fad2081cffcd9d6de63323b502a61763c8df132874ef",
-      "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json": "950b7bf82c1d8e0469cb5d643422e43ef53fd470ddfae4d5774ed9010d879c34",
+      "tmp/codex/evidence-to-decision-change-authority-audit-20260719.json": "de9174b014738243169f4e0c588d3bbfef2758c098ddb64b8b8db81a504f2326",
+      "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json": "c6514a4019767aaeecead55b342f6cdc77c5e624edbd2355fd354bdb0654af77",
       "tmp/codex/pr207-real-evidence-pilot-run-non-production.json": "b2d333d324d2005f6c8965d84ff0b3f02d4d00c0064b102b9f5ca9bd64a3e9e2",
-      "scripts/verify-evidence-to-decision-pilot-refresh.mjs": "bc43f79fce5e92031be8b9294a81a736165e6973359141c47db68b0055521bec",
+      "scripts/verify-evidence-to-decision-pilot-refresh.mjs": "3aaa9dd9f24c9c74fd81f2b926b4ff76dec971561ca6737cb5830df067560bfb",
       "scripts/lib/safe-local-artifact-writer.mjs": "e0d441359140011f9f11c8846a6c8afc44fb0d850c85ccd2fc9aeafdb854f0e7",
       "tests/evidence-to-decision-pilot-artifacts.test.mjs": "9c7af6e58ec4259a797156ee74fb719a04d8744641380ca77e06dcc8ec562b2c",
       "package.json": "f4f58d324efa7661c57acc33d75d57f23bc3ca1577a4f438c319740a27999154",
@@ -86,7 +86,7 @@
   },
   "overallDecision": "INCOMPLETE",
   "overallStatus": "BLOCKED_BOTH",
-  "goalCompletionStatus": "INCOMPLETE_CHANGE_AUTHORITY_HOLD",
+  "goalCompletionStatus": "INCOMPLETE_EXTERNAL_INPUTS",
   "issue165Status": "HOLD",
   "issue165Evidence": {
     "state": "OPEN",
@@ -109,21 +109,34 @@
     "boundary": "AUTOMATED_READ_ONLY_INVESTIGATION_NOT_HUMAN_REVIEW"
   },
   "changeAuthority": {
-    "status": "HOLD_OWNER_DISPOSITION_REQUIRED",
+    "status": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS",
     "initialDecisionCommitSha": "41ac25adcbb6aebd0de0018660dbcac0b9427d95",
     "postIncompleteImplementationCommits": 4,
     "explicitProductCodeFixCommits": 2,
-    "commitsWithExplicitRetentionAuthorityRecord": 0
+    "commitsWithExplicitRetentionAuthorityRecord": 4,
+    "ownerDisposition": {
+      "recordedAtDate": "2026-07-19",
+      "source": "EXPLICIT_USER_INSTRUCTION_IN_CURRENT_CODEX_TASK",
+      "exactInstruction": "네 커밋 모두 유지 승인",
+      "disposition": "RETAIN_ALL_FOUR_COMMITS_AS_DOCUMENTED_EXCEPTION",
+      "appliesToCommitShas": [
+        "b5570e182c8ab6515c0f09272d22d7121518f134",
+        "cfa753591f06584c7091bbc122844766b33cbb01",
+        "9ef1f94fed500a0fed3d478eb2bb0710baecb861",
+        "c6a5469338999097acd5de7c5a12c827d27d4540"
+      ]
+    }
   },
   "productionReady": false,
   "productionReviewerWorkflowReady": false,
   "prohibitedActionsPerformed": [],
   "goalRuleDeviationsObserved": [
-    "Four implementation commits followed the initial cross-PR INCOMPLETE decision record without an explicit retention-authority record in the audited pilot artifacts."
+    "Four implementation commits followed the initial cross-PR INCOMPLETE decision record. The user subsequently authorized retaining the exact four commits as a documented exception on 2026-07-19."
   ],
+  "goalRuleDeviationDisposition": "EXPLICIT_OWNER_RETENTION_EXCEPTION_RECORDED_FOR_EXACT_FOUR_COMMITS",
   "commandLedger": {
     "relativePath": "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json",
-    "sha256": "950b7bf82c1d8e0469cb5d643422e43ef53fd470ddfae4d5774ed9010d879c34",
+    "sha256": "c6514a4019767aaeecead55b342f6cdc77c5e624edbd2355fd354bdb0654af77",
     "commandGroupCount": 6,
     "allPassed": true
   }

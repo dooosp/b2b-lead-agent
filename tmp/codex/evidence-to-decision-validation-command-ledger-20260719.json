@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "evidence-to-decision-validation-command-ledger-v2",
+  "schemaVersion": "evidence-to-decision-validation-command-ledger-v3",
   "observedAtDate": "2026-07-19",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "productionReady": false,
@@ -25,8 +25,9 @@
       "exitCode": 0,
       "decision": "INCOMPLETE",
       "overallStatus": "BLOCKED_BOTH",
-      "goalCompletionStatus": "INCOMPLETE_CHANGE_AUTHORITY_HOLD",
-      "changeAuthorityStatus": "HOLD_OWNER_DISPOSITION_REQUIRED"
+      "goalCompletionStatus": "INCOMPLETE_EXTERNAL_INPUTS",
+      "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS",
+      "retentionDispositionsRecorded": 4
     },
     {
       "id": "PILOT_WORKFLOW_CONTRACT",

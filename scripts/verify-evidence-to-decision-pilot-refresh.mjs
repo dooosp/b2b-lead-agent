@@ -232,15 +232,25 @@ assert(
   'PR207 per-family approved threshold drifted',
 );
 assert(
+  changeAuthorityAudit.schemaVersion === 'evidence-to-decision-change-authority-audit-v2'
+    && pr206Decision.schemaVersion === 'pr206-human-validation-decision-v4'
+    && pr207Decision.schemaVersion === 'pr207-real-evidence-pilot-decision-v6'
+    && nextGate.schemaVersion === 'evidence-to-decision-next-gate-v6'
+    && commandLedger.schemaVersion === 'evidence-to-decision-validation-command-ledger-v3',
+  'owner-disposition artifact schema drifted',
+);
+assert(
   changeAuthorityAudit.initialDecisionRecord?.commitSha === '41ac25adcbb6aebd0de0018660dbcac0b9427d95'
     && changeAuthorityAudit.initialDecisionRecord?.trackA === 'INCOMPLETE'
     && changeAuthorityAudit.initialDecisionRecord?.trackB === 'INCOMPLETE',
   'initial INCOMPLETE decision authority record drifted',
 );
 assert(
-  changeAuthorityAudit.changeAuthorityStatus === 'HOLD_OWNER_DISPOSITION_REQUIRED'
+  changeAuthorityAudit.changeAuthorityStatus === 'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS'
     && changeAuthorityAudit.counts?.postIncompleteImplementationCommits === 4
-    && changeAuthorityAudit.counts?.commitsWithExplicitRetentionAuthorityRecord === 0,
+    && changeAuthorityAudit.counts?.explicitProductCodeFixCommits === 2
+    && changeAuthorityAudit.counts?.validationOrExperimentalImplementationCommits === 2
+    && changeAuthorityAudit.counts?.commitsWithExplicitRetentionAuthorityRecord === 4,
   'post-INCOMPLETE change-authority count drifted',
 );
 const auditedImplementationCommits = changeAuthorityAudit.postIncompleteImplementationCommits
@@ -254,6 +264,23 @@ assert(
   ]),
   'post-INCOMPLETE implementation commit list drifted',
 );
+assert(
+  changeAuthorityAudit.ownerDispositionRecord?.recordedAtDate === '2026-07-19'
+    && changeAuthorityAudit.ownerDispositionRecord?.source === 'EXPLICIT_USER_INSTRUCTION_IN_CURRENT_CODEX_TASK'
+    && changeAuthorityAudit.ownerDispositionRecord?.exactInstruction === '네 커밋 모두 유지 승인'
+    && changeAuthorityAudit.ownerDispositionRecord?.disposition ===
+      'RETAIN_ALL_FOUR_COMMITS_AS_DOCUMENTED_EXCEPTION'
+    && JSON.stringify(changeAuthorityAudit.ownerDispositionRecord?.appliesToCommitShas) ===
+      JSON.stringify(auditedImplementationCommits)
+    && changeAuthorityAudit.requiredOwnerDisposition?.length === 0,
+  'owner retention-disposition record drifted',
+);
+assert(
+  changeAuthorityAudit.postIncompleteImplementationCommits.every((entry) =>
+    entry.explicitRetentionAuthorityRecordFound === true
+      && entry.retentionDisposition === 'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS'),
+  'per-commit retention disposition drifted',
+);
 assert(gitIsAncestor(pr206Root, 'b5570e182c8ab6515c0f09272d22d7121518f134', pr206Head), 'PR206 audited implementation is absent');
 for (const commitSha of [
   'cfa753591f06584c7091bbc122844766b33cbb01',
@@ -264,12 +291,18 @@ for (const commitSha of [
 }
 assert(
   pr206Decision.changeAuthorityAudit === 'tmp/codex/evidence-to-decision-change-authority-audit-20260719.json'
-    && pr206Decision.postInitialIncompleteImplementationCommitsPresent?.length === 1,
+    && pr206Decision.changeAuthorityStatus === 'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS'
+    && pr206Decision.postInitialIncompleteImplementationCommitsPresent?.length === 1
+    && pr206Decision.postInitialIncompleteImplementationCommitsPresent.every((entry) =>
+      entry.changeAuthorityStatus === 'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS'),
   'PR206 change-authority disclosure drifted',
 );
 assert(
   pr207Decision.changeAuthorityAudit === 'tmp/codex/evidence-to-decision-change-authority-audit-20260719.json'
-    && pr207Decision.postInitialIncompleteImplementationCommitsPresent?.length === 3,
+    && pr207Decision.changeAuthorityStatus === 'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS'
+    && pr207Decision.postInitialIncompleteImplementationCommitsPresent?.length === 3
+    && pr207Decision.postInitialIncompleteImplementationCommitsPresent.every((entry) =>
+      entry.changeAuthorityStatus === 'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS'),
   'PR207 change-authority disclosure drifted',
 );
 for (const requiredThreshold of [
@@ -295,6 +328,11 @@ for (const requiredThreshold of [
 assert(nextGate.pr206?.evaluatedHeadSha === pr206Head, 'next-gate PR206 head mismatch');
 assert(nextGate.pr206?.safeIgnoredIntakeAvailable === true, 'next-gate PR206 safe-intake state drifted');
 assert(nextGate.pr207?.evaluatedHeadSha === pr207Head, 'next-gate PR207 head mismatch');
+assert(
+  nextGate.pr206?.changeAuthorityStatus === 'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS'
+    && nextGate.pr207?.changeAuthorityStatus === 'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS',
+  'next-gate per-PR retention disposition drifted',
+);
 assert(nextGate.evaluatedBaseSha === EXPECTED_BASE_SHA, 'next-gate base mismatch');
 assert(preflight.pinnedBaseSha === EXPECTED_BASE_SHA, 'preflight base mismatch');
 assert(nextGate.pr206?.draft === true && nextGate.pr206?.unmerged === true, 'next-gate PR206 state drifted');
@@ -339,16 +377,24 @@ assert(
 );
 assert(nextGate.pr207?.approvedForRepositoryReview === 0, 'next-gate PR207 approved count drifted');
 assert(
-  nextGate.fixPolicy?.changeAuthorityStatus === 'HOLD_OWNER_DISPOSITION_REQUIRED'
+  nextGate.fixPolicy?.changeAuthorityStatus === 'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS'
     && nextGate.fixPolicy?.postInitialIncompleteImplementationCommitsPresent === 4
-    && nextGate.missingExternalInputs?.some((input) =>
-      input.owner === 'EVIDENCE_TO_DECISION_CHANGE_OWNER'
-        && input.required === 4
-        && input.current === 0),
-  'next-gate change-authority HOLD drifted',
+    && nextGate.fixPolicy?.explicitProductCodeFixCommitsPresent === 2
+    && nextGate.fixPolicy?.retentionDispositionsRecorded === 4
+    && nextGate.missingExternalInputs?.length === 7
+    && nextGate.tenderMatrixBlockers?.length === 10
+    && !nextGate.missingExternalInputs?.some((input) => input.owner === 'EVIDENCE_TO_DECISION_CHANGE_OWNER')
+    && !nextGate.tenderMatrixBlockers?.includes(
+      'POST_INCOMPLETE_IMPLEMENTATION_CHANGE_AUTHORITY_DISPOSITION_MISSING'),
+  'next-gate retention disposition drifted',
 );
 assert(nextGate.overallStatus === 'BLOCKED_BOTH', 'overall gate must remain BLOCKED_BOTH');
-assert(nextGate.goalCompletionStatus === 'INCOMPLETE_CHANGE_AUTHORITY_HOLD', 'goal completion HOLD drifted');
+assert(nextGate.goalCompletionStatus === 'INCOMPLETE_EXTERNAL_INPUTS', 'goal completion state drifted');
+assert(
+  nextGate.goalRuleDeviationDisposition ===
+    'EXPLICIT_OWNER_RETENTION_EXCEPTION_RECORDED_FOR_EXACT_FOUR_COMMITS',
+  'goal-rule exception disposition drifted',
+);
 assert(nextGate.mergeTrainRecommendation === 'NO_MERGE_INPUT_INCOMPLETE', 'merge gate unexpectedly opened');
 assert(nextGate.tenderMatrixEntryGate === 'BLOCKED_BOTH', 'Tender Matrix gate unexpectedly opened');
 assert(nextGate.issue165Status === 'HOLD', 'Issue #165 boundary unexpectedly changed');
@@ -373,9 +419,11 @@ assert(
 );
 assert(
   commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')?.goalCompletionStatus ===
-    'INCOMPLETE_CHANGE_AUTHORITY_HOLD'
+    'INCOMPLETE_EXTERNAL_INPUTS'
     && commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')?.changeAuthorityStatus ===
-      'HOLD_OWNER_DISPOSITION_REQUIRED',
+      'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS'
+    && commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')
+      ?.retentionDispositionsRecorded === 4,
   'pilot verifier change-authority result drifted',
 );
 const pr206Commands = [
@@ -515,7 +563,7 @@ const verificationInputSha256 = Object.fromEntries(
 );
 
 const report = {
-  schemaVersion: 'evidence-to-decision-pilot-refresh-run-v2',
+  schemaVersion: 'evidence-to-decision-pilot-refresh-run-v3',
   asOf: AS_OF,
   boundary: 'NOT_PRODUCTION_EVIDENCE',
   evaluatedBaseSha: EXPECTED_BASE_SHA,
@@ -591,11 +639,19 @@ const report = {
     explicitProductCodeFixCommits: changeAuthorityAudit.counts.explicitProductCodeFixCommits,
     commitsWithExplicitRetentionAuthorityRecord:
       changeAuthorityAudit.counts.commitsWithExplicitRetentionAuthorityRecord,
+    ownerDisposition: {
+      recordedAtDate: changeAuthorityAudit.ownerDispositionRecord.recordedAtDate,
+      source: changeAuthorityAudit.ownerDispositionRecord.source,
+      exactInstruction: changeAuthorityAudit.ownerDispositionRecord.exactInstruction,
+      disposition: changeAuthorityAudit.ownerDispositionRecord.disposition,
+      appliesToCommitShas: changeAuthorityAudit.ownerDispositionRecord.appliesToCommitShas,
+    },
   },
   productionReady: false,
   productionReviewerWorkflowReady: false,
   prohibitedActionsPerformed: [],
   goalRuleDeviationsObserved: nextGate.goalRuleDeviationsObserved,
+  goalRuleDeviationDisposition: nextGate.goalRuleDeviationDisposition,
   commandLedger: {
     relativePath: 'tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json',
     sha256: verificationInputSha256['tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json'],
