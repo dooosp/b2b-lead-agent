@@ -1,8 +1,12 @@
 {
-  "schemaVersion": "evidence-to-decision-github-state-v1",
+  "schemaVersion": "evidence-to-decision-github-state-v2",
   "observedAtDate": "2026-07-19",
   "repository": "dooosp/b2b-lead-agent",
-  "observationMethod": "gh pr view --json",
+  "observationMethods": [
+    "gh pr view 206 --json",
+    "gh pr view 207 --json",
+    "gh issue view 165 --json"
+  ],
   "pullRequests": [
     {
       "number": 206,
@@ -75,5 +79,16 @@
       ]
     }
   ],
-  "interpretation": "This is a dated observation, not a guarantee of future GitHub state. All listed checks were completed successfully at observation time."
+  "issue165": {
+    "number": 165,
+    "url": "https://github.com/dooosp/b2b-lead-agent/issues/165",
+    "title": "Level 1 Blocker: Final Production Reviewer Workflow Proof Approval",
+    "state": "OPEN",
+    "updatedAt": "2026-06-05T13:52:55Z",
+    "latestCommentUrl": "https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4632271853",
+    "latestCommentCreatedAt": "2026-06-05T13:52:55Z",
+    "latestDecision": "HOLD",
+    "latestDecisionReason": "The latest approval-intake validation refused the proposed command allowlist; no production proof was executed and the issue remains HOLD."
+  },
+  "interpretation": "This is a dated read-only observation, not a guarantee of future GitHub state. Both PRs were Draft/Open with successful listed checks, and Issue #165's latest recorded decision remained HOLD at observation time."
 }

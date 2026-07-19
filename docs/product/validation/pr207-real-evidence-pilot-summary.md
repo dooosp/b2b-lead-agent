@@ -21,7 +21,9 @@ The existing source ledger records 11 publisher-domain-associated files evaluate
 | Switchgear / transformer bundles | 4 / 4 |
 | Korean / English bundles | 4 / 4 |
 | Human validity/use decisions | 0 / 8 |
-| Human candidate decisions | 0 / 25 required |
+| Human candidate decisions | 0 |
+| Approved for repository review | 0 / 25 required |
+| Approved switchgear / transformer candidates | 0 / 10 required each |
 
 ## Current variant-table result
 
@@ -47,7 +49,7 @@ Read-only security and method review found two additional blockers. The real-int
 
 ## Why this remains incomplete
 
-There are no safe candidates to present for the required 25 human decisions, and all eight document-level authenticity/currentness/fidelity/use judgments remain missing. Machine determinism does not establish officiality. No repository-reviewed canonical claim, `VERIFIED` state, or customer-use permission was created.
+There are no safe candidates to present for human decisions, and all eight document-level authenticity/currentness/fidelity/use judgments remain missing. The MERGE gate requires at least 25 candidates actually approved for repository review and at least 10 approved per product family; rejected or deferred reviews do not satisfy those thresholds. Machine determinism does not establish officiality. No repository-reviewed canonical claim, `VERIFIED` state, or customer-use permission was created.
 
 The bounded architecture signal is to decide whether to represent variants, semantic operators such as maximum, units, conditions, footnotes, and table row/header relationships before repeating candidate review. Only two rows were mapped, so this result proves current insufficiency but not universal prevalence.
 
@@ -59,7 +61,7 @@ The Goal permits PR #207 fixes only when Track B is `REVISE`. Missing human deci
 2. An evidence-architecture owner must make a bounded go/no-go decision on variant-aware table semantics.
 3. A rights/security owner must keep the real-intake UI blocked until complete page-text transport is removed or explicitly rights-approved.
 4. A validation-method owner must authorize a review-evidence retention correction before the required human metrics can be reconstructed.
-5. If a safe candidate population is later produced, qualified reviewers must complete at least 25 structured candidate decisions, including at least 10 for each product family, before any MERGE claim.
+5. If a safe candidate population is later produced, qualified reviewers must review enough candidates to approve at least 25 for repository review, including at least 10 approved candidates per product family, before any MERGE claim.
 
 Until then, do not merge PR #207, weaken private-data guards, call these documents official/current, export a canonical patch, or start the Tender Matrix.
 

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "evidence-to-decision-initial-investigation-ledger-v1",
+  "observedAtDate": "2026-07-19",
+  "boundary": "AUTOMATED_READ_ONLY_INVESTIGATION_NOT_HUMAN_REVIEW",
+  "required": 8,
+  "completed": 8,
+  "investigations": [
+    {
+      "id": "A",
+      "role": "PR206_PRODUCT_VALIDATION",
+      "outcome": "EXACT_SCHEMA_REVIEWED_ZERO_COMPLETED_HUMAN_SESSIONS",
+      "evidenceRefs": [
+        "docs/product/validation/pr206-human-validation-decision.json#inputCounts",
+        "docs/product/validation/pr206-human-validation-decision.json#humanMetrics"
+      ]
+    },
+    {
+      "id": "B",
+      "role": "PR207_DOCUMENT_VALIDITY",
+      "outcome": "ELEVEN_EVALUATED_EIGHT_MACHINE_ADMITTED_THREE_REFUSED_ALL_AUTHENTICITY_UNREVIEWED",
+      "evidenceRefs": [
+        "docs/product/validation/pr207-real-evidence-input-ledger.json#counts",
+        "tmp/codex/pr207-real-evidence-pilot-run-non-production.json"
+      ]
+    },
+    {
+      "id": "C",
+      "role": "QUANTITATIVE_METHODOLOGY",
+      "outcome": "PR206_AUTOMATED_AGGREGATE_NOT_DECISION_CAPABLE_AND_HUMAN_METRICS_NULL",
+      "evidenceRefs": [
+        "docs/product/validation/pr206-human-validation-decision.json#independentMethodologyRisks",
+        "docs/product/validation/pr206-human-validation-decision.json#automatedGateFitness"
+      ]
+    },
+    {
+      "id": "D",
+      "role": "PRODUCT_USEFULNESS",
+      "outcome": "NO_HUMAN_USEFULNESS_RESULT_AVAILABLE",
+      "evidenceRefs": [
+        "docs/product/validation/pr206-human-validation-decision.json#humanMetrics",
+        "docs/product/validation/pr207-real-evidence-pilot-decision.json#humanMetrics"
+      ]
+    },
+    {
+      "id": "E",
+      "role": "ELECTRICAL_PRODUCT_EVIDENCE",
+      "outcome": "TWO_ROWS_FAIL_CLOSED_ON_VARIANT_AND_MAXIMUM_SEMANTICS_NO_ENGINEERING_CERTIFICATION",
+      "evidenceRefs": [
+        "docs/product/validation/pr207-real-evidence-pilot-decision.json#currentVariantTableRun",
+        "docs/product/validation/pr207-real-evidence-pilot-decision.json#architectureSignalScope"
+      ]
+    },
+    {
+      "id": "F",
+      "role": "SECURITY_PRIVACY_COPYRIGHT",
+      "outcome": "PRIVATE_INPUTS_BOUNDED_REAL_INTAKE_UI_BLOCKED_FOR_COMPLETE_PAGE_TEXT_TRANSPORT_RISK",
+      "evidenceRefs": [
+        "docs/product/validation/pr206-human-validation-decision.json#safeIntake",
+        "docs/product/validation/pr207-real-evidence-pilot-decision.json#findings"
+      ]
+    },
+    {
+      "id": "G",
+      "role": "TEST_AND_IMPLEMENTATION_FIDELITY",
+      "outcome": "CURRENT_REVIEW_OUTPUT_CANNOT_RECONSTRUCT_REQUIRED_HUMAN_METRICS",
+      "evidenceRefs": [
+        "docs/product/validation/pr207-real-evidence-pilot-decision.json#humanReviewEvidenceRetentionFitness",
+        "docs/product/validation/pr207-real-evidence-pilot-decision.json#findings"
+      ]
+    },
+    {
+      "id": "H",
+      "role": "SKEPTICAL_DECISION_REVIEW",
+      "outcome": "TRACK_A_INCOMPLETE_TRACK_B_INCOMPLETE_OVERALL_BLOCKED_BOTH",
+      "evidenceRefs": [
+        "docs/product/validation/evidence-to-decision-next-gate.json#overallStatus",
+        "docs/product/validation/evidence-to-decision-next-gate.json#mergeTrainRecommendation"
+      ]
+    }
+  ],
+  "nonClaims": [
+    "These investigations are automated read-only analyses, not human validation sessions or engineering certification.",
+    "They do not establish document authenticity, rights approval, product usefulness, or candidate approval."
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "evidence-to-decision-next-gate-v3",
+  "schemaVersion": "evidence-to-decision-next-gate-v4",
   "asOf": "2026-07-19",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
@@ -35,6 +35,11 @@
     "safeProposals": 0,
     "safeAbstentions": 2,
     "humanCandidateDecisions": 0,
+    "approvedForRepositoryReview": 0,
+    "approvedForRepositoryReviewByFamily": {
+      "medium_voltage_switchgear": 0,
+      "transformer": 0
+    },
     "realIntakeUiAllowed": false,
     "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_REQUIRED_METRICS",
     "fixesPerformedInRefresh": 0
@@ -42,7 +47,7 @@
   "overallDecision": "INCOMPLETE",
   "overallStatus": "BLOCKED_BOTH",
   "mergeTrainRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
-  "mergeTrainReason": "Track A has zero completed human sessions. Track B has zero human validity decisions, zero safe propositions, and zero human candidate decisions. The Goal's explicit rules therefore require both tracks to remain INCOMPLETE.",
+  "mergeTrainReason": "Track A has zero completed human sessions. Track B has zero human validity decisions, zero safe propositions, zero human candidate decisions, and zero candidates approved for repository review. The Goal's explicit rules therefore require both tracks to remain INCOMPLETE.",
   "tenderMatrixEntryGate": "BLOCKED_BOTH",
   "tenderMatrixBlockers": [
     "PR206_DECISION_NOT_MERGE",
@@ -82,16 +87,23 @@
       "required": 1
     },
     {
-      "owner": "PR207_RIGHTS_SECURITY_AND_VALIDATION_METHOD_OWNERS",
-      "input": "Keep the real-intake UI blocked until complete normalized page-text transport is removed or rights-approved, and separately authorize retention of all human decisions, duration, usefulness, and patch-suitability evidence.",
+      "owner": "PR207_RIGHTS_SECURITY_OWNER",
+      "input": "Keep the real-intake UI blocked until complete normalized page-text transport is removed or explicitly approved under a documented rights boundary.",
+      "current": 0,
+      "required": 1
+    },
+    {
+      "owner": "PR207_VALIDATION_METHOD_OWNER",
+      "input": "Authorize a reconstructable review-evidence retention method covering every decision, duration, usefulness, precision denominator, and patch-suitability result.",
       "current": 0,
       "required": 1
     },
     {
       "owner": "PR207_QUALIFIED_CANDIDATE_REVIEWERS",
-      "input": "After safe propositions exist, at least 25 structured human candidate decisions, including at least 10 for each product family.",
+      "input": "After safe propositions exist, review enough candidates to approve at least 25 for repository review, including at least 10 approved candidates for each product family; rejected and deferred decisions do not count toward these approval thresholds.",
       "current": 0,
-      "required": 25
+      "required": 25,
+      "countUnit": "APPROVED_FOR_REPOSITORY_REVIEW_CANDIDATES"
     }
   ],
   "evidenceBackedConclusions": [
@@ -128,6 +140,7 @@
     "required": 8,
     "completed": 8,
     "remaining": 0,
+    "ledger": "tmp/codex/evidence-to-decision-initial-investigation-ledger-20260719.json",
     "finalReviewProtocol": "FIVE_FRESH_READ_ONLY_REVIEWS_REQUIRED_AGAINST_FINAL_CLEAN_COMMIT",
     "finalReviewResultLocation": "POST_COMMIT_REVIEW_RECORD_OUTSIDE_THIS_SELF_REFERENTIAL_ARTIFACT"
   },
@@ -143,5 +156,5 @@
   "productionReviewerWorkflowReady": false,
   "bothPrsRemainDraft": true,
   "bothPrsRemainUnmerged": true,
-  "nextAction": "External-input and method HOLD: do not merge either PR, launch the PR207 real-intake UI, or start the Tender Matrix. A method owner must resolve or explicitly accept PR206 gate limits before R1-R5 results are treated as merge evidence. PR207 requires human document validity/use decisions plus rights, review-retention, and bounded variant-aware architecture owner decisions before any candidate pilot repetition."
+  "nextAction": "External-input and method HOLD: do not merge either PR, launch the PR207 real-intake UI, or start the Tender Matrix. A method owner must resolve or explicitly accept PR206 gate limits before R1-R5 results are treated as merge evidence. PR207 requires human document validity/use decisions plus separate rights, review-retention, and bounded variant-aware architecture owner decisions before candidate-pilot repetition; any later MERGE claim additionally requires at least 25 approved candidates with at least 10 approved per product family."
 }

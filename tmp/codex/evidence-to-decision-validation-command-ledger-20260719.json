@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "evidence-to-decision-validation-command-ledger-v1",
+  "schemaVersion": "evidence-to-decision-validation-command-ledger-v2",
   "observedAtDate": "2026-07-19",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "productionReady": false,
@@ -35,45 +35,194 @@
       "failed": 0
     },
     {
+      "id": "GITHUB_STATE_RECHECK",
+      "status": "PASS",
+      "exitCode": 0,
+      "commandResults": [
+        {
+          "command": "gh pr view 206 --repo dooosp/b2b-lead-agent --json number,state,isDraft,mergeable,headRefOid,baseRefOid,statusCheckRollup,url",
+          "exitCode": 0,
+          "observed": "OPEN_DRAFT_HEAD_B5570E1_CHECKS_3_OF_3_SUCCESS"
+        },
+        {
+          "command": "gh pr view 207 --repo dooosp/b2b-lead-agent --json number,state,isDraft,mergeable,headRefOid,baseRefOid,statusCheckRollup,url",
+          "exitCode": 0,
+          "observed": "OPEN_DRAFT_HEAD_C6A5469_CHECKS_3_OF_3_SUCCESS"
+        },
+        {
+          "command": "gh issue view 165 --repo dooosp/b2b-lead-agent --json number,state,title,updatedAt,url,labels,body,comments",
+          "exitCode": 0,
+          "observed": "OPEN_LATEST_DECISION_HOLD_ISSUECOMMENT_4632271853"
+        }
+      ]
+    },
+    {
       "id": "PR206_REQUIRED_COMMANDS",
-      "commands": [
-        "npm run test:pursuit-workbench",
-        "npm run eval:pursuit-workbench",
-        "npm run test:pursuit-workbench:e2e",
-        "npm run test:claim-spec-fit",
-        "npm test",
-        "npm run check:naming",
-        "npm run check:schema",
-        "npm run test:e2e:local",
-        "npm run test:evidence",
-        "npm run check:lead-pipeline-replay",
-        "git diff --check"
+      "expectedCommandCount": 12,
+      "commandResults": [
+        {
+          "command": "npm ci",
+          "exitCode": 0,
+          "counts": { "packagesAdded": 57, "packagesAudited": 58, "vulnerabilities": 0 }
+        },
+        {
+          "command": "npm run test:pursuit-workbench",
+          "exitCode": 0,
+          "counts": { "tests": 93, "passed": 93, "failed": 0 }
+        },
+        {
+          "command": "npm run eval:pursuit-workbench",
+          "exitCode": 0,
+          "counts": { "syntheticScenarios": 12, "passed": 12, "failed": 0, "repeatRuns": 2 }
+        },
+        {
+          "command": "npm run test:pursuit-workbench:e2e",
+          "exitCode": 0,
+          "counts": { "tests": 5, "passed": 5, "failed": 0 }
+        },
+        {
+          "command": "npm run test:claim-spec-fit",
+          "exitCode": 0,
+          "counts": { "tests": 37, "passed": 37, "failed": 0 }
+        },
+        {
+          "command": "npm test",
+          "exitCode": 0,
+          "counts": {
+            "root": { "tests": 313, "passed": 313, "failed": 0 },
+            "workerUnit": { "tests": 416, "passed": 416, "failed": 0 },
+            "workerContract": { "tests": 30, "passed": 30, "failed": 0 }
+          }
+        },
+        {
+          "command": "npm run check:naming",
+          "exitCode": 0,
+          "counts": { "commandChecksPassed": 1, "commandChecksFailed": 0 }
+        },
+        {
+          "command": "npm run check:schema",
+          "exitCode": 0,
+          "counts": { "commandChecksPassed": 1, "commandChecksFailed": 0 }
+        },
+        {
+          "command": "npm run test:e2e:local",
+          "exitCode": 0,
+          "counts": { "tests": 1, "passed": 1, "failed": 0 }
+        },
+        {
+          "command": "npm run test:evidence",
+          "exitCode": 0,
+          "counts": { "tests": 7, "passed": 7, "failed": 0 }
+        },
+        {
+          "command": "npm run check:lead-pipeline-replay",
+          "exitCode": 0,
+          "counts": { "tests": 6, "passed": 6, "failed": 0 }
+        },
+        {
+          "command": "git diff --check",
+          "exitCode": 0,
+          "counts": { "whitespaceErrors": 0 }
+        }
       ],
       "status": "PASS",
       "exitCode": 0,
-      "sandboxRetry": "INITIAL_LOOPBACK_BIND_EPERM_THEN_PASS_WITH_LOCAL_LOOPBACK_PERMISSION",
+      "sandboxRetry": "INITIAL_SERVER_TEST_LOOPBACK_BIND_EPERM_NOT_ACCEPTED_THEN_ALL_FINAL_SERVER_TEST_COMMANDS_PASS_WITH_LOCAL_LOOPBACK_PERMISSION",
       "trackedWorktreeAfter": "CLEAN"
     },
     {
       "id": "PR207_REQUIRED_COMMANDS",
-      "commands": [
-        "npm run test:evidence-claim-workbench",
-        "npm run test:evidence-claim-workbench:e2e",
-        "npm run eval:evidence-claim-workbench",
-        "npm run measure:evidence-claim-workbench",
-        "npm run test:claim-spec-fit",
-        "npm test",
-        "npm run check:naming",
-        "npm run check:schema",
-        "npm run test:e2e:local",
-        "npm run test:evidence",
-        "npm run check:lead-pipeline-replay",
-        "git diff --check"
+      "expectedCommandCount": 14,
+      "commandResults": [
+        {
+          "command": "npm ci",
+          "exitCode": 0,
+          "counts": { "packagesAdded": 57, "packagesAudited": 58, "vulnerabilities": 0 }
+        },
+        {
+          "command": "npm run test:evidence-claim-workbench",
+          "exitCode": 0,
+          "counts": { "tests": 113, "passed": 113, "failed": 0 }
+        },
+        {
+          "command": "npm run test:evidence-claim-workbench:e2e",
+          "exitCode": 0,
+          "counts": { "tests": 4, "passed": 4, "failed": 0 }
+        },
+        {
+          "command": "npm run eval:evidence-claim-workbench",
+          "exitCode": 0,
+          "counts": { "syntheticScenarios": 35, "passed": 35, "failed": 0, "repeatRuns": 2 }
+        },
+        {
+          "command": "npm run audit:evidence-documents",
+          "exitCode": 0,
+          "counts": {
+            "syntheticScenarios": 35,
+            "syntheticDocumentRecords": 39,
+            "normalizedDocumentRecords": 26,
+            "rejectedDocumentRecords": 13,
+            "realDocumentsAcceptedAtFixedClock": 0,
+            "realCandidatesCreated": 0,
+            "actualHumanReviewSessions": 0,
+            "violations": 0
+          },
+          "fixedClockRealInputDiagnostic": "PRESENT_REJECTED_FUTURE_DOCUMENT_DATE_COUNT_UNKNOWN_AFTER_FAIL_CLOSED_INTAKE_REFUSAL"
+        },
+        {
+          "command": "npm run measure:evidence-claim-workbench",
+          "exitCode": 0,
+          "counts": { "measurements": 18, "violations": 0 }
+        },
+        {
+          "command": "npm run test:claim-spec-fit",
+          "exitCode": 0,
+          "counts": { "tests": 38, "passed": 38, "failed": 0 }
+        },
+        {
+          "command": "npm test",
+          "exitCode": 0,
+          "counts": {
+            "root": { "tests": 225, "passed": 225, "failed": 0 },
+            "workerUnit": { "tests": 416, "passed": 416, "failed": 0 },
+            "workerContract": { "tests": 28, "passed": 28, "failed": 0 }
+          }
+        },
+        {
+          "command": "npm run check:naming",
+          "exitCode": 0,
+          "counts": { "commandChecksPassed": 1, "commandChecksFailed": 0 }
+        },
+        {
+          "command": "npm run check:schema",
+          "exitCode": 0,
+          "counts": { "commandChecksPassed": 1, "commandChecksFailed": 0 }
+        },
+        {
+          "command": "npm run test:e2e:local",
+          "exitCode": 0,
+          "counts": { "tests": 1, "passed": 1, "failed": 0 }
+        },
+        {
+          "command": "npm run test:evidence",
+          "exitCode": 0,
+          "counts": { "tests": 7, "passed": 7, "failed": 0 }
+        },
+        {
+          "command": "npm run check:lead-pipeline-replay",
+          "exitCode": 0,
+          "counts": { "tests": 6, "passed": 6, "failed": 0 }
+        },
+        {
+          "command": "git diff --check",
+          "exitCode": 0,
+          "counts": { "whitespaceErrors": 0 }
+        }
       ],
       "status": "PASS",
       "exitCode": 0,
-      "sandboxRetry": "INITIAL_LOOPBACK_BIND_EPERM_THEN_PASS_WITH_LOCAL_LOOPBACK_PERMISSION",
-      "realInboxHandling": "TEMPORARILY_RENAMED_FOR_SYNTHETIC_MISSING_INPUT_ASSERTION_THEN_RESTORED_BY_SHELL_TRAP",
+      "sandboxRetry": "INITIAL_SERVER_TEST_LOOPBACK_BIND_EPERM_NOT_ACCEPTED_THEN_ALL_FINAL_SERVER_TEST_COMMANDS_PASS_WITH_LOCAL_LOOPBACK_PERMISSION",
+      "realInboxHandling": "AUDIT_EVIDENCE_DOCUMENTS_RAN_WITH_REAL_INBOX_PRESENT; OTHER_SYNTHETIC_REGRESSION_COMMANDS_USED_TEMPORARY_RENAME_AND_FINALLY_RESTORE",
       "realInboxFileCountAfter": 10,
       "temporaryHoldPathAfter": "ABSENT",
       "trackedWorktreeAfter": "CLEAN"

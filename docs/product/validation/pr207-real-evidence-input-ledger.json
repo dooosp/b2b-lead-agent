@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "pr207-real-evidence-input-ledger-v2",
+  "schemaVersion": "pr207-real-evidence-input-ledger-v3",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "sourcePr": 207,
   "asOf": "2026-07-18T13:00:48.000Z",
@@ -8,6 +8,7 @@
   "acceptedSourceHashCheckAtBuild": "EXPECTED_SHA256_BOUND_TO_NOFOLLOW_SINGLE_LINK_DESCRIPTOR_SNAPSHOT",
   "semanticWarning": "Legacy documentType labels containing OFFICIAL describe the PR207 schema vocabulary only; every listed source remains authenticity UNREVIEWED.",
   "machineRunArtifact": "tmp/codex/pr207-real-evidence-pilot-run-non-production.json",
+  "machineRunManifestSha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953",
   "counts": {
     "documentsEvaluated": 11,
     "machineIntakeAccepted": 8,
@@ -19,6 +20,10 @@
     "acceptedByLanguage": {
       "ko": 4,
       "en": 4
+    },
+    "machineRunRefusalReasonsExact": {
+      "SOURCE_SIZE_EXCEEDS_25000000_BYTE_INTAKE_LIMIT": 2,
+      "DOCUMENT_LANGUAGE_MISMATCH_DECLARED_KO_REPRESENTATIVE_PAGES_ZERO_HANGUL": 1
     }
   },
   "documents": [

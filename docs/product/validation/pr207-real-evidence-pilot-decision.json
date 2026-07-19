@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "pr207-real-evidence-pilot-decision-v3",
+  "schemaVersion": "pr207-real-evidence-pilot-decision-v4",
   "asOf": "2026-07-19T00:00:00.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "sourcePr": 207,
@@ -14,6 +14,8 @@
   },
   "inputLineage": {
     "boundedSourceLedger": "docs/product/validation/pr207-real-evidence-input-ledger.json",
+    "machineRunArtifact": "tmp/codex/pr207-real-evidence-pilot-run-non-production.json",
+    "machineRunManifestSha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953",
     "documentsPreviouslyEvaluated": 11,
     "documentsAcceptedByMachineIntake": 8,
     "documentsRefusedBeforeIntake": 3,
@@ -69,8 +71,17 @@
     "originalSourceFidelityDecisions": 0,
     "redistributionOrUseRightsDecisions": 0,
     "candidateReviewSessions": 0,
+    "candidateSuggestions": 0,
     "candidateDecisions": 0,
+    "reviewedSuggestions": 0,
     "approvedForRepositoryReview": 0,
+    "approvedForRepositoryReviewByFamily": {
+      "medium_voltage_switchgear": 0,
+      "transformer": 0
+    },
+    "rejectedCandidates": 0,
+    "deferredCandidates": 0,
+    "falsePositivesAmongReviewedSuggestions": 0,
     "canonicalVerifiedClaimsCreated": 0,
     "customerUseAllowedClaimsCreated": 0
   },
@@ -87,14 +98,34 @@
     "reviewerPatchSuitability": null,
     "reviewerUsefulness": null
   },
+  "observedSafetyCounts": {
+    "documentPageHashMismatchEscapes": null,
+    "automaticVerifiedLeakage": 0,
+    "automaticAllowedLeakage": 0,
+    "fullDocumentCommitted": 0,
+    "fullDocumentRuntimeLeakageObserved": 0,
+    "secretOrPrivateLeakageObserved": 0,
+    "unresolvedP0": 0,
+    "interpretation": "Zero observed leakage is not a rights approval. The unlaunched real-intake UI still has an open complete-page-text transport risk. Hash-mismatch escape rate is unavailable without human-validated real documents and candidates."
+  },
   "thresholdResults": {
-    "atLeastEightDocuments": "MACHINE_INPUT_PRESENT_NOT_HUMAN_VALIDATED",
-    "switchgearAndTransformerCoverage": "MACHINE_INPUT_PRESENT_NOT_HUMAN_VALIDATED",
-    "atLeastTwentyFiveCandidateDecisions": "INCOMPLETE_0_OF_25",
-    "atLeastTenCandidatesPerFamily": "INCOMPLETE_0_OF_10_EACH",
+    "acceptedDocumentsAtLeastEight": "MACHINE_INTAKE_8_OF_8_AUTHENTICITY_AND_RIGHTS_UNRESOLVED",
+    "acceptedSwitchgearDocumentsAtLeastFour": "MACHINE_INTAKE_4_OF_4_AUTHENTICITY_AND_RIGHTS_UNRESOLVED",
+    "acceptedTransformerDocumentsAtLeastFour": "MACHINE_INTAKE_4_OF_4_AUTHENTICITY_AND_RIGHTS_UNRESOLVED",
+    "koreanAndEnglishRepresented": "MACHINE_INTAKE_KO_4_EN_4_AUTHENTICITY_AND_RIGHTS_UNRESOLVED",
+    "quoteToPageTraceabilityOneHundredPercent": "INCOMPLETE_NO_HUMAN_REVIEWED_CANDIDATES",
+    "documentPageHashMismatchEscapesZero": "INCOMPLETE_NO_HUMAN_VALIDATED_REAL_DOCUMENT_AND_CANDIDATE_POPULATION",
+    "approvedForRepositoryReviewAtLeastTwentyFive": "INCOMPLETE_0_OF_25",
+    "approvedForRepositoryReviewAtLeastTenPerFamily": "INCOMPLETE_SWITCHGEAR_0_OF_10_TRANSFORMER_0_OF_10",
+    "reviewedSuggestionPrecisionAtLeastEightyPercent": "INCOMPLETE_NO_HUMAN_REVIEWED_SUGGESTIONS",
+    "materialUnresolvedConflictsVisiblyBlocking": "INCOMPLETE_NO_SAFE_REAL_CANDIDATE_POPULATION",
     "allDocumentValidityDecisions": "INCOMPLETE_0_OF_8",
-    "noAutomaticVerified": "PASS_0",
-    "noAutomaticCustomerUseAllowed": "PASS_0",
+    "automaticVerifiedLeakageZero": "PASS_OBSERVED_0",
+    "automaticAllowedLeakageZero": "PASS_OBSERVED_0",
+    "fullDocumentCommitOrLeakageZero": "PASS_OBSERVED_0_WITH_UNLAUNCHED_UI_TRANSPORT_RISK_OPEN",
+    "secretOrPrivateLeakageZero": "PASS_OBSERVED_0",
+    "unresolvedP0Zero": "PASS_0",
+    "generatedPatchSuitableForRepositoryReview": "INCOMPLETE_NO_HUMAN_PATCH_SUITABILITY_DECISION",
     "summary": "INCOMPLETE"
   },
   "findings": [
@@ -145,14 +176,14 @@
   "architectureSignal": "PIVOT_REQUIRED_FOR_VARIANT_AWARE_TABLE_EVIDENCE_BEFORE_REPEAT",
   "architectureSignalScope": "Bounded to two mapped rows across the eight supplied normalized documents. It proves current coverage is insufficient, not the prevalence of every unsupported table form. The reported reason is only the first blocker; latent footnote, geometry, column, condition, and configuration semantics remain unresolved.",
   "decision": "INCOMPLETE",
-  "decisionReason": "The Goal requires human document-validity decisions and at least 25 human candidate decisions. Current inputs contain zero safe proposals, zero validity decisions, and zero candidate decisions, so Track B must remain INCOMPLETE even though fail-closed abstention is correct.",
+  "decisionReason": "The Goal requires resolved document authenticity/use status, human candidate decisions, at least 25 candidates approved for repository review, and at least 10 approved per product family. Current inputs contain zero safe proposals, zero validity decisions, zero candidate decisions, and zero approved candidates, so Track B must remain INCOMPLETE even though fail-closed abstention is correct.",
   "mergeRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
   "nextExternalInputs": [
     "A qualified human must decide authenticity, revision currentness, original-source fidelity, and redistribution/use status for each of the eight normalized document bundles.",
     "An evidence-architecture owner must make a bounded go/no-go decision on representing product variants, semantic operators such as maximum, units, conditions, footnotes, and row/header relationships.",
     "A rights/security owner must keep the real-intake UI blocked until full normalized page-text transport is removed or explicitly approved under a documented rights boundary.",
     "A validation-method owner must separately authorize a review-evidence retention correction before candidate-review metrics can be reconstructed.",
-    "Only after those prerequisites and a safe candidate population exist may qualified reviewers produce at least 25 structured candidate decisions, including at least 10 per product family."
+    "Only after those prerequisites and a safe candidate population exist may qualified reviewers review enough candidates to approve at least 25 for repository review, including at least 10 approved candidates per product family; rejected and deferred decisions do not satisfy those approval thresholds."
   ],
   "productionReady": false,
   "productionReviewerWorkflowReady": false,

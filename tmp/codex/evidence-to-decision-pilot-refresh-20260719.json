@@ -1,20 +1,24 @@
 {
-  "schemaVersion": "evidence-to-decision-pilot-refresh-run-v1",
+  "schemaVersion": "evidence-to-decision-pilot-refresh-run-v2",
   "asOf": "2026-07-19T00:00:00.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
   "refreshLineage": {
     "artifactParentSha": "5caa852",
-    "refreshInputCommitSha": "90d2a6660c3cf0bdbd04748f64494655b0b925e3",
+    "refreshInputCommitSha": "994cb51f670631dafcc3b129956cae095b156846",
     "verificationInputSha256": {
       "docs/product/validation/pr206-human-validation-decision.json": "543d97c3cf3a9b51292a71baf310efa9fdda00772ef638e113aef53c33b45b21",
-      "docs/product/validation/pr207-real-evidence-input-ledger.json": "2a2be5c56246340d7f67a9f3fd22205bfd041a349c4aa616d7e37e4be1073eff",
-      "docs/product/validation/pr207-real-evidence-pilot-decision.json": "5d1bb1061003ed3e786c6f8ed44f8f06d08614ddf920190aa44947f7e6d59b9e",
-      "docs/product/validation/evidence-to-decision-next-gate.json": "fb30aa720aef94964dd6f7718da2ed2686594e765c8c1b64b4b62f3960ddae31",
-      "tmp/codex/evidence-to-decision-pilot-repo-preflight.json": "a52fe0ddcfdb4042770b65b09cda558967670f46d8938661d604d38bb8f85926",
-      "tmp/codex/evidence-to-decision-github-state-20260719.json": "6d3a20d4454cd236e4b5ec6696bbe7337448f8046ddbb2a54dba6d60f9a12802",
-      "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json": "9eb7cf5c9bbb053b552346053510107b2fb9749ba7d905e8fd12cd73977bf231",
-      "scripts/verify-evidence-to-decision-pilot-refresh.mjs": "8ad9fe5bc8e033da11ac4ecb7fcfbcffcece90ddb7802a9d8f8a6c6ab639b07a",
+      "docs/product/validation/pr206-human-validation-summary.md": "2c72d7ce3313c4f1e1923c6846324e96fff862fee7e720fc24580f116976177b",
+      "docs/product/validation/pr207-real-evidence-input-ledger.json": "81a9e2e28c1cbff6dd998d57054c80cc5a999b126555405182769d7a9c30b429",
+      "docs/product/validation/pr207-real-evidence-pilot-decision.json": "5a2f0a4ef7e30a9acb2f6e7ed826e1ed96666aeea0c1bb8d95a301cd3febbefb",
+      "docs/product/validation/pr207-real-evidence-pilot-summary.md": "8f60224c2dc4fe372518f337e60abed68681fd586e2a3041fc4ae78255b9dcb1",
+      "docs/product/validation/evidence-to-decision-next-gate.json": "83067c6399223a53afceb1c23a9a46ef337d734b4e5df60749c8f23a9e649163",
+      "tmp/codex/evidence-to-decision-pilot-repo-preflight.json": "39224c08df1715a980d202d1b551ee72b93e8e8b8bc0d9e83d5ab58884577a37",
+      "tmp/codex/evidence-to-decision-github-state-20260719.json": "a9c2e4b389761a85782e72e2f636fd9c1c6cc3ec5ec59f1299df41907000e0bd",
+      "tmp/codex/evidence-to-decision-initial-investigation-ledger-20260719.json": "2239731c615d027d3da0342830ddd592f1cfbf1685221ffba787ddc87ef4c6f3",
+      "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json": "abe02db96a38168c4b2aee305fdc6513b200b7a41bcc338909e84ad1eebdd444",
+      "tmp/codex/pr207-real-evidence-pilot-run-non-production.json": "b2d333d324d2005f6c8965d84ff0b3f02d4d00c0064b102b9f5ca9bd64a3e9e2",
+      "scripts/verify-evidence-to-decision-pilot-refresh.mjs": "74df572463ae5d7cffc996f6448eb1bff0dfd76225af3891dd10e2bee7e637c3",
       "scripts/lib/safe-local-artifact-writer.mjs": "e0d441359140011f9f11c8846a6c8afc44fb0d850c85ccd2fc9aeafdb854f0e7",
       "tests/evidence-to-decision-pilot-artifacts.test.mjs": "9c7af6e58ec4259a797156ee74fb719a04d8744641380ca77e06dcc8ec562b2c",
       "package.json": "f4f58d324efa7661c57acc33d75d57f23bc3ca1577a4f438c319740a27999154",
@@ -64,18 +68,50 @@
       "interpretation": "NOT_A_CURRENT_REAL_INPUT_COUNT"
     },
     "realIntakeExecutionRestriction": "DO_NOT_LAUNCH_REAL_INTAKE_UI_WITH_UNREVIEWED_DOCUMENTS",
-    "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_RECONSTRUCTING_REQUIRED_PILOT_METRICS"
+    "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_RECONSTRUCTING_REQUIRED_PILOT_METRICS",
+    "machineIntake": {
+      "evaluatedSourceCount": 11,
+      "acceptedSourceCount": 8,
+      "refusedSourceCount": 3,
+      "manifestSha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953"
+    },
+    "humanCandidateDecisions": 0,
+    "approvedForRepositoryReview": 0,
+    "approvedForRepositoryReviewByFamily": {
+      "medium_voltage_switchgear": 0,
+      "transformer": 0
+    }
   },
   "overallDecision": "INCOMPLETE",
   "overallStatus": "BLOCKED_BOTH",
   "issue165Status": "HOLD",
+  "issue165Evidence": {
+    "state": "OPEN",
+    "latestDecision": "HOLD",
+    "latestCommentUrl": "https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4632271853"
+  },
+  "initialReadOnlyInvestigations": {
+    "required": 8,
+    "completed": 8,
+    "ids": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H"
+    ],
+    "boundary": "AUTOMATED_READ_ONLY_INVESTIGATION_NOT_HUMAN_REVIEW"
+  },
   "productionReady": false,
   "productionReviewerWorkflowReady": false,
   "prohibitedActionsPerformed": [],
   "commandLedger": {
     "relativePath": "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json",
-    "sha256": "9eb7cf5c9bbb053b552346053510107b2fb9749ba7d905e8fd12cd73977bf231",
-    "commandGroupCount": 5,
+    "sha256": "abe02db96a38168c4b2aee305fdc6513b200b7a41bcc338909e84ad1eebdd444",
+    "commandGroupCount": 6,
     "allPassed": true
   }
 }

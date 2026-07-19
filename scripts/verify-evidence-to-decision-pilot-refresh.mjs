@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { parseArgs } from 'node:util';
+import { isDeepStrictEqual, parseArgs } from 'node:util';
 import { writeJsonArtifactInsideWorktree } from './lib/safe-local-artifact-writer.mjs';
 
 const AS_OF = '2026-07-19T00:00:00.000Z';
@@ -18,6 +18,32 @@ const EXPECTED_VARIANT_CANONICAL_SHA256 =
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function assertExactCommandSet(group, expectedCommands) {
+  assert(group, 'required command group is missing');
+  assert(group.expectedCommandCount === expectedCommands.length, `${group.id} expected-command count drifted`);
+  assert(
+    JSON.stringify(group.commandResults?.map((result) => result.command)) === JSON.stringify(expectedCommands),
+    `${group.id} command set or order drifted`,
+  );
+  assert(
+    group.commandResults.every((result) => result.exitCode === 0),
+    `${group.id} contains a failed command`,
+  );
+  assert(
+    group.commandResults.every((result) => result.counts && Object.keys(result.counts).length > 0),
+    `${group.id} contains a command without exact result counts`,
+  );
+}
+
+function assertExactCommandCounts(group, expectedCountsByCommand) {
+  for (const result of group.commandResults) {
+    assert(
+      isDeepStrictEqual(result.counts, expectedCountsByCommand[result.command]),
+      `${group.id} exact counts drifted for: ${result.command}`,
+    );
+  }
 }
 
 function runJson(root, relativeScript, args = []) {
@@ -117,6 +143,8 @@ const nextGate = await readDecision('docs/product/validation/evidence-to-decisio
 const preflight = await readDecision('tmp/codex/evidence-to-decision-pilot-repo-preflight.json');
 const githubState = await readDecision('tmp/codex/evidence-to-decision-github-state-20260719.json');
 const pr207Ledger = await readDecision('docs/product/validation/pr207-real-evidence-input-ledger.json');
+const pr207MachineRun = await readDecision('tmp/codex/pr207-real-evidence-pilot-run-non-production.json');
+const investigationLedger = await readDecision('tmp/codex/evidence-to-decision-initial-investigation-ledger-20260719.json');
 const commandLedger = await readDecision('tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json');
 const packageJson = await readDecision('package.json');
 const ciWorkflow = await readFile(path.join(process.cwd(), '.github/workflows/ci.yml'), 'utf8');
@@ -143,6 +171,76 @@ assert(
     'PRESENT_DO_NOT_LAUNCH_BEFORE_RIGHTS_BOUNDARY_REMEDIATION_OR_APPROVAL',
   'PR207 ledger transport-risk warning drifted',
 );
+assert(pr207MachineRun.evaluatedSourceCount === 11, 'PR207 machine-run evaluated count drifted');
+assert(pr207MachineRun.acceptedSourceCount === 8, 'PR207 machine-run accepted count drifted');
+assert(pr207MachineRun.refusedSourceCount === 3, 'PR207 machine-run refused count drifted');
+assert(
+  pr207MachineRun.manifestSha256 === pr207Ledger.machineRunManifestSha256
+    && pr207Decision.inputLineage?.machineRunManifestSha256 === pr207MachineRun.manifestSha256,
+  'PR207 machine-run manifest hash drifted',
+);
+const ledgerAcceptedIds = pr207Ledger.documents
+  .filter((document) => document.intakeDecision === 'ACCEPTED')
+  .map((document) => document.documentId)
+  .sort();
+const machineAcceptedIds = pr207MachineRun.acceptedDocuments
+  .map((document) => document.documentId)
+  .sort();
+assert(
+  JSON.stringify(ledgerAcceptedIds) === JSON.stringify(machineAcceptedIds),
+  'PR207 accepted document IDs do not match the machine run',
+);
+const machineRefusalReasons = Object.fromEntries(
+  Object.entries(
+    pr207MachineRun.refusedSources.reduce((counts, source) => {
+      counts[source.refusalReason] = (counts[source.refusalReason] || 0) + 1;
+      return counts;
+    }, {}),
+  ).sort(([left], [right]) => left.localeCompare(right)),
+);
+const ledgerRefusalReasons = Object.fromEntries(
+  Object.entries(pr207Ledger.counts?.machineRunRefusalReasonsExact || {})
+    .sort(([left], [right]) => left.localeCompare(right)),
+);
+assert(
+  JSON.stringify(machineRefusalReasons) === JSON.stringify(ledgerRefusalReasons),
+  'PR207 refusal reasons do not match the machine run',
+);
+assert(pr207Decision.humanReviewCounts?.approvedForRepositoryReview === 0, 'PR207 approved count drifted');
+assert(
+  Object.values(pr207Decision.humanReviewCounts?.approvedForRepositoryReviewByFamily || {})
+    .every((count) => count === 0),
+  'PR207 per-family approved counts drifted',
+);
+assert(
+  pr207Decision.thresholdResults?.approvedForRepositoryReviewAtLeastTwentyFive === 'INCOMPLETE_0_OF_25',
+  'PR207 approved-candidate threshold drifted',
+);
+assert(
+  pr207Decision.thresholdResults?.approvedForRepositoryReviewAtLeastTenPerFamily ===
+    'INCOMPLETE_SWITCHGEAR_0_OF_10_TRANSFORMER_0_OF_10',
+  'PR207 per-family approved threshold drifted',
+);
+for (const requiredThreshold of [
+  'acceptedDocumentsAtLeastEight',
+  'acceptedSwitchgearDocumentsAtLeastFour',
+  'acceptedTransformerDocumentsAtLeastFour',
+  'koreanAndEnglishRepresented',
+  'quoteToPageTraceabilityOneHundredPercent',
+  'documentPageHashMismatchEscapesZero',
+  'approvedForRepositoryReviewAtLeastTwentyFive',
+  'approvedForRepositoryReviewAtLeastTenPerFamily',
+  'reviewedSuggestionPrecisionAtLeastEightyPercent',
+  'materialUnresolvedConflictsVisiblyBlocking',
+  'automaticVerifiedLeakageZero',
+  'automaticAllowedLeakageZero',
+  'fullDocumentCommitOrLeakageZero',
+  'secretOrPrivateLeakageZero',
+  'unresolvedP0Zero',
+  'generatedPatchSuitableForRepositoryReview',
+]) {
+  assert(requiredThreshold in pr207Decision.thresholdResults, `missing PR207 MERGE threshold: ${requiredThreshold}`);
+}
 assert(nextGate.pr206?.evaluatedHeadSha === pr206Head, 'next-gate PR206 head mismatch');
 assert(nextGate.pr206?.safeIgnoredIntakeAvailable === true, 'next-gate PR206 safe-intake state drifted');
 assert(nextGate.pr207?.evaluatedHeadSha === pr207Head, 'next-gate PR207 head mismatch');
@@ -165,6 +263,30 @@ for (const [label, snapshot, expectedHead] of [
     `${label} GitHub check snapshot is not all-success`,
   );
 }
+assert(githubState.issue165?.state === 'OPEN', 'Issue #165 GitHub state is not OPEN');
+assert(githubState.issue165?.latestDecision === 'HOLD', 'Issue #165 latest decision is not HOLD');
+assert(
+  githubState.issue165?.latestCommentUrl ===
+    'https://github.com/dooosp/b2b-lead-agent/issues/165#issuecomment-4632271853',
+  'Issue #165 HOLD evidence reference drifted',
+);
+assert(investigationLedger.boundary === 'AUTOMATED_READ_ONLY_INVESTIGATION_NOT_HUMAN_REVIEW', 'investigation boundary drifted');
+assert(investigationLedger.required === 8 && investigationLedger.completed === 8, 'investigation count drifted');
+assert(
+  investigationLedger.investigations?.map((investigation) => investigation.id).join('') === 'ABCDEFGH',
+  'investigation A-H ledger drifted',
+);
+assert(
+  nextGate.readOnlyInvestigationStatus?.ledger ===
+    'tmp/codex/evidence-to-decision-initial-investigation-ledger-20260719.json',
+  'next-gate investigation ledger reference drifted',
+);
+assert(
+  nextGate.missingExternalInputs?.filter((input) => input.owner === 'PR207_RIGHTS_SECURITY_OWNER').length === 1
+    && nextGate.missingExternalInputs?.filter((input) => input.owner === 'PR207_VALIDATION_METHOD_OWNER').length === 1,
+  'independent PR207 rights and validation-method inputs must remain separate',
+);
+assert(nextGate.pr207?.approvedForRepositoryReview === 0, 'next-gate PR207 approved count drifted');
 assert(nextGate.overallStatus === 'BLOCKED_BOTH', 'overall gate must remain BLOCKED_BOTH');
 assert(nextGate.mergeTrainRecommendation === 'NO_MERGE_INPUT_INCOMPLETE', 'merge gate unexpectedly opened');
 assert(nextGate.tenderMatrixEntryGate === 'BLOCKED_BOTH', 'Tender Matrix gate unexpectedly opened');
@@ -175,7 +297,7 @@ assert(commandLedger.evaluatedHeads?.pr206 === pr206Head, 'command-ledger PR206 
 assert(commandLedger.evaluatedHeads?.pr207 === pr207Head, 'command-ledger PR207 head mismatch');
 assert(commandLedger.evaluatedHeads?.base === EXPECTED_BASE_SHA, 'command-ledger base mismatch');
 assert(
-  commandLedger.commandGroups?.length === 5
+  commandLedger.commandGroups?.length === 6
     && commandLedger.commandGroups.every((group) => group.status === 'PASS' && group.exitCode === 0),
   'command-ledger result is not all-pass',
 );
@@ -187,6 +309,106 @@ assert(
   commandLedger.commandGroups.find((group) => group.id === 'PILOT_WORKFLOW_CONTRACT')?.passed === 29
     && commandLedger.commandGroups.find((group) => group.id === 'PILOT_WORKFLOW_CONTRACT')?.failed === 0,
   'pilot workflow-contract result drifted',
+);
+const pr206Commands = [
+  'npm ci',
+  'npm run test:pursuit-workbench',
+  'npm run eval:pursuit-workbench',
+  'npm run test:pursuit-workbench:e2e',
+  'npm run test:claim-spec-fit',
+  'npm test',
+  'npm run check:naming',
+  'npm run check:schema',
+  'npm run test:e2e:local',
+  'npm run test:evidence',
+  'npm run check:lead-pipeline-replay',
+  'git diff --check',
+];
+const pr207Commands = [
+  'npm ci',
+  'npm run test:evidence-claim-workbench',
+  'npm run test:evidence-claim-workbench:e2e',
+  'npm run eval:evidence-claim-workbench',
+  'npm run audit:evidence-documents',
+  'npm run measure:evidence-claim-workbench',
+  'npm run test:claim-spec-fit',
+  'npm test',
+  'npm run check:naming',
+  'npm run check:schema',
+  'npm run test:e2e:local',
+  'npm run test:evidence',
+  'npm run check:lead-pipeline-replay',
+  'git diff --check',
+];
+const pr206ExpectedCounts = {
+  'npm ci': { packagesAdded: 57, packagesAudited: 58, vulnerabilities: 0 },
+  'npm run test:pursuit-workbench': { tests: 93, passed: 93, failed: 0 },
+  'npm run eval:pursuit-workbench': {
+    syntheticScenarios: 12,
+    passed: 12,
+    failed: 0,
+    repeatRuns: 2,
+  },
+  'npm run test:pursuit-workbench:e2e': { tests: 5, passed: 5, failed: 0 },
+  'npm run test:claim-spec-fit': { tests: 37, passed: 37, failed: 0 },
+  'npm test': {
+    root: { tests: 313, passed: 313, failed: 0 },
+    workerUnit: { tests: 416, passed: 416, failed: 0 },
+    workerContract: { tests: 30, passed: 30, failed: 0 },
+  },
+  'npm run check:naming': { commandChecksPassed: 1, commandChecksFailed: 0 },
+  'npm run check:schema': { commandChecksPassed: 1, commandChecksFailed: 0 },
+  'npm run test:e2e:local': { tests: 1, passed: 1, failed: 0 },
+  'npm run test:evidence': { tests: 7, passed: 7, failed: 0 },
+  'npm run check:lead-pipeline-replay': { tests: 6, passed: 6, failed: 0 },
+  'git diff --check': { whitespaceErrors: 0 },
+};
+const pr207ExpectedCounts = {
+  'npm ci': { packagesAdded: 57, packagesAudited: 58, vulnerabilities: 0 },
+  'npm run test:evidence-claim-workbench': { tests: 113, passed: 113, failed: 0 },
+  'npm run test:evidence-claim-workbench:e2e': { tests: 4, passed: 4, failed: 0 },
+  'npm run eval:evidence-claim-workbench': {
+    syntheticScenarios: 35,
+    passed: 35,
+    failed: 0,
+    repeatRuns: 2,
+  },
+  'npm run audit:evidence-documents': {
+    syntheticScenarios: 35,
+    syntheticDocumentRecords: 39,
+    normalizedDocumentRecords: 26,
+    rejectedDocumentRecords: 13,
+    realDocumentsAcceptedAtFixedClock: 0,
+    realCandidatesCreated: 0,
+    actualHumanReviewSessions: 0,
+    violations: 0,
+  },
+  'npm run measure:evidence-claim-workbench': { measurements: 18, violations: 0 },
+  'npm run test:claim-spec-fit': { tests: 38, passed: 38, failed: 0 },
+  'npm test': {
+    root: { tests: 225, passed: 225, failed: 0 },
+    workerUnit: { tests: 416, passed: 416, failed: 0 },
+    workerContract: { tests: 28, passed: 28, failed: 0 },
+  },
+  'npm run check:naming': { commandChecksPassed: 1, commandChecksFailed: 0 },
+  'npm run check:schema': { commandChecksPassed: 1, commandChecksFailed: 0 },
+  'npm run test:e2e:local': { tests: 1, passed: 1, failed: 0 },
+  'npm run test:evidence': { tests: 7, passed: 7, failed: 0 },
+  'npm run check:lead-pipeline-replay': { tests: 6, passed: 6, failed: 0 },
+  'git diff --check': { whitespaceErrors: 0 },
+};
+const pr206CommandGroup = commandLedger.commandGroups.find((group) => group.id === 'PR206_REQUIRED_COMMANDS');
+const pr207CommandGroup = commandLedger.commandGroups.find((group) => group.id === 'PR207_REQUIRED_COMMANDS');
+assertExactCommandSet(pr206CommandGroup, pr206Commands);
+assertExactCommandSet(pr207CommandGroup, pr207Commands);
+assertExactCommandCounts(pr206CommandGroup, pr206ExpectedCounts);
+assertExactCommandCounts(pr207CommandGroup, pr207ExpectedCounts);
+const githubCommandGroup = commandLedger.commandGroups.find((group) => group.id === 'GITHUB_STATE_RECHECK');
+assert(
+  githubCommandGroup?.commandResults?.length === 3
+    && githubCommandGroup.commandResults.every((result) => result.exitCode === 0)
+    && githubCommandGroup.commandResults.some((result) => result.observed.includes('LATEST_DECISION_HOLD')),
+  'GitHub state recheck command ledger drifted',
 );
 assert(
   packageJson.scripts?.['test:evidence-to-decision-pilot'] ===
@@ -200,12 +422,16 @@ assert(
 
 const verificationInputPaths = [
   'docs/product/validation/pr206-human-validation-decision.json',
+  'docs/product/validation/pr206-human-validation-summary.md',
   'docs/product/validation/pr207-real-evidence-input-ledger.json',
   'docs/product/validation/pr207-real-evidence-pilot-decision.json',
+  'docs/product/validation/pr207-real-evidence-pilot-summary.md',
   'docs/product/validation/evidence-to-decision-next-gate.json',
   'tmp/codex/evidence-to-decision-pilot-repo-preflight.json',
   'tmp/codex/evidence-to-decision-github-state-20260719.json',
+  'tmp/codex/evidence-to-decision-initial-investigation-ledger-20260719.json',
   'tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json',
+  'tmp/codex/pr207-real-evidence-pilot-run-non-production.json',
   'scripts/verify-evidence-to-decision-pilot-refresh.mjs',
   'scripts/lib/safe-local-artifact-writer.mjs',
   'tests/evidence-to-decision-pilot-artifacts.test.mjs',
@@ -220,7 +446,7 @@ const verificationInputSha256 = Object.fromEntries(
 );
 
 const report = {
-  schemaVersion: 'evidence-to-decision-pilot-refresh-run-v1',
+  schemaVersion: 'evidence-to-decision-pilot-refresh-run-v2',
   asOf: AS_OF,
   boundary: 'NOT_PRODUCTION_EVIDENCE',
   evaluatedBaseSha: EXPECTED_BASE_SHA,
@@ -261,10 +487,31 @@ const report = {
     },
     realIntakeExecutionRestriction: pr207Decision.realIntakeExecutionRestriction,
     humanReviewEvidenceRetentionFitness: pr207Decision.humanReviewEvidenceRetentionFitness,
+    machineIntake: {
+      evaluatedSourceCount: pr207MachineRun.evaluatedSourceCount,
+      acceptedSourceCount: pr207MachineRun.acceptedSourceCount,
+      refusedSourceCount: pr207MachineRun.refusedSourceCount,
+      manifestSha256: pr207MachineRun.manifestSha256,
+    },
+    humanCandidateDecisions: pr207Decision.humanReviewCounts.candidateDecisions,
+    approvedForRepositoryReview: pr207Decision.humanReviewCounts.approvedForRepositoryReview,
+    approvedForRepositoryReviewByFamily:
+      pr207Decision.humanReviewCounts.approvedForRepositoryReviewByFamily,
   },
   overallDecision: 'INCOMPLETE',
   overallStatus: 'BLOCKED_BOTH',
   issue165Status: 'HOLD',
+  issue165Evidence: {
+    state: githubState.issue165.state,
+    latestDecision: githubState.issue165.latestDecision,
+    latestCommentUrl: githubState.issue165.latestCommentUrl,
+  },
+  initialReadOnlyInvestigations: {
+    required: investigationLedger.required,
+    completed: investigationLedger.completed,
+    ids: investigationLedger.investigations.map((investigation) => investigation.id),
+    boundary: investigationLedger.boundary,
+  },
   productionReady: false,
   productionReviewerWorkflowReady: false,
   prohibitedActionsPerformed: [],
