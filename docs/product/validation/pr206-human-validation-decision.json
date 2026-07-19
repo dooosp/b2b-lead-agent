@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "pr206-human-validation-decision-v4",
+  "schemaVersion": "pr206-human-validation-decision-v5",
   "asOf": "2026-07-19",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "sourcePr": 206,
@@ -12,6 +12,25 @@
     "mergeable": true,
     "unmerged": true,
     "checks": "PASS_AT_EVALUATION"
+  },
+  "methodOwnerDecisionRecord": {
+    "marker": "PR206_VALIDATION_METHOD_APPROVAL_V1",
+    "commentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/206#issuecomment-5013934447",
+    "commentId": 5013934447,
+    "commenterLogin": "dooosp",
+    "createdAt": "2026-07-19T03:10:20Z",
+    "rawBodySha256": "98bf4f2b0681dc35433c0988c71b0ccfd23004061d9b3514583cd7fe1ffb33f2",
+    "lfNormalizedBodySha256": "c9c4013a95e08226533d2cfac27e186b308ab13aefdaa70dcd9e389f68c0d9ac",
+    "evaluatedHeadSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+    "frozenRuntimeSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+    "methodDecision": "ACCEPT_CURRENT_METHOD",
+    "approvedForHumanMergeEvidence": true,
+    "authorizedCorrectionScope": "NONE",
+    "identityAndDataBoundaryAccepted": true,
+    "automatedGateIsAdvisory": true,
+    "productionApproved": false,
+    "mergeApprovedByThisComment": false,
+    "stopConditionsPresent": true
   },
   "inputCounts": {
     "sessionFilesPresent": 5,
@@ -89,7 +108,7 @@
     "recurringConfusionCodes": []
   },
   "observedHumanFindings": [],
-  "automatedGateFitness": "NOT_DECISION_CAPABLE_WITHOUT_MANUAL_METHOD_REVIEW",
+  "automatedGateFitness": "OWNER_ACCEPTED_CURRENT_METHOD_FOR_HUMAN_MERGE_EVIDENCE_AUTOMATED_GATE_REMAINS_ADVISORY",
   "independentMethodologyRisks": [
     {
       "code": "AGGREGATE_CAN_PASS_WHEN_A_CORE_TASK_FAILS_FOR_ALL_REVIEWERS",
@@ -136,11 +155,11 @@
   "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS",
   "ownerRetentionExceptionScope": "EXACT_LISTED_COMMIT_ONLY_NO_FURTHER_IMPLEMENTATION_AUTHORITY",
   "implementationChangesPerformedIn20260719Refresh": 0,
-  "collectionStatus": "PRIVATE_INPUT_PATH_READY_AUTOMATED_MERGE_GATE_NOT_DECISION_CAPABLE",
+  "collectionStatus": "METHOD_OWNER_APPROVED_PRIVATE_INPUT_PATH_READY_AWAITING_FIVE_HUMAN_SESSIONS",
   "decision": "INCOMPLETE",
   "decisionReason": "Fewer than five valid completed R1-R5 sessions exist, so the Goal's Track A rule requires INCOMPLETE. No MERGE, REVISE, or PIVOT decision may be inferred from blank skeletons or synthetic regression.",
   "mergeRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
-  "nextExternalInput": "Before treating any aggregate as merge evidence, a human validation-method owner must explicitly accept or separately authorize correction of the recorded gate defects. Five qualified reviewers must then complete R1-R5 against the frozen runtime and artifacts, with de-identified task-level evidence and manual per-task, comprehension, and timing consistency review; the validator result remains advisory. The explicit owner exception authorizes retaining b5570e182c8ab6515c0f09272d22d7121518f134 only and does not satisfy these inputs.",
+  "nextExternalInput": "Method owner approval is recorded at https://github.com/dooosp/b2b-lead-agent/pull/206#issuecomment-5013934447. Five qualified reviewers must now complete R1-R5 against the frozen runtime and artifacts, with de-identified task-level evidence and manual per-task, comprehension, timing, serious-misunderstanding, and stop-condition review; the validator result remains advisory. The method approval does not supply a session, authorize another implementation change, mark the PR Ready, or approve merge or production.",
   "productionReady": false,
   "productionReviewerWorkflowReady": false,
   "issue165Status": "HOLD",

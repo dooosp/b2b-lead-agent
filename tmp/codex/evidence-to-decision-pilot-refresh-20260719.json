@@ -1,31 +1,116 @@
 {
-  "schemaVersion": "evidence-to-decision-pilot-refresh-run-v3",
-  "asOf": "2026-07-19T00:00:00.000Z",
+  "schemaVersion": "evidence-to-decision-pilot-refresh-run-v4",
+  "asOf": "2026-07-19T03:33:31.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
   "refreshLineage": {
     "artifactParentSha": "5caa852",
-    "reportParentCommitSha": "e4cd248a286b5f419c84b79b421eb685e6f8f479",
+    "reportParentCommitSha": "783e75f2e2f30684c4d936d8552129e59269a30d",
     "finalArtifactCommitSha": "EXCLUDED_TO_AVOID_SELF_REFERENCE_VERIFY_GIT_PARENT_EQUALS_REPORT_PARENT",
     "verificationInputSha256": {
-      "docs/product/validation/pr206-human-validation-decision.json": "b71ceddba081ee0df7342c66e553bab5cf5ddb1116b24c6c569f05b426d550e1",
-      "docs/product/validation/pr206-human-validation-summary.md": "b329aebb6f808733e2fb81eeefc1087952d8c3aad39b236839df1cc259fa17ec",
+      "docs/product/validation/pr206-human-validation-decision.json": "db2e3bf57060b2a157cb5f73d5bc27ade298155e37d94a9ecf17cc33a70400b9",
+      "docs/product/validation/pr206-human-validation-summary.md": "0d62c160578d8de4488f9e17efe7e2c7b52f23f69cff7451246fb3f37c9ee851",
       "docs/product/validation/pr207-real-evidence-input-ledger.json": "81a9e2e28c1cbff6dd998d57054c80cc5a999b126555405182769d7a9c30b429",
-      "docs/product/validation/pr207-real-evidence-pilot-decision.json": "54d60c6e384a81d1c3452bbd12364df3e919f32085d99600e5843868ebe6d4ae",
-      "docs/product/validation/pr207-real-evidence-pilot-summary.md": "9c79eb8cafc212f3c1c8fafe8f612d417aa6295b120fd9a72ef00cbd766a6461",
-      "docs/product/validation/evidence-to-decision-next-gate.json": "c56b8af418851382202e9b8a87712445ae042b6c5150fbc1ee92c4d16513e377",
+      "docs/product/validation/pr207-real-evidence-pilot-decision.json": "c23dd4f5f81d13cad09202004e83e4013d982805adc50585785cfac13ff90a44",
+      "docs/product/validation/pr207-real-evidence-pilot-summary.md": "e8e6ff7fc6947488c4c247d66236b86b61ee9968c3bc7ffd22b36357dba4fba8",
+      "docs/product/validation/evidence-to-decision-next-gate.json": "066f9b308e5ae083298727d11c291ebc548dba14eb0ab4c38bcdb147fcfa8a0c",
       "tmp/codex/evidence-to-decision-pilot-repo-preflight.json": "39224c08df1715a980d202d1b551ee72b93e8e8b8bc0d9e83d5ab58884577a37",
-      "tmp/codex/evidence-to-decision-github-state-20260719.json": "a9c2e4b389761a85782e72e2f636fd9c1c6cc3ec5ec59f1299df41907000e0bd",
+      "tmp/codex/evidence-to-decision-github-state-20260719.json": "4a819f72a4d143b743798acfb1875568d94471ec40b99bd1c295d89ff98101fd",
       "tmp/codex/evidence-to-decision-initial-investigation-ledger-20260719.json": "2239731c615d027d3da0342830ddd592f1cfbf1685221ffba787ddc87ef4c6f3",
       "tmp/codex/evidence-to-decision-change-authority-audit-20260719.json": "de9174b014738243169f4e0c588d3bbfef2758c098ddb64b8b8db81a504f2326",
-      "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json": "c6514a4019767aaeecead55b342f6cdc77c5e624edbd2355fd354bdb0654af77",
+      "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json": "a5239fa8b77474680d0de4a37252c138919171ac5c54f20c48eb9d1a874f13db",
       "tmp/codex/pr207-real-evidence-pilot-run-non-production.json": "b2d333d324d2005f6c8965d84ff0b3f02d4d00c0064b102b9f5ca9bd64a3e9e2",
-      "scripts/verify-evidence-to-decision-pilot-refresh.mjs": "3aaa9dd9f24c9c74fd81f2b926b4ff76dec971561ca6737cb5830df067560bfb",
+      "scripts/verify-evidence-to-decision-pilot-refresh.mjs": "112ae368133deb193e27c5bb2a9a96679d4014cb60d664f671dc358f4858b450",
       "scripts/lib/safe-local-artifact-writer.mjs": "e0d441359140011f9f11c8846a6c8afc44fb0d850c85ccd2fc9aeafdb854f0e7",
       "tests/evidence-to-decision-pilot-artifacts.test.mjs": "9c7af6e58ec4259a797156ee74fb719a04d8744641380ca77e06dcc8ec562b2c",
       "package.json": "f4f58d324efa7661c57acc33d75d57f23bc3ca1577a4f438c319740a27999154",
       ".github/workflows/ci.yml": "8fa7680e72cd2af851643346ac21de0e436751a342b67f121ddd8c326423eb74",
       "worker/tests/workflow-contract.test.mjs": "6c0e0a22a462807e86166a4d18f2f5233e9a708ae2b90f8508ea216ae4c10875"
+    },
+    "ignoredHumanInputBindings": {
+      "pr207DocumentDecisions": {
+        "evaluatedWorktreeHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+        "relativePath": "tmp/evidence-claim-workbench/human-approval/pr207-document-decisions.json",
+        "sha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
+        "mode": "0600",
+        "tracked": false,
+        "ignored": true
+      },
+      "pr207IntakeManifest": {
+        "evaluatedWorktreeHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+        "relativePath": "evidence-inbox/manifest.json",
+        "sha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953",
+        "mode": "0600",
+        "tracked": false,
+        "ignored": true,
+        "documentCount": 8
+      },
+      "pr207NormalizedDocuments": [
+        {
+          "relativePath": "evidence-inbox/ls-p01100-ko.json",
+          "sha256": "d3ae5884b1e89eaf04f109c8b97549f7ea46ba3ea780df44225bc255e69404a4",
+          "byteLength": 3779,
+          "mode": "0600",
+          "tracked": false,
+          "ignored": true
+        },
+        {
+          "relativePath": "evidence-inbox/ls-p02201-ko.json",
+          "sha256": "d1924d5d4df95da5021fb91d4193a5bc3188a39bbb75c3efa32d6659bf3024fd",
+          "byteLength": 3982,
+          "mode": "0600",
+          "tracked": false,
+          "ignored": true
+        },
+        {
+          "relativePath": "evidence-inbox/ls-mv-metal-clad-en.json",
+          "sha256": "f175f5bad1dd98f2e9fea66599265f4306a9590819274423e6cbc090bbd39fba",
+          "byteLength": 16304,
+          "mode": "0600",
+          "tracked": false,
+          "ignored": true
+        },
+        {
+          "relativePath": "evidence-inbox/schneider-masterclad-en.json",
+          "sha256": "f9c64d56446f9fe97ec6be2e154171b3eeb1a4ba591d37ef6b99b8644602dda3",
+          "byteLength": 7683,
+          "mode": "0600",
+          "tracked": false,
+          "ignored": true
+        },
+        {
+          "relativePath": "evidence-inbox/ls-cast-resin-ko.json",
+          "sha256": "bfea285ea54473befbe0278d41607661e1b63a5b7acf4efdd902a458819a2c6b",
+          "byteLength": 10139,
+          "mode": "0600",
+          "tracked": false,
+          "ignored": true
+        },
+        {
+          "relativePath": "evidence-inbox/ls-cast-resin-manual-ko.json",
+          "sha256": "e076b6af6bf067e8239616f264faf412d7ee7788342c4c186a2ca50b092e0f86",
+          "byteLength": 10523,
+          "mode": "0600",
+          "tracked": false,
+          "ignored": true
+        },
+        {
+          "relativePath": "evidence-inbox/ls-transformer-en.json",
+          "sha256": "606ff5f2f599846f2f49b851cd5ed8abe2bf149ead9c41115380d18d25edc25b",
+          "byteLength": 8993,
+          "mode": "0600",
+          "tracked": false,
+          "ignored": true
+        },
+        {
+          "relativePath": "evidence-inbox/schneider-trihal-en.json",
+          "sha256": "308b498229c12257e44314e34f5c23ce17177b390059d95496f8d5bc2a744611",
+          "byteLength": 17657,
+          "mode": "0600",
+          "tracked": false,
+          "ignored": true
+        }
+      ]
     }
   },
   "pr206": {
@@ -43,7 +128,26 @@
       "medianTimeReductionRate": null
     },
     "thresholdSummary": "INCOMPLETE",
-    "automatedGateFitness": "NOT_DECISION_CAPABLE_WITHOUT_MANUAL_METHOD_REVIEW"
+    "automatedGateFitness": "OWNER_ACCEPTED_CURRENT_METHOD_FOR_HUMAN_MERGE_EVIDENCE_AUTOMATED_GATE_REMAINS_ADVISORY",
+    "methodOwnerDecisionRecord": {
+      "marker": "PR206_VALIDATION_METHOD_APPROVAL_V1",
+      "commentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/206#issuecomment-5013934447",
+      "commentId": 5013934447,
+      "commenterLogin": "dooosp",
+      "createdAt": "2026-07-19T03:10:20Z",
+      "rawBodySha256": "98bf4f2b0681dc35433c0988c71b0ccfd23004061d9b3514583cd7fe1ffb33f2",
+      "lfNormalizedBodySha256": "c9c4013a95e08226533d2cfac27e186b308ab13aefdaa70dcd9e389f68c0d9ac",
+      "evaluatedHeadSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+      "frozenRuntimeSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+      "methodDecision": "ACCEPT_CURRENT_METHOD",
+      "approvedForHumanMergeEvidence": true,
+      "authorizedCorrectionScope": "NONE",
+      "identityAndDataBoundaryAccepted": true,
+      "automatedGateIsAdvisory": true,
+      "productionApproved": false,
+      "mergeApprovedByThisComment": false,
+      "stopConditionsPresent": true
+    }
   },
   "pr207": {
     "headSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
@@ -57,6 +161,7 @@
       "UNSUPPORTED_SEMANTIC_OPERATOR": 1
     },
     "gateStatus": "NO_SAFE_PROPOSITION",
+    "architectureSignal": "BOUNDED_NON_CANONICAL_REVIEW_PATH_APPROVED_SAFE_CANDIDATE_POPULATION_STILL_EMPTY",
     "sourceAuthenticityStatus": "UNREVIEWED",
     "canonicalPatchExportAllowed": false,
     "evaluationSha256": "a73449493dc3cb07b2c28a41446d1bea36eba1f09acf16a6eb092cda5495dfdb",
@@ -69,7 +174,46 @@
       ],
       "interpretation": "NOT_A_CURRENT_REAL_INPUT_COUNT"
     },
-    "realIntakeExecutionRestriction": "DO_NOT_LAUNCH_REAL_INTAKE_UI_WITH_UNREVIEWED_DOCUMENTS",
+    "humanDocumentDecisionRecord": {
+      "marker": "PR207_DOCUMENT_PILOT_APPROVAL_V1",
+      "canonicalApprovalCommentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5014019753",
+      "canonicalApprovalCommentId": 5014019753,
+      "approverLogin": "dooosp",
+      "createdAt": "2026-07-19T03:33:31Z",
+      "rawBodySha256": "9ade99c11f09bf78bec23c5799d7d95de41ccf5f636147300f15c0cfa2e0b661",
+      "lfNormalizedBodySha256": "b7680d1776ef5f726bc8fa1206850e24ff839e32b03e99b2f37a39b8c3ba760e",
+      "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "decisionFile": {
+        "path": "tmp/evidence-claim-workbench/human-approval/pr207-document-decisions.json",
+        "sha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
+        "mode": "0600",
+        "tracked": false,
+        "ignored": true,
+        "role": "SHA_BOUND_TRANSCRIPTION_OF_CANONICAL_GITHUB_APPROVAL",
+        "wrapperBoundary": "LOCAL_IGNORED_HUMAN_INPUT_TEMPLATE",
+        "wrapperTemplateNonClaimRetained": true,
+        "approvalSource": "CANONICAL_GITHUB_COMMENT"
+      },
+      "inputManifestSha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953",
+      "documentTupleFingerprintSha256": "59c292b30801208853cbd6cb902d1eb4d0064001b72c1317001c849d48ecabb7",
+      "documentCount": 8,
+      "commonDecisions": {
+        "officiality": "OWNER_ATTESTED_OFFICIAL_SOURCE",
+        "currentness": "CURRENT_REVISION",
+        "technicalScope": "IN_SCOPE",
+        "boundedExcerptUse": "APPROVED_FOR_INTERNAL_REPOSITORY_REVIEW",
+        "binaryHandling": "DO_NOT_COMMIT_BINARY",
+        "reason": "AUTHORIZED_OWNER_REVIEW_CONFIRMED"
+      },
+      "architectureDecision": "APPROVE_BOUNDED_NON_CANONICAL_REVIEW_PATH",
+      "originalSourceFidelityDecision": "NOT_SEPARATELY_PROVIDED",
+      "automaticVerifiedAllowed": false,
+      "automaticCustomerUseAllowed": false,
+      "productionApproved": false,
+      "mergeApproved": false,
+      "interpretation": "HUMAN_OWNER_OVERLAY_SHA_BOUND_TO_CANONICAL_GITHUB_APPROVAL_NOT_A_MACHINE_STATE_REWRITE"
+    },
+    "realIntakeExecutionRestriction": "DO_NOT_LAUNCH_REAL_INTAKE_UI_FULL_NORMALIZED_PAGE_TEXT_EXCEEDS_BOUNDED_EXCERPT_APPROVAL",
     "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_RECONSTRUCTING_REQUIRED_PILOT_METRICS",
     "machineIntake": {
       "evaluatedSourceCount": 11,
@@ -78,6 +222,16 @@
       "manifestSha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953"
     },
     "humanCandidateDecisions": 0,
+    "boundedDocumentDecisionCounts": {
+      "officiality": 8,
+      "currentness": 8,
+      "technicalScope": 8,
+      "boundedExcerptUse": 8,
+      "binaryHandling": 8,
+      "originalSourceFidelity": 0
+    },
+    "completeStructuredDocumentDecisionRows": 8,
+    "fullDocumentValidityDecisions": 0,
     "approvedForRepositoryReview": 0,
     "approvedForRepositoryReviewByFamily": {
       "medium_voltage_switchgear": 0,
@@ -87,6 +241,7 @@
   "overallDecision": "INCOMPLETE",
   "overallStatus": "BLOCKED_BOTH",
   "goalCompletionStatus": "INCOMPLETE_EXTERNAL_INPUTS",
+  "remainingExternalInputCount": 5,
   "issue165Status": "HOLD",
   "issue165Evidence": {
     "state": "OPEN",
@@ -136,8 +291,8 @@
   "goalRuleDeviationDisposition": "EXPLICIT_OWNER_RETENTION_EXCEPTION_RECORDED_FOR_EXACT_FOUR_COMMITS",
   "commandLedger": {
     "relativePath": "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json",
-    "sha256": "c6514a4019767aaeecead55b342f6cdc77c5e624edbd2355fd354bdb0654af77",
-    "commandGroupCount": 6,
+    "sha256": "a5239fa8b77474680d0de4a37252c138919171ac5c54f20c48eb9d1a874f13db",
+    "commandGroupCount": 7,
     "allPassed": true
   }
 }

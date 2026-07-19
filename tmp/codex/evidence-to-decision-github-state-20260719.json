@@ -1,11 +1,16 @@
 {
-  "schemaVersion": "evidence-to-decision-github-state-v2",
+  "schemaVersion": "evidence-to-decision-github-state-v3",
   "observedAtDate": "2026-07-19",
+  "observedThrough": "2026-07-19T03:40:48Z",
   "repository": "dooosp/b2b-lead-agent",
   "observationMethods": [
     "gh pr view 206 --json",
     "gh pr view 207 --json",
-    "gh issue view 165 --json"
+    "gh issue view 165 --json",
+    "gh api repos/dooosp/b2b-lead-agent/issues/comments/5013934447",
+    "gh api repos/dooosp/b2b-lead-agent/issues/comments/5013938164",
+    "gh api repos/dooosp/b2b-lead-agent/issues/comments/5013945474",
+    "gh api repos/dooosp/b2b-lead-agent/issues/comments/5014019753"
   ],
   "pullRequests": [
     {
@@ -15,6 +20,8 @@
       "isDraft": true,
       "mergeable": "MERGEABLE",
       "mergeStateStatus": "CLEAN",
+      "reviewDecision": null,
+      "reviewCount": 0,
       "headRefName": "codex/datacenter-pursuit-workbench-v0",
       "headRefOid": "b5570e182c8ab6515c0f09272d22d7121518f134",
       "baseRefName": "master",
@@ -50,6 +57,8 @@
       "isDraft": true,
       "mergeable": "MERGEABLE",
       "mergeStateStatus": "CLEAN",
+      "reviewDecision": null,
+      "reviewCount": 0,
       "headRefName": "codex/official-evidence-claim-review-workbench-v0",
       "headRefOid": "c6a5469338999097acd5de7c5a12c827d27d4540",
       "baseRefName": "master",
@@ -79,6 +88,99 @@
       ]
     }
   ],
+  "canonicalHumanInputRecords": [
+    {
+      "recordType": "PR206_METHOD_OWNER_APPROVAL",
+      "marker": "PR206_VALIDATION_METHOD_APPROVAL_V1",
+      "classification": "CANONICAL_VALID_METHOD_OWNER_APPROVAL",
+      "pullRequest": 206,
+      "commentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/206#issuecomment-5013934447",
+      "commentId": 5013934447,
+      "commenterLogin": "dooosp",
+      "createdAt": "2026-07-19T03:10:20Z",
+      "updatedAt": "2026-07-19T03:10:20Z",
+      "rawBodySha256": "98bf4f2b0681dc35433c0988c71b0ccfd23004061d9b3514583cd7fe1ffb33f2",
+      "lfNormalizedBodySha256": "c9c4013a95e08226533d2cfac27e186b308ab13aefdaa70dcd9e389f68c0d9ac",
+      "evaluatedHeadSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+      "frozenRuntimeSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+      "methodDecision": "ACCEPT_CURRENT_METHOD",
+      "approvedForHumanMergeEvidence": true,
+      "automatedGateIsAdvisory": true,
+      "productionApproved": false,
+      "mergeApprovedByThisComment": false,
+      "effect": "RESOLVES_PR206_METHOD_OWNER_INPUT_ONLY"
+    },
+    {
+      "recordType": "PR207_DOCUMENT_PILOT_APPROVAL",
+      "marker": "PR207_DOCUMENT_PILOT_APPROVAL_V1",
+      "classification": "CANONICAL_SHA_BOUND_DOCUMENT_AND_ARCHITECTURE_APPROVAL",
+      "pullRequest": 207,
+      "commentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5014019753",
+      "commentId": 5014019753,
+      "commenterLogin": "dooosp",
+      "createdAt": "2026-07-19T03:33:31Z",
+      "updatedAt": "2026-07-19T03:33:31Z",
+      "rawBodySha256": "9ade99c11f09bf78bec23c5799d7d95de41ccf5f636147300f15c0cfa2e0b661",
+      "lfNormalizedBodySha256": "b7680d1776ef5f726bc8fa1206850e24ff839e32b03e99b2f37a39b8c3ba760e",
+      "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "decisionFileSha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
+      "documentCount": 8,
+      "ownerLogins": {
+        "documentSourceOwner": "dooosp",
+        "technicalReviewOwner": "dooosp",
+        "rightsOwner": "dooosp",
+        "variantArchitectureOwner": "dooosp"
+      },
+      "commonDecisions": {
+        "officiality": "OWNER_ATTESTED_OFFICIAL_SOURCE",
+        "currentness": "CURRENT_REVISION",
+        "technicalScope": "IN_SCOPE",
+        "boundedExcerptUse": "APPROVED_FOR_INTERNAL_REPOSITORY_REVIEW",
+        "binaryHandling": "DO_NOT_COMMIT_BINARY",
+        "reason": "AUTHORIZED_OWNER_REVIEW_CONFIRMED"
+      },
+      "architectureDecision": "APPROVE_BOUNDED_NON_CANONICAL_REVIEW_PATH",
+      "originalSourceFidelityDecision": "NOT_SEPARATELY_PROVIDED",
+      "automaticVerifiedClaimsCreated": 0,
+      "automaticAllowedClaimsCreated": 0,
+      "productionApproved": false,
+      "mergeApprovedByThisComment": false,
+      "effect": "RESOLVES_BOUNDED_DOCUMENT_AND_ARCHITECTURE_INPUTS_ONLY"
+    }
+  ],
+  "supportingHumanInputRecords": [
+    {
+      "recordType": "PR207_DOCUMENT_DECISION_INTENT",
+      "marker": "PR207_ALL_DOCUMENT_HUMAN_DECISION_V1",
+      "classification": "SUPPORTING_INTENT_NOT_CANONICAL_SHA_BOUND_APPROVAL",
+      "pullRequest": 207,
+      "commentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5013945474",
+      "commentId": 5013945474,
+      "commenterLogin": "dooosp",
+      "createdAt": "2026-07-19T03:14:36Z",
+      "updatedAt": "2026-07-19T03:14:36Z",
+      "rawBodySha256": "c39a89e53bd4de39a9a85b988d45ab14c11e9be6840a3b94cce08065c20b77fa",
+      "lfNormalizedBodySha256": "b454432248aec101854ea045bb1b8e8c2f3e195baf359303689d51fcc2d84a5c",
+      "canonicalizedByCommentId": 5014019753
+    }
+  ],
+  "wrongPrDuplicates": [
+    {
+      "recordType": "PR207_DOCUMENT_DECISION_INTENT_WRONG_PULL_REQUEST_DUPLICATE",
+      "marker": "PR207_ALL_DOCUMENT_HUMAN_DECISION_V1",
+      "classification": "NONCANONICAL_WRONG_PULL_REQUEST_DUPLICATE",
+      "actualPullRequest": 206,
+      "intendedPullRequest": 207,
+      "commentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/206#issuecomment-5013938164",
+      "commentId": 5013938164,
+      "commenterLogin": "dooosp",
+      "createdAt": "2026-07-19T03:11:46Z",
+      "updatedAt": "2026-07-19T03:11:46Z",
+      "rawBodySha256": "c39a89e53bd4de39a9a85b988d45ab14c11e9be6840a3b94cce08065c20b77fa",
+      "lfNormalizedBodySha256": "b454432248aec101854ea045bb1b8e8c2f3e195baf359303689d51fcc2d84a5c",
+      "effect": "NONE"
+    }
+  ],
   "issue165": {
     "number": 165,
     "url": "https://github.com/dooosp/b2b-lead-agent/issues/165",
@@ -90,5 +192,5 @@
     "latestDecision": "HOLD",
     "latestDecisionReason": "The latest approval-intake validation refused the proposed command allowlist; no production proof was executed and the issue remains HOLD."
   },
-  "interpretation": "This is a dated read-only observation, not a guarantee of future GitHub state. Both PRs were Draft/Open with successful listed checks, and Issue #165's latest recorded decision remained HOLD at observation time."
+  "interpretation": "This is a dated read-only observation, not a guarantee of future GitHub state. Both PRs remained Draft/Open at their exact evaluated heads with three successful listed checks each and no review decision. Canonical comments resolved the PR206 method-owner input and the bounded PR207 document/architecture inputs only; they did not supply PR206 sessions, PR207 original-source fidelity or candidate approvals, or authorization to mark Ready or merge. The wrong-PR duplicate has no gate effect. Issue #165's latest relevant execution decision remained HOLD at observation time."
 }

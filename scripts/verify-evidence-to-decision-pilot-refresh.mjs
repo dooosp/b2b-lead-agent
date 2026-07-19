@@ -2,12 +2,13 @@
 
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { open, readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { isDeepStrictEqual, parseArgs } from 'node:util';
 import { writeJsonArtifactInsideWorktree } from './lib/safe-local-artifact-writer.mjs';
 
-const AS_OF = '2026-07-19T00:00:00.000Z';
+const AS_OF = '2026-07-19T03:33:31.000Z';
 const EXPECTED_BASE_SHA = '9d144fbe6309ce363f9dad8d50ffa713d24af683';
 const EXPECTED_PR206_HEAD = 'b5570e182c8ab6515c0f09272d22d7121518f134';
 const EXPECTED_PR207_HEAD = 'c6a5469338999097acd5de7c5a12c827d27d4540';
@@ -15,6 +16,25 @@ const EXPECTED_VARIANT_EVALUATION_SHA256 =
   'a73449493dc3cb07b2c28a41446d1bea36eba1f09acf16a6eb092cda5495dfdb';
 const EXPECTED_VARIANT_CANONICAL_SHA256 =
   '8c3ceefd6e74b82f87d5e488ecb31a3c3496c6ade16518451c6151f894f6971e';
+const EXPECTED_PR206_METHOD_COMMENT_ID = 5013934447;
+const EXPECTED_PR206_METHOD_COMMENT_RAW_SHA256 =
+  '98bf4f2b0681dc35433c0988c71b0ccfd23004061d9b3514583cd7fe1ffb33f2';
+const EXPECTED_PR206_METHOD_COMMENT_LF_SHA256 =
+  'c9c4013a95e08226533d2cfac27e186b308ab13aefdaa70dcd9e389f68c0d9ac';
+const EXPECTED_PR207_APPROVAL_COMMENT_ID = 5014019753;
+const EXPECTED_PR207_APPROVAL_COMMENT_RAW_SHA256 =
+  '9ade99c11f09bf78bec23c5799d7d95de41ccf5f636147300f15c0cfa2e0b661';
+const EXPECTED_PR207_APPROVAL_COMMENT_LF_SHA256 =
+  'b7680d1776ef5f726bc8fa1206850e24ff839e32b03e99b2f37a39b8c3ba760e';
+const EXPECTED_PR207_DECISION_FILE_SHA256 =
+  '2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb';
+const EXPECTED_PR207_DECISION_FILE_RELATIVE_PATH =
+  'tmp/evidence-claim-workbench/human-approval/pr207-document-decisions.json';
+const EXPECTED_PR207_INTAKE_MANIFEST_RELATIVE_PATH = 'evidence-inbox/manifest.json';
+const EXPECTED_PR207_INTAKE_MANIFEST_SHA256 =
+  '0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953';
+const EXPECTED_PR207_DOCUMENT_TUPLE_FINGERPRINT_SHA256 =
+  '59c292b30801208853cbd6cb902d1eb4d0064001b72c1317001c849d48ecabb7';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -61,6 +81,14 @@ function gitHead(root) {
   }).trim();
 }
 
+function gitTopLevel(root) {
+  return path.resolve(
+    execFileSync('git', ['-C', root, 'rev-parse', '--show-toplevel'], {
+      encoding: 'utf8',
+    }).trim(),
+  );
+}
+
 function gitIsAncestor(root, ancestor, descendant) {
   try {
     execFileSync('git', ['-C', root, 'merge-base', '--is-ancestor', ancestor, descendant]);
@@ -68,6 +96,92 @@ function gitIsAncestor(root, ancestor, descendant) {
   } catch {
     return false;
   }
+}
+
+function gitPathIsIgnored(root, relativePath) {
+  try {
+    execFileSync('git', ['-C', root, 'check-ignore', '--quiet', '--', relativePath], {
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function gitPathIsTracked(root, relativePath) {
+  try {
+    execFileSync('git', ['-C', root, 'ls-files', '--error-unmatch', '--', relativePath], {
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function readSafeIgnoredFile(root, relativePath, expectedSha256) {
+  assert(
+    Number.isInteger(constants.O_NOFOLLOW),
+    'runtime does not provide O_NOFOLLOW for safe local-input reads',
+  );
+  const exactPath = path.resolve(root, relativePath);
+  const canonicalRoot = await realpath(root);
+  const canonicalParent = await realpath(path.dirname(exactPath));
+  assert(
+    path.relative(root, exactPath) === relativePath,
+    `PR207 ignored input path escaped its exact worktree-relative location: ${relativePath}`,
+  );
+  assert(canonicalRoot === root, 'PR207 worktree root must not resolve through symbolic links');
+  assert(
+    canonicalParent === path.dirname(exactPath)
+      && !path.relative(canonicalRoot, canonicalParent).startsWith('..'),
+    'PR207 human decision parent must remain a real directory inside the exact worktree',
+  );
+  assert(
+    gitPathIsIgnored(root, relativePath),
+    `PR207 local input is no longer ignored: ${relativePath}`,
+  );
+  assert(
+    !gitPathIsTracked(root, relativePath),
+    `PR207 local input must remain untracked: ${relativePath}`,
+  );
+
+  let handle;
+  try {
+    handle = await open(exactPath, constants.O_RDONLY | constants.O_NOFOLLOW);
+    const stat = await handle.stat();
+    assert(stat.isFile(), `PR207 local input is not a regular file: ${relativePath}`);
+    assert(stat.nlink === 1, `PR207 local input must have exactly one hard link: ${relativePath}`);
+    assert((stat.mode & 0o777) === 0o600, `PR207 local input mode must remain 0600: ${relativePath}`);
+    const raw = await handle.readFile();
+    const sha256 = createHash('sha256').update(raw).digest('hex');
+    assert(sha256 === expectedSha256, `PR207 local input hash drifted: ${relativePath}`);
+    return {
+      exactPath,
+      relativePath,
+      sha256,
+      mode: '0600',
+      tracked: false,
+      ignored: true,
+      byteLength: raw.length,
+      raw,
+    };
+  } finally {
+    await handle?.close();
+  }
+}
+
+async function readIgnoredHumanDecision(root) {
+  const input = await readSafeIgnoredFile(
+    root,
+    EXPECTED_PR207_DECISION_FILE_RELATIVE_PATH,
+    EXPECTED_PR207_DECISION_FILE_SHA256,
+  );
+  return {
+    ...input,
+    value: JSON.parse(input.raw.toString('utf8')),
+  };
 }
 
 async function readDecision(relativePath) {
@@ -100,8 +214,91 @@ const outputPath = path.resolve(values.output);
 const pr206Head = gitHead(pr206Root);
 const pr207Head = gitHead(pr207Root);
 const reportParentCommitSha = gitHead(process.cwd());
+assert(gitTopLevel(pr206Root) === pr206Root, '--pr206-root must be the exact PR206 worktree root');
+assert(gitTopLevel(pr207Root) === pr207Root, '--pr207-root must be the exact PR207 worktree root');
 assert(pr206Head === EXPECTED_PR206_HEAD, `unexpected PR206 head: ${pr206Head}`);
 assert(pr207Head === EXPECTED_PR207_HEAD, `unexpected PR207 head: ${pr207Head}`);
+
+const pr207HumanDecisionInput = await readIgnoredHumanDecision(pr207Root);
+const pr207HumanDecision = pr207HumanDecisionInput.value;
+assert(pr207HumanDecision.schemaVersion === 'pr207-document-decisions-v1', 'PR207 human decision schema drifted');
+assert(
+  pr207HumanDecision.boundary === 'LOCAL_IGNORED_HUMAN_INPUT_TEMPLATE',
+  'PR207 decision-file wrapper boundary drifted; approval must remain externally bound',
+);
+assert(pr207HumanDecision.evaluatedPr === 207, 'PR207 human decision PR binding drifted');
+assert(pr207HumanDecision.evaluatedHead === pr207Head, 'PR207 human decision head binding drifted');
+assert(
+  pr207HumanDecision.intakeManifestSha256 === EXPECTED_PR207_INTAKE_MANIFEST_SHA256,
+  'PR207 human decision manifest binding drifted',
+);
+assert(
+  pr207HumanDecision.documentTupleFingerprintSha256 ===
+    EXPECTED_PR207_DOCUMENT_TUPLE_FINGERPRINT_SHA256,
+  'PR207 human decision tuple fingerprint drifted',
+);
+assert(pr207HumanDecision.documentCount === 8, 'PR207 human decision document count drifted');
+assert(pr207HumanDecision.humanFieldsAreBlank === false, 'PR207 human decision fields are unexpectedly blank');
+assert(pr207HumanDecision.documents?.length === 8, 'PR207 human decision rows drifted');
+
+const pr207IntakeManifestInput = await readSafeIgnoredFile(
+  pr207Root,
+  EXPECTED_PR207_INTAKE_MANIFEST_RELATIVE_PATH,
+  EXPECTED_PR207_INTAKE_MANIFEST_SHA256,
+);
+const pr207IntakeManifest = JSON.parse(pr207IntakeManifestInput.raw.toString('utf8'));
+assert(
+  pr207IntakeManifest.schemaVersion === 'official-evidence-intake-manifest-v0'
+    && pr207IntakeManifest.boundary === 'NOT_PRODUCTION_EVIDENCE'
+    && pr207IntakeManifest.productionReady === false
+    && pr207IntakeManifest.documents?.length === 8,
+  'PR207 exact ignored intake manifest boundary or document count drifted',
+);
+assert(
+  new Set(pr207IntakeManifest.documents.map((document) => document.relativePath)).size === 8
+    && new Set(pr207IntakeManifest.documents.map((document) => document.expectedSha256)).size === 8,
+  'PR207 intake manifest paths and hashes must be unique',
+);
+const pr207NormalizedInputByManifestPath = new Map();
+for (const manifestDocument of pr207IntakeManifest.documents) {
+  assert(
+    typeof manifestDocument.relativePath === 'string'
+      && path.posix.basename(manifestDocument.relativePath) === manifestDocument.relativePath
+      && manifestDocument.relativePath.endsWith('.json'),
+    `PR207 intake manifest contains a non-flat or non-JSON path: ${manifestDocument.relativePath}`,
+  );
+  const normalizedInputRelativePath = path.posix.join(
+    'evidence-inbox',
+    manifestDocument.relativePath,
+  );
+  const normalizedInput = await readSafeIgnoredFile(
+    pr207Root,
+    normalizedInputRelativePath,
+    manifestDocument.expectedSha256,
+  );
+  assert(
+    normalizedInput.byteLength === manifestDocument.byteLength,
+    `PR207 normalized intake byte length drifted: ${manifestDocument.relativePath}`,
+  );
+  const normalizedDocument = JSON.parse(normalizedInput.raw.toString('utf8'));
+  assert(
+    normalizedDocument.source?.sourceUrl === manifestDocument.sourceUrl
+      && normalizedDocument.source?.publisher === manifestDocument.publisher
+      && normalizedDocument.source?.documentNumber === manifestDocument.documentNumber
+      && normalizedDocument.source?.language === manifestDocument.language
+      && isDeepStrictEqual(
+        normalizedDocument.source?.productFamilies,
+        manifestDocument.productFamilies,
+      )
+      && normalizedDocument.revision?.revisionId === manifestDocument.revision?.revisionId
+      && normalizedDocument.source?.redistributionStatus === manifestDocument.redistributionStatus,
+    `PR207 normalized intake metadata drifted from its manifest entry: ${manifestDocument.relativePath}`,
+  );
+  pr207NormalizedInputByManifestPath.set(manifestDocument.relativePath, {
+    input: normalizedInput,
+    value: normalizedDocument,
+  });
+}
 
 const humanValidation = runJson(
   pr206Root,
@@ -141,7 +338,10 @@ const documentAudit = runJson(
 );
 assert(documentAudit.documentStatus === 'OFFICIAL_EVIDENCE_DOCUMENT_AUDIT_PASS', 'synthetic document audit failed');
 assert(documentAudit.summary?.scenarioCount === 35, 'unexpected synthetic audit count');
-assert(documentAudit.summary?.reviewState?.actualHumanReviewSessions === 0, 'human PR207 review now exists; refresh the decision');
+assert(
+  documentAudit.summary?.reviewState?.actualHumanReviewSessions === 0,
+  'human PR207 candidate-review sessions now exist; refresh the decision',
+);
 assert(documentAudit.realDocumentOutcome?.REAL_DOCUMENT_POPULATION === 'PRESENT_REJECTED', 'unexpected fixed-clock intake result');
 assert(documentAudit.realDocumentOutcome?.auditAsOf === '2026-07-17T23:59:59.999Z', 'unexpected fixed audit clock');
 assert(documentAudit.realDocumentOutcome?.rejectionCodes?.includes('FUTURE_DOCUMENT_DATE'), 'expected fail-closed clock refusal');
@@ -166,15 +366,94 @@ assert(pr206Decision.baseSha === EXPECTED_BASE_SHA, 'PR206 decision base mismatc
 assert(pr206Decision.decision === 'INCOMPLETE', 'PR206 artifact must remain INCOMPLETE');
 assert(pr206Decision.safeIntake?.status === 'AVAILABLE', 'PR206 safe-intake status drifted');
 assert(
-  pr206Decision.automatedGateFitness === 'NOT_DECISION_CAPABLE_WITHOUT_MANUAL_METHOD_REVIEW',
-  'PR206 automated-gate warning drifted',
+  pr206Decision.automatedGateFitness ===
+    'OWNER_ACCEPTED_CURRENT_METHOD_FOR_HUMAN_MERGE_EVIDENCE_AUTOMATED_GATE_REMAINS_ADVISORY',
+  'PR206 automated-gate advisory boundary drifted',
+);
+assert(
+  pr206Decision.methodOwnerDecisionRecord?.marker === 'PR206_VALIDATION_METHOD_APPROVAL_V1'
+    && pr206Decision.methodOwnerDecisionRecord?.commentId === EXPECTED_PR206_METHOD_COMMENT_ID
+    && pr206Decision.methodOwnerDecisionRecord?.commentUrl ===
+      'https://github.com/dooosp/b2b-lead-agent/pull/206#issuecomment-5013934447'
+    && pr206Decision.methodOwnerDecisionRecord?.commenterLogin === 'dooosp'
+    && pr206Decision.methodOwnerDecisionRecord?.createdAt === '2026-07-19T03:10:20Z'
+    && pr206Decision.methodOwnerDecisionRecord?.rawBodySha256 ===
+      EXPECTED_PR206_METHOD_COMMENT_RAW_SHA256
+    && pr206Decision.methodOwnerDecisionRecord?.lfNormalizedBodySha256 ===
+      EXPECTED_PR206_METHOD_COMMENT_LF_SHA256
+    && pr206Decision.methodOwnerDecisionRecord?.evaluatedHeadSha === pr206Head
+    && pr206Decision.methodOwnerDecisionRecord?.frozenRuntimeSha ===
+      '8098f66c6fb7e64464297c0ee70d25f49756135d'
+    && pr206Decision.methodOwnerDecisionRecord?.methodDecision === 'ACCEPT_CURRENT_METHOD'
+    && pr206Decision.methodOwnerDecisionRecord?.approvedForHumanMergeEvidence === true
+    && pr206Decision.methodOwnerDecisionRecord?.authorizedCorrectionScope === 'NONE'
+    && pr206Decision.methodOwnerDecisionRecord?.identityAndDataBoundaryAccepted === true
+    && pr206Decision.methodOwnerDecisionRecord?.automatedGateIsAdvisory === true
+    && pr206Decision.methodOwnerDecisionRecord?.productionApproved === false
+    && pr206Decision.methodOwnerDecisionRecord?.mergeApprovedByThisComment === false
+    && pr206Decision.methodOwnerDecisionRecord?.stopConditionsPresent === true,
+  'PR206 canonical method-owner approval binding drifted',
 );
 assert(pr207Decision.evaluatedHeadSha === pr207Head, 'PR207 decision head mismatch');
 assert(pr207Decision.baseSha === EXPECTED_BASE_SHA, 'PR207 decision base mismatch');
 assert(pr207Decision.decision === 'INCOMPLETE', 'PR207 artifact must remain INCOMPLETE');
 assert(
-  pr207Decision.realIntakeExecutionRestriction === 'DO_NOT_LAUNCH_REAL_INTAKE_UI_WITH_UNREVIEWED_DOCUMENTS',
+  pr207Decision.realIntakeExecutionRestriction ===
+    'DO_NOT_LAUNCH_REAL_INTAKE_UI_FULL_NORMALIZED_PAGE_TEXT_EXCEEDS_BOUNDED_EXCERPT_APPROVAL',
   'PR207 real-intake restriction drifted',
+);
+const pr207HumanDecisionRecord = pr207Decision.humanDocumentDecisionRecord;
+assert(
+  pr207HumanDecisionRecord?.marker === 'PR207_DOCUMENT_PILOT_APPROVAL_V1'
+    && pr207HumanDecisionRecord?.canonicalApprovalCommentId === EXPECTED_PR207_APPROVAL_COMMENT_ID
+    && pr207HumanDecisionRecord?.canonicalApprovalCommentUrl ===
+      'https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5014019753'
+    && pr207HumanDecisionRecord?.approverLogin === 'dooosp'
+    && pr207HumanDecisionRecord?.createdAt === '2026-07-19T03:33:31Z'
+    && pr207HumanDecisionRecord?.rawBodySha256 === EXPECTED_PR207_APPROVAL_COMMENT_RAW_SHA256
+    && pr207HumanDecisionRecord?.lfNormalizedBodySha256 === EXPECTED_PR207_APPROVAL_COMMENT_LF_SHA256
+    && pr207HumanDecisionRecord?.supportingDecisionIntentCommentUrl ===
+      'https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5013945474'
+    && pr207HumanDecisionRecord?.evaluatedHeadSha === pr207Head,
+  'PR207 canonical approval comment binding drifted',
+);
+assert(
+  pr207HumanDecisionRecord?.decisionFile?.path === pr207HumanDecisionInput.relativePath
+    && pr207HumanDecisionRecord?.decisionFile?.sha256 === pr207HumanDecisionInput.sha256
+    && pr207HumanDecisionRecord?.decisionFile?.mode === pr207HumanDecisionInput.mode
+    && pr207HumanDecisionRecord?.decisionFile?.tracked === pr207HumanDecisionInput.tracked
+    && pr207HumanDecisionRecord?.decisionFile?.ignored === pr207HumanDecisionInput.ignored
+    && pr207HumanDecisionRecord?.decisionFile?.role ===
+      'SHA_BOUND_TRANSCRIPTION_OF_CANONICAL_GITHUB_APPROVAL'
+    && pr207HumanDecisionRecord?.decisionFile?.wrapperBoundary === pr207HumanDecision.boundary
+    && pr207HumanDecisionRecord?.decisionFile?.wrapperTemplateNonClaimRetained === true
+    && pr207HumanDecisionRecord?.decisionFile?.approvalSource === 'CANONICAL_GITHUB_COMMENT',
+  'PR207 ignored decision-file safety or approval-source binding drifted',
+);
+assert(
+  pr207HumanDecisionRecord?.inputManifestSha256 === pr207HumanDecision.intakeManifestSha256
+    && pr207HumanDecisionRecord?.documentTupleFingerprintSha256 ===
+      pr207HumanDecision.documentTupleFingerprintSha256
+    && pr207HumanDecisionRecord?.documentCount === pr207HumanDecision.documentCount,
+  'PR207 decision-file lineage binding drifted',
+);
+assert(
+  isDeepStrictEqual(pr207HumanDecisionRecord?.commonDecisions, {
+    officiality: 'OWNER_ATTESTED_OFFICIAL_SOURCE',
+    currentness: 'CURRENT_REVISION',
+    technicalScope: 'IN_SCOPE',
+    boundedExcerptUse: 'APPROVED_FOR_INTERNAL_REPOSITORY_REVIEW',
+    binaryHandling: 'DO_NOT_COMMIT_BINARY',
+    reason: 'AUTHORIZED_OWNER_REVIEW_CONFIRMED',
+  })
+    && pr207HumanDecisionRecord?.architectureDecision ===
+      'APPROVE_BOUNDED_NON_CANONICAL_REVIEW_PATH'
+    && pr207HumanDecisionRecord?.originalSourceFidelityDecision === 'NOT_SEPARATELY_PROVIDED'
+    && pr207HumanDecisionRecord?.automaticVerifiedAllowed === false
+    && pr207HumanDecisionRecord?.automaticCustomerUseAllowed === false
+    && pr207HumanDecisionRecord?.productionApproved === false
+    && pr207HumanDecisionRecord?.mergeApproved === false,
+  'PR207 bounded human owner decision or non-approval boundaries drifted',
 );
 assert(
   pr207Ledger.realIntakeUiNormalizedPageTextTransportRisk ===
@@ -216,7 +495,113 @@ assert(
   JSON.stringify(machineRefusalReasons) === JSON.stringify(ledgerRefusalReasons),
   'PR207 refusal reasons do not match the machine run',
 );
+const pr207HumanDocumentIds = pr207HumanDecision.documents
+  .map((document) => document.documentId)
+  .sort();
+assert(
+  new Set(pr207HumanDocumentIds).size === 8
+    && JSON.stringify(pr207HumanDocumentIds) === JSON.stringify(ledgerAcceptedIds),
+  'PR207 human decision rows do not bind exactly to the eight accepted machine-intake documents',
+);
+const acceptedLedgerDocumentById = new Map(
+  pr207Ledger.documents
+    .filter((document) => document.intakeDecision === 'ACCEPTED')
+    .map((document) => [document.documentId, document]),
+);
+for (const decisionDocument of pr207HumanDecision.documents) {
+  const ledgerDocument = acceptedLedgerDocumentById.get(decisionDocument.documentId);
+  assert(ledgerDocument, `PR207 human decision references an unknown document: ${decisionDocument.documentId}`);
+  assert(
+    decisionDocument.fileSha256 === ledgerDocument.sourceFileSha256
+      && decisionDocument.normalizedContentSha256 === ledgerDocument.normalizedContentSha256
+      && decisionDocument.publisher === ledgerDocument.publisher
+      && decisionDocument.officialSourceUrl === ledgerDocument.sourceUrl
+      && decisionDocument.documentNumber === ledgerDocument.documentNumber
+      && decisionDocument.revision === ledgerDocument.revision?.revisionId
+      && decisionDocument.language === ledgerDocument.language
+      && decisionDocument.productFamily === ledgerDocument.productFamily,
+    `PR207 human decision tuple drifted from the accepted ledger: ${decisionDocument.documentId}`,
+  );
+  const matchingManifestDocuments = pr207IntakeManifest.documents.filter(
+    (manifestDocument) =>
+      manifestDocument.sourceUrl === decisionDocument.officialSourceUrl
+        && manifestDocument.publisher === decisionDocument.publisher
+        && manifestDocument.documentNumber === decisionDocument.documentNumber
+        && manifestDocument.revision?.revisionId === decisionDocument.revision
+        && manifestDocument.language === decisionDocument.language
+        && isDeepStrictEqual(manifestDocument.productFamilies, [decisionDocument.productFamily]),
+  );
+  assert(
+    matchingManifestDocuments.length === 1,
+    `PR207 human decision must map to exactly one current intake manifest entry: ${decisionDocument.documentId}`,
+  );
+  const manifestDocument = matchingManifestDocuments[0];
+  const normalizedInput = pr207NormalizedInputByManifestPath.get(manifestDocument.relativePath);
+  assert(
+    decisionDocument.normalizedIntakeFileSha256 === manifestDocument.expectedSha256
+      && decisionDocument.normalizedIntakeFileSha256 === normalizedInput?.input.sha256
+      && normalizedInput?.value.documentId === decisionDocument.documentId
+      && normalizedInput?.value.file?.sha256 === decisionDocument.fileSha256
+      && normalizedInput?.value.file?.contentSha256 === decisionDocument.normalizedContentSha256,
+    `PR207 decision row does not bind to the manifest hash and actual normalized JSON: ${decisionDocument.documentId}`,
+  );
+  assert(
+    decisionDocument.officialityDecision === 'OWNER_ATTESTED_OFFICIAL_SOURCE'
+      && decisionDocument.currentnessDecision === 'CURRENT_REVISION'
+      && decisionDocument.technicalScopeDecision === 'IN_SCOPE'
+      && decisionDocument.boundedExcerptUseDecision ===
+        'APPROVED_FOR_INTERNAL_REPOSITORY_REVIEW'
+      && decisionDocument.binaryCommitDecision === 'DO_NOT_COMMIT_BINARY'
+      && decisionDocument.decisionReasonCode === 'AUTHORIZED_OWNER_REVIEW_CONFIRMED',
+    `PR207 bounded human decision values drifted: ${decisionDocument.documentId}`,
+  );
+  assert(
+    !Object.hasOwn(decisionDocument, 'originalSourceFidelityDecision'),
+    `PR207 decision file unexpectedly claims original-source fidelity: ${decisionDocument.documentId}`,
+  );
+}
+assert(
+  pr207HumanDecision.nonClaims?.includes('This blank template is not a human approval.'),
+  'PR207 decision-file template non-claim must remain retained and externally qualified',
+);
+assert(
+  pr207Decision.inputLineage?.sourceAuthenticityStatus === 'UNREVIEWED',
+  'PR207 machine-state authenticity overlay must remain UNREVIEWED',
+);
+assert(
+  pr207Decision.humanReviewCounts?.documentAuthenticityDecisions === 8
+    && pr207Decision.humanReviewCounts?.revisionCurrentnessDecisions === 8
+    && pr207Decision.humanReviewCounts?.technicalScopeDecisions === 8
+    && pr207Decision.humanReviewCounts?.boundedExcerptUseRightsDecisions === 8
+    && pr207Decision.humanReviewCounts?.binaryHandlingDecisions === 8
+    && pr207Decision.humanReviewCounts?.completeStructuredDocumentDecisionRows === 8
+    && pr207Decision.humanReviewCounts?.originalSourceFidelityDecisions === 0
+    && pr207Decision.humanReviewCounts?.redistributionOrUseRightsDecisions === 0,
+  'PR207 bounded document-decision counts drifted or exceeded the canonical approval',
+);
+assert(
+  pr207Decision.architectureOwnerDecision?.decision ===
+    'APPROVE_BOUNDED_NON_CANONICAL_REVIEW_PATH'
+    && pr207Decision.architectureSignal ===
+      'BOUNDED_NON_CANONICAL_REVIEW_PATH_APPROVED_SAFE_CANDIDATE_POPULATION_STILL_EMPTY'
+    && pr207Decision.thresholdResults?.allDocumentOwnerBoundedDecisions ===
+      'PASS_8_OF_8_SHA_BOUND_TO_CANONICAL_GITHUB_APPROVAL'
+    && pr207Decision.thresholdResults?.allOriginalSourceFidelityDecisions ===
+      'INCOMPLETE_0_OF_8'
+    && pr207Decision.thresholdResults?.allDocumentValidityDecisions ===
+      'INCOMPLETE_ORIGINAL_SOURCE_FIDELITY_0_OF_8',
+  'PR207 owner decision or remaining fidelity gate drifted',
+);
 assert(pr207Decision.humanReviewCounts?.approvedForRepositoryReview === 0, 'PR207 approved count drifted');
+assert(
+  pr207Decision.humanReviewCounts?.candidateReviewSessions === 0
+    && pr207Decision.humanReviewCounts?.candidateSuggestions === 0
+    && pr207Decision.humanReviewCounts?.candidateDecisions === 0
+    && pr207Decision.humanReviewCounts?.reviewedSuggestions === 0
+    && pr207Decision.humanReviewCounts?.canonicalVerifiedClaimsCreated === 0
+    && pr207Decision.humanReviewCounts?.customerUseAllowedClaimsCreated === 0,
+  'PR207 candidate-review or automatic-claim count unexpectedly opened',
+);
 assert(
   Object.values(pr207Decision.humanReviewCounts?.approvedForRepositoryReviewByFamily || {})
     .every((count) => count === 0),
@@ -233,10 +618,11 @@ assert(
 );
 assert(
   changeAuthorityAudit.schemaVersion === 'evidence-to-decision-change-authority-audit-v2'
-    && pr206Decision.schemaVersion === 'pr206-human-validation-decision-v4'
-    && pr207Decision.schemaVersion === 'pr207-real-evidence-pilot-decision-v6'
-    && nextGate.schemaVersion === 'evidence-to-decision-next-gate-v6'
-    && commandLedger.schemaVersion === 'evidence-to-decision-validation-command-ledger-v3',
+    && pr206Decision.schemaVersion === 'pr206-human-validation-decision-v5'
+    && pr207Decision.schemaVersion === 'pr207-real-evidence-pilot-decision-v7'
+    && nextGate.schemaVersion === 'evidence-to-decision-next-gate-v7'
+    && githubState.schemaVersion === 'evidence-to-decision-github-state-v3'
+    && commandLedger.schemaVersion === 'evidence-to-decision-validation-command-ledger-v4',
   'owner-disposition artifact schema drifted',
 );
 assert(
@@ -316,6 +702,9 @@ for (const requiredThreshold of [
   'approvedForRepositoryReviewAtLeastTenPerFamily',
   'reviewedSuggestionPrecisionAtLeastEightyPercent',
   'materialUnresolvedConflictsVisiblyBlocking',
+  'allDocumentOwnerBoundedDecisions',
+  'allOriginalSourceFidelityDecisions',
+  'allDocumentValidityDecisions',
   'automaticVerifiedLeakageZero',
   'automaticAllowedLeakageZero',
   'fullDocumentCommitOrLeakageZero',
@@ -328,6 +717,54 @@ for (const requiredThreshold of [
 assert(nextGate.pr206?.evaluatedHeadSha === pr206Head, 'next-gate PR206 head mismatch');
 assert(nextGate.pr206?.safeIgnoredIntakeAvailable === true, 'next-gate PR206 safe-intake state drifted');
 assert(nextGate.pr207?.evaluatedHeadSha === pr207Head, 'next-gate PR207 head mismatch');
+assert(
+  nextGate.pr206?.methodOwnerDecisionRecord?.commentId === EXPECTED_PR206_METHOD_COMMENT_ID
+    && nextGate.pr206?.methodOwnerDecisionRecord?.rawBodySha256 ===
+      EXPECTED_PR206_METHOD_COMMENT_RAW_SHA256
+    && nextGate.pr206?.methodOwnerDecisionRecord?.lfNormalizedBodySha256 ===
+      EXPECTED_PR206_METHOD_COMMENT_LF_SHA256
+    && nextGate.pr206?.methodOwnerDecisionRecord?.decision === 'ACCEPT_CURRENT_METHOD'
+    && nextGate.pr206?.methodOwnerDecisionRecord?.approvedForHumanMergeEvidence === true
+    && nextGate.pr206?.methodOwnerDecisionRecord?.automatedGateIsAdvisory === true
+    && nextGate.pr206?.methodOwnerDecisionRecord?.productionApproved === false
+    && nextGate.pr206?.methodOwnerDecisionRecord?.mergeApprovedByThisComment === false
+    && nextGate.pr206?.automatedGateFitness === pr206Decision.automatedGateFitness,
+  'next-gate PR206 method-owner resolution drifted',
+);
+assert(
+  nextGate.pr207?.humanDocumentValidityDecisions === 0
+    && nextGate.pr207?.architectureSignal ===
+      'BOUNDED_NON_CANONICAL_REVIEW_PATH_APPROVED_SAFE_CANDIDATE_POPULATION_STILL_EMPTY'
+    && nextGate.pr207?.completeStructuredDocumentDecisionRows === 8
+    && isDeepStrictEqual(nextGate.pr207?.humanDocumentDecisionCounts, {
+      officiality: 8,
+      currentness: 8,
+      technicalScope: 8,
+      boundedExcerptUse: 8,
+      binaryHandling: 8,
+      originalSourceFidelity: 0,
+    })
+    && nextGate.pr207?.humanDocumentDecisionRecord?.canonicalApprovalCommentId ===
+      EXPECTED_PR207_APPROVAL_COMMENT_ID
+    && nextGate.pr207?.humanDocumentDecisionRecord?.rawBodySha256 ===
+      EXPECTED_PR207_APPROVAL_COMMENT_RAW_SHA256
+    && nextGate.pr207?.humanDocumentDecisionRecord?.lfNormalizedBodySha256 ===
+      EXPECTED_PR207_APPROVAL_COMMENT_LF_SHA256
+    && nextGate.pr207?.humanDocumentDecisionRecord?.decisionFileSha256 ===
+      pr207HumanDecisionInput.sha256
+    && nextGate.pr207?.humanDocumentDecisionRecord?.architectureDecision ===
+      'APPROVE_BOUNDED_NON_CANONICAL_REVIEW_PATH'
+    && nextGate.pr207?.humanDocumentDecisionRecord?.originalSourceFidelityDecision ===
+      'NOT_SEPARATELY_PROVIDED'
+    && nextGate.pr207?.humanDocumentDecisionRecord?.productionApproved === false
+    && nextGate.pr207?.humanDocumentDecisionRecord?.mergeApprovedByThisComment === false
+    && nextGate.pr207?.architectureOwnerDecision ===
+      'APPROVE_BOUNDED_NON_CANONICAL_REVIEW_PATH'
+    && nextGate.pr207?.safeProposals === 0
+    && nextGate.pr207?.humanCandidateDecisions === 0
+    && nextGate.pr207?.realIntakeUiAllowed === false,
+  'next-gate PR207 bounded approval or remaining-blocker state drifted',
+);
 assert(
   nextGate.pr206?.changeAuthorityStatus === 'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS'
     && nextGate.pr207?.changeAuthorityStatus === 'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS',
@@ -352,6 +789,99 @@ for (const [label, snapshot, expectedHead] of [
     `${label} GitHub check snapshot is not all-success`,
   );
 }
+const githubPr206MethodApproval = githubState.canonicalHumanInputRecords?.find(
+  (record) => record.recordType === 'PR206_METHOD_OWNER_APPROVAL',
+);
+const githubPr207DocumentApproval = githubState.canonicalHumanInputRecords?.find(
+  (record) => record.recordType === 'PR207_DOCUMENT_PILOT_APPROVAL',
+);
+assert(
+  githubState.canonicalHumanInputRecords?.length === 2
+    && githubPr206MethodApproval?.classification === 'CANONICAL_VALID_METHOD_OWNER_APPROVAL'
+    && githubPr206MethodApproval?.pullRequest === 206
+    && githubPr206MethodApproval?.commentId === EXPECTED_PR206_METHOD_COMMENT_ID
+    && githubPr206MethodApproval?.commentUrl === pr206Decision.methodOwnerDecisionRecord.commentUrl
+    && githubPr206MethodApproval?.commenterLogin === 'dooosp'
+    && githubPr206MethodApproval?.rawBodySha256 === EXPECTED_PR206_METHOD_COMMENT_RAW_SHA256
+    && githubPr206MethodApproval?.lfNormalizedBodySha256 === EXPECTED_PR206_METHOD_COMMENT_LF_SHA256
+    && githubPr206MethodApproval?.evaluatedHeadSha === pr206Head
+    && githubPr206MethodApproval?.methodDecision === 'ACCEPT_CURRENT_METHOD'
+    && githubPr206MethodApproval?.approvedForHumanMergeEvidence === true
+    && githubPr206MethodApproval?.automatedGateIsAdvisory === true
+    && githubPr206MethodApproval?.productionApproved === false
+    && githubPr206MethodApproval?.mergeApprovedByThisComment === false
+    && githubPr206MethodApproval?.effect === 'RESOLVES_PR206_METHOD_OWNER_INPUT_ONLY',
+  'GitHub snapshot PR206 method-owner approval binding drifted',
+);
+assert(
+  githubPr207DocumentApproval?.classification ===
+    'CANONICAL_SHA_BOUND_DOCUMENT_AND_ARCHITECTURE_APPROVAL'
+    && githubPr207DocumentApproval?.pullRequest === 207
+    && githubPr207DocumentApproval?.commentId === EXPECTED_PR207_APPROVAL_COMMENT_ID
+    && githubPr207DocumentApproval?.commentUrl ===
+      pr207HumanDecisionRecord.canonicalApprovalCommentUrl
+    && githubPr207DocumentApproval?.commenterLogin === 'dooosp'
+    && githubPr207DocumentApproval?.rawBodySha256 === EXPECTED_PR207_APPROVAL_COMMENT_RAW_SHA256
+    && githubPr207DocumentApproval?.lfNormalizedBodySha256 ===
+      EXPECTED_PR207_APPROVAL_COMMENT_LF_SHA256
+    && githubPr207DocumentApproval?.evaluatedHeadSha === pr207Head
+    && githubPr207DocumentApproval?.decisionFileSha256 === pr207HumanDecisionInput.sha256
+    && githubPr207DocumentApproval?.documentCount === 8
+    && Object.values(githubPr207DocumentApproval?.ownerLogins || {})
+      .length === 4
+    && Object.values(githubPr207DocumentApproval?.ownerLogins || {})
+      .every((login) => login === 'dooosp')
+    && isDeepStrictEqual(
+      githubPr207DocumentApproval?.commonDecisions,
+      pr207HumanDecisionRecord.commonDecisions,
+    )
+    && githubPr207DocumentApproval?.architectureDecision ===
+      'APPROVE_BOUNDED_NON_CANONICAL_REVIEW_PATH'
+    && githubPr207DocumentApproval?.originalSourceFidelityDecision === 'NOT_SEPARATELY_PROVIDED'
+    && githubPr207DocumentApproval?.automaticVerifiedClaimsCreated === 0
+    && githubPr207DocumentApproval?.automaticAllowedClaimsCreated === 0
+    && githubPr207DocumentApproval?.productionApproved === false
+    && githubPr207DocumentApproval?.mergeApprovedByThisComment === false
+    && githubPr207DocumentApproval?.effect ===
+      'RESOLVES_BOUNDED_DOCUMENT_AND_ARCHITECTURE_INPUTS_ONLY',
+  'GitHub snapshot PR207 SHA-bound approval drifted',
+);
+const supportingPr207Intent = githubState.supportingHumanInputRecords?.[0];
+assert(
+  githubState.supportingHumanInputRecords?.length === 1
+    && supportingPr207Intent?.classification ===
+      'SUPPORTING_INTENT_NOT_CANONICAL_SHA_BOUND_APPROVAL'
+    && supportingPr207Intent?.pullRequest === 207
+    && supportingPr207Intent?.commentId === 5013945474
+    && supportingPr207Intent?.commentUrl ===
+      'https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5013945474'
+    && supportingPr207Intent?.commenterLogin === 'dooosp'
+    && supportingPr207Intent?.createdAt === '2026-07-19T03:14:36Z'
+    && supportingPr207Intent?.rawBodySha256 ===
+      'c39a89e53bd4de39a9a85b988d45ab14c11e9be6840a3b94cce08065c20b77fa'
+    && supportingPr207Intent?.lfNormalizedBodySha256 ===
+      'b454432248aec101854ea045bb1b8e8c2f3e195baf359303689d51fcc2d84a5c'
+    && supportingPr207Intent?.canonicalizedByCommentId === EXPECTED_PR207_APPROVAL_COMMENT_ID,
+  'GitHub snapshot supporting PR207 decision intent drifted',
+);
+const wrongPrDuplicate = githubState.wrongPrDuplicates?.[0];
+assert(
+  githubState.wrongPrDuplicates?.length === 1
+    && wrongPrDuplicate?.classification === 'NONCANONICAL_WRONG_PULL_REQUEST_DUPLICATE'
+    && wrongPrDuplicate?.actualPullRequest === 206
+    && wrongPrDuplicate?.intendedPullRequest === 207
+    && wrongPrDuplicate?.commentId === 5013938164
+    && wrongPrDuplicate?.commentUrl ===
+      'https://github.com/dooosp/b2b-lead-agent/pull/206#issuecomment-5013938164'
+    && wrongPrDuplicate?.commenterLogin === 'dooosp'
+    && wrongPrDuplicate?.createdAt === '2026-07-19T03:11:46Z'
+    && wrongPrDuplicate?.rawBodySha256 ===
+      'c39a89e53bd4de39a9a85b988d45ab14c11e9be6840a3b94cce08065c20b77fa'
+    && wrongPrDuplicate?.lfNormalizedBodySha256 ===
+      'b454432248aec101854ea045bb1b8e8c2f3e195baf359303689d51fcc2d84a5c'
+    && wrongPrDuplicate?.effect === 'NONE',
+  'GitHub snapshot wrong-PR duplicate classification drifted',
+);
 assert(githubState.issue165?.state === 'OPEN', 'Issue #165 GitHub state is not OPEN');
 assert(githubState.issue165?.latestDecision === 'HOLD', 'Issue #165 latest decision is not HOLD');
 assert(
@@ -375,18 +905,51 @@ assert(
     && nextGate.missingExternalInputs?.filter((input) => input.owner === 'PR207_VALIDATION_METHOD_OWNER').length === 1,
   'independent PR207 rights and validation-method inputs must remain separate',
 );
+const remainingExternalInputOwners = nextGate.missingExternalInputs
+  .map((input) => input.owner)
+  .sort();
+assert(
+  isDeepStrictEqual(remainingExternalInputOwners, [
+    'PR206_FACILITATOR_AND_FIVE_QUALIFIED_REVIEWERS',
+    'PR207_DOCUMENT_SOURCE_OWNER',
+    'PR207_QUALIFIED_CANDIDATE_REVIEWERS',
+    'PR207_RIGHTS_SECURITY_OWNER',
+    'PR207_VALIDATION_METHOD_OWNER',
+  ])
+    && nextGate.missingExternalInputs.every((input) => input.current === 0)
+    && nextGate.missingExternalInputs.find(
+      (input) => input.owner === 'PR206_FACILITATOR_AND_FIVE_QUALIFIED_REVIEWERS',
+    )?.required === 5
+    && nextGate.missingExternalInputs.find(
+      (input) => input.owner === 'PR207_DOCUMENT_SOURCE_OWNER',
+    )?.required === 8
+    && nextGate.missingExternalInputs.find(
+      (input) => input.owner === 'PR207_QUALIFIED_CANDIDATE_REVIEWERS',
+    )?.required === 25
+    && !nextGate.missingExternalInputs.some(
+      (input) => input.owner === 'PR206_VALIDATION_METHOD_OWNER'
+        || input.owner === 'PR207_EVIDENCE_ARCHITECTURE_OWNER',
+    ),
+  'next-gate resolved and remaining human-input owners drifted',
+);
 assert(nextGate.pr207?.approvedForRepositoryReview === 0, 'next-gate PR207 approved count drifted');
 assert(
   nextGate.fixPolicy?.changeAuthorityStatus === 'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS'
     && nextGate.fixPolicy?.postInitialIncompleteImplementationCommitsPresent === 4
     && nextGate.fixPolicy?.explicitProductCodeFixCommitsPresent === 2
     && nextGate.fixPolicy?.retentionDispositionsRecorded === 4
-    && nextGate.missingExternalInputs?.length === 7
+    && nextGate.missingExternalInputs?.length === 5
     && nextGate.tenderMatrixBlockers?.length === 10
+    && nextGate.tenderMatrixBlockers?.includes(
+      'PR207_ORIGINAL_SOURCE_FIDELITY_DECISIONS_BELOW_8',
+    )
+    && !nextGate.tenderMatrixBlockers?.includes(
+      'PR207_HUMAN_DOCUMENT_VALIDITY_DECISIONS_BELOW_8',
+    )
     && !nextGate.missingExternalInputs?.some((input) => input.owner === 'EVIDENCE_TO_DECISION_CHANGE_OWNER')
     && !nextGate.tenderMatrixBlockers?.includes(
       'POST_INCOMPLETE_IMPLEMENTATION_CHANGE_AUTHORITY_DISPOSITION_MISSING'),
-  'next-gate retention disposition drifted',
+  'next-gate retention disposition or remaining blocker set drifted',
 );
 assert(nextGate.overallStatus === 'BLOCKED_BOTH', 'overall gate must remain BLOCKED_BOTH');
 assert(nextGate.goalCompletionStatus === 'INCOMPLETE_EXTERNAL_INPUTS', 'goal completion state drifted');
@@ -404,9 +967,74 @@ assert(commandLedger.evaluatedHeads?.pr206 === pr206Head, 'command-ledger PR206 
 assert(commandLedger.evaluatedHeads?.pr207 === pr207Head, 'command-ledger PR207 head mismatch');
 assert(commandLedger.evaluatedHeads?.base === EXPECTED_BASE_SHA, 'command-ledger base mismatch');
 assert(
-  commandLedger.commandGroups?.length === 6
+  commandLedger.commandGroups?.length === 7
     && commandLedger.commandGroups.every((group) => group.status === 'PASS' && group.exitCode === 0),
   'command-ledger result is not all-pass',
+);
+const humanApprovalBindingGroup = commandLedger.commandGroups.find(
+  (group) => group.id === 'HUMAN_APPROVAL_BINDING_RECHECK',
+);
+const humanApprovalBindingObservations = humanApprovalBindingGroup?.commandResults
+  ?.map((result) => result.observed) || [];
+const ledgerPr206MethodApproval = humanApprovalBindingObservations.find(
+  (observed) => observed.commentId === EXPECTED_PR206_METHOD_COMMENT_ID,
+);
+const ledgerPr207DocumentApproval = humanApprovalBindingObservations.find(
+  (observed) => observed.commentId === EXPECTED_PR207_APPROVAL_COMMENT_ID,
+);
+const ledgerSupportingIntent = humanApprovalBindingObservations.find(
+  (observed) => observed.commentId === 5013945474,
+);
+const ledgerWrongPrDuplicate = humanApprovalBindingObservations.find(
+  (observed) => observed.commentId === 5013938164,
+);
+const ledgerDecisionFileSafety = humanApprovalBindingObservations.find(
+  (observed) => observed.sha256 === EXPECTED_PR207_DECISION_FILE_SHA256,
+);
+const ledgerDecisionRows = humanApprovalBindingObservations.find(
+  (observed) => observed.documentRows === 8,
+);
+assert(
+  humanApprovalBindingGroup?.expectedCommandCount === 6
+    && humanApprovalBindingGroup?.commandResults?.length === 6
+    && humanApprovalBindingGroup.commandResults.every((result) => result.exitCode === 0)
+    && ledgerPr206MethodApproval?.classification === 'CANONICAL_VALID_METHOD_OWNER_APPROVAL'
+    && ledgerPr206MethodApproval?.rawBodySha256 === EXPECTED_PR206_METHOD_COMMENT_RAW_SHA256
+    && ledgerPr206MethodApproval?.lfNormalizedBodySha256 ===
+      EXPECTED_PR206_METHOD_COMMENT_LF_SHA256
+    && ledgerPr206MethodApproval?.evaluatedHeadAndRuntimeBinding === 'PASS'
+    && ledgerPr207DocumentApproval?.classification ===
+      'CANONICAL_SHA_BOUND_DOCUMENT_AND_ARCHITECTURE_APPROVAL'
+    && ledgerPr207DocumentApproval?.rawBodySha256 ===
+      EXPECTED_PR207_APPROVAL_COMMENT_RAW_SHA256
+    && ledgerPr207DocumentApproval?.lfNormalizedBodySha256 ===
+      EXPECTED_PR207_APPROVAL_COMMENT_LF_SHA256
+    && ledgerPr207DocumentApproval?.evaluatedHeadDecisionFileAndDocumentCountBinding === 'PASS'
+    && ledgerSupportingIntent?.classification ===
+      'SUPPORTING_INTENT_NOT_CANONICAL_SHA_BOUND_APPROVAL'
+    && ledgerSupportingIntent?.canonicalizedByCommentId === EXPECTED_PR207_APPROVAL_COMMENT_ID
+    && ledgerWrongPrDuplicate?.classification === 'NONCANONICAL_WRONG_PULL_REQUEST_DUPLICATE'
+    && ledgerWrongPrDuplicate?.gateEffect === 'NONE'
+    && ledgerDecisionFileSafety?.mode === '0600'
+    && ledgerDecisionFileSafety?.ignored === true
+    && ledgerDecisionFileSafety?.tracked === false
+    && ledgerDecisionRows?.evaluatedHeadSha === pr207Head
+    && ledgerDecisionRows?.humanFieldsAreBlank === false
+    && ledgerDecisionRows?.officialityCurrentnessScopeBoundedExcerptAndBinaryDecisionsMatch === true
+    && ledgerDecisionRows?.originalSourceFidelityFieldPresent === false
+    && ledgerDecisionRows?.wrapperBoundary === 'LOCAL_IGNORED_HUMAN_INPUT_TEMPLATE'
+    && ledgerDecisionRows?.wrapperTemplateNonClaimRetained === true
+    && isDeepStrictEqual(humanApprovalBindingGroup?.gateEffect, {
+      pr206MethodOwnerInputResolved: true,
+      pr207BoundedDocumentAndArchitectureInputsResolved: true,
+      pr206SessionsComplete: false,
+      pr207FullValidityComplete: false,
+      pr207OriginalSourceFidelityComplete: false,
+      pr207CandidateApprovalThresholdComplete: false,
+      mergeApproved: false,
+      productionApproved: false,
+    }),
+  'human-approval binding command ledger drifted',
 );
 assert(
   commandLedger.commandGroups.find((group) => group.id === 'PILOT_ARTIFACT_WRITER_SAFETY')?.passed === 5,
@@ -563,7 +1191,7 @@ const verificationInputSha256 = Object.fromEntries(
 );
 
 const report = {
-  schemaVersion: 'evidence-to-decision-pilot-refresh-run-v3',
+  schemaVersion: 'evidence-to-decision-pilot-refresh-run-v4',
   asOf: AS_OF,
   boundary: 'NOT_PRODUCTION_EVIDENCE',
   evaluatedBaseSha: EXPECTED_BASE_SHA,
@@ -572,6 +1200,38 @@ const report = {
     reportParentCommitSha,
     finalArtifactCommitSha: 'EXCLUDED_TO_AVOID_SELF_REFERENCE_VERIFY_GIT_PARENT_EQUALS_REPORT_PARENT',
     verificationInputSha256,
+    ignoredHumanInputBindings: {
+      pr207DocumentDecisions: {
+        evaluatedWorktreeHeadSha: pr207Head,
+        relativePath: pr207HumanDecisionInput.relativePath,
+        sha256: pr207HumanDecisionInput.sha256,
+        mode: pr207HumanDecisionInput.mode,
+        tracked: pr207HumanDecisionInput.tracked,
+        ignored: pr207HumanDecisionInput.ignored,
+      },
+      pr207IntakeManifest: {
+        evaluatedWorktreeHeadSha: pr207Head,
+        relativePath: pr207IntakeManifestInput.relativePath,
+        sha256: pr207IntakeManifestInput.sha256,
+        mode: pr207IntakeManifestInput.mode,
+        tracked: pr207IntakeManifestInput.tracked,
+        ignored: pr207IntakeManifestInput.ignored,
+        documentCount: pr207IntakeManifest.documents.length,
+      },
+      pr207NormalizedDocuments: pr207IntakeManifest.documents.map((manifestDocument) => {
+        const normalizedInput = pr207NormalizedInputByManifestPath.get(
+          manifestDocument.relativePath,
+        ).input;
+        return {
+          relativePath: normalizedInput.relativePath,
+          sha256: normalizedInput.sha256,
+          byteLength: normalizedInput.byteLength,
+          mode: normalizedInput.mode,
+          tracked: normalizedInput.tracked,
+          ignored: normalizedInput.ignored,
+        };
+      }),
+    },
   },
   pr206: {
     headSha: pr206Head,
@@ -583,6 +1243,7 @@ const report = {
     rates: humanValidation.rates,
     thresholdSummary: humanValidation.thresholds.summary,
     automatedGateFitness: pr206Decision.automatedGateFitness,
+    methodOwnerDecisionRecord: pr206Decision.methodOwnerDecisionRecord,
   },
   pr207: {
     headSha: pr207Head,
@@ -593,6 +1254,7 @@ const report = {
     abstentionCount: variantSpike.abstentionCount,
     abstentionReasons: variantSpike.abstentionReasons,
     gateStatus: variantSpike.gateStatus,
+    architectureSignal: pr207Decision.architectureSignal,
     sourceAuthenticityStatus: variantSpike.sourceAuthenticityStatus,
     canonicalPatchExportAllowed: variantSpike.canonicalPatchExportAllowed,
     evaluationSha256: variantSpike.evaluationSha256,
@@ -603,6 +1265,29 @@ const report = {
       rejectionCodes: documentAudit.realDocumentOutcome.rejectionCodes,
       interpretation: 'NOT_A_CURRENT_REAL_INPUT_COUNT',
     },
+    humanDocumentDecisionRecord: {
+      marker: pr207HumanDecisionRecord.marker,
+      canonicalApprovalCommentUrl: pr207HumanDecisionRecord.canonicalApprovalCommentUrl,
+      canonicalApprovalCommentId: pr207HumanDecisionRecord.canonicalApprovalCommentId,
+      approverLogin: pr207HumanDecisionRecord.approverLogin,
+      createdAt: pr207HumanDecisionRecord.createdAt,
+      rawBodySha256: pr207HumanDecisionRecord.rawBodySha256,
+      lfNormalizedBodySha256: pr207HumanDecisionRecord.lfNormalizedBodySha256,
+      evaluatedHeadSha: pr207HumanDecisionRecord.evaluatedHeadSha,
+      decisionFile: pr207HumanDecisionRecord.decisionFile,
+      inputManifestSha256: pr207HumanDecisionRecord.inputManifestSha256,
+      documentTupleFingerprintSha256: pr207HumanDecisionRecord.documentTupleFingerprintSha256,
+      documentCount: pr207HumanDecisionRecord.documentCount,
+      commonDecisions: pr207HumanDecisionRecord.commonDecisions,
+      architectureDecision: pr207HumanDecisionRecord.architectureDecision,
+      originalSourceFidelityDecision: pr207HumanDecisionRecord.originalSourceFidelityDecision,
+      automaticVerifiedAllowed: pr207HumanDecisionRecord.automaticVerifiedAllowed,
+      automaticCustomerUseAllowed: pr207HumanDecisionRecord.automaticCustomerUseAllowed,
+      productionApproved: pr207HumanDecisionRecord.productionApproved,
+      mergeApproved: pr207HumanDecisionRecord.mergeApproved,
+      interpretation:
+        'HUMAN_OWNER_OVERLAY_SHA_BOUND_TO_CANONICAL_GITHUB_APPROVAL_NOT_A_MACHINE_STATE_REWRITE',
+    },
     realIntakeExecutionRestriction: pr207Decision.realIntakeExecutionRestriction,
     humanReviewEvidenceRetentionFitness: pr207Decision.humanReviewEvidenceRetentionFitness,
     machineIntake: {
@@ -612,6 +1297,17 @@ const report = {
       manifestSha256: pr207MachineRun.manifestSha256,
     },
     humanCandidateDecisions: pr207Decision.humanReviewCounts.candidateDecisions,
+    boundedDocumentDecisionCounts: {
+      officiality: pr207Decision.humanReviewCounts.documentAuthenticityDecisions,
+      currentness: pr207Decision.humanReviewCounts.revisionCurrentnessDecisions,
+      technicalScope: pr207Decision.humanReviewCounts.technicalScopeDecisions,
+      boundedExcerptUse: pr207Decision.humanReviewCounts.boundedExcerptUseRightsDecisions,
+      binaryHandling: pr207Decision.humanReviewCounts.binaryHandlingDecisions,
+      originalSourceFidelity: pr207Decision.humanReviewCounts.originalSourceFidelityDecisions,
+    },
+    completeStructuredDocumentDecisionRows:
+      pr207Decision.humanReviewCounts.completeStructuredDocumentDecisionRows,
+    fullDocumentValidityDecisions: nextGate.pr207.humanDocumentValidityDecisions,
     approvedForRepositoryReview: pr207Decision.humanReviewCounts.approvedForRepositoryReview,
     approvedForRepositoryReviewByFamily:
       pr207Decision.humanReviewCounts.approvedForRepositoryReviewByFamily,
@@ -619,6 +1315,7 @@ const report = {
   overallDecision: 'INCOMPLETE',
   overallStatus: 'BLOCKED_BOTH',
   goalCompletionStatus: nextGate.goalCompletionStatus,
+  remainingExternalInputCount: nextGate.missingExternalInputs.length,
   issue165Status: 'HOLD',
   issue165Evidence: {
     state: githubState.issue165.state,

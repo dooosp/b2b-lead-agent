@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "evidence-to-decision-next-gate-v6",
-  "asOf": "2026-07-19",
+  "schemaVersion": "evidence-to-decision-next-gate-v7",
+  "asOf": "2026-07-19T03:33:31.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
   "artifactStorage": {
@@ -20,7 +20,21 @@
     "humanRatesAvailable": false,
     "safeIgnoredIntakeAvailable": true,
     "methodologyRiskCount": 4,
-    "automatedGateFitness": "NOT_DECISION_CAPABLE_WITHOUT_MANUAL_METHOD_REVIEW",
+    "methodOwnerDecisionRecord": {
+      "marker": "PR206_VALIDATION_METHOD_APPROVAL_V1",
+      "decision": "ACCEPT_CURRENT_METHOD",
+      "commentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/206#issuecomment-5013934447",
+      "commentId": 5013934447,
+      "commenterLogin": "dooosp",
+      "createdAt": "2026-07-19T03:10:20Z",
+      "rawBodySha256": "98bf4f2b0681dc35433c0988c71b0ccfd23004061d9b3514583cd7fe1ffb33f2",
+      "lfNormalizedBodySha256": "c9c4013a95e08226533d2cfac27e186b308ab13aefdaa70dcd9e389f68c0d9ac",
+      "approvedForHumanMergeEvidence": true,
+      "automatedGateIsAdvisory": true,
+      "productionApproved": false,
+      "mergeApprovedByThisComment": false
+    },
+    "automatedGateFitness": "OWNER_ACCEPTED_CURRENT_METHOD_FOR_HUMAN_MERGE_EVIDENCE_AUTOMATED_GATE_REMAINS_ADVISORY",
     "postInitialIncompleteImplementationCommits": 1,
     "implementationChangesPerformedIn20260719Refresh": 0,
     "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS"
@@ -28,11 +42,35 @@
   "pr207": {
     "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
     "decision": "INCOMPLETE",
-    "architectureSignal": "PIVOT_REQUIRED_FOR_VARIANT_AWARE_TABLE_EVIDENCE_BEFORE_REPEAT",
+    "architectureSignal": "BOUNDED_NON_CANONICAL_REVIEW_PATH_APPROVED_SAFE_CANDIDATE_POPULATION_STILL_EMPTY",
     "draft": true,
     "unmerged": true,
     "normalizedInputDocuments": 8,
     "humanDocumentValidityDecisions": 0,
+    "completeStructuredDocumentDecisionRows": 8,
+    "humanDocumentDecisionCounts": {
+      "officiality": 8,
+      "currentness": 8,
+      "technicalScope": 8,
+      "boundedExcerptUse": 8,
+      "binaryHandling": 8,
+      "originalSourceFidelity": 0
+    },
+    "humanDocumentDecisionRecord": {
+      "marker": "PR207_DOCUMENT_PILOT_APPROVAL_V1",
+      "canonicalApprovalCommentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5014019753",
+      "canonicalApprovalCommentId": 5014019753,
+      "approverLogin": "dooosp",
+      "createdAt": "2026-07-19T03:33:31Z",
+      "rawBodySha256": "9ade99c11f09bf78bec23c5799d7d95de41ccf5f636147300f15c0cfa2e0b661",
+      "lfNormalizedBodySha256": "b7680d1776ef5f726bc8fa1206850e24ff839e32b03e99b2f37a39b8c3ba760e",
+      "decisionFileSha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
+      "architectureDecision": "APPROVE_BOUNDED_NON_CANONICAL_REVIEW_PATH",
+      "originalSourceFidelityDecision": "NOT_SEPARATELY_PROVIDED",
+      "productionApproved": false,
+      "mergeApprovedByThisComment": false
+    },
+    "architectureOwnerDecision": "APPROVE_BOUNDED_NON_CANONICAL_REVIEW_PATH",
     "structuredRowsEvaluated": 2,
     "safeProposals": 0,
     "safeAbstentions": 2,
@@ -52,13 +90,13 @@
   "overallStatus": "BLOCKED_BOTH",
   "goalCompletionStatus": "INCOMPLETE_EXTERNAL_INPUTS",
   "mergeTrainRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
-  "mergeTrainReason": "Track A has zero completed human sessions. Track B has zero human validity decisions, zero safe propositions, zero human candidate decisions, and zero candidates approved for repository review. The four post-INCOMPLETE implementation commits have explicit owner approval for retention only; that exception does not satisfy either pilot gate. Both tracks remain INCOMPLETE and merge remains blocked.",
+  "mergeTrainReason": "Track A's method owner accepted the current bounded method, but Track A still has zero completed human sessions. Track B has eight SHA-bound owner decision rows and an approved bounded non-canonical architecture path, but original-source fidelity remains 0 of 8, safe propositions remain 0, human candidate decisions remain 0, and candidates approved for repository review remain 0. Neither approval authorizes merge or production. Both tracks remain INCOMPLETE and merge remains blocked.",
   "tenderMatrixEntryGate": "BLOCKED_BOTH",
   "tenderMatrixBlockers": [
     "PR206_DECISION_NOT_MERGE",
     "PR207_DECISION_NOT_MERGE",
     "PR206_VALID_R1_R5_SESSIONS_BELOW_5",
-    "PR207_HUMAN_DOCUMENT_VALIDITY_DECISIONS_BELOW_8",
+    "PR207_ORIGINAL_SOURCE_FIDELITY_DECISIONS_BELOW_8",
     "PR207_APPROVED_REPOSITORY_REVIEW_CANDIDATES_BELOW_25",
     "CANONICAL_VERIFIED_CLAIMS_BELOW_20",
     "BOTH_PRODUCT_FAMILIES_LACK_HUMAN_VERIFIED_REAL_CAPABILITY_COVERAGE",
@@ -68,28 +106,16 @@
   ],
   "missingExternalInputs": [
     {
-      "owner": "PR206_VALIDATION_METHOD_OWNER",
-      "input": "Explicit acceptance or separately authorized correction of the recorded per-task, comprehension, and timing gate defects before any aggregate is treated as merge evidence.",
-      "current": 0,
-      "required": 1
-    },
-    {
       "owner": "PR206_FACILITATOR_AND_FIVE_QUALIFIED_REVIEWERS",
       "input": "Five complete de-identified R1-R5 sessions against the frozen PR206 runtime and artifacts.",
       "current": 0,
       "required": 5
     },
     {
-      "owner": "PR207_DOCUMENT_AND_RIGHTS_REVIEWERS",
-      "input": "Per-document authenticity, revision-currentness, original-source-fidelity, and redistribution/use decisions for the eight normalized bundles.",
+      "owner": "PR207_DOCUMENT_SOURCE_OWNER",
+      "input": "A separate original-source-fidelity decision for each of the eight normalized bundles. The recorded officiality, currentness, technical-scope, bounded-excerpt-use, and binary-handling decisions do not establish normalized-text fidelity to the authoritative originals.",
       "current": 0,
       "required": 8
-    },
-    {
-      "owner": "PR207_EVIDENCE_ARCHITECTURE_OWNER",
-      "input": "A bounded go/no-go decision on representing product variants, semantic operators, units, conditions, footnotes, and table row/header relationships before candidate-review repetition.",
-      "current": 0,
-      "required": 1
     },
     {
       "owner": "PR207_RIGHTS_SECURITY_OWNER",
@@ -112,18 +138,19 @@
     }
   ],
   "evidenceBackedConclusions": [
-    "PR206 now has a private ignored session-intake path, but prepared blank files are not human evidence.",
+    "PR206's method owner accepted the current bounded method for human merge evidence, with the automated gate remaining advisory; prepared blank files are still not human evidence.",
     "PR207 correctly abstains on the two mapped rows rather than losing compound-variant or maximum semantics.",
-    "PR207 machine integrity and deterministic hashes do not establish officiality, revision currency, fidelity, engineering applicability, copyright permission, or customer-use approval.",
+    "PR207 now has eight SHA-bound owner decisions covering officiality, revision currency, technical scope, bounded internal repository-review excerpts, and binary non-commit handling, plus approval of the bounded non-canonical architecture path.",
+    "PR207's owner decisions do not separately establish original-source fidelity, approve complete normalized page-text transport, create a safe proposition, or approve any candidate, canonical claim, customer use, merge, or production action.",
     "The 2026-07-19 explicit owner instruction authorizes retention of the exact four listed post-INCOMPLETE commits as a documented exception; it does not change either pilot decision or authorize further implementation.",
     "No MERGE, REVISE, or product-thesis PIVOT decision is justified while the explicit external-input gates remain incomplete. The recorded PR207 architecture signal is a bounded prerequisite for another candidate attempt."
   ],
   "residualRisks": [
     "Four implementation commits entered the evaluated PR heads after the initial cross-PR INCOMPLETE decision record. Their retention is now explicitly approved as an exact documented exception, but that approval is not usability, document-validity, rights, candidate, or merge evidence.",
     "PR206's formal intake covers three of twelve scenarios and relies heavily on facilitator-coded correctness; any later aggregate must be interpreted with those limitations.",
-    "PR206's automated MERGE_THRESHOLDS result is advisory and cannot itself authorize merge or production action.",
-    "PR207 source originals, publisher signatures/checksums, retrieval records, current-revision evidence, and license/use approval are not present in the tracked decision artifact.",
-    "PR207 real-intake UI code transports complete normalized page text despite the bounded-excerpt declaration; it was not launched and remains blocked.",
+    "PR206's method-owner approval keeps the automated MERGE_THRESHOLDS result advisory; it cannot itself authorize merge or production action.",
+    "PR207 source originals, publisher signatures/checksums, retrieval records, and a separate original-source-fidelity decision are not present in the tracked decision artifact.",
+    "PR207 real-intake UI code transports complete normalized page text beyond the approved bounded-excerpt scope; it was not launched and remains blocked.",
     "PR207 current review state/patch output cannot reconstruct all rejected/deferred/authenticity decisions or the required time, usefulness, precision, and patch-suitability denominators.",
     "Six of eight PR207 normalized bundles are not represented by the two-row variant spike.",
     "The PR207 default document audit uses a fixed clock earlier than the real normalized extraction and therefore cannot be cited as a current real-input acceptance count.",
@@ -172,5 +199,5 @@
   "productionReviewerWorkflowReady": false,
   "bothPrsRemainDraft": true,
   "bothPrsRemainUnmerged": true,
-  "nextAction": "External-input HOLD: retain the exact four owner-approved commits without rewriting either Draft PR. Do not merge either PR, launch the PR207 real-intake UI, or start the Tender Matrix. A method owner must resolve or explicitly accept PR206 gate limits before five completed R1-R5 sessions are treated as merge evidence. PR207 requires human document validity/use decisions plus separate rights, review-retention, and bounded variant-aware architecture owner decisions before candidate-pilot repetition; any later MERGE claim additionally requires at least 25 approved candidates with at least 10 approved per product family."
+  "nextAction": "External-input HOLD: retain the exact four owner-approved commits without rewriting either Draft PR. The PR206 method gate and PR207 bounded document/architecture decision gate are resolved, but neither comment approves merge or production. Do not merge either PR, launch the PR207 real-intake UI, or start the Tender Matrix. Obtain five completed R1-R5 sessions for PR206. For PR207, separately resolve original-source fidelity for all eight bundles and complete the full-page rights/security and review-evidence-retention gates. Once safe bounded candidates exist under separately authorized work, obtain at least 25 approvals with at least 10 per product family."
 }
