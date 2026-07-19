@@ -124,6 +124,28 @@ test('CI workflow runs the synthetic lead-quality evaluator before full tests', 
   assert.match(workflow, /run:\s+npm run check:schema[\s\S]*run:\s+npm run eval:lead-quality[\s\S]*run:\s+npm test/);
 });
 
+test('CI workflow runs the Evidence-to-Decision pilot artifact safety gate', async () => {
+  const [workflow, packageJsonRaw] = await Promise.all([
+    readFile(ciWorkflowPath, 'utf8'),
+    readFile(packageJsonPath, 'utf8'),
+  ]);
+  const script = JSON.parse(packageJsonRaw).scripts['test:evidence-to-decision-pilot'] || '';
+
+  assert.equal(script, 'node --test tests/evidence-to-decision-pilot-artifacts.test.mjs');
+  assert.doesNotMatch(
+    script,
+    /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i,
+  );
+  assert.match(
+    workflow,
+    /name:\s+Verify Evidence-to-Decision pilot artifact safety\s+run:\s+npm run test:evidence-to-decision-pilot/,
+  );
+  assert.match(
+    workflow,
+    /run:\s+npm run check:level1[\s\S]*run:\s+npm run test:evidence-to-decision-pilot[\s\S]*run:\s+npm test/,
+  );
+});
+
 test('CI workflow runs the scoped security dependency audit triage after npm ci', async () => {
   const [workflow, packageJsonRaw] = await Promise.all([
     readFile(ciWorkflowPath, 'utf8'),

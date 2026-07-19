@@ -72,3 +72,20 @@ test('refuses a symbolic-link parent even when the lexical output is inside the 
     );
   });
 });
+
+test('refuses a nested path below a symbolic-link parent without creating an outside directory', async () => {
+  await withTemporaryRoots(async ({ root, outside }) => {
+    const linkedParent = path.join(root, 'linked');
+    const outsideNested = path.join(outside, 'must-not-exist');
+    await symlink(outside, linkedParent);
+    await assert.rejects(
+      writeJsonArtifactInsideWorktree({
+        worktreeRoot: root,
+        outputPath: path.join(linkedParent, 'must-not-exist', 'artifact.json'),
+        value: { unsafe: true },
+      }),
+      /parent path refuses symbolic links/,
+    );
+    await assert.rejects(readFile(outsideNested), (error) => error?.code === 'ENOENT');
+  });
+});

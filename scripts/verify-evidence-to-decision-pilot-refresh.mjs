@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -38,6 +39,12 @@ async function readDecision(relativePath) {
   return JSON.parse(await readFile(path.join(process.cwd(), relativePath), 'utf8'));
 }
 
+async function sha256File(relativePath) {
+  return createHash('sha256')
+    .update(await readFile(path.join(process.cwd(), relativePath)))
+    .digest('hex');
+}
+
 const { values } = parseArgs({
   options: {
     'pr206-root': { type: 'string' },
@@ -57,6 +64,7 @@ const outputPath = path.resolve(values.output);
 
 const pr206Head = gitHead(pr206Root);
 const pr207Head = gitHead(pr207Root);
+const refreshInputCommitSha = gitHead(process.cwd());
 assert(pr206Head === EXPECTED_PR206_HEAD, `unexpected PR206 head: ${pr206Head}`);
 assert(pr207Head === EXPECTED_PR207_HEAD, `unexpected PR207 head: ${pr207Head}`);
 
@@ -109,6 +117,9 @@ const nextGate = await readDecision('docs/product/validation/evidence-to-decisio
 const preflight = await readDecision('tmp/codex/evidence-to-decision-pilot-repo-preflight.json');
 const githubState = await readDecision('tmp/codex/evidence-to-decision-github-state-20260719.json');
 const pr207Ledger = await readDecision('docs/product/validation/pr207-real-evidence-input-ledger.json');
+const commandLedger = await readDecision('tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json');
+const packageJson = await readDecision('package.json');
+const ciWorkflow = await readFile(path.join(process.cwd(), '.github/workflows/ci.yml'), 'utf8');
 const githubPr206 = githubState.pullRequests?.find((pullRequest) => pullRequest.number === 206);
 const githubPr207 = githubState.pullRequests?.find((pullRequest) => pullRequest.number === 207);
 
@@ -160,12 +171,64 @@ assert(nextGate.tenderMatrixEntryGate === 'BLOCKED_BOTH', 'Tender Matrix gate un
 assert(nextGate.issue165Status === 'HOLD', 'Issue #165 boundary unexpectedly changed');
 assert(nextGate.productionReady === false, 'production readiness must remain false');
 assert(nextGate.productionReviewerWorkflowReady === false, 'production reviewer readiness must remain false');
+assert(commandLedger.evaluatedHeads?.pr206 === pr206Head, 'command-ledger PR206 head mismatch');
+assert(commandLedger.evaluatedHeads?.pr207 === pr207Head, 'command-ledger PR207 head mismatch');
+assert(commandLedger.evaluatedHeads?.base === EXPECTED_BASE_SHA, 'command-ledger base mismatch');
+assert(
+  commandLedger.commandGroups?.length === 5
+    && commandLedger.commandGroups.every((group) => group.status === 'PASS' && group.exitCode === 0),
+  'command-ledger result is not all-pass',
+);
+assert(
+  commandLedger.commandGroups.find((group) => group.id === 'PILOT_ARTIFACT_WRITER_SAFETY')?.passed === 5,
+  'artifact-writer regression count drifted',
+);
+assert(
+  commandLedger.commandGroups.find((group) => group.id === 'PILOT_WORKFLOW_CONTRACT')?.passed === 29
+    && commandLedger.commandGroups.find((group) => group.id === 'PILOT_WORKFLOW_CONTRACT')?.failed === 0,
+  'pilot workflow-contract result drifted',
+);
+assert(
+  packageJson.scripts?.['test:evidence-to-decision-pilot'] ===
+    'node --test tests/evidence-to-decision-pilot-artifacts.test.mjs',
+  'pilot artifact test script is missing',
+);
+assert(
+  ciWorkflow.includes('run: npm run test:evidence-to-decision-pilot'),
+  'pilot artifact safety test is missing from CI',
+);
+
+const verificationInputPaths = [
+  'docs/product/validation/pr206-human-validation-decision.json',
+  'docs/product/validation/pr207-real-evidence-input-ledger.json',
+  'docs/product/validation/pr207-real-evidence-pilot-decision.json',
+  'docs/product/validation/evidence-to-decision-next-gate.json',
+  'tmp/codex/evidence-to-decision-pilot-repo-preflight.json',
+  'tmp/codex/evidence-to-decision-github-state-20260719.json',
+  'tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json',
+  'scripts/verify-evidence-to-decision-pilot-refresh.mjs',
+  'scripts/lib/safe-local-artifact-writer.mjs',
+  'tests/evidence-to-decision-pilot-artifacts.test.mjs',
+  'package.json',
+  '.github/workflows/ci.yml',
+  'worker/tests/workflow-contract.test.mjs',
+];
+const verificationInputSha256 = Object.fromEntries(
+  await Promise.all(
+    verificationInputPaths.map(async (relativePath) => [relativePath, await sha256File(relativePath)]),
+  ),
+);
 
 const report = {
   schemaVersion: 'evidence-to-decision-pilot-refresh-run-v1',
   asOf: AS_OF,
   boundary: 'NOT_PRODUCTION_EVIDENCE',
   evaluatedBaseSha: EXPECTED_BASE_SHA,
+  refreshLineage: {
+    artifactParentSha: preflight.artifactParentSha,
+    refreshInputCommitSha,
+    verificationInputSha256,
+  },
   pr206: {
     headSha: pr206Head,
     decision: humanValidation.decision,
@@ -205,6 +268,12 @@ const report = {
   productionReady: false,
   productionReviewerWorkflowReady: false,
   prohibitedActionsPerformed: [],
+  commandLedger: {
+    relativePath: 'tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json',
+    sha256: verificationInputSha256['tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json'],
+    commandGroupCount: commandLedger.commandGroups.length,
+    allPassed: true,
+  },
 };
 
 await writeJsonArtifactInsideWorktree({ outputPath, value: report });

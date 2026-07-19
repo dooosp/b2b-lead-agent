@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "evidence-to-decision-validation-command-ledger-v1",
+  "observedAtDate": "2026-07-19",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "issue165Status": "HOLD",
+  "evaluatedHeads": {
+    "pr206": "b5570e182c8ab6515c0f09272d22d7121518f134",
+    "pr207": "c6a5469338999097acd5de7c5a12c827d27d4540",
+    "base": "9d144fbe6309ce363f9dad8d50ffa713d24af683"
+  },
+  "commandGroups": [
+    {
+      "id": "PILOT_ARTIFACT_WRITER_SAFETY",
+      "command": "npm run test:evidence-to-decision-pilot",
+      "status": "PASS",
+      "exitCode": 0,
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "id": "PILOT_REFRESH_VERIFIER",
+      "command": "node scripts/verify-evidence-to-decision-pilot-refresh.mjs --pr206-root <PR206_WORKTREE> --pr207-root <PR207_WORKTREE> --output tmp/codex/evidence-to-decision-pilot-refresh-20260719.json",
+      "status": "PASS",
+      "exitCode": 0,
+      "decision": "INCOMPLETE",
+      "overallStatus": "BLOCKED_BOTH"
+    },
+    {
+      "id": "PILOT_WORKFLOW_CONTRACT",
+      "command": "npm run test:contract",
+      "status": "PASS",
+      "exitCode": 0,
+      "passed": 29,
+      "failed": 0
+    },
+    {
+      "id": "PR206_REQUIRED_COMMANDS",
+      "commands": [
+        "npm run test:pursuit-workbench",
+        "npm run eval:pursuit-workbench",
+        "npm run test:pursuit-workbench:e2e",
+        "npm run test:claim-spec-fit",
+        "npm test",
+        "npm run check:naming",
+        "npm run check:schema",
+        "npm run test:e2e:local",
+        "npm run test:evidence",
+        "npm run check:lead-pipeline-replay",
+        "git diff --check"
+      ],
+      "status": "PASS",
+      "exitCode": 0,
+      "sandboxRetry": "INITIAL_LOOPBACK_BIND_EPERM_THEN_PASS_WITH_LOCAL_LOOPBACK_PERMISSION",
+      "trackedWorktreeAfter": "CLEAN"
+    },
+    {
+      "id": "PR207_REQUIRED_COMMANDS",
+      "commands": [
+        "npm run test:evidence-claim-workbench",
+        "npm run test:evidence-claim-workbench:e2e",
+        "npm run eval:evidence-claim-workbench",
+        "npm run measure:evidence-claim-workbench",
+        "npm run test:claim-spec-fit",
+        "npm test",
+        "npm run check:naming",
+        "npm run check:schema",
+        "npm run test:e2e:local",
+        "npm run test:evidence",
+        "npm run check:lead-pipeline-replay",
+        "git diff --check"
+      ],
+      "status": "PASS",
+      "exitCode": 0,
+      "sandboxRetry": "INITIAL_LOOPBACK_BIND_EPERM_THEN_PASS_WITH_LOCAL_LOOPBACK_PERMISSION",
+      "realInboxHandling": "TEMPORARILY_RENAMED_FOR_SYNTHETIC_MISSING_INPUT_ASSERTION_THEN_RESTORED_BY_SHELL_TRAP",
+      "realInboxFileCountAfter": 10,
+      "temporaryHoldPathAfter": "ABSENT",
+      "trackedWorktreeAfter": "CLEAN"
+    }
+  ],
+  "nonClaims": [
+    "This ledger records local command outcomes and is not production evidence.",
+    "Synthetic test success does not supply human sessions, source officiality, rights approval, or human candidate decisions.",
+    "No production, staging, D1, customer-data, endpoint, log, secret, CRM, outreach, LLM, or automation action was performed."
+  ]
+}

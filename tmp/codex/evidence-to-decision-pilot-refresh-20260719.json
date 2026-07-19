@@ -3,6 +3,25 @@
   "asOf": "2026-07-19T00:00:00.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+  "refreshLineage": {
+    "artifactParentSha": "5caa852",
+    "refreshInputCommitSha": "90d2a6660c3cf0bdbd04748f64494655b0b925e3",
+    "verificationInputSha256": {
+      "docs/product/validation/pr206-human-validation-decision.json": "543d97c3cf3a9b51292a71baf310efa9fdda00772ef638e113aef53c33b45b21",
+      "docs/product/validation/pr207-real-evidence-input-ledger.json": "2a2be5c56246340d7f67a9f3fd22205bfd041a349c4aa616d7e37e4be1073eff",
+      "docs/product/validation/pr207-real-evidence-pilot-decision.json": "5d1bb1061003ed3e786c6f8ed44f8f06d08614ddf920190aa44947f7e6d59b9e",
+      "docs/product/validation/evidence-to-decision-next-gate.json": "fb30aa720aef94964dd6f7718da2ed2686594e765c8c1b64b4b62f3960ddae31",
+      "tmp/codex/evidence-to-decision-pilot-repo-preflight.json": "a52fe0ddcfdb4042770b65b09cda558967670f46d8938661d604d38bb8f85926",
+      "tmp/codex/evidence-to-decision-github-state-20260719.json": "6d3a20d4454cd236e4b5ec6696bbe7337448f8046ddbb2a54dba6d60f9a12802",
+      "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json": "9eb7cf5c9bbb053b552346053510107b2fb9749ba7d905e8fd12cd73977bf231",
+      "scripts/verify-evidence-to-decision-pilot-refresh.mjs": "8ad9fe5bc8e033da11ac4ecb7fcfbcffcece90ddb7802a9d8f8a6c6ab639b07a",
+      "scripts/lib/safe-local-artifact-writer.mjs": "e0d441359140011f9f11c8846a6c8afc44fb0d850c85ccd2fc9aeafdb854f0e7",
+      "tests/evidence-to-decision-pilot-artifacts.test.mjs": "9c7af6e58ec4259a797156ee74fb719a04d8744641380ca77e06dcc8ec562b2c",
+      "package.json": "f4f58d324efa7661c57acc33d75d57f23bc3ca1577a4f438c319740a27999154",
+      ".github/workflows/ci.yml": "8fa7680e72cd2af851643346ac21de0e436751a342b67f121ddd8c326423eb74",
+      "worker/tests/workflow-contract.test.mjs": "6c0e0a22a462807e86166a4d18f2f5233e9a708ae2b90f8508ea216ae4c10875"
+    }
+  },
   "pr206": {
     "headSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
     "decision": "INCOMPLETE",
@@ -52,5 +71,11 @@
   "issue165Status": "HOLD",
   "productionReady": false,
   "productionReviewerWorkflowReady": false,
-  "prohibitedActionsPerformed": []
+  "prohibitedActionsPerformed": [],
+  "commandLedger": {
+    "relativePath": "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json",
+    "sha256": "9eb7cf5c9bbb053b552346053510107b2fb9749ba7d905e8fd12cd73977bf231",
+    "commandGroupCount": 5,
+    "allPassed": true
+  }
 }

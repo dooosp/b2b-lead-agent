@@ -111,6 +111,7 @@
     "Do not weaken private-data guards, infer a scalar from a compound table, or treat an abstention as a human rejection."
   ],
   "validationSummary": {
+    "commandLedger": "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json",
     "pilotRefreshVerifier": "PASS",
     "pr206ReadOnlyValidator": "PASS_WITH_INCOMPLETE_0_OF_5",
     "pr206SyntheticEvaluation": "PASS_12_OF_12_TWO_REPEAT_RUNS_NOT_HUMAN_EVIDENCE",
@@ -119,14 +120,16 @@
     "pr207FixedClockRealInputDiagnostic": "PRESENT_REJECTED_FUTURE_DOCUMENT_DATE_NOT_CURRENT_COUNT",
     "pr206FocusedAndFullRegression": "PASS_ALL_REQUIRED_COMMANDS_AFTER_LOOPBACK_ESCALATION",
     "pr207FocusedAndFullRegression": "PASS_ALL_REQUIRED_COMMANDS_WITH_REAL_INBOX_SAFELY_ISOLATED_AND_RESTORED_AFTER_LOOPBACK_ESCALATION",
-    "artifactWriterSafetyTests": "PASS_4_OF_4",
+    "artifactWriterSafetyTests": "PASS_5_OF_5",
+    "pilotWorkflowContract": "PASS_29_OF_29",
     "githubChecks": "PASS_AT_EVALUATION"
   },
   "readOnlyInvestigationStatus": {
     "required": 8,
     "completed": 8,
     "remaining": 0,
-    "finalSkepticalReviewPending": true
+    "finalReviewProtocol": "FIVE_FRESH_READ_ONLY_REVIEWS_REQUIRED_AGAINST_FINAL_CLEAN_COMMIT",
+    "finalReviewResultLocation": "POST_COMMIT_REVIEW_RECORD_OUTSIDE_THIS_SELF_REFERENTIAL_ARTIFACT"
   },
   "fixPolicy": {
     "trackAState": "INCOMPLETE",

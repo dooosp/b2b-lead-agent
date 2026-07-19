@@ -74,6 +74,7 @@
       "git diff --check"
     ],
     "pilotRefresh": [
+      "npm run test:evidence-to-decision-pilot",
       "node scripts/verify-evidence-to-decision-pilot-refresh.mjs --pr206-root <PR206_WORKTREE> --pr207-root <PR207_WORKTREE> --output tmp/codex/evidence-to-decision-pilot-refresh-20260719.json",
       "git diff --check"
     ]

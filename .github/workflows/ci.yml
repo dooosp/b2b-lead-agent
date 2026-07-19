@@ -52,6 +52,9 @@ jobs:
       - name: Run Level 1 non-production regression gate
         run: npm run check:level1
 
+      - name: Verify Evidence-to-Decision pilot artifact safety
+        run: npm run test:evidence-to-decision-pilot
+
       - name: Run unit and contract tests
         run: npm test
 

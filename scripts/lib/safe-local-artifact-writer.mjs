@@ -25,13 +25,24 @@ async function assertExistingDestinationIsSafe(destinationPath) {
   }
 }
 
-async function assertParentPathHasNoSymlink(rootRealPath, lexicalParentPath) {
+async function ensureParentPathSafely(rootRealPath, lexicalParentPath) {
   const relative = path.relative(rootRealPath, lexicalParentPath);
   assert(relative !== '..' && !relative.startsWith(`..${path.sep}`), '--output parent must remain inside this worktree');
   let currentPath = rootRealPath;
   for (const segment of relative.split(path.sep).filter(Boolean)) {
     currentPath = path.join(currentPath, segment);
-    const stat = await lstat(currentPath);
+    let stat;
+    try {
+      stat = await lstat(currentPath);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+      try {
+        await mkdir(currentPath, { mode: 0o755 });
+      } catch (mkdirError) {
+        if (mkdirError?.code !== 'EEXIST') throw mkdirError;
+      }
+      stat = await lstat(currentPath);
+    }
     assert(!stat.isSymbolicLink(), '--output parent path refuses symbolic links');
     assert(stat.isDirectory(), '--output parent path must contain directories only');
   }
@@ -55,8 +66,7 @@ export async function writeJsonArtifactInsideWorktree({
   );
 
   const canonicalOutputPath = path.join(rootRealPath, lexicalRelative);
-  await mkdir(path.dirname(canonicalOutputPath), { recursive: true });
-  await assertParentPathHasNoSymlink(rootRealPath, path.dirname(canonicalOutputPath));
+  await ensureParentPathSafely(rootRealPath, path.dirname(canonicalOutputPath));
   const parentRealPath = await realpath(path.dirname(canonicalOutputPath));
   assert(isInside(rootRealPath, parentRealPath), '--output parent must remain inside this worktree');
 
