@@ -1,31 +1,79 @@
 {
-  "schemaVersion": "pr206-human-validation-decision-v1",
+  "schemaVersion": "pr206-human-validation-decision-v2",
+  "asOf": "2026-07-19",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "sourcePr": 206,
-  "evaluatedHeadSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+  "evaluatedHeadSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+  "frozenRuntimeSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
   "baseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
-  "baseIsCurrentOriginMasterAtEvaluation": true,
   "githubState": {
     "state": "OPEN",
     "draft": true,
     "mergeable": true,
-    "checks": "PASS"
+    "unmerged": true,
+    "checks": "PASS_AT_EVALUATION"
   },
   "inputCounts": {
-    "sessionsSupplied": 0,
-    "sessionsAccepted": 0,
-    "sessionsRefused": 0,
-    "requiredSessions": 5,
-    "missingReviewerIds": [
+    "sessionFilesPresent": 5,
+    "completedSessionsSupplied": 0,
+    "eligibleSessionsAccepted": 0,
+    "ineligibleSessions": 0,
+    "invalidSessions": 0,
+    "requiredEligibleSessions": 5,
+    "missingCompletedReviewerIds": [
       "R1",
       "R2",
       "R3",
       "R4",
       "R5"
-    ]
+    ],
+    "interpretation": "The five files are blank NOT_STARTED skeletons, not five supplied human sessions."
   },
-  "metrics": {
-    "validSessionCount": 0,
+  "safeIntake": {
+    "status": "AVAILABLE",
+    "directoryMode": "0700",
+    "fileMode": "0600",
+    "gitStatus": "IGNORED_LOCAL_ONLY",
+    "regularSingleLinkFiles": 5,
+    "containsRealCustomerData": false,
+    "validatorAvailable": true,
+    "rawSessionContentCopiedToDecisionArtifact": false
+  },
+  "validatorResult": {
+    "status": "INCOMPLETE",
+    "decision": "INCOMPLETE",
+    "recordCount": 5,
+    "eligibleReviewerCount": 0,
+    "taskResultCount": 0,
+    "scenarioJudgmentCount": 0,
+    "claimBoundaryCheckCount": 0,
+    "internalPursuitUsefulReviewerCount": 0,
+    "pairedBaselineCount": 0,
+    "findingSeverityCounts": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0,
+      "P3": 0
+    },
+    "rates": {
+      "independentTaskCompletionRate": null,
+      "assistedTaskCompletionRate": null,
+      "fitAgreementRate": null,
+      "claimBoundarySuccessRate": null,
+      "medianTimeReductionRate": null
+    },
+    "medianReviewDurationSeconds": null,
+    "thresholdSummary": "INCOMPLETE",
+    "interpretation": "Zero findings and null rates mean no observation exists; they are not positive evidence."
+  },
+  "syntheticRegressionEvidence": {
+    "scenarioCount": 12,
+    "passed": 12,
+    "repeatRuns": 2,
+    "result": "PASS",
+    "countsTowardHumanGate": false
+  },
+  "humanMetrics": {
     "taskCompletionByTask": null,
     "overallTaskCompletion": null,
     "completionTimeMedianSeconds": null,
@@ -37,91 +85,58 @@
     "allowedBlockedAccuracy": null,
     "technicalQuestionUsefulness": null,
     "reviewPacketUsefulness": null,
-    "internalMeetingUsageIntentYesCount": null,
-    "humanSessionFindingCounts": {
-      "observed": false,
-      "P0": null,
-      "P1": null,
-      "P2": null,
-      "P3": null
-    },
-    "independentReviewFindingCounts": {
-      "P0": 0,
-      "P1": 1,
-      "P2": 0,
-      "P3": 0
-    },
-    "recurringConfusionCodes": null
+    "internalMeetingUsageIntent": null,
+    "recurringConfusionCodes": []
   },
-  "thresholdResults": {
-    "validSessionsEquals5": false,
-    "overallTaskCompletionAtLeast80Percent": null,
-    "fitAgreementAtLeast80Percent": null,
-    "allowedBlockedAccuracyAtLeast90Percent": null,
-    "criticalMisleadingInterpretationEquals0": null,
-    "unresolvedP0Equals0": null,
-    "unresolvedP1Equals0": null,
-    "medianReviewTimeAtMost15MinutesOr30PercentImprovement": null,
-    "internalMeetingUsageIntentAtLeast3Of5": null,
-    "packetNotMisreadAsOutreachCrmCommercialApprovalOrProductionEvidence": null
-  },
-  "syntheticRegressionEvidence": {
-    "scenarioCount": 12,
-    "scenarioPassCount": 12,
-    "humanValidationClaimed": false
-  },
-  "findings": [
+  "observedHumanFindings": [],
+  "automatedGateFitness": "NOT_DECISION_CAPABLE_WITHOUT_MANUAL_METHOD_REVIEW",
+  "independentMethodologyRisks": [
     {
-      "code": "SESSION_OUTPUT_STORAGE_NOT_IGNORED",
-      "severity": "P1",
-      "affectedPr": 206,
-      "scenario": null,
-      "task": "human_validation_session_capture",
-      "evidence": "The validation packet instructs facilitators to copy and populate tracked Markdown and JSON templates that contain free-text fields, while the branch ignore rules do not reserve a local-only session-results path.",
-      "recurrenceCount": 1,
-      "proposedCorrection": "Store completed raw session forms in an ignored local-only directory and require an anonymization/consistency validator before producing bounded aggregate artifacts.",
-      "blocksMerge": true,
-      "fixStatus": "NOT_IMPLEMENTED_TRACK_INCOMPLETE_AND_FIX_OUTSIDE_CURRENT_ALLOWED_LIST"
+      "code": "AGGREGATE_CAN_PASS_WHEN_A_CORE_TASK_FAILS_FOR_ALL_REVIEWERS",
+      "severity": "P1_METHOD_RISK",
+      "evidence": "An ephemeral in-memory five-record probe with T5 NOT_COMPLETED for all reviewers still produced 25/30 independent completions and MERGE_THRESHOLDS_MET because the gate pools all tasks.",
+      "effect": "A future aggregate can hide a complete task-level failure. The probe is methodology evidence, not a human session."
+    },
+    {
+      "code": "REQUIRED_UNDERSTANDING_FIELDS_DO_NOT_GATE_THE_SUMMARY",
+      "severity": "P1_METHOD_RISK",
+      "evidence": "Specification-window understanding and technical-question usefulness are captured but not aggregated; packet-boundary misunderstandings and recurring confusion do not directly gate the result. A non-human counterexample with those failures still met merge thresholds.",
+      "effect": "The automated summary can contradict required comprehension outcomes."
+    },
+    {
+      "code": "TIMING_RECORDS_ARE_NOT_CROSS_CHECKED",
+      "severity": "P1_METHOD_RISK",
+      "evidence": "A non-human probe with six 600-second tasks and a 600-second total session validated and passed the timing gate; task totals, session total, and optional baseline are not reconciled.",
+      "effect": "Impossible timing input can create a false positive."
+    },
+    {
+      "code": "SCENARIO_AND_ANSWER_COVERAGE_IS_INCOMPLETE",
+      "severity": "P1_METHOD_RISK",
+      "evidence": "The formal intake covers three of twelve scenarios, all with OPEN specification windows, and preserves most correctness only as facilitator-coded outcome rather than structured selected answers.",
+      "effect": "A future passing aggregate would not prove the full review guide's scenario or answer-key coverage."
     }
   ],
-  "inputBlockers": [
+  "fixes": [
     {
-      "code": "R1_R5_SESSION_INPUT_MISSING",
-      "severity": "BLOCKER",
-      "affectedPr": 206,
-      "scope": "human_validation_intake",
-      "evidence": "No completed anonymized session form or populated aggregate session record was present.",
-      "missing": [
-        "R1",
-        "R2",
-        "R3",
-        "R4",
-        "R5"
-      ],
-      "blocksMerge": true
+      "code": "SAFE_IGNORED_SESSION_INTAKE",
+      "status": "RESOLVED_BEFORE_THIS_EVALUATION",
+      "headSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+      "effect": "Five private ignored skeletons and a fail-closed validator now exist."
     }
   ],
-  "methodologyRisks": [
-    "The validation packet is on separate commit 1f84cc044e0aac1147a841568b40a5241c5659bc, not the evaluated PR head.",
-    "The current packet has no executable session validator or aggregate calculator.",
-    "Raw completed session storage is not isolated from tracked files, creating a privacy/confidentiality risk before R1-R5 collection.",
-    "Session records do not retain the observed exact head plus per-scenario dossier, timeline, and view-model hashes required by this pilot.",
-    "The 10-task 25-40 minute review guide and the 6-task 15-minute sprint gate use different timing protocols.",
-    "All three scored sprint scenarios have an OPEN specification window, so window-state comprehension is not directly tested.",
-    "Fit agreement after viewing system results is outcome concordance, not blind expert accuracy.",
-    "Five reviewers are sufficient only for a bounded pilot gate and not a population reliability claim."
-  ],
-  "fixes": [],
-  "collectionStatus": "HOLD_UNTIL_SEPARATE_SCOPED_SAFE_SESSION_INTAKE_EXISTS",
-  "nextActionOwnerOnly": "Do not run facilitator sessions. A separate explicitly scoped change must first add an ignored local-only raw-session directory and a bounded anonymization/consistency validator.",
+  "fixesPerformedInThisPilotRefresh": [],
+  "collectionStatus": "PRIVATE_INPUT_PATH_READY_AUTOMATED_MERGE_GATE_NOT_DECISION_CAPABLE",
   "decision": "INCOMPLETE",
-  "decisionReason": "Fewer than five valid sessions exist; no human metric can be computed without fabrication.",
-  "updatedHeadSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+  "decisionReason": "Fewer than five valid completed R1-R5 sessions exist, so the Goal's Track A rule requires INCOMPLETE. No MERGE, REVISE, or PIVOT decision may be inferred from blank skeletons or synthetic regression.",
+  "mergeRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
+  "nextExternalInput": "Before treating any aggregate as merge evidence, a human validation-method owner must explicitly accept or separately authorize correction of the recorded gate defects. Five qualified reviewers must then complete R1-R5 against the frozen runtime and artifacts. The facilitator must retain de-identified task-level evidence and manually review per-task, comprehension, and timing consistency; the validator result remains advisory.",
   "productionReady": false,
+  "productionReviewerWorkflowReady": false,
   "issue165Status": "HOLD",
   "nonClaims": [
-    "Synthetic regression success is not human technical-sales validation.",
-    "No reviewer agreement, usability, timing, usefulness, MERGE, REVISE, or PIVOT result is inferred.",
-    "No production, staging, D1, endpoint, log, secret, customer-data, CRM, outreach, email, LLM, or automation action occurred."
+    "Prepared files are not completed human sessions.",
+    "Synthetic 12/12 does not satisfy a human threshold.",
+    "No human usability, trust, time-saving, usefulness, or accessibility result is claimed.",
+    "No production, staging, customer-data, D1, endpoint, log, secret, CRM, outreach, LLM, or automation action was performed."
   ]
 }

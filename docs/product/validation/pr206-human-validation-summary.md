@@ -2,36 +2,48 @@
 
 ## Decision
 
-`INCOMPLETE`
+`INCOMPLETE` — `NO_MERGE_INPUT_INCOMPLETE`
 
-PR #206 was evaluated at `8098f66c6fb7e64464297c0ee70d25f49756135d`. It remains Open, Draft, mergeable, unmerged, and green in GitHub checks.
+PR #206 was evaluated at `b5570e182c8ab6515c0f09272d22d7121518f134` against base `9d144fbe6309ce363f9dad8d50ffa713d24af683`. It remains Open, Draft, mergeable, unmerged, and green at evaluation time.
 
-No completed R1-R5 session was supplied. The available human-validation results file is an empty template on separate commit `1f84cc044e0aac1147a841568b40a5241c5659bc`; it contains no session record and no finding. Therefore all human rates, agreement values, timing values, and usefulness values are unavailable rather than zero.
+Five private, ignored, mode-`0600` session files exist, but all five are exact `NOT_STARTED` skeletons. They contain no completed reviewer identity band, task result, scenario judgment, timing result, usefulness decision, or finding. A prepared file is not a supplied human session.
 
-## Counts
+## Actual input and result
 
 | Measure | Result |
 | --- | ---: |
-| Sessions supplied | 0 |
-| Sessions accepted | 0 |
-| Sessions refused | 0 |
-| Sessions required | 5 |
-| Synthetic scenarios passed | 12 / 12 |
-| Recorded human-session findings | not collected |
-| Independent protocol findings | 1 P1 |
+| Session files present | 5 |
+| Completed sessions supplied | 0 |
+| Eligible sessions accepted | 0 / 5 required |
+| Task results / scenario judgments | 0 / 0 |
+| Human findings | 0 because none were observed |
+| Human rates and median duration | unavailable (`null`) |
+| Aggregate threshold | `INCOMPLETE` |
+| Synthetic regression | 12 / 12, two repeat runs |
 
-The 12 / 12 result is deterministic synthetic regression evidence only. It does not satisfy any human MERGE threshold.
+The synthetic result is deterministic regression evidence only. It contributes nothing to the human gate.
 
-## Findings and fixes
+## Intake safety and method limits
 
-There are no evidence-backed human-usability findings because no session occurred. Independent security review found one protocol P1: the packet directs facilitators to populate tracked free-text Markdown/JSON files without an ignored raw-session path. A de-identification mistake could therefore enter Git history.
+The earlier tracked-free-text storage risk is resolved at the evaluated head: the local input directory is ignored and mode `0700`; each R1-R5 file is a regular, single-link mode-`0600` file; and the validator fails closed. No raw session content is copied into this artifact.
 
-No fix was implemented and the PR head was not changed. The Track is `INCOMPLETE`, and the current Goal permits PR #206 changes only for a bounded set of human-session-backed `REVISE` fixes; raw-session storage/validator work is outside that allowed list. Do not begin R1-R5 collection with the current tracked-output workflow.
+Independent read-only review found that the automated merge summary is not currently decision-capable:
 
-Methodology risks to resolve before collection include exact session-to-build/scenario/dossier hash binding, executable anonymization and consistency validation, a single timing protocol, explicit stage/window answers, full packet-usefulness fields, and safe-scope interpretation fields. These are protocol risks, not observed product defects and do not justify `REVISE` without real sessions.
+- an ephemeral, non-human counterexample with one core task failed by all five records still returned `MERGE_THRESHOLDS_MET` because all 30 tasks are pooled;
+- required specification-window, technical-question, packet-boundary, and recurring-confusion evidence does not reliably gate the summary;
+- impossible timing input can validate because task totals are not reconciled to session totals or a matched baseline;
+- the formal intake covers only three of twelve scenarios and most answer-key conformance is facilitator-coded.
 
-## Next input
+These are method risks, not human-observed product defects. The Goal permits PR #206 fixes only after Track A is `REVISE`; with zero sessions, Track A must remain `INCOMPLETE`, so this refresh changes no PR #206 product code.
 
-`HOLD`: do not run facilitator sessions with the current packet. A separate explicitly scoped owner change must first introduce an ignored local-only raw-session directory and a bounded anonymization/consistency validator. Only after that change exists may a facilitator collect five complete anonymized R1-R5 sessions against the exact evaluated head and frozen scenario/dossier artifacts. Every aggregate must be recomputed from validated raw task records.
+## Exact next input
 
-This decision is `NOT_PRODUCTION_EVIDENCE`; `productionReady:false`; Issue #165 remains `HOLD`.
+First, a human validation-method owner must explicitly accept these limitations or authorize a separate protocol correction; the present Goal does not permit that PR #206 fix while Track A is `INCOMPLETE`. Then obtain five de-identified, completed R1-R5 records from the required roles against the frozen runtime and hashes. Preserve task-level evidence and manually audit per-task failure, comprehension, and timing consistency. The command below remains a fail-closed input validator, but its `MERGE_THRESHOLDS_*` output is advisory:
+
+```text
+npm run validate:pursuit-workbench-human-validation
+```
+
+Until that happens, do not merge PR #206 and do not claim usability, trust, usefulness, time saving, accessibility success, or production readiness.
+
+This artifact is `NOT_PRODUCTION_EVIDENCE`; `productionReady:false`; `productionReviewerWorkflowReady:false`; Issue #165 remains `HOLD`.

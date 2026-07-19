@@ -2,66 +2,65 @@
 
 ## Decision
 
-`INCOMPLETE`
+`INCOMPLETE` — `NO_MERGE_INPUT_INCOMPLETE`
 
 Architecture signal: `PIVOT_REQUIRED_FOR_VARIANT_AWARE_TABLE_EVIDENCE_BEFORE_REPEAT`.
 
-PR #207 was evaluated from `1206b8979b1ee1d1b2e0089de20fdcac2a005799` and received two bounded-pilot-backed P1 fixes at `cfa753591f06584c7091bbc122844766b33cbb01` and `9ef1f94fed500a0fed3d478eb2bb0710baecb861`. Head `0b0aff64aad36743c2cd1ccb7b5c9b2ee57c7718` adds the matching source-provenance documentation. It remains Draft and unmerged.
+PR #207 was evaluated at `c6a5469338999097acd5de7c5a12c827d27d4540` against base `9d144fbe6309ce363f9dad8d50ffa713d24af683`. It remains Open, Draft, mergeable, unmerged, and green at evaluation time.
 
-This report is a separate cross-PR evaluation artifact on `codex/evidence-to-decision-pilot-20260718`; it is intentionally not stored in the evaluated PR #207 head. `updatedHeadSha` identifies the target code state that was executed, not a claim that the target commit contains this report.
+## Actual bounded inputs
 
-## Actual inputs
+The existing source ledger records 11 publisher-domain-associated files evaluated, eight admitted by bounded machine intake, and three refused before intake. The current ignored inbox contains the eight normalized bundles: four switchgear and four transformer, with four Korean and four English records.
 
-Eleven files associated with publisher-domain URLs were evaluated. Eight passed PR #207's manifest, hash, scope, size, normalized-page, and safety checks. The association comes from bounded pilot metadata and is not a verified acquisition-provenance claim. This is machine intake acceptance only; it is not human approval of authenticity, revision currentness, technical applicability, or redistribution/use rights.
-
-The `11 / 8 / 3` count is reproduced by the bounded ledger and `tmp/codex/pr207-real-evidence-pilot-run-non-production.json`. The committed builder and the ignored `evidence-inbox/` intentionally reconstruct only the eight accepted normalized bundles; refused source binaries are not copied into the inbox or Git. The machine run checks the two oversized files by no-follow file metadata without reading their bodies, and it checks the bounded language-mismatch file from an immutable private snapshot.
+“Machine admitted” means the manifest, hash, schema, size, scope, normalized-page, and safety checks passed. Every bundle remains `PUBLISHER_DOMAIN_ASSOCIATED_UNREVIEWED`. No human has approved authenticity, latest revision, original-source fidelity, technical applicability, or redistribution/use rights.
 
 | Measure | Result |
 | --- | ---: |
-| Documents evaluated / machine-accepted / refused | 11 / 8 / 3 |
-| Accepted switchgear documents | 4 / 4 required |
-| Accepted transformer documents | 4 / 4 required |
-| Accepted Korean / English documents | 4 / 4 |
-| Manifest-bound document validation | 8 passed / 0 failed |
-| Refused for 25 MB source cap | 2 |
-| Refused for metadata/body language mismatch | 1 |
-| Human authenticity/currentness/use decisions | 0 |
+| Source files evaluated / machine-admitted / refused | 11 / 8 / 3 |
+| Current normalized bundles | 8 |
+| Switchgear / transformer bundles | 4 / 4 |
+| Korean / English bundles | 4 / 4 |
+| Human validity/use decisions | 0 / 8 |
+| Human candidate decisions | 0 / 25 required |
 
-The complete bounded document ledger is `docs/product/validation/pr207-real-evidence-input-ledger.json`. Source binaries and full documents remain outside Git.
+## Current variant-table result
 
-## Candidate result
+The explicit `2026-07-19` run loaded eight bundles and two structured rows. It produced zero proposals and two safe abstentions:
 
-The pre-fix extractor emitted two candidates, both from the English Trihal catalog:
+- one compound product-variant header cannot be collapsed into a single scalar proposition;
+- one maximum operator is not represented by the current proposition model.
 
-- `50 Hz or 60 Hz` became only `50 Hz`;
-- phase-to-phase and phase-to-neutral secondary voltages became only the first scalar without its dimensional condition.
+| Measure | Result |
+| --- | ---: |
+| Structured tables / rows | 2 / 2 |
+| Safe proposals | 0 |
+| Abstentions | 2 |
+| Gate | `NO_SAFE_PROPOSITION` |
+| Canonical patch export | blocked |
+| Source authenticity | `UNREVIEWED` |
 
-These are real P1 precision failures. Commit `cfa753591f06584c7091bbc122844766b33cbb01` now refuses a scalar numeric candidate unless the quote contains exactly one compatible quantity. It preserves extraction of distinct quantities with different unit kinds.
+This is correct fail-closed behavior and an actionable evidence-architecture signal. It is not a usability result, a human rejection count, a precision measurement, or evidence that the remaining normalized content has been exhaustively represented.
 
-| Measure | Before fix | After fix | Gate |
-| --- | ---: | ---: | ---: |
-| Suggested candidates | 2 | 0 | n/a |
-| Approved for repository review | 0 | 0 | at least 25 |
-| Approved switchgear / transformer | 0 / 0 | 0 / 0 | at least 10 / 10 |
-| Automatic `VERIFIED` | 0 | 0 | 0 |
-| Automatic customer-use `ALLOWED` | 0 | 0 | 0 |
+The default document audit also passes 35 synthetic scenarios, but its fixed audit clock is `2026-07-17T23:59:59.999Z`, before the real normalized extraction time `2026-07-18T13:00:48.000Z`. It therefore reports the optional real population as `PRESENT_REJECTED` with `FUTURE_DOCUMENT_DATE`. That is a deliberate fail-closed diagnostic and must not be cited as the current real-input count.
 
-The two suppressed suggestions were not reviewed by a human and are not counted as human rejections or precision observations. Quote/page accuracy, reviewed-suggestion precision, review time, conflict/supersession recall, patch determinism, and patch suitability remain unavailable.
+Read-only security and method review found two additional blockers. The real-intake server/UI transports and renders complete normalized page text even when the declared redistribution status permits only metadata and bounded excerpts. The UI was not launched in this refresh and must remain blocked until that path is removed or rights-approved. Also, the current review request and patch output cannot reconstruct all rejected/deferred/authenticity decisions, duration, usefulness, precision, or patch-suitability denominators.
 
-The two historical suppressed candidate/document IDs belong to the pre-neutral-source-class run at `cfa753591f06584c7091bbc122844766b33cbb01`. The current ledger and zero-candidate machine run use the neutral source-class document-ID namespace at `9ef1f94fed500a0fed3d478eb2bb0710baecb861`.
+## Why this remains incomplete
 
-## Why this is not MERGE or REVISE
+There are no safe candidates to present for the required 25 human decisions, and all eight document-level authenticity/currentness/fidelity/use judgments remain missing. Machine determinism does not establish officiality. No repository-reviewed canonical claim, `VERIFIED` state, or customer-use permission was created.
 
-The document-count, family, and language thresholds are satisfied at the machine-intake layer. The decision is still `INCOMPLETE` because there are no human candidate decisions, every document-level authenticity/currentness/use judgment remains `UNREVIEWED`, and there is no safe post-fix candidate population.
+The bounded architecture signal is to decide whether to represent variants, semantic operators such as maximum, units, conditions, footnotes, and table row/header relationships before repeating candidate review. Only two rows were mapped, so this result proves current insufficiency but not universal prevalence.
 
-Separately, the Codex pilot observed at least six accepted catalogs using multi-column tables whose model, row, header, footnote, and condition associations are not represented as structured variant-aware evidence. Two transformer tap-voltage rows also collide with the private-data safety pattern. This observation is outside PR #207's human review protocol and supplies the pilot's table-architecture `PIVOT` signal; loosening the safety guard or taking the first number would be unsafe.
+The Goal permits PR #207 fixes only when Track B is `REVISE`. Missing human decisions make the track `INCOMPLETE`; therefore this refresh records the evidence and changes no PR #207 code or safety boundary.
 
-## Fix and validation
+## Exact next inputs
 
-PR #207 has the evidence-backed P1 fix for partial multi-quantity scalar candidates and now uses a neutral `PUBLISHER_DOMAIN_ASSOCIATED_UNREVIEWED` source class for this pilot instead of asserting official acquisition provenance. Candidate-focused tests pass 8 / 8, the changed bundle/candidate/patch group passes 26 / 26, and the complete Workbench suite passes 105 / 105 when the intentional ignored real inbox is temporarily isolated from the synthetic `BLOCKED_INPUT_MISSING` assertion. The same real inbox loads 8 / 8 documents and emits 0 post-fix candidates with zero authority leakage.
+1. A qualified human must record authenticity, revision-currentness, original-source-fidelity, and redistribution/use decisions for each of the eight normalized bundles.
+2. An evidence-architecture owner must make a bounded go/no-go decision on variant-aware table semantics.
+3. A rights/security owner must keep the real-intake UI blocked until complete page-text transport is removed or explicitly rights-approved.
+4. A validation-method owner must authorize a review-evidence retention correction before the required human metrics can be reconstructed.
+5. If a safe candidate population is later produced, qualified reviewers must complete at least 25 structured candidate decisions, including at least 10 for each product family, before any MERGE claim.
 
-## Next gate
+Until then, do not merge PR #207, weaken private-data guards, call these documents official/current, export a canonical patch, or start the Tender Matrix.
 
-Do not merge PR #207 and do not begin a 25-candidate human review from this extractor. A human owner must first decide whether to pursue a bounded variant-aware table evidence architecture. Human per-document authenticity, currentness, and redistribution/use decisions are still required before any later MERGE claim.
-
-This result is `NOT_PRODUCTION_EVIDENCE`; `productionReady:false`; Issue #165 remains `HOLD`.
+This artifact is `NOT_PRODUCTION_EVIDENCE`; `productionReady:false`; `productionReviewerWorkflowReady:false`; Issue #165 remains `HOLD`.

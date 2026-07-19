@@ -1,112 +1,144 @@
 {
-  "schemaVersion": "evidence-to-decision-next-gate-v2",
+  "schemaVersion": "evidence-to-decision-next-gate-v3",
+  "asOf": "2026-07-19",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
-  "evaluatedBaseWasCurrentOriginMaster": true,
   "artifactStorage": {
-    "branch": "codex/evidence-to-decision-pilot-20260718",
+    "branch": "codex/evidence-to-decision-pilot-refresh-20260719",
     "purpose": "SEPARATE_CROSS_PR_EVALUATION_ARTIFACT",
-    "evaluatedPrHeadsContainThisArtifact": false
+    "evaluatedPrHeadsContainThisArtifact": false,
+    "sourceBinariesOrRawHumanSessionsStored": false
   },
   "pr206": {
-    "evaluatedHeadSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
-    "updatedHeadSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+    "evaluatedHeadSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
     "decision": "INCOMPLETE",
     "draft": true,
     "unmerged": true,
-    "fixCount": 0
+    "sessionFilesPresent": 5,
+    "completedSessionsSupplied": 0,
+    "eligibleSessionsAccepted": 0,
+    "humanRatesAvailable": false,
+    "safeIgnoredIntakeAvailable": true,
+    "methodologyRiskCount": 4,
+    "automatedGateFitness": "NOT_DECISION_CAPABLE_WITHOUT_MANUAL_METHOD_REVIEW",
+    "fixesPerformedInRefresh": 0
   },
   "pr207": {
-    "evaluatedHeadSha": "1206b8979b1ee1d1b2e0089de20fdcac2a005799",
-    "updatedHeadSha": "0b0aff64aad36743c2cd1ccb7b5c9b2ee57c7718",
+    "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
     "decision": "INCOMPLETE",
     "architectureSignal": "PIVOT_REQUIRED_FOR_VARIANT_AWARE_TABLE_EVIDENCE_BEFORE_REPEAT",
     "draft": true,
     "unmerged": true,
-    "fixCount": 2
+    "normalizedInputDocuments": 8,
+    "humanDocumentValidityDecisions": 0,
+    "structuredRowsEvaluated": 2,
+    "safeProposals": 0,
+    "safeAbstentions": 2,
+    "humanCandidateDecisions": 0,
+    "realIntakeUiAllowed": false,
+    "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_REQUIRED_METRICS",
+    "fixesPerformedInRefresh": 0
   },
+  "overallDecision": "INCOMPLETE",
   "overallStatus": "BLOCKED_BOTH",
   "mergeTrainRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
-  "mergeTrainReason": "Neither PR has completed its required external validation gate; no merge order or restack execution is currently justified.",
+  "mergeTrainReason": "Track A has zero completed human sessions. Track B has zero human validity decisions, zero safe propositions, and zero human candidate decisions. The Goal's explicit rules therefore require both tracks to remain INCOMPLETE.",
   "tenderMatrixEntryGate": "BLOCKED_BOTH",
   "tenderMatrixBlockers": [
     "PR206_DECISION_NOT_MERGE",
     "PR207_DECISION_NOT_MERGE",
-    "APPROVED_REPOSITORY_REVIEW_CANDIDATES_BELOW_25",
+    "PR206_VALID_R1_R5_SESSIONS_BELOW_5",
+    "PR207_HUMAN_DOCUMENT_VALIDITY_DECISIONS_BELOW_8",
+    "PR207_APPROVED_REPOSITORY_REVIEW_CANDIDATES_BELOW_25",
     "CANONICAL_VERIFIED_CLAIMS_BELOW_20",
-    "BOTH_PRODUCT_FAMILIES_LACK_VERIFIED_REAL_CAPABILITY_COVERAGE",
+    "BOTH_PRODUCT_FAMILIES_LACK_HUMAN_VERIFIED_REAL_CAPABILITY_COVERAGE",
     "HUMAN_FIT_WINDOW_DOSSIER_USEFULNESS_NOT_ESTABLISHED",
-    "OFFICIAL_SOURCE_QUOTE_REVISION_TRACEABILITY_NOT_ESTABLISHED",
+    "OFFICIAL_SOURCE_QUOTE_REVISION_TRACEABILITY_NOT_HUMAN_ESTABLISHED",
     "REVIEWER_PATCH_SUITABILITY_NOT_ESTABLISHED"
   ],
   "missingExternalInputs": [
-    "Five complete anonymized R1-R5 technical-sales validation sessions bound to the exact PR206 head and frozen artifacts.",
-    "Human authenticity, revision-currentness, redistribution/use, and original-source fidelity decisions for the eleven evaluated PR207 inputs.",
-    "An explicit owner decision on whether to pursue a bounded variant-aware table evidence architecture before repeating candidate review.",
-    "After any approved architecture correction, at least twenty-five human candidate decisions with timing, usefulness, conflict, supersession, and patch-suitability judgments.",
-    "After a successful pilot, at least twenty separately repository-reviewed canonical VERIFIED claims with complete provenance."
-  ],
-  "residualRisks": [
-    "PR206 raw session capture currently targets tracked free-text templates without an ignored local-only results path; do not collect R1-R5 under that workflow.",
-    "Do not share complete worktree snapshots as pilot evidence because historical tmp artifacts may contain local filesystem paths.",
-    "PR207 redistribution/use rights require a separate human signoff per real document.",
-    "Eight machine-accepted documents emitted zero safe candidates after the partial multi-quantity P1 fix.",
-    "PR207 normalized line-based extraction repeatedly loses multi-column table, variant, comparison, tolerance, condition-dimension, and duration semantics.",
-    "Two real transformer tap-voltage rows collide with the conservative private-data pattern; the guard was not weakened."
-  ],
-  "testSummary": {
-    "pr206Focused": "PASS_65_OF_65",
-    "pr206SyntheticEvaluation": "PASS_12_OF_12_TWO_REPEAT_RUNS",
-    "pr207Focused": "PASS_8_OF_8",
-    "pr206FullRegression": "PASS",
-    "pr207FullRegression": "PASS_105_OF_105_WITH_INTENTIONAL_REAL_INBOX_TEMPORARILY_ISOLATED",
-    "pr207RealIntake": "PASS_8_DOCUMENTS_POST_FIX_CANDIDATES_0",
-    "githubChecks": "PASS",
-    "meaning": "Synthetic regression is green and the real inbox is machine-loadable, but human validity/candidate review is absent and real candidate recall is zero."
-  },
-  "freshReadOnlyReviewSummary": [
     {
-      "role": "technical_sales_product",
-      "initialResult": "PASS_WITH_P2",
-      "finding": "The 11/8/3 provenance was not initially reproducible from the accepted-only builder and ignored inbox.",
-      "resolution": "Added a separate machine-run artifact for all 11 decisions and stated that the builder/inbox reconstruct only the accepted 8.",
-      "decisionChanged": false
+      "owner": "PR206_VALIDATION_METHOD_OWNER",
+      "input": "Explicit acceptance or separately authorized correction of the recorded per-task, comprehension, and timing gate defects before any aggregate is treated as merge evidence.",
+      "current": 0,
+      "required": 1
     },
     {
-      "role": "application_engineering_evidence",
-      "initialResult": "FAIL",
-      "finding": "Refusal rows and the zero-candidate run lacked a machine artifact, and PIVOT authority was initially ambiguous.",
-      "resolution": "Added the machine-run artifact, bounded PIVOT to a Codex pilot observation outside PR207's human protocol, and clarified that the report is a separate cross-PR artifact whose target SHA is not self-referential storage identity.",
-      "finalResult": "PASS",
-      "decisionChanged": false
+      "owner": "PR206_FACILITATOR_AND_FIVE_QUALIFIED_REVIEWERS",
+      "input": "Five complete de-identified R1-R5 sessions against the frozen PR206 runtime and artifacts.",
+      "current": 0,
+      "required": 5
     },
     {
-      "role": "quantitative_methodology",
-      "initialResult": "FAIL",
-      "finding": "The unresolved P1 total was 4 while five unresolved P1 findings were enumerated.",
-      "resolution": "Corrected unresolvedP1 to 5 and documented the pre-neutral versus neutral document-ID namespaces.",
-      "finalResult": "PASS",
-      "decisionChanged": false
+      "owner": "PR207_DOCUMENT_AND_RIGHTS_REVIEWERS",
+      "input": "Per-document authenticity, revision-currentness, original-source-fidelity, and redistribution/use decisions for the eight normalized bundles.",
+      "current": 0,
+      "required": 8
     },
     {
-      "role": "security_privacy_copyright",
-      "initialResult": "FAIL",
-      "finding": "Source provenance wording, descriptor/snapshot binding, oversize-before-read handling, excerpt disclosure, safe-artifact naming, and a growing-file read bound required correction.",
-      "resolution": "Neutralized source class, bound hashes/extraction to no-follow single-link descriptor snapshots, refused oversized bodies before reading, added a 25000000+1 sentinel read cap, removed excerpts, and passed assertSafeArtifact 4/4.",
-      "finalResult": "PASS",
-      "decisionChanged": false
+      "owner": "PR207_EVIDENCE_ARCHITECTURE_OWNER",
+      "input": "A bounded go/no-go decision on representing product variants, semantic operators, units, conditions, footnotes, and table row/header relationships before candidate-review repetition.",
+      "current": 0,
+      "required": 1
     },
     {
-      "role": "skeptical_product_merge_gate",
-      "result": "PASS",
-      "evidence": "Fresh GitHub state, exact heads/bases, Draft/open status, zero human input, 11/8/3 intake, 2-to-0 candidates, Issue165 HOLD, and NO_MERGE_INPUT_INCOMPLETE agree."
+      "owner": "PR207_RIGHTS_SECURITY_AND_VALIDATION_METHOD_OWNERS",
+      "input": "Keep the real-intake UI blocked until complete normalized page-text transport is removed or rights-approved, and separately authorize retention of all human decisions, duration, usefulness, and patch-suitability evidence.",
+      "current": 0,
+      "required": 1
+    },
+    {
+      "owner": "PR207_QUALIFIED_CANDIDATE_REVIEWERS",
+      "input": "After safe propositions exist, at least 25 structured human candidate decisions, including at least 10 for each product family.",
+      "current": 0,
+      "required": 25
     }
   ],
+  "evidenceBackedConclusions": [
+    "PR206 now has a private ignored session-intake path, but prepared blank files are not human evidence.",
+    "PR207 correctly abstains on the two mapped rows rather than losing compound-variant or maximum semantics.",
+    "PR207 machine integrity and deterministic hashes do not establish officiality, revision currency, fidelity, engineering applicability, copyright permission, or customer-use approval.",
+    "No MERGE, REVISE, or product-thesis PIVOT decision is justified while the explicit external-input gates remain incomplete. The recorded PR207 architecture signal is a bounded prerequisite for another candidate attempt."
+  ],
+  "residualRisks": [
+    "PR206's formal intake covers three of twelve scenarios and relies heavily on facilitator-coded correctness; any later aggregate must be interpreted with those limitations.",
+    "PR206's automated MERGE_THRESHOLDS result is advisory and cannot itself authorize merge or production action.",
+    "PR207 source originals, publisher signatures/checksums, retrieval records, current-revision evidence, and license/use approval are not present in the tracked decision artifact.",
+    "PR207 real-intake UI code transports complete normalized page text despite the bounded-excerpt declaration; it was not launched and remains blocked.",
+    "PR207 current review state/patch output cannot reconstruct all rejected/deferred/authenticity decisions or the required time, usefulness, precision, and patch-suitability denominators.",
+    "Six of eight PR207 normalized bundles are not represented by the two-row variant spike.",
+    "The PR207 default document audit uses a fixed clock earlier than the real normalized extraction and therefore cannot be cited as a current real-input acceptance count.",
+    "Do not weaken private-data guards, infer a scalar from a compound table, or treat an abstention as a human rejection."
+  ],
+  "validationSummary": {
+    "pilotRefreshVerifier": "PASS",
+    "pr206ReadOnlyValidator": "PASS_WITH_INCOMPLETE_0_OF_5",
+    "pr206SyntheticEvaluation": "PASS_12_OF_12_TWO_REPEAT_RUNS_NOT_HUMAN_EVIDENCE",
+    "pr207VariantRun": "PASS_NO_SAFE_PROPOSITION_0_PROPOSALS_2_ABSTENTIONS",
+    "pr207SyntheticDocumentAudit": "PASS_35_SCENARIOS",
+    "pr207FixedClockRealInputDiagnostic": "PRESENT_REJECTED_FUTURE_DOCUMENT_DATE_NOT_CURRENT_COUNT",
+    "pr206FocusedAndFullRegression": "PASS_ALL_REQUIRED_COMMANDS_AFTER_LOOPBACK_ESCALATION",
+    "pr207FocusedAndFullRegression": "PASS_ALL_REQUIRED_COMMANDS_WITH_REAL_INBOX_SAFELY_ISOLATED_AND_RESTORED_AFTER_LOOPBACK_ESCALATION",
+    "artifactWriterSafetyTests": "PASS_4_OF_4",
+    "githubChecks": "PASS_AT_EVALUATION"
+  },
+  "readOnlyInvestigationStatus": {
+    "required": 8,
+    "completed": 8,
+    "remaining": 0,
+    "finalSkepticalReviewPending": true
+  },
+  "fixPolicy": {
+    "trackAState": "INCOMPLETE",
+    "trackBState": "INCOMPLETE",
+    "goalRule": "Only perform fixes when the relevant track is REVISE.",
+    "productCodeFixesPerformed": 0
+  },
   "prohibitedActionsPerformed": [],
   "issue165Status": "HOLD",
   "productionReady": false,
   "productionReviewerWorkflowReady": false,
   "bothPrsRemainDraft": true,
   "bothPrsRemainUnmerged": true,
-  "nextAction": "Owner HOLD: add a safe PR206 session-intake protocol, obtain human PR207 document-validity decisions, and make an explicit go/no-go decision on variant-aware table evidence before any repeated candidate pilot. Do not merge either PR or start the Tender Matrix."
+  "nextAction": "External-input and method HOLD: do not merge either PR, launch the PR207 real-intake UI, or start the Tender Matrix. A method owner must resolve or explicitly accept PR206 gate limits before R1-R5 results are treated as merge evidence. PR207 requires human document validity/use decisions plus rights, review-retention, and bounded variant-aware architecture owner decisions before any candidate pilot repetition."
 }

@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "repo-preflight-v1",
-  "recordedAt": "2026-07-18",
+  "schemaVersion": "repo-preflight-v2",
+  "recordedAt": "2026-07-19",
   "repoRoot": ".",
-  "workspaceLabel": "b2b-lead-agent-evidence-to-decision-pilot-20260718",
+  "workspaceLabel": "b2b-lead-agent-evidence-to-decision-pilot-refresh-20260719",
   "repoIdentityOk": true,
   "identityEvidence": {
     "packageName": "b2b-lead-agent",
@@ -11,39 +11,40 @@
     "batchEntrypoint": "main.js",
     "workerEntrypoint": "worker/index.js"
   },
-  "currentBranch": "codex/evidence-to-decision-pilot-20260718",
-  "headSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
-  "localBaseCandidates": [
-    "master",
-    "origin/master"
-  ],
-  "remoteNames": [
-    "origin"
-  ],
+  "currentBranch": "codex/evidence-to-decision-pilot-refresh-20260719",
+  "artifactParentSha": "5caa852",
   "pinnedBaseRef": "origin/master",
   "pinnedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
-  "worktreeCleanBeforeArtifacts": true,
-  "dirtyPathsBeforeArtifacts": [],
+  "worktreeCleanBeforeRefresh": true,
   "evaluatedWorktrees": [
     {
-      "purpose": "PR_206",
-      "headSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
-      "cleanBeforeValidation": true
+      "purpose": "PR_206_SAFE_SESSION_INTAKE",
+      "headSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+      "baseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+      "cleanBeforeValidation": true,
+      "ignoredPrivateInputPresent": true
     },
     {
-      "purpose": "PR_206_HUMAN_VALIDATION_PACKET",
-      "headSha": "1f84cc044e0aac1147a841568b40a5241c5659bc",
-      "cleanBeforeValidation": true
-    },
-    {
-      "purpose": "PR_207",
-      "headSha": "1206b8979b1ee1d1b2e0089de20fdcac2a005799",
-      "cleanBeforeValidation": true
+      "purpose": "PR_207_VARIANT_TABLE_SPIKE",
+      "headSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "baseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+      "cleanBeforeValidation": true,
+      "ignoredPrivateInputPresent": true
     }
   ],
-  "requiredCommands": {
+  "githubStateAtEvaluation": {
+    "snapshotArtifact": "tmp/codex/evidence-to-decision-github-state-20260719.json",
+    "openPullRequests": [206, 207],
+    "pr206Draft": true,
+    "pr206Unmerged": true,
+    "pr207Draft": true,
+    "pr207Unmerged": true,
+    "issue165Status": "HOLD"
+  },
+  "availableCommands": {
     "pr206": [
-      "npm ci",
+      "npm run prepare:pursuit-workbench-human-validation",
+      "npm run validate:pursuit-workbench-human-validation",
       "npm run test:pursuit-workbench",
       "npm run eval:pursuit-workbench",
       "npm run test:pursuit-workbench:e2e",
@@ -57,11 +58,11 @@
       "git diff --check"
     ],
     "pr207": [
-      "npm ci",
       "npm run test:evidence-claim-workbench",
       "npm run test:evidence-claim-workbench:e2e",
       "npm run eval:evidence-claim-workbench",
       "npm run audit:evidence-documents",
+      "npm run spike:evidence-variant-table",
       "npm run measure:evidence-claim-workbench",
       "npm run test:claim-spec-fit",
       "npm test",
@@ -71,13 +72,22 @@
       "npm run test:evidence",
       "npm run check:lead-pipeline-replay",
       "git diff --check"
+    ],
+    "pilotRefresh": [
+      "node scripts/verify-evidence-to-decision-pilot-refresh.mjs --pr206-root <PR206_WORKTREE> --pr207-root <PR207_WORKTREE> --output tmp/codex/evidence-to-decision-pilot-refresh-20260719.json",
+      "git diff --check"
     ]
   },
-  "canProceed": true,
-  "stopReasons": [],
-  "pilotInputBlockers": [
-    "PR206_R1_R5_SESSIONS_MISSING",
-    "PR207_OFFICIAL_DOCUMENT_INBOX_MISSING",
+  "canProceedWithReadOnlyEvaluation": true,
+  "canCompleteTrackAWithoutExternalInput": false,
+  "canCompleteTrackBWithoutExternalInput": false,
+  "externalInputBlockers": [
+    "PR206_AUTOMATED_GATE_METHOD_OWNER_DECISION_MISSING",
+    "PR206_R1_R5_COMPLETED_HUMAN_SESSIONS_MISSING",
+    "PR207_DOCUMENT_VALIDITY_AND_USE_RIGHTS_DECISIONS_MISSING",
+    "PR207_REAL_INTAKE_UI_RIGHTS_BOUNDARY_REMEDIATION_OR_APPROVAL_MISSING",
+    "PR207_HUMAN_REVIEW_EVIDENCE_RETENTION_DECISION_MISSING",
+    "PR207_SAFE_CANDIDATE_POPULATION_MISSING",
     "PR207_HUMAN_CANDIDATE_DECISIONS_MISSING"
   ]
 }

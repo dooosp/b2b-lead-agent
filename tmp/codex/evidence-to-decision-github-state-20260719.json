@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "evidence-to-decision-github-state-v1",
+  "observedAtDate": "2026-07-19",
+  "repository": "dooosp/b2b-lead-agent",
+  "observationMethod": "gh pr view --json",
+  "pullRequests": [
+    {
+      "number": 206,
+      "url": "https://github.com/dooosp/b2b-lead-agent/pull/206",
+      "state": "OPEN",
+      "isDraft": true,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "headRefName": "codex/datacenter-pursuit-workbench-v0",
+      "headRefOid": "b5570e182c8ab6515c0f09272d22d7121518f134",
+      "baseRefName": "master",
+      "baseRefOid": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+      "checks": [
+        {
+          "workflow": "CI",
+          "name": "test",
+          "status": "COMPLETED",
+          "conclusion": "SUCCESS",
+          "completedAt": "2026-07-18T14:25:36Z"
+        },
+        {
+          "workflow": "Validate Naming",
+          "name": "validate",
+          "status": "COMPLETED",
+          "conclusion": "SUCCESS",
+          "completedAt": "2026-07-18T14:24:37Z"
+        },
+        {
+          "workflow": "Validate Naming",
+          "name": "validate",
+          "status": "COMPLETED",
+          "conclusion": "SUCCESS",
+          "completedAt": "2026-07-18T14:24:35Z"
+        }
+      ]
+    },
+    {
+      "number": 207,
+      "url": "https://github.com/dooosp/b2b-lead-agent/pull/207",
+      "state": "OPEN",
+      "isDraft": true,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "headRefName": "codex/official-evidence-claim-review-workbench-v0",
+      "headRefOid": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "baseRefName": "master",
+      "baseRefOid": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+      "checks": [
+        {
+          "workflow": "CI",
+          "name": "test",
+          "status": "COMPLETED",
+          "conclusion": "SUCCESS",
+          "completedAt": "2026-07-18T14:25:53Z"
+        },
+        {
+          "workflow": "Validate Naming",
+          "name": "validate",
+          "status": "COMPLETED",
+          "conclusion": "SUCCESS",
+          "completedAt": "2026-07-18T14:24:42Z"
+        },
+        {
+          "workflow": "Validate Naming",
+          "name": "validate",
+          "status": "COMPLETED",
+          "conclusion": "SUCCESS",
+          "completedAt": "2026-07-18T14:24:34Z"
+        }
+      ]
+    }
+  ],
+  "interpretation": "This is a dated observation, not a guarantee of future GitHub state. All listed checks were completed successfully at observation time."
+}

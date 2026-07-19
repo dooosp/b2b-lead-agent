@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "evidence-to-decision-pilot-refresh-run-v1",
+  "asOf": "2026-07-19T00:00:00.000Z",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+  "pr206": {
+    "headSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+    "decision": "INCOMPLETE",
+    "sessionFilesPresent": 5,
+    "eligibleReviewerCount": 0,
+    "taskResultCount": 0,
+    "scenarioJudgmentCount": 0,
+    "rates": {
+      "independentTaskCompletionRate": null,
+      "assistedTaskCompletionRate": null,
+      "fitAgreementRate": null,
+      "claimBoundarySuccessRate": null,
+      "medianTimeReductionRate": null
+    },
+    "thresholdSummary": "INCOMPLETE",
+    "automatedGateFitness": "NOT_DECISION_CAPABLE_WITHOUT_MANUAL_METHOD_REVIEW"
+  },
+  "pr207": {
+    "headSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+    "inputDocumentCount": 8,
+    "structuredTableCount": 2,
+    "structuredRowCount": 2,
+    "proposalCount": 0,
+    "abstentionCount": 2,
+    "abstentionReasons": {
+      "COMPOUND_PRODUCT_VARIANT_HEADER": 1,
+      "UNSUPPORTED_SEMANTIC_OPERATOR": 1
+    },
+    "gateStatus": "NO_SAFE_PROPOSITION",
+    "sourceAuthenticityStatus": "UNREVIEWED",
+    "canonicalPatchExportAllowed": false,
+    "evaluationSha256": "a73449493dc3cb07b2c28a41446d1bea36eba1f09acf16a6eb092cda5495dfdb",
+    "canonicalSha256": "8c3ceefd6e74b82f87d5e488ecb31a3c3496c6ade16518451c6151f894f6971e",
+    "fixedClockAuditDiagnostic": {
+      "auditAsOf": "2026-07-17T23:59:59.999Z",
+      "realDocumentPopulation": "PRESENT_REJECTED",
+      "rejectionCodes": [
+        "FUTURE_DOCUMENT_DATE"
+      ],
+      "interpretation": "NOT_A_CURRENT_REAL_INPUT_COUNT"
+    },
+    "realIntakeExecutionRestriction": "DO_NOT_LAUNCH_REAL_INTAKE_UI_WITH_UNREVIEWED_DOCUMENTS",
+    "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_RECONSTRUCTING_REQUIRED_PILOT_METRICS"
+  },
+  "overallDecision": "INCOMPLETE",
+  "overallStatus": "BLOCKED_BOTH",
+  "issue165Status": "HOLD",
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "prohibitedActionsPerformed": []
+}

@@ -1,327 +1,168 @@
 {
-  "schemaVersion": "pr207-real-evidence-pilot-decision-v2",
+  "schemaVersion": "pr207-real-evidence-pilot-decision-v3",
+  "asOf": "2026-07-19T00:00:00.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "sourcePr": 207,
-  "evaluatedHeadSha": "1206b8979b1ee1d1b2e0089de20fdcac2a005799",
-  "updatedHeadSha": "0b0aff64aad36743c2cd1ccb7b5c9b2ee57c7718",
+  "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
   "baseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
-  "baseIsCurrentOriginMasterAtEvaluation": true,
-  "artifactStorage": {
-    "branch": "codex/evidence-to-decision-pilot-20260718",
-    "purpose": "SEPARATE_CROSS_PR_EVALUATION_ARTIFACT",
-    "evaluatedTargetHeadContainsThisArtifact": false,
-    "headBindingSemantics": "UPDATED_HEAD_SHA_IDENTIFIES_THE_EVALUATED_PR207_TARGET_NOT_THE_ARTIFACT_STORAGE_COMMIT"
-  },
-  "githubStateBeforeFix": {
+  "githubState": {
     "state": "OPEN",
     "draft": true,
     "mergeable": true,
-    "checks": "PASS"
+    "unmerged": true,
+    "checks": "PASS_AT_EVALUATION"
   },
-  "githubStateAfterFix": {
-    "state": "OPEN",
-    "draft": true,
-    "mergeable": true,
-    "checks": "PASS"
-  },
-  "inputLedger": "docs/product/validation/pr207-real-evidence-input-ledger.json",
-  "machineRunArtifact": "tmp/codex/pr207-real-evidence-pilot-run-non-production.json",
-  "observationAuthority": "CODEX_BOUNDED_PILOT_OBSERVATION_NOT_HUMAN_DOCUMENT_OR_CANDIDATE_REVIEW",
-  "inputCounts": {
-    "countEvidence": "BOUNDED_LEDGER_PLUS_MACHINE_RUN_ARTIFACT_BUILDER_AND_INBOX_RECONSTRUCT_ACCEPTED_8_ONLY",
-    "documentsEvaluated": 11,
+  "inputLineage": {
+    "boundedSourceLedger": "docs/product/validation/pr207-real-evidence-input-ledger.json",
+    "documentsPreviouslyEvaluated": 11,
     "documentsAcceptedByMachineIntake": 8,
     "documentsRefusedBeforeIntake": 3,
-    "requiredDocuments": 8,
+    "currentIgnoredNormalizedBundles": 8,
     "acceptedByFamily": {
       "medium_voltage_switchgear": 4,
       "transformer": 4
     },
-    "languageCoverage": {
+    "acceptedByLanguage": {
       "ko": 4,
       "en": 4
     },
     "refusalReasons": {
-      "SOURCE_FILE_SIZE_OUT_OF_BOUNDS": 2,
-      "DOCUMENT_LANGUAGE_MISMATCH": 1
+      "SOURCE_SIZE_EXCEEDS_BOUNDED_INTAKE_LIMIT": 2,
+      "DECLARED_LANGUAGE_DOES_NOT_MATCH_REPRESENTATIVE_BODY": 1
     },
-    "humanCandidateReviewSessions": 0
+    "sourceClass": "PUBLISHER_DOMAIN_ASSOCIATED_UNREVIEWED",
+    "sourceAuthenticityStatus": "UNREVIEWED",
+    "machineAcceptanceMeaning": "Manifest, hash, schema, scope, size, normalized-page, and safety checks only. It is not human officiality, revision-currentness, fidelity, applicability, or use-rights approval."
   },
-  "candidateCounts": {
-    "preFixDocumentIdNamespace": "PR207_CFA7535_PRE_NEUTRAL_SOURCE_CLASS_RUN",
-    "postFixDocumentIdNamespace": "PR207_9EF1F94_NEUTRAL_SOURCE_CLASS_RUN",
-    "suggestedBeforeP1Fix": 2,
-    "machineSuppressedByP1Fix": 2,
-    "suggestedAfterP1Fix": 0,
+  "currentVariantTableRun": {
+    "inputDocumentCount": 8,
+    "structuredTableCount": 2,
+    "structuredRowCount": 2,
+    "proposalCount": 0,
+    "abstentionCount": 2,
+    "abstentionReasons": {
+      "COMPOUND_PRODUCT_VARIANT_HEADER": 1,
+      "UNSUPPORTED_SEMANTIC_OPERATOR": 1
+    },
+    "gateStatus": "NO_SAFE_PROPOSITION",
+    "reviewState": "REVIEW_REQUIRED",
+    "canonicalPatchExportAllowed": false,
+    "evaluationSha256": "a73449493dc3cb07b2c28a41446d1bea36eba1f09acf16a6eb092cda5495dfdb",
+    "canonicalSha256": "8c3ceefd6e74b82f87d5e488ecb31a3c3496c6ade16518451c6151f894f6971e",
+    "interpretation": "Both mapped real-document rows abstain instead of collapsing variant or maximum semantics into an unsafe scalar claim."
+  },
+  "fixedClockAuditDiagnostic": {
+    "command": "npm run audit:evidence-documents",
+    "syntheticScenarioCount": 35,
+    "syntheticAuditResult": "PASS",
+    "auditAsOf": "2026-07-17T23:59:59.999Z",
+    "realNormalizedExtractionAt": "2026-07-18T13:00:48.000Z",
+    "realDocumentPopulation": "PRESENT_REJECTED",
+    "rejectionCodes": [
+      "FUTURE_DOCUMENT_DATE"
+    ],
+    "interpretation": "The fixed-clock audit correctly fails closed on later-created normalized inputs; its accepted-real count is not a current 2026-07-19 input count. The current variant run uses an explicit later as-of."
+  },
+  "humanReviewCounts": {
+    "documentAuthenticityDecisions": 0,
+    "revisionCurrentnessDecisions": 0,
+    "originalSourceFidelityDecisions": 0,
+    "redistributionOrUseRightsDecisions": 0,
+    "candidateReviewSessions": 0,
+    "candidateDecisions": 0,
     "approvedForRepositoryReview": 0,
-    "humanRejected": 0,
-    "humanDeferred": 0,
-    "approvedByFamily": {
-      "medium_voltage_switchgear": 0,
-      "transformer": 0
-    },
-    "automaticVerified": 0,
-    "automaticAllowed": 0
+    "canonicalVerifiedClaimsCreated": 0,
+    "customerUseAllowedClaimsCreated": 0
   },
-  "suppressedCandidates": [
-    {
-      "candidateId": "cand_585235eb44d7f2ac9528cb403cdcc047b1840a6e795183dc2e2bd31c25434edb",
-      "documentIdNamespace": "PR207_CFA7535_PRE_NEUTRAL_SOURCE_CLASS_RUN",
-      "documentId": "doc_afe2ef4721bbdd6b1cee8f86cbe4fb35798a9f7a2ff1156c94824771eeea82c0",
-      "pageLocator": {
-        "type": "DOCUMENT_PAGE",
-        "value": "18"
-      },
-      "quoteAnchorId": "anc_c63cfb7863584065c5cdbf56b3e985b50a726fa58d7e4f938e2e95d22fc5134e",
-      "quoteSha256": "f186b2c1a3b95cbc0a734217c17d9bf65f5fa68c9119e939e4a117c7108b0a94",
-      "quoteCharacterCount": 30,
-      "quoteWordCount": 7,
-      "claimType": "PRODUCT_CAPABILITY",
-      "capabilityKey": "frequency",
-      "value": 50,
-      "unit": "Hz",
-      "conditions": [],
-      "productVariant": "MISSING",
-      "jurisdiction": "KR",
-      "projectStages": [
-        "SPECIFICATION",
-        "TENDER"
-      ],
-      "decision": "MACHINE_SUPPRESSED_AFTER_P1_FIX_NOT_HUMAN_REVIEWED",
-      "decisionReason": "The quote contains two compatible frequency quantities, but the pre-fix scalar candidate retained only the first.",
-      "conflictSupersessionReferences": [],
-      "reviewDurationSeconds": null,
-      "reviewerUsefulnessResult": null
-    },
-    {
-      "candidateId": "cand_2fd3771d49710837167a65dc4c53a8ee73db67cabb179fed151b745176767aab",
-      "documentIdNamespace": "PR207_CFA7535_PRE_NEUTRAL_SOURCE_CLASS_RUN",
-      "documentId": "doc_afe2ef4721bbdd6b1cee8f86cbe4fb35798a9f7a2ff1156c94824771eeea82c0",
-      "pageLocator": {
-        "type": "DOCUMENT_PAGE",
-        "value": "33"
-      },
-      "quoteAnchorId": "anc_65f0495b0d77eaadd059f45e8568473aa217925ea114bf3efba541d2768a265f",
-      "quoteSha256": "ab9f6c38d65c6da247425acfbdbc3cc0587a318333a053ad2e8643c46d350666",
-      "quoteCharacterCount": 73,
-      "quoteWordCount": 12,
-      "claimType": "PRODUCT_CAPABILITY",
-      "capabilityKey": "secondary_voltage",
-      "value": 400,
-      "unit": "V",
-      "conditions": [],
-      "productVariant": "MISSING",
-      "jurisdiction": "KR",
-      "projectStages": [
-        "SPECIFICATION",
-        "TENDER"
-      ],
-      "decision": "MACHINE_SUPPRESSED_AFTER_P1_FIX_NOT_HUMAN_REVIEWED",
-      "decisionReason": "The quote contains phase-to-phase and phase-to-neutral quantities, but the pre-fix scalar candidate retained only the first without its condition.",
-      "conflictSupersessionReferences": [],
-      "reviewDurationSeconds": null,
-      "reviewerUsefulnessResult": null
-    }
-  ],
-  "metrics": {
-    "manifestBoundDocumentValidation": {
-      "passed": 8,
-      "failed": 0,
-      "manifestSha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953"
-    },
-    "quoteToPageTraceability": null,
+  "realIntakeExecutionRestriction": "DO_NOT_LAUNCH_REAL_INTAKE_UI_WITH_UNREVIEWED_DOCUMENTS",
+  "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_RECONSTRUCTING_REQUIRED_PILOT_METRICS",
+  "humanMetrics": {
+    "quoteToPageAccuracy": null,
     "pageLocatorAccuracy": null,
-    "documentHashMismatchEscapes": 0,
     "revisionDetection": null,
     "conflictDetection": null,
     "supersessionDetection": null,
     "reviewedSuggestionPrecision": null,
-    "humanFalsePositiveCount": null,
     "medianReviewTimePerCandidateSeconds": null,
-    "patchDeterminism": null,
-    "automaticVerifiedLeakage": 0,
-    "automaticAllowedLeakage": 0,
-    "fullDocumentLeakage": 0,
-    "forbiddenDataExposureCount": 0,
-    "unresolvedP0": 0,
-    "unresolvedP1": 5,
-    "reviewerPatchSuitability": null
+    "reviewerPatchSuitability": null,
+    "reviewerUsefulness": null
   },
   "thresholdResults": {
-    "acceptedDocumentsAtLeast8": true,
-    "acceptedSwitchgearAtLeast4": true,
-    "acceptedTransformerAtLeast4": true,
-    "koreanAndEnglishRepresented": true,
-    "quoteToPageTraceabilityEquals100Percent": null,
-    "approvedCandidatesAtLeast25": false,
-    "approvedCandidatesPerFamilyAtLeast10": false,
-    "reviewedSuggestionPrecisionAtLeast80Percent": null,
-    "materialConflictsVisiblyBlocking": null,
-    "automaticVerifiedLeakageEquals0": true,
-    "automaticAllowedLeakageEquals0": true,
-    "fullDocumentLeakageEquals0": true,
-    "forbiddenDataExposureEquals0": true,
-    "unresolvedP0Equals0": true,
-    "reviewersJudgePatchSuitable": null
+    "atLeastEightDocuments": "MACHINE_INPUT_PRESENT_NOT_HUMAN_VALIDATED",
+    "switchgearAndTransformerCoverage": "MACHINE_INPUT_PRESENT_NOT_HUMAN_VALIDATED",
+    "atLeastTwentyFiveCandidateDecisions": "INCOMPLETE_0_OF_25",
+    "atLeastTenCandidatesPerFamily": "INCOMPLETE_0_OF_10_EACH",
+    "allDocumentValidityDecisions": "INCOMPLETE_0_OF_8",
+    "noAutomaticVerified": "PASS_0",
+    "noAutomaticCustomerUseAllowed": "PASS_0",
+    "summary": "INCOMPLETE"
   },
   "findings": [
     {
-      "code": "PARTIAL_MULTI_QUANTITY_SCALAR_CANDIDATE",
-      "severity": "P1",
-      "affectedPr": 207,
-      "recurrenceCount": 2,
-      "workflowStep": "deterministic_candidate_extraction",
-      "evidence": "Two real Trihal lines containing multiple compatible quantities produced scalar candidates that retained only the first quantity and omitted the alternative or dimensional condition.",
-      "correction": "Require exactly one compatible quantity in the quote before emitting a scalar numeric candidate.",
-      "blocksMerge": false,
-      "fixStatus": "FIXED_AT_CFA753591F06584C7091BBC122844766B33CBB01"
+      "code": "REAL_INTAKE_UI_TRANSPORTS_COMPLETE_NORMALIZED_PAGE_TEXT",
+      "severity": "P1_COPYRIGHT_AND_USE_BOUNDARY",
+      "evidence": "Read-only code inspection found that real-intake catalog serialization and rendering include complete normalized page.text even when redistributionStatus is METADATA_AND_BOUNDED_EXCERPTS_ONLY.",
+      "effect": "Launching the real-intake UI can expose more third-party page content than the declared rights boundary permits before human rights review.",
+      "status": "OPEN_DO_NOT_LAUNCH_REAL_INTAKE_UI"
     },
     {
-      "code": "UNREVIEWED_SOURCE_PROVENANCE_CLASSIFIED_OFFICIAL",
-      "severity": "P1",
-      "affectedPr": 207,
-      "recurrenceCount": 8,
-      "workflowStep": "document_source_classification",
-      "evidence": "The bounded pilot could associate files with publisher-domain URLs but had no human acquisition-provenance or authenticity decisions, while the prior intake enum required an official source class.",
-      "correction": "Represent the pilot inputs as PUBLISHER_DOMAIN_ASSOCIATED_UNREVIEWED and keep authenticityStatus UNREVIEWED.",
-      "blocksMerge": false,
-      "fixStatus": "FIXED_AT_9EF1F94FED500A0FED3D478EB2BB0710BAECB861"
+      "code": "HUMAN_REVIEW_EVIDENCE_CANNOT_BE_RECONSTRUCTED",
+      "severity": "P1_METHOD_RISK",
+      "evidence": "The review request has no duration or usefulness fields, browser review state is page-memory-only, and patch projection does not retain all standalone rejected, deferred, or authenticity decisions.",
+      "effect": "The required decision counts, precision denominator, review-time median, usefulness, and patch-suitability evidence cannot be reproduced from current outputs.",
+      "status": "OPEN_SEPARATE_OWNER_DECISION_REQUIRED"
     },
     {
-      "code": "REAL_DOCUMENT_CANDIDATE_RECALL_COLLAPSE",
-      "severity": "P1",
-      "affectedPr": 207,
-      "recurrenceCount": 8,
-      "workflowStep": "deterministic_candidate_extraction",
-      "evidence": "Eight machine-accepted documents across both product families produced zero post-fix review-ready candidates against a gate requiring at least 25 total and 10 per family.",
-      "proposedCorrection": "Make an explicit product decision on a variant-aware table extraction architecture before repeating human candidate review.",
-      "blocksMerge": true,
-      "fixStatus": "NOT_FIXED_REQUIRES_ARCHITECTURE_DECISION"
+      "code": "VARIANT_AND_MAXIMUM_SEMANTICS_NOT_REPRESENTABLE",
+      "severity": "P1_EVIDENCE_COVERAGE",
+      "evidence": "The only two structured rows abstain for a compound product-variant header and an unsupported maximum operator.",
+      "effect": "There is no safe candidate population for the required human review gate.",
+      "status": "OPEN_ARCHITECTURE_DECISION_REQUIRED"
     },
     {
-      "code": "NORMALIZED_TABLE_VARIANT_ASSOCIATION_LOSS",
-      "severity": "P1",
-      "affectedPr": 207,
-      "recurrenceCount": 6,
-      "workflowStep": "pdf_or_html_to_page_text",
-      "evidence": "At least six accepted product catalogs place multiple models, ratings, or dimensional contexts in table columns that normalized line text does not represent as structured product-variant associations.",
-      "proposedCorrection": "Preserve row, column, header, footnote, and product-variant identity in a separately reviewed extraction format; do not infer associations from flattened text.",
-      "blocksMerge": true,
-      "fixStatus": "NOT_FIXED_PIVOT_SIGNAL"
+      "code": "DOCUMENT_VALIDITY_AND_USE_RIGHTS_NOT_HUMAN_REVIEWED",
+      "severity": "P1_EXTERNAL_INPUT",
+      "evidence": "All eight normalized bundles remain authenticity UNREVIEWED and no human currentness, fidelity, or use-rights decision exists.",
+      "effect": "No official-source, latest-revision, or redistribution claim is justified.",
+      "status": "EXTERNAL_HUMAN_INPUT_MISSING"
     },
     {
-      "code": "TECHNICAL_TAP_SEQUENCE_FALSE_PRIVATE_DATA_MATCH",
-      "severity": "P1",
-      "affectedPr": 207,
-      "recurrenceCount": 2,
-      "workflowStep": "page_text_safety_validation",
-      "evidence": "Two technical transformer tap-voltage rows were refused because hyphenated voltage sequences matched the Korean phone-number safety pattern.",
-      "proposedCorrection": "Do not weaken the private-data guard in isolation; distinguish table cells and typed electrical quantities before safety classification.",
-      "blocksMerge": true,
-      "fixStatus": "NOT_FIXED_SECURITY_GUARD_PRESERVED"
+      "code": "FIXED_AUDIT_CLOCK_PRECEDES_REAL_NORMALIZATION",
+      "severity": "P2_METHODOLOGY",
+      "evidence": "The default audit clock is 2026-07-17 while normalized extraction is 2026-07-18, so optional real intake is fail-closed as future-dated.",
+      "effect": "The default audit output cannot be cited as the current real-document accepted count.",
+      "status": "RECORDED_NO_SAFETY_WEAKENING"
     },
     {
-      "code": "DOCUMENT_VALIDITY_JUDGMENTS_NOT_HUMAN_REVIEWED",
-      "severity": "P1",
-      "affectedPr": 207,
-      "recurrenceCount": 11,
-      "workflowStep": "document_validity_review",
-      "evidence": "All document authenticity, revision-currentness, and redistribution/use judgments remain UNREVIEWED; machine intake acceptance is not a human validity decision.",
-      "proposedCorrection": "Collect bounded human decisions for each document before any MERGE or authenticity claim.",
-      "blocksMerge": true,
-      "fixStatus": "EXTERNAL_HUMAN_INPUT_MISSING"
-    },
-    {
-      "code": "DOCUMENT_LANGUAGE_METADATA_MISMATCH",
-      "severity": "P2",
-      "affectedPr": 207,
-      "recurrenceCount": 1,
-      "workflowStep": "document_pre_intake",
-      "evidence": "One publisher metadata page labeled a Trihal PDF Korean while representative technical pages in the supplied PDF were English.",
-      "correction": "Refuse the input instead of trusting metadata language.",
-      "blocksMerge": false,
-      "fixStatus": "INPUT_REFUSED"
-    },
-    {
-      "code": "PUBLISHER_DOMAIN_ASSOCIATED_CATALOG_EXCEEDS_SOURCE_SIZE_CAP",
-      "severity": "P2",
-      "affectedPr": 207,
-      "recurrenceCount": 2,
-      "workflowStep": "document_pre_intake",
-      "evidence": "Two publisher-hosted switchgear catalogs were 47116934 and 42927512 bytes, above the 25000000-byte source limit.",
-      "correction": "Refuse the inputs and use bounded smaller publisher documents; do not raise the safety cap without a separate resource analysis.",
-      "blocksMerge": false,
-      "fixStatus": "INPUTS_REFUSED_SMALLER_DOCUMENT_SUBSTITUTED"
-    },
-    {
-      "code": "ELECTRICAL_EVIDENCE_LOSS_MODES_NOT_STRUCTURED",
-      "severity": "P1",
-      "affectedPr": 207,
-      "recurrenceCount": 1,
-      "workflowStep": "candidate_adjudication",
-      "evidence": "The structured reason taxonomy still cannot independently record table, variant, condition-dimension, comparison, tolerance, or duration-semantic loss.",
-      "proposedCorrection": "Add bounded loss-mode decisions only together with a variant-aware evidence architecture and human review protocol.",
-      "blocksMerge": true,
-      "fixStatus": "NOT_FIXED"
+      "code": "VARIANT_RUN_HASH_DOES_NOT_PROVE_SOURCE_AUTHENTICITY",
+      "severity": "P2_TRACEABILITY",
+      "evidence": "The evaluation and canonical hashes establish deterministic normalized-input evaluation only; they do not independently verify publisher acquisition, signatures, licenses, or revision currency.",
+      "effect": "Machine determinism must not be restated as officiality.",
+      "status": "RECORDED"
     }
   ],
-  "fixes": [
-    {
-      "commitSha": "cfa753591f06584c7091bbc122844766b33cbb01",
-      "findingCode": "PARTIAL_MULTI_QUANTITY_SCALAR_CANDIDATE",
-      "files": [
-        "evidence-claim-workbench/domain/candidates.mjs",
-        "tests/official-evidence-candidate.test.mjs"
-      ],
-      "result": "The two partial scalar candidates are no longer emitted; distinct quantities with different unit kinds remain extractable."
-    },
-    {
-      "commitSha": "9ef1f94fed500a0fed3d478eb2bb0710baecb861",
-      "documentationCommitSha": "0b0aff64aad36743c2cd1ccb7b5c9b2ee57c7718",
-      "findingCode": "UNREVIEWED_SOURCE_PROVENANCE_CLASSIFIED_OFFICIAL",
-      "files": [
-        "evidence-claim-workbench/domain/constants.mjs",
-        "evidence-claim-workbench/domain/review-patch.mjs",
-        "tests/official-evidence-document-bundle.test.mjs"
-      ],
-      "result": "Real pilot bundles use a neutral publisher-domain-associated class and retain explicit UNREVIEWED authenticity."
-    }
-  ],
-  "pilotTooling": [
-    "scripts/build-pr207-real-intake-pilot.mjs",
-    "scripts/evaluate-pr207-real-intake-pilot.mjs",
-    "tmp/codex/pr207-real-evidence-pilot-run-non-production.json"
-  ],
-  "inputBlockers": [
-    {
-      "code": "HUMAN_CANDIDATE_DECISIONS_MISSING",
-      "evidence": "No candidate review decision, review duration, usefulness result, or patch-suitability judgment was supplied.",
-      "blocksMerge": true
-    },
-    {
-      "code": "HUMAN_DOCUMENT_VALIDITY_DECISIONS_MISSING",
-      "evidence": "Authenticity, currentness, and redistribution/use remain UNREVIEWED for every evaluated input.",
-      "blocksMerge": true
-    },
-    {
-      "code": "POST_FIX_REVIEW_READY_CANDIDATE_COUNT_ZERO",
-      "evidence": "There is no safe candidate population for a 25-candidate human review after the P1 precision fix.",
-      "blocksMerge": true
-    }
-  ],
+  "fixesPerformedInThisPilotRefresh": [],
   "architectureSignal": "PIVOT_REQUIRED_FOR_VARIANT_AWARE_TABLE_EVIDENCE_BEFORE_REPEAT",
-  "architectureSignalAuthority": "CODEX_PILOT_OBSERVATION_OUTSIDE_PR207_HUMAN_REVIEW_PROTOCOL",
-  "pilotExecutionStatus": "REAL_INPUT_PROCESSED_HUMAN_REVIEW_BLOCKED",
+  "architectureSignalScope": "Bounded to two mapped rows across the eight supplied normalized documents. It proves current coverage is insufficient, not the prevalence of every unsupported table form. The reported reason is only the first blocker; latent footnote, geometry, column, condition, and configuration semantics remain unresolved.",
   "decision": "INCOMPLETE",
-  "decisionReason": "Machine intake accepted eight documents with the required family and language distribution, but post-fix candidate count is zero, human candidate decisions are absent, and authenticity/currentness/redistribution judgments remain unresolved. The repeated table-association loss separately triggers a PIVOT_REQUIRED architecture signal.",
-  "mergeRecommendation": "DO_NOT_MERGE",
+  "decisionReason": "The Goal requires human document-validity decisions and at least 25 human candidate decisions. Current inputs contain zero safe proposals, zero validity decisions, and zero candidate decisions, so Track B must remain INCOMPLETE even though fail-closed abstention is correct.",
+  "mergeRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
+  "nextExternalInputs": [
+    "A qualified human must decide authenticity, revision currentness, original-source fidelity, and redistribution/use status for each of the eight normalized document bundles.",
+    "An evidence-architecture owner must make a bounded go/no-go decision on representing product variants, semantic operators such as maximum, units, conditions, footnotes, and row/header relationships.",
+    "A rights/security owner must keep the real-intake UI blocked until full normalized page-text transport is removed or explicitly approved under a documented rights boundary.",
+    "A validation-method owner must separately authorize a review-evidence retention correction before candidate-review metrics can be reconstructed.",
+    "Only after those prerequisites and a safe candidate population exist may qualified reviewers produce at least 25 structured candidate decisions, including at least 10 per product family."
+  ],
   "productionReady": false,
+  "productionReviewerWorkflowReady": false,
   "issue165Status": "HOLD",
   "nonClaims": [
-    "Machine intake acceptance does not establish source authenticity, revision currentness, technical truth, applicability, or legal redistribution/use rights.",
-    "The two pre-fix suggestions were not human-reviewed rejections and are not counted as reviewed precision evidence.",
-    "No claim was automatically VERIFIED or customer-use ALLOWED.",
-    "No source PDF or full document was committed.",
-    "No production, staging, D1, production endpoint, log, secret, customer-data, CRM, outreach, email, callback, product LLM, or automation action occurred."
+    "Publisher-domain association is not verified acquisition provenance or officiality.",
+    "No document is claimed current, applicable, redistributable, or approved for customer use.",
+    "No abstention is counted as a human rejection or precision observation.",
+    "The real-intake UI was not launched during this refresh.",
+    "No canonical VERIFIED claim or customer-use ALLOWED claim was created.",
+    "No production, staging, D1, endpoint, log, secret, customer-data, live scraping, CRM, outreach, LLM, or automation action was performed."
   ]
 }

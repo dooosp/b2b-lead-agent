@@ -1,11 +1,12 @@
 {
-  "schemaVersion": "pr207-real-evidence-input-ledger-v1",
+  "schemaVersion": "pr207-real-evidence-input-ledger-v2",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "sourcePr": 207,
   "asOf": "2026-07-18T13:00:48.000Z",
   "acceptanceDefinition": "PR207_MACHINE_INTAKE_ONLY_NOT_HUMAN_AUTHENTICITY_OR_USE_APPROVAL",
   "sourceProvenanceStatus": "PUBLISHER_DOMAIN_ASSOCIATED_AUTHENTICITY_UNREVIEWED",
   "acceptedSourceHashCheckAtBuild": "EXPECTED_SHA256_BOUND_TO_NOFOLLOW_SINGLE_LINK_DESCRIPTOR_SNAPSHOT",
+  "semanticWarning": "Legacy documentType labels containing OFFICIAL describe the PR207 schema vocabulary only; every listed source remains authenticity UNREVIEWED.",
   "machineRunArtifact": "tmp/codex/pr207-real-evidence-pilot-run-non-production.json",
   "counts": {
     "documentsEvaluated": 11,
@@ -353,7 +354,9 @@
     }
   ],
   "sourceBinariesCommitted": false,
-  "fullDocumentLeakage": 0,
+  "fullSourceBinaryLeakageCount": 0,
+  "completeNormalizedPageTextStoredInIgnoredInbox": true,
+  "realIntakeUiNormalizedPageTextTransportRisk": "PRESENT_DO_NOT_LAUNCH_BEFORE_RIGHTS_BOUNDARY_REMEDIATION_OR_APPROVAL",
   "productionReady": false,
   "issue165Status": "HOLD"
 }

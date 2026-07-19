@@ -7,6 +7,7 @@ import { mkdtemp, open, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
+import { writeJsonArtifactInsideWorktree } from './lib/safe-local-artifact-writer.mjs';
 
 const AS_OF = '2026-07-18T13:00:48.000Z';
 const EXPECTED_MANIFEST_SHA256 =
@@ -286,7 +287,7 @@ const report = {
     'Human authenticity, validity, rights, and candidate review decisions are absent; the safe post-fix candidate count is zero.',
 };
 
-await writeFile(outputPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+await writeJsonArtifactInsideWorktree({ outputPath, value: report });
 process.stdout.write(
   `${JSON.stringify({
     output: path.relative(process.cwd(), outputPath),
