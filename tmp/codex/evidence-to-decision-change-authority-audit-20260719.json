@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "evidence-to-decision-change-authority-audit-v1",
+  "observedAtDate": "2026-07-19",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "goalRule": "ONLY_PERFORM_FIXES_WHEN_THE_RELEVANT_TRACK_IS_REVISE",
+  "initialDecisionRecord": {
+    "commitSha": "41ac25adcbb6aebd0de0018660dbcac0b9427d95",
+    "committedAt": "2026-07-18T21:42:57+09:00",
+    "trackA": "INCOMPLETE",
+    "trackB": "INCOMPLETE",
+    "relationshipToPrBranches": "CROSS_PR_DECISION_COMMIT_CHRONOLOGICALLY_PRECEDES_LATER_PR_BRANCH_COMMITS_BUT_IS_NOT_THEIR_GIT_ANCESTOR"
+  },
+  "postIncompleteImplementationCommits": [
+    {
+      "pr": 206,
+      "commitSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+      "committedAt": "2026-07-18T23:24:07+09:00",
+      "title": "feat: add safe pursuit workbench human validation intake",
+      "classification": "VALIDATION_INTAKE_IMPLEMENTATION",
+      "productOrValidationCodeChanged": true,
+      "explicitRetentionAuthorityRecordFound": false
+    },
+    {
+      "pr": 207,
+      "commitSha": "cfa753591f06584c7091bbc122844766b33cbb01",
+      "committedAt": "2026-07-18T22:14:50+09:00",
+      "title": "fix: reject partial multi-quantity evidence candidates",
+      "classification": "PRODUCT_CODE_FIX",
+      "productOrValidationCodeChanged": true,
+      "explicitRetentionAuthorityRecordFound": false
+    },
+    {
+      "pr": 207,
+      "commitSha": "9ef1f94fed500a0fed3d478eb2bb0710baecb861",
+      "committedAt": "2026-07-18T22:33:04+09:00",
+      "title": "fix: keep unreviewed source provenance neutral",
+      "classification": "PRODUCT_CODE_FIX",
+      "productOrValidationCodeChanged": true,
+      "explicitRetentionAuthorityRecordFound": false
+    },
+    {
+      "pr": 207,
+      "commitSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "committedAt": "2026-07-18T23:24:07+09:00",
+      "title": "feat: add variant-aware evidence table spike",
+      "classification": "EXPERIMENTAL_EVIDENCE_ARCHITECTURE_IMPLEMENTATION",
+      "productOrValidationCodeChanged": true,
+      "explicitRetentionAuthorityRecordFound": false
+    }
+  ],
+  "counts": {
+    "postIncompleteImplementationCommits": 4,
+    "explicitProductCodeFixCommits": 2,
+    "validationOrExperimentalImplementationCommits": 2,
+    "commitsWithExplicitRetentionAuthorityRecord": 0
+  },
+  "changeAuthorityStatus": "HOLD_OWNER_DISPOSITION_REQUIRED",
+  "requiredOwnerDisposition": [
+    "Explicitly authorize retaining each listed commit under a documented exception to the Goal rule, with exact scope and non-claims.",
+    "Or provide an explicit revert/restack instruction identifying which commits must be removed from each Draft PR."
+  ],
+  "actionsNotTaken": [
+    "No commit was reverted.",
+    "No PR branch was rewritten or force-pushed.",
+    "No Draft PR was marked Ready or merged."
+  ],
+  "interpretation": "The evaluated behavior and INCOMPLETE decisions remain evidence-backed, but merge or further product work is blocked until the change owner dispositions these post-INCOMPLETE implementation commits. This audit does not infer that missing tracked authority never existed elsewhere."
+}

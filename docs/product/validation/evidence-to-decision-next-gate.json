@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "evidence-to-decision-next-gate-v4",
+  "schemaVersion": "evidence-to-decision-next-gate-v5",
   "asOf": "2026-07-19",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
@@ -21,7 +21,9 @@
     "safeIgnoredIntakeAvailable": true,
     "methodologyRiskCount": 4,
     "automatedGateFitness": "NOT_DECISION_CAPABLE_WITHOUT_MANUAL_METHOD_REVIEW",
-    "fixesPerformedInRefresh": 0
+    "postInitialIncompleteImplementationCommits": 1,
+    "implementationChangesPerformedIn20260719Refresh": 0,
+    "changeAuthorityStatus": "HOLD_OWNER_DISPOSITION_REQUIRED"
   },
   "pr207": {
     "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
@@ -42,12 +44,15 @@
     },
     "realIntakeUiAllowed": false,
     "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_REQUIRED_METRICS",
-    "fixesPerformedInRefresh": 0
+    "postInitialIncompleteImplementationCommits": 3,
+    "implementationChangesPerformedIn20260719Refresh": 0,
+    "changeAuthorityStatus": "HOLD_OWNER_DISPOSITION_REQUIRED"
   },
   "overallDecision": "INCOMPLETE",
   "overallStatus": "BLOCKED_BOTH",
+  "goalCompletionStatus": "INCOMPLETE_CHANGE_AUTHORITY_HOLD",
   "mergeTrainRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
-  "mergeTrainReason": "Track A has zero completed human sessions. Track B has zero human validity decisions, zero safe propositions, zero human candidate decisions, and zero candidates approved for repository review. The Goal's explicit rules therefore require both tracks to remain INCOMPLETE.",
+  "mergeTrainReason": "Track A has zero completed human sessions. Track B has zero human validity decisions, zero safe propositions, zero human candidate decisions, and zero candidates approved for repository review. Four implementation commits also require owner disposition because they followed the initial INCOMPLETE decision record while the Goal permitted fixes only for REVISE. Both tracks remain INCOMPLETE and merge remains blocked.",
   "tenderMatrixEntryGate": "BLOCKED_BOTH",
   "tenderMatrixBlockers": [
     "PR206_DECISION_NOT_MERGE",
@@ -55,6 +60,7 @@
     "PR206_VALID_R1_R5_SESSIONS_BELOW_5",
     "PR207_HUMAN_DOCUMENT_VALIDITY_DECISIONS_BELOW_8",
     "PR207_APPROVED_REPOSITORY_REVIEW_CANDIDATES_BELOW_25",
+    "POST_INCOMPLETE_IMPLEMENTATION_CHANGE_AUTHORITY_DISPOSITION_MISSING",
     "CANONICAL_VERIFIED_CLAIMS_BELOW_20",
     "BOTH_PRODUCT_FAMILIES_LACK_HUMAN_VERIFIED_REAL_CAPABILITY_COVERAGE",
     "HUMAN_FIT_WINDOW_DOSSIER_USEFULNESS_NOT_ESTABLISHED",
@@ -62,6 +68,13 @@
     "REVIEWER_PATCH_SUITABILITY_NOT_ESTABLISHED"
   ],
   "missingExternalInputs": [
+    {
+      "owner": "EVIDENCE_TO_DECISION_CHANGE_OWNER",
+      "input": "For each of b5570e182c8ab6515c0f09272d22d7121518f134, cfa753591f06584c7091bbc122844766b33cbb01, 9ef1f94fed500a0fed3d478eb2bb0710baecb861, and c6a5469338999097acd5de7c5a12c827d27d4540, explicitly authorize retention under a documented exception to the post-INCOMPLETE fix rule or provide exact revert/restack instructions.",
+      "current": 0,
+      "required": 4,
+      "countUnit": "POST_INCOMPLETE_IMPLEMENTATION_COMMIT_DISPOSITIONS"
+    },
     {
       "owner": "PR206_VALIDATION_METHOD_OWNER",
       "input": "Explicit acceptance or separately authorized correction of the recorded per-task, comprehension, and timing gate defects before any aggregate is treated as merge evidence.",
@@ -113,6 +126,7 @@
     "No MERGE, REVISE, or product-thesis PIVOT decision is justified while the explicit external-input gates remain incomplete. The recorded PR207 architecture signal is a bounded prerequisite for another candidate attempt."
   ],
   "residualRisks": [
+    "Four implementation commits entered the evaluated PR heads after the initial cross-PR INCOMPLETE decision record; their retention authority is not evidenced in the tracked pilot artifacts and requires owner disposition.",
     "PR206's formal intake covers three of twelve scenarios and relies heavily on facilitator-coded correctness; any later aggregate must be interpreted with those limitations.",
     "PR206's automated MERGE_THRESHOLDS result is advisory and cannot itself authorize merge or production action.",
     "PR207 source originals, publisher signatures/checksums, retrieval records, current-revision evidence, and license/use approval are not present in the tracked decision artifact.",
@@ -148,13 +162,20 @@
     "trackAState": "INCOMPLETE",
     "trackBState": "INCOMPLETE",
     "goalRule": "Only perform fixes when the relevant track is REVISE.",
-    "productCodeFixesPerformed": 0
+    "changeAuthorityAudit": "tmp/codex/evidence-to-decision-change-authority-audit-20260719.json",
+    "postInitialIncompleteImplementationCommitsPresent": 4,
+    "explicitProductCodeFixCommitsPresent": 2,
+    "implementationChangesPerformedIn20260719Refresh": 0,
+    "changeAuthorityStatus": "HOLD_OWNER_DISPOSITION_REQUIRED"
   },
   "prohibitedActionsPerformed": [],
+  "goalRuleDeviationsObserved": [
+    "Four implementation commits followed the initial cross-PR INCOMPLETE decision record without an explicit retention-authority record in the audited pilot artifacts."
+  ],
   "issue165Status": "HOLD",
   "productionReady": false,
   "productionReviewerWorkflowReady": false,
   "bothPrsRemainDraft": true,
   "bothPrsRemainUnmerged": true,
-  "nextAction": "External-input and method HOLD: do not merge either PR, launch the PR207 real-intake UI, or start the Tender Matrix. A method owner must resolve or explicitly accept PR206 gate limits before R1-R5 results are treated as merge evidence. PR207 requires human document validity/use decisions plus separate rights, review-retention, and bounded variant-aware architecture owner decisions before candidate-pilot repetition; any later MERGE claim additionally requires at least 25 approved candidates with at least 10 approved per product family."
+  "nextAction": "Change-authority and external-input HOLD: first disposition the four post-INCOMPLETE implementation commits; do not rewrite either PR without explicit owner instruction. Do not merge either PR, launch the PR207 real-intake UI, or start the Tender Matrix. A method owner must resolve or explicitly accept PR206 gate limits before R1-R5 results are treated as merge evidence. PR207 requires human document validity/use decisions plus separate rights, review-retention, and bounded variant-aware architecture owner decisions before candidate-pilot repetition; any later MERGE claim additionally requires at least 25 approved candidates with at least 10 approved per product family."
 }

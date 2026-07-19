@@ -55,13 +55,18 @@ The bounded architecture signal is to decide whether to represent variants, sema
 
 The Goal permits PR #207 fixes only when Track B is `REVISE`. Missing human decisions make the track `INCOMPLETE`; therefore this refresh records the evidence and changes no PR #207 code or safety boundary.
 
+## Change-authority hold
+
+The evaluated PR head contains two product-code fixes (`cfa753591f06584c7091bbc122844766b33cbb01`, `9ef1f94fed500a0fed3d478eb2bb0710baecb861`) and the variant-table experimental implementation (`c6a5469338999097acd5de7c5a12c827d27d4540`) committed after the cross-PR decision record had classified Track B `INCOMPLETE`. The current refresh did not create those changes, but no explicit retention-authority record was found in the audited artifacts. A change owner must authorize retaining each commit under a documented exception or explicitly instruct a revert/restack. No PR history was rewritten.
+
 ## Exact next inputs
 
-1. A qualified human must record authenticity, revision-currentness, original-source-fidelity, and redistribution/use decisions for each of the eight normalized bundles.
-2. An evidence-architecture owner must make a bounded go/no-go decision on variant-aware table semantics.
-3. A rights/security owner must keep the real-intake UI blocked until complete page-text transport is removed or explicitly rights-approved.
-4. A validation-method owner must authorize a review-evidence retention correction before the required human metrics can be reconstructed.
-5. If a safe candidate population is later produced, qualified reviewers must review enough candidates to approve at least 25 for repository review, including at least 10 approved candidates per product family, before any MERGE claim.
+1. A change owner must disposition the three post-`INCOMPLETE` implementation commits listed above.
+2. A qualified human must record authenticity, revision-currentness, original-source-fidelity, and redistribution/use decisions for each of the eight normalized bundles.
+3. An evidence-architecture owner must make a bounded go/no-go decision on variant-aware table semantics.
+4. A rights/security owner must keep the real-intake UI blocked until complete page-text transport is removed or explicitly rights-approved.
+5. A validation-method owner must authorize a review-evidence retention correction before the required human metrics can be reconstructed.
+6. If a safe candidate population is later produced, qualified reviewers must review enough candidates to approve at least 25 for repository review, including at least 10 approved candidates per product family, before any MERGE claim.
 
 Until then, do not merge PR #207, weaken private-data guards, call these documents official/current, export a canonical patch, or start the Tender Matrix.
 

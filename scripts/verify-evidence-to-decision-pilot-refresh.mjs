@@ -61,6 +61,15 @@ function gitHead(root) {
   }).trim();
 }
 
+function gitIsAncestor(root, ancestor, descendant) {
+  try {
+    execFileSync('git', ['-C', root, 'merge-base', '--is-ancestor', ancestor, descendant]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function readDecision(relativePath) {
   return JSON.parse(await readFile(path.join(process.cwd(), relativePath), 'utf8'));
 }
@@ -145,6 +154,7 @@ const githubState = await readDecision('tmp/codex/evidence-to-decision-github-st
 const pr207Ledger = await readDecision('docs/product/validation/pr207-real-evidence-input-ledger.json');
 const pr207MachineRun = await readDecision('tmp/codex/pr207-real-evidence-pilot-run-non-production.json');
 const investigationLedger = await readDecision('tmp/codex/evidence-to-decision-initial-investigation-ledger-20260719.json');
+const changeAuthorityAudit = await readDecision('tmp/codex/evidence-to-decision-change-authority-audit-20260719.json');
 const commandLedger = await readDecision('tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json');
 const packageJson = await readDecision('package.json');
 const ciWorkflow = await readFile(path.join(process.cwd(), '.github/workflows/ci.yml'), 'utf8');
@@ -221,6 +231,47 @@ assert(
     'INCOMPLETE_SWITCHGEAR_0_OF_10_TRANSFORMER_0_OF_10',
   'PR207 per-family approved threshold drifted',
 );
+assert(
+  changeAuthorityAudit.initialDecisionRecord?.commitSha === '41ac25adcbb6aebd0de0018660dbcac0b9427d95'
+    && changeAuthorityAudit.initialDecisionRecord?.trackA === 'INCOMPLETE'
+    && changeAuthorityAudit.initialDecisionRecord?.trackB === 'INCOMPLETE',
+  'initial INCOMPLETE decision authority record drifted',
+);
+assert(
+  changeAuthorityAudit.changeAuthorityStatus === 'HOLD_OWNER_DISPOSITION_REQUIRED'
+    && changeAuthorityAudit.counts?.postIncompleteImplementationCommits === 4
+    && changeAuthorityAudit.counts?.commitsWithExplicitRetentionAuthorityRecord === 0,
+  'post-INCOMPLETE change-authority count drifted',
+);
+const auditedImplementationCommits = changeAuthorityAudit.postIncompleteImplementationCommits
+  .map((entry) => entry.commitSha);
+assert(
+  JSON.stringify(auditedImplementationCommits) === JSON.stringify([
+    'b5570e182c8ab6515c0f09272d22d7121518f134',
+    'cfa753591f06584c7091bbc122844766b33cbb01',
+    '9ef1f94fed500a0fed3d478eb2bb0710baecb861',
+    'c6a5469338999097acd5de7c5a12c827d27d4540',
+  ]),
+  'post-INCOMPLETE implementation commit list drifted',
+);
+assert(gitIsAncestor(pr206Root, 'b5570e182c8ab6515c0f09272d22d7121518f134', pr206Head), 'PR206 audited implementation is absent');
+for (const commitSha of [
+  'cfa753591f06584c7091bbc122844766b33cbb01',
+  '9ef1f94fed500a0fed3d478eb2bb0710baecb861',
+  'c6a5469338999097acd5de7c5a12c827d27d4540',
+]) {
+  assert(gitIsAncestor(pr207Root, commitSha, pr207Head), `PR207 audited implementation is absent: ${commitSha}`);
+}
+assert(
+  pr206Decision.changeAuthorityAudit === 'tmp/codex/evidence-to-decision-change-authority-audit-20260719.json'
+    && pr206Decision.postInitialIncompleteImplementationCommitsPresent?.length === 1,
+  'PR206 change-authority disclosure drifted',
+);
+assert(
+  pr207Decision.changeAuthorityAudit === 'tmp/codex/evidence-to-decision-change-authority-audit-20260719.json'
+    && pr207Decision.postInitialIncompleteImplementationCommitsPresent?.length === 3,
+  'PR207 change-authority disclosure drifted',
+);
 for (const requiredThreshold of [
   'acceptedDocumentsAtLeastEight',
   'acceptedSwitchgearDocumentsAtLeastFour',
@@ -287,7 +338,17 @@ assert(
   'independent PR207 rights and validation-method inputs must remain separate',
 );
 assert(nextGate.pr207?.approvedForRepositoryReview === 0, 'next-gate PR207 approved count drifted');
+assert(
+  nextGate.fixPolicy?.changeAuthorityStatus === 'HOLD_OWNER_DISPOSITION_REQUIRED'
+    && nextGate.fixPolicy?.postInitialIncompleteImplementationCommitsPresent === 4
+    && nextGate.missingExternalInputs?.some((input) =>
+      input.owner === 'EVIDENCE_TO_DECISION_CHANGE_OWNER'
+        && input.required === 4
+        && input.current === 0),
+  'next-gate change-authority HOLD drifted',
+);
 assert(nextGate.overallStatus === 'BLOCKED_BOTH', 'overall gate must remain BLOCKED_BOTH');
+assert(nextGate.goalCompletionStatus === 'INCOMPLETE_CHANGE_AUTHORITY_HOLD', 'goal completion HOLD drifted');
 assert(nextGate.mergeTrainRecommendation === 'NO_MERGE_INPUT_INCOMPLETE', 'merge gate unexpectedly opened');
 assert(nextGate.tenderMatrixEntryGate === 'BLOCKED_BOTH', 'Tender Matrix gate unexpectedly opened');
 assert(nextGate.issue165Status === 'HOLD', 'Issue #165 boundary unexpectedly changed');
@@ -309,6 +370,13 @@ assert(
   commandLedger.commandGroups.find((group) => group.id === 'PILOT_WORKFLOW_CONTRACT')?.passed === 29
     && commandLedger.commandGroups.find((group) => group.id === 'PILOT_WORKFLOW_CONTRACT')?.failed === 0,
   'pilot workflow-contract result drifted',
+);
+assert(
+  commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')?.goalCompletionStatus ===
+    'INCOMPLETE_CHANGE_AUTHORITY_HOLD'
+    && commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')?.changeAuthorityStatus ===
+      'HOLD_OWNER_DISPOSITION_REQUIRED',
+  'pilot verifier change-authority result drifted',
 );
 const pr206Commands = [
   'npm ci',
@@ -430,6 +498,7 @@ const verificationInputPaths = [
   'tmp/codex/evidence-to-decision-pilot-repo-preflight.json',
   'tmp/codex/evidence-to-decision-github-state-20260719.json',
   'tmp/codex/evidence-to-decision-initial-investigation-ledger-20260719.json',
+  'tmp/codex/evidence-to-decision-change-authority-audit-20260719.json',
   'tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json',
   'tmp/codex/pr207-real-evidence-pilot-run-non-production.json',
   'scripts/verify-evidence-to-decision-pilot-refresh.mjs',
@@ -501,6 +570,7 @@ const report = {
   },
   overallDecision: 'INCOMPLETE',
   overallStatus: 'BLOCKED_BOTH',
+  goalCompletionStatus: nextGate.goalCompletionStatus,
   issue165Status: 'HOLD',
   issue165Evidence: {
     state: githubState.issue165.state,
@@ -513,9 +583,19 @@ const report = {
     ids: investigationLedger.investigations.map((investigation) => investigation.id),
     boundary: investigationLedger.boundary,
   },
+  changeAuthority: {
+    status: changeAuthorityAudit.changeAuthorityStatus,
+    initialDecisionCommitSha: changeAuthorityAudit.initialDecisionRecord.commitSha,
+    postIncompleteImplementationCommits:
+      changeAuthorityAudit.counts.postIncompleteImplementationCommits,
+    explicitProductCodeFixCommits: changeAuthorityAudit.counts.explicitProductCodeFixCommits,
+    commitsWithExplicitRetentionAuthorityRecord:
+      changeAuthorityAudit.counts.commitsWithExplicitRetentionAuthorityRecord,
+  },
   productionReady: false,
   productionReviewerWorkflowReady: false,
   prohibitedActionsPerformed: [],
+  goalRuleDeviationsObserved: nextGate.goalRuleDeviationsObserved,
   commandLedger: {
     relativePath: 'tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json',
     sha256: verificationInputSha256['tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json'],

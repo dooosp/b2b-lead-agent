@@ -36,9 +36,13 @@ Independent read-only review found that the automated merge summary is not curre
 
 These are method risks, not human-observed product defects. The Goal permits PR #206 fixes only after Track A is `REVISE`; with zero sessions, Track A must remain `INCOMPLETE`, so this refresh changes no PR #206 product code.
 
+## Change-authority hold
+
+The evaluated head includes `b5570e182c8ab6515c0f09272d22d7121518f134`, which added the validation intake after the cross-PR decision record had already classified Track A `INCOMPLETE`. This 2026-07-19 refresh did not create or modify that implementation, but the tracked Goal says fixes are allowed only for `REVISE`, and no explicit retention-authority record was found in the audited artifacts. Do not silently count this as an authorized fix: a change owner must either authorize retaining the commit under an exact documented exception or explicitly instruct a revert/restack. No history rewrite was performed.
+
 ## Exact next input
 
-First, a human validation-method owner must explicitly accept these limitations or authorize a separate protocol correction; the present Goal does not permit that PR #206 fix while Track A is `INCOMPLETE`. Then obtain five de-identified, completed R1-R5 records from the required roles against the frozen runtime and hashes. Preserve task-level evidence and manually audit per-task failure, comprehension, and timing consistency. The command below remains a fail-closed input validator, but its `MERGE_THRESHOLDS_*` output is advisory:
+First, disposition the existing post-`INCOMPLETE` intake commit. Then a human validation-method owner must explicitly accept these limitations or authorize a separate protocol correction; the present Goal does not permit that PR #206 fix while Track A is `INCOMPLETE`. Obtain five de-identified, completed R1-R5 records from the required roles against the frozen runtime and hashes. Preserve task-level evidence and manually audit per-task failure, comprehension, and timing consistency. The command below remains a fail-closed input validator, but its `MERGE_THRESHOLDS_*` output is advisory:
 
 ```text
 npm run validate:pursuit-workbench-human-validation

@@ -24,7 +24,9 @@
       "status": "PASS",
       "exitCode": 0,
       "decision": "INCOMPLETE",
-      "overallStatus": "BLOCKED_BOTH"
+      "overallStatus": "BLOCKED_BOTH",
+      "goalCompletionStatus": "INCOMPLETE_CHANGE_AUTHORITY_HOLD",
+      "changeAuthorityStatus": "HOLD_OWNER_DISPOSITION_REQUIRED"
     },
     {
       "id": "PILOT_WORKFLOW_CONTRACT",
