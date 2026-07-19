@@ -90,7 +90,7 @@ const outputPath = path.resolve(values.output);
 
 const pr206Head = gitHead(pr206Root);
 const pr207Head = gitHead(pr207Root);
-const refreshInputCommitSha = gitHead(process.cwd());
+const reportParentCommitSha = gitHead(process.cwd());
 assert(pr206Head === EXPECTED_PR206_HEAD, `unexpected PR206 head: ${pr206Head}`);
 assert(pr207Head === EXPECTED_PR207_HEAD, `unexpected PR207 head: ${pr207Head}`);
 
@@ -452,7 +452,8 @@ const report = {
   evaluatedBaseSha: EXPECTED_BASE_SHA,
   refreshLineage: {
     artifactParentSha: preflight.artifactParentSha,
-    refreshInputCommitSha,
+    reportParentCommitSha,
+    finalArtifactCommitSha: 'EXCLUDED_TO_AVOID_SELF_REFERENCE_VERIFY_GIT_PARENT_EQUALS_REPORT_PARENT',
     verificationInputSha256,
   },
   pr206: {
