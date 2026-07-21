@@ -171,7 +171,10 @@ const DOCUMENT_DECISION_ROW_KEYS = [
   'technicalScopeDecision',
 ];
 const FIDELITY_DECISION_KEYS = [
+  'allowedDecisionReasonCodes',
   'allowedPageTextFidelityDecisions',
+  'allowedSemanticPreservationDecisions',
+  'allowedTableStructureFidelityDecisions',
   'boundary',
   'documentCount',
   'documentDecisionFileSha256',
@@ -182,6 +185,7 @@ const FIDELITY_DECISION_KEYS = [
   'humanFieldsAreBlank',
   'intakeManifestSha256',
   'nonClaims',
+  'pageNumberNamespace',
   'preparedBy',
   'schemaVersion',
 ];
@@ -201,6 +205,13 @@ const FIDELITY_ROW_KEYS = [
   'tableStructureFidelity',
   'unitSemanticsPreserved',
   'variantSemanticsPreserved',
+];
+const REVISION_PAGE_CHECKED_KEYS = [
+  'documentIdentityStatus',
+  'documentNumberStatus',
+  'locatorType',
+  'locatorValue',
+  'revisionStatus',
 ];
 const CANDIDATE_DECISION_KEYS = [
   'allowedHumanDecisions',
@@ -240,6 +251,32 @@ const EXPECTED_FIDELITY_DECISIONS = [
   'EXACT',
   'ACCEPTABLE_WITH_LIMITATIONS',
   'UNSAFE_FOR_CANDIDATE_REVIEW',
+];
+const EXPECTED_TABLE_STRUCTURE_FIDELITY_DECISIONS = [
+  ...EXPECTED_FIDELITY_DECISIONS,
+  'NOT_APPLICABLE',
+];
+const EXPECTED_SEMANTIC_PRESERVATION_DECISIONS = [
+  'PRESERVED',
+  'NOT_PRESERVED',
+  'NOT_APPLICABLE',
+];
+const EXPECTED_FIDELITY_DECISION_REASON_CODES = [
+  'EXACT_FIDELITY_CONFIRMED',
+  'ACCEPTABLE_LIMITATION_IDENTIFIED',
+  'UNSAFE_FIDELITY_IDENTIFIED',
+  'SOURCE_PAGE_UNAVAILABLE',
+  'NO_CANDIDATE_CONTENT',
+];
+const EXPECTED_REVISION_PAGE_LOCATOR_TYPES = [
+  'DOCUMENT_PAGE',
+  'SECTION',
+  'UNAVAILABLE',
+];
+const EXPECTED_REVISION_PAGE_STATUSES = [
+  'MATCH',
+  'MISMATCH',
+  'UNCONFIRMED',
 ];
 const EXPECTED_CANDIDATE_DECISIONS = [
   'APPROVE_FOR_REPOSITORY_REVIEW',
@@ -790,6 +827,7 @@ function validateNormalizedDocuments(inputs, manifest, documentsById) {
     ]),
   );
   const seenPaths = new Set();
+  const pageNamespacesByDocumentId = new Map();
   let totalByteLength = 0;
   let totalPageCount = 0;
 
@@ -824,6 +862,26 @@ function validateNormalizedDocuments(inputs, manifest, documentsById) {
         && bundle.pages.length > 0,
       'NORMALIZED_INPUT_CONTRACT_DRIFT',
     );
+    const pageNumbers = bundle.pages.map((page) => {
+      assertCondition(
+        isPlainObject(page)
+          && Number.isSafeInteger(page.pageNumber)
+          && page.pageNumber >= 1,
+        'NORMALIZED_INPUT_PAGE_NAMESPACE_INVALID',
+      );
+      return page.pageNumber;
+    });
+    const normalizedPageNumbers = [...new Set(pageNumbers)].sort((left, right) =>
+      left - right);
+    const expectedNormalizedPageNumbers = Array.from(
+      { length: pageNumbers.length },
+      (_, index) => index + 1,
+    );
+    assertCondition(
+      normalizedPageNumbers.length === pageNumbers.length
+        && isDeepStrictEqual(pageNumbers, expectedNormalizedPageNumbers),
+      'NORMALIZED_INPUT_PAGE_NAMESPACE_INVALID',
+    );
     assertSha256(bundle.file.sha256, 'NORMALIZED_INPUT_SOURCE_HASH_INVALID');
     assertSha256(bundle.file.contentSha256, 'NORMALIZED_INPUT_CONTENT_HASH_INVALID');
     const decision = decisionByNormalizedInputHash.get(entry.input.sha256);
@@ -841,6 +899,11 @@ function validateNormalizedDocuments(inputs, manifest, documentsById) {
         && bundle.revision.revisionId === manifestDocument.revision.revisionId,
       'NORMALIZED_INPUT_DECISION_BINDING_DRIFT',
     );
+    assertCondition(
+      !pageNamespacesByDocumentId.has(bundle.documentId),
+      'NORMALIZED_INPUT_PAGE_NAMESPACE_DUPLICATE',
+    );
+    pageNamespacesByDocumentId.set(bundle.documentId, normalizedPageNumbers);
     seenPaths.add(entry.relativePath);
     totalByteLength += entry.input.byteLength;
     totalPageCount += bundle.pages.length;
@@ -851,7 +914,11 @@ function validateNormalizedDocuments(inputs, manifest, documentsById) {
       && [...manifestByRelativePath.keys()].every((relativePath) => seenPaths.has(relativePath)),
     'NORMALIZED_INPUT_COVERAGE_DRIFT',
   );
-  return { totalByteLength, totalPageCount };
+  return {
+    pageNamespacesByDocumentId,
+    totalByteLength,
+    totalPageCount,
+  };
 }
 
 function fidelityRowIsBlank(document) {
@@ -869,14 +936,251 @@ function fidelityRowIsBlank(document) {
     && isDeepStrictEqual(document.decisionReasonCodes, []);
 }
 
-function validateFidelityDecisions(input, documentsById) {
+function assertSortedUniquePageNumbers(value, code) {
+  assertCondition(Array.isArray(value), code);
+  let previous = null;
+  for (const pageNumber of value) {
+    assertCondition(
+      Number.isSafeInteger(pageNumber)
+        && pageNumber >= 1
+        && (previous === null || pageNumber > previous),
+      code,
+    );
+    previous = pageNumber;
+  }
+}
+
+function pageNumbersAreSubset(candidatePageNumbers, pageNumbers) {
+  const pageNumberSet = new Set(pageNumbers);
+  return candidatePageNumbers.every((pageNumber) => pageNumberSet.has(pageNumber));
+}
+
+function validateCompletedFidelityRow(document, normalizedPageNumbers) {
+  assertCondition(
+    Array.isArray(document.pagesChecked)
+      && Array.isArray(document.candidateBearingPagesChecked)
+      && isPlainObject(document.revisionPageChecked)
+      && typeof document.pageTextFidelity === 'string'
+      && typeof document.tableStructureFidelity === 'string'
+      && typeof document.variantSemanticsPreserved === 'string'
+      && typeof document.unitSemanticsPreserved === 'string'
+      && typeof document.minMaxRangeSemanticsPreserved === 'string'
+      && typeof document.footnoteSemanticsPreserved === 'string'
+      && Array.isArray(document.eligiblePageNumbers)
+      && Array.isArray(document.ineligiblePageNumbers)
+      && Array.isArray(document.decisionReasonCodes)
+      && document.decisionReasonCodes.length > 0,
+    'FIDELITY_ROW_PARTIAL',
+  );
+
+  for (const pageNumbers of [
+    document.pagesChecked,
+    document.candidateBearingPagesChecked,
+    document.eligiblePageNumbers,
+    document.ineligiblePageNumbers,
+  ]) {
+    assertSortedUniquePageNumbers(pageNumbers, 'FIDELITY_PAGE_NAMESPACE_INVALID');
+  }
+  assertCondition(
+    isDeepStrictEqual(document.pagesChecked, normalizedPageNumbers),
+    'FIDELITY_PAGES_CHECKED_DRIFT',
+  );
+  assertCondition(
+    pageNumbersAreSubset(
+      document.candidateBearingPagesChecked,
+      document.pagesChecked,
+    )
+      && pageNumbersAreSubset(document.eligiblePageNumbers, document.pagesChecked)
+      && pageNumbersAreSubset(document.ineligiblePageNumbers, document.pagesChecked),
+    'FIDELITY_PAGE_NAMESPACE_DRIFT',
+  );
+
+  const eligiblePageNumberSet = new Set(document.eligiblePageNumbers);
+  const ineligiblePageNumberSet = new Set(document.ineligiblePageNumbers);
+  assertCondition(
+    document.eligiblePageNumbers.every(
+      (pageNumber) => !ineligiblePageNumberSet.has(pageNumber),
+    )
+      && document.pagesChecked.every(
+        (pageNumber) =>
+          eligiblePageNumberSet.has(pageNumber)
+            || ineligiblePageNumberSet.has(pageNumber),
+      )
+      && document.eligiblePageNumbers.length
+        + document.ineligiblePageNumbers.length === document.pagesChecked.length,
+    'FIDELITY_ELIGIBILITY_PARTITION_INVALID',
+  );
+  assertCondition(
+    pageNumbersAreSubset(
+      document.eligiblePageNumbers,
+      document.candidateBearingPagesChecked,
+    ),
+    'FIDELITY_ELIGIBLE_PAGE_NOT_CANDIDATE_BEARING',
+  );
+
+  assertCondition(
+    EXPECTED_FIDELITY_DECISIONS.includes(document.pageTextFidelity),
+    'FIDELITY_PAGE_TEXT_DECISION_INVALID',
+  );
+  assertCondition(
+    EXPECTED_TABLE_STRUCTURE_FIDELITY_DECISIONS.includes(
+      document.tableStructureFidelity,
+    ),
+    'FIDELITY_TABLE_STRUCTURE_DECISION_INVALID',
+  );
+  const semanticDecisions = [
+    document.variantSemanticsPreserved,
+    document.unitSemanticsPreserved,
+    document.minMaxRangeSemanticsPreserved,
+    document.footnoteSemanticsPreserved,
+  ];
+  assertCondition(
+    semanticDecisions.every((decision) =>
+      EXPECTED_SEMANTIC_PRESERVATION_DECISIONS.includes(decision)),
+    'FIDELITY_SEMANTIC_DECISION_INVALID',
+  );
+
+  assertExactKeys(
+    document.revisionPageChecked,
+    REVISION_PAGE_CHECKED_KEYS,
+    'FIDELITY_REVISION_PAGE_SCHEMA_DRIFT',
+  );
+  assertCondition(
+    EXPECTED_REVISION_PAGE_LOCATOR_TYPES.includes(
+      document.revisionPageChecked.locatorType,
+    ),
+    'FIDELITY_REVISION_PAGE_LOCATOR_INVALID',
+  );
+  assertBoundedString(
+    document.revisionPageChecked.locatorValue,
+    'FIDELITY_REVISION_PAGE_LOCATOR_INVALID',
+    256,
+  );
+  const revisionStatuses = [
+    document.revisionPageChecked.documentIdentityStatus,
+    document.revisionPageChecked.documentNumberStatus,
+    document.revisionPageChecked.revisionStatus,
+  ];
+  assertCondition(
+    revisionStatuses.every((status) =>
+      EXPECTED_REVISION_PAGE_STATUSES.includes(status)),
+    'FIDELITY_REVISION_PAGE_STATUS_INVALID',
+  );
+
+  assertCondition(
+    document.decisionReasonCodes.length
+      <= EXPECTED_FIDELITY_DECISION_REASON_CODES.length
+      && new Set(document.decisionReasonCodes).size
+        === document.decisionReasonCodes.length
+      && document.decisionReasonCodes.every((reasonCode) =>
+        EXPECTED_FIDELITY_DECISION_REASON_CODES.includes(reasonCode)),
+    'FIDELITY_DECISION_REASON_INVALID',
+  );
+  const noCandidateContent = document.decisionReasonCodes.includes(
+    'NO_CANDIDATE_CONTENT',
+  );
+  assertCondition(
+    !noCandidateContent
+      || document.candidateBearingPagesChecked.length === 0,
+    'FIDELITY_NO_CANDIDATE_REASON_CONTRADICTION',
+  );
+
+  const allRevisionStatusesMatch = revisionStatuses.every(
+    (status) => status === 'MATCH',
+  );
+  const hasNotPreservedSemantic = semanticDecisions.includes('NOT_PRESERVED');
+  const hasLimitationReason = document.decisionReasonCodes.includes(
+    'ACCEPTABLE_LIMITATION_IDENTIFIED',
+  );
+  const hasUnsafeReason = document.decisionReasonCodes.some((reasonCode) =>
+    reasonCode === 'UNSAFE_FIDELITY_IDENTIFIED'
+      || reasonCode === 'SOURCE_PAGE_UNAVAILABLE');
+  const sourcePageUnavailable =
+    document.revisionPageChecked.locatorType === 'UNAVAILABLE';
+  const sourcePageUnavailableReason = document.decisionReasonCodes.includes(
+    'SOURCE_PAGE_UNAVAILABLE',
+  );
+  assertCondition(
+    sourcePageUnavailable === sourcePageUnavailableReason
+      && (!sourcePageUnavailable
+        || revisionStatuses.every((status) => status === 'UNCONFIRMED')),
+    'FIDELITY_SOURCE_PAGE_AVAILABILITY_CONTRADICTION',
+  );
+
+  if (document.pageTextFidelity === 'EXACT') {
+    assertCondition(
+      allRevisionStatusesMatch
+        && !sourcePageUnavailable
+        && !hasNotPreservedSemantic
+        && document.tableStructureFidelity !== 'UNSAFE_FOR_CANDIDATE_REVIEW'
+        && document.decisionReasonCodes.includes('EXACT_FIDELITY_CONFIRMED')
+        && !hasLimitationReason
+        && !hasUnsafeReason,
+      'FIDELITY_EXACT_CONTRADICTION',
+    );
+  } else if (document.pageTextFidelity === 'ACCEPTABLE_WITH_LIMITATIONS') {
+    const hasLimitationSignal = hasLimitationReason
+      || hasNotPreservedSemantic
+      || document.tableStructureFidelity === 'ACCEPTABLE_WITH_LIMITATIONS';
+    assertCondition(
+      allRevisionStatusesMatch
+        && !sourcePageUnavailable
+        && document.eligiblePageNumbers.length > 0
+        && document.ineligiblePageNumbers.length > 0
+        && hasLimitationSignal
+        && document.tableStructureFidelity !== 'UNSAFE_FOR_CANDIDATE_REVIEW'
+        && !document.decisionReasonCodes.includes('EXACT_FIDELITY_CONFIRMED')
+        && !hasUnsafeReason,
+      'FIDELITY_ACCEPTABLE_CONTRADICTION',
+    );
+  } else {
+    const hasUnsafeSignal = hasUnsafeReason
+      || hasNotPreservedSemantic
+      || !allRevisionStatusesMatch
+      || document.tableStructureFidelity === 'UNSAFE_FOR_CANDIDATE_REVIEW';
+    assertCondition(
+      document.eligiblePageNumbers.length === 0
+        && isDeepStrictEqual(
+          document.ineligiblePageNumbers,
+          document.pagesChecked,
+        )
+        && hasUnsafeReason
+        && hasUnsafeSignal
+        && !document.decisionReasonCodes.includes('EXACT_FIDELITY_CONFIRMED')
+        && !hasLimitationReason,
+      'FIDELITY_UNSAFE_CONTRADICTION',
+    );
+  }
+
+  if (document.pageTextFidelity !== 'UNSAFE_FOR_CANDIDATE_REVIEW') {
+    assertCondition(
+      allRevisionStatusesMatch,
+      'FIDELITY_REVISION_STATUS_REQUIRES_UNSAFE_DECISION',
+    );
+    assertCondition(
+      document.candidateBearingPagesChecked.length > 0 || noCandidateContent,
+      'FIDELITY_ZERO_CANDIDATE_PAGES_REASON_REQUIRED',
+    );
+  }
+}
+
+function validateFidelityDecisions(
+  input,
+  documentsById,
+  pageNamespacesByDocumentId,
+) {
   validateSafeInputDescriptor(input, 'FIDELITY_INPUT_DESCRIPTOR_INVALID');
   const fidelity = input.value;
   assertExactKeys(fidelity, FIDELITY_DECISION_KEYS, 'FIDELITY_SCHEMA_DRIFT');
   assertCondition(
-    fidelity.schemaVersion === 'pr207-document-fidelity-decisions-v1'
+    fidelity.schemaVersion === 'pr207-document-fidelity-decisions-v2'
       && fidelity.boundary === 'NOT_PRODUCTION_EVIDENCE'
-      && fidelity.preparedBy === 'CODEX_MACHINE_TEMPLATE_NO_HUMAN_DECISIONS'
+      && fidelity.pageNumberNamespace === 'NORMALIZED_BUNDLE_PAGE_NUMBER'
+      && (
+        fidelity.preparedBy === 'CODEX_MACHINE_TEMPLATE_NO_HUMAN_DECISIONS'
+          || fidelity.preparedBy
+            === 'LOCAL_OPERATOR_STRUCTURED_HUMAN_DECISIONS_NO_IDENTITY'
+      )
       && fidelity.evaluatedPr === 207
       && fidelity.evaluatedHead === EXPECTED_PR207_HEAD
       && fidelity.documentDecisionFileSha256
@@ -885,10 +1189,22 @@ function validateFidelityDecisions(input, documentsById) {
       && fidelity.documentTupleFingerprintSha256
         === EXPECTED_DOCUMENT_TUPLE_FINGERPRINT_SHA256
       && fidelity.documentCount === 8
-      && fidelity.humanFieldsAreBlank === true
+      && typeof fidelity.humanFieldsAreBlank === 'boolean'
       && isDeepStrictEqual(
         fidelity.allowedPageTextFidelityDecisions,
         EXPECTED_FIDELITY_DECISIONS,
+      )
+      && isDeepStrictEqual(
+        fidelity.allowedTableStructureFidelityDecisions,
+        EXPECTED_TABLE_STRUCTURE_FIDELITY_DECISIONS,
+      )
+      && isDeepStrictEqual(
+        fidelity.allowedSemanticPreservationDecisions,
+        EXPECTED_SEMANTIC_PRESERVATION_DECISIONS,
+      )
+      && isDeepStrictEqual(
+        fidelity.allowedDecisionReasonCodes,
+        EXPECTED_FIDELITY_DECISION_REASON_CODES,
       )
       && Array.isArray(fidelity.documents)
       && fidelity.documents.length === 8,
@@ -898,6 +1214,14 @@ function validateFidelityDecisions(input, documentsById) {
 
   const seenIds = new Set();
   let blankRowCount = 0;
+  const decisionDistribution = {
+    exactRowCount: 0,
+    acceptableWithLimitationsRowCount: 0,
+    unsafeForCandidateReviewRowCount: 0,
+  };
+  let candidateBearingPageCount = 0;
+  let eligiblePageCount = 0;
+  let ineligiblePageCount = 0;
   for (const document of fidelity.documents) {
     assertExactKeys(document, FIDELITY_ROW_KEYS, 'FIDELITY_ROW_SCHEMA_DRIFT');
     assertCondition(
@@ -915,15 +1239,53 @@ function validateFidelityDecisions(input, documentsById) {
         && sourceDecision.normalizedContentSha256 === document.normalizedContentSha256,
       'FIDELITY_DOCUMENT_BINDING_DRIFT',
     );
+    const normalizedPageNumbers = pageNamespacesByDocumentId.get(
+      document.documentId,
+    );
+    assertCondition(
+      Array.isArray(normalizedPageNumbers),
+      'FIDELITY_PAGE_NAMESPACE_BINDING_DRIFT',
+    );
     seenIds.add(document.documentId);
-    if (fidelityRowIsBlank(document)) blankRowCount += 1;
+    if (fidelityRowIsBlank(document)) {
+      blankRowCount += 1;
+      continue;
+    }
+    validateCompletedFidelityRow(document, normalizedPageNumbers);
+    candidateBearingPageCount += document.candidateBearingPagesChecked.length;
+    eligiblePageCount += document.eligiblePageNumbers.length;
+    ineligiblePageCount += document.ineligiblePageNumbers.length;
+    if (document.pageTextFidelity === 'EXACT') {
+      decisionDistribution.exactRowCount += 1;
+    } else if (document.pageTextFidelity === 'ACCEPTABLE_WITH_LIMITATIONS') {
+      decisionDistribution.acceptableWithLimitationsRowCount += 1;
+    } else {
+      decisionDistribution.unsafeForCandidateReviewRowCount += 1;
+    }
   }
   assertCondition(seenIds.size === documentsById.size, 'FIDELITY_DOCUMENT_COVERAGE_DRIFT');
+  const completedRowCount = fidelity.documents.length - blankRowCount;
   assertCondition(
-    blankRowCount === fidelity.documents.length,
-    'FIDELITY_COMPLETION_CONTRACT_UNSUPPORTED',
+    fidelity.humanFieldsAreBlank === (completedRowCount === 0),
+    'FIDELITY_HUMAN_FIELDS_BLANK_CONTRADICTION',
   );
-  return { fidelity, blankRowCount };
+  assertCondition(
+    fidelity.preparedBy === (
+      completedRowCount === 0
+        ? 'CODEX_MACHINE_TEMPLATE_NO_HUMAN_DECISIONS'
+        : 'LOCAL_OPERATOR_STRUCTURED_HUMAN_DECISIONS_NO_IDENTITY'
+    ),
+    'FIDELITY_PREPARED_BY_CONTRADICTION',
+  );
+  return {
+    blankRowCount,
+    candidateBearingPageCount,
+    completedRowCount,
+    decisionDistribution,
+    eligiblePageCount,
+    fidelity,
+    ineligiblePageCount,
+  };
 }
 
 function validateCandidateDecisions(input) {
@@ -981,9 +1343,18 @@ export function validatePr207HumanEvidenceInputs({
     manifest,
     documentsById,
   );
-  const { fidelity, blankRowCount } = validateFidelityDecisions(
+  const {
+    blankRowCount,
+    candidateBearingPageCount,
+    completedRowCount,
+    decisionDistribution,
+    eligiblePageCount,
+    fidelity,
+    ineligiblePageCount,
+  } = validateFidelityDecisions(
     fidelityDecisions,
     documentsById,
+    normalized.pageNamespacesByDocumentId,
   );
   const candidate = validateCandidateDecisions(candidateDecisions);
   const rightsRetentionDecisionRecord = rightsRetentionPolicyComment === undefined
@@ -992,15 +1363,40 @@ export function validatePr207HumanEvidenceInputs({
       comment: rightsRetentionPolicyComment,
       asOf,
     });
+  const humanFidelityEvidence = completedRowCount === 0
+    ? 'INCOMPLETE_0_OF_8'
+    : completedRowCount === fidelity.documents.length
+      ? 'COMPLETE_8_OF_8'
+      : `PARTIAL_${completedRowCount}_OF_8`;
+  const fidelityDecisionCompletion = completedRowCount === 0
+    ? 'BLANK_0_OF_8'
+    : completedRowCount === fidelity.documents.length
+      ? 'COMPLETE_8_OF_8'
+      : `PARTIAL_${completedRowCount}_OF_8`;
+  const rightsRetentionDecisionSummary = rightsRetentionDecisionRecord === null
+    ? null
+    : {
+      activeAtEvaluation: rightsRetentionDecisionRecord.activeAtEvaluation,
+      mergeApprovedByThisComment:
+        rightsRetentionDecisionRecord.mergeApprovedByThisComment,
+      productionApproved: rightsRetentionDecisionRecord.productionApproved,
+      rawBodyRetained: rightsRetentionDecisionRecord.rawBodyRetained,
+      realDocumentAllowedClaimsCreated:
+        rightsRetentionDecisionRecord.realDocumentAllowedClaimsCreated,
+      realDocumentVerifiedClaimsCreated:
+        rightsRetentionDecisionRecord.realDocumentVerifiedClaimsCreated,
+      validationStatus: rightsRetentionDecisionRecord.validationStatus,
+    };
 
   return {
-    schemaVersion: 'pr207-human-evidence-input-validation-v2',
+    schemaVersion: 'pr207-human-evidence-input-validation-v3',
     boundary: 'NOT_PRODUCTION_EVIDENCE',
     validationStatus: 'STRUCTURALLY_VALID',
     evidenceStatus: 'INCOMPLETE',
     operatorOutcome: 'AWAITING_HUMAN_INPUT',
     evaluatedPr: 207,
     evaluatedHead: EXPECTED_PR207_HEAD,
+    evaluatedAsOf: asOf ?? null,
     hashes: {
       intakeManifestSha256: intakeManifest.sha256,
       documentDecisionFileSha256: documentDecisions.sha256,
@@ -1020,7 +1416,18 @@ export function validatePr207HumanEvidenceInputs({
       documentDecisionRowCount: decision.documents.length,
       fidelityDecisionRowCount: fidelity.documents.length,
       blankFidelityDecisionRowCount: blankRowCount,
-      completedFidelityDecisionRowCount: fidelity.documents.length - blankRowCount,
+      partialFidelityDecisionRowCount: 0,
+      completedFidelityDecisionRowCount: completedRowCount,
+      partialFidelityDecisionFileCount:
+        completedRowCount > 0 && completedRowCount < fidelity.documents.length
+          ? 1
+          : 0,
+      completeFidelityDecisionFileCount:
+        completedRowCount === fidelity.documents.length ? 1 : 0,
+      fidelityDecisionDistribution: decisionDistribution,
+      fidelityCandidateBearingPageCount: candidateBearingPageCount,
+      fidelityEligiblePageCount: eligiblePageCount,
+      fidelityIneligiblePageCount: ineligiblePageCount,
       candidateDecisionRowCount: candidate.candidates.length,
       approvedCandidateDecisionRowCount: 0,
       intakeManifestByteCount: intakeManifest.byteLength,
@@ -1037,9 +1444,9 @@ export function validatePr207HumanEvidenceInputs({
     statuses: {
       localInputSafety: 'PASS',
       structuralAndLineageValidation: 'PASS',
-      humanFidelityEvidence: 'INCOMPLETE_0_OF_8',
-      fidelityCompletionContract:
-        'UNSUPPORTED_PENDING_EXPLICIT_PAGE_NAMESPACE_AND_HUMAN_CONTRACT',
+      humanFidelityEvidence,
+      fidelityDecisionCompletion,
+      fidelityCompletionContract: 'SUPPORTED_FAIL_CLOSED_V2',
       rightsAndRetentionAuthority:
         rightsRetentionDecisionRecord?.validationStatus
           ?? 'NOT_VALIDATED_REQUIRES_CANONICAL_GITHUB_DECISION',
@@ -1051,7 +1458,7 @@ export function validatePr207HumanEvidenceInputs({
       mergeApproval: 'NOT_GRANTED',
       productionApproval: 'NOT_GRANTED',
     },
-    rightsRetentionDecisionRecord,
+    rightsRetentionDecisionRecord: rightsRetentionDecisionSummary,
     nonClaims: [
       'Structural validation does not create or infer a human fidelity decision.',
       'An empty candidate set does not satisfy the PR207 real-evidence pilot threshold.',

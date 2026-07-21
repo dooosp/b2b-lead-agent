@@ -29,6 +29,27 @@ import {
 } from '../scripts/lib/pr207-human-evidence-validator.mjs';
 
 const SAFE_INPUT_STATUS = 'SAFE_IGNORED_UNTRACKED_REGULAR_0600_SINGLE_LINK';
+const PAGE_TEXT_FIDELITY_DECISIONS = [
+  'EXACT',
+  'ACCEPTABLE_WITH_LIMITATIONS',
+  'UNSAFE_FOR_CANDIDATE_REVIEW',
+];
+const TABLE_STRUCTURE_FIDELITY_DECISIONS = [
+  ...PAGE_TEXT_FIDELITY_DECISIONS,
+  'NOT_APPLICABLE',
+];
+const SEMANTIC_PRESERVATION_DECISIONS = [
+  'PRESERVED',
+  'NOT_PRESERVED',
+  'NOT_APPLICABLE',
+];
+const FIDELITY_DECISION_REASON_CODES = [
+  'EXACT_FIDELITY_CONFIRMED',
+  'ACCEPTABLE_LIMITATION_IDENTIFIED',
+  'UNSAFE_FIDELITY_IDENTIFIED',
+  'SOURCE_PAGE_UNAVAILABLE',
+  'NO_CANDIDATE_CONTENT',
+];
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -159,7 +180,10 @@ function syntheticInputs() {
         redistributionStatus: 'METADATA_AND_BOUNDED_EXCERPTS_ONLY',
       },
       revision: { revisionId: row.revision },
-      pages: [{ pageNumber: 1 }],
+      pages: [1, 2, 3].map((pageNumber) => ({
+        pageNumber,
+        text: `protected source page text ${index + 1}:${pageNumber}`,
+      })),
     };
     return {
       relativePath: `evidence-inbox/document-${index + 1}.json`,
@@ -230,9 +254,10 @@ function syntheticInputs() {
     nonClaims: ['Synthetic fixture; no approval is created by this test.'],
   };
   const fidelityDecisions = {
-    schemaVersion: 'pr207-document-fidelity-decisions-v1',
+    schemaVersion: 'pr207-document-fidelity-decisions-v2',
     boundary: 'NOT_PRODUCTION_EVIDENCE',
     preparedBy: 'CODEX_MACHINE_TEMPLATE_NO_HUMAN_DECISIONS',
+    pageNumberNamespace: 'NORMALIZED_BUNDLE_PAGE_NUMBER',
     evaluatedPr: 207,
     evaluatedHead: EXPECTED_PR207_HEAD,
     documentDecisionFileSha256: EXPECTED_DOCUMENT_DECISION_FILE_SHA256,
@@ -240,11 +265,12 @@ function syntheticInputs() {
     documentTupleFingerprintSha256: EXPECTED_DOCUMENT_TUPLE_FINGERPRINT_SHA256,
     documentCount: 8,
     humanFieldsAreBlank: true,
-    allowedPageTextFidelityDecisions: [
-      'EXACT',
-      'ACCEPTABLE_WITH_LIMITATIONS',
-      'UNSAFE_FOR_CANDIDATE_REVIEW',
-    ],
+    allowedPageTextFidelityDecisions: [...PAGE_TEXT_FIDELITY_DECISIONS],
+    allowedTableStructureFidelityDecisions:
+      [...TABLE_STRUCTURE_FIDELITY_DECISIONS],
+    allowedSemanticPreservationDecisions:
+      [...SEMANTIC_PRESERVATION_DECISIONS],
+    allowedDecisionReasonCodes: [...FIDELITY_DECISION_REASON_CODES],
     documents: rows.map((row) => ({
       documentId: row.documentId,
       fileSha256: row.fileSha256,
@@ -305,6 +331,78 @@ function syntheticInputs() {
     fidelityDecisions: descriptor(fidelityDecisions, sha256('fidelity-fixture')),
     candidateDecisions: descriptor(candidateDecisions, sha256('candidate-fixture')),
   };
+}
+
+function completeFidelityRow(inputs, index, decision = 'EXACT', overrides = {}) {
+  const row = inputs.fidelityDecisions.value.documents[index];
+  const revisionPageChecked = {
+    locatorType: 'DOCUMENT_PAGE',
+    locatorValue: `normalized-page-${index + 1}`,
+    documentIdentityStatus: 'MATCH',
+    documentNumberStatus: 'MATCH',
+    revisionStatus: 'MATCH',
+  };
+  const completed = {
+    pagesChecked: [1, 2, 3],
+    candidateBearingPagesChecked: [1, 2],
+    revisionPageChecked,
+    pageTextFidelity: decision,
+    tableStructureFidelity: 'EXACT',
+    variantSemanticsPreserved: 'PRESERVED',
+    unitSemanticsPreserved: 'PRESERVED',
+    minMaxRangeSemanticsPreserved: 'PRESERVED',
+    footnoteSemanticsPreserved: 'PRESERVED',
+    eligiblePageNumbers: [1, 2],
+    ineligiblePageNumbers: [3],
+    decisionReasonCodes: ['EXACT_FIDELITY_CONFIRMED'],
+  };
+
+  if (decision === 'ACCEPTABLE_WITH_LIMITATIONS') {
+    Object.assign(completed, {
+      tableStructureFidelity: 'ACCEPTABLE_WITH_LIMITATIONS',
+      unitSemanticsPreserved: 'NOT_PRESERVED',
+      eligiblePageNumbers: [1],
+      ineligiblePageNumbers: [2, 3],
+      decisionReasonCodes: ['ACCEPTABLE_LIMITATION_IDENTIFIED'],
+    });
+  } else if (decision === 'UNSAFE_FOR_CANDIDATE_REVIEW') {
+    Object.assign(completed, {
+      tableStructureFidelity: 'UNSAFE_FOR_CANDIDATE_REVIEW',
+      variantSemanticsPreserved: 'NOT_PRESERVED',
+      eligiblePageNumbers: [],
+      ineligiblePageNumbers: [1, 2, 3],
+      decisionReasonCodes: ['UNSAFE_FIDELITY_IDENTIFIED'],
+    });
+    revisionPageChecked.revisionStatus = 'MISMATCH';
+  }
+
+  Object.assign(completed, overrides);
+  if (overrides.revisionPageChecked) {
+    completed.revisionPageChecked = {
+      ...revisionPageChecked,
+      ...overrides.revisionPageChecked,
+    };
+  }
+  Object.assign(row, completed);
+  inputs.fidelityDecisions.value.humanFieldsAreBlank = false;
+  inputs.fidelityDecisions.value.preparedBy =
+    'LOCAL_OPERATOR_STRUCTURED_HUMAN_DECISIONS_NO_IDENTITY';
+  return row;
+}
+
+function completeAllFidelityRows(inputs) {
+  const decisions = [
+    'EXACT',
+    'ACCEPTABLE_WITH_LIMITATIONS',
+    'UNSAFE_FOR_CANDIDATE_REVIEW',
+    'EXACT',
+    'ACCEPTABLE_WITH_LIMITATIONS',
+    'UNSAFE_FOR_CANDIDATE_REVIEW',
+    'EXACT',
+    'EXACT',
+  ];
+  decisions.forEach((decision, index) =>
+    completeFidelityRow(inputs, index, decision));
 }
 
 test('accepts a bounded active rights/retention policy without retaining its body', () => {
@@ -490,15 +588,33 @@ test('rejects incomplete stop conditions and an expired policy', async (t) => {
 
 test('accepts the exact blank-input contract as structurally valid but incomplete', () => {
   const report = validatePr207HumanEvidenceInputs(syntheticInputs());
-  assert.equal(report.schemaVersion, 'pr207-human-evidence-input-validation-v2');
+  assert.equal(report.schemaVersion, 'pr207-human-evidence-input-validation-v3');
   assert.equal(report.validationStatus, 'STRUCTURALLY_VALID');
   assert.equal(report.evidenceStatus, 'INCOMPLETE');
   assert.equal(report.operatorOutcome, 'AWAITING_HUMAN_INPUT');
+  assert.equal(report.evaluatedAsOf, null);
   assert.equal(report.counts.safeIgnoredInputFileCount, 12);
   assert.equal(report.counts.fidelityDecisionRowCount, 8);
   assert.equal(report.counts.blankFidelityDecisionRowCount, 8);
+  assert.equal(report.counts.partialFidelityDecisionRowCount, 0);
   assert.equal(report.counts.completedFidelityDecisionRowCount, 0);
+  assert.equal(report.counts.partialFidelityDecisionFileCount, 0);
+  assert.equal(report.counts.completeFidelityDecisionFileCount, 0);
+  assert.deepEqual(report.counts.fidelityDecisionDistribution, {
+    exactRowCount: 0,
+    acceptableWithLimitationsRowCount: 0,
+    unsafeForCandidateReviewRowCount: 0,
+  });
+  assert.equal(report.counts.fidelityCandidateBearingPageCount, 0);
+  assert.equal(report.counts.fidelityEligiblePageCount, 0);
+  assert.equal(report.counts.fidelityIneligiblePageCount, 0);
   assert.equal(report.counts.candidateDecisionRowCount, 0);
+  assert.equal(report.statuses.humanFidelityEvidence, 'INCOMPLETE_0_OF_8');
+  assert.equal(report.statuses.fidelityDecisionCompletion, 'BLANK_0_OF_8');
+  assert.equal(
+    report.statuses.fidelityCompletionContract,
+    'SUPPORTED_FAIL_CLOSED_V2',
+  );
   assert.equal(report.statuses.mergeApproval, 'NOT_GRANTED');
   assert.equal(
     report.statuses.rightsAndRetentionAuthority,
@@ -537,13 +653,495 @@ test('rejects an actual normalized input that drifts from its manifest hash', ()
   );
 });
 
-test('rejects nonblank fidelity values until a human completion contract exists', () => {
+test('rejects a reordered normalized bundle page namespace', () => {
   const inputs = syntheticInputs();
-  inputs.fidelityDecisions.value.documents[0].pagesChecked = [1];
+  const pages = inputs.normalizedDocuments[0].input.value.pages;
+  inputs.normalizedDocuments[0].input.value.pages = [pages[1], pages[0], pages[2]];
   assert.throws(
     () => validatePr207HumanEvidenceInputs(inputs),
-    { code: 'FIDELITY_COMPLETION_CONTRACT_UNSUPPORTED' },
+    { code: 'NORMALIZED_INPUT_PAGE_NAMESPACE_INVALID' },
   );
+});
+
+test('accepts one complete row as a partial-file fidelity decision', () => {
+  const inputs = syntheticInputs();
+  completeFidelityRow(inputs, 0);
+  const report = validatePr207HumanEvidenceInputs(inputs);
+  assert.equal(report.evidenceStatus, 'INCOMPLETE');
+  assert.equal(report.operatorOutcome, 'AWAITING_HUMAN_INPUT');
+  assert.equal(report.counts.blankFidelityDecisionRowCount, 7);
+  assert.equal(report.counts.partialFidelityDecisionRowCount, 0);
+  assert.equal(report.counts.completedFidelityDecisionRowCount, 1);
+  assert.equal(report.counts.partialFidelityDecisionFileCount, 1);
+  assert.equal(report.counts.completeFidelityDecisionFileCount, 0);
+  assert.deepEqual(report.counts.fidelityDecisionDistribution, {
+    exactRowCount: 1,
+    acceptableWithLimitationsRowCount: 0,
+    unsafeForCandidateReviewRowCount: 0,
+  });
+  assert.equal(report.counts.fidelityCandidateBearingPageCount, 2);
+  assert.equal(report.counts.fidelityEligiblePageCount, 2);
+  assert.equal(report.counts.fidelityIneligiblePageCount, 1);
+  assert.equal(report.statuses.humanFidelityEvidence, 'PARTIAL_1_OF_8');
+  assert.equal(report.statuses.fidelityDecisionCompletion, 'PARTIAL_1_OF_8');
+  assert.equal(report.statuses.mergeApproval, 'NOT_GRANTED');
+  assert.equal(report.statuses.productionApproval, 'NOT_GRANTED');
+});
+
+test('accepts eight complete rows with dynamic fidelity and page counts', () => {
+  const inputs = syntheticInputs();
+  completeAllFidelityRows(inputs);
+  const report = validatePr207HumanEvidenceInputs(inputs);
+  assert.equal(report.evidenceStatus, 'INCOMPLETE');
+  assert.equal(report.operatorOutcome, 'AWAITING_HUMAN_INPUT');
+  assert.equal(report.counts.blankFidelityDecisionRowCount, 0);
+  assert.equal(report.counts.partialFidelityDecisionRowCount, 0);
+  assert.equal(report.counts.completedFidelityDecisionRowCount, 8);
+  assert.equal(report.counts.partialFidelityDecisionFileCount, 0);
+  assert.equal(report.counts.completeFidelityDecisionFileCount, 1);
+  assert.deepEqual(report.counts.fidelityDecisionDistribution, {
+    exactRowCount: 4,
+    acceptableWithLimitationsRowCount: 2,
+    unsafeForCandidateReviewRowCount: 2,
+  });
+  assert.equal(report.counts.fidelityCandidateBearingPageCount, 16);
+  assert.equal(report.counts.fidelityEligiblePageCount, 10);
+  assert.equal(report.counts.fidelityIneligiblePageCount, 14);
+  assert.equal(report.statuses.humanFidelityEvidence, 'COMPLETE_8_OF_8');
+  assert.equal(report.statuses.fidelityDecisionCompletion, 'COMPLETE_8_OF_8');
+  assert.equal(report.statuses.candidatePopulation, 'EMPTY');
+  assert.equal(report.statuses.mergeApproval, 'NOT_GRANTED');
+  assert.equal(report.statuses.productionApproval, 'NOT_GRANTED');
+});
+
+test('accepts explicit no-candidate-content and unsafe unavailable-source decisions', () => {
+  const inputs = syntheticInputs();
+  completeFidelityRow(inputs, 0, 'EXACT', {
+    candidateBearingPagesChecked: [],
+    tableStructureFidelity: 'NOT_APPLICABLE',
+    variantSemanticsPreserved: 'NOT_APPLICABLE',
+    unitSemanticsPreserved: 'NOT_APPLICABLE',
+    minMaxRangeSemanticsPreserved: 'NOT_APPLICABLE',
+    footnoteSemanticsPreserved: 'NOT_APPLICABLE',
+    eligiblePageNumbers: [],
+    ineligiblePageNumbers: [1, 2, 3],
+    decisionReasonCodes: [
+      'EXACT_FIDELITY_CONFIRMED',
+      'NO_CANDIDATE_CONTENT',
+    ],
+  });
+  completeFidelityRow(inputs, 1, 'UNSAFE_FOR_CANDIDATE_REVIEW', {
+    candidateBearingPagesChecked: [],
+    revisionPageChecked: {
+      locatorType: 'UNAVAILABLE',
+      locatorValue: 'source-page-unavailable',
+      documentIdentityStatus: 'UNCONFIRMED',
+      documentNumberStatus: 'UNCONFIRMED',
+      revisionStatus: 'UNCONFIRMED',
+    },
+    tableStructureFidelity: 'NOT_APPLICABLE',
+    variantSemanticsPreserved: 'NOT_APPLICABLE',
+    unitSemanticsPreserved: 'NOT_APPLICABLE',
+    minMaxRangeSemanticsPreserved: 'NOT_APPLICABLE',
+    footnoteSemanticsPreserved: 'NOT_APPLICABLE',
+    decisionReasonCodes: ['SOURCE_PAGE_UNAVAILABLE'],
+  });
+  const report = validatePr207HumanEvidenceInputs(inputs);
+  assert.equal(report.counts.completedFidelityDecisionRowCount, 2);
+  assert.equal(report.counts.fidelityCandidateBearingPageCount, 0);
+  assert.equal(report.counts.fidelityEligiblePageCount, 0);
+  assert.equal(report.counts.fidelityIneligiblePageCount, 6);
+});
+
+test('requires an explicit no-candidate-content reason for a non-unsafe empty page set', () => {
+  const inputs = syntheticInputs();
+  completeFidelityRow(inputs, 0, 'EXACT', {
+    candidateBearingPagesChecked: [],
+    eligiblePageNumbers: [],
+    ineligiblePageNumbers: [1, 2, 3],
+    decisionReasonCodes: ['EXACT_FIDELITY_CONFIRMED'],
+  });
+  assert.throws(
+    () => validatePr207HumanEvidenceInputs(inputs),
+    { code: 'FIDELITY_ZERO_CANDIDATE_PAGES_REASON_REQUIRED' },
+  );
+});
+
+test('rejects v1 and top-level fidelity contract drift', async (t) => {
+  await t.test('v1 schema', () => {
+    const inputs = syntheticInputs();
+    inputs.fidelityDecisions.value.schemaVersion =
+      'pr207-document-fidelity-decisions-v1';
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_CONTRACT_DRIFT' },
+    );
+  });
+
+  await t.test('page number namespace', () => {
+    const inputs = syntheticInputs();
+    inputs.fidelityDecisions.value.pageNumberNamespace = 'PDF_PAGE_NUMBER';
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_CONTRACT_DRIFT' },
+    );
+  });
+
+  await t.test('allowlist widening', () => {
+    const inputs = syntheticInputs();
+    inputs.fidelityDecisions.value.allowedDecisionReasonCodes.push(
+      'FREE_FORM_REASON',
+    );
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_CONTRACT_DRIFT' },
+    );
+  });
+});
+
+test('rejects a partially filled fidelity row', () => {
+  const inputs = syntheticInputs();
+  inputs.fidelityDecisions.value.documents[0].pagesChecked = [1, 2, 3];
+  inputs.fidelityDecisions.value.humanFieldsAreBlank = false;
+  inputs.fidelityDecisions.value.preparedBy =
+    'LOCAL_OPERATOR_STRUCTURED_HUMAN_DECISIONS_NO_IDENTITY';
+  assert.throws(
+    () => validatePr207HumanEvidenceInputs(inputs),
+    { code: 'FIDELITY_ROW_PARTIAL' },
+  );
+});
+
+test('rejects page namespace drift, duplicates, and unsorted page arrays', async (t) => {
+  await t.test('pages checked do not equal normalized bundle namespace', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'EXACT', { pagesChecked: [1, 2] });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_PAGES_CHECKED_DRIFT' },
+    );
+  });
+
+  await t.test('duplicate candidate-bearing page', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'EXACT', {
+      candidateBearingPagesChecked: [1, 1],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_PAGE_NAMESPACE_INVALID' },
+    );
+  });
+
+  await t.test('unsorted eligible pages', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'EXACT', {
+      eligiblePageNumbers: [2, 1],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_PAGE_NAMESPACE_INVALID' },
+    );
+  });
+
+  await t.test('page outside normalized namespace', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'EXACT', {
+      candidateBearingPagesChecked: [1, 4],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_PAGE_NAMESPACE_DRIFT' },
+    );
+  });
+});
+
+test('rejects eligibility partition and candidate-bearing contradictions', async (t) => {
+  await t.test('eligible and ineligible overlap', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'EXACT', {
+      eligiblePageNumbers: [1, 2],
+      ineligiblePageNumbers: [2, 3],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_ELIGIBILITY_PARTITION_INVALID' },
+    );
+  });
+
+  await t.test('partition does not cover every page', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'EXACT', {
+      eligiblePageNumbers: [1],
+      ineligiblePageNumbers: [3],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_ELIGIBILITY_PARTITION_INVALID' },
+    );
+  });
+
+  await t.test('eligible page is not candidate-bearing', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'EXACT', {
+      candidateBearingPagesChecked: [1],
+      eligiblePageNumbers: [1, 2],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_ELIGIBLE_PAGE_NOT_CANDIDATE_BEARING' },
+    );
+  });
+});
+
+test('enforces exact revision-page keys, values, and status constraints', async (t) => {
+  await t.test('revision object has an extra key', () => {
+    const inputs = syntheticInputs();
+    const row = completeFidelityRow(inputs, 0);
+    row.revisionPageChecked.pageNumber = 1;
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_REVISION_PAGE_SCHEMA_DRIFT' },
+    );
+  });
+
+  await t.test('invalid locator type', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'EXACT', {
+      revisionPageChecked: { locatorType: 'URL' },
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_REVISION_PAGE_LOCATOR_INVALID' },
+    );
+  });
+
+  await t.test('EXACT cannot use mismatch', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'EXACT', {
+      revisionPageChecked: { documentIdentityStatus: 'MISMATCH' },
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_EXACT_CONTRADICTION' },
+    );
+  });
+
+  await t.test('ACCEPTABLE cannot use unconfirmed', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'ACCEPTABLE_WITH_LIMITATIONS', {
+      revisionPageChecked: { documentNumberStatus: 'UNCONFIRMED' },
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_ACCEPTABLE_CONTRADICTION' },
+    );
+  });
+
+  await t.test('unavailable locator cannot claim matching revision metadata', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'UNSAFE_FOR_CANDIDATE_REVIEW', {
+      revisionPageChecked: {
+        locatorType: 'UNAVAILABLE',
+        locatorValue: 'source-page-unavailable',
+        documentIdentityStatus: 'MATCH',
+        documentNumberStatus: 'MATCH',
+        revisionStatus: 'MATCH',
+      },
+      decisionReasonCodes: ['SOURCE_PAGE_UNAVAILABLE'],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_SOURCE_PAGE_AVAILABILITY_CONTRADICTION' },
+    );
+  });
+
+  await t.test('source-unavailable reason requires an unavailable locator', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'UNSAFE_FOR_CANDIDATE_REVIEW', {
+      decisionReasonCodes: ['SOURCE_PAGE_UNAVAILABLE'],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_SOURCE_PAGE_AVAILABILITY_CONTRADICTION' },
+    );
+  });
+});
+
+test('rejects EXACT, ACCEPTABLE, and UNSAFE fidelity contradictions', async (t) => {
+  await t.test('EXACT with a not-preserved semantic', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'EXACT', {
+      unitSemanticsPreserved: 'NOT_PRESERVED',
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_EXACT_CONTRADICTION' },
+    );
+  });
+
+  await t.test('EXACT with unsafe table structure', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'EXACT', {
+      tableStructureFidelity: 'UNSAFE_FOR_CANDIDATE_REVIEW',
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_EXACT_CONTRADICTION' },
+    );
+  });
+
+  await t.test('ACCEPTABLE without eligible pages', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'ACCEPTABLE_WITH_LIMITATIONS', {
+      eligiblePageNumbers: [],
+      ineligiblePageNumbers: [1, 2, 3],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_ACCEPTABLE_CONTRADICTION' },
+    );
+  });
+
+  await t.test('ACCEPTABLE without ineligible pages', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'ACCEPTABLE_WITH_LIMITATIONS', {
+      candidateBearingPagesChecked: [1, 2, 3],
+      eligiblePageNumbers: [1, 2, 3],
+      ineligiblePageNumbers: [],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_ACCEPTABLE_CONTRADICTION' },
+    );
+  });
+
+  await t.test('ACCEPTABLE without a limitation signal', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'ACCEPTABLE_WITH_LIMITATIONS', {
+      tableStructureFidelity: 'EXACT',
+      unitSemanticsPreserved: 'PRESERVED',
+      decisionReasonCodes: ['EXACT_FIDELITY_CONFIRMED'],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_ACCEPTABLE_CONTRADICTION' },
+    );
+  });
+
+  await t.test('UNSAFE with an eligible page', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'UNSAFE_FOR_CANDIDATE_REVIEW', {
+      eligiblePageNumbers: [1],
+      ineligiblePageNumbers: [2, 3],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_UNSAFE_CONTRADICTION' },
+    );
+  });
+
+  await t.test('UNSAFE without an unsafe signal', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'UNSAFE_FOR_CANDIDATE_REVIEW', {
+      revisionPageChecked: {
+        documentIdentityStatus: 'MATCH',
+        documentNumberStatus: 'MATCH',
+        revisionStatus: 'MATCH',
+      },
+      tableStructureFidelity: 'EXACT',
+      variantSemanticsPreserved: 'PRESERVED',
+      decisionReasonCodes: ['EXACT_FIDELITY_CONFIRMED'],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_UNSAFE_CONTRADICTION' },
+    );
+  });
+
+  await t.test('UNSAFE requires an explicit unsafe reason code', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0, 'UNSAFE_FOR_CANDIDATE_REVIEW', {
+      candidateBearingPagesChecked: [],
+      eligiblePageNumbers: [],
+      ineligiblePageNumbers: [1, 2, 3],
+      decisionReasonCodes: ['NO_CANDIDATE_CONTENT'],
+    });
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_UNSAFE_CONTRADICTION' },
+    );
+  });
+});
+
+test('rejects unknown and free-form fidelity reason values', () => {
+  const inputs = syntheticInputs();
+  completeFidelityRow(inputs, 0, 'EXACT', {
+    decisionReasonCodes: ['human free-form explanation'],
+  });
+  assert.throws(
+    () => validatePr207HumanEvidenceInputs(inputs),
+    { code: 'FIDELITY_DECISION_REASON_INVALID' },
+  );
+});
+
+test('rejects humanFieldsAreBlank and preparedBy contradictions', async (t) => {
+  await t.test('completed row claims human fields are blank', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0);
+    inputs.fidelityDecisions.value.humanFieldsAreBlank = true;
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_HUMAN_FIELDS_BLANK_CONTRADICTION' },
+    );
+  });
+
+  await t.test('completed row uses machine template attribution', () => {
+    const inputs = syntheticInputs();
+    completeFidelityRow(inputs, 0);
+    inputs.fidelityDecisions.value.preparedBy =
+      'CODEX_MACHINE_TEMPLATE_NO_HUMAN_DECISIONS';
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_PREPARED_BY_CONTRADICTION' },
+    );
+  });
+
+  await t.test('blank file uses operator attribution', () => {
+    const inputs = syntheticInputs();
+    inputs.fidelityDecisions.value.preparedBy =
+      'LOCAL_OPERATOR_STRUCTURED_HUMAN_DECISIONS_NO_IDENTITY';
+    assert.throws(
+      () => validatePr207HumanEvidenceInputs(inputs),
+      { code: 'FIDELITY_PREPARED_BY_CONTRADICTION' },
+    );
+  });
+});
+
+test('aggregate validation report excludes protected decision content', () => {
+  const inputs = syntheticInputs();
+  const protectedLocator =
+    'https://reviewer-person@publisher.example.invalid/document/secret-revision-page';
+  const row = completeFidelityRow(inputs, 0, 'EXACT', {
+    revisionPageChecked: {
+      locatorType: 'SECTION',
+      locatorValue: protectedLocator,
+    },
+  });
+  const report = validatePr207HumanEvidenceInputs(inputs);
+  const serialized = JSON.stringify(report);
+  assert.doesNotMatch(serialized, /protected source page text/);
+  assert.doesNotMatch(serialized, /example\.invalid/);
+  assert.doesNotMatch(serialized, /publisher-/);
+  assert.doesNotMatch(serialized, /title-/);
+  assert.doesNotMatch(serialized, new RegExp(row.documentId));
+  assert.doesNotMatch(serialized, new RegExp(protectedLocator));
+  assert.doesNotMatch(serialized, /normalized-page-/);
+  assert.doesNotMatch(serialized, /reviewer-person/);
+  assert.doesNotMatch(
+    serialized,
+    /EXACT_FIDELITY_CONFIRMED|ACCEPTABLE_LIMITATION_IDENTIFIED|SOURCE_PAGE_UNAVAILABLE/,
+  );
+  assert.equal(report.rightsRetentionDecisionRecord, null);
 });
 
 test('rejects nonempty candidate v1 inputs until a candidate contract exists', () => {

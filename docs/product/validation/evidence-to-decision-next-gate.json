@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "evidence-to-decision-next-gate-v8",
-  "asOf": "2026-07-21T08:54:24.000Z",
+  "schemaVersion": "evidence-to-decision-next-gate-v9",
+  "asOf": "2026-07-21T10:05:34.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
   "artifactStorage": {
@@ -106,7 +106,31 @@
     "retentionMethodOwnerInputResolved": true,
     "rightsRetentionPolicyStatus": "ACTIVE_APPROVED_BOUNDED_POLICY",
     "realIntakeRightsBoundary": "APPROVE_LOCAL_OPERATOR_DISPLAY_ONLY_NO_TRANSMISSION",
-    "realIntakeRightsBoundaryImplementationCapable": false,
+    "realIntakeRightsBoundaryImplementationCapable": true,
+    "localOriginalSourceSnapshotReverification": {
+      "expectedSnapshotCount": 8,
+      "reverifiedAgainstPinnedFileSha256Count": 8,
+      "regularSingleLinkFileCount": 8,
+      "localGitExcludedOperatorControlled": true,
+      "humanFidelityDecisionsCreated": 0
+    },
+    "machineOnlyFidelityCapability": {
+      "contractSchemaVersion": "pr207-document-fidelity-decisions-v2",
+      "validatorSchemaVersion": "pr207-human-evidence-input-validation-v3",
+      "supportStatus": "SUPPORTED_FAIL_CLOSED_V2",
+      "pageNumberNamespace": "NORMALIZED_BUNDLE_PAGE_NUMBER",
+      "ignoredTemplateSha256": "e5e6aa1d7c73ab939d88e8c907107c8eed93ff698524efa5aefc4bdd6e14ae1e",
+      "blankRows": 8,
+      "completedRows": 0,
+      "operatorOutcome": "AWAITING_HUMAN_INPUT"
+    },
+    "localOperatorDisplayCapability": {
+      "status": "DIRECT_LOCAL_FILESYSTEM_DISPLAY_NO_SERVER",
+      "metadataOnlyChecklistPresent": true,
+      "metadataOnlyChecklistSha256": "89a8cf7f3923c85ba78418e8e3fe3337da610173c8d5d5c989d8413004de6813",
+      "existingRealIntakeUiLaunched": false,
+      "existingRealIntakeUiAllowed": false
+    },
     "retentionDecision": "APPROVED_BOUNDED_REVIEW_METADATA_AND_EXCERPTS_ONLY",
     "retentionImplementationCapable": false,
     "architectureOwnerDecision": "APPROVE_BOUNDED_NON_CANONICAL_REVIEW_PATH",
@@ -125,8 +149,9 @@
       {
         "id": "PR207_NO_TRANSMISSION_LOCAL_OPERATOR_DISPLAY_PATH",
         "classification": "IMPLEMENTATION_CAPABILITY_NOT_EXTERNAL_HUMAN_INPUT",
-        "status": "REQUIRED_NOT_IMPLEMENTED",
-        "requirement": "Implement and verify a local-operator display path with no full-page transmission, Git commit, export, or public excerpt before launch."
+        "status": "SATISFIED",
+        "satisfiedBy": "DIRECT_LOCAL_FILESYSTEM_DISPLAY_NO_SERVER",
+        "requirement": "Use the verified direct-local-filesystem display path with no server, full-page transmission, Git commit, export, public excerpt, or launch of the existing real-intake UI."
       },
       {
         "id": "PR207_BOUNDED_RECONSTRUCTABLE_REVIEW_RETENTION",
@@ -143,7 +168,7 @@
   "overallStatus": "BLOCKED_BOTH",
   "goalCompletionStatus": "INCOMPLETE_EXTERNAL_INPUTS",
   "mergeTrainRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
-  "mergeTrainReason": "Track A's method owner accepted the current bounded method, but Track A still has zero completed human sessions. Track B has eight SHA-bound owner decision rows, an approved bounded non-canonical architecture path, and resolved rights/retention authority inputs. The existing full-page transport path does not conform to the approved local-display-only/no-transmission policy, the retention implementation cannot reconstruct required metrics, original-source fidelity remains 0 of 8, safe propositions remain 0, human candidate decisions remain 0, and candidates approved for repository review remain 0. No comment authorizes merge or production. Both tracks remain INCOMPLETE and merge remains blocked.",
+  "mergeTrainReason": "Track A's method owner accepted the current bounded method, but Track A still has zero completed human sessions. Track B has eight SHA-bound owner decision rows, an approved bounded non-canonical architecture path, resolved rights/retention authority inputs, eight hash-reverified local source snapshots, a fail-closed v2 fidelity contract, and a direct-local-filesystem no-server display path. These machine capabilities create no human fidelity decision. The existing full-page UI transport remains nonconforming and prohibited, the retention implementation cannot reconstruct required candidate-review metrics, original-source fidelity remains 0 of 8, safe propositions remain 0, human candidate decisions remain 0, and candidates approved for repository review remain 0. No comment authorizes merge or production. Both tracks remain INCOMPLETE and merge remains blocked.",
   "tenderMatrixEntryGate": "BLOCKED_BOTH",
   "tenderMatrixBlockers": [
     "PR206_DECISION_NOT_MERGE",
@@ -192,8 +217,8 @@
     "Four implementation commits entered the evaluated PR heads after the initial cross-PR INCOMPLETE decision record. Their retention is now explicitly approved as an exact documented exception, but that approval is not usability, document-validity, rights, candidate, or merge evidence.",
     "PR206's formal intake covers three of twelve scenarios and relies heavily on facilitator-coded correctness; any later aggregate must be interpreted with those limitations.",
     "PR206's method-owner approval keeps the automated MERGE_THRESHOLDS result advisory; it cannot itself authorize merge or production action.",
-    "PR207 source originals, publisher signatures/checksums, retrieval records, and a separate original-source-fidelity decision are not present in the tracked decision artifact.",
-    "PR207 real-intake UI code transports complete normalized page text contrary to the active local-operator-display-only/no-transmission policy; it was not launched and remains blocked pending a conforming path.",
+    "Eight local source snapshots were reverified against pinned hashes and are available only through the operator-controlled local path; publisher signatures and a separate human original-source-fidelity decision remain absent from the tracked decision evidence.",
+    "PR207 real-intake UI code still transports complete normalized page text contrary to the active local-operator-display-only/no-transmission policy; it was not launched and remains prohibited even though a separate conforming direct-local-filesystem path is now available.",
     "PR207 has an approved bounded review-record retention policy, but current review state/patch output still cannot reconstruct all rejected/deferred/authenticity decisions or the required time, usefulness, precision, and patch-suitability denominators.",
     "Six of eight PR207 normalized bundles are not represented by the two-row variant spike.",
     "The PR207 default document audit uses a fixed clock earlier than the real normalized extraction and therefore cannot be cited as a current real-input acceptance count.",
@@ -202,6 +227,8 @@
   "validationSummary": {
     "commandLedger": "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json",
     "pilotRefreshVerifier": "PASS",
+    "pr207HumanEvidenceValidator": "PASS_STRUCTURALLY_VALID_SUPPORTED_FAIL_CLOSED_V2_INCOMPLETE_0_OF_8",
+    "pr207LocalSourceSnapshotReverification": "PASS_8_OF_8_PINNED_SHA256_REGULAR_SINGLE_LINK_LOCAL_GIT_EXCLUDED_0600",
     "pr206ReadOnlyValidator": "PASS_WITH_INCOMPLETE_0_OF_5",
     "pr206SyntheticEvaluation": "PASS_12_OF_12_TWO_REPEAT_RUNS_NOT_HUMAN_EVIDENCE",
     "pr207VariantRun": "PASS_NO_SAFE_PROPOSITION_0_PROPOSALS_2_ABSTENTIONS",
@@ -242,5 +269,5 @@
   "productionReviewerWorkflowReady": false,
   "bothPrsRemainDraft": true,
   "bothPrsRemainUnmerged": true,
-  "nextAction": "External-input and implementation-capability HOLD: retain the exact four owner-approved commits without rewriting either Draft PR. The PR206 method gate and PR207 bounded document/architecture plus rights/retention authority gates are resolved, but no comment approves merge or production. Do not merge either PR, launch the nonconforming PR207 real-intake UI, or start the Tender Matrix. Obtain five completed R1-R5 sessions for PR206 and separately resolve original-source fidelity for all eight PR207 bundles. As distinct implementation prerequisites, build and verify a no-transmission local-operator display path and bounded reconstructable review retention. Once safe bounded candidates exist under separately authorized work, obtain at least 25 approvals with at least 10 per product family."
+  "nextAction": "External-input and remaining implementation-capability HOLD: retain the exact four owner-approved commits without rewriting either Draft PR. The PR206 method gate and PR207 bounded document/architecture plus rights/retention authority gates are resolved. PR207 now has eight hash-reverified local source snapshots, a fail-closed v2 fidelity input contract, and a direct-local-filesystem no-server display path, but these create zero human fidelity decisions. Do not merge either PR, launch the existing nonconforming PR207 real-intake UI, or start the Tender Matrix. Obtain five completed R1-R5 sessions for PR206. For PR207, compare one document at a time starting with P02201 and obtain eight structured fidelity decisions; separately implement reconstructable bounded candidate-review retention. Once safe bounded candidates exist under separately authorized work, obtain at least 25 approvals with at least 10 per product family."
 }

@@ -1,7 +1,8 @@
 {
-  "schemaVersion": "evidence-to-decision-validation-command-ledger-v5",
+  "schemaVersion": "evidence-to-decision-validation-command-ledger-v6",
   "observedAtDate": "2026-07-21",
   "humanApprovalInputsObservedThrough": "2026-07-21T08:54:24Z",
+  "machineCapabilityObservedThrough": "2026-07-21T10:05:34.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "productionReady": false,
   "issue165Status": "HOLD",
@@ -24,11 +25,15 @@
       "command": "node scripts/verify-evidence-to-decision-pilot-refresh.mjs --pr206-root <PR206_WORKTREE> --pr207-root <PR207_WORKTREE> --output tmp/codex/evidence-to-decision-pilot-refresh-20260719.json",
       "status": "PASS",
       "exitCode": 0,
+      "reportSchemaVersion": "evidence-to-decision-pilot-refresh-run-v6",
+      "reportAsOf": "2026-07-21T10:05:34.000Z",
       "decision": "INCOMPLETE",
       "overallStatus": "BLOCKED_BOTH",
       "goalCompletionStatus": "INCOMPLETE_EXTERNAL_INPUTS",
       "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS",
-      "retentionDispositionsRecorded": 4
+      "retentionDispositionsRecorded": 4,
+      "fidelityCompletionContract": "SUPPORTED_FAIL_CLOSED_V2",
+      "humanFidelityDecisions": 0
     },
     {
       "id": "PILOT_WORKFLOW_CONTRACT",
@@ -162,17 +167,21 @@
           "command": "SEQUENTIAL_FOCUSED_PR207_HUMAN_EVIDENCE_VALIDATION_RECHECK",
           "commands": [
             "npm run test:pr207-human-evidence-validator",
-            "npm run validate:pr207-human-evidence -- --pr207-root <PR207_WORKTREE> --as-of 2026-07-21T08:54:24.000Z --output tmp/codex/pr207-human-evidence-validation-non-production.json"
+            "npm run validate:pr207-human-evidence -- --pr207-root <PR207_WORKTREE> --as-of 2026-07-21T10:05:34.000Z --output tmp/codex/pr207-human-evidence-validation-non-production.json"
           ],
           "exitCode": 0,
           "observed": {
-            "classification": "PR207_HUMAN_EVIDENCE_VALIDATOR_V2",
-            "testsPassed": 31,
+            "classification": "PR207_HUMAN_EVIDENCE_VALIDATOR_V3",
+            "testsPassed": 71,
             "testsFailed": 0,
             "validationStatus": "STRUCTURALLY_VALID",
             "rightsAndRetentionAuthority": "VALID_ACTIVE_BOUNDED_POLICY_LOCAL_DISPLAY_ONLY",
             "evidenceStatus": "INCOMPLETE",
             "operatorOutcome": "AWAITING_HUMAN_INPUT",
+            "fidelityCompletionContract": "SUPPORTED_FAIL_CLOSED_V2",
+            "fidelityTemplateSha256": "e5e6aa1d7c73ab939d88e8c907107c8eed93ff698524efa5aefc4bdd6e14ae1e",
+            "operatorChecklistSha256": "89a8cf7f3923c85ba78418e8e3fe3337da610173c8d5d5c989d8413004de6813",
+            "blankFidelityDecisionRowCount": 8,
             "completedFidelityDecisionRowCount": 0,
             "approvedCandidateDecisionRowCount": 0,
             "productionApproval": "NOT_GRANTED",
@@ -185,6 +194,8 @@
         "pr207BoundedDocumentAndArchitectureInputsResolved": true,
         "pr207RightsAuthorityInputResolved": true,
         "pr207RetentionPolicyAuthorityInputResolved": true,
+        "pr207DirectLocalFilesystemDisplayCapable": true,
+        "pr207FidelityContractSupported": true,
         "pr207CurrentUiPolicyConforming": false,
         "pr207RetentionImplementationComplete": false,
         "pr206SessionsComplete": false,
@@ -370,7 +381,7 @@
   "nonClaims": [
     "This ledger records local command outcomes and is not production evidence.",
     "Synthetic test success does not supply human sessions, source officiality, rights approval, or human candidate decisions.",
-    "The canonical human comments resolve the explicitly bounded PR206 method, PR207 document/architecture, and PR207 rights/retention authority inputs. The active policy prohibits full-page transmission, Git commit, and export; it does not make the current UI conforming or the current retention implementation reconstructable.",
+    "The canonical human comments resolve the explicitly bounded PR206 method, PR207 document/architecture, and PR207 rights/retention authority inputs. The active policy prohibits full-page transmission, Git commit, and export. Direct local-filesystem display now satisfies the no-transmission operator-display prerequisite without launching the nonconforming existing UI; bounded reconstructable review retention remains unimplemented.",
     "The current evidence still does not establish original-source fidelity, supply a session or candidate decision, satisfy the 25-total or 10-per-family approval thresholds, or authorize merge or production.",
     "No production, staging, D1, customer-data, endpoint, log, secret, CRM, outreach, LLM, or automation action was performed."
   ]

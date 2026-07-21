@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "pr207-real-evidence-pilot-decision-v8",
-  "asOf": "2026-07-21T08:54:24.000Z",
+  "schemaVersion": "pr207-real-evidence-pilot-decision-v9",
+  "asOf": "2026-07-21T10:05:34.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "sourcePr": 207,
   "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
@@ -46,17 +46,8 @@
     "lfNormalizedBodySha256": "b7680d1776ef5f726bc8fa1206850e24ff839e32b03e99b2f37a39b8c3ba760e",
     "supportingDecisionIntentCommentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5013945474",
     "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
-    "decisionFile": {
-      "path": "tmp/evidence-claim-workbench/human-approval/pr207-document-decisions.json",
-      "sha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
-      "mode": "0600",
-      "tracked": false,
-      "ignored": true,
-      "role": "SHA_BOUND_TRANSCRIPTION_OF_CANONICAL_GITHUB_APPROVAL",
-      "wrapperBoundary": "LOCAL_IGNORED_HUMAN_INPUT_TEMPLATE",
-      "wrapperTemplateNonClaimRetained": true,
-      "approvalSource": "CANONICAL_GITHUB_COMMENT"
-    },
+    "ignoredDecisionFileDetailsRetained": false,
+    "ignoredDecisionTranscriptionValidated": true,
     "inputManifestSha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953",
     "documentTupleFingerprintSha256": "59c292b30801208853cbd6cb902d1eb4d0064001b72c1317001c849d48ecabb7",
     "documentCount": 8,
@@ -106,6 +97,91 @@
     "realDocumentAllowedClaimsCreated": 0,
     "productionApproved": false,
     "mergeApprovedByThisComment": false
+  },
+  "machineOnlyFidelityCapability": {
+    "contractSchemaVersion": "pr207-document-fidelity-decisions-v2",
+    "supportStatus": "SUPPORTED_FAIL_CLOSED_V2",
+    "pageNumberNamespace": "NORMALIZED_BUNDLE_PAGE_NUMBER",
+    "rowCompletionRule": "EXACTLY_BLANK_OR_COMPLETE_NO_PARTIAL_ROWS",
+    "allowedPageTextFidelityDecisions": [
+      "EXACT",
+      "ACCEPTABLE_WITH_LIMITATIONS",
+      "UNSAFE_FOR_CANDIDATE_REVIEW"
+    ],
+    "allowedTableStructureFidelityDecisions": [
+      "EXACT",
+      "ACCEPTABLE_WITH_LIMITATIONS",
+      "UNSAFE_FOR_CANDIDATE_REVIEW",
+      "NOT_APPLICABLE"
+    ],
+    "allowedSemanticPreservationDecisions": [
+      "PRESERVED",
+      "NOT_PRESERVED",
+      "NOT_APPLICABLE"
+    ],
+    "allowedDecisionReasonCodes": [
+      "EXACT_FIDELITY_CONFIRMED",
+      "ACCEPTABLE_LIMITATION_IDENTIFIED",
+      "UNSAFE_FIDELITY_IDENTIFIED",
+      "SOURCE_PAGE_UNAVAILABLE",
+      "NO_CANDIDATE_CONTENT"
+    ],
+    "revisionStatusFields": [
+      "documentIdentityStatus",
+      "documentNumberStatus",
+      "revisionStatus"
+    ],
+    "allowedRevisionStatuses": [
+      "MATCH",
+      "MISMATCH",
+      "UNCONFIRMED"
+    ],
+    "pageRules": [
+      "SORTED_UNIQUE_POSITIVE_NORMALIZED_BUNDLE_PAGE_NUMBERS",
+      "PAGES_CHECKED_EQUALS_COMPLETE_NORMALIZED_BUNDLE_PAGE_NAMESPACE",
+      "CANDIDATE_BEARING_ELIGIBLE_AND_INELIGIBLE_PAGES_ARE_SUBSETS_OF_PAGES_CHECKED",
+      "ELIGIBLE_PAGES_ARE_A_SUBSET_OF_CANDIDATE_BEARING_PAGES",
+      "ELIGIBLE_AND_INELIGIBLE_PAGES_FORM_A_DISJOINT_EXHAUSTIVE_PARTITION"
+    ],
+    "ignoredTemplate": {
+      "sha256": "e5e6aa1d7c73ab939d88e8c907107c8eed93ff698524efa5aefc4bdd6e14ae1e",
+      "mode": "0600",
+      "tracked": false,
+      "ignored": true,
+      "documentRows": 8,
+      "blankRows": 8,
+      "completedRows": 0
+    },
+    "validator": {
+      "schemaVersion": "pr207-human-evidence-input-validation-v3",
+      "validationStatus": "STRUCTURALLY_VALID",
+      "evidenceStatus": "INCOMPLETE",
+      "operatorOutcome": "AWAITING_HUMAN_INPUT",
+      "humanFidelityEvidence": "INCOMPLETE_0_OF_8"
+    }
+  },
+  "localOriginalSourceSnapshotReverification": {
+    "expectedSnapshotCount": 8,
+    "reverifiedAgainstPinnedFileSha256Count": 8,
+    "regularFileCount": 8,
+    "singleLinkFileCount": 8,
+    "gitExcludedDirectory": true,
+    "directoryMode": "0700",
+    "fileMode": "0600",
+    "pathsRetainedInTrackedArtifacts": false,
+    "individualHashesRetainedInTrackedArtifacts": false,
+    "humanFidelityDecisionsCreated": 0
+  },
+  "localOperatorDisplayCapability": {
+    "status": "DIRECT_LOCAL_FILESYSTEM_DISPLAY_NO_SERVER",
+    "metadataOnlyChecklistExists": true,
+    "checklistSha256": "89a8cf7f3923c85ba78418e8e3fe3337da610173c8d5d5c989d8413004de6813",
+    "checklistMode": "0600",
+    "checklistTracked": false,
+    "checklistIgnored": true,
+    "serverUsed": false,
+    "existingRealIntakeUiLaunched": false,
+    "existingRealIntakeUiAllowed": false
   },
   "currentVariantTableRun": {
     "inputDocumentCount": 8,
@@ -162,6 +238,8 @@
     "customerUseAllowedClaimsCreated": 0
   },
   "realIntakeExecutionRestriction": "DO_NOT_LAUNCH_EXISTING_REAL_INTAKE_UI_FULL_PAGE_TRANSPORT_PROHIBITED_LOCAL_OPERATOR_DISPLAY_ONLY_POLICY",
+  "realIntakeUiAllowed": false,
+  "retentionImplementationCapable": false,
   "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_RECONSTRUCTING_REQUIRED_PILOT_METRICS",
   "humanMetrics": {
     "quoteToPageAccuracy": null,
@@ -197,7 +275,7 @@
     "materialUnresolvedConflictsVisiblyBlocking": "INCOMPLETE_NO_SAFE_REAL_CANDIDATE_POPULATION",
     "allDocumentOwnerBoundedDecisions": "PASS_8_OF_8_SHA_BOUND_TO_CANONICAL_GITHUB_APPROVAL",
     "rightsRetentionPolicyDecision": "PASS_1_OF_1_ACTIVE_APPROVED_BOUNDED_POLICY",
-    "rightsBoundaryImplementation": "INCOMPLETE_EXISTING_UI_TRANSPORT_NONCONFORMING_DO_NOT_LAUNCH",
+    "rightsBoundaryImplementation": "SATISFIED_DIRECT_LOCAL_FILESYSTEM_DISPLAY_NO_SERVER_EXISTING_UI_REMAINS_PROHIBITED_UNLAUNCHED",
     "reviewEvidenceRetentionImplementation": "INCOMPLETE_NOT_CAPABLE_OF_RECONSTRUCTING_REQUIRED_PILOT_METRICS",
     "allOriginalSourceFidelityDecisions": "INCOMPLETE_0_OF_8",
     "allDocumentValidityDecisions": "INCOMPLETE_ORIGINAL_SOURCE_FIDELITY_0_OF_8",
@@ -214,8 +292,8 @@
       "code": "REAL_INTAKE_UI_TRANSPORTS_COMPLETE_NORMALIZED_PAGE_TEXT",
       "severity": "P1_COPYRIGHT_AND_USE_BOUNDARY",
       "evidence": "Read-only code inspection found that real-intake catalog serialization and rendering include complete normalized page.text. The active owner policy permits local-operator display only and prohibits full-page transmission, Git commit, and export.",
-      "effect": "The rights authority input is resolved, but launching the existing UI would use a transport path that does not conform to the approved no-transmission boundary.",
-      "status": "AUTHORITY_RESOLVED_IMPLEMENTATION_NONCONFORMING_DO_NOT_LAUNCH_REAL_INTAKE_UI"
+      "effect": "The separate direct-local-filesystem display capability satisfies the no-transmission local-operator prerequisite without a server. Launching the existing UI would still use a nonconforming transport path and remains prohibited.",
+      "status": "DIRECT_LOCAL_FILESYSTEM_DISPLAY_CAPABILITY_SATISFIED_EXISTING_UI_PROHIBITED_UNLAUNCHED"
     },
     {
       "code": "HUMAN_REVIEW_EVIDENCE_CANNOT_BE_RECONSTRUCTED",
@@ -234,9 +312,9 @@
     {
       "code": "ORIGINAL_SOURCE_FIDELITY_UNREVIEWED_RIGHTS_POLICY_BOUNDED",
       "severity": "P1_EXTERNAL_INPUT",
-      "evidence": "The SHA-bound document approval records officiality, currentness, technical scope, bounded-excerpt internal-review use, and binary handling for all eight normalized bundles, while the later rights policy selects local-operator display only and explicitly prohibits full-page transmission, Git commit, and export. Neither comment separately decides original-source fidelity.",
-      "effect": "The bounded owner decisions are usable only within their stated scope; original-source fidelity remains unresolved and the existing full-page transport path remains nonconforming with the now-decided policy.",
-      "status": "PARTIALLY_RESOLVED_ORIGINAL_SOURCE_FIDELITY_OPEN_RIGHTS_POLICY_ACTIVE"
+      "evidence": "The SHA-bound document approval records officiality, currentness, technical scope, bounded-excerpt internal-review use, and binary handling for all eight normalized bundles. Eight existing local source snapshots were machine-reverified against their pinned file SHA256 values with regular-file and single-link checks, but no human fidelity row was completed.",
+      "effect": "Machine snapshot re-verification and the fail-closed v2 input contract make one-document-at-a-time comparison possible; they do not decide original-source fidelity. All eight human fidelity decisions remain open.",
+      "status": "MACHINE_SOURCE_SNAPSHOTS_REVERIFIED_8_OF_8_HUMAN_FIDELITY_DECISIONS_INCOMPLETE_0_OF_8"
     },
     {
       "code": "FIXED_AUDIT_CLOCK_PRECEDES_REAL_NORMALIZATION",
@@ -285,10 +363,10 @@
   "architectureSignal": "BOUNDED_NON_CANONICAL_REVIEW_PATH_APPROVED_SAFE_CANDIDATE_POPULATION_STILL_EMPTY",
   "architectureSignalScope": "Bounded to two mapped rows across the eight supplied normalized documents. The owner decision resolves the requested architecture direction without changing the current evaluator: compound variant and maximum semantics still abstain, and latent footnote, geometry, column, condition, and configuration semantics remain unresolved.",
   "decision": "INCOMPLETE",
-  "decisionReason": "The canonical owner approvals resolve officiality, currentness, technical scope, bounded-excerpt internal-review use, binary handling, the bounded architecture direction, and the rights/retention authority inputs. The active policy permits local-operator display only, prohibits full-page transmission, Git commit, and export, and approves bounded review-metadata/excerpt retention. The existing UI transport remains nonconforming, the current retention implementation remains incapable of reconstructing required pilot metrics, original-source fidelity remains 0 of 8, and current inputs still contain zero safe proposals, zero candidate decisions, and zero approved candidates. The required 25 total and 10-per-family human approval thresholds remain unmet, so Track B stays INCOMPLETE.",
+  "decisionReason": "The canonical owner approvals resolve officiality, currentness, technical scope, bounded-excerpt internal-review use, binary handling, the bounded architecture direction, and the rights/retention authority inputs. The machine-only fail-closed v2 fidelity contract, 8-of-8 local source-snapshot re-verification, and direct local-filesystem no-server display capability are now present. They create no human fidelity decision. The existing UI remains prohibited and unlaunched, the review-retention implementation remains incapable of reconstructing required candidate-review metrics, original-source fidelity remains 0 of 8, and current inputs still contain zero safe proposals, zero candidate decisions, and zero approved candidates. The required 25 total and 10-per-family human approval thresholds remain unmet, so Track B stays INCOMPLETE.",
   "mergeRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
   "nextExternalInputs": [
-    "A qualified human must separately decide original-source fidelity for each of the eight normalized document bundles; the recorded officiality/currentness/scope/bounded-excerpt decisions must not be expanded into that missing decision.",
+    "A qualified human must compare one document at a time against its normalized bundle, starting with P02201, and separately decide original-source fidelity for each of the eight bundles; machine re-verification and recorded officiality/currentness/scope/bounded-excerpt decisions must not be expanded into that missing decision.",
     "A safe candidate population must be supplied under the approved bounded non-canonical path without weakening the current compound-variant or unsupported-operator abstentions.",
     "Only after those prerequisites and a safe candidate population exist may qualified reviewers review enough candidates to approve at least 25 for repository review, including at least 10 approved candidates per product family; rejected and deferred decisions do not satisfy those approval thresholds."
   ],
@@ -296,8 +374,9 @@
     {
       "id": "PR207_NO_TRANSMISSION_LOCAL_OPERATOR_DISPLAY_PATH",
       "classification": "IMPLEMENTATION_CAPABILITY_NOT_EXTERNAL_HUMAN_INPUT",
-      "status": "REQUIRED_NOT_IMPLEMENTED",
-      "requirement": "Implement and verify a local-operator display path that does not transmit, Git-commit, export, or publicly excerpt full normalized page text before the real-intake UI may launch."
+      "status": "SATISFIED",
+      "satisfiedBy": "DIRECT_LOCAL_FILESYSTEM_DISPLAY_NO_SERVER",
+      "requirement": "Use the verified direct-local-filesystem display path without a server, transmission, Git commit, export, public excerpt, or launch of the existing real-intake UI."
     },
     {
       "id": "PR207_BOUNDED_RECONSTRUCTABLE_REVIEW_RETENTION",
@@ -313,6 +392,8 @@
     "The owner-attested official-source decision is a human approval record, not independent cryptographic acquisition provenance or an original-source fidelity decision.",
     "The active rights policy permits local-operator display and bounded excerpts for internal review only; it explicitly prohibits full-page transmission, Git commit, export, and public repository excerpts during the pilot, and does not approve customer use.",
     "The rights and retention authority inputs are resolved, but the existing full-page transport path is nonconforming and the current review-evidence retention implementation is not capable of reconstructing the required pilot metrics.",
+    "Machine re-verification of eight local source snapshots and structural validation of eight blank v2 fidelity rows do not create or infer any human fidelity decision.",
+    "DIRECT_LOCAL_FILESYSTEM_DISPLAY_NO_SERVER satisfies only the no-transmission local-operator display prerequisite; it does not authorize or launch the existing PR207 UI.",
     "No abstention is counted as a human rejection or precision observation.",
     "The real-intake UI was not launched during this refresh.",
     "No canonical VERIFIED claim or customer-use ALLOWED claim was created.",

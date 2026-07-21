@@ -10,6 +10,7 @@ import { writeJsonArtifactInsideWorktree } from './lib/safe-local-artifact-write
 
 const AS_OF = '2026-07-19T03:33:31.000Z';
 const TRANSITION_AS_OF = '2026-07-21T08:54:24.000Z';
+const FIDELITY_CONTRACT_AS_OF = '2026-07-21T10:05:34.000Z';
 const EXPECTED_BASE_SHA = '9d144fbe6309ce363f9dad8d50ffa713d24af683';
 const EXPECTED_PR206_HEAD = 'b5570e182c8ab6515c0f09272d22d7121518f134';
 const EXPECTED_PR207_HEAD = 'c6a5469338999097acd5de7c5a12c827d27d4540';
@@ -37,6 +38,18 @@ const EXPECTED_PR207_DECISION_FILE_SHA256 =
   '2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb';
 const EXPECTED_PR207_DECISION_FILE_RELATIVE_PATH =
   'tmp/evidence-claim-workbench/human-approval/pr207-document-decisions.json';
+const EXPECTED_PR207_FIDELITY_DECISION_FILE_RELATIVE_PATH =
+  'tmp/evidence-claim-workbench/human-approval/pr207-document-fidelity-decisions.json';
+const EXPECTED_PR207_FIDELITY_DECISION_FILE_SHA256 =
+  'e5e6aa1d7c73ab939d88e8c907107c8eed93ff698524efa5aefc4bdd6e14ae1e';
+const EXPECTED_PR207_FIDELITY_CHECKLIST_RELATIVE_PATH =
+  'tmp/evidence-claim-workbench/human-approval/pr207-document-fidelity-operator-checklist.md';
+const EXPECTED_PR207_FIDELITY_CHECKLIST_SHA256 =
+  '89a8cf7f3923c85ba78418e8e3fe3337da610173c8d5d5c989d8413004de6813';
+const EXPECTED_PR207_CANDIDATE_DECISION_FILE_RELATIVE_PATH =
+  'tmp/evidence-claim-workbench/human-approval/pr207-candidate-decisions.json';
+const EXPECTED_PR207_CANDIDATE_DECISION_FILE_SHA256 =
+  '10460a8fb0202af984ea98e3ca5b34fea3822a4531ed2ed1221e35d5acaa3051';
 const EXPECTED_PR207_INTAKE_MANIFEST_RELATIVE_PATH = 'evidence-inbox/manifest.json';
 const EXPECTED_PR207_INTAKE_MANIFEST_SHA256 =
   '0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953';
@@ -248,6 +261,54 @@ assert(pr207HumanDecision.documentCount === 8, 'PR207 human decision document co
 assert(pr207HumanDecision.humanFieldsAreBlank === false, 'PR207 human decision fields are unexpectedly blank');
 assert(pr207HumanDecision.documents?.length === 8, 'PR207 human decision rows drifted');
 
+const pr207FidelityDecisionInput = await readSafeIgnoredFile(
+  pr207Root,
+  EXPECTED_PR207_FIDELITY_DECISION_FILE_RELATIVE_PATH,
+  EXPECTED_PR207_FIDELITY_DECISION_FILE_SHA256,
+);
+const pr207FidelityDecision = JSON.parse(pr207FidelityDecisionInput.raw.toString('utf8'));
+assert(
+  pr207FidelityDecision.schemaVersion === 'pr207-document-fidelity-decisions-v2'
+    && pr207FidelityDecision.boundary === 'NOT_PRODUCTION_EVIDENCE'
+    && pr207FidelityDecision.evaluatedPr === 207
+    && pr207FidelityDecision.evaluatedHead === pr207Head
+    && pr207FidelityDecision.intakeManifestSha256 ===
+      EXPECTED_PR207_INTAKE_MANIFEST_SHA256
+    && pr207FidelityDecision.documentDecisionFileSha256 ===
+      EXPECTED_PR207_DECISION_FILE_SHA256
+    && pr207FidelityDecision.documentCount === 8
+    && pr207FidelityDecision.pageNumberNamespace ===
+      'NORMALIZED_BUNDLE_PAGE_NUMBER'
+    && pr207FidelityDecision.humanFieldsAreBlank === true
+    && pr207FidelityDecision.preparedBy ===
+      'CODEX_MACHINE_TEMPLATE_NO_HUMAN_DECISIONS'
+    && pr207FidelityDecision.documents?.length === 8,
+  'PR207 exact ignored fidelity template binding or blank-state contract drifted',
+);
+const pr207FidelityChecklistInput = await readSafeIgnoredFile(
+  pr207Root,
+  EXPECTED_PR207_FIDELITY_CHECKLIST_RELATIVE_PATH,
+  EXPECTED_PR207_FIDELITY_CHECKLIST_SHA256,
+);
+const pr207CandidateDecisionInput = await readSafeIgnoredFile(
+  pr207Root,
+  EXPECTED_PR207_CANDIDATE_DECISION_FILE_RELATIVE_PATH,
+  EXPECTED_PR207_CANDIDATE_DECISION_FILE_SHA256,
+);
+const pr207CandidateDecision = JSON.parse(pr207CandidateDecisionInput.raw.toString('utf8'));
+assert(
+  pr207CandidateDecision.schemaVersion === 'pr207-candidate-decisions-v1'
+    && pr207CandidateDecision.boundary === 'LOCAL_IGNORED_HUMAN_INPUT_TEMPLATE'
+    && pr207CandidateDecision.evaluatedPr === 207
+    && pr207CandidateDecision.evaluatedHead === pr207Head
+    && pr207CandidateDecision.intakeManifestSha256 ===
+      EXPECTED_PR207_INTAKE_MANIFEST_SHA256
+    && pr207CandidateDecision.humanFieldsAreBlank === true
+    && pr207CandidateDecision.candidateCount === 0
+    && pr207CandidateDecision.candidates?.length === 0,
+  'PR207 exact ignored candidate template binding or empty-state contract drifted',
+);
+
 const pr207IntakeManifestInput = await readSafeIgnoredFile(
   pr207Root,
   EXPECTED_PR207_INTAKE_MANIFEST_RELATIVE_PATH,
@@ -306,6 +367,30 @@ for (const manifestDocument of pr207IntakeManifest.documents) {
     value: normalizedDocument,
   });
 }
+
+const pr207VerifierBoundIgnoredInputs = [
+  pr207HumanDecisionInput,
+  pr207FidelityDecisionInput,
+  pr207FidelityChecklistInput,
+  pr207CandidateDecisionInput,
+  pr207IntakeManifestInput,
+  ...[...pr207NormalizedInputByManifestPath.values()].map(({ input }) => input),
+];
+assert(
+  pr207VerifierBoundIgnoredInputs.length === 13
+    && pr207VerifierBoundIgnoredInputs.every(
+      (input) => input.mode === '0600' && input.tracked === false && input.ignored === true,
+    ),
+  'PR207 verifier-bound ignored input safety aggregate drifted',
+);
+const pr207IgnoredInputAggregateBindingSha256 = createHash('sha256')
+  .update(
+    pr207VerifierBoundIgnoredInputs
+      .map((input) => input.sha256)
+      .sort()
+      .join('\n'),
+  )
+  .digest('hex');
 
 const humanValidation = runJson(
   pr206Root,
@@ -406,7 +491,7 @@ assert(
 );
 assert(pr207Decision.evaluatedHeadSha === pr207Head, 'PR207 decision head mismatch');
 assert(pr207Decision.baseSha === EXPECTED_BASE_SHA, 'PR207 decision base mismatch');
-assert(pr207Decision.asOf === TRANSITION_AS_OF, 'PR207 decision transition time drifted');
+assert(pr207Decision.asOf === FIDELITY_CONTRACT_AS_OF, 'PR207 decision fidelity-contract time drifted');
 assert(pr207Decision.decision === 'INCOMPLETE', 'PR207 artifact must remain INCOMPLETE');
 assert(
   pr207Decision.realIntakeExecutionRestriction ===
@@ -429,17 +514,10 @@ assert(
   'PR207 canonical approval comment binding drifted',
 );
 assert(
-  pr207HumanDecisionRecord?.decisionFile?.path === pr207HumanDecisionInput.relativePath
-    && pr207HumanDecisionRecord?.decisionFile?.sha256 === pr207HumanDecisionInput.sha256
-    && pr207HumanDecisionRecord?.decisionFile?.mode === pr207HumanDecisionInput.mode
-    && pr207HumanDecisionRecord?.decisionFile?.tracked === pr207HumanDecisionInput.tracked
-    && pr207HumanDecisionRecord?.decisionFile?.ignored === pr207HumanDecisionInput.ignored
-    && pr207HumanDecisionRecord?.decisionFile?.role ===
-      'SHA_BOUND_TRANSCRIPTION_OF_CANONICAL_GITHUB_APPROVAL'
-    && pr207HumanDecisionRecord?.decisionFile?.wrapperBoundary === pr207HumanDecision.boundary
-    && pr207HumanDecisionRecord?.decisionFile?.wrapperTemplateNonClaimRetained === true
-    && pr207HumanDecisionRecord?.decisionFile?.approvalSource === 'CANONICAL_GITHUB_COMMENT',
-  'PR207 ignored decision-file safety or approval-source binding drifted',
+  !('decisionFile' in pr207HumanDecisionRecord)
+    && pr207HumanDecisionRecord?.ignoredDecisionFileDetailsRetained === false
+    && pr207HumanDecisionRecord?.ignoredDecisionTranscriptionValidated === true,
+  'PR207 tracked decision artifact retained ignored decision-file details',
 );
 assert(
   pr207HumanDecisionRecord?.inputManifestSha256 === pr207HumanDecision.intakeManifestSha256
@@ -520,62 +598,112 @@ assert(
       'NOT_CAPABLE_OF_RECONSTRUCTING_REQUIRED_PILOT_METRICS'
     && pr207Decision.implementationPrerequisites?.length === 2
     && pr207Decision.implementationPrerequisites.every(
-      (prerequisite) => prerequisite.status === 'REQUIRED_NOT_IMPLEMENTED'
-        && prerequisite.classification ===
-          'IMPLEMENTATION_CAPABILITY_NOT_EXTERNAL_HUMAN_INPUT',
-    ),
+      (prerequisite) => prerequisite.classification ===
+        'IMPLEMENTATION_CAPABILITY_NOT_EXTERNAL_HUMAN_INPUT',
+    )
+    && pr207Decision.implementationPrerequisites.some(
+      (prerequisite) => prerequisite.id ===
+          'PR207_NO_TRANSMISSION_LOCAL_OPERATOR_DISPLAY_PATH'
+        && prerequisite.status === 'SATISFIED'
+        && prerequisite.satisfiedBy ===
+          'DIRECT_LOCAL_FILESYSTEM_DISPLAY_NO_SERVER',
+    )
+    && pr207Decision.implementationPrerequisites.some(
+      (prerequisite) => prerequisite.id ===
+          'PR207_BOUNDED_RECONSTRUCTABLE_REVIEW_RETENTION'
+        && prerequisite.status === 'REQUIRED_NOT_IMPLEMENTED',
+    )
+    && pr207Decision.localOriginalSourceSnapshotReverification
+      ?.reverifiedAgainstPinnedFileSha256Count === 8
+    && pr207Decision.localOriginalSourceSnapshotReverification
+      ?.humanFidelityDecisionsCreated === 0
+    && pr207Decision.machineOnlyFidelityCapability?.supportStatus ===
+      'SUPPORTED_FAIL_CLOSED_V2'
+    && pr207Decision.machineOnlyFidelityCapability?.ignoredTemplate?.sha256 ===
+      'e5e6aa1d7c73ab939d88e8c907107c8eed93ff698524efa5aefc4bdd6e14ae1e'
+    && pr207Decision.machineOnlyFidelityCapability?.ignoredTemplate?.completedRows === 0
+    && pr207Decision.localOperatorDisplayCapability?.status ===
+      'DIRECT_LOCAL_FILESYSTEM_DISPLAY_NO_SERVER'
+    && pr207Decision.localOperatorDisplayCapability?.checklistSha256 ===
+      EXPECTED_PR207_FIDELITY_CHECKLIST_SHA256
+    && pr207Decision.localOperatorDisplayCapability?.existingRealIntakeUiLaunched === false,
   'PR207 policy authority must remain distinct from affirmative redistribution and implementation fitness',
 );
 const validatedRightsRetentionRecord =
   pr207HumanEvidenceValidation.rightsRetentionDecisionRecord;
 assert(
   pr207HumanEvidenceValidation.schemaVersion ===
-    'pr207-human-evidence-input-validation-v2'
+    'pr207-human-evidence-input-validation-v3'
     && pr207HumanEvidenceValidation.validationStatus === 'STRUCTURALLY_VALID'
     && pr207HumanEvidenceValidation.evidenceStatus === 'INCOMPLETE'
     && pr207HumanEvidenceValidation.operatorOutcome === 'AWAITING_HUMAN_INPUT'
     && pr207HumanEvidenceValidation.evaluatedHead === pr207Head
+    && pr207HumanEvidenceValidation.evaluatedAsOf === FIDELITY_CONTRACT_AS_OF
     && pr207HumanEvidenceValidation.counts?.safeIgnoredInputFileCount === 12
     && pr207HumanEvidenceValidation.counts?.rightsRetentionPolicyCommentCount === 1
+    && pr207HumanEvidenceValidation.counts?.blankFidelityDecisionRowCount === 8
+    && pr207HumanEvidenceValidation.counts?.partialFidelityDecisionRowCount === 0
     && pr207HumanEvidenceValidation.counts?.completedFidelityDecisionRowCount === 0
+    && pr207HumanEvidenceValidation.counts?.partialFidelityDecisionFileCount === 0
+    && pr207HumanEvidenceValidation.counts?.completeFidelityDecisionFileCount === 0
+    && isDeepStrictEqual(
+      pr207HumanEvidenceValidation.counts?.fidelityDecisionDistribution,
+      {
+        exactRowCount: 0,
+        acceptableWithLimitationsRowCount: 0,
+        unsafeForCandidateReviewRowCount: 0,
+      },
+    )
+    && pr207HumanEvidenceValidation.counts?.fidelityCandidateBearingPageCount === 0
+    && pr207HumanEvidenceValidation.counts?.fidelityEligiblePageCount === 0
+    && pr207HumanEvidenceValidation.counts?.fidelityIneligiblePageCount === 0
     && pr207HumanEvidenceValidation.counts?.approvedCandidateDecisionRowCount === 0
     && pr207HumanEvidenceValidation.statuses?.rightsAndRetentionAuthority ===
       'VALID_ACTIVE_BOUNDED_POLICY_LOCAL_DISPLAY_ONLY'
     && pr207HumanEvidenceValidation.statuses?.humanFidelityEvidence ===
       'INCOMPLETE_0_OF_8'
+    && pr207HumanEvidenceValidation.statuses?.fidelityDecisionCompletion ===
+      'BLANK_0_OF_8'
+    && pr207HumanEvidenceValidation.statuses?.fidelityCompletionContract ===
+      'SUPPORTED_FAIL_CLOSED_V2'
     && pr207HumanEvidenceValidation.statuses?.candidateReviewEvidence ===
       'INCOMPLETE_0_OF_25'
     && pr207HumanEvidenceValidation.statuses?.mergeApproval === 'NOT_GRANTED'
     && pr207HumanEvidenceValidation.statuses?.productionApproval === 'NOT_GRANTED'
-    && validatedRightsRetentionRecord?.commentId ===
-      EXPECTED_PR207_RIGHTS_RETENTION_COMMENT_ID
-    && validatedRightsRetentionRecord?.rawBodySha256 ===
+    && pr207HumanEvidenceValidation.hashes?.rightsRetentionPolicyRawBodySha256 ===
       EXPECTED_PR207_RIGHTS_RETENTION_COMMENT_RAW_SHA256
-    && validatedRightsRetentionRecord?.lfNormalizedBodySha256 ===
+    && pr207HumanEvidenceValidation.hashes?.fidelityDecisionFileSha256 ===
+      EXPECTED_PR207_FIDELITY_DECISION_FILE_SHA256
+    && pr207HumanEvidenceValidation.hashes
+      ?.rightsRetentionPolicyLfNormalizedBodySha256 ===
       EXPECTED_PR207_RIGHTS_RETENTION_COMMENT_LF_SHA256
-    && validatedRightsRetentionRecord?.rawBodyRetained === false
-    && validatedRightsRetentionRecord?.rawBodyByteLength === 1582
-    && validatedRightsRetentionRecord?.evaluatedAsOf === TRANSITION_AS_OF
-    && validatedRightsRetentionRecord?.evaluatedHead === pr207Head
-    && validatedRightsRetentionRecord?.documentDecisionFileSha256 ===
-      EXPECTED_PR207_DECISION_FILE_SHA256
-    && validatedRightsRetentionRecord?.expirationOrReviewDate ===
-      EXPECTED_PR207_RIGHTS_RETENTION_EXPIRY
-    && validatedRightsRetentionRecord?.activeAtEvaluation === true
-    && validatedRightsRetentionRecord?.stopConditionCoverage?.length === 7
-    && validatedRightsRetentionRecord?.fullPageTransmissionAllowed === 'NO'
-    && validatedRightsRetentionRecord?.fullPageGitCommitAllowed === 'NO'
-    && validatedRightsRetentionRecord?.fullPageExportAllowed === 'NO'
-    && validatedRightsRetentionRecord?.boundedExcerptInternalReviewAllowed === 'YES'
-    && validatedRightsRetentionRecord?.publicRepositoryExcerptAllowedDuringPilot === 'NO'
-    && validatedRightsRetentionRecord?.productionApproved === 'NO'
-    && validatedRightsRetentionRecord?.mergeApprovedByThisComment === 'NO',
+    && isDeepStrictEqual(validatedRightsRetentionRecord, {
+      activeAtEvaluation: true,
+      mergeApprovedByThisComment: 'NO',
+      productionApproved: 'NO',
+      rawBodyRetained: false,
+      realDocumentAllowedClaimsCreated: 0,
+      realDocumentVerifiedClaimsCreated: 0,
+      validationStatus: 'VALID_ACTIVE_BOUNDED_POLICY_LOCAL_DISPLAY_ONLY',
+    }),
   'PR207 human-evidence validator rights-policy transition drifted',
 );
 assert(
   pr207Ledger.realIntakeUiNormalizedPageTextTransportRisk ===
     'PRESENT_PROHIBITED_BY_APPROVED_LOCAL_OPERATOR_DISPLAY_ONLY_POLICY_DO_NOT_LAUNCH_EXISTING_UI'
-    && pr207Ledger.decisionObservedThrough === TRANSITION_AS_OF
+    && pr207Ledger.decisionObservedThrough === FIDELITY_CONTRACT_AS_OF
+    && pr207Ledger.localOriginalSourceSnapshotReverification
+      ?.reverifiedAgainstPinnedFileSha256Count === 8
+    && pr207Ledger.localOriginalSourceSnapshotReverification
+      ?.humanFidelityDecisionsCreated === 0
+    && pr207Ledger.machineOnlyFidelityCapability?.supportStatus ===
+      'SUPPORTED_FAIL_CLOSED_V2'
+    && pr207Ledger.machineOnlyFidelityCapability?.completedRows === 0
+    && pr207Ledger.localOperatorDisplayPath?.status ===
+      'DIRECT_LOCAL_FILESYSTEM_DISPLAY_NO_SERVER'
+    && pr207Ledger.localOperatorDisplayPath?.checklistSha256 ===
+      EXPECTED_PR207_FIDELITY_CHECKLIST_SHA256
+    && pr207Ledger.localOperatorDisplayPath?.existingRealIntakeUiLaunched === false
     && isDeepStrictEqual(
       pr207Ledger.rightsRetentionDecisionRecord,
       pr207RightsRetentionDecisionRecord,
@@ -741,11 +869,11 @@ assert(
 assert(
   changeAuthorityAudit.schemaVersion === 'evidence-to-decision-change-authority-audit-v2'
     && pr206Decision.schemaVersion === 'pr206-human-validation-decision-v5'
-    && pr207Decision.schemaVersion === 'pr207-real-evidence-pilot-decision-v8'
-    && nextGate.schemaVersion === 'evidence-to-decision-next-gate-v8'
-    && pr207Ledger.schemaVersion === 'pr207-real-evidence-input-ledger-v4'
+    && pr207Decision.schemaVersion === 'pr207-real-evidence-pilot-decision-v9'
+    && nextGate.schemaVersion === 'evidence-to-decision-next-gate-v9'
+    && pr207Ledger.schemaVersion === 'pr207-real-evidence-input-ledger-v5'
     && githubState.schemaVersion === 'evidence-to-decision-github-state-v4'
-    && commandLedger.schemaVersion === 'evidence-to-decision-validation-command-ledger-v5',
+    && commandLedger.schemaVersion === 'evidence-to-decision-validation-command-ledger-v6',
   'owner-disposition artifact schema drifted',
 );
 assert(
@@ -890,7 +1018,22 @@ assert(
     && nextGate.pr207?.retentionMethodOwnerInputResolved === true
     && nextGate.pr207?.rightsRetentionPolicyStatus ===
       'ACTIVE_APPROVED_BOUNDED_POLICY'
-    && nextGate.pr207?.realIntakeRightsBoundaryImplementationCapable === false
+    && nextGate.pr207?.realIntakeRightsBoundaryImplementationCapable === true
+    && nextGate.pr207?.localOriginalSourceSnapshotReverification
+      ?.reverifiedAgainstPinnedFileSha256Count === 8
+    && nextGate.pr207?.localOriginalSourceSnapshotReverification
+      ?.humanFidelityDecisionsCreated === 0
+    && nextGate.pr207?.machineOnlyFidelityCapability?.supportStatus ===
+      'SUPPORTED_FAIL_CLOSED_V2'
+    && nextGate.pr207?.machineOnlyFidelityCapability?.ignoredTemplateSha256 ===
+      'e5e6aa1d7c73ab939d88e8c907107c8eed93ff698524efa5aefc4bdd6e14ae1e'
+    && nextGate.pr207?.machineOnlyFidelityCapability?.completedRows === 0
+    && nextGate.pr207?.localOperatorDisplayCapability?.status ===
+      'DIRECT_LOCAL_FILESYSTEM_DISPLAY_NO_SERVER'
+    && nextGate.pr207?.localOperatorDisplayCapability?.metadataOnlyChecklistSha256 ===
+      EXPECTED_PR207_FIDELITY_CHECKLIST_SHA256
+    && nextGate.pr207?.localOperatorDisplayCapability?.existingRealIntakeUiLaunched === false
+    && nextGate.pr207?.localOperatorDisplayCapability?.existingRealIntakeUiAllowed === false
     && nextGate.pr207?.retentionImplementationCapable === false
     && nextGate.pr207?.humanReviewEvidenceRetentionFitness ===
       'NOT_CAPABLE_OF_REQUIRED_METRICS'
@@ -900,9 +1043,20 @@ assert(
     )
     && nextGate.pr207?.implementationPrerequisites?.length === 2
     && nextGate.pr207.implementationPrerequisites.every(
-      (prerequisite) => prerequisite.status === 'REQUIRED_NOT_IMPLEMENTED'
-        && prerequisite.classification ===
-          'IMPLEMENTATION_CAPABILITY_NOT_EXTERNAL_HUMAN_INPUT',
+      (prerequisite) => prerequisite.classification ===
+        'IMPLEMENTATION_CAPABILITY_NOT_EXTERNAL_HUMAN_INPUT',
+    )
+    && nextGate.pr207.implementationPrerequisites.some(
+      (prerequisite) => prerequisite.id ===
+          'PR207_NO_TRANSMISSION_LOCAL_OPERATOR_DISPLAY_PATH'
+        && prerequisite.status === 'SATISFIED'
+        && prerequisite.satisfiedBy ===
+          'DIRECT_LOCAL_FILESYSTEM_DISPLAY_NO_SERVER',
+    )
+    && nextGate.pr207.implementationPrerequisites.some(
+      (prerequisite) => prerequisite.id ===
+          'PR207_BOUNDED_RECONSTRUCTABLE_REVIEW_RETENTION'
+        && prerequisite.status === 'REQUIRED_NOT_IMPLEMENTED',
     ),
   'next-gate PR207 bounded approval or remaining-blocker state drifted',
 );
@@ -912,7 +1066,7 @@ assert(
   'next-gate per-PR retention disposition drifted',
 );
 assert(nextGate.evaluatedBaseSha === EXPECTED_BASE_SHA, 'next-gate base mismatch');
-assert(nextGate.asOf === TRANSITION_AS_OF, 'next-gate transition time drifted');
+assert(nextGate.asOf === FIDELITY_CONTRACT_AS_OF, 'next-gate fidelity-contract time drifted');
 assert(preflight.pinnedBaseSha === EXPECTED_BASE_SHA, 'preflight base mismatch');
 assert(nextGate.pr206?.draft === true && nextGate.pr206?.unmerged === true, 'next-gate PR206 state drifted');
 assert(nextGate.pr207?.draft === true && nextGate.pr207?.unmerged === true, 'next-gate PR207 state drifted');
@@ -1139,6 +1293,10 @@ assert(
   'command-ledger human approval observation time drifted',
 );
 assert(
+  commandLedger.machineCapabilityObservedThrough === FIDELITY_CONTRACT_AS_OF,
+  'command-ledger machine-capability observation time drifted',
+);
+assert(
   commandLedger.commandGroups?.length === 7
     && commandLedger.commandGroups.every((group) => group.status === 'PASS' && group.exitCode === 0),
   'command-ledger result is not all-pass',
@@ -1158,7 +1316,7 @@ const ledgerPr207RightsRetentionPolicy = humanApprovalBindingObservations.find(
   (observed) => observed.commentId === EXPECTED_PR207_RIGHTS_RETENTION_COMMENT_ID,
 );
 const ledgerPr207HumanEvidenceValidator = humanApprovalBindingObservations.find(
-  (observed) => observed.classification === 'PR207_HUMAN_EVIDENCE_VALIDATOR_V2',
+  (observed) => observed.classification === 'PR207_HUMAN_EVIDENCE_VALIDATOR_V3',
 );
 const ledgerSupportingIntent = humanApprovalBindingObservations.find(
   (observed) => observed.commentId === 5013945474,
@@ -1199,6 +1357,15 @@ assert(
     && ledgerPr207HumanEvidenceValidator?.rightsAndRetentionAuthority ===
       'VALID_ACTIVE_BOUNDED_POLICY_LOCAL_DISPLAY_ONLY'
     && ledgerPr207HumanEvidenceValidator?.evidenceStatus === 'INCOMPLETE'
+    && ledgerPr207HumanEvidenceValidator?.fidelityCompletionContract ===
+      'SUPPORTED_FAIL_CLOSED_V2'
+    && ledgerPr207HumanEvidenceValidator?.fidelityTemplateSha256 ===
+      EXPECTED_PR207_FIDELITY_DECISION_FILE_SHA256
+    && ledgerPr207HumanEvidenceValidator?.operatorChecklistSha256 ===
+      EXPECTED_PR207_FIDELITY_CHECKLIST_SHA256
+    && ledgerPr207HumanEvidenceValidator?.testsPassed === 71
+    && ledgerPr207HumanEvidenceValidator?.testsFailed === 0
+    && ledgerPr207HumanEvidenceValidator?.blankFidelityDecisionRowCount === 8
     && ledgerPr207HumanEvidenceValidator?.completedFidelityDecisionRowCount === 0
     && ledgerPr207HumanEvidenceValidator?.approvedCandidateDecisionRowCount === 0
     && ledgerSupportingIntent?.classification ===
@@ -1220,6 +1387,8 @@ assert(
       pr207BoundedDocumentAndArchitectureInputsResolved: true,
       pr207RightsAuthorityInputResolved: true,
       pr207RetentionPolicyAuthorityInputResolved: true,
+      pr207DirectLocalFilesystemDisplayCapable: true,
+      pr207FidelityContractSupported: true,
       pr207CurrentUiPolicyConforming: false,
       pr207RetentionImplementationComplete: false,
       pr206SessionsComplete: false,
@@ -1241,12 +1410,21 @@ assert(
   'pilot workflow-contract result drifted',
 );
 assert(
-  commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')?.goalCompletionStatus ===
-    'INCOMPLETE_EXTERNAL_INPUTS'
-    && commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')?.changeAuthorityStatus ===
+  commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')
+    ?.reportSchemaVersion === 'evidence-to-decision-pilot-refresh-run-v6'
+    && commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')
+      ?.reportAsOf === FIDELITY_CONTRACT_AS_OF
+    && commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')
+      ?.goalCompletionStatus === 'INCOMPLETE_EXTERNAL_INPUTS'
+    && commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')
+      ?.changeAuthorityStatus ===
       'RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS'
     && commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')
-      ?.retentionDispositionsRecorded === 4,
+      ?.retentionDispositionsRecorded === 4
+    && commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')
+      ?.fidelityCompletionContract === 'SUPPORTED_FAIL_CLOSED_V2'
+    && commandLedger.commandGroups.find((group) => group.id === 'PILOT_REFRESH_VERIFIER')
+      ?.humanFidelityDecisions === 0,
   'pilot verifier change-authority result drifted',
 );
 const pr206Commands = [
@@ -1390,8 +1568,8 @@ const verificationInputSha256 = Object.fromEntries(
 );
 
 const report = {
-  schemaVersion: 'evidence-to-decision-pilot-refresh-run-v5',
-  asOf: TRANSITION_AS_OF,
+  schemaVersion: 'evidence-to-decision-pilot-refresh-run-v6',
+  asOf: FIDELITY_CONTRACT_AS_OF,
   boundary: 'NOT_PRODUCTION_EVIDENCE',
   evaluatedBaseSha: EXPECTED_BASE_SHA,
   refreshLineage: {
@@ -1399,37 +1577,26 @@ const report = {
     reportParentCommitSha,
     finalArtifactCommitSha: 'EXCLUDED_TO_AVOID_SELF_REFERENCE_VERIFY_GIT_PARENT_EQUALS_REPORT_PARENT',
     verificationInputSha256,
-    ignoredHumanInputBindings: {
-      pr207DocumentDecisions: {
-        evaluatedWorktreeHeadSha: pr207Head,
-        relativePath: pr207HumanDecisionInput.relativePath,
-        sha256: pr207HumanDecisionInput.sha256,
-        mode: pr207HumanDecisionInput.mode,
-        tracked: pr207HumanDecisionInput.tracked,
-        ignored: pr207HumanDecisionInput.ignored,
-      },
-      pr207IntakeManifest: {
-        evaluatedWorktreeHeadSha: pr207Head,
-        relativePath: pr207IntakeManifestInput.relativePath,
-        sha256: pr207IntakeManifestInput.sha256,
-        mode: pr207IntakeManifestInput.mode,
-        tracked: pr207IntakeManifestInput.tracked,
-        ignored: pr207IntakeManifestInput.ignored,
-        documentCount: pr207IntakeManifest.documents.length,
-      },
-      pr207NormalizedDocuments: pr207IntakeManifest.documents.map((manifestDocument) => {
-        const normalizedInput = pr207NormalizedInputByManifestPath.get(
-          manifestDocument.relativePath,
-        ).input;
-        return {
-          relativePath: normalizedInput.relativePath,
-          sha256: normalizedInput.sha256,
-          byteLength: normalizedInput.byteLength,
-          mode: normalizedInput.mode,
-          tracked: normalizedInput.tracked,
-          ignored: normalizedInput.ignored,
-        };
-      }),
+    ignoredHumanInputSafetySummary: {
+      evaluatedWorktreeHeadSha: pr207Head,
+      verifierBoundFileCount: pr207VerifierBoundIgnoredInputs.length,
+      validatorBoundFileCount: pr207HumanEvidenceValidation.counts.safeIgnoredInputFileCount,
+      normalizedDocumentCount: pr207IntakeManifest.documents.length,
+      normalizedPageCount: pr207HumanEvidenceValidation.counts.normalizedDocumentPageCount,
+      documentDecisionRowCount: pr207HumanDecision.documents.length,
+      fidelityDecisionRowCount: pr207FidelityDecision.documents.length,
+      blankFidelityDecisionRowCount: pr207FidelityDecision.documents.length,
+      completedFidelityDecisionRowCount: 0,
+      candidateDecisionRowCount: pr207CandidateDecision.candidates.length,
+      operatorChecklistPresent: true,
+      allVerifierBoundFilesMode0600: true,
+      allVerifierBoundFilesUntracked: true,
+      allVerifierBoundFilesIgnored: true,
+      individualRelativePathsRetained: false,
+      individualFileSha256Retained: false,
+      individualByteLengthsRetained: false,
+      protectedContentRetained: false,
+      aggregateBindingSha256: pr207IgnoredInputAggregateBindingSha256,
     },
   },
   pr206: {
@@ -1473,8 +1640,6 @@ const report = {
       rawBodySha256: pr207HumanDecisionRecord.rawBodySha256,
       lfNormalizedBodySha256: pr207HumanDecisionRecord.lfNormalizedBodySha256,
       evaluatedHeadSha: pr207HumanDecisionRecord.evaluatedHeadSha,
-      decisionFile: pr207HumanDecisionRecord.decisionFile,
-      inputManifestSha256: pr207HumanDecisionRecord.inputManifestSha256,
       documentTupleFingerprintSha256: pr207HumanDecisionRecord.documentTupleFingerprintSha256,
       documentCount: pr207HumanDecisionRecord.documentCount,
       commonDecisions: pr207HumanDecisionRecord.commonDecisions,
@@ -1484,12 +1649,34 @@ const report = {
       automaticCustomerUseAllowed: pr207HumanDecisionRecord.automaticCustomerUseAllowed,
       productionApproved: pr207HumanDecisionRecord.productionApproved,
       mergeApproved: pr207HumanDecisionRecord.mergeApproved,
+      ignoredDecisionFileDetailsRetainedInTrackedReport: false,
       interpretation:
         'HUMAN_OWNER_OVERLAY_SHA_BOUND_TO_CANONICAL_GITHUB_APPROVAL_NOT_A_MACHINE_STATE_REWRITE',
     },
-    rightsRetentionDecisionRecord: pr207Decision.rightsRetentionDecisionRecord,
+    rightsRetentionDecisionRecord: {
+      ...Object.fromEntries(
+        Object.entries(pr207Decision.rightsRetentionDecisionRecord)
+          .filter(([key]) => key !== 'decisionFileSha256'),
+      ),
+      ignoredDecisionFileHashRetainedInTrackedReport: false,
+    },
     realIntakeExecutionRestriction: pr207Decision.realIntakeExecutionRestriction,
     humanReviewEvidenceRetentionFitness: pr207Decision.humanReviewEvidenceRetentionFitness,
+    localOriginalSourceSnapshotReverification:
+      pr207Decision.localOriginalSourceSnapshotReverification,
+    machineOnlyFidelityCapability: pr207Decision.machineOnlyFidelityCapability,
+    localOperatorDisplayCapability: pr207Decision.localOperatorDisplayCapability,
+    humanEvidenceValidation: {
+      schemaVersion: pr207HumanEvidenceValidation.schemaVersion,
+      evaluatedAsOf: pr207HumanEvidenceValidation.evaluatedAsOf,
+      validationStatus: pr207HumanEvidenceValidation.validationStatus,
+      evidenceStatus: pr207HumanEvidenceValidation.evidenceStatus,
+      operatorOutcome: pr207HumanEvidenceValidation.operatorOutcome,
+      counts: pr207HumanEvidenceValidation.counts,
+      statuses: pr207HumanEvidenceValidation.statuses,
+      individualInputHashesRetainedInTrackedReport: false,
+      aggregateInputBindingSha256: pr207IgnoredInputAggregateBindingSha256,
+    },
     machineIntake: {
       evaluatedSourceCount: pr207MachineRun.evaluatedSourceCount,
       acceptedSourceCount: pr207MachineRun.acceptedSourceCount,
@@ -1557,6 +1744,24 @@ const report = {
     allPassed: true,
   },
 };
+
+const serializedReport = JSON.stringify(report);
+assert(
+  !('ignoredHumanInputBindings' in report.refreshLineage)
+    && report.refreshLineage.ignoredHumanInputSafetySummary
+      ?.individualRelativePathsRetained === false
+    && report.refreshLineage.ignoredHumanInputSafetySummary
+      ?.individualFileSha256Retained === false
+    && report.refreshLineage.ignoredHumanInputSafetySummary
+      ?.individualByteLengthsRetained === false
+    && !('decisionFile' in report.pr207.humanDocumentDecisionRecord)
+    && !('decisionFileSha256' in report.pr207.rightsRetentionDecisionRecord)
+    && report.pr207.humanEvidenceValidation?.individualInputHashesRetainedInTrackedReport ===
+      false
+    && !serializedReport.includes('/Users/')
+    && !serializedReport.includes('evidence-inbox/'),
+  'tracked refresh report retained non-aggregate ignored-input details',
+);
 
 await writeJsonArtifactInsideWorktree({ outputPath, value: report });
 process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

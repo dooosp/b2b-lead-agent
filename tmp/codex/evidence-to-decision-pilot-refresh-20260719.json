@@ -1,120 +1,56 @@
 {
-  "schemaVersion": "evidence-to-decision-pilot-refresh-run-v5",
-  "asOf": "2026-07-21T08:54:24.000Z",
+  "schemaVersion": "evidence-to-decision-pilot-refresh-run-v6",
+  "asOf": "2026-07-21T10:05:34.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
   "refreshLineage": {
     "artifactParentSha": "5caa852",
-    "reportParentCommitSha": "b027b8bfdff8ac6e1a08b54477c89273d545f420",
+    "reportParentCommitSha": "667daf0813b523f41d02a11c7b655078e3334059",
     "finalArtifactCommitSha": "EXCLUDED_TO_AVOID_SELF_REFERENCE_VERIFY_GIT_PARENT_EQUALS_REPORT_PARENT",
     "verificationInputSha256": {
       "docs/product/validation/pr206-human-validation-decision.json": "db2e3bf57060b2a157cb5f73d5bc27ade298155e37d94a9ecf17cc33a70400b9",
       "docs/product/validation/pr206-human-validation-summary.md": "0d62c160578d8de4488f9e17efe7e2c7b52f23f69cff7451246fb3f37c9ee851",
-      "docs/product/validation/pr207-real-evidence-input-ledger.json": "681700379e6c2621a135d60fa595930c4c35ceb181d69c4eb4a51980a3521a7b",
-      "docs/product/validation/pr207-real-evidence-pilot-decision.json": "f273fd028e50550b2de12cc3a95cef4d77e7bbf696c97bc4bc377200b9400d79",
-      "docs/product/validation/pr207-real-evidence-pilot-summary.md": "c5f04d5794fcc719c1e4ba11b421443b0b29494d611e269475f108bbe0024494",
-      "docs/product/validation/evidence-to-decision-next-gate.json": "10a09eaca417c35a48915de702d9cd3d9a3d70455ff68b7d28c937ba15dd2e64",
+      "docs/product/validation/pr207-real-evidence-input-ledger.json": "db9ddb55e0f752b3bf8a82a1155dd18be9faec279f9c7b16c33b85d0c6b8aa5a",
+      "docs/product/validation/pr207-real-evidence-pilot-decision.json": "9b9b8a13e0a2e41f787aecf1f697ea4885fc87cda68d5e63c20ed14a1fe991e2",
+      "docs/product/validation/pr207-real-evidence-pilot-summary.md": "256d6e0dc02a8e28ec5cc6a63a6dae4c7ef2eef2f1beefbea3f8682bb1749b0d",
+      "docs/product/validation/evidence-to-decision-next-gate.json": "4f9b9ec6bb26a898283f82ea4acbaa29c710ee78fb86c17b440ff46a9b2660b3",
       "tmp/codex/evidence-to-decision-pilot-repo-preflight.json": "39224c08df1715a980d202d1b551ee72b93e8e8b8bc0d9e83d5ab58884577a37",
       "tmp/codex/evidence-to-decision-github-state-20260719.json": "a1be8fd2828a8efb310fa3d8c0227c2b54a09b8c69cc267b42197d80ad74883f",
       "tmp/codex/evidence-to-decision-initial-investigation-ledger-20260719.json": "2239731c615d027d3da0342830ddd592f1cfbf1685221ffba787ddc87ef4c6f3",
       "tmp/codex/evidence-to-decision-change-authority-audit-20260719.json": "de9174b014738243169f4e0c588d3bbfef2758c098ddb64b8b8db81a504f2326",
-      "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json": "8c40b79d3e471a30df16ada12217e52f7c7263022da90bfc0675d012b0fb3606",
+      "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json": "4148031f87b5ca06b71a7cd34f7b010ca22ad0f28525e48ab9b6e21cfc2b3a53",
       "tmp/codex/pr207-real-evidence-pilot-run-non-production.json": "b2d333d324d2005f6c8965d84ff0b3f02d4d00c0064b102b9f5ca9bd64a3e9e2",
-      "tmp/codex/pr207-human-evidence-validation-non-production.json": "ac40679f8c9bff6a89a639be58efded6e4c925748cd450ec277286c6fbb9136e",
-      "scripts/verify-evidence-to-decision-pilot-refresh.mjs": "5b4bbe753a4f3cfe03ac3cff3d9b761e0613c8fb855f0eb6684ee10712d624c2",
-      "scripts/lib/pr207-human-evidence-validator.mjs": "ef81bfee403e2f06bc32b1e7f7b6850666e489bb8a4075456ce89aa21a668050",
+      "tmp/codex/pr207-human-evidence-validation-non-production.json": "1589d6383ff1e816dfd18e722d68838621f5c3f2e79727f27331446d5789ffec",
+      "scripts/verify-evidence-to-decision-pilot-refresh.mjs": "a79dbc8d1500067efdf4767ebed13d089268b1571d74587e211d9ff8755134a4",
+      "scripts/lib/pr207-human-evidence-validator.mjs": "ff63283b58886cc80fa710a11d7bf22f6b6188c3511f15a0c4cb032a56502192",
       "scripts/validate-pr207-human-evidence-inputs.mjs": "63cf3d14edb3a6763d191f9b5c6224a5b2b5e064ef6879737600fd88b016e77b",
       "scripts/lib/safe-local-artifact-writer.mjs": "e0d441359140011f9f11c8846a6c8afc44fb0d850c85ccd2fc9aeafdb854f0e7",
       "tests/evidence-to-decision-pilot-artifacts.test.mjs": "9c7af6e58ec4259a797156ee74fb719a04d8744641380ca77e06dcc8ec562b2c",
-      "tests/pr207-human-evidence-validator.test.mjs": "2a9689a52f403a56d7d13ab00240a44a988cdfc3ad0c6c228a3b9cde9034064f",
+      "tests/pr207-human-evidence-validator.test.mjs": "638a15df88fe7dc038b42aaaa8b2478291686a0b9bff81e1b6cefbbaf897b1a8",
       "package.json": "28d3800094c7abff2dbbb78ad2fdb0a57e9f836edbc1e5e88fd22625d1e8532e",
       ".github/workflows/ci.yml": "8fa7680e72cd2af851643346ac21de0e436751a342b67f121ddd8c326423eb74",
       "worker/tests/workflow-contract.test.mjs": "6c0e0a22a462807e86166a4d18f2f5233e9a708ae2b90f8508ea216ae4c10875"
     },
-    "ignoredHumanInputBindings": {
-      "pr207DocumentDecisions": {
-        "evaluatedWorktreeHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
-        "relativePath": "tmp/evidence-claim-workbench/human-approval/pr207-document-decisions.json",
-        "sha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
-        "mode": "0600",
-        "tracked": false,
-        "ignored": true
-      },
-      "pr207IntakeManifest": {
-        "evaluatedWorktreeHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
-        "relativePath": "evidence-inbox/manifest.json",
-        "sha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953",
-        "mode": "0600",
-        "tracked": false,
-        "ignored": true,
-        "documentCount": 8
-      },
-      "pr207NormalizedDocuments": [
-        {
-          "relativePath": "evidence-inbox/ls-p01100-ko.json",
-          "sha256": "d3ae5884b1e89eaf04f109c8b97549f7ea46ba3ea780df44225bc255e69404a4",
-          "byteLength": 3779,
-          "mode": "0600",
-          "tracked": false,
-          "ignored": true
-        },
-        {
-          "relativePath": "evidence-inbox/ls-p02201-ko.json",
-          "sha256": "d1924d5d4df95da5021fb91d4193a5bc3188a39bbb75c3efa32d6659bf3024fd",
-          "byteLength": 3982,
-          "mode": "0600",
-          "tracked": false,
-          "ignored": true
-        },
-        {
-          "relativePath": "evidence-inbox/ls-mv-metal-clad-en.json",
-          "sha256": "f175f5bad1dd98f2e9fea66599265f4306a9590819274423e6cbc090bbd39fba",
-          "byteLength": 16304,
-          "mode": "0600",
-          "tracked": false,
-          "ignored": true
-        },
-        {
-          "relativePath": "evidence-inbox/schneider-masterclad-en.json",
-          "sha256": "f9c64d56446f9fe97ec6be2e154171b3eeb1a4ba591d37ef6b99b8644602dda3",
-          "byteLength": 7683,
-          "mode": "0600",
-          "tracked": false,
-          "ignored": true
-        },
-        {
-          "relativePath": "evidence-inbox/ls-cast-resin-ko.json",
-          "sha256": "bfea285ea54473befbe0278d41607661e1b63a5b7acf4efdd902a458819a2c6b",
-          "byteLength": 10139,
-          "mode": "0600",
-          "tracked": false,
-          "ignored": true
-        },
-        {
-          "relativePath": "evidence-inbox/ls-cast-resin-manual-ko.json",
-          "sha256": "e076b6af6bf067e8239616f264faf412d7ee7788342c4c186a2ca50b092e0f86",
-          "byteLength": 10523,
-          "mode": "0600",
-          "tracked": false,
-          "ignored": true
-        },
-        {
-          "relativePath": "evidence-inbox/ls-transformer-en.json",
-          "sha256": "606ff5f2f599846f2f49b851cd5ed8abe2bf149ead9c41115380d18d25edc25b",
-          "byteLength": 8993,
-          "mode": "0600",
-          "tracked": false,
-          "ignored": true
-        },
-        {
-          "relativePath": "evidence-inbox/schneider-trihal-en.json",
-          "sha256": "308b498229c12257e44314e34f5c23ce17177b390059d95496f8d5bc2a744611",
-          "byteLength": 17657,
-          "mode": "0600",
-          "tracked": false,
-          "ignored": true
-        }
-      ]
+    "ignoredHumanInputSafetySummary": {
+      "evaluatedWorktreeHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "verifierBoundFileCount": 13,
+      "validatorBoundFileCount": 12,
+      "normalizedDocumentCount": 8,
+      "normalizedPageCount": 22,
+      "documentDecisionRowCount": 8,
+      "fidelityDecisionRowCount": 8,
+      "blankFidelityDecisionRowCount": 8,
+      "completedFidelityDecisionRowCount": 0,
+      "candidateDecisionRowCount": 0,
+      "operatorChecklistPresent": true,
+      "allVerifierBoundFilesMode0600": true,
+      "allVerifierBoundFilesUntracked": true,
+      "allVerifierBoundFilesIgnored": true,
+      "individualRelativePathsRetained": false,
+      "individualFileSha256Retained": false,
+      "individualByteLengthsRetained": false,
+      "protectedContentRetained": false,
+      "aggregateBindingSha256": "b08bbc505ffc47e0277aebf88180fcb70d68f47b464e43edfbd4ec976556f1d3"
     }
   },
   "pr206": {
@@ -187,18 +123,6 @@
       "rawBodySha256": "9ade99c11f09bf78bec23c5799d7d95de41ccf5f636147300f15c0cfa2e0b661",
       "lfNormalizedBodySha256": "b7680d1776ef5f726bc8fa1206850e24ff839e32b03e99b2f37a39b8c3ba760e",
       "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
-      "decisionFile": {
-        "path": "tmp/evidence-claim-workbench/human-approval/pr207-document-decisions.json",
-        "sha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
-        "mode": "0600",
-        "tracked": false,
-        "ignored": true,
-        "role": "SHA_BOUND_TRANSCRIPTION_OF_CANONICAL_GITHUB_APPROVAL",
-        "wrapperBoundary": "LOCAL_IGNORED_HUMAN_INPUT_TEMPLATE",
-        "wrapperTemplateNonClaimRetained": true,
-        "approvalSource": "CANONICAL_GITHUB_COMMENT"
-      },
-      "inputManifestSha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953",
       "documentTupleFingerprintSha256": "59c292b30801208853cbd6cb902d1eb4d0064001b72c1317001c849d48ecabb7",
       "documentCount": 8,
       "commonDecisions": {
@@ -215,6 +139,7 @@
       "automaticCustomerUseAllowed": false,
       "productionApproved": false,
       "mergeApproved": false,
+      "ignoredDecisionFileDetailsRetainedInTrackedReport": false,
       "interpretation": "HUMAN_OWNER_OVERLAY_SHA_BOUND_TO_CANONICAL_GITHUB_APPROVAL_NOT_A_MACHINE_STATE_REWRITE"
     },
     "rightsRetentionDecisionRecord": {
@@ -230,7 +155,6 @@
       "lfNormalizedBodySha256": "22e9a051d2a9a81620a5fb1465be1b4e07dc7eb3cd0f1f33344c55300346b885",
       "evaluatedPr": 207,
       "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
-      "decisionFileSha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
       "policyDecision": "APPROVE",
       "fullPageReviewMode": "LOCAL_OPERATOR_DISPLAY_ONLY",
       "fullPageTransmissionAllowed": false,
@@ -247,10 +171,150 @@
       "realDocumentVerifiedClaimsCreated": 0,
       "realDocumentAllowedClaimsCreated": 0,
       "productionApproved": false,
-      "mergeApprovedByThisComment": false
+      "mergeApprovedByThisComment": false,
+      "ignoredDecisionFileHashRetainedInTrackedReport": false
     },
     "realIntakeExecutionRestriction": "DO_NOT_LAUNCH_EXISTING_REAL_INTAKE_UI_FULL_PAGE_TRANSPORT_PROHIBITED_LOCAL_OPERATOR_DISPLAY_ONLY_POLICY",
     "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_RECONSTRUCTING_REQUIRED_PILOT_METRICS",
+    "localOriginalSourceSnapshotReverification": {
+      "expectedSnapshotCount": 8,
+      "reverifiedAgainstPinnedFileSha256Count": 8,
+      "regularFileCount": 8,
+      "singleLinkFileCount": 8,
+      "gitExcludedDirectory": true,
+      "directoryMode": "0700",
+      "fileMode": "0600",
+      "pathsRetainedInTrackedArtifacts": false,
+      "individualHashesRetainedInTrackedArtifacts": false,
+      "humanFidelityDecisionsCreated": 0
+    },
+    "machineOnlyFidelityCapability": {
+      "contractSchemaVersion": "pr207-document-fidelity-decisions-v2",
+      "supportStatus": "SUPPORTED_FAIL_CLOSED_V2",
+      "pageNumberNamespace": "NORMALIZED_BUNDLE_PAGE_NUMBER",
+      "rowCompletionRule": "EXACTLY_BLANK_OR_COMPLETE_NO_PARTIAL_ROWS",
+      "allowedPageTextFidelityDecisions": [
+        "EXACT",
+        "ACCEPTABLE_WITH_LIMITATIONS",
+        "UNSAFE_FOR_CANDIDATE_REVIEW"
+      ],
+      "allowedTableStructureFidelityDecisions": [
+        "EXACT",
+        "ACCEPTABLE_WITH_LIMITATIONS",
+        "UNSAFE_FOR_CANDIDATE_REVIEW",
+        "NOT_APPLICABLE"
+      ],
+      "allowedSemanticPreservationDecisions": [
+        "PRESERVED",
+        "NOT_PRESERVED",
+        "NOT_APPLICABLE"
+      ],
+      "allowedDecisionReasonCodes": [
+        "EXACT_FIDELITY_CONFIRMED",
+        "ACCEPTABLE_LIMITATION_IDENTIFIED",
+        "UNSAFE_FIDELITY_IDENTIFIED",
+        "SOURCE_PAGE_UNAVAILABLE",
+        "NO_CANDIDATE_CONTENT"
+      ],
+      "revisionStatusFields": [
+        "documentIdentityStatus",
+        "documentNumberStatus",
+        "revisionStatus"
+      ],
+      "allowedRevisionStatuses": [
+        "MATCH",
+        "MISMATCH",
+        "UNCONFIRMED"
+      ],
+      "pageRules": [
+        "SORTED_UNIQUE_POSITIVE_NORMALIZED_BUNDLE_PAGE_NUMBERS",
+        "PAGES_CHECKED_EQUALS_COMPLETE_NORMALIZED_BUNDLE_PAGE_NAMESPACE",
+        "CANDIDATE_BEARING_ELIGIBLE_AND_INELIGIBLE_PAGES_ARE_SUBSETS_OF_PAGES_CHECKED",
+        "ELIGIBLE_PAGES_ARE_A_SUBSET_OF_CANDIDATE_BEARING_PAGES",
+        "ELIGIBLE_AND_INELIGIBLE_PAGES_FORM_A_DISJOINT_EXHAUSTIVE_PARTITION"
+      ],
+      "ignoredTemplate": {
+        "sha256": "e5e6aa1d7c73ab939d88e8c907107c8eed93ff698524efa5aefc4bdd6e14ae1e",
+        "mode": "0600",
+        "tracked": false,
+        "ignored": true,
+        "documentRows": 8,
+        "blankRows": 8,
+        "completedRows": 0
+      },
+      "validator": {
+        "schemaVersion": "pr207-human-evidence-input-validation-v3",
+        "validationStatus": "STRUCTURALLY_VALID",
+        "evidenceStatus": "INCOMPLETE",
+        "operatorOutcome": "AWAITING_HUMAN_INPUT",
+        "humanFidelityEvidence": "INCOMPLETE_0_OF_8"
+      }
+    },
+    "localOperatorDisplayCapability": {
+      "status": "DIRECT_LOCAL_FILESYSTEM_DISPLAY_NO_SERVER",
+      "metadataOnlyChecklistExists": true,
+      "checklistSha256": "89a8cf7f3923c85ba78418e8e3fe3337da610173c8d5d5c989d8413004de6813",
+      "checklistMode": "0600",
+      "checklistTracked": false,
+      "checklistIgnored": true,
+      "serverUsed": false,
+      "existingRealIntakeUiLaunched": false,
+      "existingRealIntakeUiAllowed": false
+    },
+    "humanEvidenceValidation": {
+      "schemaVersion": "pr207-human-evidence-input-validation-v3",
+      "evaluatedAsOf": "2026-07-21T10:05:34.000Z",
+      "validationStatus": "STRUCTURALLY_VALID",
+      "evidenceStatus": "INCOMPLETE",
+      "operatorOutcome": "AWAITING_HUMAN_INPUT",
+      "counts": {
+        "safeIgnoredInputFileCount": 12,
+        "intakeManifestDocumentCount": 8,
+        "normalizedDocumentInputCount": 8,
+        "normalizedDocumentPageCount": 22,
+        "documentDecisionRowCount": 8,
+        "fidelityDecisionRowCount": 8,
+        "blankFidelityDecisionRowCount": 8,
+        "partialFidelityDecisionRowCount": 0,
+        "completedFidelityDecisionRowCount": 0,
+        "partialFidelityDecisionFileCount": 0,
+        "completeFidelityDecisionFileCount": 0,
+        "fidelityDecisionDistribution": {
+          "exactRowCount": 0,
+          "acceptableWithLimitationsRowCount": 0,
+          "unsafeForCandidateReviewRowCount": 0
+        },
+        "fidelityCandidateBearingPageCount": 0,
+        "fidelityEligiblePageCount": 0,
+        "fidelityIneligiblePageCount": 0,
+        "candidateDecisionRowCount": 0,
+        "approvedCandidateDecisionRowCount": 0,
+        "intakeManifestByteCount": 7271,
+        "documentDecisionFileByteCount": 9739,
+        "fidelityDecisionFileByteCount": 7653,
+        "candidateDecisionFileByteCount": 1272,
+        "normalizedDocumentInputByteCount": 79060,
+        "rightsRetentionPolicyCommentCount": 1,
+        "realDocumentVerifiedClaimsCreated": 0,
+        "realDocumentAllowedClaimsCreated": 0
+      },
+      "statuses": {
+        "localInputSafety": "PASS",
+        "structuralAndLineageValidation": "PASS",
+        "humanFidelityEvidence": "INCOMPLETE_0_OF_8",
+        "fidelityDecisionCompletion": "BLANK_0_OF_8",
+        "fidelityCompletionContract": "SUPPORTED_FAIL_CLOSED_V2",
+        "rightsAndRetentionAuthority": "VALID_ACTIVE_BOUNDED_POLICY_LOCAL_DISPLAY_ONLY",
+        "candidatePopulation": "EMPTY",
+        "candidateCompletionContract": "NOT_APPROVED_NONEMPTY_V1_REFUSED",
+        "candidateReviewEvidence": "INCOMPLETE_0_OF_25",
+        "candidateFamilyThresholds": "INCOMPLETE_SWITCHGEAR_0_OF_10_TRANSFORMER_0_OF_10",
+        "mergeApproval": "NOT_GRANTED",
+        "productionApproval": "NOT_GRANTED"
+      },
+      "individualInputHashesRetainedInTrackedReport": false,
+      "aggregateInputBindingSha256": "b08bbc505ffc47e0277aebf88180fcb70d68f47b464e43edfbd4ec976556f1d3"
+    },
     "machineIntake": {
       "evaluatedSourceCount": 11,
       "acceptedSourceCount": 8,
@@ -328,7 +392,7 @@
   "goalRuleDeviationDisposition": "EXPLICIT_OWNER_RETENTION_EXCEPTION_RECORDED_FOR_EXACT_FOUR_COMMITS",
   "commandLedger": {
     "relativePath": "tmp/codex/evidence-to-decision-validation-command-ledger-20260719.json",
-    "sha256": "8c40b79d3e471a30df16ada12217e52f7c7263022da90bfc0675d012b0fb3606",
+    "sha256": "4148031f87b5ca06b71a7cd34f7b010ca22ad0f28525e48ab9b6e21cfc2b3a53",
     "commandGroupCount": 7,
     "allPassed": true
   }
