@@ -31,6 +31,8 @@
     "test:e2e:local": "node --test worker/e2e/local-e2e.test.mjs",
     "test:evidence": "node --test tests/release-evidence-redaction.test.js tests/release-evidence-packet.test.js",
     "test:evidence-to-decision-pilot": "node --test tests/evidence-to-decision-pilot-artifacts.test.mjs",
+    "test:pr207-human-evidence-validator": "node --test tests/pr207-human-evidence-validator.test.mjs",
+    "validate:pr207-human-evidence": "node scripts/validate-pr207-human-evidence-inputs.mjs",
     "test:root": "node --test tests/*.test.js",
     "test:runtime": "npm run test:root",
     "test:unit": "find worker/tests -maxdepth 1 -name '*.test.mjs' ! -name 'job-trigger.test.mjs' ! -name 'trigger-handler.test.mjs' ! -name 'workflow-contract.test.mjs' -print0 | xargs -0 node --test",

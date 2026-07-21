@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "pr207-human-evidence-input-validation-v1",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "validationStatus": "STRUCTURALLY_VALID",
+  "evidenceStatus": "INCOMPLETE",
+  "operatorOutcome": "AWAITING_HUMAN_INPUT",
+  "evaluatedPr": 207,
+  "evaluatedHead": "c6a5469338999097acd5de7c5a12c827d27d4540",
+  "hashes": {
+    "intakeManifestSha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953",
+    "documentDecisionFileSha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
+    "fidelityDecisionFileSha256": "7cec1b41c7678535d72e5569a3cdc75700cf2394e314840775325f5dd834872d",
+    "candidateDecisionFileSha256": "10460a8fb0202af984ea98e3ca5b34fea3822a4531ed2ed1221e35d5acaa3051",
+    "documentTupleFingerprintSha256": "59c292b30801208853cbd6cb902d1eb4d0064001b72c1317001c849d48ecabb7"
+  },
+  "counts": {
+    "safeIgnoredInputFileCount": 12,
+    "intakeManifestDocumentCount": 8,
+    "normalizedDocumentInputCount": 8,
+    "normalizedDocumentPageCount": 22,
+    "documentDecisionRowCount": 8,
+    "fidelityDecisionRowCount": 8,
+    "blankFidelityDecisionRowCount": 8,
+    "completedFidelityDecisionRowCount": 0,
+    "candidateDecisionRowCount": 0,
+    "approvedCandidateDecisionRowCount": 0,
+    "intakeManifestByteCount": 7271,
+    "documentDecisionFileByteCount": 9739,
+    "fidelityDecisionFileByteCount": 7129,
+    "candidateDecisionFileByteCount": 1272,
+    "normalizedDocumentInputByteCount": 79060
+  },
+  "statuses": {
+    "localInputSafety": "PASS",
+    "structuralAndLineageValidation": "PASS",
+    "humanFidelityEvidence": "INCOMPLETE_0_OF_8",
+    "fidelityCompletionContract": "UNSUPPORTED_PENDING_EXPLICIT_PAGE_NAMESPACE_AND_HUMAN_CONTRACT",
+    "rightsAndRetentionAuthority": "NOT_VALIDATED_REQUIRES_CANONICAL_GITHUB_DECISION",
+    "candidatePopulation": "EMPTY",
+    "candidateCompletionContract": "NOT_APPROVED_NONEMPTY_V1_REFUSED",
+    "candidateReviewEvidence": "INCOMPLETE_0_OF_25",
+    "candidateFamilyThresholds": "INCOMPLETE_SWITCHGEAR_0_OF_10_TRANSFORMER_0_OF_10",
+    "mergeApproval": "NOT_GRANTED",
+    "productionApproval": "NOT_GRANTED"
+  },
+  "nonClaims": [
+    "Structural validation does not create or infer a human fidelity decision.",
+    "An empty candidate set does not satisfy the PR207 real-evidence pilot threshold.",
+    "This report does not establish source rights, retention approval, claim correctness, merge approval, or production approval."
+  ]
+}
