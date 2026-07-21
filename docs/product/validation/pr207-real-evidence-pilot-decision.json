@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "pr207-real-evidence-pilot-decision-v7",
-  "asOf": "2026-07-19T03:33:31.000Z",
+  "schemaVersion": "pr207-real-evidence-pilot-decision-v8",
+  "asOf": "2026-07-21T08:54:24.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "sourcePr": 207,
   "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
@@ -75,6 +75,38 @@
     "productionApproved": false,
     "mergeApproved": false
   },
+  "rightsRetentionDecisionRecord": {
+    "marker": "PR207_PAGE_REVIEW_RIGHTS_RETENTION_POLICY_V1",
+    "policyStatus": "ACTIVE_APPROVED_BOUNDED_POLICY",
+    "commentId": 5031954760,
+    "commentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5031954760",
+    "commenterLogin": "dooosp",
+    "authorAssociation": "OWNER",
+    "createdAt": "2026-07-21T08:48:13Z",
+    "updatedAt": "2026-07-21T08:48:13Z",
+    "rawBodySha256": "13a7d5809bf10df1383219dac9f9ebe59e92c83e01e054ccbada539aa1b6b760",
+    "lfNormalizedBodySha256": "22e9a051d2a9a81620a5fb1465be1b4e07dc7eb3cd0f1f33344c55300346b885",
+    "evaluatedPr": 207,
+    "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+    "decisionFileSha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
+    "policyDecision": "APPROVE",
+    "fullPageReviewMode": "LOCAL_OPERATOR_DISPLAY_ONLY",
+    "fullPageTransmissionAllowed": false,
+    "fullPageGitCommitAllowed": false,
+    "fullPageExportAllowed": false,
+    "boundedExcerptInternalReviewAllowed": true,
+    "publicRepositoryExcerptAllowedDuringPilot": false,
+    "reviewRecordRetentionMode": "BOUNDED_REVIEW_METADATA_AND_EXCERPTS_ONLY",
+    "reviewRecordRetentionLocation": "LOCAL_IGNORED_HUMAN_APPROVAL_PATH_AND_CONTROL_BRANCH_ANONYMIZED_HASH_AGGREGATES_ONLY",
+    "reviewerIdentityRetained": "NOT_COLLECTED",
+    "fullSourceBinaryRetained": "LOCAL_IGNORED_OPERATOR_CONTROLLED_ONLY; NEVER_GIT_COMMITTED_OR_TRANSMITTED",
+    "expiresAt": "2026-08-21T23:59:59Z",
+    "stopConditionsPresent": true,
+    "realDocumentVerifiedClaimsCreated": 0,
+    "realDocumentAllowedClaimsCreated": 0,
+    "productionApproved": false,
+    "mergeApprovedByThisComment": false
+  },
   "currentVariantTableRun": {
     "inputDocumentCount": 8,
     "structuredTableCount": 2,
@@ -110,6 +142,7 @@
     "technicalScopeDecisions": 8,
     "originalSourceFidelityDecisions": 0,
     "redistributionOrUseRightsDecisions": 0,
+    "rightsRetentionPolicyDecisions": 1,
     "boundedExcerptUseRightsDecisions": 8,
     "binaryHandlingDecisions": 8,
     "completeStructuredDocumentDecisionRows": 8,
@@ -128,7 +161,7 @@
     "canonicalVerifiedClaimsCreated": 0,
     "customerUseAllowedClaimsCreated": 0
   },
-  "realIntakeExecutionRestriction": "DO_NOT_LAUNCH_REAL_INTAKE_UI_FULL_NORMALIZED_PAGE_TEXT_EXCEEDS_BOUNDED_EXCERPT_APPROVAL",
+  "realIntakeExecutionRestriction": "DO_NOT_LAUNCH_EXISTING_REAL_INTAKE_UI_FULL_PAGE_TRANSPORT_PROHIBITED_LOCAL_OPERATOR_DISPLAY_ONLY_POLICY",
   "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_RECONSTRUCTING_REQUIRED_PILOT_METRICS",
   "humanMetrics": {
     "quoteToPageAccuracy": null,
@@ -149,7 +182,7 @@
     "fullDocumentRuntimeLeakageObserved": 0,
     "secretOrPrivateLeakageObserved": 0,
     "unresolvedP0": 0,
-    "interpretation": "Zero observed leakage is not a full-document rights approval. The owner approved bounded excerpts for internal repository review only; the unlaunched real-intake UI still has an open complete-page-text transport risk. Hash-mismatch escape rate is unavailable without separately decided original-source fidelity and human-reviewed candidates."
+    "interpretation": "Zero observed leakage is not a full-document transmission approval. The active owner policy permits local-operator display and bounded excerpts for internal review, explicitly prohibits full-page transmission, Git commit, and export, and does not make the existing unlaunched real-intake UI conforming. Hash-mismatch escape rate is unavailable without separately decided original-source fidelity and human-reviewed candidates."
   },
   "thresholdResults": {
     "acceptedDocumentsAtLeastEight": "OWNER_OFFICIALITY_CURRENTNESS_SCOPE_AND_BOUNDED_EXCERPT_DECISIONS_8_OF_8_ORIGINAL_SOURCE_FIDELITY_UNRESOLVED",
@@ -163,6 +196,9 @@
     "reviewedSuggestionPrecisionAtLeastEightyPercent": "INCOMPLETE_NO_HUMAN_REVIEWED_SUGGESTIONS",
     "materialUnresolvedConflictsVisiblyBlocking": "INCOMPLETE_NO_SAFE_REAL_CANDIDATE_POPULATION",
     "allDocumentOwnerBoundedDecisions": "PASS_8_OF_8_SHA_BOUND_TO_CANONICAL_GITHUB_APPROVAL",
+    "rightsRetentionPolicyDecision": "PASS_1_OF_1_ACTIVE_APPROVED_BOUNDED_POLICY",
+    "rightsBoundaryImplementation": "INCOMPLETE_EXISTING_UI_TRANSPORT_NONCONFORMING_DO_NOT_LAUNCH",
+    "reviewEvidenceRetentionImplementation": "INCOMPLETE_NOT_CAPABLE_OF_RECONSTRUCTING_REQUIRED_PILOT_METRICS",
     "allOriginalSourceFidelityDecisions": "INCOMPLETE_0_OF_8",
     "allDocumentValidityDecisions": "INCOMPLETE_ORIGINAL_SOURCE_FIDELITY_0_OF_8",
     "automaticVerifiedLeakageZero": "PASS_OBSERVED_0",
@@ -177,16 +213,16 @@
     {
       "code": "REAL_INTAKE_UI_TRANSPORTS_COMPLETE_NORMALIZED_PAGE_TEXT",
       "severity": "P1_COPYRIGHT_AND_USE_BOUNDARY",
-      "evidence": "Read-only code inspection found that real-intake catalog serialization and rendering include complete normalized page.text even when redistributionStatus is METADATA_AND_BOUNDED_EXCERPTS_ONLY.",
-      "effect": "Launching the real-intake UI can expose more third-party page content than the declared rights boundary permits before human rights review.",
-      "status": "OPEN_DO_NOT_LAUNCH_REAL_INTAKE_UI"
+      "evidence": "Read-only code inspection found that real-intake catalog serialization and rendering include complete normalized page.text. The active owner policy permits local-operator display only and prohibits full-page transmission, Git commit, and export.",
+      "effect": "The rights authority input is resolved, but launching the existing UI would use a transport path that does not conform to the approved no-transmission boundary.",
+      "status": "AUTHORITY_RESOLVED_IMPLEMENTATION_NONCONFORMING_DO_NOT_LAUNCH_REAL_INTAKE_UI"
     },
     {
       "code": "HUMAN_REVIEW_EVIDENCE_CANNOT_BE_RECONSTRUCTED",
       "severity": "P1_METHOD_RISK",
-      "evidence": "The review request has no duration or usefulness fields, browser review state is page-memory-only, and patch projection does not retain all standalone rejected, deferred, or authenticity decisions.",
-      "effect": "The required decision counts, precision denominator, review-time median, usefulness, and patch-suitability evidence cannot be reproduced from current outputs.",
-      "status": "OPEN_SEPARATE_OWNER_DECISION_REQUIRED"
+      "evidence": "The approved policy limits retention to bounded review metadata and excerpts in the local ignored human-approval path and control-branch anonymized hash aggregates. The review request still has no duration or usefulness fields, browser review state is page-memory-only, and patch projection does not retain all standalone rejected, deferred, or authenticity decisions.",
+      "effect": "The retention authority input is resolved, but the required decision counts, precision denominator, review-time median, usefulness, and patch-suitability evidence still cannot be reproduced from current outputs.",
+      "status": "AUTHORITY_RESOLVED_IMPLEMENTATION_NOT_CAPABLE"
     },
     {
       "code": "VARIANT_AND_MAXIMUM_SEMANTICS_NOT_REPRESENTABLE",
@@ -196,11 +232,11 @@
       "status": "OWNER_DECISION_RECORDED_SAFE_CANDIDATE_POPULATION_STILL_EMPTY"
     },
     {
-      "code": "DOCUMENT_VALIDITY_AND_USE_RIGHTS_NOT_HUMAN_REVIEWED",
+      "code": "ORIGINAL_SOURCE_FIDELITY_UNREVIEWED_RIGHTS_POLICY_BOUNDED",
       "severity": "P1_EXTERNAL_INPUT",
-      "evidence": "The SHA-bound owner approval records officiality, currentness, technical scope, bounded-excerpt internal-review use, and binary handling for all eight normalized bundles. It does not separately decide original-source fidelity or full-page redistribution.",
-      "effect": "The bounded owner decisions are usable only within their stated scope; original-source fidelity and full-page transport remain unresolved.",
-      "status": "PARTIALLY_RESOLVED_ORIGINAL_SOURCE_FIDELITY_AND_FULL_PAGE_RIGHTS_OPEN"
+      "evidence": "The SHA-bound document approval records officiality, currentness, technical scope, bounded-excerpt internal-review use, and binary handling for all eight normalized bundles, while the later rights policy selects local-operator display only and explicitly prohibits full-page transmission, Git commit, and export. Neither comment separately decides original-source fidelity.",
+      "effect": "The bounded owner decisions are usable only within their stated scope; original-source fidelity remains unresolved and the existing full-page transport path remains nonconforming with the now-decided policy.",
+      "status": "PARTIALLY_RESOLVED_ORIGINAL_SOURCE_FIDELITY_OPEN_RIGHTS_POLICY_ACTIVE"
     },
     {
       "code": "FIXED_AUDIT_CLOCK_PRECEDES_REAL_NORMALIZATION",
@@ -249,21 +285,34 @@
   "architectureSignal": "BOUNDED_NON_CANONICAL_REVIEW_PATH_APPROVED_SAFE_CANDIDATE_POPULATION_STILL_EMPTY",
   "architectureSignalScope": "Bounded to two mapped rows across the eight supplied normalized documents. The owner decision resolves the requested architecture direction without changing the current evaluator: compound variant and maximum semantics still abstain, and latent footnote, geometry, column, condition, and configuration semantics remain unresolved.",
   "decision": "INCOMPLETE",
-  "decisionReason": "The canonical owner approval resolves officiality, currentness, technical scope, bounded-excerpt internal-review use, binary handling, and the bounded architecture direction for all eight SHA-bound document rows. It does not separately resolve original-source fidelity or the full-page UI rights boundary. Current inputs still contain zero safe proposals, zero candidate decisions, and zero approved candidates, so the required 25 total and 10-per-family human approval thresholds remain unmet and Track B stays INCOMPLETE.",
+  "decisionReason": "The canonical owner approvals resolve officiality, currentness, technical scope, bounded-excerpt internal-review use, binary handling, the bounded architecture direction, and the rights/retention authority inputs. The active policy permits local-operator display only, prohibits full-page transmission, Git commit, and export, and approves bounded review-metadata/excerpt retention. The existing UI transport remains nonconforming, the current retention implementation remains incapable of reconstructing required pilot metrics, original-source fidelity remains 0 of 8, and current inputs still contain zero safe proposals, zero candidate decisions, and zero approved candidates. The required 25 total and 10-per-family human approval thresholds remain unmet, so Track B stays INCOMPLETE.",
   "mergeRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
   "nextExternalInputs": [
     "A qualified human must separately decide original-source fidelity for each of the eight normalized document bundles; the recorded officiality/currentness/scope/bounded-excerpt decisions must not be expanded into that missing decision.",
-    "A rights/security owner must keep the real-intake UI blocked until full normalized page-text transport is removed or explicitly approved under a documented rights boundary.",
-    "A validation-method owner must separately authorize a review-evidence retention correction before candidate-review metrics can be reconstructed.",
     "A safe candidate population must be supplied under the approved bounded non-canonical path without weakening the current compound-variant or unsupported-operator abstentions.",
     "Only after those prerequisites and a safe candidate population exist may qualified reviewers review enough candidates to approve at least 25 for repository review, including at least 10 approved candidates per product family; rejected and deferred decisions do not satisfy those approval thresholds."
+  ],
+  "implementationPrerequisites": [
+    {
+      "id": "PR207_NO_TRANSMISSION_LOCAL_OPERATOR_DISPLAY_PATH",
+      "classification": "IMPLEMENTATION_CAPABILITY_NOT_EXTERNAL_HUMAN_INPUT",
+      "status": "REQUIRED_NOT_IMPLEMENTED",
+      "requirement": "Implement and verify a local-operator display path that does not transmit, Git-commit, export, or publicly excerpt full normalized page text before the real-intake UI may launch."
+    },
+    {
+      "id": "PR207_BOUNDED_RECONSTRUCTABLE_REVIEW_RETENTION",
+      "classification": "IMPLEMENTATION_CAPABILITY_NOT_EXTERNAL_HUMAN_INPUT",
+      "status": "REQUIRED_NOT_IMPLEMENTED",
+      "requirement": "Implement and verify reconstructable pilot metrics using only the approved bounded review metadata/excerpts and approved retention locations before candidate review begins."
+    }
   ],
   "productionReady": false,
   "productionReviewerWorkflowReady": false,
   "issue165Status": "HOLD",
   "nonClaims": [
     "The owner-attested official-source decision is a human approval record, not independent cryptographic acquisition provenance or an original-source fidelity decision.",
-    "The owner decisions approve current revision, technical scope, and bounded excerpts for internal repository review only; they do not approve full-page redistribution or customer use.",
+    "The active rights policy permits local-operator display and bounded excerpts for internal review only; it explicitly prohibits full-page transmission, Git commit, export, and public repository excerpts during the pilot, and does not approve customer use.",
+    "The rights and retention authority inputs are resolved, but the existing full-page transport path is nonconforming and the current review-evidence retention implementation is not capable of reconstructing the required pilot metrics.",
     "No abstention is counted as a human rejection or precision observation.",
     "The real-intake UI was not launched during this refresh.",
     "No canonical VERIFIED claim or customer-use ALLOWED claim was created.",

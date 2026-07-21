@@ -8,6 +8,7 @@ import { parseArgs } from 'node:util';
 import {
   EXPECTED_PR207_HEAD,
   INPUT_PATHS,
+  PR207_RIGHTS_RETENTION_POLICY_EXPECTATION,
   Pr207HumanEvidenceValidationError,
   listPr207NormalizedInputPaths,
   readSafeIgnoredJsonInput,
@@ -31,10 +32,36 @@ function gitValue(root, args) {
   }
 }
 
+function fetchCanonicalRightsRetentionPolicyComment() {
+  let raw;
+  try {
+    raw = execFileSync(
+      'gh',
+      [
+        'api',
+        `repos/dooosp/b2b-lead-agent/issues/comments/${PR207_RIGHTS_RETENTION_POLICY_EXPECTATION.commentId}`,
+      ],
+      {
+        encoding: 'utf8',
+        maxBuffer: 256 * 1024,
+        stdio: ['ignore', 'pipe', 'ignore'],
+      },
+    );
+  } catch {
+    fail('RIGHTS_POLICY_COMMENT_FETCH_FAILED');
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    fail('RIGHTS_POLICY_COMMENT_RESPONSE_INVALID');
+  }
+}
+
 async function main() {
   const { values } = parseArgs({
     options: {
       'pr207-root': { type: 'string' },
+      'as-of': { type: 'string' },
       output: { type: 'string' },
     },
     strict: true,
@@ -46,6 +73,7 @@ async function main() {
     '..',
   );
   const pr207Root = path.resolve(values['pr207-root']);
+  const asOf = values['as-of'] ?? new Date().toISOString();
   const gitTopLevel = path.resolve(gitValue(pr207Root, ['rev-parse', '--show-toplevel']));
   if (gitTopLevel !== pr207Root) fail('PR207_ROOT_MUST_BE_EXACT_WORKTREE_ROOT');
   const head = gitValue(pr207Root, ['rev-parse', 'HEAD']);
@@ -57,7 +85,13 @@ async function main() {
     relativePath: INPUT_PATHS.intakeManifest,
   });
   const normalizedInputPaths = listPr207NormalizedInputPaths(intakeManifest);
-  const [documentDecisions, fidelityDecisions, candidateDecisions, normalizedDocuments] =
+  const [
+    documentDecisions,
+    fidelityDecisions,
+    candidateDecisions,
+    normalizedDocuments,
+    rightsRetentionPolicyComment,
+  ] =
     await Promise.all([
       readSafeIgnoredJsonInput({
         pr207Root,
@@ -75,6 +109,7 @@ async function main() {
         relativePath,
         input: await readSafeIgnoredJsonInput({ pr207Root, relativePath }),
       }))),
+      Promise.resolve().then(fetchCanonicalRightsRetentionPolicyComment),
     ]);
 
   const report = validatePr207HumanEvidenceInputs({
@@ -83,6 +118,8 @@ async function main() {
     documentDecisions,
     fidelityDecisions,
     candidateDecisions,
+    rightsRetentionPolicyComment,
+    asOf,
   });
   if (values.output) {
     await writeJsonArtifactInsideWorktree({

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": "evidence-to-decision-validation-command-ledger-v4",
-  "observedAtDate": "2026-07-19",
-  "humanApprovalInputsObservedThrough": "2026-07-19T03:40:48Z",
+  "schemaVersion": "evidence-to-decision-validation-command-ledger-v5",
+  "observedAtDate": "2026-07-21",
+  "humanApprovalInputsObservedThrough": "2026-07-21T08:54:24Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "productionReady": false,
   "issue165Status": "HOLD",
@@ -64,7 +64,7 @@
       "id": "HUMAN_APPROVAL_BINDING_RECHECK",
       "status": "PASS",
       "exitCode": 0,
-      "expectedCommandCount": 6,
+      "expectedCommandCount": 8,
       "commandResults": [
         {
           "command": "gh api repos/dooosp/b2b-lead-agent/issues/comments/5013934447 | node <comment identity and raw/LF SHA-256 recheck>",
@@ -92,6 +92,22 @@
             "rawBodySha256": "9ade99c11f09bf78bec23c5799d7d95de41ccf5f636147300f15c0cfa2e0b661",
             "lfNormalizedBodySha256": "b7680d1776ef5f726bc8fa1206850e24ff839e32b03e99b2f37a39b8c3ba760e",
             "evaluatedHeadDecisionFileAndDocumentCountBinding": "PASS"
+          }
+        },
+        {
+          "command": "gh api repos/dooosp/b2b-lead-agent/issues/comments/5031954760 | node <comment identity and raw/LF SHA-256 recheck>",
+          "exitCode": 0,
+          "observed": {
+            "classification": "CANONICAL_ACTIVE_BOUNDED_RIGHTS_RETENTION_POLICY",
+            "commentId": 5031954760,
+            "pullRequest": 207,
+            "login": "dooosp",
+            "authorAssociation": "OWNER",
+            "createdAt": "2026-07-21T08:48:13Z",
+            "updatedAt": "2026-07-21T08:48:13Z",
+            "rawBodySha256": "13a7d5809bf10df1383219dac9f9ebe59e92c83e01e054ccbada539aa1b6b760",
+            "lfNormalizedBodySha256": "22e9a051d2a9a81620a5fb1465be1b4e07dc7eb3cd0f1f33344c55300346b885",
+            "evaluatedHeadDecisionFilePolicyAndExpiryBinding": "PASS"
           }
         },
         {
@@ -141,11 +157,36 @@
             "wrapperBoundary": "LOCAL_IGNORED_HUMAN_INPUT_TEMPLATE",
             "wrapperTemplateNonClaimRetained": true
           }
+        },
+        {
+          "command": "SEQUENTIAL_FOCUSED_PR207_HUMAN_EVIDENCE_VALIDATION_RECHECK",
+          "commands": [
+            "npm run test:pr207-human-evidence-validator",
+            "npm run validate:pr207-human-evidence -- --pr207-root <PR207_WORKTREE> --as-of 2026-07-21T08:54:24.000Z --output tmp/codex/pr207-human-evidence-validation-non-production.json"
+          ],
+          "exitCode": 0,
+          "observed": {
+            "classification": "PR207_HUMAN_EVIDENCE_VALIDATOR_V2",
+            "testsPassed": 31,
+            "testsFailed": 0,
+            "validationStatus": "STRUCTURALLY_VALID",
+            "rightsAndRetentionAuthority": "VALID_ACTIVE_BOUNDED_POLICY_LOCAL_DISPLAY_ONLY",
+            "evidenceStatus": "INCOMPLETE",
+            "operatorOutcome": "AWAITING_HUMAN_INPUT",
+            "completedFidelityDecisionRowCount": 0,
+            "approvedCandidateDecisionRowCount": 0,
+            "productionApproval": "NOT_GRANTED",
+            "mergeApproval": "NOT_GRANTED"
+          }
         }
       ],
       "gateEffect": {
         "pr206MethodOwnerInputResolved": true,
         "pr207BoundedDocumentAndArchitectureInputsResolved": true,
+        "pr207RightsAuthorityInputResolved": true,
+        "pr207RetentionPolicyAuthorityInputResolved": true,
+        "pr207CurrentUiPolicyConforming": false,
+        "pr207RetentionImplementationComplete": false,
         "pr206SessionsComplete": false,
         "pr207FullValidityComplete": false,
         "pr207OriginalSourceFidelityComplete": false,
@@ -329,7 +370,8 @@
   "nonClaims": [
     "This ledger records local command outcomes and is not production evidence.",
     "Synthetic test success does not supply human sessions, source officiality, rights approval, or human candidate decisions.",
-    "The canonical human comments resolve only the explicitly bounded PR206 method and PR207 document/architecture inputs; they do not establish original-source fidelity, approve complete page-text transport, supply a session or candidate decision, or authorize merge or production.",
+    "The canonical human comments resolve the explicitly bounded PR206 method, PR207 document/architecture, and PR207 rights/retention authority inputs. The active policy prohibits full-page transmission, Git commit, and export; it does not make the current UI conforming or the current retention implementation reconstructable.",
+    "The current evidence still does not establish original-source fidelity, supply a session or candidate decision, satisfy the 25-total or 10-per-family approval thresholds, or authorize merge or production.",
     "No production, staging, D1, customer-data, endpoint, log, secret, CRM, outreach, LLM, or automation action was performed."
   ]
 }

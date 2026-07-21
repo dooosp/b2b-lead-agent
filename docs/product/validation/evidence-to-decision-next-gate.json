@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "evidence-to-decision-next-gate-v7",
-  "asOf": "2026-07-19T03:33:31.000Z",
+  "schemaVersion": "evidence-to-decision-next-gate-v8",
+  "asOf": "2026-07-21T08:54:24.000Z",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "evaluatedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
   "artifactStorage": {
@@ -70,6 +70,45 @@
       "productionApproved": false,
       "mergeApprovedByThisComment": false
     },
+    "rightsRetentionDecisionRecord": {
+      "marker": "PR207_PAGE_REVIEW_RIGHTS_RETENTION_POLICY_V1",
+      "policyStatus": "ACTIVE_APPROVED_BOUNDED_POLICY",
+      "commentId": 5031954760,
+      "commentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5031954760",
+      "commenterLogin": "dooosp",
+      "authorAssociation": "OWNER",
+      "createdAt": "2026-07-21T08:48:13Z",
+      "updatedAt": "2026-07-21T08:48:13Z",
+      "rawBodySha256": "13a7d5809bf10df1383219dac9f9ebe59e92c83e01e054ccbada539aa1b6b760",
+      "lfNormalizedBodySha256": "22e9a051d2a9a81620a5fb1465be1b4e07dc7eb3cd0f1f33344c55300346b885",
+      "evaluatedPr": 207,
+      "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "decisionFileSha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
+      "policyDecision": "APPROVE",
+      "fullPageReviewMode": "LOCAL_OPERATOR_DISPLAY_ONLY",
+      "fullPageTransmissionAllowed": false,
+      "fullPageGitCommitAllowed": false,
+      "fullPageExportAllowed": false,
+      "boundedExcerptInternalReviewAllowed": true,
+      "publicRepositoryExcerptAllowedDuringPilot": false,
+      "reviewRecordRetentionMode": "BOUNDED_REVIEW_METADATA_AND_EXCERPTS_ONLY",
+      "reviewRecordRetentionLocation": "LOCAL_IGNORED_HUMAN_APPROVAL_PATH_AND_CONTROL_BRANCH_ANONYMIZED_HASH_AGGREGATES_ONLY",
+      "reviewerIdentityRetained": "NOT_COLLECTED",
+      "fullSourceBinaryRetained": "LOCAL_IGNORED_OPERATOR_CONTROLLED_ONLY; NEVER_GIT_COMMITTED_OR_TRANSMITTED",
+      "expiresAt": "2026-08-21T23:59:59Z",
+      "stopConditionsPresent": true,
+      "realDocumentVerifiedClaimsCreated": 0,
+      "realDocumentAllowedClaimsCreated": 0,
+      "productionApproved": false,
+      "mergeApprovedByThisComment": false
+    },
+    "rightsOwnerInputResolved": true,
+    "retentionMethodOwnerInputResolved": true,
+    "rightsRetentionPolicyStatus": "ACTIVE_APPROVED_BOUNDED_POLICY",
+    "realIntakeRightsBoundary": "APPROVE_LOCAL_OPERATOR_DISPLAY_ONLY_NO_TRANSMISSION",
+    "realIntakeRightsBoundaryImplementationCapable": false,
+    "retentionDecision": "APPROVED_BOUNDED_REVIEW_METADATA_AND_EXCERPTS_ONLY",
+    "retentionImplementationCapable": false,
     "architectureOwnerDecision": "APPROVE_BOUNDED_NON_CANONICAL_REVIEW_PATH",
     "structuredRowsEvaluated": 2,
     "safeProposals": 0,
@@ -82,6 +121,20 @@
     },
     "realIntakeUiAllowed": false,
     "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_REQUIRED_METRICS",
+    "implementationPrerequisites": [
+      {
+        "id": "PR207_NO_TRANSMISSION_LOCAL_OPERATOR_DISPLAY_PATH",
+        "classification": "IMPLEMENTATION_CAPABILITY_NOT_EXTERNAL_HUMAN_INPUT",
+        "status": "REQUIRED_NOT_IMPLEMENTED",
+        "requirement": "Implement and verify a local-operator display path with no full-page transmission, Git commit, export, or public excerpt before launch."
+      },
+      {
+        "id": "PR207_BOUNDED_RECONSTRUCTABLE_REVIEW_RETENTION",
+        "classification": "IMPLEMENTATION_CAPABILITY_NOT_EXTERNAL_HUMAN_INPUT",
+        "status": "REQUIRED_NOT_IMPLEMENTED",
+        "requirement": "Implement and verify reconstructable pilot metrics using only approved bounded review metadata/excerpts and approved retention locations before candidate review."
+      }
+    ],
     "postInitialIncompleteImplementationCommits": 3,
     "implementationChangesPerformedIn20260719Refresh": 0,
     "changeAuthorityStatus": "RETENTION_APPROVED_FOR_EXACT_FOUR_COMMITS"
@@ -90,7 +143,7 @@
   "overallStatus": "BLOCKED_BOTH",
   "goalCompletionStatus": "INCOMPLETE_EXTERNAL_INPUTS",
   "mergeTrainRecommendation": "NO_MERGE_INPUT_INCOMPLETE",
-  "mergeTrainReason": "Track A's method owner accepted the current bounded method, but Track A still has zero completed human sessions. Track B has eight SHA-bound owner decision rows and an approved bounded non-canonical architecture path, but original-source fidelity remains 0 of 8, safe propositions remain 0, human candidate decisions remain 0, and candidates approved for repository review remain 0. Neither approval authorizes merge or production. Both tracks remain INCOMPLETE and merge remains blocked.",
+  "mergeTrainReason": "Track A's method owner accepted the current bounded method, but Track A still has zero completed human sessions. Track B has eight SHA-bound owner decision rows, an approved bounded non-canonical architecture path, and resolved rights/retention authority inputs. The existing full-page transport path does not conform to the approved local-display-only/no-transmission policy, the retention implementation cannot reconstruct required metrics, original-source fidelity remains 0 of 8, safe propositions remain 0, human candidate decisions remain 0, and candidates approved for repository review remain 0. No comment authorizes merge or production. Both tracks remain INCOMPLETE and merge remains blocked.",
   "tenderMatrixEntryGate": "BLOCKED_BOTH",
   "tenderMatrixBlockers": [
     "PR206_DECISION_NOT_MERGE",
@@ -118,18 +171,6 @@
       "required": 8
     },
     {
-      "owner": "PR207_RIGHTS_SECURITY_OWNER",
-      "input": "Keep the real-intake UI blocked until complete normalized page-text transport is removed or explicitly approved under a documented rights boundary.",
-      "current": 0,
-      "required": 1
-    },
-    {
-      "owner": "PR207_VALIDATION_METHOD_OWNER",
-      "input": "Authorize a reconstructable review-evidence retention method covering every decision, duration, usefulness, precision denominator, and patch-suitability result.",
-      "current": 0,
-      "required": 1
-    },
-    {
       "owner": "PR207_QUALIFIED_CANDIDATE_REVIEWERS",
       "input": "After safe propositions exist, review enough candidates to approve at least 25 for repository review, including at least 10 approved candidates for each product family; rejected and deferred decisions do not count toward these approval thresholds.",
       "current": 0,
@@ -141,7 +182,9 @@
     "PR206's method owner accepted the current bounded method for human merge evidence, with the automated gate remaining advisory; prepared blank files are still not human evidence.",
     "PR207 correctly abstains on the two mapped rows rather than losing compound-variant or maximum semantics.",
     "PR207 now has eight SHA-bound owner decisions covering officiality, revision currency, technical scope, bounded internal repository-review excerpts, and binary non-commit handling, plus approval of the bounded non-canonical architecture path.",
-    "PR207's owner decisions do not separately establish original-source fidelity, approve complete normalized page-text transport, create a safe proposition, or approve any candidate, canonical claim, customer use, merge, or production action.",
+    "PR207 now also has an active SHA-bound owner policy that resolves the rights and retention authority inputs: local-operator display only, no full-page transmission/Git commit/export, bounded internal excerpts allowed, bounded review metadata/excerpts retained only in approved locations, and reviewer identity not collected.",
+    "The policy does not make the existing full-page UI transport conforming or the current review-evidence retention implementation reconstructable; those are implementation prerequisites, not missing human authority inputs.",
+    "PR207's owner decisions do not separately establish original-source fidelity, create a safe proposition, or approve any candidate, canonical claim, customer use, merge, or production action.",
     "The 2026-07-19 explicit owner instruction authorizes retention of the exact four listed post-INCOMPLETE commits as a documented exception; it does not change either pilot decision or authorize further implementation.",
     "No MERGE, REVISE, or product-thesis PIVOT decision is justified while the explicit external-input gates remain incomplete. The recorded PR207 architecture signal is a bounded prerequisite for another candidate attempt."
   ],
@@ -150,8 +193,8 @@
     "PR206's formal intake covers three of twelve scenarios and relies heavily on facilitator-coded correctness; any later aggregate must be interpreted with those limitations.",
     "PR206's method-owner approval keeps the automated MERGE_THRESHOLDS result advisory; it cannot itself authorize merge or production action.",
     "PR207 source originals, publisher signatures/checksums, retrieval records, and a separate original-source-fidelity decision are not present in the tracked decision artifact.",
-    "PR207 real-intake UI code transports complete normalized page text beyond the approved bounded-excerpt scope; it was not launched and remains blocked.",
-    "PR207 current review state/patch output cannot reconstruct all rejected/deferred/authenticity decisions or the required time, usefulness, precision, and patch-suitability denominators.",
+    "PR207 real-intake UI code transports complete normalized page text contrary to the active local-operator-display-only/no-transmission policy; it was not launched and remains blocked pending a conforming path.",
+    "PR207 has an approved bounded review-record retention policy, but current review state/patch output still cannot reconstruct all rejected/deferred/authenticity decisions or the required time, usefulness, precision, and patch-suitability denominators.",
     "Six of eight PR207 normalized bundles are not represented by the two-row variant spike.",
     "The PR207 default document audit uses a fixed clock earlier than the real normalized extraction and therefore cannot be cited as a current real-input acceptance count.",
     "Do not weaken private-data guards, infer a scalar from a compound table, or treat an abstention as a human rejection."
@@ -199,5 +242,5 @@
   "productionReviewerWorkflowReady": false,
   "bothPrsRemainDraft": true,
   "bothPrsRemainUnmerged": true,
-  "nextAction": "External-input HOLD: retain the exact four owner-approved commits without rewriting either Draft PR. The PR206 method gate and PR207 bounded document/architecture decision gate are resolved, but neither comment approves merge or production. Do not merge either PR, launch the PR207 real-intake UI, or start the Tender Matrix. Obtain five completed R1-R5 sessions for PR206. For PR207, separately resolve original-source fidelity for all eight bundles and complete the full-page rights/security and review-evidence-retention gates. Once safe bounded candidates exist under separately authorized work, obtain at least 25 approvals with at least 10 per product family."
+  "nextAction": "External-input and implementation-capability HOLD: retain the exact four owner-approved commits without rewriting either Draft PR. The PR206 method gate and PR207 bounded document/architecture plus rights/retention authority gates are resolved, but no comment approves merge or production. Do not merge either PR, launch the nonconforming PR207 real-intake UI, or start the Tender Matrix. Obtain five completed R1-R5 sessions for PR206 and separately resolve original-source fidelity for all eight PR207 bundles. As distinct implementation prerequisites, build and verify a no-transmission local-operator display path and bounded reconstructable review retention. Once safe bounded candidates exist under separately authorized work, obtain at least 25 approvals with at least 10 per product family."
 }

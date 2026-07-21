@@ -1,8 +1,9 @@
 {
-  "schemaVersion": "pr207-real-evidence-input-ledger-v3",
+  "schemaVersion": "pr207-real-evidence-input-ledger-v4",
   "boundary": "NOT_PRODUCTION_EVIDENCE",
   "sourcePr": 207,
   "asOf": "2026-07-18T13:00:48.000Z",
+  "decisionObservedThrough": "2026-07-21T08:54:24.000Z",
   "acceptanceDefinition": "PR207_MACHINE_INTAKE_ONLY_NOT_HUMAN_AUTHENTICITY_OR_USE_APPROVAL",
   "sourceProvenanceStatus": "PUBLISHER_DOMAIN_ASSOCIATED_AUTHENTICITY_UNREVIEWED",
   "acceptedSourceHashCheckAtBuild": "EXPECTED_SHA256_BOUND_TO_NOFOLLOW_SINGLE_LINK_DESCRIPTOR_SNAPSHOT",
@@ -25,6 +26,45 @@
       "SOURCE_SIZE_EXCEEDS_25000000_BYTE_INTAKE_LIMIT": 2,
       "DOCUMENT_LANGUAGE_MISMATCH_DECLARED_KO_REPRESENTATIVE_PAGES_ZERO_HANGUL": 1
     }
+  },
+  "humanDecisionCounts": {
+    "rightsRetentionPolicyDecisions": 1,
+    "legacyAffirmativeRedistributionOrUseRightsDecisions": 0,
+    "fullPageTransmissionApprovals": 0,
+    "realDocumentVerifiedClaimsCreated": 0,
+    "realDocumentAllowedClaimsCreated": 0
+  },
+  "rightsRetentionDecisionRecord": {
+    "marker": "PR207_PAGE_REVIEW_RIGHTS_RETENTION_POLICY_V1",
+    "policyStatus": "ACTIVE_APPROVED_BOUNDED_POLICY",
+    "commentId": 5031954760,
+    "commentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5031954760",
+    "commenterLogin": "dooosp",
+    "authorAssociation": "OWNER",
+    "createdAt": "2026-07-21T08:48:13Z",
+    "updatedAt": "2026-07-21T08:48:13Z",
+    "rawBodySha256": "13a7d5809bf10df1383219dac9f9ebe59e92c83e01e054ccbada539aa1b6b760",
+    "lfNormalizedBodySha256": "22e9a051d2a9a81620a5fb1465be1b4e07dc7eb3cd0f1f33344c55300346b885",
+    "evaluatedPr": 207,
+    "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+    "decisionFileSha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
+    "policyDecision": "APPROVE",
+    "fullPageReviewMode": "LOCAL_OPERATOR_DISPLAY_ONLY",
+    "fullPageTransmissionAllowed": false,
+    "fullPageGitCommitAllowed": false,
+    "fullPageExportAllowed": false,
+    "boundedExcerptInternalReviewAllowed": true,
+    "publicRepositoryExcerptAllowedDuringPilot": false,
+    "reviewRecordRetentionMode": "BOUNDED_REVIEW_METADATA_AND_EXCERPTS_ONLY",
+    "reviewRecordRetentionLocation": "LOCAL_IGNORED_HUMAN_APPROVAL_PATH_AND_CONTROL_BRANCH_ANONYMIZED_HASH_AGGREGATES_ONLY",
+    "reviewerIdentityRetained": "NOT_COLLECTED",
+    "fullSourceBinaryRetained": "LOCAL_IGNORED_OPERATOR_CONTROLLED_ONLY; NEVER_GIT_COMMITTED_OR_TRANSMITTED",
+    "expiresAt": "2026-08-21T23:59:59Z",
+    "stopConditionsPresent": true,
+    "realDocumentVerifiedClaimsCreated": 0,
+    "realDocumentAllowedClaimsCreated": 0,
+    "productionApproved": false,
+    "mergeApprovedByThisComment": false
   },
   "documents": [
     {
@@ -361,7 +401,11 @@
   "sourceBinariesCommitted": false,
   "fullSourceBinaryLeakageCount": 0,
   "completeNormalizedPageTextStoredInIgnoredInbox": true,
-  "realIntakeUiNormalizedPageTextTransportRisk": "PRESENT_DO_NOT_LAUNCH_BEFORE_RIGHTS_BOUNDARY_REMEDIATION_OR_APPROVAL",
+  "realIntakeUiNormalizedPageTextTransportRisk": "PRESENT_PROHIBITED_BY_APPROVED_LOCAL_OPERATOR_DISPLAY_ONLY_POLICY_DO_NOT_LAUNCH_EXISTING_UI",
+  "realIntakeUiAllowed": false,
+  "currentUiPolicyConforming": false,
+  "humanReviewEvidenceRetentionFitness": "NOT_CAPABLE_OF_RECONSTRUCTING_REQUIRED_PILOT_METRICS",
+  "retentionImplementationComplete": false,
   "productionReady": false,
   "issue165Status": "HOLD"
 }

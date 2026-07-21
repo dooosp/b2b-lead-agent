@@ -1,7 +1,7 @@
 {
-  "schemaVersion": "evidence-to-decision-github-state-v3",
-  "observedAtDate": "2026-07-19",
-  "observedThrough": "2026-07-19T03:40:48Z",
+  "schemaVersion": "evidence-to-decision-github-state-v4",
+  "observedAtDate": "2026-07-21",
+  "observedThrough": "2026-07-21T08:54:24Z",
   "repository": "dooosp/b2b-lead-agent",
   "observationMethods": [
     "gh pr view 206 --json",
@@ -10,7 +10,8 @@
     "gh api repos/dooosp/b2b-lead-agent/issues/comments/5013934447",
     "gh api repos/dooosp/b2b-lead-agent/issues/comments/5013938164",
     "gh api repos/dooosp/b2b-lead-agent/issues/comments/5013945474",
-    "gh api repos/dooosp/b2b-lead-agent/issues/comments/5014019753"
+    "gh api repos/dooosp/b2b-lead-agent/issues/comments/5014019753",
+    "gh api repos/dooosp/b2b-lead-agent/issues/comments/5031954760"
   ],
   "pullRequests": [
     {
@@ -146,6 +147,41 @@
       "productionApproved": false,
       "mergeApprovedByThisComment": false,
       "effect": "RESOLVES_BOUNDED_DOCUMENT_AND_ARCHITECTURE_INPUTS_ONLY"
+    },
+    {
+      "recordType": "PR207_RIGHTS_RETENTION_POLICY",
+      "marker": "PR207_PAGE_REVIEW_RIGHTS_RETENTION_POLICY_V1",
+      "classification": "CANONICAL_ACTIVE_BOUNDED_RIGHTS_RETENTION_POLICY",
+      "pullRequest": 207,
+      "commentId": 5031954760,
+      "commentUrl": "https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5031954760",
+      "commenterLogin": "dooosp",
+      "authorAssociation": "OWNER",
+      "createdAt": "2026-07-21T08:48:13Z",
+      "updatedAt": "2026-07-21T08:48:13Z",
+      "rawBodySha256": "13a7d5809bf10df1383219dac9f9ebe59e92c83e01e054ccbada539aa1b6b760",
+      "lfNormalizedBodySha256": "22e9a051d2a9a81620a5fb1465be1b4e07dc7eb3cd0f1f33344c55300346b885",
+      "evaluatedHeadSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "decisionFileSha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
+      "policyStatus": "ACTIVE_APPROVED_BOUNDED_POLICY",
+      "policyDecision": "APPROVE",
+      "fullPageReviewMode": "LOCAL_OPERATOR_DISPLAY_ONLY",
+      "fullPageTransmissionAllowed": false,
+      "fullPageGitCommitAllowed": false,
+      "fullPageExportAllowed": false,
+      "boundedExcerptInternalReviewAllowed": true,
+      "publicRepositoryExcerptAllowedDuringPilot": false,
+      "reviewRecordRetentionMode": "BOUNDED_REVIEW_METADATA_AND_EXCERPTS_ONLY",
+      "reviewRecordRetentionLocation": "LOCAL_IGNORED_HUMAN_APPROVAL_PATH_AND_CONTROL_BRANCH_ANONYMIZED_HASH_AGGREGATES_ONLY",
+      "reviewerIdentityRetained": "NOT_COLLECTED",
+      "fullSourceBinaryRetained": "LOCAL_IGNORED_OPERATOR_CONTROLLED_ONLY; NEVER_GIT_COMMITTED_OR_TRANSMITTED",
+      "expiresAt": "2026-08-21T23:59:59Z",
+      "stopConditionsPresent": true,
+      "realDocumentVerifiedClaimsCreated": 0,
+      "realDocumentAllowedClaimsCreated": 0,
+      "productionApproved": false,
+      "mergeApprovedByThisComment": false,
+      "effect": "RESOLVES_RIGHTS_AND_RETENTION_AUTHORITY_INPUTS_ONLY"
     }
   ],
   "supportingHumanInputRecords": [
@@ -192,5 +228,5 @@
     "latestDecision": "HOLD",
     "latestDecisionReason": "The latest approval-intake validation refused the proposed command allowlist; no production proof was executed and the issue remains HOLD."
   },
-  "interpretation": "This is a dated read-only observation, not a guarantee of future GitHub state. Both PRs remained Draft/Open at their exact evaluated heads with three successful listed checks each and no review decision. Canonical comments resolved the PR206 method-owner input and the bounded PR207 document/architecture inputs only; they did not supply PR206 sessions, PR207 original-source fidelity or candidate approvals, or authorization to mark Ready or merge. The wrong-PR duplicate has no gate effect. Issue #165's latest relevant execution decision remained HOLD at observation time."
+  "interpretation": "This is a dated read-only observation, not a guarantee of future GitHub state. Both PRs remained Draft/Open at their exact evaluated heads with three successful listed checks each and no review decision. Canonical comments resolved the PR206 method-owner input, the bounded PR207 document/architecture inputs, and the PR207 rights/retention authority inputs. The active PR207 policy permits local-operator display only, prohibits full-page transmission/Git commit/export, allows bounded internal excerpts, and approves bounded review-record retention; it does not make the existing UI transport conforming or the current retention implementation reconstructable. The comments do not supply PR206 sessions, PR207 original-source fidelity or candidate approvals, or authorization to mark Ready, merge, or use production. The wrong-PR duplicate has no gate effect. Issue #165's latest relevant execution decision remained HOLD at observation time."
 }

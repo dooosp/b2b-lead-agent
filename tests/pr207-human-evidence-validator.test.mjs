@@ -21,8 +21,11 @@ import {
   EXPECTED_DOCUMENT_TUPLE_FINGERPRINT_SHA256,
   EXPECTED_INTAKE_MANIFEST_SHA256,
   EXPECTED_PR207_HEAD,
+  PR207_RIGHTS_RETENTION_POLICY_EXPECTATION,
   readSafeIgnoredJsonInput,
+  validatePr207RightsRetentionPolicyComment,
   validatePr207HumanEvidenceInputs,
+  validateRightsRetentionPolicyCommentAgainstExpectation,
 } from '../scripts/lib/pr207-human-evidence-validator.mjs';
 
 const SAFE_INPUT_STATUS = 'SAFE_IGNORED_UNTRACKED_REGULAR_0600_SINGLE_LINK';
@@ -38,6 +41,86 @@ function descriptor(value, sha) {
     byteLength: Buffer.byteLength(JSON.stringify(value)),
     value,
   };
+}
+
+const SYNTHETIC_POLICY_FIELDS = Object.freeze({
+  POLICY_DECISION: 'APPROVE',
+  FULL_PAGE_REVIEW_MODE: 'LOCAL_OPERATOR_DISPLAY_ONLY',
+  FULL_PAGE_TRANSMISSION_ALLOWED: 'NO',
+  FULL_PAGE_GIT_COMMIT_ALLOWED: 'NO',
+  FULL_PAGE_EXPORT_ALLOWED: 'NO',
+  BOUNDED_EXCERPT_INTERNAL_REVIEW_ALLOWED: 'YES',
+  PUBLIC_REPOSITORY_EXCERPT_ALLOWED_DURING_PILOT: 'NO',
+  REVIEW_RECORD_RETENTION_MODE:
+    'BOUNDED_REVIEW_METADATA_AND_EXCERPTS_ONLY',
+  REVIEW_RECORD_RETENTION_LOCATION:
+    'LOCAL_IGNORED_HUMAN_APPROVAL_PATH_AND_CONTROL_BRANCH_ANONYMIZED_HASH_AGGREGATES_ONLY',
+  REVIEWER_IDENTITY_RETAINED: 'NOT_COLLECTED',
+  FULL_SOURCE_BINARY_RETAINED:
+    'LOCAL_IGNORED_OPERATOR_CONTROLLED_ONLY; NEVER_GIT_COMMITTED_OR_TRANSMITTED',
+  REAL_DOCUMENT_VERIFIED_CLAIMS_CREATED: '0',
+  REAL_DOCUMENT_ALLOWED_CLAIMS_CREATED: '0',
+  PRODUCTION_APPROVED: 'NO',
+  MERGE_APPROVED_BY_THIS_COMMENT: 'NO',
+});
+
+function syntheticPolicyFixture() {
+  const lines = [
+    'SYNTHETIC_PR207_RIGHTS_POLICY_TEST_V1',
+    '',
+    'RIGHTS_RETENTION_OWNER_GITHUB_LOGIN: synthetic-owner',
+    'OWNER_AUTHORITY: I attest I am authorized to decide the page-review rights and review-record retention policy for this bounded pilot.',
+    `EVALUATED_PR: 207`,
+    `EVALUATED_HEAD: ${EXPECTED_PR207_HEAD}`,
+    `DOCUMENT_DECISION_FILE_SHA256: ${EXPECTED_DOCUMENT_DECISION_FILE_SHA256}`,
+    ...Object.entries(SYNTHETIC_POLICY_FIELDS).map(([key, value]) => `${key}: ${value}`),
+    'EXPIRATION_OR_REVIEW_DATE: 2026-08-21T23:59:59Z',
+    'STOP_CONDITIONS: evaluated-head drift; document-decision or source hash drift; unauthorized full-page transmission, export, or Git commit; full-page or source-binary leakage; private or secret leakage; expiry/review-date arrival; incomplete, vague, or contradictory human decision.',
+  ];
+  const body = lines.join('\r\n');
+  const expectation = {
+    commentId: 999,
+    apiUrl: 'https://api.example.invalid/comments/999',
+    commentUrl: 'https://example.invalid/pull/207#comment-999',
+    issueUrl: 'https://api.example.invalid/issues/207',
+    authorLogin: 'synthetic-owner',
+    authorType: 'User',
+    authorAssociation: 'OWNER',
+    createdAt: '2026-07-21T08:48:13Z',
+    updatedAt: '2026-07-21T08:48:13Z',
+    marker: lines[0],
+    rawBodySha256: sha256(body),
+    lfBodySha256: sha256(body.replace(/\r\n?/g, '\n')),
+    evaluatedPr: 207,
+    evaluatedHead: EXPECTED_PR207_HEAD,
+    documentDecisionFileSha256: EXPECTED_DOCUMENT_DECISION_FILE_SHA256,
+    expirationOrReviewDate: '2026-08-21T23:59:59Z',
+    policyFields: SYNTHETIC_POLICY_FIELDS,
+  };
+  return {
+    expectation,
+    comment: {
+      id: expectation.commentId,
+      url: expectation.apiUrl,
+      html_url: expectation.commentUrl,
+      issue_url: expectation.issueUrl,
+      user: {
+        login: expectation.authorLogin,
+        type: expectation.authorType,
+      },
+      author_association: expectation.authorAssociation,
+      created_at: expectation.createdAt,
+      updated_at: expectation.updatedAt,
+      body,
+    },
+  };
+}
+
+function validateSyntheticPolicy(fixture, asOf = '2026-07-21T08:54:24.000Z') {
+  return validateRightsRetentionPolicyCommentAgainstExpectation({
+    ...fixture,
+    asOf,
+  });
 }
 
 function syntheticInputs() {
@@ -224,8 +307,190 @@ function syntheticInputs() {
   };
 }
 
+test('accepts a bounded active rights/retention policy without retaining its body', () => {
+  const record = validateSyntheticPolicy(syntheticPolicyFixture());
+  assert.equal(
+    record.validationStatus,
+    'VALID_ACTIVE_BOUNDED_POLICY_LOCAL_DISPLAY_ONLY',
+  );
+  assert.equal(record.fullPageReviewMode, 'LOCAL_OPERATOR_DISPLAY_ONLY');
+  assert.equal(record.fullPageTransmissionAllowed, 'NO');
+  assert.equal(record.boundedExcerptInternalReviewAllowed, 'YES');
+  assert.equal(record.realDocumentVerifiedClaimsCreated, 0);
+  assert.equal(record.realDocumentAllowedClaimsCreated, 0);
+  assert.equal(record.productionApproved, 'NO');
+  assert.equal(record.mergeApprovedByThisComment, 'NO');
+  assert.equal(record.activeAtEvaluation, true);
+  assert.equal(record.rawBodyRetained, false);
+  assert.equal(record.stopConditionCoverage.length, 7);
+  assert.doesNotMatch(JSON.stringify(record), /OWNER_AUTHORITY|STOP_CONDITIONS|body/);
+});
+
+test('pins the canonical GitHub comment identity before reading policy content', () => {
+  assert.equal(PR207_RIGHTS_RETENTION_POLICY_EXPECTATION.commentId, 5031954760);
+  assert.equal(PR207_RIGHTS_RETENTION_POLICY_EXPECTATION.authorLogin, 'dooosp');
+  assert.equal(PR207_RIGHTS_RETENTION_POLICY_EXPECTATION.authorAssociation, 'OWNER');
+  assert.equal(
+    PR207_RIGHTS_RETENTION_POLICY_EXPECTATION.rawBodySha256,
+    '13a7d5809bf10df1383219dac9f9ebe59e92c83e01e054ccbada539aa1b6b760',
+  );
+  const { comment } = syntheticPolicyFixture();
+  assert.throws(
+    () => validatePr207RightsRetentionPolicyComment({
+      comment,
+      asOf: '2026-07-21T08:54:24.000Z',
+    }),
+    { code: 'RIGHTS_POLICY_COMMENT_METADATA_DRIFT' },
+  );
+});
+
+test('rejects rights policy metadata drift including post-publication edits', () => {
+  const fixture = syntheticPolicyFixture();
+  fixture.comment.updated_at = '2026-07-21T08:49:00Z';
+  assert.throws(
+    () => validateSyntheticPolicy(fixture),
+    { code: 'RIGHTS_POLICY_COMMENT_METADATA_DRIFT' },
+  );
+});
+
+test('rejects rights policy body schema and marker drift', async (t) => {
+  await t.test('marker drift', () => {
+    const fixture = syntheticPolicyFixture();
+    fixture.comment.body = fixture.comment.body.replace(
+      fixture.expectation.marker,
+      'DIFFERENT_POLICY_MARKER',
+    );
+    assert.throws(
+      () => validateSyntheticPolicy(fixture),
+      { code: 'RIGHTS_POLICY_MARKER_DRIFT' },
+    );
+  });
+
+  await t.test('missing field', () => {
+    const fixture = syntheticPolicyFixture();
+    fixture.comment.body = fixture.comment.body.replace(
+      /REVIEWER_IDENTITY_RETAINED:[^\r\n]+\r\n/,
+      '',
+    );
+    assert.throws(
+      () => validateSyntheticPolicy(fixture),
+      { code: 'RIGHTS_POLICY_BODY_SCHEMA_DRIFT' },
+    );
+  });
+});
+
+test('rejects rights policy evaluated-head and decision-file hash drift', async (t) => {
+  await t.test('head drift', () => {
+    const fixture = syntheticPolicyFixture();
+    fixture.comment.body = fixture.comment.body.replace(
+      EXPECTED_PR207_HEAD,
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    );
+    assert.throws(
+      () => validateSyntheticPolicy(fixture),
+      { code: 'RIGHTS_POLICY_HEAD_DRIFT' },
+    );
+  });
+
+  await t.test('decision-file hash drift', () => {
+    const fixture = syntheticPolicyFixture();
+    fixture.comment.body = fixture.comment.body.replace(
+      EXPECTED_DOCUMENT_DECISION_FILE_SHA256,
+      'a'.repeat(64),
+    );
+    assert.throws(
+      () => validateSyntheticPolicy(fixture),
+      { code: 'RIGHTS_POLICY_DOCUMENT_DECISION_HASH_DRIFT' },
+    );
+  });
+});
+
+test('rejects raw and LF-normalized rights policy body hash drift', async (t) => {
+  await t.test('raw hash drift', () => {
+    const fixture = syntheticPolicyFixture();
+    fixture.comment.body += '\r\n';
+    assert.throws(
+      () => validateSyntheticPolicy(fixture),
+      { code: 'RIGHTS_POLICY_RAW_BODY_HASH_DRIFT' },
+    );
+  });
+
+  await t.test('LF-normalized hash drift', () => {
+    const fixture = syntheticPolicyFixture();
+    fixture.expectation = {
+      ...fixture.expectation,
+      lfBodySha256: sha256('different LF-normalized body'),
+    };
+    assert.throws(
+      () => validateSyntheticPolicy(fixture),
+      { code: 'RIGHTS_POLICY_LF_BODY_HASH_DRIFT' },
+    );
+  });
+});
+
+test('rejects contradictory rights policy fields, counts, and authority', async (t) => {
+  await t.test('full-page transmission', () => {
+    const fixture = syntheticPolicyFixture();
+    fixture.comment.body = fixture.comment.body.replace(
+      'FULL_PAGE_TRANSMISSION_ALLOWED: NO',
+      'FULL_PAGE_TRANSMISSION_ALLOWED: YES',
+    );
+    assert.throws(
+      () => validateSyntheticPolicy(fixture),
+      { code: 'RIGHTS_POLICY_CONTRADICTION' },
+    );
+  });
+
+  await t.test('nonzero verified claim count', () => {
+    const fixture = syntheticPolicyFixture();
+    fixture.comment.body = fixture.comment.body.replace(
+      'REAL_DOCUMENT_VERIFIED_CLAIMS_CREATED: 0',
+      'REAL_DOCUMENT_VERIFIED_CLAIMS_CREATED: 1',
+    );
+    assert.throws(
+      () => validateSyntheticPolicy(fixture),
+      { code: 'RIGHTS_POLICY_CONTRADICTION' },
+    );
+  });
+
+  await t.test('merge approval', () => {
+    const fixture = syntheticPolicyFixture();
+    fixture.comment.body = fixture.comment.body.replace(
+      'MERGE_APPROVED_BY_THIS_COMMENT: NO',
+      'MERGE_APPROVED_BY_THIS_COMMENT: YES',
+    );
+    assert.throws(
+      () => validateSyntheticPolicy(fixture),
+      { code: 'RIGHTS_POLICY_CONTRADICTION' },
+    );
+  });
+});
+
+test('rejects incomplete stop conditions and an expired policy', async (t) => {
+  await t.test('stop-condition coverage', () => {
+    const fixture = syntheticPolicyFixture();
+    fixture.comment.body = fixture.comment.body.replace(
+      'private or secret leakage; ',
+      '',
+    );
+    assert.throws(
+      () => validateSyntheticPolicy(fixture),
+      { code: 'RIGHTS_POLICY_STOP_CONDITIONS_INCOMPLETE' },
+    );
+  });
+
+  await t.test('expiry boundary', () => {
+    const fixture = syntheticPolicyFixture();
+    assert.throws(
+      () => validateSyntheticPolicy(fixture, '2026-08-21T23:59:59.000Z'),
+      { code: 'RIGHTS_POLICY_EXPIRED' },
+    );
+  });
+});
+
 test('accepts the exact blank-input contract as structurally valid but incomplete', () => {
   const report = validatePr207HumanEvidenceInputs(syntheticInputs());
+  assert.equal(report.schemaVersion, 'pr207-human-evidence-input-validation-v2');
   assert.equal(report.validationStatus, 'STRUCTURALLY_VALID');
   assert.equal(report.evidenceStatus, 'INCOMPLETE');
   assert.equal(report.operatorOutcome, 'AWAITING_HUMAN_INPUT');
@@ -235,6 +500,10 @@ test('accepts the exact blank-input contract as structurally valid but incomplet
   assert.equal(report.counts.completedFidelityDecisionRowCount, 0);
   assert.equal(report.counts.candidateDecisionRowCount, 0);
   assert.equal(report.statuses.mergeApproval, 'NOT_GRANTED');
+  assert.equal(
+    report.statuses.rightsAndRetentionAuthority,
+    'NOT_VALIDATED_REQUIRES_CANONICAL_GITHUB_DECISION',
+  );
   assert.doesNotMatch(
     JSON.stringify(report),
     /sourceUrl|publisher|title|reviewer|pagesChecked|decisionReasonCodes/,

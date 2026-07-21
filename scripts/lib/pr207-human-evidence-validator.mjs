@@ -14,6 +14,29 @@ export const EXPECTED_DOCUMENT_DECISION_FILE_SHA256 =
 export const EXPECTED_DOCUMENT_TUPLE_FINGERPRINT_SHA256 =
   '59c292b30801208853cbd6cb902d1eb4d0064001b72c1317001c849d48ecabb7';
 
+export const PR207_RIGHTS_RETENTION_POLICY_EXPECTATION = Object.freeze({
+  commentId: 5031954760,
+  apiUrl:
+    'https://api.github.com/repos/dooosp/b2b-lead-agent/issues/comments/5031954760',
+  commentUrl:
+    'https://github.com/dooosp/b2b-lead-agent/pull/207#issuecomment-5031954760',
+  issueUrl: 'https://api.github.com/repos/dooosp/b2b-lead-agent/issues/207',
+  authorLogin: 'dooosp',
+  authorType: 'User',
+  authorAssociation: 'OWNER',
+  createdAt: '2026-07-21T08:48:13Z',
+  updatedAt: '2026-07-21T08:48:13Z',
+  marker: 'PR207_PAGE_REVIEW_RIGHTS_RETENTION_POLICY_V1',
+  rawBodySha256:
+    '13a7d5809bf10df1383219dac9f9ebe59e92c83e01e054ccbada539aa1b6b760',
+  lfBodySha256:
+    '22e9a051d2a9a81620a5fb1465be1b4e07dc7eb3cd0f1f33344c55300346b885',
+  evaluatedPr: 207,
+  evaluatedHead: EXPECTED_PR207_HEAD,
+  documentDecisionFileSha256: EXPECTED_DOCUMENT_DECISION_FILE_SHA256,
+  expirationOrReviewDate: '2026-08-21T23:59:59Z',
+});
+
 export const INPUT_PATHS = Object.freeze({
   intakeManifest: 'evidence-inbox/manifest.json',
   documentDecisions:
@@ -26,8 +49,69 @@ export const INPUT_PATHS = Object.freeze({
 
 const MAX_INPUT_BYTES = 128 * 1024;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
+const GIT_SHA_PATTERN = /^[a-f0-9]{40}$/;
 const DOCUMENT_ID_PATTERN = /^doc_[a-f0-9]{64}$/;
 const SAFE_INPUT_STATUS = 'SAFE_IGNORED_UNTRACKED_REGULAR_0600_SINGLE_LINK';
+const MAX_POLICY_COMMENT_BODY_BYTES = 16 * 1024;
+
+const RIGHTS_RETENTION_POLICY_KEYS = [
+  'BOUNDED_EXCERPT_INTERNAL_REVIEW_ALLOWED',
+  'DOCUMENT_DECISION_FILE_SHA256',
+  'EVALUATED_HEAD',
+  'EVALUATED_PR',
+  'EXPIRATION_OR_REVIEW_DATE',
+  'FULL_PAGE_EXPORT_ALLOWED',
+  'FULL_PAGE_GIT_COMMIT_ALLOWED',
+  'FULL_PAGE_REVIEW_MODE',
+  'FULL_PAGE_TRANSMISSION_ALLOWED',
+  'FULL_SOURCE_BINARY_RETAINED',
+  'MERGE_APPROVED_BY_THIS_COMMENT',
+  'OWNER_AUTHORITY',
+  'POLICY_DECISION',
+  'PRODUCTION_APPROVED',
+  'PUBLIC_REPOSITORY_EXCERPT_ALLOWED_DURING_PILOT',
+  'REAL_DOCUMENT_ALLOWED_CLAIMS_CREATED',
+  'REAL_DOCUMENT_VERIFIED_CLAIMS_CREATED',
+  'REVIEWER_IDENTITY_RETAINED',
+  'REVIEW_RECORD_RETENTION_LOCATION',
+  'REVIEW_RECORD_RETENTION_MODE',
+  'RIGHTS_RETENTION_OWNER_GITHUB_LOGIN',
+  'STOP_CONDITIONS',
+];
+
+const EXPECTED_RIGHTS_RETENTION_POLICY_FIELDS = Object.freeze({
+  POLICY_DECISION: 'APPROVE',
+  FULL_PAGE_REVIEW_MODE: 'LOCAL_OPERATOR_DISPLAY_ONLY',
+  FULL_PAGE_TRANSMISSION_ALLOWED: 'NO',
+  FULL_PAGE_GIT_COMMIT_ALLOWED: 'NO',
+  FULL_PAGE_EXPORT_ALLOWED: 'NO',
+  BOUNDED_EXCERPT_INTERNAL_REVIEW_ALLOWED: 'YES',
+  PUBLIC_REPOSITORY_EXCERPT_ALLOWED_DURING_PILOT: 'NO',
+  REVIEW_RECORD_RETENTION_MODE:
+    'BOUNDED_REVIEW_METADATA_AND_EXCERPTS_ONLY',
+  REVIEW_RECORD_RETENTION_LOCATION:
+    'LOCAL_IGNORED_HUMAN_APPROVAL_PATH_AND_CONTROL_BRANCH_ANONYMIZED_HASH_AGGREGATES_ONLY',
+  REVIEWER_IDENTITY_RETAINED: 'NOT_COLLECTED',
+  FULL_SOURCE_BINARY_RETAINED:
+    'LOCAL_IGNORED_OPERATOR_CONTROLLED_ONLY; NEVER_GIT_COMMITTED_OR_TRANSMITTED',
+  REAL_DOCUMENT_VERIFIED_CLAIMS_CREATED: '0',
+  REAL_DOCUMENT_ALLOWED_CLAIMS_CREATED: '0',
+  PRODUCTION_APPROVED: 'NO',
+  MERGE_APPROVED_BY_THIS_COMMENT: 'NO',
+});
+
+const RIGHTS_RETENTION_STOP_CONDITION_PATTERNS = Object.freeze({
+  EVALUATED_HEAD_DRIFT: /evaluated-head drift/i,
+  DOCUMENT_DECISION_OR_SOURCE_HASH_DRIFT:
+    /document-decision or source hash drift/i,
+  UNAUTHORIZED_FULL_PAGE_TRANSMISSION_EXPORT_OR_GIT_COMMIT:
+    /unauthorized full-page transmission, export, or git commit/i,
+  FULL_PAGE_OR_SOURCE_BINARY_LEAKAGE: /full-page or source-binary\s+leakage/i,
+  PRIVATE_OR_SECRET_LEAKAGE: /private or secret leakage/i,
+  EXPIRY_OR_REVIEW_DATE_ARRIVAL: /expiry\/review-date arrival/i,
+  INCOMPLETE_VAGUE_OR_CONTRADICTORY_HUMAN_DECISION:
+    /incomplete,\s+vague, or contradictory human decision/i,
+});
 
 const MANIFEST_KEYS = [
   'boundary',
@@ -227,6 +311,288 @@ function validateSafeInputDescriptor(input, code) {
     code,
   );
   assertCondition(isPlainObject(input.value), code);
+}
+
+function parseIsoTimestamp(value, code) {
+  assertCondition(
+    typeof value === 'string'
+      && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(value),
+    code,
+  );
+  const epochMilliseconds = Date.parse(value);
+  assertCondition(Number.isFinite(epochMilliseconds), code);
+  return epochMilliseconds;
+}
+
+function sha256(value) {
+  return createHash('sha256').update(value).digest('hex');
+}
+
+function parseRightsRetentionPolicyBody(body) {
+  assertCondition(
+    typeof body === 'string'
+      && Buffer.byteLength(body) > 0
+      && Buffer.byteLength(body) <= MAX_POLICY_COMMENT_BODY_BYTES
+      && !body.includes('\0'),
+    'RIGHTS_POLICY_COMMENT_BODY_INVALID',
+  );
+  const lfBody = body.replace(/\r\n?/g, '\n');
+  const lines = lfBody.split('\n');
+  const marker = lines.shift();
+  assertBoundedString(marker, 'RIGHTS_POLICY_MARKER_INVALID', 128);
+
+  const fieldParts = new Map();
+  let activeKey = null;
+  for (const line of lines) {
+    if (line.length === 0) {
+      activeKey = null;
+      continue;
+    }
+    const fieldMatch = /^([A-Z][A-Z0-9_]*):(.*)$/.exec(line);
+    if (fieldMatch) {
+      const [, key, rawValue] = fieldMatch;
+      assertCondition(!fieldParts.has(key), 'RIGHTS_POLICY_BODY_SCHEMA_DRIFT');
+      const value = rawValue.startsWith(' ') ? rawValue.slice(1) : rawValue;
+      assertCondition(rawValue.length === 0 || rawValue.startsWith(' '), 'RIGHTS_POLICY_BODY_INVALID');
+      fieldParts.set(key, value.length > 0 ? [value] : []);
+      activeKey = key;
+      continue;
+    }
+    assertCondition(
+      activeKey !== null && line.startsWith('  ') && line.trim().length > 0,
+      'RIGHTS_POLICY_BODY_INVALID',
+    );
+    fieldParts.get(activeKey).push(line.trim());
+  }
+
+  assertCondition(
+    isDeepStrictEqual([...fieldParts.keys()].sort(), [...RIGHTS_RETENTION_POLICY_KEYS].sort()),
+    'RIGHTS_POLICY_BODY_SCHEMA_DRIFT',
+  );
+  const fields = Object.fromEntries(
+    [...fieldParts].map(([key, parts]) => {
+      assertCondition(parts.length > 0, 'RIGHTS_POLICY_BODY_INVALID');
+      const value = parts.join(' ');
+      assertBoundedString(value, 'RIGHTS_POLICY_BODY_INVALID', 2_048);
+      return [key, value];
+    }),
+  );
+  return { fields, lfBody, marker };
+}
+
+function validatePolicyExpectation(expectation) {
+  assertCondition(isPlainObject(expectation), 'RIGHTS_POLICY_EXPECTATION_INVALID');
+  for (const key of [
+    'apiUrl',
+    'commentUrl',
+    'issueUrl',
+    'authorLogin',
+    'authorType',
+    'authorAssociation',
+    'createdAt',
+    'updatedAt',
+    'marker',
+    'evaluatedHead',
+    'documentDecisionFileSha256',
+    'expirationOrReviewDate',
+  ]) {
+    assertBoundedString(expectation[key], 'RIGHTS_POLICY_EXPECTATION_INVALID');
+  }
+  assertCondition(
+    Number.isSafeInteger(expectation.commentId) && expectation.commentId > 0,
+    'RIGHTS_POLICY_EXPECTATION_INVALID',
+  );
+  assertCondition(
+    expectation.evaluatedPr === 207 && isPlainObject(expectation.policyFields),
+    'RIGHTS_POLICY_EXPECTATION_INVALID',
+  );
+  assertSha256(expectation.rawBodySha256, 'RIGHTS_POLICY_EXPECTATION_INVALID');
+  assertSha256(expectation.lfBodySha256, 'RIGHTS_POLICY_EXPECTATION_INVALID');
+  assertCondition(
+    GIT_SHA_PATTERN.test(expectation.evaluatedHead),
+    'RIGHTS_POLICY_EXPECTATION_INVALID',
+  );
+  assertSha256(
+    expectation.documentDecisionFileSha256,
+    'RIGHTS_POLICY_EXPECTATION_INVALID',
+  );
+  assertCondition(
+    isDeepStrictEqual(
+      Object.keys(expectation.policyFields).sort(),
+      Object.keys(EXPECTED_RIGHTS_RETENTION_POLICY_FIELDS).sort(),
+    ),
+    'RIGHTS_POLICY_EXPECTATION_INVALID',
+  );
+  parseIsoTimestamp(expectation.createdAt, 'RIGHTS_POLICY_EXPECTATION_INVALID');
+  parseIsoTimestamp(expectation.updatedAt, 'RIGHTS_POLICY_EXPECTATION_INVALID');
+  parseIsoTimestamp(
+    expectation.expirationOrReviewDate,
+    'RIGHTS_POLICY_EXPECTATION_INVALID',
+  );
+}
+
+function assertPolicyIsNotContradictory(fields) {
+  assertCondition(
+    fields.POLICY_DECISION === 'APPROVE'
+      && fields.FULL_PAGE_REVIEW_MODE === 'LOCAL_OPERATOR_DISPLAY_ONLY'
+      && fields.FULL_PAGE_TRANSMISSION_ALLOWED === 'NO'
+      && fields.FULL_PAGE_GIT_COMMIT_ALLOWED === 'NO'
+      && fields.FULL_PAGE_EXPORT_ALLOWED === 'NO'
+      && fields.BOUNDED_EXCERPT_INTERNAL_REVIEW_ALLOWED === 'YES'
+      && fields.PUBLIC_REPOSITORY_EXCERPT_ALLOWED_DURING_PILOT === 'NO'
+      && fields.REAL_DOCUMENT_VERIFIED_CLAIMS_CREATED === '0'
+      && fields.REAL_DOCUMENT_ALLOWED_CLAIMS_CREATED === '0'
+      && fields.PRODUCTION_APPROVED === 'NO'
+      && fields.MERGE_APPROVED_BY_THIS_COMMENT === 'NO',
+    'RIGHTS_POLICY_CONTRADICTION',
+  );
+}
+
+export function validateRightsRetentionPolicyCommentAgainstExpectation({
+  comment,
+  asOf,
+  expectation,
+}) {
+  validatePolicyExpectation(expectation);
+  assertCondition(
+    isPlainObject(comment)
+      && isPlainObject(comment.user)
+      && comment.id === expectation.commentId
+      && comment.url === expectation.apiUrl
+      && comment.html_url === expectation.commentUrl
+      && comment.issue_url === expectation.issueUrl
+      && comment.user.login === expectation.authorLogin
+      && comment.user.type === expectation.authorType
+      && comment.author_association === expectation.authorAssociation
+      && comment.created_at === expectation.createdAt
+      && comment.updated_at === expectation.updatedAt
+      && comment.created_at === comment.updated_at,
+    'RIGHTS_POLICY_COMMENT_METADATA_DRIFT',
+  );
+
+  const { fields, lfBody, marker } = parseRightsRetentionPolicyBody(comment.body);
+  assertCondition(marker === expectation.marker, 'RIGHTS_POLICY_MARKER_DRIFT');
+  assertCondition(
+    fields.RIGHTS_RETENTION_OWNER_GITHUB_LOGIN === expectation.authorLogin
+      && fields.RIGHTS_RETENTION_OWNER_GITHUB_LOGIN === comment.user.login,
+    'RIGHTS_POLICY_OWNER_BINDING_DRIFT',
+  );
+  assertCondition(
+    /\battest\b/i.test(fields.OWNER_AUTHORITY)
+      && /\bauthorized\b/i.test(fields.OWNER_AUTHORITY)
+      && /page-review rights/i.test(fields.OWNER_AUTHORITY)
+      && /review-record retention policy/i.test(fields.OWNER_AUTHORITY)
+      && /bounded pilot/i.test(fields.OWNER_AUTHORITY),
+    'RIGHTS_POLICY_OWNER_AUTHORITY_INCOMPLETE',
+  );
+  assertCondition(
+    fields.EVALUATED_PR === String(expectation.evaluatedPr),
+    'RIGHTS_POLICY_PR_DRIFT',
+  );
+  assertCondition(
+    fields.EVALUATED_HEAD === expectation.evaluatedHead,
+    'RIGHTS_POLICY_HEAD_DRIFT',
+  );
+  assertCondition(
+    fields.DOCUMENT_DECISION_FILE_SHA256 === expectation.documentDecisionFileSha256,
+    'RIGHTS_POLICY_DOCUMENT_DECISION_HASH_DRIFT',
+  );
+
+  assertPolicyIsNotContradictory(fields);
+  for (const [key, expectedValue] of Object.entries(expectation.policyFields)) {
+    assertCondition(fields[key] === expectedValue, 'RIGHTS_POLICY_FIELD_DRIFT');
+  }
+  assertCondition(
+    fields.EXPIRATION_OR_REVIEW_DATE === expectation.expirationOrReviewDate,
+    'RIGHTS_POLICY_EXPIRATION_DRIFT',
+  );
+
+  const stopConditionCoverage = [];
+  for (const [coverageCode, pattern] of Object.entries(
+    RIGHTS_RETENTION_STOP_CONDITION_PATTERNS,
+  )) {
+    assertCondition(
+      pattern.test(fields.STOP_CONDITIONS),
+      'RIGHTS_POLICY_STOP_CONDITIONS_INCOMPLETE',
+    );
+    stopConditionCoverage.push(coverageCode);
+  }
+
+  const createdAtEpoch = parseIsoTimestamp(
+    expectation.createdAt,
+    'RIGHTS_POLICY_COMMENT_METADATA_DRIFT',
+  );
+  const asOfEpoch = parseIsoTimestamp(asOf, 'RIGHTS_POLICY_AS_OF_INVALID');
+  const expiresAtEpoch = parseIsoTimestamp(
+    fields.EXPIRATION_OR_REVIEW_DATE,
+    'RIGHTS_POLICY_EXPIRATION_DRIFT',
+  );
+  assertCondition(asOfEpoch >= createdAtEpoch, 'RIGHTS_POLICY_NOT_YET_ACTIVE');
+  assertCondition(asOfEpoch < expiresAtEpoch, 'RIGHTS_POLICY_EXPIRED');
+
+  const rawBodySha256 = sha256(comment.body);
+  const lfBodySha256 = sha256(lfBody);
+  assertCondition(
+    rawBodySha256 === expectation.rawBodySha256,
+    'RIGHTS_POLICY_RAW_BODY_HASH_DRIFT',
+  );
+  assertCondition(
+    lfBodySha256 === expectation.lfBodySha256,
+    'RIGHTS_POLICY_LF_BODY_HASH_DRIFT',
+  );
+
+  return {
+    recordType: 'PR207_PAGE_REVIEW_RIGHTS_RETENTION_POLICY',
+    marker,
+    validationStatus: 'VALID_ACTIVE_BOUNDED_POLICY_LOCAL_DISPLAY_ONLY',
+    commentId: comment.id,
+    commentUrl: comment.html_url,
+    authorLogin: comment.user.login,
+    authorAssociation: comment.author_association,
+    createdAt: comment.created_at,
+    updatedAt: comment.updated_at,
+    rawBodySha256,
+    lfNormalizedBodySha256: lfBodySha256,
+    rawBodyByteLength: Buffer.byteLength(comment.body),
+    rawBodyRetained: false,
+    evaluatedAsOf: asOf,
+    evaluatedPr: Number(fields.EVALUATED_PR),
+    evaluatedHead: fields.EVALUATED_HEAD,
+    documentDecisionFileSha256: fields.DOCUMENT_DECISION_FILE_SHA256,
+    policyDecision: fields.POLICY_DECISION,
+    fullPageReviewMode: fields.FULL_PAGE_REVIEW_MODE,
+    fullPageTransmissionAllowed: fields.FULL_PAGE_TRANSMISSION_ALLOWED,
+    fullPageGitCommitAllowed: fields.FULL_PAGE_GIT_COMMIT_ALLOWED,
+    fullPageExportAllowed: fields.FULL_PAGE_EXPORT_ALLOWED,
+    boundedExcerptInternalReviewAllowed:
+      fields.BOUNDED_EXCERPT_INTERNAL_REVIEW_ALLOWED,
+    publicRepositoryExcerptAllowedDuringPilot:
+      fields.PUBLIC_REPOSITORY_EXCERPT_ALLOWED_DURING_PILOT,
+    reviewRecordRetentionMode: fields.REVIEW_RECORD_RETENTION_MODE,
+    reviewRecordRetentionLocation: fields.REVIEW_RECORD_RETENTION_LOCATION,
+    reviewerIdentityRetained: fields.REVIEWER_IDENTITY_RETAINED,
+    fullSourceBinaryRetained: fields.FULL_SOURCE_BINARY_RETAINED,
+    expirationOrReviewDate: fields.EXPIRATION_OR_REVIEW_DATE,
+    activeAtEvaluation: true,
+    stopConditionCoverage,
+    realDocumentVerifiedClaimsCreated:
+      Number(fields.REAL_DOCUMENT_VERIFIED_CLAIMS_CREATED),
+    realDocumentAllowedClaimsCreated:
+      Number(fields.REAL_DOCUMENT_ALLOWED_CLAIMS_CREATED),
+    productionApproved: fields.PRODUCTION_APPROVED,
+    mergeApprovedByThisComment: fields.MERGE_APPROVED_BY_THIS_COMMENT,
+  };
+}
+
+export function validatePr207RightsRetentionPolicyComment({ comment, asOf }) {
+  return validateRightsRetentionPolicyCommentAgainstExpectation({
+    comment,
+    asOf,
+    expectation: {
+      ...PR207_RIGHTS_RETENTION_POLICY_EXPECTATION,
+      policyFields: EXPECTED_RIGHTS_RETENTION_POLICY_FIELDS,
+    },
+  });
 }
 
 function validateManifest(input) {
@@ -602,6 +968,8 @@ export function validatePr207HumanEvidenceInputs({
   documentDecisions,
   fidelityDecisions,
   candidateDecisions,
+  rightsRetentionPolicyComment,
+  asOf,
 }) {
   const manifest = validateManifest(intakeManifest);
   const { decision, documentsById } = validateDocumentDecisions(
@@ -618,9 +986,15 @@ export function validatePr207HumanEvidenceInputs({
     documentsById,
   );
   const candidate = validateCandidateDecisions(candidateDecisions);
+  const rightsRetentionDecisionRecord = rightsRetentionPolicyComment === undefined
+    ? null
+    : validatePr207RightsRetentionPolicyComment({
+      comment: rightsRetentionPolicyComment,
+      asOf,
+    });
 
   return {
-    schemaVersion: 'pr207-human-evidence-input-validation-v1',
+    schemaVersion: 'pr207-human-evidence-input-validation-v2',
     boundary: 'NOT_PRODUCTION_EVIDENCE',
     validationStatus: 'STRUCTURALLY_VALID',
     evidenceStatus: 'INCOMPLETE',
@@ -633,6 +1007,10 @@ export function validatePr207HumanEvidenceInputs({
       fidelityDecisionFileSha256: fidelityDecisions.sha256,
       candidateDecisionFileSha256: candidateDecisions.sha256,
       documentTupleFingerprintSha256: decision.documentTupleFingerprintSha256,
+      rightsRetentionPolicyRawBodySha256:
+        rightsRetentionDecisionRecord?.rawBodySha256 ?? null,
+      rightsRetentionPolicyLfNormalizedBodySha256:
+        rightsRetentionDecisionRecord?.lfNormalizedBodySha256 ?? null,
     },
     counts: {
       safeIgnoredInputFileCount: 4 + normalizedDocuments.length,
@@ -650,6 +1028,11 @@ export function validatePr207HumanEvidenceInputs({
       fidelityDecisionFileByteCount: fidelityDecisions.byteLength,
       candidateDecisionFileByteCount: candidateDecisions.byteLength,
       normalizedDocumentInputByteCount: normalized.totalByteLength,
+      rightsRetentionPolicyCommentCount: rightsRetentionDecisionRecord ? 1 : 0,
+      realDocumentVerifiedClaimsCreated:
+        rightsRetentionDecisionRecord?.realDocumentVerifiedClaimsCreated ?? 0,
+      realDocumentAllowedClaimsCreated:
+        rightsRetentionDecisionRecord?.realDocumentAllowedClaimsCreated ?? 0,
     },
     statuses: {
       localInputSafety: 'PASS',
@@ -658,7 +1041,8 @@ export function validatePr207HumanEvidenceInputs({
       fidelityCompletionContract:
         'UNSUPPORTED_PENDING_EXPLICIT_PAGE_NAMESPACE_AND_HUMAN_CONTRACT',
       rightsAndRetentionAuthority:
-        'NOT_VALIDATED_REQUIRES_CANONICAL_GITHUB_DECISION',
+        rightsRetentionDecisionRecord?.validationStatus
+          ?? 'NOT_VALIDATED_REQUIRES_CANONICAL_GITHUB_DECISION',
       candidatePopulation: 'EMPTY',
       candidateCompletionContract: 'NOT_APPROVED_NONEMPTY_V1_REFUSED',
       candidateReviewEvidence: 'INCOMPLETE_0_OF_25',
@@ -667,10 +1051,14 @@ export function validatePr207HumanEvidenceInputs({
       mergeApproval: 'NOT_GRANTED',
       productionApproval: 'NOT_GRANTED',
     },
+    rightsRetentionDecisionRecord,
     nonClaims: [
       'Structural validation does not create or infer a human fidelity decision.',
       'An empty candidate set does not satisfy the PR207 real-evidence pilot threshold.',
-      'This report does not establish source rights, retention approval, claim correctness, merge approval, or production approval.',
+      rightsRetentionDecisionRecord
+        ? 'The active bounded policy permits local operator display and bounded internal-review excerpts only; it does not permit full-page transmission, export, Git commit, public-repository excerpts, merge, or production.'
+        : 'This report does not establish source rights, retention approval, claim correctness, merge approval, or production approval.',
+      'This report does not establish human fidelity, claim correctness, candidate approval, merge approval, or production approval.',
     ],
   };
 }
