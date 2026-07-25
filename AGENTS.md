@@ -243,18 +243,37 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   local only: `productionReady:false`; Issue #165 remains `HOLD`; no live
   research, real datasheet/regulation/reference verification, customer/private
   data, D1 registry persistence, production/staging action, CRM/outreach, LLM,
-  or final commercial pursuit decision was approved or performed. PRs
-  #206-#208 are open Drafts from this shipped baseline and are not shipped;
-  their human-review, implementation, restack, and merge gates remain separate.
+  or final commercial pursuit decision was approved or performed. At that
+  PR #205 baseline, PRs #206-#208 were open Drafts and unshipped; their
+  human-review, implementation, restack, and merge gates remained separate.
 - Post-PR209 Gate 0 remediation addendum: `master` includes PR #209 at
   `d7a45257b9aa48d2975db9852a993d79f70972bf`. It raises the current axios
   floor to `^1.18.0` with lockfile `1.18.1`, keeps required PR CI on the
   deterministic offline triage, adds a separate scheduled/manual
   moderate-or-higher live audit, suppresses valid top-level
   `generatedAt`-only evidence rewrites, and syncs the PR #205 source baseline.
-  It is repository/local/test evidence only. PRs #206-#208 remain Draft and
-  separate; Candidate Review v2 implementation and human execution are not
-  shipped; Issue #165 remains `HOLD`; `productionReady:false` remains required.
+  It is repository/local/test evidence only. At that PR #209 baseline, PRs
+  #206-#208 were Draft and separate; Candidate Review v2 implementation and
+  human execution were not shipped; Issue #165 remained `HOLD`; and
+  `productionReady:false` remained required.
+- Post-PR208 Candidate Review v2 method addendum: `master` includes the
+  docs-only PR #208 packet at
+  `4dad779efc30ca87d61bb113b4892cee6fafc1b9`. Its non-circular packet receipt
+  binds exact `A_packet`
+  `3ea7a8020ce1bae8e5de2956c65af9a6f0ca2dd8` and receipt-only child
+  `B_packet` `8d53f1df0eae69dd62399d1437abafce839953f3`. It selects only
+  the future Candidate Review v2 method; the packet itself approves no
+  implementation or human fidelity/candidate-review execution. The later exact-
+  head owner record
+  `https://github.com/dooosp/b2b-lead-agent/pull/208#issuecomment-5077119914`
+  authorizes only a new stacked local/test implementation branch from frozen
+  PR #207 head `c6a5469338999097acd5de7c5a12c827d27d4540`; implementation
+  acceptance/merge and all human execution remain unapproved and unperformed.
+  PR #206
+  remains Draft/HOLD at `b5570e182c8ab6515c0f09272d22d7121518f134`;
+  PR #207 remains Draft/HOLD at
+  `c6a5469338999097acd5de7c5a12c827d27d4540`; Issue #165 remains `HOLD`;
+  and `productionReady:false` remains required.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.

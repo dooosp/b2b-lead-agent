@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-07-25.
-> Audited against first-parent `master` history through `d7a45257b9aa48d2975db9852a993d79f70972bf` (PR #209, Gate 0 security and reproducibility remediation) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input and non-production gates through PR #185, refactor/source-of-truth work through PR #190, Reviewer Workflow Intelligence and boundary audit through PR #193, the post-PR193 source-of-truth sync in PR #194, test-only P0 characterization in PR #195, LeadBrief publication hardening in PR #196, D1 snapshot/migration hardening in PR #197, the post-PR197 sync in PR #198, Worker outbound and protected-cache remediation in PRs #199-#200, concurrency/callback hardening in PR #201, atomic publication/notification hardening in PRs #202-#203, the source-of-truth sync in PR #204, the local/test-only claim/spec-fit foundation in PR #205, and PR #209's bounded Gate 0 remediation. PRs #206-#208 are open Drafts and are not shipped. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
+> Audited against first-parent `master` history through `4dad779efc30ca87d61bb113b4892cee6fafc1b9` (PR #208, docs-only Candidate Review v2 bounded-retention method packet) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input and non-production gates through PR #185, refactor/source-of-truth work through PR #190, Reviewer Workflow Intelligence and boundary audit through PR #193, the post-PR193 source-of-truth sync in PR #194, test-only P0 characterization in PR #195, LeadBrief publication hardening in PR #196, D1 snapshot/migration hardening in PR #197, the post-PR197 sync in PR #198, Worker outbound and protected-cache remediation in PRs #199-#200, concurrency/callback hardening in PR #201, atomic publication/notification hardening in PRs #202-#203, the source-of-truth sync in PR #204, the local/test-only claim/spec-fit foundation in PR #205, PR #209's bounded Gate 0 remediation, and PR #208's exact-A/B-receipt method packet. PR #206 and PR #207 remain open Draft/HOLD at their frozen heads. PR #208 itself approved no Candidate Review v2 implementation or human execution; later owner record `https://github.com/dooosp/b2b-lead-agent/pull/208#issuecomment-5077119914` authorizes only a new stacked local/test implementation from exact PR #207 head, not human execution, acceptance, Ready, or merge. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -83,6 +83,8 @@
 | 73 | 2026-07-17 | #203 | `19ca3d3` | Atomic publication recovery and consumer hardening | Hardened transaction recovery, manifest-primary Worker consumers, commit/path/byte ownership, repository-wide notification identity locking, producer/consumer budgets, callback credential scope, and exact validated-commit push behavior |
 | 74 | 2026-07-17 | #204 | `d52b2f1` | Post-PR203 source-of-truth sync | Synced root source-of-truth and production-boundary docs after PR #203 without production/staging action |
 | 75 | 2026-07-17 | #205 | `9d144fb` | Evidence Claim Registry and Data Center Specification Fit v1 foundation | Added the repository-authoritative claim registry, legacy managed-profile trust inventory, synthetic Data Center opportunity/specification-window/fit/Pursuit Dossier contracts, trusted-reference projection, deterministic local CI gates, and explicit `productionReady:false` / Issue #165 `HOLD` boundaries |
+| 76 | 2026-07-25 | #209 | `d7a4525` | Gate 0 security and reproducibility remediation | Raised the axios floor and lockfile, split deterministic required CI from scheduled/manual live audit, suppressed valid timestamp-only evidence rewrites, and synced the PR #205 source baseline without production action |
+| 77 | 2026-07-25 | #208 | `4dad779` | Candidate Review v2 bounded-retention method packet | Shipped the docs-only method packet with exact `A_packet` / receipt-only `B_packet` review binding; no Candidate Review v2 implementation or human execution was approved or performed |
 
 Post-PR177 update: PR #171 merged at
 `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` with non-production
@@ -158,9 +160,10 @@ local/test-only Evidence Claim Registry and Data Center Specification Fit v1
 foundation at `9d144fbe6309ce363f9dad8d50ffa713d24af683`. Its validated registry is
 the only authority for derived `VERIFIED` claim status and separately derived
 customer-use `ALLOWED`; the legacy inventory remains unverified/assumption
-input, and all executable fit/dossier fixtures are synthetic. PRs #206-#208 are
-open Drafts from this baseline, are not shipped, and do not create human-review,
-implementation, merge, canonical-claim, Tender Matrix, or production authority.
+input, and all executable fit/dossier fixtures are synthetic. At that PR #205
+baseline, PRs #206-#208 were open Drafts and unshipped; they did not create
+human-review, implementation, merge, canonical-claim, Tender Matrix, or
+production authority.
 Production actions performed: none.
 PR #196 LeadBrief publication update: untrusted model output is projected
 through the public LeadBrief allowlist; score and HTTP(S) source constraints are
@@ -761,24 +764,28 @@ production-readiness claims.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step: no mandatory staging or production action follows this
   source-of-truth sync. The stable operational default is truthful `HOLD`/no-op.
-- The current docs-only follow-up is
-  `docs/roadmap/pr207-candidate-review-v2-bounded-retention-method-decision-packet.md`.
-  It records a packet-local method revision pending exact-head review for the
-  future Candidate Review v2 reviewer, candidate/page/anchor, decision,
-  precision, patch-suitability, bounded-retention, privacy, merge-train,
-  canonical-claim, and Tender Matrix method on the post-PR209 baseline.
-  It creates no candidates, no human fidelity decisions, and no Candidate
-  Review v2 human candidate decisions, and approves no implementation, restack,
-  merge, canonical `VERIFIED` claim, Tender Matrix, or production action. PRs
-  #206/#207 remain Draft and frozen; Issue #165 remains `HOLD`.
 - PR #209 merged the bounded Gate 0 security, reproducibility, and
   source-of-truth remediation at
   `d7a45257b9aa48d2975db9852a993d79f70972bf`. No mandatory staging or
-  production action follows it. PRs
-  #206-#208 remain open Drafts and require their separate human-review,
-  implementation, restack, and merge gates. If another bounded local goal is
-  selected, the remaining application-level remote-read deadline identified in
-  PR #197 is a candidate; real evidence verification, auth/RBAC/privacy
+  production action followed it.
+- PR #208 then merged the docs-only Candidate Review v2 / Bounded Retention
+  Method Decision Packet at
+  `4dad779efc30ca87d61bb113b4892cee6fafc1b9`. Its exact post-commit receipt
+  binds `A_packet` `3ea7a8020ce1bae8e5de2956c65af9a6f0ca2dd8`
+  and receipt-only child `B_packet`
+  `8d53f1df0eae69dd62399d1437abafce839953f3`. The packet selects a future
+  method only: it creates no candidates or human decisions and the packet
+  itself approves no implementation, human execution, canonical `VERIFIED`
+  promotion, Tender Matrix, or production action. The later exact-head owner
+  record
+  `https://github.com/dooosp/b2b-lead-agent/pull/208#issuecomment-5077119914`
+  authorizes only a new stacked local/test implementation branch; it is not
+  implementation acceptance/merge or human-review authority. PR #206 remains Draft/HOLD at
+  `b5570e182c8ab6515c0f09272d22d7121518f134`; PR #207 remains Draft/HOLD at
+  `c6a5469338999097acd5de7c5a12c827d27d4540`; Issue #165 remains `HOLD`;
+  and `productionReady:false` remains required. If another bounded local goal
+  is selected, the remaining application-level remote-read deadline identified
+  in PR #197 is a candidate; real evidence verification, auth/RBAC/privacy
   implementation, canonical claim promotion, Tender Matrix work, and production
   proof remain separately approval-gated goals.
 - Issues #162, #154, #163, and #164 are complete for docs planning only; those
