@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
-> Status: current hardening source of truth for `master` as of 2026-07-17.
-> Audited against first-parent `master` history through `19ca3d31c771bd59ae89699f930737a43311b93f` (PR #203, atomic publication recovery and consumer hardening) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input and non-production gates through PR #185, refactor/source-of-truth work through PR #190, Reviewer Workflow Intelligence and boundary audit through PR #193, the post-PR193 source-of-truth sync in PR #194, test-only P0 characterization in PR #195, LeadBrief publication hardening in PR #196, D1 snapshot/migration hardening in PR #197, the post-PR197 sync in PR #198, Worker outbound and protected-cache remediation in PRs #199-#200, concurrency/callback hardening in PR #201, and atomic publication/notification hardening in PRs #202-#203. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
+> Status: current hardening source of truth for `master` as of 2026-07-25.
+> Audited against first-parent `master` history through `9d144fbe6309ce363f9dad8d50ffa713d24af683` (PR #205, Evidence Claim Registry and Data Center Specification Fit v1 foundation) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input and non-production gates through PR #185, refactor/source-of-truth work through PR #190, Reviewer Workflow Intelligence and boundary audit through PR #193, the post-PR193 source-of-truth sync in PR #194, test-only P0 characterization in PR #195, LeadBrief publication hardening in PR #196, D1 snapshot/migration hardening in PR #197, the post-PR197 sync in PR #198, Worker outbound and protected-cache remediation in PRs #199-#200, concurrency/callback hardening in PR #201, atomic publication/notification hardening in PRs #202-#203, the source-of-truth sync in PR #204, and the local/test-only claim/spec-fit foundation in PR #205. PRs #206-#208 are open Drafts and are not shipped. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -81,6 +81,8 @@
 | 71 | 2026-07-15 | #201 | `88fa3ba` | Lead PATCH CAS and monotonic callbacks | Added `version` / `expectedVersion` compare-and-swap writes, atomic side effects, callback payload idempotency, provider-attempt ordering, and terminal absorption, closing the five remaining concurrency TODOs |
 | 72 | 2026-07-15 | #202 | `a180e75` | Atomic publication and notification-safe baseline | Added typed pipeline state/outcomes, immutable manifest-selected publication, exact Git staging and verified push, post-publication notification, retry semantics, workflow serialization, and failure-injection coverage |
 | 73 | 2026-07-17 | #203 | `19ca3d3` | Atomic publication recovery and consumer hardening | Hardened transaction recovery, manifest-primary Worker consumers, commit/path/byte ownership, repository-wide notification identity locking, producer/consumer budgets, callback credential scope, and exact validated-commit push behavior |
+| 74 | 2026-07-17 | #204 | `d52b2f1` | Post-PR203 source-of-truth sync | Synced root source-of-truth and production-boundary docs after PR #203 without production/staging action |
+| 75 | 2026-07-17 | #205 | `9d144fb` | Evidence Claim Registry and Data Center Specification Fit v1 foundation | Added the repository-authoritative claim registry, legacy managed-profile trust inventory, synthetic Data Center opportunity/specification-window/fit/Pursuit Dossier contracts, trusted-reference projection, deterministic local CI gates, and explicit `productionReady:false` / Issue #165 `HOLD` boundaries |
 
 Post-PR177 update: PR #171 merged at
 `a4f8a080ebe426d79bb85dba8298372ef6d14cfc` with non-production
@@ -121,7 +123,7 @@ auth/session/provider parsing, Cloudflare Access calls, CRM/outreach, LLM,
 automation, rollback execution, destructive data action, or generated
 suggestion persistence/export/history/attribution.
 
-Post-PR203 source-of-truth update: PR #187 merged the post-PR186
+Post-PR205 source-of-truth update: PR #187 merged the post-PR186
 source-of-truth sync at `c7da118376df889edf5c47ba508fc4f817535ed0`.
 PR #188 then merged archival PR #12 root-cycle merge and Wave 2 bootstrap
 execution/status records at `55953593088e292f9561e6c3570eae2e29a90ca3`.
@@ -150,7 +152,16 @@ manifest-aware consumers, notification identity, and the exact Git commit push
 boundary at `19ca3d31c771bd59ae89699f930737a43311b93f`. The PR #188 records remain
 historical execution artifacts only; they do not replace this file,
 `docs/roadmap/current-pr-train.md`, or production-proof boundary docs as current
-source of truth. Production actions performed: none.
+source of truth. PR #204 then synced those source-of-truth documents at
+`d52b2f11a9f7342d91fed7431664083b3d95a537`. PR #205 added the
+local/test-only Evidence Claim Registry and Data Center Specification Fit v1
+foundation at `9d144fbe6309ce363f9dad8d50ffa713d24af683`. Its validated registry is
+the only authority for derived `VERIFIED` claim status and separately derived
+customer-use `ALLOWED`; the legacy inventory remains unverified/assumption
+input, and all executable fit/dossier fixtures are synthetic. PRs #206-#208 are
+open Drafts from this baseline, are not shipped, and do not create human-review,
+implementation, merge, canonical-claim, Tender Matrix, or production authority.
+Production actions performed: none.
 PR #196 LeadBrief publication update: untrusted model output is projected
 through the public LeadBrief allowlist; score and HTTP(S) source constraints are
 validated; verification is derived only from canonical, fresh, bound evidence;
@@ -223,7 +234,11 @@ Post-PR181 enrichment replay update: PR #178 merged at
 `b4d407171fefa5e6a6c2bb86b3e52aaa63bde9da` with the local-only Level 1
 operator rehearsal gate. PR #179 merged at
 `bf78c2bc5f6779723eea44300978e40ca8d41574` with the scoped axios `1.16.0`
-audit triage and clean npm audit baseline. PR #180 merged at
+audit triage and the then-clean npm audit baseline. The current dependency
+floor is `^1.18.0`, the lockfile resolves `1.18.1`, and the security triage
+refuses versions below `1.18.0`; a separate scheduled/manual security workflow
+runs the live moderate-or-higher `npm run security:audit-current` gate without
+making required PR CI depend on mutable registry state. PR #180 merged at
 `6950e2c91bee564c1d2c17917cfe06d5d45241f8` with
 `OUTBOUND_HTTP_ENRICHMENT_BOUNDARY_GUARDS_NON_PRODUCTION`, which keeps that
 dependency reachable only through `enricher/outbound-http-boundary.js`, adds
@@ -746,9 +761,12 @@ production-readiness claims.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step: no mandatory staging or production action follows this
   source-of-truth sync. The stable operational default is truthful `HOLD`/no-op.
-- No mandatory local hardening action follows PR #203. If a new bounded goal is
+- No mandatory merge, staging, or production action follows PR #205. PRs
+  #206-#208 remain open Drafts and require their separate human-review,
+  implementation, restack, and merge gates. If another bounded local goal is
   selected, the remaining application-level remote-read deadline identified in
-  PR #197 is a candidate; real auth/RBAC/privacy implementation and production
+  PR #197 is a candidate; real evidence verification, auth/RBAC/privacy
+  implementation, canonical claim promotion, Tender Matrix work, and production
   proof remain separately approval-gated goals.
 - Issues #162, #154, #163, and #164 are complete for docs planning only; those
   records may be reconfirmed in parallel for an exact future SHA/target and do

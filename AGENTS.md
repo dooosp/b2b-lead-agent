@@ -52,9 +52,14 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - Post-PR180 enrichment boundary addendum: `master` includes PR #178's local-only
   Level 1 operator rehearsal gate at
   `b4d407171fefa5e6a6c2bb86b3e52aaa63bde9da` and PR #179's scoped axios
-  audit triage at `bf78c2bc5f6779723eea44300978e40ca8d41574`. Axios is
-  patched to `1.16.0` and remains reachable only in the root lead-generation
-  enrichment pipeline, not Worker runtime. PR #180 merged at
+  audit triage at `bf78c2bc5f6779723eea44300978e40ca8d41574`. PR #179
+  historically patched axios to `1.16.0`; the current dependency floor is
+  `^1.18.0`, the lockfile resolves `1.18.1`, and the security triage refuses
+  versions below `1.18.0`. A separate scheduled/manual security workflow runs
+  `npm run security:audit-current` for newly published moderate-or-higher
+  production-dependency advisories without making required PR CI depend on
+  mutable registry state. Axios remains reachable only in the root
+  lead-generation enrichment pipeline, not Worker runtime. PR #180 merged at
   `6950e2c91bee564c1d2c17917cfe06d5d45241f8` and centralizes axios behind
   `enricher/outbound-http-boundary.js`, adds injected local/test transports,
   request-policy guards, failure-mode and redaction coverage,
@@ -225,6 +230,22 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   production endpoint/log/secret access, customer/private data use, real email
   or callbacks, CRM/outreach/LLM automation, or production-readiness claims.
   Issue #165 remains `HOLD`, and `productionReady:false` remains required.
+- Post-PR205 claim/spec-fit addendum: `master` includes PR #204's
+  source-of-truth sync at
+  `d52b2f11a9f7342d91fed7431664083b3d95a537` and PR #205's local/test-only
+  Evidence Claim Registry and Data Center Specification Fit v1 foundation at
+  `9d144fbe6309ce363f9dad8d50ffa713d24af683`. PR #205 makes the validated
+  repository claim registry the only authority for derived `VERIFIED` status
+  and separately derived customer-use `ALLOWED`, inventories legacy managed
+  profile claims as unverified/assumption inputs, and adds deterministic
+  synthetic Data Center opportunity, specification-window, fit, and Pursuit
+  Dossier contracts plus CI gates. Its executable evidence is synthetic and
+  local only: `productionReady:false`; Issue #165 remains `HOLD`; no live
+  research, real datasheet/regulation/reference verification, customer/private
+  data, D1 registry persistence, production/staging action, CRM/outreach, LLM,
+  or final commercial pursuit decision was approved or performed. PRs
+  #206-#208 are open Drafts from this shipped baseline and are not shipped;
+  their human-review, implementation, restack, and merge gates remain separate.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.
@@ -368,6 +389,13 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - Option A manual review notes are human-entered text only. The explicit local/test-safe API/UI contract is `manualReviewNotes` with derived provenance `human_entered`, backed by the existing `notes` column. T1 local/test-safe timestamp semantics use `manualReviewNotesUpdatedAt` backed by `manual_review_notes_updated_at` for the last accepted human-entered manual note change/save/clear event only. Current generic author-label semantics use `manualReviewNotesAuthorLabel` backed by `manual_review_notes_author_label` with only the fixed non-PII value `manual_reviewer` for accepted manual note create/edit/clear events. H2 metadata-only local/test history uses `manual_review_note_events` and exposes only metadata summary fields: `manualReviewNotesHistoryEventCount`, `manualReviewNotesHistoryLastEventType`, `manualReviewNotesHistoryLastEventAt`, and `manualReviewNotesHistoryLastAuthorLabel`. Old manual note values are not retained in history. Generated suggestion payload fields must be rejected or ignored by persistence paths and must not be stored as manual notes, update the note-specific timestamp, receive reviewer attribution, or become history entries. Lead-level `updatedAt` / `updated_at` may be displayed only as a lead-level "last updated" signal when no note-specific timestamp exists; do not present it as a note-specific save timestamp.
 - Reviewer Workflow Intelligence v1 is local/test-safe only. `reviewerFeedback` is explicit human-entered reviewer feedback stored in `reviewer_feedback` with fixed non-PII `manual_reviewer` attribution and metadata-only `reviewer_feedback_events` history. It follows the same C2 local/test role-stub protection as manual notes. `GET /api/leads` may expose additive `reviewerWorkflowSummary` and `dataGapPrioritization` metadata, but all such evidence is `NOT_PRODUCTION_EVIDENCE` and `productionReady:false`. Generated reviewer suggestions remain copy-only and must not be saved, sent, attributed, history-stored, exported, or mixed into reviewer feedback.
 - Reviewer Workflow Boundary Audit v1 is local/test-safe only. `npm run check:reviewer-workflow-boundary` emits `tmp/codex/reviewer-workflow-boundary-audit-non-production.json` and checks reviewer feedback freeform redaction plus CSV, publication, denied-role summary, and prioritization boundaries. It is `NOT_PRODUCTION_EVIDENCE`, keeps `productionReady:false`, and does not approve production/staging proof, production D1, real auth/session, retention/privacy enforcement, or generated suggestion persistence/export/history/attribution.
+- Evidence Claim Registry and Data Center Specification Fit v1 is
+  local/test-only. A model, profile object, imported status, legacy D1 row, or
+  registry-shaped object must not establish `VERIFIED` or customer-use
+  `ALLOWED`; trusted projection accepts only the exact validated registry
+  instance and exact applicability context. Verification and customer use stay
+  separately derived, conflict/expiry/retraction remain fail-closed, and all
+  checked-in fit fixtures remain synthetic.
 - Managed/self-service upserts preserve existing `review_status` on conflict so refreshes do not erase human review decisions.
 - CSV, browser UI, self-service copy, and downloads must preserve review/trust metadata.
 - All Worker request paths must remain DDL-free. On D1-backed access paths,
@@ -381,7 +409,7 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   migration-files/command workflow, target inventory, rollback owner, and stop
   conditions. No production migration or schema observation is claimed.
 - Production deploy and production DB writes were not performed during PR #25,
-  PR #26, PR #27, or the shipped PR #36-#203
+  PR #26, PR #27, or the shipped PR #36-#205
   local/test/docs/reviewer-UX/product-planning/proof-gate train.
 
 ## Canonical Repo Rules
@@ -422,8 +450,19 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
 - `npm run proof:level1:approval-intake` for the local-only Level 1 Issue #165 approval-intake template/validator artifact writer
 - `npm run proof:level1:post-approval-simulator` for the local-only Level 1 Issue #165 post-approval HOLD/BLOCKED/READY simulator artifact writer
 - `npm run check:enrichment-boundary` for the local-only outbound HTTP enrichment boundary guard
+- `npm run security:audit-current` for the live npm moderate-or-higher
+  production-dependency audit used by the separate scheduled/manual security
+  workflow, not required PR CI
+- `npm run security:audit-triage` for the offline, floor-bound Axios advisory packet
 - `npm run check:enrichment-replay` for the local-only root enrichment fixture replay output contract
 - `npm run check:lead-pipeline-replay` for the local-only root lead pipeline fixture replay artifact contract
+- `npm run audit:claims` for the local, deterministic Evidence Claim Registry
+  and legacy managed-profile trust-boundary audit
+- `npm run eval:spec-fit` for the synthetic-only Data Center specification-fit
+  evaluator
+- `npm run test:claim-spec-fit` for focused claim registry, specification-fit,
+  Pursuit Dossier, prompt-projection, CLI, failure-injection, and performance
+  coverage
 - `npm run check:level1` for the local-only Level 1 auth/route/privacy/proof/preflight/approval/change-control/operator-rehearsal/closure-dashboard/approval-intake/post-approval-simulator regression gate
 - `npm run eval:lead-quality` for synthetic-only LeadBrief quality and review-readiness checks
 - `npm run test:e2e:local` for fake-D1, loopback-only Worker route/page smoke coverage

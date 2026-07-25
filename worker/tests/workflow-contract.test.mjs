@@ -8,6 +8,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = path.resolve(__dirname, '../../package.json');
 const workflowPath = path.resolve(__dirname, '../../.github/workflows/generate-report.yml');
 const ciWorkflowPath = path.resolve(__dirname, '../../.github/workflows/ci.yml');
+const currentSecurityAuditWorkflowPath = path.resolve(
+  __dirname,
+  '../../.github/workflows/security-audit-current.yml',
+);
 const validateNamingWorkflowPath = path.resolve(__dirname, '../../.github/workflows/validate-naming.yml');
 
 test('generate-report workflow keeps requestId callback contract fields', async () => {
@@ -125,17 +129,25 @@ test('CI workflow runs the synthetic lead-quality evaluator before full tests', 
 });
 
 test('CI workflow runs the scoped security dependency audit triage after npm ci', async () => {
-  const [workflow, packageJsonRaw] = await Promise.all([
+  const [workflow, currentAuditWorkflow, packageJsonRaw] = await Promise.all([
     readFile(ciWorkflowPath, 'utf8'),
+    readFile(currentSecurityAuditWorkflowPath, 'utf8'),
     readFile(packageJsonPath, 'utf8'),
   ]);
   const packageJson = JSON.parse(packageJsonRaw);
+  const currentAuditScript = packageJson.scripts['security:audit-current'] || '';
   const script = packageJson.scripts['security:audit-triage'] || '';
 
+  assert.equal(currentAuditScript, 'npm audit --omit=dev --audit-level=moderate');
   assert.match(script, /node scripts\/security-dependency-audit-triage\.mjs --json --output tmp\/codex\/security-dependency-audit-triage-non-production\.json/);
   assert.doesNotMatch(script, /npm audit|wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
+  assert.doesNotMatch(workflow, /npm run security:audit-current/);
   assert.match(workflow, /name:\s+Run security dependency audit triage\s+run:\s+npm run security:audit-triage/);
   assert.match(workflow, /run:\s+npm ci[\s\S]*run:\s+npm run security:audit-triage[\s\S]*run:\s+npm run check:schema/);
+  assert.match(currentAuditWorkflow, /schedule:\s+- cron:\s+'17 3 \* \* \*'/);
+  assert.match(currentAuditWorkflow, /workflow_dispatch:/);
+  assert.match(currentAuditWorkflow, /permissions:\s+contents:\s+read/);
+  assert.match(currentAuditWorkflow, /run:\s+npm ci[\s\S]*run:\s+npm run security:audit-current/);
 });
 
 test('CI workflow runs the local-only outbound HTTP enrichment boundary guard after security triage', async () => {

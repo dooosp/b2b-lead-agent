@@ -2,7 +2,7 @@
   "ok": true,
   "schemaVersion": "security.dependency_audit_triage.v1",
   "documentStatus": "SECURITY_DEPENDENCY_AUDIT_TRIAGE_NON_PRODUCTION",
-  "generatedAt": "2026-07-15T02:20:30.641Z",
+  "generatedAt": "2026-07-25T02:53:39.514Z",
   "repo": "dooosp/b2b-lead-agent",
   "packageJsonPath": "package.json",
   "packageLockPath": "package-lock.json",
@@ -18,13 +18,14 @@
     "directDependency": true,
     "devOnly": false,
     "prodScope": true,
-    "manifestSpec": "^1.16.0",
-    "manifestMinimum": "1.16.0",
-    "lockedVersion": "1.16.0",
-    "patchedMinimum": "1.16.0",
+    "manifestSpec": "^1.18.0",
+    "manifestMinimum": "1.18.0",
+    "lockedVersion": "1.18.1",
+    "patchedMinimum": "1.18.0",
     "lockDependencies": {
       "follow-redirects": "^1.16.0",
       "form-data": "^4.0.5",
+      "https-proxy-agent": "^5.0.1",
       "proxy-from-env": "^2.1.0"
     },
     "baselineSeverity": "high",
@@ -34,32 +35,74 @@
     ],
     "advisories": [
       {
-        "source": 1119667,
-        "url": "https://github.com/advisories/GHSA-pjwm-pj3p-43mv",
-        "severity": "high",
-        "range": ">=1.0.0 <1.16.0",
-        "title": "axios shouldBypassProxy does not recognize IPv4-mapped IPv6 addresses, allowing NO_PROXY bypass"
-      },
-      {
-        "source": 1119669,
-        "url": "https://github.com/advisories/GHSA-898c-q2cr-xwhg",
+        "source": 1123882,
+        "url": "https://github.com/advisories/GHSA-42h9-826w-cgv3",
         "severity": "moderate",
-        "range": ">=1.0.0 <1.16.0",
-        "title": "axios has DoS and Header Injection via Prototype Pollution Read-Side Gadgets in merge functions"
+        "range": ">=1.0.0 <1.18.0",
+        "title": "Axios: Excessive recursion in formDataToJSON can cause denial of service"
       },
       {
-        "source": 1119670,
-        "url": "https://github.com/advisories/GHSA-654m-c8p4-x5fp",
-        "severity": "low",
-        "range": "=1.15.2",
-        "title": "Axios Proxy-Authorization Header Injection via Prototype Pollution incomplete null-prototype fix"
+        "source": 1123884,
+        "url": "https://github.com/advisories/GHSA-xj6q-8x83-jv6g",
+        "severity": "moderate",
+        "range": ">=1.15.2 <1.18.0",
+        "title": "Axios: Prototype pollution auth subfields can inject Basic auth"
       },
       {
-        "source": 1119675,
-        "url": "https://github.com/advisories/GHSA-35jp-ww65-95wh",
+        "source": 1123885,
+        "url": "https://github.com/advisories/GHSA-pmv8-rq9r-6j72",
+        "severity": "moderate",
+        "range": ">=1.0.0 <1.18.0",
+        "title": "Axios: Deep formToJSON Key Recursion Can Cause Denial of Service"
+      },
+      {
+        "source": 1123957,
+        "url": "https://github.com/advisories/GHSA-jqh4-m9w3-8hp9",
+        "severity": "moderate",
+        "range": ">=1.7.0 <1.18.0",
+        "title": "Axios: Fetch adapter ReadableStream uploads bypass maxBodyLength"
+      },
+      {
+        "source": 1123959,
+        "url": "https://github.com/advisories/GHSA-mmx7-hfxf-jppx",
+        "severity": "moderate",
+        "range": ">=1.0.0 <1.18.0",
+        "title": "Axios: Prototype pollution gadgets can alter axios request construction"
+      },
+      {
+        "source": 1123961,
+        "url": "https://github.com/advisories/GHSA-f4gw-2p7v-4548",
+        "severity": "moderate",
+        "range": ">=1.15.0 <1.18.0",
+        "title": "Axios: NO_PROXY bypass for 0.0.0.0 local addresses in axios"
+      },
+      {
+        "source": 1123967,
+        "url": "https://github.com/advisories/GHSA-gcfj-64vw-6mp9",
         "severity": "high",
-        "range": ">=1.0.0 <1.16.0",
-        "title": "axios vulnerable to full man-in-the-middle via Prototype Pollution gadget in config.proxy"
+        "range": ">=1.15.2 <1.18.0",
+        "title": "Axios Node HTTP adapter can use an inherited proxy after interceptor config cloning"
+      },
+      {
+        "source": 1123969,
+        "url": "https://github.com/advisories/GHSA-hcpx-6fm6-wx23",
+        "severity": "moderate",
+        "range": ">=1.15.1 <1.18.0",
+        "title": "Axios form serializer maxDepth bypass via {} metatoken"
+      },
+      {
+        "source": 1123971,
+        "url": "https://github.com/advisories/GHSA-7q8q-rj6j-mhjq",
+        "severity": "moderate",
+        "range": ">=1.0.0 <1.18.0",
+        "title": "Axios: Nested axios option objects can consume polluted prototype values"
+      },
+      {
+        "source": 1123973,
+        "url": "https://github.com/advisories/GHSA-mwf2-3pr3-8698",
+        "severity": "moderate",
+        "range": ">=1.13.0 <1.18.0",
+        "title": "Axios: HTTP/2 streamed uploads bypass maxBodyLength"
       }
     ]
   },
@@ -79,7 +122,7 @@
   },
   "decision": {
     "status": "PASS_LOCAL_PATCHED",
-    "action": "PATCHED_WITH_SCOPED_AXIOS_1_16_0_UPDATE",
+    "action": "PATCHED_WITH_SCOPED_AXIOS_1_18_0_UPDATE",
     "riskOwner": "@dooosp / Taeho Jang",
     "followUp": "Keep npm audit, security:audit-triage, and check:enrichment-boundary in local validation when axios or outbound enrichment HTTP surfaces change."
   },

@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 
 import { createRequire } from 'node:module';
-import { isDirectCliRun, optionValue, writeJsonArtifact } from './lib/cli-utils.mjs';
+import {
+  isDirectCliRun,
+  optionValue,
+  writeJsonArtifactIfMateriallyChanged,
+} from './lib/cli-utils.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -27,7 +31,12 @@ export function evaluateOutboundHttpEnrichmentBoundaryAudit(input = {}) {
 }
 
 function runCli() {
-  const artifact = evaluateOutboundHttpEnrichmentBoundaryAudit();
+  const evaluatedArtifact = evaluateOutboundHttpEnrichmentBoundaryAudit();
+  const outputPath = optionValue('--output') || '';
+  const { artifact } = writeJsonArtifactIfMateriallyChanged(
+    outputPath,
+    evaluatedArtifact
+  );
   const output = process.argv.includes('--json')
     ? JSON.stringify(artifact, null, 2)
     : [
@@ -37,9 +46,6 @@ function runCli() {
       `notProductionEvidence: ${artifact.notProductionEvidence}`,
       `transport: ${artifact.transportContract.defaultTransport}`,
     ].join('\n');
-  const outputPath = optionValue('--output') || '';
-
-  writeJsonArtifact(outputPath, artifact);
 
   console.log(output);
 }
