@@ -5,7 +5,7 @@ This document summarizes the May 2026 PR train, stale PR disposition, and next w
 Evidence baseline:
 
 - Repo default branch: `master`
-- Latest audited source-of-truth `origin/master`: `d7a45257b9aa48d2975db9852a993d79f70972bf` (PR #209)
+- Latest audited source-of-truth `origin/master`: `4dad779efc30ca87d61bb113b4892cee6fafc1b9` (PR #208)
 - Evidence collected from GitHub PR/issue metadata, PR bodies, current
   `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`,
   `docs/d1-schema-drift-hardening.md`, and `docs/architecture/*.md`
@@ -20,7 +20,13 @@ Evidence baseline:
 - Post-PR203 scope extension: PR #204 source-of-truth sync and PR #205's
   local/test-only Evidence Claim Registry and Data Center Specification Fit v1
   foundation, followed by PR #209's bounded Gate 0 security/reproducibility
-  remediation. PRs #206-#208 are open Drafts and are not shipped.
+  remediation and PR #208's docs-only exact-A/B-receipt Candidate Review v2
+  method packet. PR #206 and PR #207 remain open Draft/HOLD at their frozen
+  heads. Exact-head owner record
+  `https://github.com/dooosp/b2b-lead-agent/pull/208#issuecomment-5077119914`
+  authorizes only a new stacked local/test Candidate Review v2 implementation;
+  human execution, implementation acceptance/merge, and production remain
+  unapproved.
 - Current owner-input response processing: Issues #162, #163, #164, #165, and #154 now have scoped owner confirmations processed as docs-planning `COMPLETE`. Issue #165 explicitly keeps production proof execution unapproved until a separate explicit future proof goal. Production reviewer workflow remains `BLOCKED`.
 - Production actions performed for this synthesis: none
 
@@ -333,11 +339,13 @@ Option A manual review notes update: PR #119 added the plan-only implementation 
 | [#203](https://github.com/dooosp/b2b-lead-agent/pull/203) | Atomic publication recovery and consumer hardening | Hardened recovery, manifest-primary Worker consumers, commit/path/byte ownership, repository-wide notification identity locks, producer/consumer budgets, callback credential scope, and exact validated-commit push behavior. |
 | [#204](https://github.com/dooosp/b2b-lead-agent/pull/204) | Post-PR203 source-of-truth sync | Synced root source-of-truth and production-boundary docs after PR #203 without production/staging action. |
 | [#205](https://github.com/dooosp/b2b-lead-agent/pull/205) | Evidence Claim Registry and Data Center Specification Fit v1 | Added a repository-authoritative claim registry, legacy managed-profile trust inventory, synthetic Data Center opportunity/specification-window/fit/Pursuit Dossier contracts, trusted-reference projection, and deterministic local CI gates while keeping `productionReady:false` and Issue #165 on `HOLD`. |
+| [#209](https://github.com/dooosp/b2b-lead-agent/pull/209) | Gate 0 security and reproducibility remediation | Raised the axios floor and lockfile, separated deterministic required CI from scheduled/manual live audit, suppressed valid timestamp-only evidence rewrites, and synced the PR #205 source baseline without production action. |
+| [#208](https://github.com/dooosp/b2b-lead-agent/pull/208) | Candidate Review v2 bounded-retention method packet | Shipped the docs-only method packet with exact `A_packet` / receipt-only `B_packet` review binding; no Candidate Review v2 implementation or human execution was approved or performed. |
 
 ## Immediate Merge Queue
 
 At this source-of-truth sync preflight, PR #119 through PR #153 plus PR #155
-through PR #205 are merged into `master`. PR #178 added the local-only Level 1
+through PR #205, PR #209, and PR #208 are merged into `master`. PR #178 added the local-only Level 1
 operator rehearsal gate, PR #179 added axios audit triage, and PR #180 added
 outbound HTTP enrichment boundary guards. PR #181 added the local-only
 enrichment fixture replay output contract. PR #182 added the local-only lead
@@ -361,14 +369,22 @@ typed atomic publication plus notification-safe behavior. PR #204 synced that
 source of truth, and PR #205 added the local/test-only Evidence Claim Registry
 and synthetic Data Center specification-fit foundation. PR #209 then merged the
 bounded Gate 0 security, reproducibility, and source-of-truth remediation at
-`d7a45257b9aa48d2975db9852a993d79f70972bf`. PRs #206-#208 remain open Drafts;
-they are not shipped and their human-review, implementation, restack, and merge
-gates remain separate. The docs-only
+`d7a45257b9aa48d2975db9852a993d79f70972bf`. PR #208 then merged the docs-only
 `docs/roadmap/pr207-candidate-review-v2-bounded-retention-method-decision-packet.md`
-is under exact-head revision after `REQUEST_CHANGES`; Candidate Review v2
-implementation and execution remain unapproved, and all three Draft merges
-remain `HOLD`. No feature merge or production action is implied by this
-source-of-truth update.
+at `4dad779efc30ca87d61bb113b4892cee6fafc1b9` after satisfying the controlling
+`REQUEST_CHANGES` with exact `A_packet`
+`3ea7a8020ce1bae8e5de2956c65af9a6f0ca2dd8` and receipt-only `B_packet`
+`8d53f1df0eae69dd62399d1437abafce839953f3`. This is shipped docs-only method
+evidence, not Candidate Review v2 implementation or human execution. The later
+exact-head owner record
+`https://github.com/dooosp/b2b-lead-agent/pull/208#issuecomment-5077119914`
+authorizes only a new stacked local/test implementation branch from frozen
+PR #207 head; it does not approve human execution, implementation
+acceptance/merge, or production. PR #206
+remains Draft/HOLD at `b5570e182c8ab6515c0f09272d22d7121518f134`; PR #207
+remains Draft/HOLD at `c6a5469338999097acd5de7c5a12c827d27d4540`. Issue
+#165 remains `HOLD`, and `productionReady:false` remains required. No feature
+merge or production action is implied by this source-of-truth update.
 The active Privacy Owner Input
 tracking issue is [Issue #154](https://github.com/dooosp/b2b-lead-agent/issues/154),
 status `OPEN`. PR #157 recorded `COMPLETE_FOR_CONSERVATIVE_POLICY`; the later
