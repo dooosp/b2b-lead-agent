@@ -5,7 +5,7 @@ This document summarizes the May 2026 PR train, stale PR disposition, and next w
 Evidence baseline:
 
 - Repo default branch: `master`
-- Latest audited source-of-truth `origin/master`: `9d144fbe6309ce363f9dad8d50ffa713d24af683` (PR #205)
+- Latest audited source-of-truth `origin/master`: `d7a45257b9aa48d2975db9852a993d79f70972bf` (PR #209)
 - Evidence collected from GitHub PR/issue metadata, PR bodies, current
   `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`,
   `docs/d1-schema-drift-hardening.md`, and `docs/architecture/*.md`
@@ -19,8 +19,8 @@ Evidence baseline:
   typed atomic publication, recovery, consumer, and notification hardening.
 - Post-PR203 scope extension: PR #204 source-of-truth sync and PR #205's
   local/test-only Evidence Claim Registry and Data Center Specification Fit v1
-  foundation. PRs #206-#208 are open Drafts from that baseline and are not
-  shipped.
+  foundation, followed by PR #209's bounded Gate 0 security/reproducibility
+  remediation. PRs #206-#208 are open Drafts and are not shipped.
 - Current owner-input response processing: Issues #162, #163, #164, #165, and #154 now have scoped owner confirmations processed as docs-planning `COMPLETE`. Issue #165 explicitly keeps production proof execution unapproved until a separate explicit future proof goal. Production reviewer workflow remains `BLOCKED`.
 - Production actions performed for this synthesis: none
 
@@ -359,11 +359,16 @@ artifact reads, PR #198 synced source of truth, PRs #199-#201 closed the
 remaining network/cache/concurrency lanes, and PRs #202-#203 added and hardened
 typed atomic publication plus notification-safe behavior. PR #204 synced that
 source of truth, and PR #205 added the local/test-only Evidence Claim Registry
-and synthetic Data Center specification-fit foundation. PRs #206-#208 remain
-open Drafts from the PR #205 baseline; they are not shipped and their
-human-review, implementation, restack, and merge gates remain separate. No
-additional feature merge or production action is implied by this
-source-of-truth sync.
+and synthetic Data Center specification-fit foundation. PR #209 then merged the
+bounded Gate 0 security, reproducibility, and source-of-truth remediation at
+`d7a45257b9aa48d2975db9852a993d79f70972bf`. PRs #206-#208 remain open Drafts;
+they are not shipped and their human-review, implementation, restack, and merge
+gates remain separate. The docs-only
+`docs/roadmap/pr207-candidate-review-v2-bounded-retention-method-decision-packet.md`
+is under exact-head revision after `REQUEST_CHANGES`; Candidate Review v2
+implementation and execution remain unapproved, and all three Draft merges
+remain `HOLD`. No feature merge or production action is implied by this
+source-of-truth update.
 The active Privacy Owner Input
 tracking issue is [Issue #154](https://github.com/dooosp/b2b-lead-agent/issues/154),
 status `OPEN`. PR #157 recorded `COMPLETE_FOR_CONSERVATIVE_POLICY`; the later

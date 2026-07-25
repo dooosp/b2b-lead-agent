@@ -1,0 +1,189 @@
+{
+  "schemaVersion": "pr207-candidate-review-v2-packet-post-commit-review-receipt-v1",
+  "recordKind": "POST_COMMIT_INDEPENDENT_REVIEW_RECEIPT",
+  "createdAt": "2026-07-25T05:16:06Z",
+  "repository": "dooosp/b2b-lead-agent",
+  "pullRequest": 208,
+  "evidenceClass": "LOCAL_DOCS_ONLY_EXACT_COMMIT_REVIEW_RECEIPT",
+  "notProductionEvidence": true,
+  "revisionRequest": {
+    "record": "PR208_METHOD_REVIEW_V1",
+    "url": "https://github.com/dooosp/b2b-lead-agent/pull/208#issuecomment-5077027554",
+    "commentId": 5077027554,
+    "decision": "REQUEST_CHANGES",
+    "reviewedPriorHead": "dd38805e96d33a82803e6a6926c74ea2450ef41b",
+    "reviewedPriorPacketSha256": "e477b0fb0812089d889b3d37fd6474e026679b05c4bbe66e2c7d69b370638f33",
+    "reviewedPriorObservationSha256": "ab9f2ac19bb929e68681bd2d3029a3b94effe1444d474ddc811e3164086d680a"
+  },
+  "defaultBranch": {
+    "name": "master",
+    "headAtReview": "d7a45257b9aa48d2975db9852a993d79f70972bf",
+    "headIsAncestorOfReviewedCommit": true
+  },
+  "packetCommit": {
+    "label": "A_packet",
+    "sha": "3ea7a8020ce1bae8e5de2956c65af9a6f0ca2dd8",
+    "parents": [
+      "f95e318e06cd3c6d491d94c57a6d3b8faa96368f"
+    ],
+    "parentCount": 1,
+    "receiptPathAbsent": true,
+    "changedPathManifest": {
+      "format": "git-diff-tree-name-status-lf-v1",
+      "reproductionCommand": "git diff-tree --no-commit-id --name-status -r 3ea7a8020ce1bae8e5de2956c65af9a6f0ca2dd8",
+      "sha256": "98a10f7d3329bf3457931bfa55bf8bf8f807caf6de09ede9b5222fe93678a9b3",
+      "entries": [
+        {
+          "status": "M",
+          "path": "AGENTS.md"
+        },
+        {
+          "status": "M",
+          "path": "HARDENING_PLAN.md"
+        },
+        {
+          "status": "M",
+          "path": "NEXT_SESSION_PROMPT.md"
+        },
+        {
+          "status": "M",
+          "path": "docs/roadmap/current-pr-train.md"
+        },
+        {
+          "status": "M",
+          "path": "docs/roadmap/pr207-candidate-review-v2-bounded-retention-method-decision-packet.md"
+        },
+        {
+          "status": "M",
+          "path": "docs/roadmap/pr207-candidate-review-v2-packet-revalidation-20260725.json"
+        },
+        {
+          "status": "M",
+          "path": "docs/roadmap/production-proof-boundaries.md"
+        },
+        {
+          "status": "M",
+          "path": "tests/source-of-truth-baseline.test.js"
+        }
+      ]
+    }
+  },
+  "reviewedArtifacts": [
+    {
+      "path": "docs/roadmap/pr207-candidate-review-v2-bounded-retention-method-decision-packet.md",
+      "mode": "100644",
+      "gitBlobOid": "645001a32325db1d225fc3b82ab89974797d1686",
+      "byteSha256": "d93a1bfe141ab0564c218eebcd6d07a3c5f35e9f40289a38e14e2ae5ba460dc5"
+    },
+    {
+      "path": "docs/roadmap/pr207-candidate-review-v2-packet-revalidation-20260725.json",
+      "mode": "100644",
+      "gitBlobOid": "20275d4ef4f6c9f444fbd3591c20a7b1f7d6a233",
+      "byteSha256": "3007ed14626b933279e38950424e808913b9bfb47f04ddc0d75af929f37d7922"
+    }
+  ],
+  "independentReviews": [
+    {
+      "roleLabel": "METHOD_REPRODUCIBILITY_REVIEW",
+      "reviewMode": "READ_ONLY_INDEPENDENT_AGENT",
+      "reviewedCommit": "3ea7a8020ce1bae8e5de2956c65af9a6f0ca2dd8",
+      "decision": "PASS",
+      "severityCounts": {
+        "P0": 0,
+        "P1": 0,
+        "P2": 0,
+        "P3": 0
+      },
+      "findingCount": 0,
+      "artifactBindingsMatch": true,
+      "receiptPathAbsentAtReview": true,
+      "humanReviewClaimed": false,
+      "reviewerIdentityRetained": false
+    },
+    {
+      "roleLabel": "SECURITY_PRIVACY_BOUNDARY_REVIEW",
+      "reviewMode": "READ_ONLY_INDEPENDENT_AGENT",
+      "reviewedCommit": "3ea7a8020ce1bae8e5de2956c65af9a6f0ca2dd8",
+      "decision": "PASS",
+      "severityCounts": {
+        "P0": 0,
+        "P1": 0,
+        "P2": 0,
+        "P3": 0
+      },
+      "findingCount": 0,
+      "artifactBindingsMatch": true,
+      "receiptPathAbsentAtReview": true,
+      "humanReviewClaimed": false,
+      "reviewerIdentityRetained": false
+    }
+  ],
+  "liveDependencySnapshot": {
+    "observedAt": "2026-07-25T05:16:06Z",
+    "snapshotOnlyNotDriftProof": true,
+    "pr206": {
+      "state": "OPEN",
+      "draft": true,
+      "merged": false,
+      "baseRef": "master",
+      "baseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+      "headRef": "codex/datacenter-pursuit-workbench-v0",
+      "headSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+      "humanSessionRuntimeRootSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+      "allObservedChecksSuccessful": true,
+      "mergeDisposition": "HOLD"
+    },
+    "pr207": {
+      "state": "OPEN",
+      "draft": true,
+      "merged": false,
+      "baseRef": "master",
+      "baseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+      "headRef": "codex/official-evidence-claim-review-workbench-v0",
+      "headSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "allObservedChecksSuccessful": true,
+      "mergeDisposition": "HOLD"
+    },
+    "issue165": {
+      "state": "OPEN",
+      "disposition": "HOLD"
+    }
+  },
+  "localValidation": [
+    {
+      "command": "npm ci",
+      "result": "PASS",
+      "auditVulnerabilityCount": 0
+    },
+    {
+      "command": "npm test",
+      "result": "PASS"
+    },
+    {
+      "command": "npm run check:naming",
+      "result": "PASS"
+    },
+    {
+      "command": "node --test tests/source-of-truth-baseline.test.js",
+      "result": "PASS"
+    }
+  ],
+  "commitBContract": {
+    "receiptPath": "docs/roadmap/pr207-candidate-review-v2-packet-post-commit-review-receipt-20260725.json",
+    "parentMustEqualReviewedCommit": true,
+    "onlyChangedPathMustBeReceiptPath": true,
+    "receiptMustNotContainCommitBSha": true,
+    "reviewedArtifactBlobsMustRemainIdentical": true
+  },
+  "nonClaims": {
+    "humanFidelityReviewExecuted": false,
+    "humanCandidateReviewExecuted": false,
+    "candidateReviewV2Implemented": false,
+    "packetMergeApproved": false,
+    "pr206MergeApproved": false,
+    "pr207MergeApproved": false,
+    "productionProofApproved": false,
+    "productionReady": false,
+    "productionReviewerWorkflowReady": false
+  }
+}

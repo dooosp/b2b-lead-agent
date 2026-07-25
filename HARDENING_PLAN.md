@@ -1,7 +1,7 @@
 # HARDENING_PLAN
 
 > Status: current hardening source of truth for `master` as of 2026-07-25.
-> Audited against first-parent `master` history through `9d144fbe6309ce363f9dad8d50ffa713d24af683` (PR #205, Evidence Claim Registry and Data Center Specification Fit v1 foundation) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input and non-production gates through PR #185, refactor/source-of-truth work through PR #190, Reviewer Workflow Intelligence and boundary audit through PR #193, the post-PR193 source-of-truth sync in PR #194, test-only P0 characterization in PR #195, LeadBrief publication hardening in PR #196, D1 snapshot/migration hardening in PR #197, the post-PR197 sync in PR #198, Worker outbound and protected-cache remediation in PRs #199-#200, concurrency/callback hardening in PR #201, atomic publication/notification hardening in PRs #202-#203, the source-of-truth sync in PR #204, and the local/test-only claim/spec-fit foundation in PR #205. PRs #206-#208 are open Drafts and are not shipped. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
+> Audited against first-parent `master` history through `d7a45257b9aa48d2975db9852a993d79f70972bf` (PR #209, Gate 0 security and reproducibility remediation) and current GitHub PR/issue state after stale PR #1-#9 closure, post-PR51 follow-ups #69-#84, PRs #87-#99, PRs #101-#107, PR #109, PR #110, PR #112, PR #114, PR #119-#145, Level 1 owner-input and non-production gates through PR #185, refactor/source-of-truth work through PR #190, Reviewer Workflow Intelligence and boundary audit through PR #193, the post-PR193 source-of-truth sync in PR #194, test-only P0 characterization in PR #195, LeadBrief publication hardening in PR #196, D1 snapshot/migration hardening in PR #197, the post-PR197 sync in PR #198, Worker outbound and protected-cache remediation in PRs #199-#200, concurrency/callback hardening in PR #201, atomic publication/notification hardening in PRs #202-#203, the source-of-truth sync in PR #204, the local/test-only claim/spec-fit foundation in PR #205, and PR #209's bounded Gate 0 remediation. PRs #206-#208 are open Drafts and are not shipped. Level 1 production reviewer workflow remains blocked; `productionReady` must remain false until a separate explicit human production proof execution goal.
 > Earlier files under `docs/exec-plans/` and `tmp/codex/` are retained as archival execution records, not current `master` truth, unless explicitly refreshed.
 
 ## Shipped Merge Order
@@ -761,7 +761,20 @@ production-readiness claims.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step: no mandatory staging or production action follows this
   source-of-truth sync. The stable operational default is truthful `HOLD`/no-op.
-- No mandatory merge, staging, or production action follows PR #205. PRs
+- The current docs-only follow-up is
+  `docs/roadmap/pr207-candidate-review-v2-bounded-retention-method-decision-packet.md`.
+  It records a packet-local method revision pending exact-head review for the
+  future Candidate Review v2 reviewer, candidate/page/anchor, decision,
+  precision, patch-suitability, bounded-retention, privacy, merge-train,
+  canonical-claim, and Tender Matrix method on the post-PR209 baseline.
+  It creates no candidates, no human fidelity decisions, and no Candidate
+  Review v2 human candidate decisions, and approves no implementation, restack,
+  merge, canonical `VERIFIED` claim, Tender Matrix, or production action. PRs
+  #206/#207 remain Draft and frozen; Issue #165 remains `HOLD`.
+- PR #209 merged the bounded Gate 0 security, reproducibility, and
+  source-of-truth remediation at
+  `d7a45257b9aa48d2975db9852a993d79f70972bf`. No mandatory staging or
+  production action follows it. PRs
   #206-#208 remain open Drafts and require their separate human-review,
   implementation, restack, and merge gates. If another bounded local goal is
   selected, the remaining application-level remote-read deadline identified in
