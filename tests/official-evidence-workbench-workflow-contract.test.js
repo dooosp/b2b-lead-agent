@@ -31,18 +31,41 @@ test('package exposes bounded local-only official-evidence Workbench commands', 
   assert.doesNotMatch(packageJson.scripts['demo:evidence-claim-workbench:real'], /--intake-dir|--workspace|\/Users\//);
 });
 
+test('package exposes fixed local/test-only Candidate Review v2 commands', async () => {
+  const packageJson = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+  const expected = {
+    'test:candidate-review-v2': 'node --test tests/official-evidence-candidate-review-v2-*.test.mjs',
+    'eval:candidate-review-v2': 'node scripts/evaluate-candidate-review-v2.mjs --json --repeat 2',
+    'check:candidate-review-v2': 'npm run test:candidate-review-v2 && npm run eval:candidate-review-v2',
+    'prepare:candidate-review-v2:local': 'node scripts/prepare-candidate-review-v2.mjs',
+    'validate:candidate-review-v2:local': 'node scripts/validate-candidate-review-v2.mjs',
+    'verify:candidate-review-v2:aggregate-receipt': 'node scripts/verify-candidate-review-v2-aggregate-receipt.mjs'
+  };
+
+  for (const [name, command] of Object.entries(expected)) {
+    assert.equal(packageJson.scripts[name], command);
+    assert.doesNotMatch(
+      command,
+      /wrangler|curl|deploy|D1_DATABASE|CLOUDFLARE|GEMINI|GMAIL|https?:\/\/|--input|--output|--workspace|--root/i
+    );
+  }
+});
+
 test('CI runs network-free Workbench gates before full tests and browser E2E after Chromium install', async () => {
   const workflow = await readFile(path.join(root, '.github/workflows/ci.yml'), 'utf8');
 
   assert.match(
     workflow,
-    /run:\s+npm run test:claim-spec-fit[\s\S]*run:\s+npm run audit:evidence-documents[\s\S]*run:\s+npm run eval:evidence-claim-workbench[\s\S]*run:\s+npm run test:evidence-claim-workbench[\s\S]*run:\s+npm run measure:evidence-claim-workbench[\s\S]*run:\s+npm test/
+    /run:\s+npm run test:claim-spec-fit[\s\S]*run:\s+npm run audit:evidence-documents[\s\S]*run:\s+npm run eval:evidence-claim-workbench[\s\S]*run:\s+npm run check:candidate-review-v2[\s\S]*run:\s+npm run test:evidence-claim-workbench[\s\S]*run:\s+npm run measure:evidence-claim-workbench[\s\S]*run:\s+npm test/
   );
   assert.match(
     workflow,
     /run:\s+npx playwright install --with-deps chromium[\s\S]*run:\s+npm run test:e2e:local[\s\S]*run:\s+npm run test:evidence-claim-workbench:e2e/
   );
-  assert.doesNotMatch(workflow, /evidence-inbox|REAL_DOCUMENT|--workspace/);
+  assert.doesNotMatch(
+    workflow,
+    /evidence-inbox|REAL_DOCUMENT|--workspace|prepare:candidate-review-v2|validate:candidate-review-v2|verify:candidate-review-v2|aggregate-receipt|human-validation/i
+  );
 });
 
 test('official-document inbox and mutable Workbench output stay ignored', async () => {
