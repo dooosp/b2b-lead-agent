@@ -1,23 +1,36 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import { sha256 } from '../knowledge/claim-registry/index.mjs';
 import {
   createCandidate,
   formatCandidateStatement
 } from '../evidence-claim-workbench/domain/candidates.mjs';
+import { normalizeSourceDocumentBundle } from '../evidence-claim-workbench/domain/document-bundle.mjs';
+import { createPageEvidenceAnchor } from '../evidence-claim-workbench/domain/evidence-anchor.mjs';
 import { createReviewDecision } from '../evidence-claim-workbench/domain/review-decisions.mjs';
+import { createReviewPatch } from '../evidence-claim-workbench/domain/review-patch.mjs';
 import {
   CANDIDATE_REVIEW_FROZEN_HEAD_SHA,
+  CANDIDATE_REVIEW_PREREQUISITE_SCHEMA_VERSION,
+  CANDIDATE_REVIEW_REAL_STRUCTURAL_MODE,
+  CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES,
   CANDIDATE_REVIEW_SYNTHETIC_PREREQUISITE_BYPASS,
   computeCandidateReviewAssignmentHash,
   computeCandidateReviewDecisionSetHash,
+  computeCandidateReviewMetrics,
   createBlankCandidateReviewRoleSubmission,
   createCandidateReviewPatchSet,
   reconcileCandidateReviewRound,
   selectCandidateReviewPopulation,
   validateCandidateReviewPatchSet,
+  validateCandidateReviewReconciliation,
   validateCandidateReviewRoleSubmission
 } from '../evidence-claim-workbench/domain/candidate-review-v2.mjs';
+import {
+  SYNTHETIC_BENCHMARK_AS_OF,
+  createSyntheticDocument
+} from '../evidence-claim-workbench/fixtures/synthetic-benchmark-v0.mjs';
 
 const CLAIM_TYPES = [
   'PRODUCT_CAPABILITY',
@@ -40,7 +53,12 @@ const FAMILY_VALUES = {
   ]
 };
 
-function syntheticCandidate(index, family, { semanticIndex = index } = {}) {
+function syntheticCandidate(index, family, {
+  semanticIndex = index,
+  synthetic = true,
+  documentId,
+  evidenceAnchorId
+} = {}) {
   const combinations = FAMILY_VALUES[family].flatMap((value, valueIndex) => (
     CLAIM_TYPES.map((claimType, claimIndex) => ({
       value,
@@ -59,9 +77,9 @@ function syntheticCandidate(index, family, { semanticIndex = index } = {}) {
   };
   return createCandidate({
     schemaVersion: 'evidence-claim-candidate-v0',
-    synthetic: true,
-    documentId: `doc_${(index + 1).toString(16).padStart(64, '0')}`,
-    evidenceAnchorId: `anc_${(index + 20_001).toString(16).padStart(64, '0')}`,
+    synthetic,
+    documentId: documentId ?? `doc_${(index + 1).toString(16).padStart(64, '0')}`,
+    evidenceAnchorId: evidenceAnchorId ?? `anc_${(index + 20_001).toString(16).padStart(64, '0')}`,
     claimType: combination.claimType,
     subject: {
       type: 'PRODUCT_FAMILY',
@@ -136,6 +154,10 @@ function completedSubmission(population, role, specificationByCandidateId = {}) 
     role
   });
   const submission = structuredClone(blank);
+  submission.submissionAuthorityStatus = population.prerequisiteMode
+    === CANDIDATE_REVIEW_SYNTHETIC_PREREQUISITE_BYPASS
+    ? CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.synthetic
+    : CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.structural;
   submission.roleQualificationAttested = true;
   submission.sealed = true;
   submission.rows = population.candidates.map((candidate, index) => {
@@ -182,6 +204,182 @@ function patchSetFor(population, primary, secondary, approvedCandidateIds) {
   });
 }
 
+function candidateSnapshot(candidate) {
+  return {
+    claimType: candidate.claimType,
+    productFamily: candidate.subject.id,
+    capabilityKey: candidate.value.key,
+    value: candidate.value,
+    applicability: candidate.applicability,
+    validity: candidate.validity
+  };
+}
+
+function anchorFor(document, quote) {
+  const page = [...document.pages[0].text];
+  const selected = [...quote];
+  let startCodePoint = -1;
+  for (let index = 0; index <= page.length - selected.length; index += 1) {
+    if (page.slice(index, index + selected.length).join('') === quote) {
+      startCodePoint = index;
+      break;
+    }
+  }
+  assert.ok(startCodePoint >= 0);
+  return createPageEvidenceAnchor(document, {
+    pageNumber: 1,
+    startCodePoint,
+    endCodePoint: startCodePoint + selected.length,
+    quote
+  });
+}
+
+function generatedStructuralRoundFixture() {
+  const records = [];
+  const reviewPatches = [];
+  const excerptsByCandidateId = {};
+  const documents = [];
+  let candidateOrdinal = 0;
+
+  for (const [familyOrdinal, family] of [
+    'medium_voltage_switchgear',
+    'transformer'
+  ].entries()) {
+    for (let documentOrdinal = 0; documentOrdinal < 4; documentOrdinal += 1) {
+      const semanticIndexes = Array.from({ length: 15 }, (_, index) => index)
+        .slice(documentOrdinal * 4, Math.min(15, (documentOrdinal + 1) * 4));
+      const quotes = semanticIndexes.map((semanticIndex) => (
+        `Bounded evidence ${familyOrdinal + 1}-${semanticIndex + 1}.`
+      ));
+      const rawDocument = createSyntheticDocument({
+        key: `candidate-v2-structural-${familyOrdinal + 1}-${documentOrdinal + 1}`,
+        productFamilies: [family],
+        pages: [`Generated public context. ${quotes.join(' Separate context. ')} End context.`],
+        source: {
+          sourceClass: 'OFFICIAL_MANUFACTURER',
+          publisher: 'Generated Manufacturer Evidence',
+          title: `Generated structural evidence ${familyOrdinal + 1}-${documentOrdinal + 1}`,
+          documentNumber: `GENERATED-${familyOrdinal + 1}-${documentOrdinal + 1}`,
+          sourceUrl: `https://evidence.example.com/generated/${familyOrdinal + 1}/${documentOrdinal + 1}`,
+          authenticityStatus: 'UNREVIEWED',
+          redistributionStatus: 'METADATA_AND_BOUNDED_EXCERPTS_ONLY'
+        }
+      });
+      rawDocument.synthetic = false;
+      const document = normalizeSourceDocumentBundle(rawDocument, {
+        asOf: SYNTHETIC_BENCHMARK_AS_OF
+      });
+      documents.push(document);
+
+      for (const [quoteIndex, semanticIndex] of semanticIndexes.entries()) {
+        const quote = quotes[quoteIndex];
+        const anchor = anchorFor(document, quote);
+        const candidate = syntheticCandidate(1_000 + candidateOrdinal, family, {
+          semanticIndex,
+          synthetic: false,
+          documentId: document.documentId,
+          evidenceAnchorId: anchor.anchorId
+        });
+        const decision = createReviewDecision({
+          candidate,
+          decision: 'APPROVE_FOR_REPOSITORY_REVIEW',
+          reasonCodes: ['EVIDENCE_QUOTE_CONFIRMED', 'STRUCTURED_MEANING_CONFIRMED']
+        });
+        reviewPatches.push(createReviewPatch({
+          baseCommitSha: CANDIDATE_REVIEW_FROZEN_HEAD_SHA,
+          registryPath: 'knowledge/claim-registry/candidate-review-v2-structural.json',
+          generatedAt: SYNTHETIC_BENCHMARK_AS_OF,
+          documents: [document],
+          anchors: [anchor],
+          candidates: [candidate],
+          decisions: [decision]
+        }));
+        excerptsByCandidateId[candidate.candidateId] = quote;
+        records.push({
+          evaluatedPrNumber: 207,
+          evaluatedPrHeadSha: CANDIDATE_REVIEW_FROZEN_HEAD_SHA,
+          manifestSha256: '1'.repeat(64),
+          documentDecisionSha256: '2'.repeat(64),
+          fidelityDecisionSha256: '3'.repeat(64),
+          candidate,
+          candidateSnapshot: candidateSnapshot(candidate),
+          productFamily: family,
+          claimType: candidate.claimType,
+          document: {
+            documentId: document.documentId,
+            sourceFileSha256: document.file.sha256,
+            normalizedContentSha256: document.file.contentSha256,
+            documentNumber: document.source.documentNumber,
+            revisionSeriesId: document.revision.seriesId,
+            revisionId: document.revision.revisionId,
+            revisionSequence: document.revision.sequence
+          },
+          page: {
+            namespace: 'NORMALIZED_BUNDLE_PAGE_NUMBER',
+            extractedPageOrdinal: anchor.page.extractedPageOrdinal,
+            locator: `${anchor.page.locator.type}:${anchor.page.locator.value}`,
+            pageTextSha256: anchor.page.textSha256,
+            pageCodePointLength: anchor.page.textCodePoints
+          },
+          anchor: {
+            evidenceAnchorId: anchor.anchorId,
+            normalizationVersion: anchor.selection.normalizationVersion,
+            startCodePoint: anchor.selection.startCodePoint,
+            endCodePoint: anchor.selection.endCodePoint,
+            quoteSha256: anchor.selection.quoteSha256,
+            occurrenceIndex: anchor.selection.occurrenceIndex - 1,
+            occurrenceCount: anchor.selection.occurrenceCount,
+            contextBeforeSha256: anchor.selection.prefixContextSha256,
+            contextAfterSha256: anchor.selection.suffixContextSha256
+          },
+          relationshipIds: [],
+          relatedCandidateIds: []
+        });
+        candidateOrdinal += 1;
+      }
+    }
+  }
+
+  const prerequisites = {
+    schemaVersion: CANDIDATE_REVIEW_PREREQUISITE_SCHEMA_VERSION,
+    evaluatedPrNumber: 207,
+    evaluatedPrHeadSha: CANDIDATE_REVIEW_FROZEN_HEAD_SHA,
+    manifestSha256: '1'.repeat(64),
+    documentDecisionSha256: '2'.repeat(64),
+    fidelityDecisionSha256: '3'.repeat(64),
+    policy: {
+      marker: 'PR207_PAGE_REVIEW_RIGHTS_RETENTION_POLICY_V1',
+      active: true,
+      expiresAt: '2026-08-21T23:59:59.000Z',
+      retentionMethod: 'IGNORE_VERIFIED_LOCAL_LEDGER_PLUS_POLICY_BOUNDED_HASH_AGGREGATE'
+    },
+    evaluationDate: '2026-07-25',
+    fidelityRows: documents.map((document) => ({
+      documentId: document.documentId,
+      documentIdentityCheck: 'MATCH',
+      documentNumberCheck: 'MATCH',
+      revisionCheck: 'MATCH',
+      candidateBearingPagesChecked: [1],
+      eligiblePageNumbers: [1],
+      fidelityDecision: 'ACCEPTABLE_FOR_CANDIDATE_REVIEW',
+      semanticPreservation: {
+        value: 'PRESERVED',
+        unit: 'PRESERVED',
+        operator: 'PRESERVED',
+        variant: 'PRESERVED',
+        condition: 'PRESERVED',
+        footnote: 'PRESERVED',
+        locator: 'PRESERVED'
+      }
+    }))
+  };
+  const population = selectCandidateReviewPopulation({
+    candidateRecords: records,
+    prerequisites
+  });
+  return { excerptsByCandidateId, population, reviewPatches };
+}
+
 test('two complete role submissions reconcile to immutable approvals only through a validated patch set', () => {
   const population = population30();
   const primary = completedSubmission(population, 'PRIMARY_TECHNICAL_REVIEWER');
@@ -219,6 +417,105 @@ test('two complete role submissions reconcile to immutable approvals only throug
     }),
     (error) => error.code === 'VALIDATED_PATCH_SET_REQUIRED_FOR_SUITABLE_OUTCOME'
   );
+});
+
+test('generated structurally non-synthetic-shaped review patches remain contract-only and non-authoritative', () => {
+  const fixture = generatedStructuralRoundFixture();
+  const { population } = fixture;
+  // Generated non-synthetic-shaped rows exercise the contract only; they are
+  // never external human provenance or custody evidence.
+  assert.equal(population.prerequisiteMode, CANDIDATE_REVIEW_REAL_STRUCTURAL_MODE);
+  assert.equal(population.realFidelityPrerequisitesSatisfied, false);
+  assert.equal(population.humanReviewEvidence, false);
+  assert.equal(population.externalHumanProvenanceVerified, false);
+  assert.equal(population.externalCustodyVerified, false);
+
+  const primary = completedSubmission(population, 'PRIMARY_TECHNICAL_REVIEWER');
+  const secondary = completedSubmission(population, 'SECONDARY_EVIDENCE_REVIEWER');
+  assert.equal(
+    primary.submissionAuthorityStatus,
+    CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.structural
+  );
+  assert.equal(primary.externalHumanProvenanceVerified, false);
+  assert.equal(primary.externalCustodyVerified, false);
+
+  const approvedCandidateIds = population.candidates.map(({ candidateId }) => candidateId);
+  const decisionSetHash = computeCandidateReviewDecisionSetHash({
+    population,
+    primarySubmission: primary,
+    secondarySubmission: secondary
+  });
+  const patchSet = createCandidateReviewPatchSet({
+    population,
+    decisionSetHash,
+    approvedCandidateIds,
+    excerptsByCandidateId: fixture.excerptsByCandidateId,
+    sourceReopenByCandidateId: Object.fromEntries(approvedCandidateIds.map((candidateId) => [
+      candidateId,
+      true
+    ])),
+    baseCommitSha: CANDIDATE_REVIEW_FROZEN_HEAD_SHA,
+    registryPath: 'knowledge/claim-registry/candidate-review-v2-structural.json',
+    validatedReviewPatches: fixture.reviewPatches
+  });
+  assert.ok(patchSet.validatedReviewPatches.every((patch) => (
+    patch.sourceDocuments[0].sourceUrl.startsWith('https://evidence.example.com/')
+  )));
+  const privateSourceForgery = structuredClone(patchSet);
+  privateSourceForgery.validatedReviewPatches[0].sourceDocuments[0].sourceUrl
+    = 'http://127.0.0.1/private';
+  assert.throws(
+    () => reconcileCandidateReviewRound({
+      population,
+      primarySubmission: primary,
+      secondarySubmission: secondary,
+      patchSuitabilityByCandidateId: Object.fromEntries(approvedCandidateIds.map((candidateId) => [
+        candidateId,
+        'SUITABLE_FOR_REPOSITORY_REVIEW'
+      ])),
+      roleSeparationAttested: true,
+      patchSet: privateSourceForgery
+    }),
+    (error) => error.code === 'PRIVATE_SOURCE_URL_REFUSED'
+  );
+
+  const reconciliation = reconcileCandidateReviewRound({
+    population,
+    primarySubmission: primary,
+    secondarySubmission: secondary,
+    patchSuitabilityByCandidateId: Object.fromEntries(approvedCandidateIds.map((candidateId) => [
+      candidateId,
+      'SUITABLE_FOR_REPOSITORY_REVIEW'
+    ])),
+    roleSeparationAttested: true,
+    patchSet
+  });
+  assert.ok(reconciliation.finalOutcomes.every(({ outcome }) => outcome === 'APPROVED'));
+  assert.equal(reconciliation.externalHumanProvenanceVerified, false);
+  assert.equal(reconciliation.externalCustodyVerified, false);
+  assert.deepEqual(reconciliation.candidateReviewMethodBlockers, [
+    'EXTERNAL_HUMAN_PROVENANCE_AND_CUSTODY_UNVERIFIED'
+  ]);
+  assert.deepEqual(validateCandidateReviewReconciliation(reconciliation, {
+    population,
+    primarySubmission: primary,
+    secondarySubmission: secondary
+  }), reconciliation);
+
+  const metrics = computeCandidateReviewMetrics({
+    population,
+    finalOutcomes: reconciliation,
+    primarySubmission: primary,
+    secondarySubmission: secondary,
+    qualityFindingCounts: { p0: 0, p1: 0, synthetic: false }
+  });
+  assert.equal(metrics.gates.candidateReviewThresholdsPassed, true);
+  assert.equal(metrics.gates.candidateReviewMethodGatePassed, false);
+  assert.equal(metrics.externalHumanProvenanceVerified, false);
+  assert.equal(metrics.externalCustodyVerified, false);
+  assert.deepEqual(metrics.candidateReviewMethodBlockers, [
+    'EXTERNAL_HUMAN_PROVENANCE_AND_CUSTODY_UNVERIFIED'
+  ]);
 });
 
 test('ordered reconciliation preserves rejection intersections, holds, conflicts, and limitation acknowledgements', () => {
@@ -387,12 +684,36 @@ test('all 2N rows, exact roles, fixed schemas, and no identity/free text are req
       || error.code === 'IDENTITY_OR_PRIVATE_TEXT_REFUSED'
   );
 
+  const forgedExternalAuthority = structuredClone(primary);
+  forgedExternalAuthority.externalHumanProvenanceVerified = true;
+  forgedExternalAuthority.externalCustodyVerified = true;
+  forgedExternalAuthority.submissionHash = null;
+  assert.throws(
+    () => validateCandidateReviewRoleSubmission(forgedExternalAuthority, { population }),
+    (error) => error.code === 'EXTERNAL_SUBMISSION_AUTHORITY_CLAIM_REFUSED'
+  );
+
+  const completedWithPendingAuthority = structuredClone(primary);
+  completedWithPendingAuthority.submissionAuthorityStatus
+    = CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.pending;
+  completedWithPendingAuthority.submissionHash = null;
+  assert.throws(
+    () => validateCandidateReviewRoleSubmission(completedWithPendingAuthority, { population }),
+    (error) => error.code === 'EXTERNAL_SUBMISSION_AUTHORITY_CLAIM_REFUSED'
+  );
+
   const blank = createBlankCandidateReviewRoleSubmission({
     roundId: population.roundId,
     populationHash: population.populationHash,
     assignmentHash: primary.assignmentHash,
     role: 'PRIMARY_TECHNICAL_REVIEWER'
   });
+  assert.equal(
+    blank.submissionAuthorityStatus,
+    CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.pending
+  );
+  assert.equal(blank.externalHumanProvenanceVerified, false);
+  assert.equal(blank.externalCustodyVerified, false);
   assert.deepEqual(
     validateCandidateReviewRoleSubmission(blank, { population, allowBlank: true }),
     blank

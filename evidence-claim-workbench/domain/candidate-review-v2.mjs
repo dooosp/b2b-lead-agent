@@ -21,6 +21,12 @@ export const CANDIDATE_REVIEW_PR_NUMBER = 207;
 export const CANDIDATE_REVIEW_FROZEN_HEAD_SHA = 'c6a5469338999097acd5de7c5a12c827d27d4540';
 export const CANDIDATE_REVIEW_BOUNDARY = 'NOT_PRODUCTION_EVIDENCE';
 export const CANDIDATE_REVIEW_SYNTHETIC_PREREQUISITE_BYPASS = 'SYNTHETIC_FIXTURE_ONLY';
+export const CANDIDATE_REVIEW_REAL_STRUCTURAL_MODE = 'STRUCTURALLY_BOUND_EXTERNAL_EVIDENCE_REQUIRED';
+export const CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES = Object.freeze({
+  pending: 'STRUCTURAL_VALIDATION_PENDING_NON_AUTHORITATIVE',
+  structural: 'STRUCTURALLY_BOUND_NON_AUTHORITATIVE_EXTERNAL_EVIDENCE_REQUIRED',
+  synthetic: 'SYNTHETIC_FIXTURE_NON_AUTHORITATIVE_NO_HUMAN_EVIDENCE'
+});
 export const CANDIDATE_REVIEW_PREREQUISITE_SCHEMA_VERSION = 'pr207-candidate-review-prerequisites-v2';
 export const CANDIDATE_REVIEW_COMPONENT_SCHEMA_VERSION = 'pr207-candidate-review-components-v2';
 export const CANDIDATE_REVIEW_POPULATION_SCHEMA_VERSION = 'pr207-candidate-review-population-v2';
@@ -122,6 +128,11 @@ const BOUNDARY = Object.freeze({
   customerUseAllowed: false,
   proofExecutionApproved: false
 });
+const EXTERNAL_EVIDENCE_BLOCKER = 'EXTERNAL_HUMAN_PROVENANCE_AND_CUSTODY_UNVERIFIED';
+const SYNTHETIC_EVIDENCE_BLOCKER = 'SYNTHETIC_FIXTURE_NOT_HUMAN_EVIDENCE';
+const ROLE_SUBMISSION_PENDING_STATUS = CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.pending;
+const ROLE_SUBMISSION_STRUCTURAL_STATUS = CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.structural;
+const ROLE_SUBMISSION_SYNTHETIC_STATUS = CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.synthetic;
 
 export class CandidateReviewV2ValidationError extends Error {
   constructor(code, path = '$') {
@@ -236,6 +247,38 @@ function assertSafeInput(value, path = '$') {
     fail(error?.code || 'UNSAFE_ARTIFACT_REFUSED', error?.path || path);
   }
   assertReviewSafe(value, path);
+}
+
+function projectPatchSetForOuterSafety(patchSet) {
+  if (!isPlainObject(patchSet)) return patchSet;
+  return {
+    ...patchSet,
+    validatedReviewPatches: Array.isArray(patchSet.validatedReviewPatches)
+      ? patchSet.validatedReviewPatches.map((patch) => ({ patchId: patch?.patchId }))
+      : patchSet.validatedReviewPatches
+  };
+}
+
+function assertSafeInputWithCanonicalPatches(value, path = '$') {
+  try {
+    assertSafeArtifact(value, path);
+  } catch (error) {
+    fail(error?.code || 'UNSAFE_ARTIFACT_REFUSED', error?.path || path);
+  }
+  if (!isPlainObject(value)) fail('OBJECT_REQUIRED', path);
+  const projection = {
+    ...value,
+    ...(Object.hasOwn(value, 'patchSet') ? {
+      patchSet: projectPatchSetForOuterSafety(value.patchSet)
+    } : {}),
+    ...(isPlainObject(value.finalOutcomes) && Object.hasOwn(value.finalOutcomes, 'patchSet') ? {
+      finalOutcomes: {
+        ...value.finalOutcomes,
+        patchSet: projectPatchSetForOuterSafety(value.finalOutcomes.patchSet)
+      }
+    } : {})
+  };
+  assertReviewSafe(projection, path);
 }
 
 function assertSha256(value, path) {
@@ -944,7 +987,7 @@ export function selectCandidateReviewPopulation(input = {}) {
       fail('CANDIDATE_RECORD_ARRAY_REQUIRED', '$.candidateRecords');
     }
     candidates = normalizeCandidates(input.candidateRecords.map((record) => record?.candidate), '$.candidateRecords.candidate');
-    prerequisiteMode = 'FULL_FIDELITY_AND_SECTION5_BINDINGS';
+    prerequisiteMode = CANDIDATE_REVIEW_REAL_STRUCTURAL_MODE;
   }
 
   const componentSet = buildCandidateReviewComponents({
@@ -1005,10 +1048,15 @@ export function selectCandidateReviewPopulation(input = {}) {
     syntheticPrerequisiteBypass: prerequisiteMode === CANDIDATE_REVIEW_SYNTHETIC_PREREQUISITE_BYPASS
       ? CANDIDATE_REVIEW_SYNTHETIC_PREREQUISITE_BYPASS
       : null,
-    realFidelityPrerequisitesSatisfied: prerequisiteMode === 'FULL_FIDELITY_AND_SECTION5_BINDINGS',
-    section5BindingsComplete: prerequisiteMode === 'FULL_FIDELITY_AND_SECTION5_BINDINGS',
+    realFidelityPrerequisitesSatisfied: false,
+    section5BindingsComplete: prerequisiteMode === CANDIDATE_REVIEW_REAL_STRUCTURAL_MODE,
+    externalHumanProvenanceVerified: false,
+    externalCustodyVerified: false,
+    candidateReviewMethodBlockers: prerequisiteMode === CANDIDATE_REVIEW_SYNTHETIC_PREREQUISITE_BYPASS
+      ? [EXTERNAL_EVIDENCE_BLOCKER, SYNTHETIC_EVIDENCE_BLOCKER].sort(compareAscii)
+      : [EXTERNAL_EVIDENCE_BLOCKER],
     humanReviewEvidence: false,
-    prerequisites: prerequisiteMode === 'FULL_FIDELITY_AND_SECTION5_BINDINGS'
+    prerequisites: prerequisiteMode === CANDIDATE_REVIEW_REAL_STRUCTURAL_MODE
       ? prerequisites
       : null,
     candidateCount: selectedCandidates.length,
@@ -1054,6 +1102,9 @@ export function selectCandidateReviewPopulation(input = {}) {
     syntheticPrerequisiteBypass: core.syntheticPrerequisiteBypass,
     realFidelityPrerequisitesSatisfied: core.realFidelityPrerequisitesSatisfied,
     section5BindingsComplete: core.section5BindingsComplete,
+    externalHumanProvenanceVerified: false,
+    externalCustodyVerified: false,
+    candidateReviewMethodBlockers: core.candidateReviewMethodBlockers,
     humanReviewEvidence: false,
     prerequisites: core.prerequisites,
     candidateCount: selectedCandidates.length,
@@ -1094,6 +1145,9 @@ function populationCoreForHash(population) {
     syntheticPrerequisiteBypass: population.syntheticPrerequisiteBypass,
     realFidelityPrerequisitesSatisfied: population.realFidelityPrerequisitesSatisfied,
     section5BindingsComplete: population.section5BindingsComplete,
+    externalHumanProvenanceVerified: population.externalHumanProvenanceVerified,
+    externalCustodyVerified: population.externalCustodyVerified,
+    candidateReviewMethodBlockers: population.candidateReviewMethodBlockers,
     humanReviewEvidence: false,
     prerequisites: population.prerequisites,
     candidateCount: population.candidateCount,
@@ -1120,6 +1174,9 @@ export function validateCandidateReviewPopulation(rawPopulation) {
       'syntheticPrerequisiteBypass',
       'realFidelityPrerequisitesSatisfied',
       'section5BindingsComplete',
+      'externalHumanProvenanceVerified',
+      'externalCustodyVerified',
+      'candidateReviewMethodBlockers',
       'humanReviewEvidence',
       'prerequisites',
       'candidateCount',
@@ -1160,15 +1217,19 @@ export function validateCandidateReviewPopulation(rawPopulation) {
     if (rawPopulation.syntheticPrerequisiteBypass !== CANDIDATE_REVIEW_SYNTHETIC_PREREQUISITE_BYPASS
       || rawPopulation.realFidelityPrerequisitesSatisfied !== false
       || rawPopulation.section5BindingsComplete !== false
+      || rawPopulation.externalHumanProvenanceVerified !== false
+      || rawPopulation.externalCustodyVerified !== false
       || rawPopulation.prerequisites !== null
       || rawPopulation.candidateRecords.length !== 0
       || candidates.some((candidate) => candidate.synthetic !== true)) {
       fail('INVALID_SYNTHETIC_PREREQUISITE_BYPASS', '$');
     }
-  } else if (rawPopulation.prerequisiteMode === 'FULL_FIDELITY_AND_SECTION5_BINDINGS') {
+  } else if (rawPopulation.prerequisiteMode === CANDIDATE_REVIEW_REAL_STRUCTURAL_MODE) {
     if (rawPopulation.syntheticPrerequisiteBypass !== null
-      || rawPopulation.realFidelityPrerequisitesSatisfied !== true
+      || rawPopulation.realFidelityPrerequisitesSatisfied !== false
       || rawPopulation.section5BindingsComplete !== true
+      || rawPopulation.externalHumanProvenanceVerified !== false
+      || rawPopulation.externalCustodyVerified !== false
       || !isPlainObject(rawPopulation.prerequisites)
       || rawPopulation.candidateRecords.length !== candidates.length
       || candidates.some((candidate) => candidate.synthetic !== false)) {
@@ -1176,6 +1237,13 @@ export function validateCandidateReviewPopulation(rawPopulation) {
     }
   } else {
     fail('UNSUPPORTED_PREREQUISITE_MODE', '$.prerequisiteMode');
+  }
+  const expectedMethodBlockers = syntheticMode
+    ? [EXTERNAL_EVIDENCE_BLOCKER, SYNTHETIC_EVIDENCE_BLOCKER].sort(compareAscii)
+    : [EXTERNAL_EVIDENCE_BLOCKER];
+  if (canonicalStringify(rawPopulation.candidateReviewMethodBlockers)
+    !== canonicalStringify(expectedMethodBlockers)) {
+    fail('CANDIDATE_REVIEW_METHOD_BLOCKER_MISMATCH', '$.candidateReviewMethodBlockers');
   }
   assertExactKeys(rawPopulation.relationshipReport, {
     required: ['schemaVersion', ...BOUNDARY_KEYS, 'relationships', 'reportHash']
@@ -1292,6 +1360,9 @@ export function createBlankCandidateReviewRoleSubmission({
     populationHash,
     assignmentHash,
     role,
+    submissionAuthorityStatus: ROLE_SUBMISSION_PENDING_STATUS,
+    externalHumanProvenanceVerified: false,
+    externalCustodyVerified: false,
     roleQualificationAttested: false,
     sealed: false,
     rows: [],
@@ -1367,6 +1438,9 @@ export function validateCandidateReviewRoleSubmission(rawSubmission, {
       'populationHash',
       'assignmentHash',
       'role',
+      'submissionAuthorityStatus',
+      'externalHumanProvenanceVerified',
+      'externalCustodyVerified',
       'roleQualificationAttested',
       'sealed',
       'rows',
@@ -1398,7 +1472,10 @@ export function validateCandidateReviewRoleSubmission(rawSubmission, {
   }
   if (rawSubmission.rows.length === 0) {
     if (!allowBlank) fail('INCOMPLETE_ROLE_SUBMISSION', '$.rows');
-    if (rawSubmission.roleQualificationAttested !== false
+    if (rawSubmission.submissionAuthorityStatus !== ROLE_SUBMISSION_PENDING_STATUS
+      || rawSubmission.externalHumanProvenanceVerified !== false
+      || rawSubmission.externalCustodyVerified !== false
+      || rawSubmission.roleQualificationAttested !== false
       || rawSubmission.sealed !== false
       || rawSubmission.submissionHash !== null) {
       fail('NONCANONICAL_BLANK_SUBMISSION', '$');
@@ -1406,6 +1483,14 @@ export function validateCandidateReviewRoleSubmission(rawSubmission, {
     return cloneFrozen(rawSubmission);
   }
   if (!population) fail('POPULATION_REQUIRED_FOR_COMPLETED_SUBMISSION', '$.population');
+  const expectedAuthorityStatus = population.prerequisiteMode === CANDIDATE_REVIEW_SYNTHETIC_PREREQUISITE_BYPASS
+    ? ROLE_SUBMISSION_SYNTHETIC_STATUS
+    : ROLE_SUBMISSION_STRUCTURAL_STATUS;
+  if (rawSubmission.submissionAuthorityStatus !== expectedAuthorityStatus
+    || rawSubmission.externalHumanProvenanceVerified !== false
+    || rawSubmission.externalCustodyVerified !== false) {
+    fail('EXTERNAL_SUBMISSION_AUTHORITY_CLAIM_REFUSED', '$');
+  }
   if (rawSubmission.roleQualificationAttested !== true) fail('ROLE_QUALIFICATION_ATTESTATION_REQUIRED', '$.roleQualificationAttested');
   if (rawSubmission.sealed !== true) fail('SEALED_SUBMISSION_REQUIRED', '$.sealed');
   if (rawSubmission.rows.length !== population.candidates.length) fail('EXACT_ROLE_ROW_COUNT_REQUIRED', '$.rows');
@@ -1498,6 +1583,9 @@ export function validateCandidateReviewRoleSubmission(rawSubmission, {
     populationHash: rawSubmission.populationHash,
     assignmentHash: rawSubmission.assignmentHash,
     role: rawSubmission.role,
+    submissionAuthorityStatus: expectedAuthorityStatus,
+    externalHumanProvenanceVerified: false,
+    externalCustodyVerified: false,
     roleQualificationAttested: true,
     sealed: true,
     rows
@@ -1918,7 +2006,7 @@ export function createCandidateReviewPatchSet({
     if (sourceReopenByCandidateId[candidateId] !== true) {
       fail('SOURCE_REOPEN_CONFIRMATION_REQUIRED', `$.sourceReopenByCandidateId.${candidateId}`);
     }
-    if (population.prerequisiteMode === 'FULL_FIDELITY_AND_SECTION5_BINDINGS') {
+    if (population.prerequisiteMode === CANDIDATE_REVIEW_REAL_STRUCTURAL_MODE) {
       const record = population.candidateRecords.find((item) => item.candidate.candidateId === candidateId);
       if (!record || sha256(excerpt) !== record.anchor.quoteSha256) {
         fail('PATCH_EXCERPT_ANCHOR_HASH_MISMATCH', `$.excerptsByCandidateId.${candidateId}`);
@@ -2029,12 +2117,7 @@ export function validateCandidateReviewPatchSet(rawPatchSet, { population: rawPo
   } catch (error) {
     fail(error?.code || 'UNSAFE_ARTIFACT_REFUSED', error?.path || '$');
   }
-  const patchSafetyProjection = {
-    ...rawPatchSet,
-    validatedReviewPatches: Array.isArray(rawPatchSet.validatedReviewPatches)
-      ? rawPatchSet.validatedReviewPatches.map((patch) => ({ patchId: patch?.patchId }))
-      : rawPatchSet.validatedReviewPatches
-  };
+  const patchSafetyProjection = projectPatchSetForOuterSafety(rawPatchSet);
   assertReviewSafe(patchSafetyProjection, '$');
   assertExactKeys(rawPatchSet, {
     required: [
@@ -2192,7 +2275,7 @@ export function validateCandidateReviewPatchSet(rawPatchSet, { population: rawPo
         fail('INVALID_PATCH_EXCERPT', entryPath);
       }
       assertReviewSafe(entry.excerpt, `${entryPath}.excerpt`);
-      if (population.prerequisiteMode === 'FULL_FIDELITY_AND_SECTION5_BINDINGS') {
+      if (population.prerequisiteMode === CANDIDATE_REVIEW_REAL_STRUCTURAL_MODE) {
         const record = population.candidateRecords.find((item) => (
           item.candidate.candidateId === entry.candidateId
         ));
@@ -2267,7 +2350,7 @@ export function reconcileCandidateReviewRound({
     ],
     optional: ['relationshipReport', 'patchSet']
   }, '$');
-  assertSafeInput(arguments[0], '$');
+  assertSafeInputWithCanonicalPatches(arguments[0], '$');
   const population = validateCandidateReviewPopulation(rawPopulation);
   if (roleSeparationAttested !== true) fail('ROLE_SEPARATION_ATTESTATION_REQUIRED', '$.roleSeparationAttested');
   const primary = validateCandidateReviewRoleSubmission(rawPrimary, { population });
@@ -2419,6 +2502,9 @@ export function reconcileCandidateReviewRound({
     ...BOUNDARY,
     roundId: population.roundId,
     populationHash: population.populationHash,
+    externalHumanProvenanceVerified: false,
+    externalCustodyVerified: false,
+    candidateReviewMethodBlockers: population.candidateReviewMethodBlockers,
     assignmentHash: primary.assignmentHash,
     roleSeparationAttested: true,
     primarySubmissionHash: primary.submissionHash,
@@ -2442,13 +2528,16 @@ export function validateCandidateReviewReconciliation(rawReconciliation, {
   primarySubmission,
   secondarySubmission
 } = {}) {
-  assertSafeInput(rawReconciliation, '$');
+  assertSafeInputWithCanonicalPatches(rawReconciliation, '$');
   assertExactKeys(rawReconciliation, {
     required: [
       'schemaVersion',
       ...BOUNDARY_KEYS,
       'roundId',
       'populationHash',
+      'externalHumanProvenanceVerified',
+      'externalCustodyVerified',
+      'candidateReviewMethodBlockers',
       'assignmentHash',
       'roleSeparationAttested',
       'primarySubmissionHash',
@@ -2595,7 +2684,7 @@ export function computeCandidateReviewMetrics({
     required: ['population', 'finalOutcomes', 'primarySubmission', 'secondarySubmission'],
     optional: ['qualityFindingCounts']
   }, '$');
-  assertSafeInput(arguments[0], '$');
+  assertSafeInputWithCanonicalPatches(arguments[0], '$');
   const population = validateCandidateReviewPopulation(rawPopulation);
   const primary = validateCandidateReviewRoleSubmission(rawPrimary, { population });
   const secondary = validateCandidateReviewRoleSubmission(rawSecondary, { population });
@@ -2683,6 +2772,9 @@ export function computeCandidateReviewMetrics({
     ...BOUNDARY,
     roundId: population.roundId,
     populationHash: population.populationHash,
+    externalHumanProvenanceVerified: false,
+    externalCustodyVerified: false,
+    candidateReviewMethodBlockers: reconciliation.candidateReviewMethodBlockers,
     candidateCount: population.candidateCount,
     roleRowCount: primary.rows.length + secondary.rows.length,
     outcomeCounts: {
@@ -2738,8 +2830,7 @@ export function computeCandidateReviewMetrics({
         ...gates,
         ...safetyGates,
         candidateReviewThresholdsPassed,
-        candidateReviewMethodGatePassed: candidateReviewThresholdsPassed
-          && population.prerequisiteMode === 'FULL_FIDELITY_AND_SECTION5_BINDINGS'
+        candidateReviewMethodGatePassed: false
       };
     })()
   };

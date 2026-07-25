@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { canonicalStringify, sha256 } from '../knowledge/claim-registry/index.mjs';
 import {
+  CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES,
   computeCandidateReviewAssignmentHash,
   computeCandidateReviewDecisionSetHash,
   computeCandidateReviewMetrics,
@@ -56,6 +57,10 @@ const ROLES = Object.freeze([
 ]);
 const SYNTHETIC_REGISTRY_PATH =
   'knowledge/claim-registry/candidate-review-v2-synthetic.json';
+const SYNTHETIC_METHOD_BLOCKERS = Object.freeze([
+  'EXTERNAL_HUMAN_PROVENANCE_AND_CUSTODY_UNVERIFIED',
+  'SYNTHETIC_FIXTURE_NOT_HUMAN_EVIDENCE'
+]);
 
 function compareAscii(left, right) {
   return left < right ? -1 : left > right ? 1 : 0;
@@ -262,6 +267,10 @@ function createCompletedRoleSubmission({
   }));
   return validateCandidateReviewRoleSubmission({
     ...blank,
+    submissionAuthorityStatus:
+      CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.synthetic,
+    externalHumanProvenanceVerified: false,
+    externalCustodyVerified: false,
     roleQualificationAttested: true,
     sealed: true,
     rows,
@@ -383,6 +392,11 @@ function buildSyntheticScenario({
     syntheticDecisionSimulation: true,
     humanReviewExecuted: false,
     candidateReviewV2HumanGateStatus: 'INCOMPLETE',
+    externalHumanProvenanceVerified: false,
+    externalCustodyVerified: false,
+    candidateReviewMethodBlockers: metrics.candidateReviewMethodBlockers,
+    candidateReviewMethodGatePassed:
+      metrics.gates.candidateReviewMethodGatePassed,
     population,
     primarySubmission,
     secondarySubmission,
@@ -453,8 +467,19 @@ function summarizeScenario(result) {
     syntheticDecisionSimulation: true,
     humanReviewExecuted: false,
     candidateReviewV2HumanGateStatus: 'INCOMPLETE',
+    externalHumanProvenanceVerified:
+      result.metrics.externalHumanProvenanceVerified,
+    externalCustodyVerified: result.metrics.externalCustodyVerified,
+    candidateReviewMethodBlockers:
+      result.metrics.candidateReviewMethodBlockers,
+    candidateReviewMethodGatePassed:
+      result.metrics.gates.candidateReviewMethodGatePassed,
     syntheticRoleRowCount:
       result.primarySubmission.rows.length + result.secondarySubmission.rows.length,
+    primarySubmissionAuthorityStatus:
+      result.primarySubmission.submissionAuthorityStatus,
+    secondarySubmissionAuthorityStatus:
+      result.secondarySubmission.submissionAuthorityStatus,
     primarySubmissionHash: result.primarySubmission.submissionHash,
     secondarySubmissionHash: result.secondarySubmission.submissionHash,
     outcomeCounts: result.metrics.outcomeCounts,
@@ -533,6 +558,10 @@ function evaluateCore() {
     const submission = roleSubmissions[role];
     return {
       role,
+      submissionAuthorityStatus: submission.submissionAuthorityStatus,
+      externalHumanProvenanceVerified:
+        submission.externalHumanProvenanceVerified,
+      externalCustodyVerified: submission.externalCustodyVerified,
       roleQualificationAttested: submission.roleQualificationAttested,
       sealed: submission.sealed,
       decisionRowCount: submission.rows.length,
@@ -563,6 +592,11 @@ function evaluateCore() {
     evaluationAsOf: fixture.evaluationAsOf,
     syntheticEvaluationStatus: 'PASS',
     candidateReviewV2HumanGateStatus: 'INCOMPLETE',
+    externalHumanProvenanceVerified: false,
+    externalCustodyVerified: false,
+    candidateReviewMethodBlockers:
+      population.candidateReviewMethodBlockers,
+    candidateReviewMethodGatePassed: false,
     documentStatus: 'SYNTHETIC_FIXTURE_GATE_PASS_HUMAN_REVIEW_INCOMPLETE',
     thresholds: CANDIDATE_REVIEW_V2_EVALUATION_THRESHOLDS,
     fixture: {
@@ -570,13 +604,29 @@ function evaluateCore() {
       semanticSha256: fixture.semanticSha256,
       evaluatedPr207Head: fixture.evaluatedPr207Head,
       candidateCount: fixture.candidates.length,
-      humanReviewExecuted: false
+      humanReviewExecuted: false,
+      externalHumanProvenanceVerified:
+        fixture.externalHumanProvenanceVerified,
+      externalCustodyVerified: fixture.externalCustodyVerified,
+      candidateReviewMethodBlockers:
+        fixture.candidateReviewMethodBlockers,
+      candidateReviewMethodGatePassed:
+        fixture.candidateReviewMethodGatePassed
     },
     population: {
       populationHash: population.populationHash,
       prerequisiteHash: population.prerequisiteHash,
       roundId,
       assignmentHash,
+      prerequisiteMode: population.prerequisiteMode,
+      realFidelityPrerequisitesSatisfied:
+        population.realFidelityPrerequisitesSatisfied,
+      section5BindingsComplete: population.section5BindingsComplete,
+      externalHumanProvenanceVerified:
+        population.externalHumanProvenanceVerified,
+      externalCustodyVerified: population.externalCustodyVerified,
+      candidateReviewMethodBlockers:
+        population.candidateReviewMethodBlockers,
       candidateCount: population.candidateCount,
       productFamilyCounts: population.productFamilyCounts,
       componentCount: population.components.length,
@@ -607,6 +657,7 @@ function evaluateCore() {
       'All executable inputs and completed decision rows are deterministic synthetic simulations.',
       'Synthetic completed submissions exercise code paths but are not human fidelity or Candidate Review v2 results.',
       'The synthetic population, decisions, and blank-envelope checks do not prove role isolation or two different qualified people.',
+      'No external human provenance or custody is verified, and the human method gate remains false.',
       'No candidate is a canonical claim, derived VERIFIED status, or customer-use permission.',
       'PR #206 and PR #207 remain Draft and HOLD; this stacked branch is not merge approval.',
       'Issue #165 and production remain HOLD; this report is not production evidence.'
@@ -621,8 +672,28 @@ export function assertCandidateReviewV2Evaluation(report) {
     || report.productionReviewerWorkflowReady !== false
     || report.issue165Status !== 'HOLD'
     || report.syntheticEvaluationStatus !== 'PASS'
-    || report.candidateReviewV2HumanGateStatus !== 'INCOMPLETE') {
+    || report.candidateReviewV2HumanGateStatus !== 'INCOMPLETE'
+    || report.externalHumanProvenanceVerified !== false
+    || report.externalCustodyVerified !== false
+    || report.candidateReviewMethodGatePassed !== false
+    || canonicalStringify(report.candidateReviewMethodBlockers)
+      !== canonicalStringify(SYNTHETIC_METHOD_BLOCKERS)) {
     throw new Error('CANDIDATE_REVIEW_V2_BOUNDARY_FAILURE');
+  }
+  if (report.fixture.humanReviewExecuted !== false
+    || report.fixture.externalHumanProvenanceVerified !== false
+    || report.fixture.externalCustodyVerified !== false
+    || report.fixture.candidateReviewMethodGatePassed !== false
+    || canonicalStringify(report.fixture.candidateReviewMethodBlockers)
+      !== canonicalStringify(SYNTHETIC_METHOD_BLOCKERS)
+    || report.population.prerequisiteMode !== 'SYNTHETIC_FIXTURE_ONLY'
+    || report.population.realFidelityPrerequisitesSatisfied !== false
+    || report.population.section5BindingsComplete !== false
+    || report.population.externalHumanProvenanceVerified !== false
+    || report.population.externalCustodyVerified !== false
+    || canonicalStringify(report.population.candidateReviewMethodBlockers)
+      !== canonicalStringify(SYNTHETIC_METHOD_BLOCKERS)) {
+    throw new Error('CANDIDATE_REVIEW_V2_METHOD_BOUNDARY_FAILURE');
   }
   if (report.population.candidateCount < thresholds.minimumCandidateCount
     || report.population.candidateCount > thresholds.maximumCandidateCount) {
@@ -643,10 +714,16 @@ export function assertCandidateReviewV2Evaluation(report) {
     throw new Error('CANDIDATE_REVIEW_V2_COMPONENT_SPLIT_OR_DROP');
   }
   if (report.blankRoleEnvelopes.length !== 2
-    || report.blankRoleEnvelopes.some((entry) => entry.roleQualificationAttested !== false
+    || report.blankRoleEnvelopes.some((entry) => (
+      entry.submissionAuthorityStatus
+        !== CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.pending
+      || entry.externalHumanProvenanceVerified !== false
+      || entry.externalCustodyVerified !== false
+      || entry.roleQualificationAttested !== false
       || entry.sealed !== false
       || entry.decisionRowCount !== thresholds.expectedHumanDecisionRows
-      || entry.submissionHashPresent !== false)) {
+      || entry.submissionHashPresent !== false
+    ))) {
     throw new Error('CANDIDATE_REVIEW_V2_BLANK_ENVELOPE_FAILURE');
   }
   if (Object.values(report.blockedHumanOperations.strictBlankValidationCodes)
@@ -656,6 +733,21 @@ export function assertCandidateReviewV2Evaluation(report) {
     || report.blockedHumanOperations.finalOutcomeCount !== 0
     || report.blockedHumanOperations.humanResultRecorded !== false) {
     throw new Error('CANDIDATE_REVIEW_V2_INCOMPLETE_GATE_FAILURE');
+  }
+
+  if (Object.values(report.syntheticScenarioChecks).some((scenario) => (
+    scenario.externalHumanProvenanceVerified !== false
+    || scenario.externalCustodyVerified !== false
+    || scenario.candidateReviewMethodGatePassed !== false
+    || canonicalStringify(scenario.candidateReviewMethodBlockers)
+      !== canonicalStringify(SYNTHETIC_METHOD_BLOCKERS)
+    || scenario.primarySubmissionAuthorityStatus
+      !== CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.synthetic
+    || scenario.secondarySubmissionAuthorityStatus
+      !== CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.synthetic
+    || scenario.gates.candidateReviewMethodGatePassed !== false
+  ))) {
+    throw new Error('CANDIDATE_REVIEW_V2_SYNTHETIC_AUTHORITY_FAILURE');
   }
 
   const thresholdPass = report.syntheticScenarioChecks.THRESHOLD_PASS;

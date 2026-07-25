@@ -18,6 +18,9 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import test from 'node:test';
 
+import {
+  CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES
+} from '../evidence-claim-workbench/domain/candidate-review-v2.mjs';
 import { createSyntheticCandidateReviewV2BlankRound } from '../scripts/evaluate-candidate-review-v2.mjs';
 import {
   CANDIDATE_REVIEW_V2_ALLOWLISTS,
@@ -116,6 +119,8 @@ function completedDraft(role) {
   const blank = roleSubmissions[role];
   return {
     ...blank,
+    submissionAuthorityStatus:
+      CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.synthetic,
     roleQualificationAttested: true,
     rows: population.candidates.map((candidate) => ({
       candidateId: candidate.candidateId,
@@ -228,6 +233,35 @@ test('blank preparation creates only fixed 0700 roots and 0600 non-human skeleto
   assert.deepEqual(primary.value.rows, []);
   assert.equal(primary.value.sealed, false);
   assert.equal(primary.value.submissionHash, null);
+});
+
+test('blank preparation refuses an intermediate-directory swap before file creation', async (t) => {
+  const repositoryRoot = await createRepository(t);
+  const custodianRoot = path.join(
+    repositoryRoot,
+    CANDIDATE_REVIEW_V2_PATHS.roots.custodian
+  );
+  const movedRoot = `${custodianRoot}-moved`;
+  let swapped = false;
+  await expectCode(
+    prepareBlankCandidateReviewRoots({
+      repositoryRoot,
+      round: centralRound(),
+      inject: {
+        async beforePrivateCreate({ relativePath }) {
+          if (swapped || relativePath !== CANDIDATE_REVIEW_V2_PATHS.round) return;
+          swapped = true;
+          await rename(custodianRoot, movedRoot);
+          await symlink(movedRoot, custodianRoot);
+        }
+      }
+    }),
+    'CANDIDATE_REVIEW_DIRECTORY_RACE_REFUSED'
+  );
+  await assert.rejects(
+    lstat(path.join(movedRoot, path.basename(CANDIDATE_REVIEW_V2_PATHS.round))),
+    (error) => error.code === 'ENOENT'
+  );
 });
 
 test('blank package remains INCOMPLETE even with valid injected isolation evidence', async (t) => {
@@ -380,6 +414,25 @@ test('reader refuses alternate/traversal paths, wrong modes, oversize files, and
     }),
     'CANDIDATE_REVIEW_FILE_RACE_REFUSED'
   );
+
+  const custodianRoot = path.join(
+    repositoryRoot,
+    CANDIDATE_REVIEW_V2_PATHS.roots.custodian
+  );
+  const movedRoot = `${custodianRoot}-moved`;
+  await expectCode(
+    readBoundedCandidateReviewJson({
+      repositoryRoot,
+      relativePath: CANDIDATE_REVIEW_V2_PATHS.round,
+      inject: {
+        async afterPathInspection() {
+          await rename(custodianRoot, movedRoot);
+          await symlink(movedRoot, custodianRoot);
+        }
+      }
+    }),
+    'CANDIDATE_REVIEW_DIRECTORY_RACE_REFUSED'
+  );
 });
 
 test('value-aware leakage validation rejects benign-key secrets, encoded paths, private URLs, and protected payloads', () => {
@@ -506,6 +559,40 @@ test('malformed completed rows and same-bytes replacement races cannot be sealed
       }),
       'CANDIDATE_REVIEW_FILE_RACE_REFUSED'
     );
+  });
+
+  await t.test('intermediate-directory replacement race', async (t) => {
+    const { repositoryRoot } = await prepareRepository(t);
+    await writeDraft(
+      repositoryRoot,
+      'PRIMARY_TECHNICAL_REVIEWER',
+      completedDraft('PRIMARY_TECHNICAL_REVIEWER')
+    );
+    const primaryRoot = path.join(
+      repositoryRoot,
+      CANDIDATE_REVIEW_V2_PATHS.roots.primary
+    );
+    const movedRoot = `${primaryRoot}-moved`;
+    await expectCode(
+      validateAndSealRoleSubmission({
+        repositoryRoot,
+        role: 'PRIMARY_TECHNICAL_REVIEWER',
+        population: syntheticRound().population,
+        accessProbe: async () => passingAccessProbe(),
+        inject: {
+          async beforeSealRename() {
+            await rename(primaryRoot, movedRoot);
+            await symlink(movedRoot, primaryRoot);
+          }
+        }
+      }),
+      'CANDIDATE_REVIEW_DIRECTORY_RACE_REFUSED'
+    );
+    const original = JSON.parse(await readFile(
+      path.join(movedRoot, path.basename(CANDIDATE_REVIEW_V2_PATHS.primarySubmission)),
+      'utf8'
+    ));
+    assert.equal(original.sealed, false);
   });
 });
 

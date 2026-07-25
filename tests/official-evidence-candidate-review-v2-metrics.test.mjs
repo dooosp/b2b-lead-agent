@@ -11,6 +11,7 @@ import {
 import { createReviewDecision } from '../evidence-claim-workbench/domain/review-decisions.mjs';
 import {
   CANDIDATE_REVIEW_FROZEN_HEAD_SHA,
+  CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES,
   CANDIDATE_REVIEW_SYNTHETIC_PREREQUISITE_BYPASS,
   computeCandidateReviewAssignmentHash,
   computeCandidateReviewDecisionSetHash,
@@ -118,6 +119,10 @@ function completeSubmission(populationValue, role, specs = {}, { outerAll = fals
   }));
   result.roleQualificationAttested = true;
   result.sealed = true;
+  result.submissionAuthorityStatus = populationValue.prerequisiteMode
+    === CANDIDATE_REVIEW_SYNTHETIC_PREREQUISITE_BYPASS
+    ? CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.synthetic
+    : CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.structural;
   result.rows = populationValue.candidates.map((candidate, index) => {
     const spec = specs[candidate.candidateId] ?? {
       decision: 'APPROVE_FOR_REPOSITORY_REVIEW',
@@ -249,6 +254,12 @@ test('metrics count unique candidates, floor basis points, report families/media
   assert.equal(metrics.unresolvedP0P1FindingCount, 0);
   assert.equal(metrics.gates.candidateReviewThresholdsPassed, true);
   assert.equal(metrics.gates.candidateReviewMethodGatePassed, false);
+  assert.equal(metrics.externalHumanProvenanceVerified, false);
+  assert.equal(metrics.externalCustodyVerified, false);
+  assert.deepEqual(metrics.candidateReviewMethodBlockers, [
+    'EXTERNAL_HUMAN_PROVENANCE_AND_CUSTODY_UNVERIFIED',
+    'SYNTHETIC_FIXTURE_NOT_HUMAN_EVIDENCE'
+  ]);
   assert.equal(metrics.productionReady, false);
   assert.ok(Object.isFrozen(metrics));
 

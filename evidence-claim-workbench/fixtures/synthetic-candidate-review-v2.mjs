@@ -262,6 +262,13 @@ export function createSyntheticCandidateReviewV2Fixture() {
     synthetic: true,
     humanReviewExecuted: false,
     humanReviewStatus: 'INCOMPLETE',
+    externalHumanProvenanceVerified: false,
+    externalCustodyVerified: false,
+    candidateReviewMethodBlockers: Object.freeze([
+      'EXTERNAL_HUMAN_PROVENANCE_AND_CUSTODY_UNVERIFIED',
+      'SYNTHETIC_FIXTURE_NOT_HUMAN_EVIDENCE'
+    ]),
+    candidateReviewMethodGatePassed: false,
     evaluationAsOf: SYNTHETIC_CANDIDATE_REVIEW_V2_AS_OF,
     evaluatedPr207Head: SYNTHETIC_CANDIDATE_REVIEW_V2_PR207_HEAD,
     documents,
@@ -273,6 +280,7 @@ export function createSyntheticCandidateReviewV2Fixture() {
     nonClaims: Object.freeze([
       'The fixture contains generated synthetic candidates only.',
       'No human fidelity or Candidate Review v2 decision is represented.',
+      'No external human provenance or custody is verified.',
       'No candidate is a canonical claim or customer-use permission.',
       'Issue #165 and both Draft merge gates remain HOLD.'
     ])

@@ -557,7 +557,15 @@ async function requireAccessProbe(accessProbe, canonicalRoot) {
   return 'PASS';
 }
 
-async function writeExclusivePrivateJson(absolutePath, value) {
+async function writeExclusivePrivateJson({
+  canonicalRoot,
+  relativePath,
+  value,
+  inject = {}
+}) {
+  const normalized = normalizeRelativePath(relativePath);
+  const absolutePath = path.join(canonicalRoot, ...normalized.split('/'));
+  const directoryGuard = await captureSafeDirectoryChain(canonicalRoot, normalized);
   const serialized = `${canonicalStringify(value)}\n`;
   const bytes = Buffer.from(serialized, 'utf8');
   if (bytes.byteLength === 0
@@ -567,6 +575,11 @@ async function writeExclusivePrivateJson(absolutePath, value) {
   if (!Number.isInteger(fsConstants.O_NOFOLLOW)) fail('O_NOFOLLOW_UNAVAILABLE');
   let handle;
   try {
+    await inject.beforePrivateCreate?.({
+      relativePath: normalized,
+      absolutePath
+    });
+    await assertDirectoryChainUnchanged(directoryGuard);
     handle = await open(
       absolutePath,
       fsConstants.O_WRONLY
@@ -575,9 +588,31 @@ async function writeExclusivePrivateJson(absolutePath, value) {
         | fsConstants.O_NOFOLLOW,
       CANDIDATE_REVIEW_V2_LIMITS.draftFileMode
     );
+    const opened = await handle.stat({ bigint: true });
+    let pathAfterOpen;
+    try {
+      pathAfterOpen = await lstat(absolutePath, { bigint: true });
+    } catch {
+      fail('CANDIDATE_REVIEW_DIRECTORY_RACE_REFUSED');
+    }
+    await assertDirectoryChainUnchanged(directoryGuard);
+    if (!sameFileState(opened, pathAfterOpen)) {
+      fail('CANDIDATE_REVIEW_DIRECTORY_RACE_REFUSED');
+    }
     await handle.writeFile(bytes);
     await handle.chmod(CANDIDATE_REVIEW_V2_LIMITS.draftFileMode);
     await handle.sync();
+    const afterWrite = await handle.stat({ bigint: true });
+    let pathAfterWrite;
+    try {
+      pathAfterWrite = await lstat(absolutePath, { bigint: true });
+    } catch {
+      fail('CANDIDATE_REVIEW_DIRECTORY_RACE_REFUSED');
+    }
+    await assertDirectoryChainUnchanged(directoryGuard);
+    if (!sameFileState(afterWrite, pathAfterWrite)) {
+      fail('CANDIDATE_REVIEW_DIRECTORY_RACE_REFUSED');
+    }
   } catch (error) {
     if (error?.code === 'EEXIST') fail('CANDIDATE_REVIEW_PREPARE_REFUSES_OVERWRITE');
     if (error instanceof CandidateReviewV2FilesError) throw error;
@@ -650,7 +685,8 @@ async function loadCoreBlankSubmissionFactory() {
 export async function prepareBlankCandidateReviewRoots({
   repositoryRoot,
   round,
-  accessProbe
+  accessProbe,
+  inject = {}
 }) {
   assertBlankRound(round);
   const canonicalRoot = await resolveRepositoryRoot(repositoryRoot);
@@ -697,10 +733,12 @@ export async function prepareBlankCandidateReviewRoots({
 
   const preparedFiles = [];
   inspectBoundedContent(round, CANDIDATE_REVIEW_V2_PATHS.round);
-  const roundWrite = await writeExclusivePrivateJson(
-    path.join(canonicalRoot, CANDIDATE_REVIEW_V2_PATHS.round),
-    round
-  );
+  const roundWrite = await writeExclusivePrivateJson({
+    canonicalRoot,
+    relativePath: CANDIDATE_REVIEW_V2_PATHS.round,
+    value: round,
+    inject
+  });
   preparedFiles.push({
     role: 'CUSTODIAN',
     relativePath: CANDIDATE_REVIEW_V2_PATHS.round,
@@ -710,10 +748,12 @@ export async function prepareBlankCandidateReviewRoots({
   });
   for (const submission of submissions) {
     inspectBoundedContent(submission.value, submission.relativePath);
-    const written = await writeExclusivePrivateJson(
-      path.join(canonicalRoot, submission.relativePath),
-      submission.value
-    );
+    const written = await writeExclusivePrivateJson({
+      canonicalRoot,
+      relativePath: submission.relativePath,
+      value: submission.value,
+      inject
+    });
     preparedFiles.push({
       role: submission.role,
       relativePath: submission.relativePath,
@@ -744,11 +784,25 @@ export async function prepareBlankCandidateReviewRoots({
   });
 }
 
-async function assertSafePathSegments(canonicalRoot, relativePath) {
+function directoryIdentity(metadata) {
+  return {
+    dev: metadata.dev.toString(),
+    ino: metadata.ino.toString(),
+    uid: metadata.uid.toString(),
+    mode: metadata.mode.toString()
+  };
+}
+
+function sameDirectoryIdentity(left, right) {
+  return canonicalStringify(left) === canonicalStringify(right);
+}
+
+async function captureSafeDirectoryChain(canonicalRoot, relativePath) {
   const segments = relativePath.split('/');
   let current = canonicalRoot;
-  for (let index = 0; index < segments.length - 1; index += 1) {
-    current = path.join(current, segments[index]);
+  const directories = [];
+  for (let index = -1; index < segments.length - 1; index += 1) {
+    if (index >= 0) current = path.join(current, segments[index]);
     let metadata;
     try {
       metadata = await lstat(current, { bigint: true });
@@ -758,6 +812,29 @@ async function assertSafePathSegments(canonicalRoot, relativePath) {
     if (metadata.isSymbolicLink() || !metadata.isDirectory()) {
       fail('CANDIDATE_REVIEW_PATH_COMPONENT_UNSAFE', { relativePath });
     }
+    assertOwned(metadata, 'CANDIDATE_REVIEW_DIRECTORY_OWNER_UNSAFE');
+    directories.push({
+      absolutePath: current,
+      identity: directoryIdentity(metadata)
+    });
+  }
+  return directories;
+}
+
+async function assertDirectoryChainUnchanged(directories) {
+  for (const directory of directories) {
+    let metadata;
+    try {
+      metadata = await lstat(directory.absolutePath, { bigint: true });
+    } catch {
+      fail('CANDIDATE_REVIEW_DIRECTORY_RACE_REFUSED');
+    }
+    if (metadata.isSymbolicLink()
+      || !metadata.isDirectory()
+      || !sameDirectoryIdentity(directory.identity, directoryIdentity(metadata))) {
+      fail('CANDIDATE_REVIEW_DIRECTORY_RACE_REFUSED');
+    }
+    assertOwned(metadata, 'CANDIDATE_REVIEW_DIRECTORY_OWNER_UNSAFE');
   }
 }
 
@@ -979,7 +1056,7 @@ export async function readBoundedCandidateReviewJson({
     fail('EXPECTED_SHA256_INVALID');
   }
   const canonicalRoot = await resolveRepositoryRoot(repositoryRoot);
-  await assertSafePathSegments(canonicalRoot, normalized);
+  const directoryGuard = await captureSafeDirectoryChain(canonicalRoot, normalized);
   const absolutePath = path.join(canonicalRoot, ...normalized.split('/'));
   let before;
   try {
@@ -1004,6 +1081,7 @@ export async function readBoundedCandidateReviewJson({
   let handle;
   try {
     await inject.afterPathInspection?.({ relativePath: normalized, absolutePath });
+    await assertDirectoryChainUnchanged(directoryGuard);
     handle = await open(absolutePath, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
     const opened = await handle.stat({ bigint: true });
     if (!sameFileState(before, opened)) {
@@ -1026,12 +1104,14 @@ export async function readBoundedCandidateReviewJson({
     const bytes = Buffer.concat(chunks, total);
     await inject.afterRead?.({ relativePath: normalized, absolutePath });
     const after = await handle.stat({ bigint: true });
+    await assertDirectoryChainUnchanged(directoryGuard);
     let pathAfter;
     try {
       pathAfter = await lstat(absolutePath, { bigint: true });
     } catch {
       fail('CANDIDATE_REVIEW_FILE_RACE_REFUSED', { relativePath: normalized });
     }
+    await assertDirectoryChainUnchanged(directoryGuard);
     if (!sameFileState(opened, after)
       || !sameFileState(opened, pathAfter)
       || BigInt(bytes.byteLength) !== opened.size) {
@@ -1099,6 +1179,9 @@ function validateDraftSubmissionEnvelope(value, role) {
     'populationHash',
     'assignmentHash',
     'role',
+    'submissionAuthorityStatus',
+    'externalHumanProvenanceVerified',
+    'externalCustodyVerified',
     'roleQualificationAttested',
     'sealed',
     'rows',
@@ -1113,6 +1196,9 @@ function validateDraftSubmissionEnvelope(value, role) {
     || value.customerUseAllowed !== false
     || value.proofExecutionApproved !== false
     || value.role !== role
+    || typeof value.submissionAuthorityStatus !== 'string'
+    || value.externalHumanProvenanceVerified !== false
+    || value.externalCustodyVerified !== false
     || value.roleQualificationAttested !== true
     || value.sealed !== false
     || value.submissionHash !== null
@@ -1140,6 +1226,10 @@ export async function validateAndSealRoleSubmission({
   }
   const canonicalRoot = await resolveRepositoryRoot(repositoryRoot);
   await requireAccessProbe(accessProbe, canonicalRoot);
+  const directoryGuard = await captureSafeDirectoryChain(
+    canonicalRoot,
+    normalizedRole.relativePath
+  );
   const read = await readBoundedCandidateReviewJson({
     repositoryRoot: canonicalRoot,
     relativePath: normalizedRole.relativePath,
@@ -1217,6 +1307,7 @@ export async function validateAndSealRoleSubmission({
       sourcePath: absolutePath,
       temporaryPath
     });
+    await assertDirectoryChainUnchanged(directoryGuard);
     const immediatelyBeforeRename = await lstat(absolutePath, { bigint: true });
     if (!sameFileIdentity(
       fileIdentity(immediatelyBeforeRename),
@@ -1226,6 +1317,7 @@ export async function validateAndSealRoleSubmission({
     }
     await rename(temporaryPath, absolutePath);
     renamed = true;
+    await assertDirectoryChainUnchanged(directoryGuard);
     const sealed = await readBoundedCandidateReviewJson({
       repositoryRoot: canonicalRoot,
       relativePath: normalizedRole.relativePath,

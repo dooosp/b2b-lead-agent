@@ -7,6 +7,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import {
+  CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES,
   validateCandidateReviewPatchSet
 } from '../evidence-claim-workbench/domain/candidate-review-v2.mjs';
 import {
@@ -59,7 +60,7 @@ const OPERATOR_CLIS = Object.freeze([
 const FIXTURE_SEMANTIC_SHA256 =
   '41c5a6f522d031b5c3a85643bcd035e4b846914a4908b74dda5bd70379741276';
 const EVALUATION_CANONICAL_SHA256 =
-  '2610ea6bb7397ba883f640e732d744c347fff11099f76047f85cb95ac356fe34';
+  'dde45063ef9ac7cb2e46043852172b4416bb3ba5319f2719e856c977d4cba533';
 
 async function createTemporaryRepository(t) {
   const root = await mkdtemp(path.join(tmpdir(), 'candidate-review-v2-cli-'));
@@ -88,6 +89,13 @@ test('synthetic Candidate Review v2 fixture is deterministic, bounded, and expli
   assert.equal(first.issue165Status, 'HOLD');
   assert.equal(first.humanReviewExecuted, false);
   assert.equal(first.humanReviewStatus, 'INCOMPLETE');
+  assert.equal(first.externalHumanProvenanceVerified, false);
+  assert.equal(first.externalCustodyVerified, false);
+  assert.deepEqual(first.candidateReviewMethodBlockers, [
+    'EXTERNAL_HUMAN_PROVENANCE_AND_CUSTODY_UNVERIFIED',
+    'SYNTHETIC_FIXTURE_NOT_HUMAN_EVIDENCE'
+  ]);
+  assert.equal(first.candidateReviewMethodGatePassed, false);
   assert.equal(first.candidates.length, 32);
   assert.deepEqual(
     first.relationshipCaseTypes,
@@ -113,6 +121,31 @@ test('threshold-pass simulation validates patches but cannot satisfy the human m
   assert.equal(scenario.syntheticDecisionSimulation, true);
   assert.equal(scenario.humanReviewExecuted, false);
   assert.equal(scenario.candidateReviewV2HumanGateStatus, 'INCOMPLETE');
+  assert.equal(scenario.externalHumanProvenanceVerified, false);
+  assert.equal(scenario.externalCustodyVerified, false);
+  assert.deepEqual(scenario.candidateReviewMethodBlockers, [
+    'EXTERNAL_HUMAN_PROVENANCE_AND_CUSTODY_UNVERIFIED',
+    'SYNTHETIC_FIXTURE_NOT_HUMAN_EVIDENCE'
+  ]);
+  assert.equal(scenario.candidateReviewMethodGatePassed, false);
+  assert.equal(
+    scenario.primarySubmission.submissionAuthorityStatus,
+    CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.synthetic
+  );
+  assert.equal(
+    scenario.secondarySubmission.submissionAuthorityStatus,
+    CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.synthetic
+  );
+  assert.equal(
+    scenario.primarySubmission.externalHumanProvenanceVerified,
+    false
+  );
+  assert.equal(scenario.primarySubmission.externalCustodyVerified, false);
+  assert.equal(
+    scenario.secondarySubmission.externalHumanProvenanceVerified,
+    false
+  );
+  assert.equal(scenario.secondarySubmission.externalCustodyVerified, false);
   assert.deepEqual(scenario.metrics.outcomeCounts, {
     approved: 29,
     rejected: 2,
@@ -209,6 +242,33 @@ test('evaluator repeats canonically while human results stay absent', async () =
   assert.equal(report.syntheticEvaluationStatus, 'PASS');
   assert.equal(report.repeatedRunHashEquality, true);
   assert.equal(report.candidateReviewV2HumanGateStatus, 'INCOMPLETE');
+  assert.equal(report.externalHumanProvenanceVerified, false);
+  assert.equal(report.externalCustodyVerified, false);
+  assert.deepEqual(report.candidateReviewMethodBlockers, [
+    'EXTERNAL_HUMAN_PROVENANCE_AND_CUSTODY_UNVERIFIED',
+    'SYNTHETIC_FIXTURE_NOT_HUMAN_EVIDENCE'
+  ]);
+  assert.equal(report.candidateReviewMethodGatePassed, false);
+  assert.equal(report.population.prerequisiteMode, 'SYNTHETIC_FIXTURE_ONLY');
+  assert.equal(report.population.realFidelityPrerequisitesSatisfied, false);
+  assert.equal(report.population.section5BindingsComplete, false);
+  assert.equal(report.population.externalHumanProvenanceVerified, false);
+  assert.equal(report.population.externalCustodyVerified, false);
+  assert.ok(report.blankRoleEnvelopes.every((entry) => (
+    entry.submissionAuthorityStatus
+      === CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.pending
+    && entry.externalHumanProvenanceVerified === false
+    && entry.externalCustodyVerified === false
+  )));
+  assert.ok(Object.values(report.syntheticScenarioChecks).every((scenario) => (
+    scenario.primarySubmissionAuthorityStatus
+      === CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.synthetic
+    && scenario.secondarySubmissionAuthorityStatus
+      === CANDIDATE_REVIEW_SUBMISSION_AUTHORITY_STATUSES.synthetic
+    && scenario.externalHumanProvenanceVerified === false
+    && scenario.externalCustodyVerified === false
+    && scenario.candidateReviewMethodGatePassed === false
+  )));
   assert.equal(report.blockedHumanOperations.humanResultRecorded, false);
   assert.equal(report.blockedHumanOperations.finalOutcomeCount, 0);
   assert.deepEqual(report.scenarioOutcomeCoverage, [

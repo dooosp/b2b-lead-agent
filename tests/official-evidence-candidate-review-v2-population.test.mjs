@@ -10,6 +10,7 @@ import {
   CANDIDATE_REVIEW_BOUNDARY,
   CANDIDATE_REVIEW_FROZEN_HEAD_SHA,
   CANDIDATE_REVIEW_PREREQUISITE_SCHEMA_VERSION,
+  CANDIDATE_REVIEW_REAL_STRUCTURAL_MODE,
   CANDIDATE_REVIEW_SYNTHETIC_PREREQUISITE_BYPASS,
   buildCandidateReviewComponents,
   computeCandidateReviewRoundId,
@@ -253,6 +254,12 @@ test('synthetic population selection is explicit, deterministic, bounded, immuta
   assert.equal(first.syntheticPrerequisiteBypass, 'SYNTHETIC_FIXTURE_ONLY');
   assert.equal(first.realFidelityPrerequisitesSatisfied, false);
   assert.equal(first.section5BindingsComplete, false);
+  assert.equal(first.externalHumanProvenanceVerified, false);
+  assert.equal(first.externalCustodyVerified, false);
+  assert.deepEqual(first.candidateReviewMethodBlockers, [
+    'EXTERNAL_HUMAN_PROVENANCE_AND_CUSTODY_UNVERIFIED',
+    'SYNTHETIC_FIXTURE_NOT_HUMAN_EVIDENCE'
+  ]);
   assert.equal(first.humanReviewEvidence, false);
   assert.equal(first.candidateRecords.length, 0);
   assert.ok(Object.isFrozen(first));
@@ -363,11 +370,23 @@ test('real-mode population validation replays prerequisites and every Section 5 
     candidateRecords: fixture.candidateRecords,
     prerequisites: fixture.prerequisites
   });
-  assert.equal(population.prerequisiteMode, 'FULL_FIDELITY_AND_SECTION5_BINDINGS');
-  assert.equal(population.realFidelityPrerequisitesSatisfied, true);
+  assert.equal(population.prerequisiteMode, CANDIDATE_REVIEW_REAL_STRUCTURAL_MODE);
+  assert.equal(population.realFidelityPrerequisitesSatisfied, false);
   assert.equal(population.section5BindingsComplete, true);
+  assert.equal(population.externalHumanProvenanceVerified, false);
+  assert.equal(population.externalCustodyVerified, false);
+  assert.deepEqual(population.candidateReviewMethodBlockers, [
+    'EXTERNAL_HUMAN_PROVENANCE_AND_CUSTODY_UNVERIFIED'
+  ]);
   assert.equal(population.candidateRecords.length, 30);
   assert.deepEqual(validateCandidateReviewPopulation(population), population);
+
+  const legacyAuthorityClaim = structuredClone(population);
+  legacyAuthorityClaim.prerequisiteMode = 'FULL_FIDELITY_AND_SECTION5_BINDINGS';
+  assert.throws(
+    () => validateCandidateReviewPopulation(legacyAuthorityClaim),
+    (error) => error.code === 'UNSUPPORTED_PREREQUISITE_MODE'
+  );
 
   const forged = structuredClone(population);
   forged.prerequisites.evaluatedPrHeadSha = '0'.repeat(40);
@@ -395,6 +414,9 @@ test('real-mode population validation replays prerequisites and every Section 5 
     syntheticPrerequisiteBypass: forged.syntheticPrerequisiteBypass,
     realFidelityPrerequisitesSatisfied: forged.realFidelityPrerequisitesSatisfied,
     section5BindingsComplete: forged.section5BindingsComplete,
+    externalHumanProvenanceVerified: forged.externalHumanProvenanceVerified,
+    externalCustodyVerified: forged.externalCustodyVerified,
+    candidateReviewMethodBlockers: forged.candidateReviewMethodBlockers,
     humanReviewEvidence: false,
     prerequisites: forged.prerequisites,
     candidateCount: forged.candidateCount,

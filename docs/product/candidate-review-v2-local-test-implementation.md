@@ -93,11 +93,35 @@ Even when the synthetic numeric thresholds pass,
 `candidateReviewMethodGatePassed` remains `false`, and the evaluator reports
 the Candidate Review v2 human gate as `INCOMPLETE`.
 
+The core contract also has a generated, repository-local round-trip test for
+the structurally non-synthetic-shaped branch. It exercises
+`createReviewPatch -> createCandidateReviewPatchSet -> reconcile`. That path is
+named `STRUCTURALLY_BOUND_EXTERNAL_EVIDENCE_REQUIRED`: it proves only that
+canonical patch objects and the Candidate Review v2 structural bindings can be
+validated together. The test inputs are generated and are not human evidence.
+The path does not authenticate the supplied commit-shaped values, prove that a
+human reviewed a source, or prove custody separation.
+Every such result therefore fixes `externalHumanProvenanceVerified` and
+`externalCustodyVerified` to `false`, retains an explicit external-evidence
+blocker, and keeps `candidateReviewMethodGatePassed:false`. A future,
+separately approved execution wrapper would have to verify the external source,
+human provenance, role separation, access isolation, and Git receipts before
+any human method gate could be promoted; this implementation has no such
+promotion path.
+
 The local prepare command creates only fixed-path blank role envelopes from the
 synthetic round. The local validator may validate those bounded files but must
 continue to report `INCOMPLETE` until separately authorized, complete, sealed
 role inputs exist. Preparing a blank file is never evidence that a qualified
 person reviewed anything.
+
+The fixed-path reader, creator, and sealer snapshot the repository/root
+directory chain and revalidate directory ownership and inode identity around
+file open, read, and rename operations. Intermediate-directory replacement or
+symlink swaps fail closed. This is application-level race detection, not an OS
+security boundary against a malicious process running as the same account;
+actual cross-principal custody still requires separately verified filesystem
+isolation and access-probe evidence.
 
 The aggregate-receipt verifier is read-only. It checks only the fixed aggregate
 and receipt paths and the local Git commit graph. It cannot create either
@@ -146,6 +170,8 @@ blank inputs. It does not prove:
 
 - role isolation, filesystem ACL enforcement, or two different qualified
   humans;
+- external human provenance or custody merely because objects shaped for the
+  structural branch were supplied;
 - actual human fidelity or Candidate Review v2 execution;
 - real-document fidelity, officiality, currency, technical truth, rights, or
   suitability;
