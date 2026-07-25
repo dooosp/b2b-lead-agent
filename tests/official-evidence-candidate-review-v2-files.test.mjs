@@ -264,6 +264,40 @@ test('blank preparation refuses an intermediate-directory swap before file creat
   );
 });
 
+test('blank preparation refuses an intermediate-directory swap after file creation', async (t) => {
+  const repositoryRoot = await createRepository(t);
+  const custodianRoot = path.join(
+    repositoryRoot,
+    CANDIDATE_REVIEW_V2_PATHS.roots.custodian
+  );
+  const movedRoot = `${custodianRoot}-moved`;
+  let swapped = false;
+  await expectCode(
+    prepareBlankCandidateReviewRoots({
+      repositoryRoot,
+      round: centralRound(),
+      inject: {
+        async afterPrivateCreate({ relativePath }) {
+          if (swapped || relativePath !== CANDIDATE_REVIEW_V2_PATHS.round) return;
+          swapped = true;
+          await rename(custodianRoot, movedRoot);
+          await mkdir(custodianRoot, { recursive: true, mode: 0o700 });
+          await writeFile(
+            path.join(custodianRoot, path.basename(CANDIDATE_REVIEW_V2_PATHS.round)),
+            '{}\n',
+            { mode: 0o600 }
+          );
+        }
+      }
+    }),
+    'CANDIDATE_REVIEW_DIRECTORY_RACE_REFUSED'
+  );
+  const movedStat = await lstat(
+    path.join(movedRoot, path.basename(CANDIDATE_REVIEW_V2_PATHS.round))
+  );
+  assert.equal(movedStat.isFile(), true);
+});
+
 test('blank package remains INCOMPLETE even with valid injected isolation evidence', async (t) => {
   const { repositoryRoot } = await prepareRepository(t);
   const loaded = await loadCandidateReviewPackage({

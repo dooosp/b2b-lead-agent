@@ -574,6 +574,7 @@ async function writeExclusivePrivateJson({
   }
   if (!Number.isInteger(fsConstants.O_NOFOLLOW)) fail('O_NOFOLLOW_UNAVAILABLE');
   let handle;
+  let afterWrite;
   try {
     await inject.beforePrivateCreate?.({
       relativePath: normalized,
@@ -602,7 +603,7 @@ async function writeExclusivePrivateJson({
     await handle.writeFile(bytes);
     await handle.chmod(CANDIDATE_REVIEW_V2_LIMITS.draftFileMode);
     await handle.sync();
-    const afterWrite = await handle.stat({ bigint: true });
+    afterWrite = await handle.stat({ bigint: true });
     let pathAfterWrite;
     try {
       pathAfterWrite = await lstat(absolutePath, { bigint: true });
@@ -622,8 +623,14 @@ async function writeExclusivePrivateJson({
   }
   let metadata;
   try {
+    await inject.afterPrivateCreate?.({
+      relativePath: normalized,
+      absolutePath
+    });
+    await assertDirectoryChainUnchanged(directoryGuard);
     metadata = await lstat(absolutePath, { bigint: true });
-  } catch {
+  } catch (error) {
+    if (error instanceof CandidateReviewV2FilesError) throw error;
     fail('CANDIDATE_REVIEW_FILE_CREATE_FAILED');
   }
   if (metadata.isSymbolicLink()
@@ -632,6 +639,9 @@ async function writeExclusivePrivateJson({
     || modeOf(metadata) !== CANDIDATE_REVIEW_V2_LIMITS.draftFileMode
     || metadata.size !== BigInt(bytes.byteLength)) {
     fail('CANDIDATE_REVIEW_CREATED_FILE_UNSAFE');
+  }
+  if (!afterWrite || !sameFileState(afterWrite, metadata)) {
+    fail('CANDIDATE_REVIEW_DIRECTORY_RACE_REFUSED');
   }
   assertOwned(metadata, 'CANDIDATE_REVIEW_FILE_OWNER_UNSAFE');
   return {
