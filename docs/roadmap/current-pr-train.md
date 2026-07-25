@@ -5,7 +5,7 @@ This document summarizes the May 2026 PR train, stale PR disposition, and next w
 Evidence baseline:
 
 - Repo default branch: `master`
-- Latest audited source-of-truth `origin/master`: `9d144fbe6309ce363f9dad8d50ffa713d24af683` (PR #205)
+- Latest audited source-of-truth `origin/master`: `d7a45257b9aa48d2975db9852a993d79f70972bf` (PR #209)
 - Evidence collected from GitHub PR/issue metadata, PR bodies, current
   `AGENTS.md`, `HARDENING_PLAN.md`, `NEXT_SESSION_PROMPT.md`,
   `docs/d1-schema-drift-hardening.md`, and `docs/architecture/*.md`
@@ -19,8 +19,8 @@ Evidence baseline:
   typed atomic publication, recovery, consumer, and notification hardening.
 - Post-PR203 scope extension: PR #204 source-of-truth sync and PR #205's
   local/test-only Evidence Claim Registry and Data Center Specification Fit v1
-  foundation. PRs #206-#208 are open Drafts from that baseline and are not
-  shipped.
+  foundation, followed by PR #209's bounded Gate 0 security/reproducibility
+  remediation. PRs #206-#208 are open Drafts and are not shipped.
 - Current owner-input response processing: Issues #162, #163, #164, #165, and #154 now have scoped owner confirmations processed as docs-planning `COMPLETE`. Issue #165 explicitly keeps production proof execution unapproved until a separate explicit future proof goal. Production reviewer workflow remains `BLOCKED`.
 - Production actions performed for this synthesis: none
 

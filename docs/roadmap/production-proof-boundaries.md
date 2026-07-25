@@ -3,7 +3,7 @@
 This document records the production-proof boundary after Issue #34 and the
 Manual Review Notes v1 PR train through PR #142, the Level 1 non-production
 gate train through PR #185, the post-PR186 refactor/dependency cleanup, and
-the post-PR193 reviewer-workflow boundary audit plus PR #194-#205
+the post-PR193 reviewer-workflow boundary audit plus PR #194-#209
 source-of-truth, P0 characterization, LeadBrief publication, D1
 snapshot/migration, Worker outbound/cache/concurrency, and atomic publication
 contracts, followed by the local/test-only claim/spec-fit foundation. It
@@ -15,7 +15,7 @@ Audited repo baseline for this snapshot:
 - Previous Manual Review Notes v1 privacy-warning baseline:
   `f2ddf35e828017eec9332dc80876e50bbee2f54a` (PR #130)
 - Current source-of-truth `origin/master`:
-  `9d144fbe6309ce363f9dad8d50ffa713d24af683` (PR #205)
+  `d7a45257b9aa48d2975db9852a993d79f70972bf` (PR #209)
 - Issue #34 current state: closed as completed after GitHub-only closeout, [Production D1 observation approval request](https://github.com/dooosp/b2b-lead-agent/issues/34)
 - Issue #34 final useful closeout SHA: `12d44374a24a9958de179fae5f9311621606ad24`
 - Production action performed for this roadmap synthesis: none
@@ -41,10 +41,10 @@ Audited repo baseline for this snapshot:
 - Current Level 1 operator rehearsal packet:
   `docs/roadmap/b2b-lead-agent-level-1-operator-rehearsal-gate-non-production.md`
 
-Post-PR205 operating update:
+Post-PR209 operating update:
 
 - Current source-of-truth `origin/master` for this boundary update:
-  `9d144fbe6309ce363f9dad8d50ffa713d24af683` (PR #205).
+  `d7a45257b9aa48d2975db9852a993d79f70972bf` (PR #209).
 - PR #187 only synced source-of-truth docs after PR #186. PR #188 only tracked
   historical PR #12 root-cycle merge and Wave 2 bootstrap records as archival
   execution artifacts. PR #189 only synced source-of-truth and
@@ -61,7 +61,9 @@ Post-PR205 operating update:
   publication plus notification-safe behavior. PR #204 synced the resulting
   source-of-truth documents, and PR #205 added the local/test-only Evidence
   Claim Registry and synthetic Data Center specification-fit foundation.
-  None of these PRs approves production or staging action.
+  PR #209 then shipped the bounded Gate 0 dependency-security,
+  reproducibility, and source-of-truth remediation. None of these PRs approves
+  production or staging action.
 - PR #205 does not verify real datasheets, regulations, references, projects,
   customers, or product capabilities. Its legacy managed-profile inventory
   remains unverified/assumption input, all executable fit/dossier fixtures are
@@ -302,10 +304,11 @@ Reviewer Workflow Intelligence v1, and
 Reviewer Workflow Boundary Audit v1. A later audited baseline was
 `1b53aabf917e790d6c05db311c0810b4b3807d95` after PR #197 added the explicit
 D1 snapshot/migration and bounded published-artifact read contracts. The
-current baseline is `9d144fbe6309ce363f9dad8d50ffa713d24af683` after PR #204
-synced source of truth and PR #205 added the local/test-only Evidence Claim
-Registry and synthetic Data Center specification-fit foundation on top of the
-PR #198-#203 hardening train. Any new
+current baseline is `d7a45257b9aa48d2975db9852a993d79f70972bf` after PR #204
+synced source of truth, PR #205 added the local/test-only Evidence Claim
+Registry and synthetic Data Center specification-fit foundation, and PR #209
+shipped the bounded Gate 0 remediation on top of the PR #198-#203 hardening
+train. Any new
 production action must refresh the actual current
 `origin/master` SHA, CI metadata, owners, and approval records before
 execution. Issue #34 closeout does not authorize further production proof work.

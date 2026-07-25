@@ -11,17 +11,25 @@ or authorize production proof.
 - Document status: `DECISION_READY_DOCS_ONLY`.
 - Repository: `dooosp/b2b-lead-agent`.
 - Evaluated default-branch baseline:
-  `9d144fbe6309ce363f9dad8d50ffa713d24af683`.
+  `d7a45257b9aa48d2975db9852a993d79f70972bf`.
 - Evaluated control artifact commit:
   `016be9efb9d194859c691d5fd9245ce3dae844a0`.
 - Evaluated on: `2026-07-22`.
-- Frozen state revalidated on: `2026-07-25`.
-- Revalidation receipt:
+- Revision baseline observed on: `2026-07-25`.
+- Controlling revision request:
+  [`PR208_METHOD_REVIEW_V1`](https://github.com/dooosp/b2b-lead-agent/pull/208#issuecomment-5077027554),
+  decision `REQUEST_CHANGES`, reviewed PR #208 head
+  `dd38805e96d33a82803e6a6926c74ea2450ef41b`.
+- Non-authoritative pre-revision input observation:
   `docs/roadmap/pr207-candidate-review-v2-packet-revalidation-20260725.json`.
-  It records the live head/base/Draft/check and Issue #165 snapshot, owner
-  record bindings, owning-worktree heads/status, exact local file hashes,
-  file types/link counts/modes, ignore rules, and control-commit digests. The
-  observed values matched the frozen values below.
+  It records inputs observed before this revision. It is not a receipt, not an
+  independent review, not a final `PASS`, and does not bind the revised packet
+  commit.
+- Required post-commit review receipt:
+  `docs/roadmap/pr207-candidate-review-v2-packet-post-commit-review-receipt-20260725.json`.
+  Commit A references this path but must not contain it. The file may be added
+  only by Commit B after Commit A exists and the independent reviews described
+  in Section 16 are complete.
 - Selected method:
   `IGNORE_VERIFIED_LOCAL_LEDGER_PLUS_POLICY_BOUNDED_HASH_AGGREGATE`.
 - Runtime, schema, API, UI, evaluator, and validator changes: none.
@@ -37,6 +45,9 @@ pr207_candidate_review_v2_method:
   document_status: DECISION_READY_DOCS_ONLY
   scope: DOCS_ONLY_METHOD_AND_RETENTION_CONTRACT
   selected_retention_method: IGNORE_VERIFIED_LOCAL_LEDGER_PLUS_POLICY_BOUNDED_HASH_AGGREGATE
+  current_master_baseline: d7a45257b9aa48d2975db9852a993d79f70972bf
+  pre_revision_observation_authoritative: false
+  post_commit_review_receipt: PENDING_COMMIT_B
   implementation_approved: false
   human_review_executed: false
   candidate_population_created: false
@@ -56,13 +67,14 @@ must re-read live GitHub state and fail closed on any unexplained drift.
 
 | Surface | Frozen value | Meaning |
 | --- | --- | --- |
-| PR #206 head | `b5570e182c8ab6515c0f09272d22d7121518f134` | Open, Draft, unmerged at packet preparation. No human session is claimed. |
-| PR #206 runtime | `8098f66c6fb7e64464297c0ee70d25f49756135d` | Human validation sessions must remain bound to this runtime. |
-| PR #206 `package-lock.json` | `a14f41c200c480e20b1f3e3ef1ccedf48155e274888b4716aeb2e1b1ba4d97cc` | Frozen runtime artifact SHA-256. |
-| PR #206 Workbench fixture | `08ec7591cfd89d8af33a2ca613df8762c2a852d8946f36379dc0aaabfc365d41` | Frozen runtime artifact SHA-256. |
-| PR #206 review guide | `3000973dab91408d6e360363872e43398228d39a88d010d21d6c5803d28b366a` | Frozen runtime artifact SHA-256. |
+| Current `master` baseline | `d7a45257b9aa48d2975db9852a993d79f70972bf` | Post-PR #209 baseline for this packet revision. It is not the historical base of either Draft PR. |
+| PR #206 intake/tooling head | `b5570e182c8ab6515c0f09272d22d7121518f134` | Open, Draft, unmerged. This later commit supplies only the ignored R1-R5 intake preparation/validation tooling; it is not the human-session runtime root. |
+| PR #206 frozen runtime root | `8098f66c6fb7e64464297c0ee70d25f49756135d` | The only permitted Workbench code/runtime root for R1-R5 human validation sessions. |
+| Frozen runtime `package-lock.json` | `a14f41c200c480e20b1f3e3ef1ccedf48155e274888b4716aeb2e1b1ba4d97cc` | SHA-256 verified from the tree at `8098f66...`; equality at `b5570e...` does not move runtime authority. |
+| Frozen runtime Workbench fixture | `08ec7591cfd89d8af33a2ca613df8762c2a852d8946f36379dc0aaabfc365d41` | SHA-256 verified from the tree at `8098f66...`; equality at `b5570e...` does not move runtime authority. |
+| Frozen runtime review guide | `3000973dab91408d6e360363872e43398228d39a88d010d21d6c5803d28b366a` | SHA-256 verified from the tree at `8098f66...`; equality at `b5570e...` does not move runtime authority. |
 | PR #207 head | `c6a5469338999097acd5de7c5a12c827d27d4540` | Open, Draft, unmerged at packet preparation. Candidate Review v2 must not mutate this head. |
-| PR #207 base | `9d144fbe6309ce363f9dad8d50ffa713d24af683` | Current common base before the future conditional merge train. |
+| PR #207 historical Draft base | `9d144fbe6309ce363f9dad8d50ffa713d24af683` | Frozen base of the still-unmerged Draft; it is not current `master`. |
 | Real-intake manifest | `evidence-inbox/manifest.json`, `0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953` | Eight manifest-bound normalized inputs. It does not prove fidelity or truth. |
 | Completed document-decision file | `tmp/evidence-claim-workbench/human-approval/pr207-document-decisions.json`, `2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb` | Eight owner decisions for officiality, currentness, technical scope, bounded internal excerpt use, and binary non-commit handling. |
 | Blank fidelity template | `tmp/evidence-claim-workbench/human-approval/pr207-document-fidelity-decisions.json`, `e5e6aa1d7c73ab939d88e8c907107c8eed93ff698524efa5aefc4bdd6e14ae1e` | Eight blank rows and zero human fidelity decisions. It is a starting template, not evidence. |
@@ -90,6 +102,31 @@ produce a new completed-file SHA-256. That expected human-input hash change does
 not permit any change to the frozen PR heads, source manifest, normalized source
 files, document decisions, or PR #206 runtime artifacts. The future completed
 hash must be separately recorded and bound by the Candidate Review v2 round.
+
+PR #206 has two distinct roots and they must never be collapsed. Before and
+immediately after each R1-R5 session, the custodian records the output of `git
+rev-parse --show-toplevel`, proves the command ran from that canonical root,
+proves `git rev-parse HEAD` is exactly
+`8098f66c6fb7e64464297c0ee70d25f49756135d`, proves `git status
+--porcelain=v1 --untracked-files=all` is empty, and proves the three runtime
+SHA-256 values above match files read from that same root. Dependencies are
+installed there with exact command `npm ci`; the only launch command is exact
+command `npm run demo:pursuit-workbench`, run from that root with no additional
+arguments, and only its printed loopback URL may be opened. A branch name,
+ancestry from `8098f66...`, or equal hashes at another head is insufficient.
+
+The ignored R1-R5 intake files are prepared and validated only in a separate
+canonical worktree whose `git rev-parse HEAD` is exactly
+`b5570e182c8ab6515c0f09272d22d7121518f134`, whose `git rev-parse
+--show-toplevel` equals the recorded tooling root and whose same porcelain
+status check is empty before preparation and after validation. Its tracked
+prepare/validate scripts and package lock are read from that head, and every
+ignored intake path must pass `git check-ignore`. Only `npm run
+prepare:pursuit-workbench-human-validation` and `npm run
+validate:pursuit-workbench-human-validation` may run there. The tooling root
+must not launch the Workbench, and the runtime root must not prepare, validate,
+or retain intake. Any head, root, status, artifact-hash, command, or loopback
+binding mismatch keeps PR #206 human evidence `INCOMPLETE`.
 
 ## 3. Proven Gap and Method Decision
 
@@ -145,23 +182,37 @@ Candidate generation may begin only when all of the following are true:
    conditional footnotes, and visually ambiguous tables continue to abstain
    until an implementation contract represents them without loss.
 
-The future generator must produce one immutable review population containing
-between 30 and 35 unique candidate IDs, inclusive, with at least 10 candidates
-from each exact product family:
+Before population selection, the future generator must build the complete
+undirected graph over every safely representable candidate using all declared
+relationship edges. Each connected component is one indivisible selection
+unit, including components that span product families. A candidate with a
+missing related candidate, dangling relationship ID, or relationship endpoint
+outside the safely representable universe makes that whole component
+inadmissible; it must not be selected partially.
+
+The generator must then produce one immutable review population containing
+whole relationship components totaling between 30 and 35 unique candidate IDs,
+inclusive, with at least 10 candidates from each exact product family:
 
 - `medium_voltage_switchgear`
 - `transformer`
 
-This is a safety gate, not a quota license. If fewer than 30 safe candidates or
-fewer than 10 for either family exist, the result is `INCOMPLETE`. The generator
-must not weaken abstentions, use an ineligible page, invent evidence, split a
-compound value, or relabel a machine abstention as a human rejection.
+This is a safety gate, not a quota license. If the complete safe universe itself
+fits the total and family bounds, every component is selected. Otherwise,
+before any human review, enumerate component subsets with a deterministic
+dynamic-programming search. A subset is feasible only when its whole-component
+union has `30 <= N <= 35` and at least 10 candidates from each family. Select
+the feasible subset with the greatest `N`; break ties by the lexicographically
+smallest ASCII-sorted candidate-ID vector. The component key is its smallest
+ASCII candidate ID, and component/member ordering is fixed before the search.
 
-If the safe universe contains more than 35 candidates, selection must be
-pre-review and deterministic: sort by candidate ID within each family, reserve
-the first 10 from each family, then fill the remaining 15 positions from the
-ASCII-sorted union of unselected IDs. Human outcome, perceived usefulness, or
-commercial preference must not influence selection.
+If no whole-component subset satisfies every bound, the round is `INCOMPLETE`
+even when an individual-candidate selection could have met the quotas. The
+generator must not split a relationship component, drop an inconvenient edge,
+weaken abstentions, use an ineligible page, invent evidence, split a compound
+value, or relabel a machine abstention as a human rejection. Human outcome,
+perceived usefulness, or commercial preference must not influence component
+selection.
 
 The population is frozen before the first human decision. Any later addition,
 removal, reorder that changes canonical content, or candidate mutation creates
@@ -255,9 +306,10 @@ The secondary reviewer must:
 ### Local review custodian
 
 A local custodian prepares the fixed-path blank files, confirms role separation
-and eligibility without retaining identity, freezes hashes, produces the
-aggregate, and clears expired local review records. The custodian does not gain
-authority to decide a candidate merely by operating the files.
+and eligibility without retaining identity, freezes hashes, controls the
+custodian-only central ledger, seals the two isolated role submissions, produces
+the aggregate, and clears expired local review records. The custodian does not
+gain authority to decide a candidate merely by operating the files.
 
 The local method records only:
 
@@ -282,10 +334,30 @@ The custodian verifies qualifications and that the two people differ during the
 local session, but retains only the fixed attestations above. No identity or real
 auth/RBAC is claimed. Missing, unknown, duplicated, or ineligible roles; one
 human filling both roles; or a missing attestation keeps the candidate and round
-at `HOLD`. Detailed local files may be created/read only by the assigned
-reviewers and custodian through the direct local filesystem. Only the custodian
-may clear the finalized local ledger at the retention close event. No detailed
-review ledger may be exported or committed.
+at `HOLD`.
+
+Blinding is enforced by filesystem separation, not by reviewer promise. The
+custodian freezes one identical candidate/source assignment hash for both roles,
+then provisions the three fixed roots in Section 11. The central ledger is
+custodian-only. The primary role can read/write only the primary submission
+root; the secondary role can read/write only the secondary submission root;
+neither role can list, read, infer the status of, or write the other role's root
+or the central ledger. The operating environment must prove these access
+denials before the first row is shown. A shared account, shared writable
+directory, browser memory shared between roles, common submission file, or
+visibility of the other disposition is a stop condition.
+
+Each role writes only its own fixed submission file. Submission is an atomic
+close-and-rename followed by canonical validation, byte length, SHA-256, and a
+read-only seal. The custodian records only the role label, assignment hash,
+sealed-file hash, size, and fixed attestations; no OS principal or human
+identity enters the ledger. Both role files must be sealed before the custodian
+may copy their validated bytes into the central ledger or run reconciliation.
+Any post-seal mutation invalidates the round. Only after both seals exist may
+the secondary reviewer receive the bounded provisional patch-suitability view;
+that view contains neither primary raw decisions nor primary metrics. Only the
+custodian may clear finalized local records at the retention close event. No
+detailed ledger or role submission may be exported or committed.
 
 ## 7. Structured Decisions and Final Outcomes
 
@@ -388,6 +460,14 @@ in a separate docs-only issue.
 
 A candidate cannot be patch-suitable until its entire connected relationship
 component has a complete disposition.
+
+The frozen population must contain either every member of a relationship
+component or none of them. Reconciliation and patch suitability operate on the
+same complete component atomically: no member can be emitted, counted as
+approved, or sharded while another member lacks its two sealed role rows and
+final disposition. A split, dangling endpoint, omitted member, or component
+whose complete dispositions cannot satisfy the rules below makes the round
+`INCOMPLETE`; it is not repaired by deleting the relationship.
 
 | Relationship | Promotable closure |
 | --- | --- |
@@ -580,28 +660,34 @@ separate explicit rights decision before committing any real excerpt.
 
 ### Detailed local ledger
 
-The only proposed detailed record location is the fixed directory:
+Detailed data is split across exactly three local roots:
 
 ```text
-tmp/evidence-claim-workbench/human-approval/
+tmp/evidence-claim-workbench/human-approval/pr207-candidate-review-v2-custodian/
+tmp/evidence-claim-workbench/human-approval/pr207-candidate-review-v2-primary-submission/
+tmp/evidence-claim-workbench/human-approval/pr207-candidate-review-v2-secondary-submission/
 ```
 
-The frozen PR #207 head already ignores `tmp/evidence-claim-workbench/` in its
+The first root is the only central ledger and is custodian-only. The other two
+are isolated role-specific submission roots; neither is a shared ledger. The
+frozen PR #207 head already ignores `tmp/evidence-claim-workbench/` in its
 `.gitignore`; the evaluated default-branch baseline does not. Therefore the
-future operator must run `git check-ignore` against the exact Candidate Review
-v2 filenames in the actual operating worktree before any detailed file is
-created or populated. A no-match result is a stop condition; a future
-implementation on any branch lacking the rule must add and validate the narrow
-ignore rule first. A global excludes file or status configuration is not
-sufficient evidence.
+future operator must run `git check-ignore` against every exact Candidate
+Review v2 path in the actual operating worktree before any directory or file is
+created or populated. A no-match result is a stop condition; a global excludes
+file or status configuration is not sufficient evidence.
 
-A future implementation may add fixed Candidate Review v2 filenames under that
-directory only after the ignore check passes. The directory must be mode `0700`;
-files must be mode `0600`, regular, single-link, non-symlink files. Alternate
-paths, arguments, traversal, hardlinks, races, invalid UTF-8, duplicate JSON
-keys, partial rows, unknown fields, and over-limit data fail closed.
+Each root must be mode `0700`. The central root must be readable and writable
+only by the custodian. Each submission root must be readable and writable only
+by the assigned role and custodian, with explicit read/list/write denial proven
+for the other role and central-ledger denial proven for both roles. Draft and
+central files are mode `0600`; a submitted role file is atomically renamed,
+validated, hashed, and sealed mode `0400` before reconciliation. Every file is
+regular, single-link, and non-symlink. Alternate paths, arguments, traversal,
+hardlinks, races, invalid UTF-8, duplicate JSON keys, partial rows, unknown
+fields, and over-limit data fail closed.
 
-The detailed-file allowlist is exactly:
+The custodian-root file allowlist is exactly:
 
 ```text
 pr207-candidate-review-v2-round.json
@@ -611,20 +697,32 @@ pr207-candidate-review-v2-candidates-03.json
 pr207-candidate-review-v2-candidates-04.json
 pr207-candidate-review-v2-primary-decisions.json
 pr207-candidate-review-v2-secondary-decisions.json
+pr207-candidate-review-v2-secondary-patch-assessments.json
 pr207-candidate-review-v2-final-decisions.json
 pr207-candidate-review-v2-patch-set.json
 pr207-candidate-review-v2-patch-NN.json
 ```
 
+The primary-root allowlist is exactly
+`pr207-candidate-review-v2-primary-submission.json`. The secondary-root
+allowlist is exactly
+`pr207-candidate-review-v2-secondary-submission.json` before reconciliation and
+`pr207-candidate-review-v2-secondary-patch-assessments.json` after both initial
+role submissions are sealed. The post-reconciliation assessment file receives
+only the bounded provisional patch view and cannot contain either role's raw
+decision or metrics. No other role-root file may exist.
+
 Candidate IDs are ASCII-sorted and placed in sequential chunks of at most 10;
 only the first three or four candidate files may exist as required by `N`. The
 only allowed `NN` values are the closed zero-padded integer range `01` through
 `35`. The patch-set manifest permits only a contiguous prefix of that range and
-binds every present shard. The round manifest binds the exact list and SHA-256 of
-every other present allowlisted file; it omits its own path/hash and has no self-
-hash field. Its entire canonical serialized file is then hashed externally as
-`roundManifestSha256`, which the tracked aggregate binds. No timestamped,
-backup, history, alternate, or user-named detailed file is allowed.
+binds every present shard. The round manifest binds the exact root label,
+relative path, seal state, and SHA-256 of every other present allowlisted file,
+including the two sealed initial role submissions and the later secondary patch
+assessment; it omits its own path/hash and has no self-hash field. Its entire
+canonical serialized file is then hashed externally as `roundManifestSha256`,
+which the tracked aggregate binds. No timestamped, backup, history, alternate,
+or user-named detailed file is allowed.
 
 The detailed ledger may retain only:
 
@@ -687,20 +785,32 @@ tracked record. A hash is a consistency commitment, not proof of anonymity or
 non-reversibility; low-entropy or detailed per-candidate input must not be placed
 in the tracked aggregate merely because it was hashed.
 
-The resulting aggregate commit uses this non-circular two-commit receipt:
+The resulting aggregate uses a non-circular two-commit receipt. To distinguish
+it from the packet-review commits in Section 16, call these commits
+`A_aggregate` and `B_aggregate`:
 
-1. Commit A writes the final aggregate on the exact recorded control base. The
-   aggregate does not contain Commit A's SHA or any receipt field.
-2. After Commit A exists, compute its commit SHA and the exact aggregate blob
-   SHA-256. Commit B must be Commit A's direct child, must leave the aggregate
-   byte-identical, and may add only
-   `docs/product/validation/pr207-candidate-review-v2-aggregate-receipt.json`.
-3. The receipt contains only its schema/boundary, control branch/base, aggregate
-   path, Commit A SHA, and aggregate blob SHA-256. It does not contain Commit B's
-   own SHA, candidate/source detail, or human data.
-4. The aggregate is verified only when Commit B's parent is Commit A, both paths
-   and hashes match, and the aggregate is unchanged in Commit B. A later branch
-   head may advance, but the two receipt commits must remain reachable.
+1. Freeze one exact control base `C`. `A_aggregate` must have exactly one parent
+   and `parent(A_aggregate) == C`. The complete `C..A_aggregate` name-status
+   diff contains exactly one added or modified path,
+   `docs/product/validation/pr207-candidate-review-v2-aggregate.json`; no
+   rename, mode change, deletion, or second path is allowed. The aggregate does
+   not contain `A_aggregate`'s SHA or any receipt field.
+2. After `A_aggregate` exists, compute its commit SHA, the aggregate Git blob
+   object ID, and the SHA-256 of the exact aggregate bytes.
+   `B_aggregate` must have exactly one parent equal to `A_aggregate`.
+   `A_aggregate..B_aggregate` must add exactly
+   `docs/product/validation/pr207-candidate-review-v2-aggregate-receipt.json`
+   and make no other path, mode, or byte change.
+3. The receipt contains only its schema/boundary, control branch and `C`,
+   aggregate path, `A_aggregate` SHA, aggregate Git blob object ID, and aggregate
+   byte SHA-256. It does not contain `B_aggregate`'s own SHA,
+   candidate/source detail, or human data.
+4. At every evaluated branch tip `T`, `B_aggregate` must be an ancestor of `T`.
+   The aggregate and receipt blob object IDs and byte SHA-256 values at `T` must
+   equal those at `B_aggregate`; reachability alone is insufficient. Verification
+   also rechecks the exact parent counts, both parent equalities, and the two
+   closed path diffs above. Any extra parent, changed/deleted blob, rename,
+   mode-only change, unexpected path, or tip drift invalidates the aggregate.
 
 This packet does not authorize creating either commit; it selects the future
 receipt method so no file is required to hash the commit that contains itself.
@@ -785,29 +895,56 @@ future conditional sequence, not present merge approval:
 2. PR #206 may be considered for merge only after five eligible de-identified
    R1-R5 sessions pass the frozen method and a human merge decision is recorded.
 3. Merge PR #206 first.
-4. After PR #206 merges, construct the exact proposed PR #207 restack commit in a
-   fresh detached worktree without moving the live PR branch. Record the merged
-   `master` SHA and proposed restack SHA.
-5. Evidence reuse is allowed only if, while the live PR still has the old head
-   and the current ledger policy is active, a read-only verifier proves the old
-   head and proposed restack byte/semantic equivalent for the source manifest,
-   document decisions, completed fidelity decisions, candidate population,
-   complete candidates, decision snapshots, anchors, relationships, final
-   decisions, and patch outputs. Record the verifier command/result hashes.
-6. Before moving the live PR head, obtain a fresh owner rebind record naming the
-   exact old head, merged `master`, proposed restack SHA, policy/expiry, ledger
-   hashes, and verifier result. It must explicitly approve only that exact
-   transition. If either the verifier or owner record is absent, do not reuse the
-   old human evidence: after restack, obtain a new policy and repeat the affected
+4. Freeze `O_base =
+   9d144fbe6309ce363f9dad8d50ffa713d24af683`, old PR #207 head `O =
+   c6a5469338999097acd5de7c5a12c827d27d4540`, and the exact post-PR #206
+   `master` tip `M`. Prove `O_base` is the merge base and ancestor of `O`, and
+   record the complete ordered commit list for `O_base..O`.
+5. In a fresh detached worktree, replay that complete ordered commit list onto
+   `M` without moving the live PR branch. The proposed tip `R` must be a linear
+   chain: its first replayed commit has sole parent `M`, each later replayed
+   commit has the preceding replayed commit as its sole parent, `M` is an
+   ancestor of `R`, and `git merge-base M R` equals `M`. Merge commits, omitted
+   commits, added commits, or a different parent make the rebind ineligible.
+6. Run the full equivalence verifier in a second clean read-only worktree. It
+   binds and hashes: (a) `git range-diff --no-color O_base..O M..R`, with a
+   one-to-one ordered mapping and no unmatched commit; (b) the complete
+   name-status/mode path sets for both ranges; (c) per-path base, old-tip,
+   merged-base, and proposed-tip blob IDs plus byte SHA-256; and (d) an
+   independently replayed expected tree `E`. `tree(R)` must equal `E`, and a
+   full-tree diff between `E` and `R` must be empty. No path outside the old
+   PR #207 range is permitted.
+7. Conflict resolution uses one exact-path allowlist frozen during the detached
+   replay and before owner rebind. Each entry contains only the path, conflict
+   kind, `O_base`/`O`/`M`/resolved blob IDs and byte SHA-256 values, fixed
+   resolution reason, and independent verifier result. Globs, directories,
+   unrecorded conflicts, mode-only drift, and prose-only claims of semantic
+   equivalence are forbidden. Every non-allowlisted path must have an unchanged
+   mapped patch in the range-diff; every allowlisted path must equal its
+   independently constructed expected blob. The allowlist is exactly empty
+   when no conflict occurred.
+8. While the live PR still has head `O` and the current ledger policy is active,
+   the same verifier must additionally prove byte and canonical-semantic
+   equivalence for the source manifest, document decisions, completed fidelity
+   decisions, population and component selection, complete candidates,
+   decision snapshots, anchors, relationships, sealed role submissions, final
+   decisions, and patch outputs. Record exact command, tool SHA, input hashes,
+   result hashes, `O_base`, `O`, `M`, `R`, `E`, range-diff hash, path-manifest
+   hash, and conflict-allowlist hash.
+9. Before moving the live PR head, obtain a fresh owner rebind record naming all
+   of those exact values plus policy/expiry and ledger hashes. It must approve
+   only `O -> R`. If ancestry, full range/tree/path equivalence, the conflict
+   allowlist, verifier, or owner record is absent or fails, do not reuse old
+   human evidence: after restack, obtain a new policy and repeat the affected
    fidelity and Candidate Review v2 work.
-7. Move the live PR #207 head only to the preverified, prebound proposed SHA and
-   confirm the remote head is exact. Any other result is unexplained drift,
-   invalidates the round, and triggers exceptional close without a ledger read.
-8. Rerun complete supported validation and the Candidate Review v2 gates against
-   the restacked head. PR #207 may be considered for merge only when they pass,
-   all P0/P1 findings are closed, checks pass, and a human merge decision is
-   recorded.
-9. Merge PR #207 second.
+10. Move the live PR #207 head only to `R` and confirm the remote head is exact.
+    Any other result is unexplained drift, invalidates the round, and triggers
+    exceptional close without a ledger read.
+11. Rerun complete supported validation and the Candidate Review v2 gates
+    against `R`. PR #207 may be considered for merge only when they pass, all
+    P0/P1 findings are closed, checks pass, and a human merge decision is
+    recorded.
+12. Merge PR #207 second.
 
 Candidate approval is not canonical Claim Registry approval. Only a separate
 Claim Registry PR may map patch-suitable approvals into `evidence-claim-v1`,
@@ -900,6 +1037,43 @@ Stop immediately on:
 
 ## 16. Validation Contract and Final Status
 
+The revised packet uses a separate non-circular packet-review receipt. These
+commits are `A_packet` and `B_packet`; they are not the future aggregate commits
+in Section 11.
+
+1. `A_packet` is the final revision commit based on current `master`
+   `d7a45257b9aa48d2975db9852a993d79f70972bf`. That baseline must be its
+   ancestor, and the receipt records `A_packet`'s exact parent vector and
+   complete changed-path manifest. `A_packet` contains this packet and the
+   non-authoritative input-observation JSON, references the required receipt
+   path, and must not contain that receipt path.
+2. Only after `A_packet` exists, two isolated read-only reviews evaluate that
+   exact commit under fixed non-identity role labels
+   `METHOD_REPRODUCIBILITY_REVIEW` and `SECURITY_PRIVACY_BOUNDARY_REVIEW`.
+   Each result binds `A_packet`, the packet and observation Git blob object IDs
+   and byte SHA-256 values, decision `PASS` or `REQUEST_CHANGES`, and fixed
+   severity counts. No reviewer identity, prose note, source excerpt, local
+   path, or human data is retained. Any non-`PASS` result or unresolved finding
+   requires a new `A_packet`; it cannot be papered over in a receipt.
+3. Only when both independent results are `PASS`, `B_packet` may be created as
+   the sole child step. `parent(B_packet)` must equal `A_packet`, and the
+   complete `A_packet..B_packet` diff must add only
+   `docs/roadmap/pr207-candidate-review-v2-packet-post-commit-review-receipt-20260725.json`.
+   The packet and observation blobs and modes must remain byte-identical.
+4. The receipt binds its schema and non-production boundary, the controlling
+   `REQUEST_CHANGES` URL/comment ID and reviewed prior head/hashes, current
+   `master` baseline, `A_packet` SHA and parents, complete changed-path-manifest
+   hash, packet/observation paths, blob object IDs and byte SHA-256 values, and
+   both independent structured review results. It must not contain
+   `B_packet`'s SHA, its own blob ID/hash, human data, or a claim of merge or
+   production authority.
+5. At any evaluated PR tip `T`, `B_packet` must be an ancestor of `T`, and the
+   packet, observation, and receipt blob object IDs and byte SHA-256 values at
+   `T` must equal those at `B_packet`. Verification rechecks both commits'
+   parent/diff invariants. A copied receipt, self-described pre-commit `PASS`,
+   changed packet after review, extra Commit B path, or evaluated-tip blob drift
+   is `REQUEST_CHANGES`.
+
 Docs-only content validation for this packet is:
 
 ```text
@@ -908,9 +1082,12 @@ git diff --cached --check
 npm run check:naming
 ```
 
-The packet and its source-of-truth pointer files must be staged explicitly
-before the cached-diff check. An unstaged `git diff --check` does not inspect an
-untracked packet and is insufficient.
+For `A_packet`, the receipt path must be absent and that absence must be checked
+explicitly. For `B_packet`, parse the newly added receipt, prove the exact
+parent/diff/blob rules above, and verify both independent results before treating
+it as review evidence. The packet and its source-of-truth pointer files must be
+staged explicitly before the cached-diff check. An unstaged `git diff --check`
+does not inspect an untracked packet and is insufficient.
 
 Packet preparation additionally requires read-only evidence checks for:
 
@@ -935,7 +1112,9 @@ implementation must add commands and tests before claiming capability.
 
 ```yaml
 final_status:
-  packet: READY_FOR_DOCS_ONLY_REVIEW
+  packet: READY_FOR_EXACT_COMMIT_A_POST_COMMIT_REVIEW
+  pre_revision_observation: NON_AUTHORITATIVE_INPUT_ONLY
+  post_commit_review_receipt: REQUIRED_IN_COMMIT_B
   packet_merge_approved: false
   method_decision: SELECTED_IN_PACKET_PENDING_HUMAN_REVIEW
   bounded_retention: IGNORE_VERIFIED_LOCAL_LEDGER_PLUS_POLICY_BOUNDED_HASH_AGGREGATE

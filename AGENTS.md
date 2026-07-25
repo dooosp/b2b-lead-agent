@@ -246,6 +246,15 @@ Repo-specific operating guidance for agent work in `b2b-lead-agent`.
   or final commercial pursuit decision was approved or performed. PRs
   #206-#208 are open Drafts from this shipped baseline and are not shipped;
   their human-review, implementation, restack, and merge gates remain separate.
+- Post-PR209 Gate 0 remediation addendum: `master` includes PR #209 at
+  `d7a45257b9aa48d2975db9852a993d79f70972bf`. It raises the current axios
+  floor to `^1.18.0` with lockfile `1.18.1`, keeps required PR CI on the
+  deterministic offline triage, adds a separate scheduled/manual
+  moderate-or-higher live audit, suppresses valid top-level
+  `generatedAt`-only evidence rewrites, and syncs the PR #205 source baseline.
+  It is repository/local/test evidence only. PRs #206-#208 remain Draft and
+  separate; Candidate Review v2 implementation and human execution are not
+  shipped; Issue #165 remains `HOLD`; `productionReady:false` remains required.
 - Wave 1 shipped across PRs #11 and #12.
 - Wave 2 shipped via PR #16.
 - Wave 3 shipped via PR #18.

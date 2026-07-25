@@ -1,14 +1,45 @@
 {
-  "schemaVersion": "pr207-candidate-review-v2-packet-revalidation-v1",
+  "schemaVersion": "pr207-candidate-review-v2-packet-input-observation-v2",
+  "recordKind": "NON_AUTHORITATIVE_PRE_REVISION_INPUT_OBSERVATION",
   "observedAt": "2026-07-25T01:59:14Z",
+  "revisionInputsObservedAt": "2026-07-25T05:08:07Z",
   "repository": "dooosp/b2b-lead-agent",
-  "evidenceClass": "LOCAL_DOCS_ONLY_PACKET_PREPARATION_SNAPSHOT",
+  "evidenceClass": "LOCAL_DOCS_ONLY_INPUT_OBSERVATION_NOT_A_RECEIPT",
+  "authoritativeReceipt": false,
+  "packetReviewResult": "NOT_EVALUATED",
+  "finalPassClaimed": false,
   "notProductionEvidence": true,
   "packetBranch": "codex/pr207-candidate-review-v2-decision-packet",
   "defaultBranch": "master",
-  "defaultBranchHead": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+  "defaultBranchHead": "d7a45257b9aa48d2975db9852a993d79f70972bf",
+  "defaultBranchHeadAtOriginalObservation": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+  "revisionRequest": {
+    "record": "PR208_METHOD_REVIEW_V1",
+    "url": "https://github.com/dooosp/b2b-lead-agent/pull/208#issuecomment-5077027554",
+    "commentId": 5077027554,
+    "decision": "REQUEST_CHANGES",
+    "reviewedPr208Head": "dd38805e96d33a82803e6a6926c74ea2450ef41b",
+    "reviewedPacketSha256": "e477b0fb0812089d889b3d37fd6474e026679b05c4bbe66e2c7d69b370638f33",
+    "reviewedInputObservationSha256": "ab9f2ac19bb929e68681bd2d3029a3b94effe1444d474ddc811e3164086d680a",
+    "currentMaster": "d7a45257b9aa48d2975db9852a993d79f70972bf"
+  },
+  "requiredPostCommitReceipt": {
+    "path": "docs/roadmap/pr207-candidate-review-v2-packet-post-commit-review-receipt-20260725.json",
+    "mustBeAbsentFromPacketCommitA": true,
+    "mayBeAddedOnlyInDirectChildCommitB": true,
+    "requiresIndependentExactCommitReviews": true,
+    "statusInThisObservation": "NOT_PRESENT_NOT_EVALUATED"
+  },
+  "observationLimitations": [
+    "This file records inputs observed before the packet revision.",
+    "It does not bind the revised packet commit or blobs.",
+    "It is not an independent post-commit review.",
+    "It is not a final PASS, merge approval, human-review execution record, or production evidence."
+  ],
   "requiredCommitObjectsPresent": [
+    "d7a45257b9aa48d2975db9852a993d79f70972bf",
     "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+    "8098f66c6fb7e64464297c0ee70d25f49756135d",
     "b5570e182c8ab6515c0f09272d22d7121518f134",
     "c6a5469338999097acd5de7c5a12c827d27d4540",
     "016be9efb9d194859c691d5fd9245ce3dae844a0"
@@ -21,10 +52,13 @@
       "merged": false,
       "baseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
       "headSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+      "headPurpose": "IGNORED_R1_R5_INTAKE_PREPARATION_AND_VALIDATION_TOOLING_ONLY",
+      "humanSessionRuntimeRootSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
       "checks": {
         "test": "SUCCESS",
         "validateRuns": 2,
-        "allObservedChecksPassed": true
+        "allChecksSuccessfulAtObservation": true,
+        "packetPassInferred": false
       }
     },
     {
@@ -37,10 +71,50 @@
       "checks": {
         "test": "SUCCESS",
         "validateRuns": 2,
-        "allObservedChecksPassed": true
+        "allChecksSuccessfulAtObservation": true,
+        "packetPassInferred": false
       }
     }
   ],
+  "pr206RootSeparation": {
+    "frozenHumanSessionRuntime": {
+      "headSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+      "requiredRootCommand": "git rev-parse --show-toplevel",
+      "requiredHeadCommand": "git rev-parse HEAD",
+      "requiredStatusCommand": "git status --porcelain=v1 --untracked-files=all",
+      "requiredStatusOutput": "",
+      "statusCheckMoments": [
+        "BEFORE_EACH_SESSION",
+        "IMMEDIATELY_AFTER_EACH_SESSION"
+      ],
+      "installCommand": "npm ci",
+      "onlyLaunchCommand": "npm run demo:pursuit-workbench",
+      "networkBoundary": "PRINTED_LOOPBACK_URL_ONLY"
+    },
+    "ignoredIntakeTooling": {
+      "headSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+      "requiredRootCommand": "git rev-parse --show-toplevel",
+      "requiredHeadCommand": "git rev-parse HEAD",
+      "requiredStatusCommand": "git status --porcelain=v1 --untracked-files=all",
+      "requiredStatusOutput": "",
+      "statusCheckMoments": [
+        "BEFORE_PREPARATION",
+        "AFTER_VALIDATION"
+      ],
+      "allowedCommands": [
+        "npm run prepare:pursuit-workbench-human-validation",
+        "npm run validate:pursuit-workbench-human-validation"
+      ],
+      "workbenchLaunchAllowed": false
+    },
+    "frozenRuntimeArtifactSha256": {
+      "package-lock.json": "a14f41c200c480e20b1f3e3ef1ccedf48155e274888b4716aeb2e1b1ba4d97cc",
+      "pursuit-workbench/fixtures/datacenter-workbench-v0.json": "08ec7591cfd89d8af33a2ca613df8762c2a852d8946f36379dc0aaabfc365d41",
+      "docs/product/datacenter-pursuit-workbench-v0-review-guide.md": "3000973dab91408d6e360363872e43398228d39a88d010d21d6c5803d28b366a"
+    },
+    "equalArtifactHashesDoNotTransferRuntimeAuthority": true,
+    "rootHeadStatusHashOrCommandMismatchDisposition": "INCOMPLETE"
+  },
   "issue165": {
     "state": "OPEN",
     "packetDisposition": "HOLD"
@@ -81,28 +155,31 @@
   },
   "artifactObservations": [
     {
-      "scope": "PR206_HEAD_WORKTREE",
+      "scope": "PR206_INTAKE_TOOLING_HEAD_WORKTREE_B5570E",
       "path": "package-lock.json",
       "sha256": "a14f41c200c480e20b1f3e3ef1ccedf48155e274888b4716aeb2e1b1ba4d97cc",
       "fileType": "REGULAR",
       "linkCount": 1,
-      "mode": "0644"
+      "mode": "0644",
+      "runtimeAuthority": false
     },
     {
-      "scope": "PR206_HEAD_WORKTREE",
+      "scope": "PR206_INTAKE_TOOLING_HEAD_WORKTREE_B5570E",
       "path": "pursuit-workbench/fixtures/datacenter-workbench-v0.json",
       "sha256": "08ec7591cfd89d8af33a2ca613df8762c2a852d8946f36379dc0aaabfc365d41",
       "fileType": "REGULAR",
       "linkCount": 1,
-      "mode": "0644"
+      "mode": "0644",
+      "runtimeAuthority": false
     },
     {
-      "scope": "PR206_HEAD_WORKTREE",
+      "scope": "PR206_INTAKE_TOOLING_HEAD_WORKTREE_B5570E",
       "path": "docs/product/datacenter-pursuit-workbench-v0-review-guide.md",
       "sha256": "3000973dab91408d6e360363872e43398228d39a88d010d21d6c5803d28b366a",
       "fileType": "REGULAR",
       "linkCount": 1,
-      "mode": "0644"
+      "mode": "0644",
+      "runtimeAuthority": false
     },
     {
       "scope": "PR207_HEAD_WORKTREE",
@@ -162,6 +239,10 @@
     "canonicalVerifiedClaimsCreated": 0,
     "pr206HeadMutated": false,
     "pr207HeadMutated": false,
+    "revisedPacketCommitBound": false,
+    "independentPostCommitReviewCompleted": false,
+    "postCommitReceiptCreated": false,
+    "packetPassed": false,
     "mergeApproved": false,
     "productionApproved": false
   }

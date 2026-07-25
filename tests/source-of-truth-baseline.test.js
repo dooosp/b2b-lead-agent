@@ -4,7 +4,7 @@ const path = require('node:path');
 const test = require('node:test');
 
 const repoRoot = path.resolve(__dirname, '..');
-const expectedBaseline = '9d144fbe6309ce363f9dad8d50ffa713d24af683';
+const expectedBaseline = 'd7a45257b9aa48d2975db9852a993d79f70972bf';
 
 const documents = [
   {
@@ -29,14 +29,14 @@ function readDocument(file) {
   return fs.readFileSync(path.join(repoRoot, file), 'utf8');
 }
 
-test('canonical source-of-truth headers bind the shipped PR #205 baseline', () => {
+test('canonical source-of-truth headers bind the shipped PR #209 baseline', () => {
   for (const { file, headerLines } of documents) {
     const header = readDocument(file).split('\n').slice(0, headerLines).join('\n');
 
-    assert.match(header, /PR #205/, `${file} must identify PR #205`);
+    assert.match(header, /PR #209/, `${file} must identify PR #209`);
     assert.ok(
       header.includes(expectedBaseline),
-      `${file} must bind the exact shipped PR #205 SHA`,
+      `${file} must bind the exact shipped PR #209 SHA`,
     );
   }
 });
