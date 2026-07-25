@@ -629,6 +629,11 @@ async function writeExclusivePrivateJson({
     });
     await assertDirectoryChainUnchanged(directoryGuard);
     metadata = await lstat(absolutePath, { bigint: true });
+    await inject.afterPrivateCreatePathInspection?.({
+      relativePath: normalized,
+      absolutePath
+    });
+    await assertDirectoryChainUnchanged(directoryGuard);
   } catch (error) {
     if (error instanceof CandidateReviewV2FilesError) throw error;
     fail('CANDIDATE_REVIEW_FILE_CREATE_FAILED');
