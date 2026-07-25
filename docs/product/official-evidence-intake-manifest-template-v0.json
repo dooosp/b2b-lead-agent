@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "official-evidence-intake-manifest-v0",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "documents": [
+    {
+      "relativePath": "normalized-source-document.json",
+      "byteLength": 1,
+      "mediaType": "application/json",
+      "sourceUrl": "https://official-publisher.example.invalid/product/document",
+      "publisher": "REPLACE_WITH_OFFICIAL_PUBLISHER",
+      "title": "REPLACE_WITH_DOCUMENT_TITLE",
+      "documentNumber": "REPLACE_WITH_DOCUMENT_NUMBER",
+      "documentType": "NORMALIZED_PAGE_TEXT_JSON",
+      "revision": {
+        "seriesId": "replace-with-series-id",
+        "revisionId": "REPLACE_WITH_REVISION_ID",
+        "sequence": 1
+      },
+      "language": "ko",
+      "vertical": "datacenter",
+      "jurisdiction": "KR",
+      "domain": "electrical_power",
+      "productFamilies": [
+        "medium_voltage_switchgear"
+      ],
+      "redistributionStatus": "METADATA_AND_BOUNDED_EXCERPTS_ONLY"
+    }
+  ]
+}

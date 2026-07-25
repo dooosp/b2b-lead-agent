@@ -2,6 +2,10 @@ node_modules/
 .env
 .dev.vars
 .wrangler/
+evidence-inbox/
+!evidence-claim-workbench/fixtures/intake-hash-mismatch/evidence-inbox/
+!evidence-claim-workbench/fixtures/intake-hash-mismatch/evidence-inbox/*.json
+tmp/evidence-claim-workbench/
 reports/**/*.md
 !reports/*/latest-leads.json
 !reports/*/lead-history.json

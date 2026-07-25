@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "official-evidence-intake-manifest-v0",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "documents": [
+    {
+      "relativePath": "document.json",
+      "byteLength": 3,
+      "mediaType": "application/json",
+      "sourceUrl": "https://synthetic.example/evidence/intake-hash-mismatch",
+      "publisher": "Synthetic Electrical Evidence Laboratory",
+      "title": "Synthetic source-file hash mismatch sentinel",
+      "documentNumber": "SYNTH-INTAKE-HASH-MISMATCH",
+      "documentType": "NORMALIZED_PAGE_TEXT_JSON",
+      "revision": {
+        "seriesId": "synthetic-series-intake-hash-mismatch",
+        "revisionId": "rev-1",
+        "sequence": 1
+      },
+      "language": "en",
+      "vertical": "datacenter",
+      "jurisdiction": "KR",
+      "domain": "electrical_power",
+      "productFamilies": [
+        "medium_voltage_switchgear"
+      ],
+      "redistributionStatus": "SYNTHETIC_FIXTURE_REDISTRIBUTION_PERMITTED",
+      "expectedSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ]
+}
