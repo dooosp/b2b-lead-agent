@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 import {
@@ -21,6 +20,7 @@ import {
   redactLevel1EvidenceRecord,
   validateLevel1FutureProductionProofEvidenceArtifact,
 } from '../worker/lib/level1-readiness-guards.js';
+import { writeJsonArtifactIfMateriallyChanged } from './lib/cli-utils.mjs';
 
 export const LEVEL1_OPERATOR_REHEARSAL_OUTPUT_PATH =
   'tmp/codex/level1-operator-rehearsal-non-production-runbook.json';
@@ -420,21 +420,21 @@ function runCli() {
     env: process.env,
     urls: urls.length > 0 ? urls : undefined,
   });
+  const outputPath = optionValue('--output') || '';
+  const { artifact: runbook } = writeJsonArtifactIfMateriallyChanged(
+    outputPath,
+    result.runbook
+  );
   const output = process.argv.includes('--json')
-    ? JSON.stringify(result.runbook, null, 2)
+    ? JSON.stringify(runbook, null, 2)
     : [
-      `LEVEL1_OPERATOR_REHEARSAL_GATE_NON_PRODUCTION: ${result.runbook.status}`,
-      `productionReady: ${result.runbook.productionReady}`,
-      `productionReviewerWorkflowReady: ${result.runbook.productionReviewerWorkflowReady}`,
-      `notProductionEvidence: ${result.runbook.notProductionEvidence}`,
-      `proofStartBlocked: ${result.runbook.proofStartBlocked}`,
+      `LEVEL1_OPERATOR_REHEARSAL_GATE_NON_PRODUCTION: ${runbook.status}`,
+      `productionReady: ${runbook.productionReady}`,
+      `productionReviewerWorkflowReady: ${runbook.productionReviewerWorkflowReady}`,
+      `notProductionEvidence: ${runbook.notProductionEvidence}`,
+      `proofStartBlocked: ${runbook.proofStartBlocked}`,
       `blockers: ${result.blockers.length}`,
     ].join('\n');
-  const outputPath = optionValue('--output') || '';
-  if (outputPath) {
-    mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, `${JSON.stringify(result.runbook, null, 2)}\n`);
-  }
   console.log(output);
   if (!result.ok) process.exitCode = 1;
 }

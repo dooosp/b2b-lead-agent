@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 import { redactLevel1EvidenceRecord } from '../worker/lib/level1-readiness-guards.js';
+import { writeJsonArtifactIfMateriallyChanged } from './lib/cli-utils.mjs';
 
 export const LEVEL1_CHANGE_CONTROL_MANIFEST_PATH =
   'docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.json';
@@ -545,20 +545,20 @@ export function evaluateLevel1ChangeControlManifest(input = {}) {
 function runCli() {
   const manifestPath = optionValue('--manifest') || LEVEL1_CHANGE_CONTROL_MANIFEST_PATH;
   const result = evaluateLevel1ChangeControlManifest({ manifestPath });
+  const outputPath = optionValue('--output');
+  const { artifact: plan } = writeJsonArtifactIfMateriallyChanged(
+    outputPath,
+    result.plan
+  );
   const output = process.argv.includes('--json')
-    ? JSON.stringify(result.plan, null, 2)
+    ? JSON.stringify(plan, null, 2)
     : [
-      `LEVEL1_PRODUCTION_PROOF_CHANGE_CONTROL_MANIFEST_NON_PRODUCTION: ${result.plan.status}`,
-      `productionReady: ${result.plan.productionReady}`,
-      `notProductionEvidence: ${result.plan.notProductionEvidence}`,
-      `nonExecutableSteps: ${result.plan.nonExecutableSteps.length}`,
+      `LEVEL1_PRODUCTION_PROOF_CHANGE_CONTROL_MANIFEST_NON_PRODUCTION: ${plan.status}`,
+      `productionReady: ${plan.productionReady}`,
+      `notProductionEvidence: ${plan.notProductionEvidence}`,
+      `nonExecutableSteps: ${plan.nonExecutableSteps.length}`,
       `blockers: ${result.validation.blockers.length}`,
     ].join('\n');
-  const outputPath = optionValue('--output');
-  if (outputPath) {
-    mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, `${JSON.stringify(result.plan, null, 2)}\n`);
-  }
   console.log(output);
   if (!result.ok) process.exitCode = 1;
 }

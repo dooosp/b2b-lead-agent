@@ -236,6 +236,26 @@ test('Level 1 change-control manifest CLI writes only a NOT_PRODUCTION_EVIDENCE 
     assert.equal(plan.productionReady, false);
     assert.equal(plan.gates.some((gate) => gate.id === 'production_proof_approval' && gate.status === 'HOLD'), true);
     assert.equal(JSON.stringify(plan).includes('token-must-not-appear'), false);
+
+    const firstWrite = readFileSync(outputPath, 'utf8');
+    const secondResult = spawnSync(process.execPath, [
+      'scripts/level1-production-proof-change-control-manifest.mjs',
+      '--manifest',
+      manifestPath,
+      '--json',
+      '--output',
+      outputPath,
+    ], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        LEVEL1_CHANGE_CONTROL_NOW: '2026-06-01T12:00:00.000Z',
+      },
+    });
+
+    assert.equal(secondResult.status, 0, secondResult.stderr || secondResult.stdout);
+    assert.equal(readFileSync(outputPath, 'utf8'), firstWrite);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

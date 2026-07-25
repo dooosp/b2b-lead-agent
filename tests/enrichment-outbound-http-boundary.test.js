@@ -339,6 +339,20 @@ test('enrichment outbound boundary audit CLI writes local non-production artifac
     assert.equal(serialized.includes('raw-token-value'), false);
     assert.equal(serialized.includes('raw-bearer-value'), false);
     assert.equal(serialized.includes('ACME_PRIVATE_CUSTOMER'), false);
+
+    const firstWrite = readFileSync(outputPath, 'utf8');
+    const secondResult = spawnSync(process.execPath, [
+      'scripts/outbound-http-enrichment-boundary-audit.mjs',
+      '--json',
+      '--output',
+      outputPath,
+    ], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+    });
+
+    assert.equal(secondResult.status, 0, secondResult.stderr);
+    assert.equal(readFileSync(outputPath, 'utf8'), firstWrite);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

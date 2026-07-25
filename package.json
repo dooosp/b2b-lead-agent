@@ -16,6 +16,7 @@
     "proof:level1:closure-dashboard": "node scripts/level1-readiness-closure-dashboard.mjs --json --output tmp/codex/level1-readiness-closure-dashboard-non-production.json --markdown --markdown-output docs/roadmap/b2b-lead-agent-level-1-readiness-closure-dashboard-non-production.md",
     "proof:level1:approval-intake": "node scripts/level1-production-proof-approval-intake-gate.mjs --json --output tmp/codex/level1-production-proof-approval-intake-gate-non-production.json --template-output docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-template-non-production.json --markdown-output docs/roadmap/b2b-lead-agent-level-1-production-proof-approval-intake-gate-non-production.md",
     "proof:level1:post-approval-simulator": "node scripts/level1-post-approval-decision-simulator.mjs --json --output tmp/codex/level1-post-approval-decision-simulator-non-production.json --markdown --markdown-output docs/roadmap/b2b-lead-agent-level-1-post-approval-decision-simulator-non-production.md",
+    "security:audit-current": "npm audit --omit=dev --audit-level=moderate",
     "security:audit-triage": "node scripts/security-dependency-audit-triage.mjs --json --output tmp/codex/security-dependency-audit-triage-non-production.json",
     "check:enrichment-boundary": "node --test tests/enrichment-outbound-http-boundary.test.js && node scripts/outbound-http-enrichment-boundary-audit.mjs --json --output tmp/codex/outbound-http-enrichment-boundary-guards-non-production.json",
     "check:enrichment-replay": "node --test tests/enrichment-fixture-replay.test.js && node scripts/enrichment-fixture-replay.mjs --json --output tmp/codex/enrichment-fixture-replay-output-contract-non-production.json",
@@ -39,7 +40,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
-    "axios": "^1.16.0",
+    "axios": "^1.18.0",
     "cheerio": "^1.1.2",
     "dotenv": "^17.2.3",
     "nodemailer": "^9.0.1",
