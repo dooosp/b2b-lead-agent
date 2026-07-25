@@ -746,6 +746,16 @@ production-readiness claims.
   - Remote raw/historical branches may remain as concept inventory. Do not prune/delete branches without an explicit cleanup instruction.
 - Product next step: no mandatory staging or production action follows this
   source-of-truth sync. The stable operational default is truthful `HOLD`/no-op.
+- The current docs-only follow-up is
+  `docs/roadmap/pr207-candidate-review-v2-bounded-retention-method-decision-packet.md`.
+  It records a packet-local method selection pending human docs review for the
+  future Candidate Review v2 reviewer, candidate/page/anchor, decision,
+  precision, patch-suitability, bounded-retention, privacy, merge-train,
+  canonical-claim, and Tender Matrix method on the evaluated PR #205 baseline.
+  It creates no candidates, no human fidelity decisions, and no Candidate
+  Review v2 human candidate decisions, and approves no implementation, restack,
+  merge, canonical `VERIFIED` claim, Tender Matrix, or production action. PRs
+  #206/#207 remain Draft and frozen; Issue #165 remains `HOLD`.
 - No mandatory local hardening action follows PR #203. If a new bounded goal is
   selected, the remaining application-level remote-read deadline identified in
   PR #197 is a candidate; real auth/RBAC/privacy implementation and production

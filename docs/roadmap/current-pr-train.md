@@ -353,6 +353,15 @@ artifact reads, PR #198 synced source of truth, PRs #199-#201 closed the
 remaining network/cache/concurrency lanes, and PRs #202-#203 added and hardened
 typed atomic publication plus notification-safe behavior. No additional
 feature PR is required before this source-of-truth sync branch.
+Subsequent `master` includes PR #204's source-of-truth sync and PR #205's
+evidence Claim Registry / Data Center specification-fit foundation at
+`9d144fbe6309ce363f9dad8d50ffa713d24af683`. PRs #206 and #207 are open Draft
+sibling branches from that baseline and remain frozen pending their human
+gates. The docs-only
+`docs/roadmap/pr207-candidate-review-v2-bounded-retention-method-decision-packet.md`
+records a packet-local method selection pending human docs review; Candidate
+Review v2 implementation and execution are unapproved, and both merges remain
+`HOLD`.
 The active Privacy Owner Input
 tracking issue is [Issue #154](https://github.com/dooosp/b2b-lead-agent/issues/154),
 status `OPEN`. PR #157 recorded `COMPLETE_FOR_CONSERVATIVE_POLICY`; the later

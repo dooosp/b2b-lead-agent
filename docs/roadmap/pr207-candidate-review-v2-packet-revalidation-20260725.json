@@ -1,0 +1,168 @@
+{
+  "schemaVersion": "pr207-candidate-review-v2-packet-revalidation-v1",
+  "observedAt": "2026-07-25T01:59:14Z",
+  "repository": "dooosp/b2b-lead-agent",
+  "evidenceClass": "LOCAL_DOCS_ONLY_PACKET_PREPARATION_SNAPSHOT",
+  "notProductionEvidence": true,
+  "packetBranch": "codex/pr207-candidate-review-v2-decision-packet",
+  "defaultBranch": "master",
+  "defaultBranchHead": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+  "requiredCommitObjectsPresent": [
+    "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+    "b5570e182c8ab6515c0f09272d22d7121518f134",
+    "c6a5469338999097acd5de7c5a12c827d27d4540",
+    "016be9efb9d194859c691d5fd9245ce3dae844a0"
+  ],
+  "pullRequests": [
+    {
+      "number": 206,
+      "state": "OPEN",
+      "draft": true,
+      "merged": false,
+      "baseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+      "headSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+      "checks": {
+        "test": "SUCCESS",
+        "validateRuns": 2,
+        "allObservedChecksPassed": true
+      }
+    },
+    {
+      "number": 207,
+      "state": "OPEN",
+      "draft": true,
+      "merged": false,
+      "baseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+      "headSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "checks": {
+        "test": "SUCCESS",
+        "validateRuns": 2,
+        "allObservedChecksPassed": true
+      }
+    }
+  ],
+  "issue165": {
+    "state": "OPEN",
+    "packetDisposition": "HOLD"
+  },
+  "ownerRecords": [
+    {
+      "commentId": 5014019753,
+      "record": "PR207_DOCUMENT_PILOT_APPROVAL_V1",
+      "evaluatedHead": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "documentDecisionFileSha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
+      "mergeApproved": false,
+      "productionApproved": false
+    },
+    {
+      "commentId": 5031954760,
+      "record": "PR207_PAGE_REVIEW_RIGHTS_RETENTION_POLICY_V1",
+      "evaluatedHead": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "documentDecisionFileSha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
+      "policyDecision": "APPROVE",
+      "expiresOrRequiresReviewAt": "2026-08-21T23:59:59Z",
+      "mergeApproved": false,
+      "productionApproved": false
+    }
+  ],
+  "owningWorktreeHeads": {
+    "pr206": {
+      "headSha": "b5570e182c8ab6515c0f09272d22d7121518f134",
+      "trackedStatusClean": true
+    },
+    "pr207": {
+      "headSha": "c6a5469338999097acd5de7c5a12c827d27d4540",
+      "trackedStatusClean": true
+    },
+    "control": {
+      "headSha": "016be9efb9d194859c691d5fd9245ce3dae844a0",
+      "trackedStatusClean": true
+    }
+  },
+  "artifactObservations": [
+    {
+      "scope": "PR206_HEAD_WORKTREE",
+      "path": "package-lock.json",
+      "sha256": "a14f41c200c480e20b1f3e3ef1ccedf48155e274888b4716aeb2e1b1ba4d97cc",
+      "fileType": "REGULAR",
+      "linkCount": 1,
+      "mode": "0644"
+    },
+    {
+      "scope": "PR206_HEAD_WORKTREE",
+      "path": "pursuit-workbench/fixtures/datacenter-workbench-v0.json",
+      "sha256": "08ec7591cfd89d8af33a2ca613df8762c2a852d8946f36379dc0aaabfc365d41",
+      "fileType": "REGULAR",
+      "linkCount": 1,
+      "mode": "0644"
+    },
+    {
+      "scope": "PR206_HEAD_WORKTREE",
+      "path": "docs/product/datacenter-pursuit-workbench-v0-review-guide.md",
+      "sha256": "3000973dab91408d6e360363872e43398228d39a88d010d21d6c5803d28b366a",
+      "fileType": "REGULAR",
+      "linkCount": 1,
+      "mode": "0644"
+    },
+    {
+      "scope": "PR207_HEAD_WORKTREE",
+      "path": "evidence-inbox/manifest.json",
+      "sha256": "0e62b5b258a90395b4f7a95bf2e5288e0781d768aa0990b07c0916a67c16c953",
+      "fileType": "REGULAR",
+      "linkCount": 1,
+      "mode": "0600",
+      "ignoredBy": "evidence-inbox/"
+    },
+    {
+      "scope": "PR207_HEAD_WORKTREE",
+      "path": "tmp/evidence-claim-workbench/human-approval/pr207-document-decisions.json",
+      "sha256": "2748e31856100d2f00259f32b1e351d6b7fe4386884e593ba1dc7997c6cab8fb",
+      "fileType": "REGULAR",
+      "linkCount": 1,
+      "mode": "0600",
+      "ignoredBy": "tmp/evidence-claim-workbench/"
+    },
+    {
+      "scope": "PR207_HEAD_WORKTREE",
+      "path": "tmp/evidence-claim-workbench/human-approval/pr207-document-fidelity-decisions.json",
+      "sha256": "e5e6aa1d7c73ab939d88e8c907107c8eed93ff698524efa5aefc4bdd6e14ae1e",
+      "fileType": "REGULAR",
+      "linkCount": 1,
+      "mode": "0600",
+      "ignoredBy": "tmp/evidence-claim-workbench/"
+    },
+    {
+      "scope": "PR207_HEAD_WORKTREE",
+      "path": "tmp/evidence-claim-workbench/human-approval/pr207-document-fidelity-operator-checklist.md",
+      "sha256": "89a8cf7f3923c85ba78418e8e3fe3337da610173c8d5d5c989d8413004de6813",
+      "fileType": "REGULAR",
+      "linkCount": 1,
+      "mode": "0600",
+      "ignoredBy": "tmp/evidence-claim-workbench/"
+    },
+    {
+      "scope": "PR207_HEAD_WORKTREE",
+      "path": "tmp/evidence-claim-workbench/human-approval/pr207-candidate-decisions.json",
+      "sha256": "10460a8fb0202af984ea98e3ca5b34fea3822a4531ed2ed1221e35d5acaa3051",
+      "fileType": "REGULAR",
+      "linkCount": 1,
+      "mode": "0600",
+      "ignoredBy": "tmp/evidence-claim-workbench/"
+    }
+  ],
+  "controlVariantDigests": {
+    "sourceCommit": "016be9efb9d194859c691d5fd9245ce3dae844a0",
+    "evaluationSha256": "a73449493dc3cb07b2c28a41446d1bea36eba1f09acf16a6eb092cda5495dfdb",
+    "canonicalRedactedSummarySha256": "8c3ceefd6e74b82f87d5e488ecb31a3c3496c6ade16518451c6151f894f6971e"
+  },
+  "nonClaims": {
+    "humanFidelityDecisionsCreated": 0,
+    "candidatesCreated": 0,
+    "humanCandidateDecisionsCreated": 0,
+    "canonicalVerifiedClaimsCreated": 0,
+    "pr206HeadMutated": false,
+    "pr207HeadMutated": false,
+    "mergeApproved": false,
+    "productionApproved": false
+  }
+}
