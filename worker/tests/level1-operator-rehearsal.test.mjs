@@ -236,6 +236,27 @@ test('Level 1 operator rehearsal CLI writes only a redacted NOT_PRODUCTION_EVIDE
     assert.equal(runbook.orderedSteps.every((step) => step.nonExecutable === true), true);
     assert.equal(serialized.includes('token-must-not-appear'), false);
     assert.equal(serialized.includes('Synthetic manual note body'), false);
+
+    const firstWrite = readFileSync(outputPath, 'utf8');
+    const secondResult = spawnSync(process.execPath, [
+      scriptPath,
+      '--json',
+      '--output',
+      outputPath,
+    ], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      env: {
+        PATH: process.env.PATH || '',
+        LEVEL1_OPERATOR_REHEARSAL_NOW: '2026-06-03T00:00:00.000Z',
+        LEVEL1_PROOF_PREFLIGHT_ENV: 'local_test',
+        WORKER_ENV: 'local',
+        WORKER_ORIGIN: 'localhost:8787',
+      },
+    });
+
+    assert.equal(secondResult.status, 0, secondResult.stderr || secondResult.stdout);
+    assert.equal(readFileSync(outputPath, 'utf8'), firstWrite);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

@@ -1,46 +1,85 @@
 #!/usr/bin/env node
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+
+import { writeJsonArtifactIfMateriallyChanged } from './lib/cli-utils.mjs';
 
 export const SECURITY_DEPENDENCY_AUDIT_TRIAGE_OUTPUT_PATH =
   'tmp/codex/security-dependency-audit-triage-non-production.json';
 
-export const AXIOS_PATCHED_MINIMUM_VERSION = '1.16.0';
+export const AXIOS_PATCHED_MINIMUM_VERSION = '1.18.0';
 
 const AXIOS_ADVISORIES = Object.freeze([
   {
-    source: 1119667,
-    url: 'https://github.com/advisories/GHSA-pjwm-pj3p-43mv',
-    severity: 'high',
-    range: '>=1.0.0 <1.16.0',
-    title:
-      "axios shouldBypassProxy does not recognize IPv4-mapped IPv6 addresses, allowing NO_PROXY bypass",
-  },
-  {
-    source: 1119669,
-    url: 'https://github.com/advisories/GHSA-898c-q2cr-xwhg',
+    source: 1123882,
+    url: 'https://github.com/advisories/GHSA-42h9-826w-cgv3',
     severity: 'moderate',
-    range: '>=1.0.0 <1.16.0',
-    title:
-      'axios has DoS and Header Injection via Prototype Pollution Read-Side Gadgets in merge functions',
+    range: '>=1.0.0 <1.18.0',
+    title: 'Axios: Excessive recursion in formDataToJSON can cause denial of service',
   },
   {
-    source: 1119670,
-    url: 'https://github.com/advisories/GHSA-654m-c8p4-x5fp',
-    severity: 'low',
-    range: '=1.15.2',
-    title:
-      'Axios Proxy-Authorization Header Injection via Prototype Pollution incomplete null-prototype fix',
+    source: 1123884,
+    url: 'https://github.com/advisories/GHSA-xj6q-8x83-jv6g',
+    severity: 'moderate',
+    range: '>=1.15.2 <1.18.0',
+    title: 'Axios: Prototype pollution auth subfields can inject Basic auth',
   },
   {
-    source: 1119675,
-    url: 'https://github.com/advisories/GHSA-35jp-ww65-95wh',
+    source: 1123885,
+    url: 'https://github.com/advisories/GHSA-pmv8-rq9r-6j72',
+    severity: 'moderate',
+    range: '>=1.0.0 <1.18.0',
+    title: 'Axios: Deep formToJSON Key Recursion Can Cause Denial of Service',
+  },
+  {
+    source: 1123957,
+    url: 'https://github.com/advisories/GHSA-jqh4-m9w3-8hp9',
+    severity: 'moderate',
+    range: '>=1.7.0 <1.18.0',
+    title: 'Axios: Fetch adapter ReadableStream uploads bypass maxBodyLength',
+  },
+  {
+    source: 1123959,
+    url: 'https://github.com/advisories/GHSA-mmx7-hfxf-jppx',
+    severity: 'moderate',
+    range: '>=1.0.0 <1.18.0',
+    title: 'Axios: Prototype pollution gadgets can alter axios request construction',
+  },
+  {
+    source: 1123961,
+    url: 'https://github.com/advisories/GHSA-f4gw-2p7v-4548',
+    severity: 'moderate',
+    range: '>=1.15.0 <1.18.0',
+    title: 'Axios: NO_PROXY bypass for 0.0.0.0 local addresses in axios',
+  },
+  {
+    source: 1123967,
+    url: 'https://github.com/advisories/GHSA-gcfj-64vw-6mp9',
     severity: 'high',
-    range: '>=1.0.0 <1.16.0',
-    title:
-      'axios vulnerable to full man-in-the-middle via Prototype Pollution gadget in config.proxy',
+    range: '>=1.15.2 <1.18.0',
+    title: 'Axios Node HTTP adapter can use an inherited proxy after interceptor config cloning',
+  },
+  {
+    source: 1123969,
+    url: 'https://github.com/advisories/GHSA-hcpx-6fm6-wx23',
+    severity: 'moderate',
+    range: '>=1.15.1 <1.18.0',
+    title: 'Axios form serializer maxDepth bypass via {} metatoken',
+  },
+  {
+    source: 1123971,
+    url: 'https://github.com/advisories/GHSA-7q8q-rj6j-mhjq',
+    severity: 'moderate',
+    range: '>=1.0.0 <1.18.0',
+    title: 'Axios: Nested axios option objects can consume polluted prototype values',
+  },
+  {
+    source: 1123973,
+    url: 'https://github.com/advisories/GHSA-mwf2-3pr3-8698',
+    severity: 'moderate',
+    range: '>=1.13.0 <1.18.0',
+    title: 'Axios: HTTP/2 streamed uploads bypass maxBodyLength',
   },
 ]);
 
@@ -59,17 +98,23 @@ function hasOwn(object, key) {
 }
 
 export function extractMinimumVersion(spec) {
-  const match = String(spec || '').match(/\d+\.\d+\.\d+/);
-  return match ? match[0] : '';
+  const match = String(spec || '')
+    .trim()
+    .match(/^(?:\^|~|>=)?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/);
+  return match ? `${match[1]}.${match[2]}.${match[3]}` : '';
 }
 
 export function compareVersions(left, right) {
-  const leftParts = String(left || '').split('.').map((part) => Number.parseInt(part, 10));
-  const rightParts = String(right || '').split('.').map((part) => Number.parseInt(part, 10));
+  const stableVersionPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+  const leftMatch = String(left || '').match(stableVersionPattern);
+  const rightMatch = String(right || '').match(stableVersionPattern);
+  if (!leftMatch || !rightMatch) return Number.NaN;
+  const leftParts = leftMatch.slice(1).map(Number);
+  const rightParts = rightMatch.slice(1).map(Number);
 
   for (let index = 0; index < 3; index += 1) {
-    const leftPart = Number.isFinite(leftParts[index]) ? leftParts[index] : 0;
-    const rightPart = Number.isFinite(rightParts[index]) ? rightParts[index] : 0;
+    const leftPart = leftParts[index];
+    const rightPart = rightParts[index];
     if (leftPart > rightPart) return 1;
     if (leftPart < rightPart) return -1;
   }
@@ -173,7 +218,7 @@ export function evaluateSecurityDependencyAuditTriage(input = {}) {
     decision: {
       status,
       action: status === 'PASS_LOCAL_PATCHED'
-        ? 'PATCHED_WITH_SCOPED_AXIOS_1_16_0_UPDATE'
+        ? 'PATCHED_WITH_SCOPED_AXIOS_1_18_0_UPDATE'
         : 'HOLD_UNTIL_AXIOS_PATCHED_MINIMUM_RESTORED',
       riskOwner: '@dooosp / Taeho Jang',
       followUp:
@@ -195,22 +240,18 @@ function runCli() {
     packageJsonPath,
     packageLockPath,
   });
+  const outputPath = optionValue('--output') || '';
+  const { artifact } = writeJsonArtifactIfMateriallyChanged(outputPath, result);
   const output = process.argv.includes('--json')
-    ? JSON.stringify(result, null, 2)
+    ? JSON.stringify(artifact, null, 2)
     : [
-      `${result.documentStatus}: ${result.decision.status}`,
-      `package: ${result.finding.packageName}@${result.finding.lockedVersion}`,
-      `patchedMinimum: ${result.finding.patchedMinimum}`,
-      `productionReady: ${result.productionReady}`,
-      `notProductionEvidence: ${result.notProductionEvidence}`,
+      `${artifact.documentStatus}: ${artifact.decision.status}`,
+      `package: ${artifact.finding.packageName}@${artifact.finding.lockedVersion}`,
+      `patchedMinimum: ${artifact.finding.patchedMinimum}`,
+      `productionReady: ${artifact.productionReady}`,
+      `notProductionEvidence: ${artifact.notProductionEvidence}`,
       `blockers: ${result.blockers.length}`,
     ].join('\n');
-  const outputPath = optionValue('--output') || '';
-
-  if (outputPath) {
-    mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, `${JSON.stringify(result, null, 2)}\n`);
-  }
 
   console.log(output);
   if (!result.ok) process.exitCode = 1;
