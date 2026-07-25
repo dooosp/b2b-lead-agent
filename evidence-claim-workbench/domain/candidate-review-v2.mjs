@@ -1855,9 +1855,21 @@ function normalizeValidatedReviewPatches(
       }
       seenApprovedIds.add(candidateId);
     }
+    const relationshipCandidateIds = patch.relationshipReviews
+      .map((record) => record.candidate.candidateId);
+    for (const [relationshipIndex, record] of patch.relationshipReviews.entries()) {
+      const expectedCandidate = populationById.get(record.candidate.candidateId);
+      if (!expectedCandidate
+        || canonicalStringify(record.candidate) !== canonicalStringify(expectedCandidate)) {
+        fail(
+          'REVIEW_PATCH_RELATIONSHIP_CANDIDATE_BINDING_MISMATCH',
+          `$.validatedReviewPatches[${index}].relationshipReviews[${relationshipIndex}].candidate`
+        );
+      }
+    }
     const candidateIds = [...new Set([
       ...patchApprovedIds,
-      ...patch.relationshipReviews.map((record) => record.candidate.candidateId)
+      ...relationshipCandidateIds
     ])].sort(compareAscii);
     return {
       patch,

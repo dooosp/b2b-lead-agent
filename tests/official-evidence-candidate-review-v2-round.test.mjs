@@ -9,7 +9,10 @@ import {
 import { normalizeSourceDocumentBundle } from '../evidence-claim-workbench/domain/document-bundle.mjs';
 import { createPageEvidenceAnchor } from '../evidence-claim-workbench/domain/evidence-anchor.mjs';
 import { createReviewDecision } from '../evidence-claim-workbench/domain/review-decisions.mjs';
-import { createReviewPatch } from '../evidence-claim-workbench/domain/review-patch.mjs';
+import {
+  createReviewPatch,
+  validateReviewPatch
+} from '../evidence-claim-workbench/domain/review-patch.mjs';
 import {
   CANDIDATE_REVIEW_FROZEN_HEAD_SHA,
   CANDIDATE_REVIEW_PREREQUISITE_SCHEMA_VERSION,
@@ -238,6 +241,7 @@ function generatedStructuralRoundFixture() {
   const records = [];
   const reviewPatches = [];
   const excerptsByCandidateId = {};
+  const sourceMaterialByCandidateId = {};
   const documents = [];
   let candidateOrdinal = 0;
 
@@ -295,6 +299,12 @@ function generatedStructuralRoundFixture() {
           decisions: [decision]
         }));
         excerptsByCandidateId[candidate.candidateId] = quote;
+        sourceMaterialByCandidateId[candidate.candidateId] = {
+          document,
+          anchor,
+          family,
+          semanticIndex
+        };
         records.push({
           evaluatedPrNumber: 207,
           evaluatedPrHeadSha: CANDIDATE_REVIEW_FROZEN_HEAD_SHA,
@@ -377,7 +387,12 @@ function generatedStructuralRoundFixture() {
     candidateRecords: records,
     prerequisites
   });
-  return { excerptsByCandidateId, population, reviewPatches };
+  return {
+    excerptsByCandidateId,
+    population,
+    reviewPatches,
+    sourceMaterialByCandidateId
+  };
 }
 
 test('two complete role submissions reconcile to immutable approvals only through a validated patch set', () => {
@@ -516,6 +531,97 @@ test('generated structurally non-synthetic-shaped review patches remain contract
   assert.deepEqual(metrics.candidateReviewMethodBlockers, [
     'EXTERNAL_HUMAN_PROVENANCE_AND_CUSTODY_UNVERIFIED'
   ]);
+});
+
+test('structural patch sets reject relationship candidates outside the selected population', () => {
+  const fixture = generatedStructuralRoundFixture();
+  const { population } = fixture;
+  const approvedCandidate = population.candidates[0];
+  const approvedSource = fixture.sourceMaterialByCandidateId[approvedCandidate.candidateId];
+  assert.ok(approvedSource);
+
+  const foreignQuote = 'Bounded foreign duplicate evidence.';
+  const rawForeignDocument = createSyntheticDocument({
+    key: 'candidate-v2-foreign-relationship-candidate',
+    productFamilies: [approvedSource.family],
+    pages: [`Generated public context. ${foreignQuote} End context.`],
+    source: {
+      sourceClass: 'OFFICIAL_MANUFACTURER',
+      publisher: 'Generated Foreign Evidence',
+      title: 'Generated foreign relationship evidence',
+      documentNumber: 'GENERATED-FOREIGN-RELATIONSHIP',
+      sourceUrl: 'https://evidence.example.com/generated/foreign-relationship',
+      authenticityStatus: 'UNREVIEWED',
+      redistributionStatus: 'METADATA_AND_BOUNDED_EXCERPTS_ONLY'
+    }
+  });
+  rawForeignDocument.synthetic = false;
+  const foreignDocument = normalizeSourceDocumentBundle(rawForeignDocument, {
+    asOf: SYNTHETIC_BENCHMARK_AS_OF
+  });
+  const foreignAnchor = anchorFor(foreignDocument, foreignQuote);
+  const foreignCandidate = syntheticCandidate(9_999, approvedSource.family, {
+    semanticIndex: approvedSource.semanticIndex,
+    synthetic: false,
+    documentId: foreignDocument.documentId,
+    evidenceAnchorId: foreignAnchor.anchorId
+  });
+  assert.notEqual(foreignCandidate.candidateId, approvedCandidate.candidateId);
+  assert.equal(
+    population.candidates.some(({ candidateId }) => candidateId === foreignCandidate.candidateId),
+    false
+  );
+
+  const smuggledPatch = createReviewPatch({
+    baseCommitSha: CANDIDATE_REVIEW_FROZEN_HEAD_SHA,
+    registryPath: 'knowledge/claim-registry/candidate-review-v2-structural.json',
+    generatedAt: SYNTHETIC_BENCHMARK_AS_OF,
+    documents: [approvedSource.document, foreignDocument],
+    anchors: [approvedSource.anchor, foreignAnchor],
+    candidates: [approvedCandidate, foreignCandidate],
+    decisions: [
+      createReviewDecision({
+        candidate: approvedCandidate,
+        decision: 'APPROVE_FOR_REPOSITORY_REVIEW',
+        reasonCodes: ['EVIDENCE_QUOTE_CONFIRMED', 'STRUCTURED_MEANING_CONFIRMED']
+      }),
+      createReviewDecision({
+        candidate: foreignCandidate,
+        decision: 'REJECT',
+        reasonCodes: ['DUPLICATE_CANDIDATE']
+      })
+    ]
+  });
+  assert.deepEqual(validateReviewPatch(smuggledPatch), smuggledPatch);
+  assert.ok(smuggledPatch.relationshipReviews.some(({ candidate }) => (
+    candidate.candidateId === foreignCandidate.candidateId
+  )));
+
+  const primary = completedSubmission(population, 'PRIMARY_TECHNICAL_REVIEWER');
+  const secondary = completedSubmission(population, 'SECONDARY_EVIDENCE_REVIEWER');
+  const decisionSetHash = computeCandidateReviewDecisionSetHash({
+    population,
+    primarySubmission: primary,
+    secondarySubmission: secondary
+  });
+
+  assert.throws(
+    () => createCandidateReviewPatchSet({
+      population,
+      decisionSetHash,
+      approvedCandidateIds: [approvedCandidate.candidateId],
+      excerptsByCandidateId: {
+        [approvedCandidate.candidateId]: fixture.excerptsByCandidateId[approvedCandidate.candidateId]
+      },
+      sourceReopenByCandidateId: {
+        [approvedCandidate.candidateId]: true
+      },
+      baseCommitSha: CANDIDATE_REVIEW_FROZEN_HEAD_SHA,
+      registryPath: 'knowledge/claim-registry/candidate-review-v2-structural.json',
+      validatedReviewPatches: [smuggledPatch]
+    }),
+    (error) => error.code === 'REVIEW_PATCH_RELATIONSHIP_CANDIDATE_BINDING_MISMATCH'
+  );
 });
 
 test('ordered reconciliation preserves rejection intersections, holds, conflicts, and limitation acknowledgements', () => {
