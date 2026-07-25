@@ -46,6 +46,9 @@ jobs:
       - name: Evaluate official-evidence claim Workbench
         run: npm run eval:evidence-claim-workbench
 
+      - name: Run Candidate Review v2 synthetic gate
+        run: npm run check:candidate-review-v2
+
       - name: Run official-evidence claim Workbench tests
         run: npm run test:evidence-claim-workbench
 
