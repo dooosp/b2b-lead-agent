@@ -559,8 +559,8 @@ test('lead review pages keep lead-level timestamp copy honest when note-specific
 test('lead list page uses reviewer queue heading and non-repetitive human review copy', () => {
   const listHtml = getLeadsPage();
 
-  assert.match(listHtml, /<title>리드 리뷰 큐<\/title>/);
-  assert.match(listHtml, /<h1[^>]*>리드 리뷰 큐<\/h1>/);
+  assert.match(listHtml, /<title>프로젝트 신호 검토 큐<\/title>/);
+  assert.match(listHtml, /<h1[^>]*>프로젝트 신호 검토 큐<\/h1>/);
   assert.doesNotMatch(listHtml, /리드 상세 보기/);
   assert.match(listHtml, /사람 검토: /);
   assert.match(listHtml, /영업 /);

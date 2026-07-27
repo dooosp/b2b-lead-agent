@@ -1,0 +1,210 @@
+{
+  "schemaVersion": "pursuit-golden-human-adjudication-additions-v1",
+  "boundary": "HUMAN_ADJUDICATION_ADDITIONS_NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "evaluationAsOf": "2026-07-26T00:00:00.000Z",
+  "baseDatasetVersion": "datacenter-kr-v0",
+  "projectAdjudications": [
+    {
+      "projectKey": "empyrion_kr1_gangnam",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch02-20260726t045706252z-72500e3c4a75-4876e32ee2b14721995a82eb9952f9b7",
+      "reviewedAt": "2026-07-26T04:57:06.252Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "OPERATION",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The grand-opening release establishes facility operation but provides no single-line diagram, equipment specification, tender, supplier qualification, or package-level procurement requirement.",
+        "No expansion, retrofit, replacement, or other current lifecycle opportunity for the compared product families is identified."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "The initial-build window has passed, while the reviewed source does not establish any current lifecycle specification or procurement window."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "kakao_data_center_ansan",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch02-20260726t045706252z-72500e3c4a75-4876e32ee2b14721995a82eb9952f9b7",
+      "reviewedAt": "2026-07-26T04:57:06.252Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "OPERATION",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The opening release describes resilient infrastructure at a facility level but provides no applicable switchgear or transformer specification, single-line diagram, tender, supplier status, or package requirement.",
+        "No current expansion, retrofit, replacement, or supplier-qualification opportunity is evidenced."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "Opening confirms that initial construction is complete, but the source does not establish a current lifecycle specification or procurement window."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "lguplus_pyeongchon2",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch02-20260726t045706252z-72500e3c4a75-4876e32ee2b14721995a82eb9952f9b7",
+      "reviewedAt": "2026-07-26T04:57:06.252Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "OPERATION",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The completion release does not provide an applicable equipment specification, single-line diagram, tender, supplier selection, or package status for either compared product family.",
+        "No current expansion, retrofit, replacement, or other lifecycle procurement scope is identified."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "Completion indicates that the initial-build influence window has passed, while no later lifecycle window is evidenced."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "nhn_gwangju_national_ai",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch02-20260726t045706252z-72500e3c4a75-4876e32ee2b14721995a82eb9952f9b7",
+      "reviewedAt": "2026-07-26T04:57:06.252Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "OPERATION",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The service-launch source establishes operation but contains no applicable electrical specification, single-line diagram, tender, supplier status, or equipment-package requirement.",
+        "No current expansion, retrofit, replacement, or qualification opportunity for the compared product families is evidenced."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "Service launch indicates the initial build is complete, but the reviewed source does not establish a current lifecycle influence window."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "samsungsds_dongtan",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch02-20260726t045706252z-72500e3c4a75-4876e32ee2b14721995a82eb9952f9b7",
+      "reviewedAt": "2026-07-26T04:57:06.252Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "OPERATION",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The media-day source describes an operating cloud facility but provides no applicable equipment specification, single-line diagram, tender, supplier selection, or procurement package.",
+        "No current expansion, retrofit, replacement, or supplier-qualification window is identified."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "The source supports ongoing operation but does not identify a current lifecycle specification or procurement window."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "ulsan_underwater_data_center_model",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch02-20260726t045706252z-72500e3c4a75-4876e32ee2b14721995a82eb9952f9b7",
+      "reviewedAt": "2026-07-26T04:57:06.252Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "DESIGN",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The source describes a research standard model and future testbed, not an issued commercial data-center equipment specification or procurement package.",
+        "No single-line diagram, site-specific electrical requirement, tender, award, supplier qualification, or switchgear or transformer package is available.",
+        "Named research participation does not establish an equipment award or a product-family fit."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "Design research is beginning, but the reviewed evidence does not establish a commercial specification influence process or an open procurement window."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "wanju_ai_data_center",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch02-20260726t045706252z-72500e3c4a75-4876e32ee2b14721995a82eb9952f9b7",
+      "reviewedAt": "2026-07-26T04:57:06.252Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "FEASIBILITY",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The memorandum and future capacity target do not establish completed design, construction commencement, an issued tender, or a package-level equipment requirement.",
+        "The source provides no single-line diagram, technical specification, award status, supplier qualification, or procurement schedule for either compared product family.",
+        "Participation in the memorandum does not by itself establish an equipment award or product-family fit."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "The early project phase may permit future influence, but no actual specification process or open procurement window is evidenced."
+      },
+      "finalPursuitDecision": "HOLD"
+    }
+  ],
+  "capabilityAdjudications": [],
+  "pairAdjudications": [],
+  "revisionAdjudications": []
+}

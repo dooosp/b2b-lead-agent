@@ -1,0 +1,36 @@
+{
+  "documentStatus": "PURSUIT_GOLDEN_HUMAN_REVIEW_APPROVAL_MATERIALIZED",
+  "schemaVersion": "pursuit-golden-human-review-approval-receipt-v0",
+  "boundary": "REPOSITORY_APPROVAL_ASSERTION_NOT_AUTHENTICATED_IDENTITY",
+  "productionReady": false,
+  "goldenReady": false,
+  "humanAdjudicationRecorded": true,
+  "approvalStatus": "APPROVED_AS_WRITTEN_AND_MATERIALIZED",
+  "reviewerIdentityStatus": "UNAUTHENTICATED_REPOSITORY_ASSERTION",
+  "evaluationAsOf": "2026-07-26T00:00:00.000Z",
+  "reviewer": "Jang tae ho",
+  "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+  "reviewedAt": "2026-07-26T03:48:10.000Z",
+  "disposition": "APPROVE_AS_WRITTEN",
+  "attestation": "나는 연결된 출처, 근거, 한계를 직접 검토했고 이 제안들을 내 도메인 판단으로 채택합니다.",
+  "changes": [],
+  "preAdjudicationDatasetCanonicalSha256": "dc257baefc969a84a92ca9ce02b6c1ae549fa41a57313fdaa47bd4a4cf6aed52",
+  "reviewBatchCanonicalSha256": "ce7c07a8536bc93bafb7a99a90bcc1d979a47c2d07bdd0a16532e0cd6e3c1252",
+  "proposalCanonicalSha256": "101802f8336570c07370587a015a2fea41354c49d7650f76cf02af9c339bf796",
+  "materializedAdjudicationsCanonicalSha256": "24f872c06f9fd633acc18f799c4ff73a7df047058ea4b78a9a0f02f42bdd672b",
+  "postAdjudicationDatasetCanonicalSha256": "f9a1c447c13a60f20ed7d166b12aab8fcbd6fbc059a318533aa20d370a724c50",
+  "postAdjudicationDatasetState": "PARTIALLY_ADJUDICATED",
+  "scope": {
+    "projectCount": 10,
+    "capabilityCount": 30,
+    "pairCount": 10,
+    "revisionCount": 1
+  },
+  "nonClaims": [
+    "This receipt records a repository assertion supplied through the explicit approval command; it does not authenticate reviewer identity or prove who operated the repository.",
+    "HUMAN_DOMAIN_REVIEW denotes the supplied adjudication authority for this batch only; it is not an identity-verification mechanism.",
+    "The materialized adjudications remain non-production evidence and do not authorize production access, customer use, outreach, CRM mutation, or automated final decisions.",
+    "This first batch leaves five project candidates unadjudicated and does not satisfy the five-stage diversity threshold, so goldenReady remains false."
+  ],
+  "canonicalSha256": "0fcb020494f3f4f5f63fc810df50bbb3f5b08b232614d6e3b26d261eae41af58"
+}

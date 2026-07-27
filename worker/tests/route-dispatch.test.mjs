@@ -121,7 +121,7 @@ test('/manifest.json is a GET-only no-DB static route', async () => {
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('Content-Type'), 'application/json; charset=utf-8');
-  assert.equal(payload.name, 'B2B Sales Intelligence');
+  assert.equal(payload.name, 'Pursuit Twin KR');
   assert.deepEqual(tracker.accesses, []);
 
   const rejectedWrite = await worker.fetch(createRequest('/manifest.json', { method: 'POST' }), env, {});

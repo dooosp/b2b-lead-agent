@@ -1,5 +1,10 @@
 # B2B Lead Agent — 프로젝트 종합 보고서
 
+> [!WARNING]
+> 이 문서는 2026-02-14 시점의 역사적 제품 스냅샷입니다. 현재 제품
+> 포지셔닝과 아키텍처는 `README.md`와
+> `docs/architecture/pursuit-twin-v0.md`를 기준으로 확인하세요.
+
 > **작성일:** 2026-02-14
 > **저장소:** https://github.com/dooosp/b2b-lead-agent
 > **배포 URL:** https://b2b-lead-trigger.jangho1383.workers.dev
@@ -438,6 +443,6 @@ node e2e-test.mjs
 
 ---
 
-> **이 보고서는 B2B Lead Agent의 현재 구현 상태를 완전히 반영합니다.**
+> **이 보고서는 2026-02-14 당시 구현을 기록하며 현재 상태를 완전히 반영하지 않습니다.**
 > **소스코드:** https://github.com/dooosp/b2b-lead-agent
 > **라이브 데모:** https://b2b-lead-trigger.jangho1383.workers.dev
