@@ -34,8 +34,17 @@ jobs:
       - name: Audit evidence claims
         run: npm run audit:claims
 
+      - name: Audit public Golden Dataset candidate boundary
+        run: npm run check:golden-dataset
+
       - name: Evaluate data-center specification fit
         run: npm run eval:spec-fit
+
+      - name: Evaluate Pursuit Twin revision and minimum-evidence contracts
+        run: npm run eval:pursuit-twin
+
+      - name: Check Pursuit Value Pilot local human-intake contracts
+        run: npm run check:pursuit-value-pilot
 
       - name: Run focused claim and specification-fit tests
         run: npm run test:claim-spec-fit

@@ -197,22 +197,90 @@ test('CI workflow runs the local-only lead pipeline replay artifact contract aft
   assert.doesNotMatch(workflow, /wrangler|curl|deploy|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL/i);
 });
 
-test('CI runs claim audit, spec-fit evaluation, and focused tests before lead replay', async () => {
+test('CI runs claim audit, Golden Dataset boundary audit, spec-fit evaluation, and focused tests before lead replay', async () => {
   const [workflow, packageJsonRaw] = await Promise.all([
     readFile(ciWorkflowPath, 'utf8'),
     readFile(packageJsonPath, 'utf8'),
   ]);
   const scripts = JSON.parse(packageJsonRaw).scripts;
   assert.equal(scripts['audit:claims'], 'node scripts/audit-evidence-claims.mjs --json --fail-on-violations');
+  assert.equal(
+    scripts['check:golden-dataset'],
+    'node --test tests/golden-dataset.test.js tests/golden-dataset-lineage-v1.test.js tests/golden-dataset-cli.test.js tests/golden-generated-artifacts.test.js tests/golden-human-review-batch.test.js tests/golden-human-review-proposal.test.js tests/golden-human-review-approval.test.js tests/golden-human-review-batch-02.test.js tests/golden-human-review-proposal-02.test.js tests/golden-human-review-approval-02.test.js && npm run check:golden-artifacts',
+  );
+  assert.equal(
+    scripts['check:golden-artifacts'],
+    'node scripts/check-pursuit-golden-generated-artifacts.mjs',
+  );
+  assert.equal(
+    scripts['prepare:golden-review-batch'],
+    'node scripts/prepare-pursuit-golden-human-review.mjs --json --quiet --output tmp/codex/pursuit-golden-human-review-batch-01.json',
+  );
+  assert.equal(
+    scripts['prepare:golden-review-proposal'],
+    'node scripts/prepare-pursuit-golden-human-review-proposal.mjs --quiet --output tmp/codex/pursuit-golden-human-review-batch-01-proposal.json --markdown-output docs/roadmap/pursuit-golden-human-review-batch-01-proposal.md',
+  );
+  assert.equal(
+    scripts['prepare:golden-review-batch-02'],
+    'node scripts/prepare-pursuit-golden-human-review-batch-02.mjs --quiet --output tmp/codex/pursuit-golden-human-review-batch-02.json',
+  );
+  assert.equal(
+    scripts['prepare:golden-review-proposal-02'],
+    'node scripts/prepare-pursuit-golden-human-review-proposal-02.mjs --quiet --output tmp/codex/pursuit-golden-human-review-batch-02-proposal.json --markdown-output docs/roadmap/pursuit-golden-human-review-batch-02-proposal.md',
+  );
   assert.equal(scripts['eval:spec-fit'], 'node scripts/evaluate-spec-fit.mjs --fixtures --json --repeat 2');
+  assert.equal(scripts['eval:pursuit-twin'], 'node scripts/evaluate-pursuit-twin-v0.mjs --json --repeat 2');
   assert.match(scripts['test:claim-spec-fit'], /tests\/evidence-claim-registry\.test\.js/);
   assert.match(scripts['test:claim-spec-fit'], /tests\/specification-fit-engine\.test\.js/);
   assert.match(scripts['test:claim-spec-fit'], /tests\/pursuit-dossier\.test\.js/);
-  assert.match(workflow, /run:\s+npm run check:enrichment-replay[\s\S]*run:\s+npm run audit:claims[\s\S]*run:\s+npm run eval:spec-fit[\s\S]*run:\s+npm run test:claim-spec-fit[\s\S]*run:\s+npm run check:lead-pipeline-replay/);
-  for (const scriptName of ['audit:claims', 'eval:spec-fit', 'test:claim-spec-fit']) {
+  assert.match(scripts['test:claim-spec-fit'], /tests\/pursuit-twin-v0\.test\.js/);
+  assert.match(scripts['test:claim-spec-fit'], /tests\/pursuit-twin-v0-cli\.test\.js/);
+  assert.match(workflow, /run:\s+npm run check:enrichment-replay[\s\S]*run:\s+npm run audit:claims[\s\S]*run:\s+npm run check:golden-dataset[\s\S]*run:\s+npm run eval:spec-fit[\s\S]*run:\s+npm run eval:pursuit-twin[\s\S]*run:\s+npm run test:claim-spec-fit[\s\S]*run:\s+npm run check:lead-pipeline-replay/);
+  for (const scriptName of ['audit:claims', 'check:golden-dataset', 'eval:spec-fit', 'eval:pursuit-twin', 'test:claim-spec-fit']) {
     assert.doesNotMatch(scripts[scriptName], /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i);
   }
   assert.doesNotMatch(workflow, /secrets\./);
+});
+
+test('CI runs the local-only Pursuit Value Pilot contract without human or production execution', async () => {
+  const [workflow, packageJsonRaw] = await Promise.all([
+    readFile(ciWorkflowPath, 'utf8'),
+    readFile(packageJsonPath, 'utf8'),
+  ]);
+  const scripts = JSON.parse(packageJsonRaw).scripts;
+
+  assert.equal(
+    scripts['eval:pursuit-value-pilot'],
+    'node scripts/evaluate-pursuit-value-pilot-v0.mjs',
+  );
+  assert.equal(
+    scripts['prepare:pursuit-value-pilot'],
+    'node scripts/prepare-pursuit-value-pilot-v0.mjs',
+  );
+  assert.equal(
+    scripts['validate:pursuit-value-pilot'],
+    'node scripts/validate-pursuit-value-pilot-v0.mjs',
+  );
+  assert.equal(
+    scripts['check:pursuit-value-pilot'],
+    'node --test tests/pursuit-value-pilot-v0.test.js tests/pursuit-value-pilot-offline-html.test.js tests/pursuit-value-pilot-v0-files.test.js tests/pursuit-value-pilot-v0-cli.test.js && npm run eval:pursuit-value-pilot',
+  );
+  assert.match(
+    workflow,
+    /run:\s+npm run eval:pursuit-twin[\s\S]*run:\s+npm run check:pursuit-value-pilot[\s\S]*run:\s+npm run test:claim-spec-fit/,
+  );
+  assert.doesNotMatch(workflow, /npm run prepare:pursuit-value-pilot|npm run validate:pursuit-value-pilot/);
+  for (const scriptName of [
+    'eval:pursuit-value-pilot',
+    'prepare:pursuit-value-pilot',
+    'validate:pursuit-value-pilot',
+    'check:pursuit-value-pilot',
+  ]) {
+    assert.doesNotMatch(
+      scripts[scriptName],
+      /wrangler|curl|deploy|main\.js|D1_DATABASE|DATABASE_ID|CLOUDFLARE|GEMINI|GMAIL|https?:\/\//i,
+    );
+  }
 });
 
 test('CI workflow runs the local-only Worker E2E smoke after full tests', async () => {
