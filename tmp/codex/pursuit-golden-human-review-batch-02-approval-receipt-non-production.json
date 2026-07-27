@@ -1,0 +1,40 @@
+{
+  "documentStatus": "PURSUIT_GOLDEN_HUMAN_REVIEW_BATCH_02_APPROVAL_MATERIALIZED",
+  "schemaVersion": "pursuit-golden-human-review-approval-receipt-02-v0",
+  "boundary": "REPOSITORY_APPROVAL_ASSERTION_NOT_AUTHENTICATED_IDENTITY",
+  "productionReady": false,
+  "goldenReady": true,
+  "humanAdjudicationRecorded": true,
+  "approvalStatus": "APPROVED_AS_WRITTEN_AND_MATERIALIZED",
+  "reviewerIdentityStatus": "UNAUTHENTICATED_REPOSITORY_ASSERTION",
+  "evaluationAsOf": "2026-07-26T00:00:00.000Z",
+  "reviewer": "Jang tae ho",
+  "reviewReceipt": "golden-batch02-20260726t045706252z-72500e3c4a75-4876e32ee2b14721995a82eb9952f9b7",
+  "reviewedAt": "2026-07-26T04:57:06.252Z",
+  "confirmation": "GOLDEN_BATCH_02_APPROVAL",
+  "disposition": "APPROVE_AS_WRITTEN",
+  "attestation": "나는 연결된 출처, 근거, 한계를 직접 검토했고 이 제안들을 내 도메인 판단으로 채택합니다.",
+  "changes": [],
+  "preAdjudicationDatasetCanonicalSha256": "53939a9ab41c6d85e0b1a9175d2471cf954fc698fb5847ff6d7d2789f3e2d854",
+  "priorMaterializedAdjudicationsCanonicalSha256": "24f872c06f9fd633acc18f799c4ff73a7df047058ea4b78a9a0f02f42bdd672b",
+  "priorApprovalReceiptCanonicalSha256": "0fcb020494f3f4f5f63fc810df50bbb3f5b08b232614d6e3b26d261eae41af58",
+  "reviewBatchCanonicalSha256": "b682271fc3fdc118911089a4dc9345583d323780f7b8082d45cec74dbf745635",
+  "proposalCanonicalSha256": "72500e3c4a753da40da3ddfa4a77ee99fa0db78bdb7b64b33af5beef4e28e7d1",
+  "materializedAdjudicationAdditionsCanonicalSha256": "9fcdb4c0eef8b103b03480dd2787502b6d0f709bc8c138ed0c588592af2f7460",
+  "composedAdjudicationsCanonicalSha256": "3ec5eedb5580e78647b9368a79ba6edbccb5506a2448ab2bcd5d900981bac6f1",
+  "postAdjudicationDatasetCanonicalSha256": "203adea096eb4187fd9f09ce945a49eaf957e9d95a23bbbd84dceb3f3de55301",
+  "postAdjudicationDatasetState": "HUMAN_CONFIRMED",
+  "scope": {
+    "projectCount": 7,
+    "capabilityCount": 0,
+    "pairCount": 0,
+    "revisionCount": 0
+  },
+  "nonClaims": [
+    "This receipt records a repository assertion supplied through the explicit approval command; it does not authenticate reviewer identity or prove who operated the repository.",
+    "HUMAN_DOMAIN_REVIEW denotes the supplied adjudication authority for this batch only; it is not an identity-verification mechanism.",
+    "Golden readiness here means only that the offline dataset thresholds are met; it is not production readiness, customer evidence, or permission to act.",
+    "The materialized adjudication additions remain non-production evidence and do not authorize production access, customer use, outreach, CRM mutation, or automated final decisions."
+  ],
+  "canonicalSha256": "fa2ddb19f204441845a017ae2fe12dd79151050ec1c366cfe5ca8e0916d98ce3"
+}

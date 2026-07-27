@@ -1,0 +1,38 @@
+{
+  "documentStatus": "PURSUIT_GOLDEN_DATASET_AUDIT_PASS",
+  "schemaVersion": "pursuit-golden-dataset-audit-v0",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "goldenReady": true,
+  "datasetState": "HUMAN_CONFIRMED",
+  "evaluationAsOf": "2026-07-26T00:00:00.000Z",
+  "summary": {
+    "projectCandidateCount": 17,
+    "publicSourceDocumentCandidateCount": 39,
+    "capabilityClaimCandidateCount": 30,
+    "requirementCapabilityPairCandidateCount": 10,
+    "productFamilyCount": 2,
+    "candidateStageCount": 5,
+    "revisionLinkCandidateCount": 1,
+    "humanConfirmedProjectCount": 17,
+    "humanConfirmedCapabilityClaimCount": 30,
+    "humanConfirmedPairCount": 10,
+    "humanConfirmedRevisionLinkCount": 1,
+    "humanConfirmedStageCount": 5,
+    "pendingProjectCount": 0,
+    "pendingCapabilityClaimCount": 0,
+    "pendingPairCount": 0,
+    "pendingRevisionLinkCount": 0,
+    "provisionalLabelLeakage": 0,
+    "thresholdGaps": []
+  },
+  "violations": [],
+  "nonClaims": [
+    "Officiality, reachability, and currentness of remote source URLs are candidates for human confirmation; this offline audit does not verify them.",
+    "AI-assisted project stages and capability extractions are not human labels, product fit, procurement status, or final pursuit decisions.",
+    "Review receipts are repository assertions; this audit does not authenticate reviewer identity or prove human participation.",
+    "This audit does not access production, customer data, private documents, endpoints, D1, logs, secrets, CRM, outreach, or LLM services."
+  ],
+  "datasetCanonicalSha256": "203adea096eb4187fd9f09ce945a49eaf957e9d95a23bbbd84dceb3f3de55301",
+  "canonicalSha256": "c372939205d223fa20a0cca849d6c220cb934f13d9889682a723b0ead5f6d0f0"
+}

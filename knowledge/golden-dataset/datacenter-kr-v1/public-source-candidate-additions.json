@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "pursuit-golden-source-candidate-additions-v1",
+  "boundary": "PUBLIC_SOURCE_REVIEW_SET_ADDITIONS_NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "evaluationAsOf": "2026-07-26T00:00:00.000Z",
+  "baseDatasetVersion": "datacenter-kr-v0",
+  "documents": [
+    {
+      "documentKey": "project_wanju_ai_data_center_press_2026",
+      "sourceClass": "PROJECT",
+      "publisher": "Wanju County",
+      "title": "완주군에 전북 최초 2,800억 규모 데이터센터 들어선다",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "wanju.go.kr",
+      "sourceUrl": "https://www.wanju.go.kr/planweb/board/view.9is?boardUid=ff8080818b024d8e018b1c99655f1226&categoryUid1=ff8080818b024d8e018b1c9ab0b61240&contentUid=ff808081898ba9ba0189f1e5b90901a7&dataUid=4028a6029bdaa74e019c99a6704621a1",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2026-02-26T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-26T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "wanju_ai_data_center_press",
+        "revisionKey": "2026-02-26",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "mou-site-capacity-and-grid-review",
+          "text": "Wanju County reports an MOU, a fixed industrial-complex site, 20MW capacity, and completed grid-impact review for a planned data center."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_ulsan_underwater_data_center_design_2026",
+      "sourceClass": "PROJECT",
+      "publisher": "Ulsan Metropolitan City",
+      "title": "울산 앞바다에 '수중 데이터센터' 본격 추진",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "ulsan.go.kr",
+      "sourceUrl": "https://www.ulsan.go.kr/u/rep/bbs/view.do?bbsId=BBS_0000000000000027&dataId=180322&mId=001004003001000000",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2026-04-08T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-26T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "ulsan_underwater_data_center_design_press",
+        "revisionKey": "2026-04-08",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "site-analysis-basic-design-and-testbed-plan",
+          "text": "Ulsan reports that research starts with site analysis, basic design, ground analysis, and server-cooling design before testbed installation."
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "projectKey": "wanju_ai_data_center",
+      "name": "Wanju AI Data Center",
+      "location": {
+        "countryCode": "KR",
+        "region": "Jeonbuk",
+        "locality": "Wanju"
+      },
+      "documentKeys": [
+        "project_wanju_ai_data_center_press_2026"
+      ],
+      "stageObservation": {
+        "stage": "FEASIBILITY",
+        "observedAt": "2026-02-26T00:00:00.000Z",
+        "documentKey": "project_wanju_ai_data_center_press_2026",
+        "forwardLooking": true
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "The source supports the stage only as of publication on 2026-02-26 and does not independently prove unchanged status at the evaluation date.",
+        "The MOU, identified site, capacity, and grid review do not establish that detailed design, permitting, financing close, or construction has begun.",
+        "No tender, technical specification, equipment package, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "ulsan_underwater_data_center_model",
+      "name": "Ulsan Carbon-Zero Underwater Data Center Standard Model",
+      "location": {
+        "countryCode": "KR",
+        "region": "Ulsan",
+        "locality": "Ulsan"
+      },
+      "documentKeys": [
+        "project_ulsan_underwater_data_center_design_2026"
+      ],
+      "stageObservation": {
+        "stage": "DESIGN",
+        "observedAt": "2026-04-08T00:00:00.000Z",
+        "documentKey": "project_ulsan_underwater_data_center_design_2026",
+        "forwardLooking": true
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "The source supports the stage only as of publication on 2026-04-08 and does not independently prove unchanged status at the evaluation date.",
+        "This is an R&D standard-model and testbed program, not evidence of a commercial data-center procurement or awarded construction package.",
+        "The public source identifies Ulsan offshore waters but does not provide a precise offshore parcel or coordinates.",
+        "No project technical specification, single-line diagram, equipment package, product fit, award status, or supplier qualification is claimed."
+      ]
+    }
+  ],
+  "capabilityClaims": [],
+  "requirementCapabilityPairs": []
+}

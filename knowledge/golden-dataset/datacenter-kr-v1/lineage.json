@@ -1,0 +1,31 @@
+{
+  "documentStatus": "PURSUIT_GOLDEN_DATASET_V1_LINEAGE",
+  "schemaVersion": "pursuit-golden-dataset-lineage-v1",
+  "boundary": "IMMUTABLE_ADDITIVE_LINEAGE_NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "datasetVersion": "datacenter-kr-v1",
+  "evaluationAsOf": "2026-07-26T00:00:00.000Z",
+  "base": {
+    "datasetVersion": "datacenter-kr-v0",
+    "candidatesPath": "knowledge/golden-dataset/datacenter-kr-v0/public-source-candidates.json",
+    "adjudicationsPath": "knowledge/golden-dataset/datacenter-kr-v0/human-adjudications.json",
+    "candidatesCanonicalSha256": "98f435028d7fbdb1c01f4da70e4cdf28d16c4a8fe353e1e5105dc6ed93fa746f",
+    "adjudicationsCanonicalSha256": "24f872c06f9fd633acc18f799c4ff73a7df047058ea4b78a9a0f02f42bdd672b",
+    "postAdjudicationDatasetCanonicalSha256": "f9a1c447c13a60f20ed7d166b12aab8fcbd6fbc059a318533aa20d370a724c50"
+  },
+  "batch01ApprovalReceipt": {
+    "path": "tmp/codex/pursuit-golden-human-review-batch-01-approval-receipt-non-production.json",
+    "canonicalSha256": "0fcb020494f3f4f5f63fc810df50bbb3f5b08b232614d6e3b26d261eae41af58"
+  },
+  "additions": {
+    "candidatesPath": "knowledge/golden-dataset/datacenter-kr-v1/public-source-candidate-additions.json",
+    "candidatesCanonicalSha256": "3e16d95cba3f6130146044d0a2be8542ad08c18b93bf410214161f3b9622edaa",
+    "adjudicationsPath": "knowledge/golden-dataset/datacenter-kr-v1/human-adjudication-additions.json"
+  },
+  "nonClaims": [
+    "This lineage preserves the immutable Batch 01 candidate and adjudication inputs and adds only public-source project candidates pending human review.",
+    "The two additive stage observations are AI-assisted candidates, not human-confirmed lifecycle labels or production evidence.",
+    "No Batch 02 human adjudication, production access, customer use, outreach, CRM mutation, or automated final decision is authorized."
+  ],
+  "canonicalSha256": "a249deccd0a2cadda6cdc1f5fef8fcffe42ee393c5c17e058e852dea2b4554ae"
+}
