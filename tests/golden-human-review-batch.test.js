@@ -1,16 +1,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-} = require('node:fs');
-const { tmpdir } = require('node:os');
+const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 
 const SCRIPT = 'scripts/prepare-pursuit-golden-human-review.mjs';
+const OUTPUT_PATH = 'tmp/codex/pursuit-golden-human-review-batch-01.json';
 
 function moduleUrl(relativePath) {
   return pathToFileURL(join(process.cwd(), relativePath));
@@ -100,26 +96,23 @@ test('human review batch is deterministic across library and CLI writes', async 
     batchModule.buildGoldenHumanReviewBatch(dataset),
   );
 
-  const dir = mkdtempSync(join(tmpdir(), 'pursuit-golden-human-review-'));
-  const output = join(dir, 'batch.json');
-  try {
-    const first = run(['--json', '--output', output]);
-    assert.equal(first.status, 0, first.stderr || first.stdout);
-    const firstWrite = readFileSync(output, 'utf8');
-    assert.equal(first.stdout, firstWrite);
+  const output = join(process.cwd(), OUTPUT_PATH);
+  const checkedIn = readFileSync(output, 'utf8');
+  const first = run(['--json', '--output', OUTPUT_PATH]);
+  assert.equal(first.status, 0, first.stderr || first.stdout);
+  const firstWrite = readFileSync(output, 'utf8');
+  assert.equal(firstWrite, checkedIn);
+  assert.equal(first.stdout, firstWrite);
 
-    const second = run(['--json', '--output', output]);
-    assert.equal(second.status, 0, second.stderr || second.stdout);
-    assert.equal(second.stdout, first.stdout);
-    assert.equal(readFileSync(output, 'utf8'), firstWrite);
+  const second = run(['--json', '--output', OUTPUT_PATH]);
+  assert.equal(second.status, 0, second.stderr || second.stdout);
+  assert.equal(second.stdout, first.stdout);
+  assert.equal(readFileSync(output, 'utf8'), firstWrite);
 
-    const quiet = run(['--json', '--quiet', '--output', output]);
-    assert.equal(quiet.status, 0, quiet.stderr || quiet.stdout);
-    assert.equal(quiet.stdout, '');
-    assert.equal(readFileSync(output, 'utf8'), firstWrite);
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
+  const quiet = run(['--json', '--quiet', '--output', OUTPUT_PATH]);
+  assert.equal(quiet.status, 0, quiet.stderr || quiet.stdout);
+  assert.equal(quiet.stdout, '');
+  assert.equal(readFileSync(output, 'utf8'), firstWrite);
 });
 
 test('human review batch validator refuses a prefilled human decision even with a forged hash', async () => {

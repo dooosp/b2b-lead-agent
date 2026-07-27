@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
+  promises: fsPromises,
   readFileSync,
   statSync,
 } = require('node:fs');
@@ -36,7 +37,7 @@ function artifactReader(contents, mutate) {
   };
 }
 
-test('canonical Golden generated artifacts are deterministic and cover the exact seven paths', async () => {
+test('canonical Golden generated artifacts are deterministic and cover the exact nine paths', async () => {
   const checker = await loadChecker();
   const first = await checker.buildExpectedGoldenGeneratedArtifacts();
   const second = await checker.buildExpectedGoldenGeneratedArtifacts();
@@ -64,10 +65,60 @@ test('current canonical artifacts pass without filesystem mutation', async () =>
   assert.deepEqual(first, {
     documentStatus: 'PURSUIT_GOLDEN_GENERATED_ARTIFACT_DRIFT_CHECK_PASS',
     productionReady: false,
-    checkedArtifactCount: 7,
+    checkedArtifactCount: 9,
     checkedPaths: [...checker.GOLDEN_GENERATED_ARTIFACT_PATHS],
   });
   assert.deepEqual(after, before);
+});
+
+test('both approval receipts fail closed on one-byte canonical drift', async (t) => {
+  const checker = await loadChecker();
+  const contents = new Map(
+    checker.GOLDEN_GENERATED_ARTIFACT_PATHS.map((relativePath) => [
+      relativePath,
+      readFileSync(join(process.cwd(), relativePath), 'utf8'),
+    ]),
+  );
+  const receiptPaths = [
+    'tmp/codex/pursuit-golden-human-review-batch-01-approval-receipt-non-production.json',
+    'tmp/codex/pursuit-golden-human-review-batch-02-approval-receipt-non-production.json',
+  ];
+
+  for (const driftPath of receiptPaths) {
+    await t.test(driftPath, async () => {
+      await assert.rejects(
+        checker.checkPursuitGoldenGeneratedArtifacts({
+          readArtifact: artifactReader(contents, (relativePath, value) => (
+            relativePath === driftPath ? `${value} ` : value
+          )),
+        }),
+        (error) => error?.code === 'GOLDEN_GENERATED_ARTIFACT_DRIFT'
+          && error?.relativePath === driftPath,
+      );
+    });
+  }
+});
+
+test('candidate-additions envelope drift fails before generated expectations are accepted', async () => {
+  const checker = await loadChecker();
+  const candidateAdditionsPath =
+    'knowledge/golden-dataset/datacenter-kr-v1/public-source-candidate-additions.json';
+
+  await assert.rejects(
+    checker.buildExpectedGoldenGeneratedArtifacts({
+      readGoldenJson: async (relativePath) => {
+        const value = JSON.parse(await fsPromises.readFile(
+          join(process.cwd(), relativePath),
+          'utf8',
+        ));
+        return relativePath === candidateAdditionsPath
+          ? { ...value, boundary: 'DRIFTED_BOUNDARY' }
+          : value;
+      },
+    }),
+    (error) => error?.code === 'GOLDEN_GENERATED_ARTIFACT_EXPECTED_INVALID'
+      && error?.relativePath === 'tmp/codex/pursuit-golden-human-review-batch-02.json',
+  );
 });
 
 test('one-byte canonical drift fails closed with the exact artifact path', async () => {

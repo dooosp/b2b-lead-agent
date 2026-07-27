@@ -254,6 +254,10 @@ test('CI runs the local-only Pursuit Value Pilot contract without human or produ
     'node scripts/evaluate-pursuit-value-pilot-v0.mjs',
   );
   assert.equal(
+    scripts['check:pursuit-value-pilot-artifacts'],
+    'node scripts/check-pursuit-value-pilot-generated-artifacts.mjs',
+  );
+  assert.equal(
     scripts['prepare:pursuit-value-pilot'],
     'node scripts/prepare-pursuit-value-pilot-v0.mjs',
   );
@@ -263,15 +267,20 @@ test('CI runs the local-only Pursuit Value Pilot contract without human or produ
   );
   assert.equal(
     scripts['check:pursuit-value-pilot'],
-    'node --test tests/pursuit-value-pilot-v0.test.js tests/pursuit-value-pilot-offline-html.test.js tests/pursuit-value-pilot-v0-files.test.js tests/pursuit-value-pilot-v0-cli.test.js && npm run eval:pursuit-value-pilot',
+    'node --test tests/pursuit-value-pilot-v0.test.js tests/pursuit-value-pilot-offline-html.test.js tests/pursuit-value-pilot-v0-files.test.js tests/pursuit-value-pilot-v0-cli.test.js tests/pursuit-value-pilot-generated-artifacts.test.js && npm run eval:pursuit-value-pilot && npm run check:pursuit-value-pilot-artifacts',
   );
   assert.match(
     workflow,
     /run:\s+npm run eval:pursuit-twin[\s\S]*run:\s+npm run check:pursuit-value-pilot[\s\S]*run:\s+npm run test:claim-spec-fit/,
   );
   assert.doesNotMatch(workflow, /npm run prepare:pursuit-value-pilot|npm run validate:pursuit-value-pilot/);
+  assert.doesNotMatch(
+    scripts['check:pursuit-value-pilot'],
+    /--write-canonical-artifacts/,
+  );
   for (const scriptName of [
     'eval:pursuit-value-pilot',
+    'check:pursuit-value-pilot-artifacts',
     'prepare:pursuit-value-pilot',
     'validate:pursuit-value-pilot',
     'check:pursuit-value-pilot',

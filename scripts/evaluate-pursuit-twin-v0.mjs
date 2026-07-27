@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
 import { evaluatePursuitTwinV0Suite } from '../eval/pursuit-twin-v0-evaluator.mjs';
 import {
   assertSafeArtifact,
@@ -9,18 +7,39 @@ import {
   sha256
 } from '../knowledge/claim-registry/index.mjs';
 import { loadEvidenceDomainInputs, REPO_ROOT } from './lib/repository-claim-registry.mjs';
+import {
+  resolveApprovedArtifactOutput,
+  writeApprovedArtifactOutput,
+} from './lib/repository-artifact-output.mjs';
+
+export const PURSUIT_TWIN_EVALUATION_OUTPUT_PATH =
+  'tmp/codex/pursuit-twin-v0-evaluation-non-production.json';
+export const PURSUIT_TWIN_PACKET_JSON_OUTPUT_PATH =
+  'tmp/codex/pursuit-twin-v0-review-packet-non-production.json';
+export const PURSUIT_TWIN_PACKET_MARKDOWN_OUTPUT_PATH =
+  'tmp/codex/pursuit-twin-v0-review-packet-non-production.md';
 
 function parseOption(name) {
   const index = process.argv.indexOf(name);
   return index === -1 ? '' : process.argv[index + 1] || '';
 }
 
-async function writeRequested(relativeOrAbsolutePath, contents) {
-  if (!relativeOrAbsolutePath) return;
-  const destination = resolve(REPO_ROOT, relativeOrAbsolutePath);
-  await mkdir(dirname(destination), { recursive: true });
-  await writeFile(destination, contents, 'utf8');
-}
+const artifactOptions = { repositoryRoot: REPO_ROOT };
+const reportOutput = resolveApprovedArtifactOutput(
+  parseOption('--output'),
+  PURSUIT_TWIN_EVALUATION_OUTPUT_PATH,
+  artifactOptions,
+);
+const packetJsonOutput = resolveApprovedArtifactOutput(
+  parseOption('--packet-json'),
+  PURSUIT_TWIN_PACKET_JSON_OUTPUT_PATH,
+  artifactOptions,
+);
+const packetMarkdownOutput = resolveApprovedArtifactOutput(
+  parseOption('--packet-markdown'),
+  PURSUIT_TWIN_PACKET_MARKDOWN_OUTPUT_PATH,
+  artifactOptions,
+);
 
 const repeat = Number(parseOption('--repeat') || 1);
 if (!Number.isInteger(repeat) || repeat < 1 || repeat > 20) {
@@ -45,9 +64,13 @@ const report = {
 const serialized = `${JSON.stringify(report, null, 2)}\n`;
 
 await Promise.all([
-  writeRequested(parseOption('--output'), serialized),
-  writeRequested(parseOption('--packet-json'), fixtureReviewPacket.json),
-  writeRequested(parseOption('--packet-markdown'), fixtureReviewPacket.markdown)
+  writeApprovedArtifactOutput(reportOutput, serialized, artifactOptions),
+  writeApprovedArtifactOutput(packetJsonOutput, fixtureReviewPacket.json, artifactOptions),
+  writeApprovedArtifactOutput(
+    packetMarkdownOutput,
+    fixtureReviewPacket.markdown,
+    artifactOptions,
+  ),
 ]);
 
 process.stdout.write(serialized);

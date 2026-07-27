@@ -1,16 +1,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-} = require('node:fs');
-const { tmpdir } = require('node:os');
+const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 
 const SCRIPT = 'scripts/prepare-pursuit-golden-human-review-batch-02.mjs';
+const OUTPUT_PATH = 'tmp/codex/pursuit-golden-human-review-batch-02.json';
 
 function moduleUrl(relativePath) {
   return pathToFileURL(join(process.cwd(), relativePath));
@@ -104,21 +100,18 @@ test('Batch 02 is deterministic across library and CLI writes', async () => {
     batchModule.buildGoldenHumanReviewBatch02(dataset),
   );
 
-  const directory = mkdtempSync(join(tmpdir(), 'pursuit-golden-batch-02-'));
-  const output = join(directory, 'batch-02.json');
-  try {
-    const first = run(['--output', output]);
-    assert.equal(first.status, 0, first.stderr || first.stdout);
-    assert.equal(first.stdout, `${JSON.stringify(packet, null, 2)}\n`);
-    assert.equal(readFileSync(output, 'utf8'), first.stdout);
+  const output = join(process.cwd(), OUTPUT_PATH);
+  const checkedIn = readFileSync(output, 'utf8');
+  const first = run(['--output', OUTPUT_PATH]);
+  assert.equal(first.status, 0, first.stderr || first.stdout);
+  assert.equal(first.stdout, `${JSON.stringify(packet, null, 2)}\n`);
+  assert.equal(readFileSync(output, 'utf8'), checkedIn);
+  assert.equal(readFileSync(output, 'utf8'), first.stdout);
 
-    const second = run(['--quiet', '--output', output]);
-    assert.equal(second.status, 0, second.stderr || second.stdout);
-    assert.equal(second.stdout, '');
-    assert.equal(readFileSync(output, 'utf8'), first.stdout);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
+  const second = run(['--quiet', '--output', OUTPUT_PATH]);
+  assert.equal(second.status, 0, second.stderr || second.stdout);
+  assert.equal(second.stdout, '');
+  assert.equal(readFileSync(output, 'utf8'), first.stdout);
 });
 
 test('Batch 02 validator rejects human-prefill and stage divergence after rehashing', async () => {

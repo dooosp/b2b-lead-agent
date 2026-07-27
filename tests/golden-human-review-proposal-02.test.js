@@ -1,16 +1,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-} = require('node:fs');
-const { tmpdir } = require('node:os');
+const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 
 const SCRIPT = 'scripts/prepare-pursuit-golden-human-review-proposal-02.mjs';
+const OUTPUT_PATH = 'tmp/codex/pursuit-golden-human-review-batch-02-proposal.json';
+const MARKDOWN_OUTPUT_PATH =
+  'docs/roadmap/pursuit-golden-human-review-batch-02-proposal.md';
 
 function moduleUrl(relativePath) {
   return pathToFileURL(join(process.cwd(), relativePath));
@@ -173,26 +171,32 @@ test('Batch 02 proposal is deterministic across library and CLI JSON/Markdown wr
     proposalModule.buildGoldenHumanReviewProposal02(batch, dataset),
   );
 
-  const directory = mkdtempSync(join(tmpdir(), 'pursuit-golden-proposal-02-'));
-  const output = join(directory, 'proposal-02.json');
-  const markdownOutput = join(directory, 'proposal-02.md');
-  try {
-    const first = run(['--output', output, '--markdown-output', markdownOutput]);
-    assert.equal(first.status, 0, first.stderr || first.stdout);
-    assert.equal(first.stdout, `${JSON.stringify(proposal, null, 2)}\n`);
-    assert.equal(readFileSync(output, 'utf8'), first.stdout);
-    assert.equal(
-      readFileSync(markdownOutput, 'utf8'),
-      proposalModule.renderGoldenHumanReviewProposal02Markdown(proposal, batch, dataset),
-    );
+  const output = join(process.cwd(), OUTPUT_PATH);
+  const markdownOutput = join(process.cwd(), MARKDOWN_OUTPUT_PATH);
+  const checkedInOutput = readFileSync(output, 'utf8');
+  const checkedInMarkdown = readFileSync(markdownOutput, 'utf8');
+  const first = run([
+    '--output', OUTPUT_PATH,
+    '--markdown-output', MARKDOWN_OUTPUT_PATH,
+  ]);
+  assert.equal(first.status, 0, first.stderr || first.stdout);
+  assert.equal(first.stdout, `${JSON.stringify(proposal, null, 2)}\n`);
+  assert.equal(readFileSync(output, 'utf8'), checkedInOutput);
+  assert.equal(readFileSync(output, 'utf8'), first.stdout);
+  assert.equal(readFileSync(markdownOutput, 'utf8'), checkedInMarkdown);
+  assert.equal(
+    readFileSync(markdownOutput, 'utf8'),
+    proposalModule.renderGoldenHumanReviewProposal02Markdown(proposal, batch, dataset),
+  );
 
-    const second = run(['--quiet', '--output', output, '--markdown-output', markdownOutput]);
-    assert.equal(second.status, 0, second.stderr || second.stdout);
-    assert.equal(second.stdout, '');
-    assert.equal(readFileSync(output, 'utf8'), first.stdout);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
+  const second = run([
+    '--quiet',
+    '--output', OUTPUT_PATH,
+    '--markdown-output', MARKDOWN_OUTPUT_PATH,
+  ]);
+  assert.equal(second.status, 0, second.stderr || second.stdout);
+  assert.equal(second.stdout, '');
+  assert.equal(readFileSync(output, 'utf8'), first.stdout);
 });
 
 test('Batch 02 proposal validator rejects approval, stage, blocker, and scope tampering after rehashing', async () => {

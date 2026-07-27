@@ -14,6 +14,8 @@ const { pathToFileURL } = require('node:url');
 const SCRIPT = 'scripts/audit-pursuit-golden-dataset.mjs';
 const CANDIDATES_PATH =
   'knowledge/golden-dataset/datacenter-kr-v0/public-source-candidates.json';
+const AUDIT_OUTPUT_PATH =
+  'tmp/codex/pursuit-golden-dataset-audit-non-production.json';
 
 function run(args) {
   return spawnSync(process.execPath, [SCRIPT, ...args], {
@@ -30,36 +32,33 @@ async function loadReportValidator() {
 }
 
 test('Golden Dataset CLI writes the deterministic additive-v1 human-confirmed audit', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'pursuit-golden-audit-'));
-  const output = join(dir, 'audit.json');
-  try {
-    const first = run(['--json', '--output', output, '--fail-on-violations']);
-    assert.equal(first.status, 0, first.stderr || first.stdout);
-    const firstWrite = readFileSync(output, 'utf8');
-    const report = JSON.parse(firstWrite);
-    assert.equal(report.documentStatus, 'PURSUIT_GOLDEN_DATASET_AUDIT_PASS');
-    assert.equal(report.datasetState, 'HUMAN_CONFIRMED');
-    assert.equal(report.goldenReady, true);
-    assert.equal(report.productionReady, false);
-    assert.equal(report.summary.projectCandidateCount, 17);
-    assert.equal(report.summary.publicSourceDocumentCandidateCount, 39);
-    assert.equal(report.summary.candidateStageCount, 5);
-    assert.equal(report.summary.humanConfirmedProjectCount, 17);
-    assert.equal(report.summary.humanConfirmedCapabilityClaimCount, 30);
-    assert.equal(report.summary.humanConfirmedPairCount, 10);
-    assert.equal(report.summary.humanConfirmedRevisionLinkCount, 1);
-    assert.equal(report.summary.humanConfirmedStageCount, 5);
-    assert.equal(report.summary.pendingProjectCount, 0);
-    assert.deepEqual(report.summary.thresholdGaps, []);
-    assert.deepEqual(report.violations, []);
+  const output = join(process.cwd(), AUDIT_OUTPUT_PATH);
+  const checkedIn = readFileSync(output, 'utf8');
+  const first = run(['--json', '--output', AUDIT_OUTPUT_PATH, '--fail-on-violations']);
+  assert.equal(first.status, 0, first.stderr || first.stdout);
+  const firstWrite = readFileSync(output, 'utf8');
+  assert.equal(firstWrite, checkedIn);
+  const report = JSON.parse(firstWrite);
+  assert.equal(report.documentStatus, 'PURSUIT_GOLDEN_DATASET_AUDIT_PASS');
+  assert.equal(report.datasetState, 'HUMAN_CONFIRMED');
+  assert.equal(report.goldenReady, true);
+  assert.equal(report.productionReady, false);
+  assert.equal(report.summary.projectCandidateCount, 17);
+  assert.equal(report.summary.publicSourceDocumentCandidateCount, 39);
+  assert.equal(report.summary.candidateStageCount, 5);
+  assert.equal(report.summary.humanConfirmedProjectCount, 17);
+  assert.equal(report.summary.humanConfirmedCapabilityClaimCount, 30);
+  assert.equal(report.summary.humanConfirmedPairCount, 10);
+  assert.equal(report.summary.humanConfirmedRevisionLinkCount, 1);
+  assert.equal(report.summary.humanConfirmedStageCount, 5);
+  assert.equal(report.summary.pendingProjectCount, 0);
+  assert.deepEqual(report.summary.thresholdGaps, []);
+  assert.deepEqual(report.violations, []);
 
-    const second = run(['--json', '--output', output, '--fail-on-violations']);
-    assert.equal(second.status, 0, second.stderr || second.stdout);
-    assert.equal(readFileSync(output, 'utf8'), firstWrite);
-    assert.deepEqual(JSON.parse(second.stdout), report);
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
+  const second = run(['--json', '--output', AUDIT_OUTPUT_PATH, '--fail-on-violations']);
+  assert.equal(second.status, 0, second.stderr || second.stdout);
+  assert.equal(readFileSync(output, 'utf8'), firstWrite);
+  assert.deepEqual(JSON.parse(second.stdout), report);
 });
 
 test('Golden Dataset CLI accepts checked-in Golden readiness while preserving production hold', () => {

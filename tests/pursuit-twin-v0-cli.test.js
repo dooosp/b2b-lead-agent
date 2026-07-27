@@ -2,15 +2,17 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const {
-  mkdtempSync,
+  existsSync,
   readFileSync,
   rmSync,
 } = require('node:fs');
-const { tmpdir } = require('node:os');
 const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
 const script = 'scripts/evaluate-pursuit-twin-v0.mjs';
+const reportOutput = 'tmp/codex/pursuit-twin-v0-evaluation-non-production.json';
+const packetJsonOutput = 'tmp/codex/pursuit-twin-v0-review-packet-non-production.json';
+const packetMarkdownOutput = 'tmp/codex/pursuit-twin-v0-review-packet-non-production.md';
 
 function run(args) {
   const result = spawnSync(process.execPath, [script, ...args], {
@@ -54,16 +56,18 @@ test('Pursuit Twin v0 CLI emits a deterministic strict non-production report', (
 });
 
 test('Pursuit Twin v0 CLI writes stable report and review-packet artifacts on request', () => {
-  const directory = mkdtempSync(path.join(tmpdir(), 'pursuit-twin-v0-'));
-  const reportPath = path.join(directory, 'report.json');
-  const packetJsonPath = path.join(directory, 'packet.json');
-  const packetMarkdownPath = path.join(directory, 'packet.md');
+  const reportPath = path.join(root, reportOutput);
+  const packetJsonPath = path.join(root, packetJsonOutput);
+  const packetMarkdownPath = path.join(root, packetMarkdownOutput);
+  for (const artifactPath of [reportPath, packetJsonPath, packetMarkdownPath]) {
+    assert.equal(existsSync(artifactPath), false, `refusing to replace ${artifactPath}`);
+  }
   try {
     const report = run([
       '--repeat', '2',
-      '--output', reportPath,
-      '--packet-json', packetJsonPath,
-      '--packet-markdown', packetMarkdownPath,
+      '--output', reportOutput,
+      '--packet-json', packetJsonOutput,
+      '--packet-markdown', packetMarkdownOutput,
     ]);
     assert.deepEqual(JSON.parse(readFileSync(reportPath, 'utf8')), report);
     const packet = JSON.parse(readFileSync(packetJsonPath, 'utf8'));
@@ -77,6 +81,8 @@ test('Pursuit Twin v0 CLI writes stable report and review-packet artifacts on re
     assert.match(markdown, /FIT guarantee: false/);
     assert.match(markdown, /Human decision review: REVIEW\\_REQUIRED/);
   } finally {
-    rmSync(directory, { recursive: true, force: true });
+    for (const artifactPath of [reportPath, packetJsonPath, packetMarkdownPath]) {
+      rmSync(artifactPath, { force: true });
+    }
   }
 });

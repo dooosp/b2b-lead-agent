@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
 import {
   GOLDEN_AUDIT_BOUNDARY,
   GOLDEN_AUDIT_SCHEMA_VERSION,
@@ -18,6 +16,13 @@ import {
   loadRepositoryGoldenDataset,
 } from './lib/repository-golden-dataset.mjs';
 import { validateGoldenDatasetAuditReport } from './lib/golden-dataset-report-validation.mjs';
+import {
+  resolveApprovedArtifactOutput,
+  writeApprovedArtifactOutput,
+} from './lib/repository-artifact-output.mjs';
+
+export const GOLDEN_DATASET_AUDIT_OUTPUT_PATH =
+  'tmp/codex/pursuit-golden-dataset-audit-non-production.json';
 
 function option(name) {
   const index = process.argv.indexOf(name);
@@ -46,6 +51,13 @@ function emptySummary() {
     thresholdGaps: [],
   };
 }
+
+const artifactOptions = { repositoryRoot: REPO_ROOT };
+const outputPath = resolveApprovedArtifactOutput(
+  option('--output'),
+  GOLDEN_DATASET_AUDIT_OUTPUT_PATH,
+  artifactOptions,
+);
 
 function failureReport(error) {
   const violation = {
@@ -91,12 +103,7 @@ try {
 
 validateGoldenDatasetAuditReport(report);
 const serialized = `${JSON.stringify(report, null, 2)}\n`;
-const output = option('--output');
-if (output) {
-  const outputPath = resolve(REPO_ROOT, output);
-  await mkdir(dirname(outputPath), { recursive: true });
-  await writeFile(outputPath, serialized, 'utf8');
-}
+await writeApprovedArtifactOutput(outputPath, serialized, artifactOptions);
 process.stdout.write(serialized);
 
 if (report.violations.length > 0 && process.argv.includes('--fail-on-violations')) {
