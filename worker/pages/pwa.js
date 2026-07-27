@@ -1,8 +1,8 @@
 export function getPWAManifest(env) {
   return {
-    name: 'B2B Sales Intelligence',
-    short_name: 'B2B Leads',
-    description: 'AI 기반 영업 인텔리전스 플랫폼',
+    name: 'Pursuit Twin KR',
+    short_name: 'Pursuit Twin',
+    description: '산업 프로젝트 사양 추적 및 기술영업 의사결정 시스템',
     start_url: '/',
     display: 'standalone',
     background_color: '#1a1a2e',

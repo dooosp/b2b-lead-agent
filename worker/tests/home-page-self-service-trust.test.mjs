@@ -121,6 +121,35 @@ function createHeuristicLead() {
   };
 }
 
+test('home page makes Project Pursuit primary and keeps legacy sales tools secondary', () => {
+  const html = getMainPage({});
+  const pursuitTabIndex = html.indexOf('id="tab-pursuit"');
+  const signalTabIndex = html.indexOf('id="tab-self-service"');
+
+  assert.match(html, /<title>Pursuit Twin KR<\/title>/);
+  assert.match(html, /산업 프로젝트 사양 추적 및 기술영업 의사결정 시스템/);
+  assert.match(html, /<div class="tab-content active" id="tab-pursuit"/);
+  assert.match(html, /<div class="tab-content" id="tab-self-service"/);
+  assert.ok(pursuitTabIndex >= 0 && pursuitTabIndex < signalTabIndex);
+  assert.match(html, /프로젝트 기회 × 제품군 × 사양 영향 구간 × 근거 집합/);
+  assert.match(html, /현재 기반과 아래 v0 요약은 local\/test 및 합성 근거 검증 범위/);
+  assert.match(html, /현재 구현 계약:[\s\S]*Spec Delta와 Minimum Evidence to Advance의 결정적 로컬\/합성 검증 표면/);
+  assert.match(html, /data-testid="pursuit-twin-v0-summary"/);
+  assert.match(html, /data-testid="spec-delta-summary"/);
+  assert.match(html, /SPEC-R1 · BASIC_DESIGN[\s\S]*SPEC-R2 · TENDER/);
+  assert.match(html, /PURSUE → REVIEW_REQUIRED/);
+  assert.match(html, /carry-forward: false/);
+  assert.match(html, /data-testid="minimum-evidence-summary"/);
+  assert.match(html, /재평가를 가능하게 할 뿐, FIT를 보장하지 않습니다/);
+  assert.match(html, /SYNTHETIC · NOT_PRODUCTION_EVIDENCE/);
+  assert.match(html, /Issue #165 production proof: HOLD/);
+  assert.match(html, /final decision: NOT_MADE/);
+  assert.doesNotMatch(html, /현재는 모두 로드맵이며 출시 기능이 아닙니다/);
+  assert.match(html, />신호 탐색<\/button>/);
+  assert.match(html, /<details class="secondary-tools">[\s\S]*PPT 제안서[\s\S]*CPA 견적서[\s\S]*영업 역량 시뮬레이션[\s\S]*<\/details>/);
+  assert.doesNotMatch(html, /href="\/pursuits"/);
+});
+
 test('home page self-service client preserves and exports fallback trust metadata', async () => {
   const { context, captured, getElement } = createHarness();
   const lead = createHeuristicLead();

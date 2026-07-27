@@ -41,7 +41,7 @@ async function setup() {
 async function testMainPage() {
   await page.goto(BASE);
   const title = await page.title();
-  log('T1 메인 페이지 로드', title.includes('B2B'));
+  log('T1 메인 페이지 로드', title.includes('Pursuit Twin KR'));
 
   const profiles = await page.locator('select option').allTextContents();
   const hasDanfoss = profiles.some(t => t.includes('댄포스'));
@@ -52,8 +52,8 @@ async function testMainPage() {
 // T2: 셀프서비스 분석
 async function testSelfService() {
   await page.goto(BASE);
-  // click self-service tab
-  const ssTab = page.locator('text=셀프서비스').first();
+  // open the secondary signal-discovery tab
+  const ssTab = page.getByRole('tab', { name: '신호 탐색' });
   if (await ssTab.count() > 0) {
     await ssTab.click();
     await page.waitForTimeout(500);

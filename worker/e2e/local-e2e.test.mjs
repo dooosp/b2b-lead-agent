@@ -55,7 +55,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   const manifest = await readJson(manifestResponse);
   assert.equal(manifestResponse.status, 200);
   assert.match(manifestResponse.headers.get('content-type') || '', /application\/json/);
-  assert.equal(manifest.name, 'B2B Sales Intelligence');
+  assert.equal(manifest.name, 'Pursuit Twin KR');
   assert.equal(manifest.start_url, '/');
 
   const leadsResponse = await localFetch('/api/leads?profile=danfoss');
@@ -166,6 +166,20 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   }, LOCAL_E2E_TOKEN);
   const page = await context.newPage();
 
+  await page.goto(`${harness.origin}/`, { waitUntil: 'domcontentloaded' });
+  await assertRenderedText(page, [
+    'Pursuit Twin v0 — Spec Delta + Minimum Evidence to Advance',
+    'PURSUE → REVIEW_REQUIRED',
+    'carry-forward: false',
+    'Minimum Evidence to Advance',
+    'SYNTHETIC · NOT_PRODUCTION_EVIDENCE',
+    'Issue #165 production proof: HOLD',
+    'final decision: NOT_MADE',
+  ]);
+  assert.equal(await page.locator('[data-testid="spec-delta-summary"]').count(), 1);
+  assert.equal(await page.locator('[data-testid="minimum-evidence-summary"]').count(), 1);
+  assert.equal(await page.locator('[data-testid="pursuit-twin-boundary"][data-boundary="NOT_PRODUCTION_EVIDENCE"]').count(), 1);
+
   await page.goto(`${harness.origin}/leads?profile=danfoss`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => {
     const el = document.querySelector('#leadsList');
@@ -173,7 +187,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   });
 
   await assertRenderedText(page, [
-    '리드 리뷰 큐',
+    '프로젝트 신호 검토 큐',
     'Local Factory Automation',
     '사람 검토: 승인',
     '신뢰도 HIGH',
