@@ -55,4 +55,32 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
       assert.equal(await page.locator('#leadSelect').inputValue(), '', 'ambiguous legacy indexes must not select another company');
     });
   }
+
+  await t.test('a fresh reviewer can open existing leads without generating a report', async () => {
+    const page = await createPage({ authenticated: false });
+    const mutations = [];
+    page.on('request', (request) => { if (request.method() !== 'GET') mutations.push(request.url()); });
+    await page.goto(harness.origin);
+    await page.getByRole('tab', { name: '관리 프로필' }).click();
+    await page.getByRole('textbox', { name: '비밀번호 입력', exact: true }).fill(LOCAL_E2E_TOKEN);
+    const response = page.waitForResponse((res) => res.url().includes('/api/leads?'));
+    await page.getByRole('link', { name: /리드 (상세 보기|리뷰 큐)/ }).click();
+    assert.equal((await response).status(), 200);
+    await page.locator('[data-lead-id="local-lead-review"]').waitFor();
+    assert.deepEqual(mutations, []);
+  });
+
+  await t.test('unauthenticated lead lists show an actionable sign-in state instead of empty data', async () => {
+    const page = await createPage({ authenticated: false });
+    const response = page.waitForResponse((res) => res.url().includes('/api/leads?'));
+    await page.goto(`${harness.origin}/leads?profile=danfoss`);
+    assert.equal((await response).status(), 401);
+    await page.waitForFunction(() => !document.querySelector('#leadsList').textContent.includes('로딩 중'));
+    assert.match(await page.locator('#leadsList').textContent(), /인증/);
+    assert.doesNotMatch(await page.locator('#leadsList').textContent(), /아직 생성된 리드가 없습니다/);
+    await page.getByRole('link', { name: '인증하고 다시 보기' }).click();
+    await page.getByRole('textbox', { name: '비밀번호 입력', exact: true }).fill(LOCAL_E2E_TOKEN);
+    await page.getByRole('button', { name: '인증하고 돌아가기' }).click();
+    await page.locator('[data-lead-id="local-lead-review"]').waitFor();
+  });
 });

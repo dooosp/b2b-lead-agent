@@ -60,6 +60,7 @@ function createHarness() {
     Date,
     Math,
     URL: HarnessURL,
+    location: { href: 'http://localhost/', origin: 'http://localhost' },
     clearInterval() {},
     setInterval() { return 1; },
     setTimeout(fn) { fn(); },

@@ -2261,10 +2261,30 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       btn.textContent = '일괄 상세 분석';
     }
 
+    function renderLeadsLoadError(statusCode) {
+      cachedLeads = [];
+      cacheReviewerActionQueue(null);
+      document.getElementById('leadsSummary').innerHTML = '';
+      document.getElementById('nextReviewStrip').innerHTML = '';
+      const needsAuth = statusCode === 401;
+      const message = needsAuth ? '인증이 필요합니다. 비밀번호를 입력한 뒤 다시 조회하세요.'
+        : statusCode === 403 ? '이 리드 목록에 접근할 권한이 없습니다. 관리자에게 문의하세요.'
+        : statusCode === 503 ? '서버 설정 또는 데이터 준비 상태를 확인해야 합니다. 잠시 후 다시 시도하세요.'
+        : '리드 데이터를 불러오지 못했습니다. 잠시 후 다시 시도하세요.';
+      const signIn = '/?returnTo=' + encodeURIComponent(window.location.pathname + window.location.search);
+      const content = '<div role="alert"><p>' + message + '</p>'
+        + (needsAuth ? '<a class="btn btn-secondary" href="' + esc(signIn) + '">인증하고 다시 보기</a>'
+          : '<button class="btn btn-secondary" type="button" onclick="loadLeads()">다시 시도</button>') + '</div>';
+      document.getElementById('leadsList').innerHTML = content;
+      document.getElementById('kanbanView').innerHTML = content;
+    }
+
     async function loadLeads(options = {}) {
       try {
         const res = await fetch('/api/leads?profile=' + getProfile(), {headers:authHeaders()});
+        if (!res.ok) { renderLeadsLoadError(res.status); return; }
         const data = await res.json();
+        if (!Array.isArray(data.leads)) { renderLeadsLoadError(500); return; }
         const container = document.getElementById('leadsList');
         const summaryContainer = document.getElementById('leadsSummary');
 
@@ -2294,7 +2314,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           });
         }
       } catch(e) {
-        document.getElementById('leadsList').innerHTML = '<p style="color:#e74c3c;">데이터 로드 실패: ' + esc(e.message) + '</p>';
+        renderLeadsLoadError(500);
       }
     }
     let currentView = 'list';
