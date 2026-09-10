@@ -1,0 +1,606 @@
+{
+  "documentStatus": "PURSUIT_GOLDEN_HUMAN_REVIEW_BATCH_02_DRAFT",
+  "schemaVersion": "pursuit-golden-human-review-batch-02-v0",
+  "boundary": "DRAFT_PENDING_ONLY_HUMAN_REVIEW_INPUT_NOT_ADJUDICATION",
+  "productionReady": false,
+  "goldenReady": false,
+  "humanAdjudicationRecorded": false,
+  "reviewStatus": "AWAITING_HUMAN_DOMAIN_REVIEW",
+  "evaluationAsOf": "2026-07-26T00:00:00.000Z",
+  "datasetStateAtPreparation": "PARTIALLY_ADJUDICATED",
+  "datasetCanonicalSha256": "53939a9ab41c6d85e0b1a9175d2471cf954fc698fb5847ff6d7d2789f3e2d854",
+  "priorMaterializedAdjudicationsCanonicalSha256": "24f872c06f9fd633acc18f799c4ff73a7df047058ea4b78a9a0f02f42bdd672b",
+  "selectionPolicy": {
+    "projectScope": "ALL_CURRENTLY_UNADJUDICATED_PROJECTS",
+    "projectItemCount": 7,
+    "order": "PROJECT_KEY_ASCENDING",
+    "excludePriorAdjudications": true,
+    "capabilityScope": "NONE_ALREADY_FULLY_ADJUDICATED",
+    "pairScope": "NONE_ALREADY_FULLY_ADJUDICATED",
+    "revisionScope": "NONE_ALREADY_FULLY_ADJUDICATED"
+  },
+  "priorAdjudicationSummary": {
+    "projectAdjudicationCount": 10,
+    "capabilityAdjudicationCount": 30,
+    "pairAdjudicationCount": 10,
+    "revisionAdjudicationCount": 1
+  },
+  "summary": {
+    "projectReviewItemCount": 7,
+    "capabilityReviewItemCount": 0,
+    "pairReviewItemCount": 0,
+    "revisionReviewItemCount": 0
+  },
+  "projectReviews": [
+    {
+      "itemType": "PROJECT",
+      "candidate": {
+        "projectKey": "empyrion_kr1_gangnam",
+        "projectId": "prj_924f176af65f9c85d8020fc6090f9d947ced00a532f5a5e8d411b850f3736d5f",
+        "name": "Empyrion Digital KR1 Gangnam",
+        "location": {
+          "countryCode": "KR",
+          "region": "Seoul",
+          "locality": "Gangnam"
+        },
+        "stageObservationCandidate": {
+          "stage": "OPERATION",
+          "observedAt": "2025-07-02T00:00:00.000Z",
+          "forwardLooking": false,
+          "documentKey": "project_empyrion_kr1_press_2025",
+          "documentId": "doc_6f0e70aab5dc7d6a7b3be3c99d46bbca79039c67ecfcc89f7a1b4d45c55e2ceb"
+        },
+        "annotationOrigin": "AI_ASSISTED",
+        "limitations": [
+          "No procurement window, product fit, award status, or supplier qualification is claimed.",
+          "Stage is an AI-assisted source observation, not a human-confirmed current stage."
+        ],
+        "eligibleAppliedSpecificationDocumentKeys": []
+      },
+      "sourceDocuments": [
+        {
+          "documentKey": "project_empyrion_kr1_press_2025",
+          "documentId": "doc_6f0e70aab5dc7d6a7b3be3c99d46bbca79039c67ecfcc89f7a1b4d45c55e2ceb",
+          "sourceClass": "PROJECT",
+          "publisher": "Empyrion Digital",
+          "title": "Empyrion Digital KR1 Gangnam grand opening",
+          "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+          "officialDomainCandidate": "empyriondigital.com",
+          "sourceUrl": "https://empyriondigital.com/empyrion-digital-celebrates-grand-opening-of-kr1-gangnam-data-centre/",
+          "documentKind": "PRESS_RELEASE",
+          "publishedAt": "2025-07-02T00:00:00.000Z",
+          "publishedAtPrecision": "DAY",
+          "retrievedAt": "2026-07-25T00:00:00.000Z",
+          "remoteContentSha256Candidate": null,
+          "revision": {
+            "seriesKey": "empyrion_kr1_press",
+            "revisionKey": "2025-07-02",
+            "supersedesDocumentKey": null
+          },
+          "excerpts": [
+            {
+              "locator": "grand-opening",
+              "text": "Empyrion Digital reports the grand opening of KR1 Gangnam."
+            }
+          ]
+        }
+      ],
+      "humanInputTemplate": {
+        "projectKey": "empyrion_kr1_gangnam",
+        "reviewAuthority": null,
+        "reviewReceipt": null,
+        "reviewedAt": null,
+        "identityStatus": null,
+        "currentStage": null,
+        "appliedSpecificationDocumentKeys": [],
+        "productFitByFamily": [
+          {
+            "productFamilyId": "medium_voltage_switchgear",
+            "fitResult": null
+          },
+          {
+            "productFamilyId": "transformer",
+            "fitResult": null
+          }
+        ],
+        "blockingEvidence": [],
+        "specificationWindow": {
+          "state": null,
+          "rationale": null
+        },
+        "finalPursuitDecision": null
+      }
+    },
+    {
+      "itemType": "PROJECT",
+      "candidate": {
+        "projectKey": "kakao_data_center_ansan",
+        "projectId": "prj_4c26967cebe4334b7e5c3d4168db9c4ff888c56d315694cb524ccc5cb94cd4b3",
+        "name": "Kakao Data Center Ansan",
+        "location": {
+          "countryCode": "KR",
+          "region": "Gyeonggi",
+          "locality": "Ansan"
+        },
+        "stageObservationCandidate": {
+          "stage": "OPERATION",
+          "observedAt": "2024-06-12T00:00:00.000Z",
+          "forwardLooking": false,
+          "documentKey": "project_kakao_ansan_press_2024",
+          "documentId": "doc_e42f4867dd1591f16fd28be141713e42c6ea31b40c31792f6cd01b9a333b3bcd"
+        },
+        "annotationOrigin": "AI_ASSISTED",
+        "limitations": [
+          "No procurement window, product fit, award status, or supplier qualification is claimed.",
+          "Stage is an AI-assisted source observation, not a human-confirmed current stage."
+        ],
+        "eligibleAppliedSpecificationDocumentKeys": []
+      },
+      "sourceDocuments": [
+        {
+          "documentKey": "project_kakao_ansan_press_2024",
+          "documentId": "doc_e42f4867dd1591f16fd28be141713e42c6ea31b40c31792f6cd01b9a333b3bcd",
+          "sourceClass": "PROJECT",
+          "publisher": "Kakao",
+          "title": "Kakao Data Center Ansan opening",
+          "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+          "officialDomainCandidate": "kakaocorp.com",
+          "sourceUrl": "https://www.kakaocorp.com/page/detail/11097",
+          "documentKind": "PRESS_RELEASE",
+          "publishedAt": "2024-06-12T00:00:00.000Z",
+          "publishedAtPrecision": "DAY",
+          "retrievedAt": "2026-07-25T00:00:00.000Z",
+          "remoteContentSha256Candidate": null,
+          "revision": {
+            "seriesKey": "kakao_ansan_press",
+            "revisionKey": "2024-06-12",
+            "supersedesDocumentKey": null
+          },
+          "excerpts": [
+            {
+              "locator": "opening-and-redundancy",
+              "text": "Kakao describes opening the Ansan data center and resilient infrastructure."
+            }
+          ]
+        }
+      ],
+      "humanInputTemplate": {
+        "projectKey": "kakao_data_center_ansan",
+        "reviewAuthority": null,
+        "reviewReceipt": null,
+        "reviewedAt": null,
+        "identityStatus": null,
+        "currentStage": null,
+        "appliedSpecificationDocumentKeys": [],
+        "productFitByFamily": [
+          {
+            "productFamilyId": "medium_voltage_switchgear",
+            "fitResult": null
+          },
+          {
+            "productFamilyId": "transformer",
+            "fitResult": null
+          }
+        ],
+        "blockingEvidence": [],
+        "specificationWindow": {
+          "state": null,
+          "rationale": null
+        },
+        "finalPursuitDecision": null
+      }
+    },
+    {
+      "itemType": "PROJECT",
+      "candidate": {
+        "projectKey": "lguplus_pyeongchon2",
+        "projectId": "prj_25df4d46936ba085830090ec427112e51641f07e0abaa9e02aa820caebc2bb14",
+        "name": "LG U+ Pyeongchon 2",
+        "location": {
+          "countryCode": "KR",
+          "region": "Gyeonggi",
+          "locality": "Anyang"
+        },
+        "stageObservationCandidate": {
+          "stage": "OPERATION",
+          "observedAt": "2023-10-26T00:00:00.000Z",
+          "forwardLooking": false,
+          "documentKey": "project_lguplus_pyeongchon2_press_2023",
+          "documentId": "doc_c6ddd8139146fcf2725f11b450362ee64db917c2b43a232c923b1cbd2859a95b"
+        },
+        "annotationOrigin": "AI_ASSISTED",
+        "limitations": [
+          "No procurement window, product fit, award status, or supplier qualification is claimed.",
+          "Stage is an AI-assisted source observation, not a human-confirmed current stage."
+        ],
+        "eligibleAppliedSpecificationDocumentKeys": []
+      },
+      "sourceDocuments": [
+        {
+          "documentKey": "project_lguplus_pyeongchon2_press_2023",
+          "documentId": "doc_c6ddd8139146fcf2725f11b450362ee64db917c2b43a232c923b1cbd2859a95b",
+          "sourceClass": "PROJECT",
+          "publisher": "LG U+",
+          "title": "LG U+ Pyeongchon 2 data center completion",
+          "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+          "officialDomainCandidate": "news.lguplus.com",
+          "sourceUrl": "https://news.lguplus.com/?p=13762",
+          "documentKind": "PRESS_RELEASE",
+          "publishedAt": "2023-10-26T00:00:00.000Z",
+          "publishedAtPrecision": "DAY",
+          "retrievedAt": "2026-07-25T00:00:00.000Z",
+          "remoteContentSha256Candidate": null,
+          "revision": {
+            "seriesKey": "lguplus_pyeongchon2_press",
+            "revisionKey": "2023-10-26",
+            "supersedesDocumentKey": null
+          },
+          "excerpts": [
+            {
+              "locator": "completion-summary",
+              "text": "LG U+ describes completion of Pyeongchon 2 data center."
+            }
+          ]
+        }
+      ],
+      "humanInputTemplate": {
+        "projectKey": "lguplus_pyeongchon2",
+        "reviewAuthority": null,
+        "reviewReceipt": null,
+        "reviewedAt": null,
+        "identityStatus": null,
+        "currentStage": null,
+        "appliedSpecificationDocumentKeys": [],
+        "productFitByFamily": [
+          {
+            "productFamilyId": "medium_voltage_switchgear",
+            "fitResult": null
+          },
+          {
+            "productFamilyId": "transformer",
+            "fitResult": null
+          }
+        ],
+        "blockingEvidence": [],
+        "specificationWindow": {
+          "state": null,
+          "rationale": null
+        },
+        "finalPursuitDecision": null
+      }
+    },
+    {
+      "itemType": "PROJECT",
+      "candidate": {
+        "projectKey": "nhn_gwangju_national_ai",
+        "projectId": "prj_61feea0547a217ea1f1efe03d3c5f8113c341bfe7f83679b429f4a9c4e5e6f0b",
+        "name": "NHN Gwangju National AI Data Center",
+        "location": {
+          "countryCode": "KR",
+          "region": "Gwangju",
+          "locality": "Gwangju"
+        },
+        "stageObservationCandidate": {
+          "stage": "OPERATION",
+          "observedAt": "2023-11-06T00:00:00.000Z",
+          "forwardLooking": false,
+          "documentKey": "project_nhn_gwangju_press_2023",
+          "documentId": "doc_b5d94f92122fa67d5912e6f8c5a17ee6fb9de640d39a9260b4c3881aef1f7d81"
+        },
+        "annotationOrigin": "AI_ASSISTED",
+        "limitations": [
+          "No procurement window, product fit, award status, or supplier qualification is claimed.",
+          "Stage is an AI-assisted source observation, not a human-confirmed current stage."
+        ],
+        "eligibleAppliedSpecificationDocumentKeys": []
+      },
+      "sourceDocuments": [
+        {
+          "documentKey": "project_nhn_gwangju_press_2023",
+          "documentId": "doc_b5d94f92122fa67d5912e6f8c5a17ee6fb9de640d39a9260b4c3881aef1f7d81",
+          "sourceClass": "PROJECT",
+          "publisher": "NHN",
+          "title": "National AI Data Center in Gwangju service launch",
+          "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+          "officialDomainCandidate": "inside.nhn.com",
+          "sourceUrl": "https://inside.nhn.com/news/524",
+          "documentKind": "PRESS_RELEASE",
+          "publishedAt": "2023-11-06T00:00:00.000Z",
+          "publishedAtPrecision": "DAY",
+          "retrievedAt": "2026-07-25T00:00:00.000Z",
+          "remoteContentSha256Candidate": null,
+          "revision": {
+            "seriesKey": "nhn_gwangju_ai_press",
+            "revisionKey": "2023-11-06",
+            "supersedesDocumentKey": null
+          },
+          "excerpts": [
+            {
+              "locator": "service-launch",
+              "text": "NHN reports the Gwangju National AI Data Center service launch."
+            }
+          ]
+        }
+      ],
+      "humanInputTemplate": {
+        "projectKey": "nhn_gwangju_national_ai",
+        "reviewAuthority": null,
+        "reviewReceipt": null,
+        "reviewedAt": null,
+        "identityStatus": null,
+        "currentStage": null,
+        "appliedSpecificationDocumentKeys": [],
+        "productFitByFamily": [
+          {
+            "productFamilyId": "medium_voltage_switchgear",
+            "fitResult": null
+          },
+          {
+            "productFamilyId": "transformer",
+            "fitResult": null
+          }
+        ],
+        "blockingEvidence": [],
+        "specificationWindow": {
+          "state": null,
+          "rationale": null
+        },
+        "finalPursuitDecision": null
+      }
+    },
+    {
+      "itemType": "PROJECT",
+      "candidate": {
+        "projectKey": "samsungsds_dongtan",
+        "projectId": "prj_02c8f7105bc6ee25322a55dfcedf0a1b85963f12b1f3961623a70d1f0eea1649",
+        "name": "Samsung SDS Dongtan Data Center",
+        "location": {
+          "countryCode": "KR",
+          "region": "Gyeonggi",
+          "locality": "Hwaseong"
+        },
+        "stageObservationCandidate": {
+          "stage": "OPERATION",
+          "observedAt": "2023-03-13T00:00:00.000Z",
+          "forwardLooking": false,
+          "documentKey": "project_samsungsds_dongtan_press_2023",
+          "documentId": "doc_1423e5dc0ca82b91fa8239abf59a4a0011cac584a8b3040ac11a1090a7bc008b"
+        },
+        "annotationOrigin": "AI_ASSISTED",
+        "limitations": [
+          "No procurement window, product fit, award status, or supplier qualification is claimed.",
+          "Stage is an AI-assisted source observation, not a human-confirmed current stage."
+        ],
+        "eligibleAppliedSpecificationDocumentKeys": []
+      },
+      "sourceDocuments": [
+        {
+          "documentKey": "project_samsungsds_dongtan_press_2023",
+          "documentId": "doc_1423e5dc0ca82b91fa8239abf59a4a0011cac584a8b3040ac11a1090a7bc008b",
+          "sourceClass": "PROJECT",
+          "publisher": "Samsung SDS",
+          "title": "Samsung SDS Dongtan data center media day",
+          "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+          "officialDomainCandidate": "samsungsds.com",
+          "sourceUrl": "https://www.samsungsds.com/kr/news/230310-sdscloudmediaday.html",
+          "documentKind": "PRESS_RELEASE",
+          "publishedAt": "2023-03-13T00:00:00.000Z",
+          "publishedAtPrecision": "DAY",
+          "retrievedAt": "2026-07-25T00:00:00.000Z",
+          "remoteContentSha256Candidate": null,
+          "revision": {
+            "seriesKey": "samsungsds_dongtan_press",
+            "revisionKey": "2023-03-13",
+            "supersedesDocumentKey": null
+          },
+          "excerpts": [
+            {
+              "locator": "facility-operation",
+              "text": "Samsung SDS presents the Dongtan data center as operating cloud infrastructure."
+            }
+          ]
+        }
+      ],
+      "humanInputTemplate": {
+        "projectKey": "samsungsds_dongtan",
+        "reviewAuthority": null,
+        "reviewReceipt": null,
+        "reviewedAt": null,
+        "identityStatus": null,
+        "currentStage": null,
+        "appliedSpecificationDocumentKeys": [],
+        "productFitByFamily": [
+          {
+            "productFamilyId": "medium_voltage_switchgear",
+            "fitResult": null
+          },
+          {
+            "productFamilyId": "transformer",
+            "fitResult": null
+          }
+        ],
+        "blockingEvidence": [],
+        "specificationWindow": {
+          "state": null,
+          "rationale": null
+        },
+        "finalPursuitDecision": null
+      }
+    },
+    {
+      "itemType": "PROJECT",
+      "candidate": {
+        "projectKey": "ulsan_underwater_data_center_model",
+        "projectId": "prj_7009da09e0bd93760b4b93da33fbd946c866fcbc52695600bdd4b146e6922f8c",
+        "name": "Ulsan Carbon-Zero Underwater Data Center Standard Model",
+        "location": {
+          "countryCode": "KR",
+          "region": "Ulsan",
+          "locality": "Ulsan"
+        },
+        "stageObservationCandidate": {
+          "stage": "DESIGN",
+          "observedAt": "2026-04-08T00:00:00.000Z",
+          "forwardLooking": true,
+          "documentKey": "project_ulsan_underwater_data_center_design_2026",
+          "documentId": "doc_b66fa2f03622e6c4fbdf4f2c21a5a3442ace7fbad5c40322a8687bc8a6212f15"
+        },
+        "annotationOrigin": "AI_ASSISTED",
+        "limitations": [
+          "No project technical specification, single-line diagram, equipment package, product fit, award status, or supplier qualification is claimed.",
+          "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+          "The public source identifies Ulsan offshore waters but does not provide a precise offshore parcel or coordinates.",
+          "The source supports the stage only as of publication on 2026-04-08 and does not independently prove unchanged status at the evaluation date.",
+          "This is an R&D standard-model and testbed program, not evidence of a commercial data-center procurement or awarded construction package."
+        ],
+        "eligibleAppliedSpecificationDocumentKeys": []
+      },
+      "sourceDocuments": [
+        {
+          "documentKey": "project_ulsan_underwater_data_center_design_2026",
+          "documentId": "doc_b66fa2f03622e6c4fbdf4f2c21a5a3442ace7fbad5c40322a8687bc8a6212f15",
+          "sourceClass": "PROJECT",
+          "publisher": "Ulsan Metropolitan City",
+          "title": "울산 앞바다에 '수중 데이터센터' 본격 추진",
+          "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+          "officialDomainCandidate": "ulsan.go.kr",
+          "sourceUrl": "https://www.ulsan.go.kr/u/rep/bbs/view.do?bbsId=BBS_0000000000000027&dataId=180322&mId=001004003001000000",
+          "documentKind": "PRESS_RELEASE",
+          "publishedAt": "2026-04-08T00:00:00.000Z",
+          "publishedAtPrecision": "DAY",
+          "retrievedAt": "2026-07-26T00:00:00.000Z",
+          "remoteContentSha256Candidate": null,
+          "revision": {
+            "seriesKey": "ulsan_underwater_data_center_design_press",
+            "revisionKey": "2026-04-08",
+            "supersedesDocumentKey": null
+          },
+          "excerpts": [
+            {
+              "locator": "site-analysis-basic-design-and-testbed-plan",
+              "text": "Ulsan reports that research starts with site analysis, basic design, ground analysis, and server-cooling design before testbed installation."
+            }
+          ]
+        }
+      ],
+      "humanInputTemplate": {
+        "projectKey": "ulsan_underwater_data_center_model",
+        "reviewAuthority": null,
+        "reviewReceipt": null,
+        "reviewedAt": null,
+        "identityStatus": null,
+        "currentStage": null,
+        "appliedSpecificationDocumentKeys": [],
+        "productFitByFamily": [
+          {
+            "productFamilyId": "medium_voltage_switchgear",
+            "fitResult": null
+          },
+          {
+            "productFamilyId": "transformer",
+            "fitResult": null
+          }
+        ],
+        "blockingEvidence": [],
+        "specificationWindow": {
+          "state": null,
+          "rationale": null
+        },
+        "finalPursuitDecision": null
+      }
+    },
+    {
+      "itemType": "PROJECT",
+      "candidate": {
+        "projectKey": "wanju_ai_data_center",
+        "projectId": "prj_f66c2f4a5f72f2b8dbecfc90b9555570bebe144d369dc14cd733093ddf06be61",
+        "name": "Wanju AI Data Center",
+        "location": {
+          "countryCode": "KR",
+          "region": "Jeonbuk",
+          "locality": "Wanju"
+        },
+        "stageObservationCandidate": {
+          "stage": "FEASIBILITY",
+          "observedAt": "2026-02-26T00:00:00.000Z",
+          "forwardLooking": true,
+          "documentKey": "project_wanju_ai_data_center_press_2026",
+          "documentId": "doc_81b792e915cd45c0bfc18c318f7a2419a5cbd9de3c4673426534c51d43d2b14e"
+        },
+        "annotationOrigin": "AI_ASSISTED",
+        "limitations": [
+          "No tender, technical specification, equipment package, product fit, award status, or supplier qualification is claimed.",
+          "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+          "The MOU, identified site, capacity, and grid review do not establish that detailed design, permitting, financing close, or construction has begun.",
+          "The source supports the stage only as of publication on 2026-02-26 and does not independently prove unchanged status at the evaluation date."
+        ],
+        "eligibleAppliedSpecificationDocumentKeys": []
+      },
+      "sourceDocuments": [
+        {
+          "documentKey": "project_wanju_ai_data_center_press_2026",
+          "documentId": "doc_81b792e915cd45c0bfc18c318f7a2419a5cbd9de3c4673426534c51d43d2b14e",
+          "sourceClass": "PROJECT",
+          "publisher": "Wanju County",
+          "title": "완주군에 전북 최초 2,800억 규모 데이터센터 들어선다",
+          "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+          "officialDomainCandidate": "wanju.go.kr",
+          "sourceUrl": "https://www.wanju.go.kr/planweb/board/view.9is?boardUid=ff8080818b024d8e018b1c99655f1226&categoryUid1=ff8080818b024d8e018b1c9ab0b61240&contentUid=ff808081898ba9ba0189f1e5b90901a7&dataUid=4028a6029bdaa74e019c99a6704621a1",
+          "documentKind": "PRESS_RELEASE",
+          "publishedAt": "2026-02-26T00:00:00.000Z",
+          "publishedAtPrecision": "DAY",
+          "retrievedAt": "2026-07-26T00:00:00.000Z",
+          "remoteContentSha256Candidate": null,
+          "revision": {
+            "seriesKey": "wanju_ai_data_center_press",
+            "revisionKey": "2026-02-26",
+            "supersedesDocumentKey": null
+          },
+          "excerpts": [
+            {
+              "locator": "mou-site-capacity-and-grid-review",
+              "text": "Wanju County reports an MOU, a fixed industrial-complex site, 20MW capacity, and completed grid-impact review for a planned data center."
+            }
+          ]
+        }
+      ],
+      "humanInputTemplate": {
+        "projectKey": "wanju_ai_data_center",
+        "reviewAuthority": null,
+        "reviewReceipt": null,
+        "reviewedAt": null,
+        "identityStatus": null,
+        "currentStage": null,
+        "appliedSpecificationDocumentKeys": [],
+        "productFitByFamily": [
+          {
+            "productFamilyId": "medium_voltage_switchgear",
+            "fitResult": null
+          },
+          {
+            "productFamilyId": "transformer",
+            "fitResult": null
+          }
+        ],
+        "blockingEvidence": [],
+        "specificationWindow": {
+          "state": null,
+          "rationale": null
+        },
+        "finalPursuitDecision": null
+      }
+    }
+  ],
+  "capabilityReviews": [],
+  "pairReviews": [],
+  "revisionReviews": [],
+  "nonClaims": [
+    "This packet contains only the seven currently unadjudicated projects; it does not reopen, alter, or re-approve prior materialized adjudications.",
+    "This packet is AI-prepared review input, not a human adjudication or a claim that human review occurred.",
+    "Review authority, receipt, timestamp, identity, stage, fit, blocker, influence-window, and final-decision fields are intentionally blank.",
+    "Capability, requirement-capability pair, and revision scopes are empty because those candidate sets are already fully adjudicated in the pinned dataset.",
+    "Officiality, reachability, currentness, and project interpretation of remote sources still require direct human review.",
+    "This packet is not production evidence and does not authorize customer use, production access, D1 access, CRM, outreach, or automated decisions."
+  ],
+  "canonicalSha256": "b682271fc3fdc118911089a4dc9345583d323780f7b8082d45cec74dbf745635"
+}

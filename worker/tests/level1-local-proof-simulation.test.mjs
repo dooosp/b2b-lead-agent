@@ -65,7 +65,7 @@ test('Level 1 local proof simulation covers /leads page, reviewer API queue, det
   const leadsPageResponse = await handleWorkerRequest(createWorkerRequest('/leads'), env, {});
   const leadsPageHtml = await leadsPageResponse.text();
   assert.equal(leadsPageResponse.status, 200);
-  assert.match(leadsPageHtml, /리드 리뷰 큐/);
+  assert.match(leadsPageHtml, /프로젝트 신호 검토 큐/);
   assert.match(leadsPageHtml, /Follow-up check:/);
   assert.match(leadsPageHtml, /생성된 검토 메모 제안/);
 

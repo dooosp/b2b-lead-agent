@@ -27,7 +27,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>리드 리뷰 큐</title>
+  <title>프로젝트 신호 검토 큐</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e94560">
   <style>${getCommonStyles()}
@@ -61,6 +61,9 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     .lead-sources a:hover { color: #5dade2; text-decoration: underline; }
     .lead-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .lead-actions a { font-size: 12px; padding: 6px 12px; }
+    .lead-secondary-tools { margin-top:12px; border:1px solid #2a3a4a; border-radius:8px; background:#111a25; }
+    .lead-secondary-tools summary { cursor:pointer; padding:9px 11px; color:#9fb0c0; font-size:12px; font-weight:700; }
+    .lead-secondary-tools .lead-actions { margin:0; padding:0 10px 10px; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     .badge-a { background: #e94560; color: #fff; }
     .badge-b { background: #f39c12; color: #fff; }
@@ -300,8 +303,8 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
         <button class="btn btn-secondary csv-btn" style="font-size:12px;padding:6px 12px;" onclick="downloadCSV()">CSV 내보내기</button>
       </div>
     </nav>
-    <h1 style="font-size:22px;">리드 리뷰 큐</h1>
-    <p class="subtitle">최근 분석된 영업 기회 목록</p>
+    <h1 style="font-size:22px;">프로젝트 신호 검토 큐</h1>
+    <p class="subtitle">Project Pursuit 후보를 찾기 위한 LeadBrief 기반 보조 신호 목록</p>
 
     <div class="view-tabs" role="tablist" aria-label="리드 보기 전환" aria-orientation="vertical">
       <button id="listViewTab" class="view-tab active" type="button" role="tab" aria-selected="true" aria-controls="leadsList" tabindex="0" data-view-target="list" onclick="switchView('list')">리스트</button>
@@ -2422,11 +2425,16 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
             </div>\` : ''}
             \${lead.id ? renderReviewerFeedbackControls(lead) : ''}
             <div class="lead-actions">
-              <a href="/ppt?profile=\${encodeURIComponent(getProfile())}&lead=\${i}" class="btn btn-secondary">PPT 생성</a>
-              <a href="/roleplay?profile=\${encodeURIComponent(getProfile())}&lead=\${i}" class="btn btn-secondary">영업 연습</a>
               \${lead.id && !lead.enriched ? \`<button class="btn-enrich" onclick="enrichLead('\${esc(lead.id)}', this)">상세 분석</button>\` : ''}
               \${lead.id && lead.enriched ? \`<button class="btn-enrich" style="opacity:0.6" onclick="enrichLead('\${esc(lead.id)}', this, true)" title="재분석">재분석</button>\` : ''}
             </div>
+            <details class="lead-secondary-tools">
+              <summary>제안·연습 보조 도구</summary>
+              <div class="lead-actions">
+                <a href="/ppt?profile=\${encodeURIComponent(getProfile())}&lead=\${i}" class="btn btn-secondary">PPT 생성</a>
+                <a href="/roleplay?profile=\${encodeURIComponent(getProfile())}&lead=\${i}" class="btn btn-secondary">영업 연습</a>
+              </div>
+            </details>
           </div>
         \`).join('');
     }

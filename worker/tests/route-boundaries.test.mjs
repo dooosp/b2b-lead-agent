@@ -15,7 +15,7 @@ test('manifest route returns public JSON without API authentication', async () =
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get('Content-Type') || '', /application\/json/);
-  assert.equal(payload.name, 'B2B Sales Intelligence');
+  assert.equal(payload.name, 'Pursuit Twin KR');
   assert.equal(payload.start_url, '/');
   assert.equal(payload.display, 'standalone');
 });

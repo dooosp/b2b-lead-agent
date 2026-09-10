@@ -1,0 +1,903 @@
+{
+  "schemaVersion": "pursuit-golden-human-adjudications-v0",
+  "boundary": "HUMAN_ADJUDICATIONS_NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "evaluationAsOf": "2026-07-26T00:00:00.000Z",
+  "projectAdjudications": [
+    {
+      "projectKey": "stt_seoul1",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "OPERATION",
+      "appliedSpecificationDocumentKeys": [
+        "project_stt_seoul1_facility_spec_2026"
+      ],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The public facility factsheet states dual 22.9kV utility service but does not provide the single-line diagram, transformation boundary, equipment package, or procurement requirements.",
+        "The facility is operating and no current retrofit, replacement, tender, supplier-qualification, or procurement window is identified."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "Initial construction is complete, but the sources do not establish whether any retrofit or replacement specification window exists."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "digitaledge_sel2",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "OPERATION",
+      "appliedSpecificationDocumentKeys": [
+        "project_digitaledge_sel2_facility_spec_2024_11"
+      ],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The public facility specification gives a 2x154kV utility interface but not an equipment-level requirement for the compared MV switchgear or distribution transformer families.",
+        "The single-line diagram, transformation boundary, equipment package, tender status, and replacement opportunity are unavailable."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "The facility is operating; initial-build influence is over, while any retrofit or replacement window is not evidenced."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "skaws_ulsan_aidc",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "CONSTRUCTION",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "SK Telecom publicly identifies Schneider Electric as the integrated MEP supplier for switchgear, UPS, transformers, automation, and related initial-build scope.",
+        "No applicable tender, technical specification, single-line diagram, or alternate package opportunity is present in the review set.",
+        "This recommendation is limited to the reviewed initial-build package and does not decide future expansion, retrofit, or replacement scope."
+      ],
+      "specificationWindow": {
+        "state": "CLOSED",
+        "rationale": "For the reviewed initial-build switchgear and transformer scope, an integrated MEP supplier has already been contracted."
+      },
+      "finalPursuitDecision": "NO_BID"
+    },
+    {
+      "projectKey": "lguplus_paju_aidc",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "CONSTRUCTION",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The sources confirm construction and a 2027 target but provide no tender, single-line diagram, equipment specification, supplier selection, or package status."
+      ],
+      "specificationWindow": {
+        "state": "CLOSING",
+        "rationale": "Construction is underway, so design influence is likely narrowing, but no public procurement evidence proves that the window is fully closed."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "digitaledge_sel5",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "ANNOUNCED",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The source confirms secured power for a planned 60MW facility but provides no design basis, tender, equipment specification, construction status, supplier list, or procurement schedule."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "The announced stage suggests possible future influence, but an open specification or procurement window is not actually evidenced."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "equinix_sl2x",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "OPERATION",
+      "appliedSpecificationDocumentKeys": [
+        "project_equinix_sl2x_specs"
+      ],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The public technical-specification page identifies the facility but the captured evidence contains no equipment-level MV switchgear or transformer requirement.",
+        "No current tender, replacement scope, supplier qualification, or procurement window is evidenced."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "The operating facility's initial-build window has passed, while possible lifecycle work is not described by the sources."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "naver_gak_chuncheon",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "OPERATION",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The operating-facility page describes aggregate power and UPS/STS architecture but is not an applicable equipment procurement specification.",
+        "No expansion, replacement, tender, equipment specification, or current supplier opportunity is identified."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "The original facility is operational, but the review set does not establish whether a lifecycle replacement window exists."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "naver_gak_sejong",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "OPERATION",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The existing operating facility and the 2026 expansion/AI Factory scope are not separated into equipment packages or project specifications.",
+        "The expansion sources provide capacity milestones but no tender, single-line diagram, equipment requirements, supplier selection, or procurement status."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "Expansion execution is announced, but the available evidence does not establish whether switchgear or transformer specifications remain influenceable."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "digitalrealty_icn10",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "OPERATION",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The sources confirm facility and colocation availability but provide no applicable electrical specification, tender, equipment package, supplier status, or lifecycle opportunity."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "The facility is operating; no evidence establishes a current expansion, retrofit, or replacement specification window."
+      },
+      "finalPursuitDecision": "HOLD"
+    },
+    {
+      "projectKey": "ktcloud_gasan_aidc",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "identityStatus": "CONFIRMED",
+      "currentStage": "OPERATION",
+      "appliedSpecificationDocumentKeys": [],
+      "productFitByFamily": [
+        {
+          "productFamilyId": "medium_voltage_switchgear",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        },
+        {
+          "productFamilyId": "transformer",
+          "fitResult": "INSUFFICIENT_EVIDENCE"
+        }
+      ],
+      "blockingEvidence": [
+        "The sources confirm opening and business context but provide no single-line diagram, equipment specification, tender, supplier status, or replacement opportunity."
+      ],
+      "specificationWindow": {
+        "state": "UNKNOWN",
+        "rationale": "The facility is operating and no current lifecycle procurement window is evidenced."
+      },
+      "finalPursuitDecision": "HOLD"
+    }
+  ],
+  "capabilityAdjudications": [
+    {
+      "claimKey": "mv_abb_001_rated_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "OFFICIAL_SOURCE_SUPPORT",
+        "UNDATED_LIVE_PAGE",
+        "PROJECT_APPLICABILITY_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_2231176d1c1bddc74e2002ccaeb5da9f9304fbfcf91f53ec25b55798ffd6d21b#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_abb_002_main_busbar_current",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "OFFICIAL_SOURCE_SUPPORT",
+        "UNDATED_LIVE_PAGE",
+        "SIMULTANEOUS_CONFIGURATION_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_2231176d1c1bddc74e2002ccaeb5da9f9304fbfcf91f53ec25b55798ffd6d21b#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_abb_003_short_time_current",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reasonCodes": [
+        "DURATION_MISSING",
+        "UNDATED_LIVE_PAGE"
+      ],
+      "sourceSpans": [
+        "doc_2231176d1c1bddc74e2002ccaeb5da9f9304fbfcf91f53ec25b55798ffd6d21b#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_hh_001_standard",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "OFFICIAL_SOURCE_SUPPORT",
+        "UNDATED_LIVE_PAGE",
+        "DOCUMENT_CONTROL_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_26c7436c2e02975cdc7035d197a12a1fb39a8a70c9f783905e235b131a5873a0#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_hh_002_rated_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "OFFICIAL_SOURCE_SUPPORT",
+        "UNDATED_LIVE_PAGE",
+        "PROJECT_CONFIGURATION_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_26c7436c2e02975cdc7035d197a12a1fb39a8a70c9f783905e235b131a5873a0#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_hh_003_rated_current",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "OFFICIAL_SOURCE_SUPPORT",
+        "UNDATED_LIVE_PAGE",
+        "PROJECT_CONFIGURATION_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_26c7436c2e02975cdc7035d197a12a1fb39a8a70c9f783905e235b131a5873a0#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_hh_004_vendor_breaking_capacity",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reasonCodes": [
+        "VENDOR_TERM_MAPPING_UNRESOLVED"
+      ],
+      "sourceSpans": [
+        "doc_26c7436c2e02975cdc7035d197a12a1fb39a8a70c9f783905e235b131a5873a0#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_si_001_rated_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED",
+      "reasonCodes": [
+        "DATED_OFFICIAL_CATALOG",
+        "PUBLISHED_CONFIGURATION_SCOPE"
+      ],
+      "sourceSpans": [
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_si_002_rated_frequency",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED",
+      "reasonCodes": [
+        "DATED_OFFICIAL_CATALOG",
+        "PUBLISHED_CONFIGURATION_SCOPE"
+      ],
+      "sourceSpans": [
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_si_003_busbar_continuous_current",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "CONDITION_BOUND_RATING",
+        "SIMULTANEOUS_CONFIGURATION_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_si_004_feeder_continuous_current",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "CONDITION_BOUND_RATING",
+        "SIMULTANEOUS_CONFIGURATION_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_si_005_short_time_withstand_current",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "DURATION_BOUND_RATING",
+        "PROJECT_CONFIGURATION_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_si_006_ambient_temperature",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED",
+      "reasonCodes": [
+        "DATED_OFFICIAL_CATALOG",
+        "PUBLISHED_RANGE_SUPPORT"
+      ],
+      "sourceSpans": [
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_si_007_primary_circuit_ip",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED",
+      "reasonCodes": [
+        "DATED_OFFICIAL_CATALOG",
+        "ENCLOSURE_SCOPE_BOUND"
+      ],
+      "sourceSpans": [
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_si_008_internal_arc_classification",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "CONFIGURATION_SPECIFIC_CLASSIFICATION",
+        "DURATION_BOUND_RATING"
+      ],
+      "sourceSpans": [
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "mv_si_009_power_frequency_withstand_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "PATH_SPECIFIC_RATING",
+        "RATED_VOLTAGE_24KV_SCOPE"
+      ],
+      "sourceSpans": [
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:1"
+      ]
+    },
+    {
+      "claimKey": "mv_si_010_lightning_impulse_withstand_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "PATH_SPECIFIC_RATING",
+        "RATED_VOLTAGE_24KV_SCOPE"
+      ],
+      "sourceSpans": [
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:1"
+      ]
+    },
+    {
+      "claimKey": "mv_si_011_rated_peak_withstand_current",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "ALTERNATIVE_VALUES_NOT_SIMULTANEOUS",
+        "FREQUENCY_CONDITION_BOUND"
+      ],
+      "sourceSpans": [
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:1"
+      ]
+    },
+    {
+      "claimKey": "tr_he_001_high_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "UNDATED_LIVE_PAGE",
+        "FAMILY_MAXIMUM_SCOPE",
+        "MODEL_UNRESOLVED"
+      ],
+      "sourceSpans": [
+        "doc_c438b1774cf50166ea40f542961a9e7d274c2a67f8c1ed39aac8597fc4edd412#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "tr_he_002_partial_discharge",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reasonCodes": [
+        "MODEL_TEST_CONDITIONS_MISSING"
+      ],
+      "sourceSpans": [
+        "doc_c438b1774cf50166ea40f542961a9e7d274c2a67f8c1ed39aac8597fc4edd412#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "tr_hh_001_rated_power_range",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "UNDATED_LIVE_PAGE",
+        "FAMILY_RANGE_SCOPE"
+      ],
+      "sourceSpans": [
+        "doc_36a99065e1b0e526578cd9c5da543bab6c858542298dbd2c9d155063d3215bd6#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "tr_hh_002_rated_voltage_range",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "UNDATED_LIVE_PAGE",
+        "WINDING_SIDE_UNRESOLVED",
+        "FAMILY_RANGE_SCOPE"
+      ],
+      "sourceSpans": [
+        "doc_36a99065e1b0e526578cd9c5da543bab6c858542298dbd2c9d155063d3215bd6#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "tr_si_001_rated_power",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "HISTORICAL_EXAMPLE_CONFIGURATION",
+        "CURRENT_OFFER_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_032bb49ec6faa1fc400198882e6e82f7cb7ef4adf67e5680a4077d7a1a4fcfd4#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "tr_si_002_primary_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "HISTORICAL_EXAMPLE_CONFIGURATION",
+        "CURRENT_OFFER_UNVERIFIED",
+        "PROJECT_VOLTAGE_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_032bb49ec6faa1fc400198882e6e82f7cb7ef4adf67e5680a4077d7a1a4fcfd4#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "tr_si_003_secondary_no_load_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "HISTORICAL_EXAMPLE_CONFIGURATION",
+        "CURRENT_OFFER_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_032bb49ec6faa1fc400198882e6e82f7cb7ef4adf67e5680a4077d7a1a4fcfd4#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "tr_si_004_impedance_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "HISTORICAL_EXAMPLE_CONFIGURATION",
+        "CURRENT_OFFER_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_032bb49ec6faa1fc400198882e6e82f7cb7ef4adf67e5680a4077d7a1a4fcfd4#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "tr_si_005_no_load_loss",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "HISTORICAL_EXAMPLE_CONFIGURATION",
+        "CONFIGURATION_SPECIFIC_LOSS",
+        "CURRENT_OFFER_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_032bb49ec6faa1fc400198882e6e82f7cb7ef4adf67e5680a4077d7a1a4fcfd4#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "tr_si_006_load_loss_120c",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "HISTORICAL_EXAMPLE_CONFIGURATION",
+        "CONFIGURATION_SPECIFIC_LOSS",
+        "REFERENCE_TEMPERATURE_BOUND"
+      ],
+      "sourceSpans": [
+        "doc_032bb49ec6faa1fc400198882e6e82f7cb7ef4adf67e5680a4077d7a1a4fcfd4#excerpt:0"
+      ]
+    },
+    {
+      "claimKey": "tr_si_007_climatic_class",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "FAMILY_SCOPE_ONLY",
+        "OTHER_CLASSES_ON_REQUEST",
+        "PROJECT_ENVIRONMENT_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_032bb49ec6faa1fc400198882e6e82f7cb7ef4adf67e5680a4077d7a1a4fcfd4#excerpt:1"
+      ]
+    },
+    {
+      "claimKey": "tr_si_008_fire_classification",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "SUPPORTED_CONDITIONAL",
+      "reasonCodes": [
+        "FAMILY_SCOPE_ONLY",
+        "CURRENT_OFFER_UNVERIFIED",
+        "PROJECT_APPLICABILITY_UNVERIFIED"
+      ],
+      "sourceSpans": [
+        "doc_032bb49ec6faa1fc400198882e6e82f7cb7ef4adf67e5680a4077d7a1a4fcfd4#excerpt:1"
+      ]
+    }
+  ],
+  "pairAdjudications": [
+    {
+      "pairKey": "pair_digitaledge_sel2_mv_abb_001_utility_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "NOT_APPLICABLE",
+      "reasonCodes": [
+        "FACILITY_VOLTAGE_NOT_EQUIPMENT_REQUIREMENT",
+        "TRANSFORMATION_BOUNDARY_MISSING",
+        "SINGLE_LINE_DIAGRAM_MISSING"
+      ],
+      "sourceSpans": [
+        "doc_2231176d1c1bddc74e2002ccaeb5da9f9304fbfcf91f53ec25b55798ffd6d21b#excerpt:0",
+        "doc_e367b6b3ba7d9fdb27c248f14c5755d7c3072132c9b98da361e7f827367df89b#excerpt:0"
+      ]
+    },
+    {
+      "pairKey": "pair_digitaledge_sel2_mv_si_001_utility_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "NOT_APPLICABLE",
+      "reasonCodes": [
+        "FACILITY_VOLTAGE_NOT_EQUIPMENT_REQUIREMENT",
+        "TRANSFORMATION_BOUNDARY_MISSING",
+        "SINGLE_LINE_DIAGRAM_MISSING"
+      ],
+      "sourceSpans": [
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:0",
+        "doc_e367b6b3ba7d9fdb27c248f14c5755d7c3072132c9b98da361e7f827367df89b#excerpt:0"
+      ]
+    },
+    {
+      "pairKey": "pair_digitaledge_sel2_tr_he_001_utility_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "NOT_APPLICABLE",
+      "reasonCodes": [
+        "FACILITY_VOLTAGE_NOT_EQUIPMENT_REQUIREMENT",
+        "TRANSFORMATION_BOUNDARY_MISSING",
+        "SINGLE_LINE_DIAGRAM_MISSING"
+      ],
+      "sourceSpans": [
+        "doc_c438b1774cf50166ea40f542961a9e7d274c2a67f8c1ed39aac8597fc4edd412#excerpt:0",
+        "doc_e367b6b3ba7d9fdb27c248f14c5755d7c3072132c9b98da361e7f827367df89b#excerpt:0"
+      ]
+    },
+    {
+      "pairKey": "pair_digitaledge_sel2_tr_hh_002_utility_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "NOT_APPLICABLE",
+      "reasonCodes": [
+        "FACILITY_VOLTAGE_NOT_EQUIPMENT_REQUIREMENT",
+        "TRANSFORMATION_BOUNDARY_MISSING",
+        "SINGLE_LINE_DIAGRAM_MISSING"
+      ],
+      "sourceSpans": [
+        "doc_36a99065e1b0e526578cd9c5da543bab6c858542298dbd2c9d155063d3215bd6#excerpt:0",
+        "doc_e367b6b3ba7d9fdb27c248f14c5755d7c3072132c9b98da361e7f827367df89b#excerpt:0"
+      ]
+    },
+    {
+      "pairKey": "pair_stt_seoul1_mv_abb_001_utility_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reasonCodes": [
+        "FACILITY_VOLTAGE_NOT_EQUIPMENT_REQUIREMENT",
+        "EQUIPMENT_PACKAGE_MISSING",
+        "SINGLE_LINE_DIAGRAM_MISSING"
+      ],
+      "sourceSpans": [
+        "doc_2231176d1c1bddc74e2002ccaeb5da9f9304fbfcf91f53ec25b55798ffd6d21b#excerpt:0",
+        "doc_8b15f15ad08791f6ce1aee7fc320eaa40e28201fdc13deff2ff20da837a2088f#excerpt:0"
+      ]
+    },
+    {
+      "pairKey": "pair_stt_seoul1_mv_hh_002_utility_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reasonCodes": [
+        "FACILITY_VOLTAGE_NOT_EQUIPMENT_REQUIREMENT",
+        "EQUIPMENT_PACKAGE_MISSING",
+        "SINGLE_LINE_DIAGRAM_MISSING"
+      ],
+      "sourceSpans": [
+        "doc_26c7436c2e02975cdc7035d197a12a1fb39a8a70c9f783905e235b131a5873a0#excerpt:0",
+        "doc_8b15f15ad08791f6ce1aee7fc320eaa40e28201fdc13deff2ff20da837a2088f#excerpt:0"
+      ]
+    },
+    {
+      "pairKey": "pair_stt_seoul1_mv_si_001_utility_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reasonCodes": [
+        "FACILITY_VOLTAGE_NOT_EQUIPMENT_REQUIREMENT",
+        "EQUIPMENT_PACKAGE_MISSING",
+        "SINGLE_LINE_DIAGRAM_MISSING"
+      ],
+      "sourceSpans": [
+        "doc_8b15f15ad08791f6ce1aee7fc320eaa40e28201fdc13deff2ff20da837a2088f#excerpt:0",
+        "doc_d68f985397d6d7ec2d11df84b805b51d37b4a416de50e11863c834f167b22699#excerpt:0"
+      ]
+    },
+    {
+      "pairKey": "pair_stt_seoul1_tr_he_001_utility_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reasonCodes": [
+        "FACILITY_VOLTAGE_NOT_EQUIPMENT_REQUIREMENT",
+        "TRANSFORMATION_BOUNDARY_MISSING",
+        "SINGLE_LINE_DIAGRAM_MISSING"
+      ],
+      "sourceSpans": [
+        "doc_8b15f15ad08791f6ce1aee7fc320eaa40e28201fdc13deff2ff20da837a2088f#excerpt:0",
+        "doc_c438b1774cf50166ea40f542961a9e7d274c2a67f8c1ed39aac8597fc4edd412#excerpt:0"
+      ]
+    },
+    {
+      "pairKey": "pair_stt_seoul1_tr_hh_002_utility_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reasonCodes": [
+        "FACILITY_VOLTAGE_NOT_EQUIPMENT_REQUIREMENT",
+        "TRANSFORMATION_BOUNDARY_MISSING",
+        "SINGLE_LINE_DIAGRAM_MISSING"
+      ],
+      "sourceSpans": [
+        "doc_36a99065e1b0e526578cd9c5da543bab6c858542298dbd2c9d155063d3215bd6#excerpt:0",
+        "doc_8b15f15ad08791f6ce1aee7fc320eaa40e28201fdc13deff2ff20da837a2088f#excerpt:0"
+      ]
+    },
+    {
+      "pairKey": "pair_stt_seoul1_tr_si_002_utility_voltage",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reasonCodes": [
+        "FACILITY_VOLTAGE_NOT_EQUIPMENT_REQUIREMENT",
+        "TRANSFORMATION_BOUNDARY_MISSING",
+        "SINGLE_LINE_DIAGRAM_MISSING"
+      ],
+      "sourceSpans": [
+        "doc_032bb49ec6faa1fc400198882e6e82f7cb7ef4adf67e5680a4077d7a1a4fcfd4#excerpt:0",
+        "doc_8b15f15ad08791f6ce1aee7fc320eaa40e28201fdc13deff2ff20da837a2088f#excerpt:0"
+      ]
+    }
+  ],
+  "revisionAdjudications": [
+    {
+      "documentKey": "reference_iec_62271_200_2021",
+      "supersedesDocumentKey": "reference_iec_62271_200_2011",
+      "reviewAuthority": "HUMAN_DOMAIN_REVIEW",
+      "reviewReceipt": "golden-batch01-jang-tae-ho-20260726t034810z-101802f83365",
+      "reviewedAt": "2026-07-26T03:48:10.000Z",
+      "relationshipStatus": "CONFIRMED_SUPERSESSION",
+      "reasonCodes": [
+        "IEC_EXPLICIT_CANCELLATION_AND_REPLACEMENT",
+        "SAME_STANDARD_SERIES_LATER_EDITION"
+      ],
+      "sourceSpans": [
+        "doc_7e62d2d7d3ad7c077a9987537c4bb1e627da154e999939f9cd195ff734fc29ec#excerpt:0",
+        "doc_a93573de72e2bb6a8d93e9ae71101c01f71a160fabce28eaac5f37a927ab9db4#excerpt:0"
+      ]
+    }
+  ]
+}

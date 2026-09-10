@@ -1,0 +1,2313 @@
+{
+  "schemaVersion": "pursuit-golden-source-candidates-v0",
+  "boundary": "PUBLIC_SOURCE_REVIEW_SET_NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "evaluationAsOf": "2026-07-26T00:00:00.000Z",
+  "scope": {
+    "verticalId": "datacenter_infrastructure",
+    "jurisdiction": "KR",
+    "productFamilyIds": [
+      "medium_voltage_switchgear",
+      "transformer"
+    ]
+  },
+  "documents": [
+    {
+      "documentKey": "project_naver_gak_chuncheon_press_2013",
+      "sourceClass": "PROJECT",
+      "publisher": "NAVER",
+      "title": "NAVER GAK Chuncheon opening press release",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "navercorp.com",
+      "sourceUrl": "https://navercorp.com/media/pressReleasesDetail?seq=28880",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2013-06-20T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "naver_gak_chuncheon_press",
+        "revisionKey": "2013-06-20",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "opening-and-facility-description",
+          "text": "GAK Chuncheon is described as NAVER's data center in Chuncheon."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_naver_gak_chuncheon_facility",
+      "sourceClass": "PROJECT",
+      "publisher": "NAVER",
+      "title": "GAK Chuncheon facility page",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "datacenter.navercorp.com",
+      "sourceUrl": "https://datacenter.navercorp.com/gak/gak-chuncheon",
+      "documentKind": "FACILITY_PAGE",
+      "publishedAt": null,
+      "publishedAtPrecision": "UNKNOWN",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "naver_gak_chuncheon_facility",
+        "revisionKey": "retrieved-2026-07-25",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "power-system-summary",
+          "text": "Maximum power 40,000kW; dual power and Dynamic UPS/STS are described."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_naver_gak_sejong_press_2023",
+      "sourceClass": "PROJECT",
+      "publisher": "NAVER",
+      "title": "NAVER GAK Sejong opening press release",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "navercorp.com",
+      "sourceUrl": "https://navercorp.com/media/pressReleasesDetail?seq=2255",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2023-11-08T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "naver_gak_sejong_press",
+        "revisionKey": "2023-11-08",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "opening-summary",
+          "text": "GAK Sejong is presented as a newly opened NAVER data center."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_naver_gak_overview",
+      "sourceClass": "PROJECT",
+      "publisher": "NAVER",
+      "title": "NAVER GAK overview",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "datacenter.navercorp.com",
+      "sourceUrl": "https://datacenter.navercorp.com/gak",
+      "documentKind": "PORTFOLIO_PAGE",
+      "publishedAt": null,
+      "publishedAtPrecision": "UNKNOWN",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "naver_gak_overview",
+        "revisionKey": "retrieved-2026-07-25",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "gak-portfolio",
+          "text": "NAVER's GAK portfolio includes Chuncheon and Sejong facilities."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_naver_gak_sejong_facility",
+      "sourceClass": "PROJECT",
+      "publisher": "NAVER",
+      "title": "GAK Sejong facility page",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "datacenter.navercorp.com",
+      "sourceUrl": "https://datacenter.navercorp.com/gak/gak-sejong",
+      "documentKind": "FACILITY_PAGE",
+      "publishedAt": null,
+      "publishedAtPrecision": "UNKNOWN",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "naver_gak_sejong_facility",
+        "revisionKey": "retrieved-2026-07-25",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "power-system-summary",
+          "text": "The facility page describes 154kV, dual feeds, up to 270MW, UPS, and generators."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_naver_gak_sejong_expansion_2026_06",
+      "sourceClass": "PROJECT",
+      "publisher": "NAVER",
+      "title": "NAVER AI infrastructure expansion roadmap",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "navercorp.com",
+      "sourceUrl": "https://www.navercorp.com/media/pressReleasesDetail?seq=10034355",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2026-06-08T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-26T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "naver_gak_sejong_expansion_press",
+        "revisionKey": "2026-06-08",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "capacity-expansion-roadmap",
+          "text": "NAVER describes GAK Sejong expansion milestones of 55MW, 100MW, and 200MW through 2028."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_naver_gak_sejong_ai_factory_2026_07",
+      "sourceClass": "PROJECT",
+      "publisher": "NAVER",
+      "title": "NAVER GAK Sejong 200MW AI Factory announcement",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "navercorp.com",
+      "sourceUrl": "https://www.navercorp.com/media/pressReleasesDetail?seq=10034517",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2026-07-24T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-26T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "naver_gak_sejong_ai_factory_press",
+        "revisionKey": "2026-07-24",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "ai-factory-execution",
+          "text": "NAVER describes a 200MW NVIDIA DSX AI Factory at GAK Sejong as entering execution."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_kakao_ansan_press_2024",
+      "sourceClass": "PROJECT",
+      "publisher": "Kakao",
+      "title": "Kakao Data Center Ansan opening",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "kakaocorp.com",
+      "sourceUrl": "https://www.kakaocorp.com/page/detail/11097",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2024-06-12T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "kakao_ansan_press",
+        "revisionKey": "2024-06-12",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "opening-and-redundancy",
+          "text": "Kakao describes opening the Ansan data center and resilient infrastructure."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_lguplus_pyeongchon2_press_2023",
+      "sourceClass": "PROJECT",
+      "publisher": "LG U+",
+      "title": "LG U+ Pyeongchon 2 data center completion",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "news.lguplus.com",
+      "sourceUrl": "https://news.lguplus.com/?p=13762",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2023-10-26T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "lguplus_pyeongchon2_press",
+        "revisionKey": "2023-10-26",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "completion-summary",
+          "text": "LG U+ describes completion of Pyeongchon 2 data center."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_lguplus_paju_press_2026_02",
+      "sourceClass": "PROJECT",
+      "publisher": "LG U+",
+      "title": "LG U+ Paju AI data center construction update",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "news.lguplus.com",
+      "sourceUrl": "https://news.lguplus.com/?p=21246",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2026-02-24T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "lguplus_paju_press",
+        "revisionKey": "2026-02-24",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "construction-plan",
+          "text": "The Paju AI data center is described as a construction project."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_lguplus_paju_press_2026_06",
+      "sourceClass": "PROJECT",
+      "publisher": "LG U+",
+      "title": "LG U+ Paju AI data center progress update",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "news.lguplus.com",
+      "sourceUrl": "https://news.lguplus.com/22175",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2026-06-29T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "lguplus_paju_press",
+        "revisionKey": "2026-06-29",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "construction-progress",
+          "text": "LG U+ reports Paju AI data center construction with a 2027 target."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_ktcloud_gasan_press_2025",
+      "sourceClass": "PROJECT",
+      "publisher": "kt cloud",
+      "title": "kt cloud Gasan AIDC opening",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "ktcloud.com",
+      "sourceUrl": "https://www.ktcloud.com/media/press/20251106090958820?lan=kor",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2025-11-06T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "ktcloud_gasan_press",
+        "revisionKey": "2025-11-06",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "opening-summary",
+          "text": "kt cloud describes opening the Gasan AI data center."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_kt_gasan_investor_2026",
+      "sourceClass": "PROJECT",
+      "publisher": "KT",
+      "title": "KT fourth-quarter 2025 earnings presentation",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "corp.kt.com",
+      "sourceUrl": "https://corp.kt.com/attach/record/2025/4Q25_KT_ER_PT_KOR_260209_FIN.pdf",
+      "documentKind": "INVESTOR_PRESENTATION_PDF",
+      "publishedAt": "2026-02-09T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "kt_quarterly_earnings_presentation",
+        "revisionKey": "2025-q4",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "gasan-aidc-reference",
+          "text": "The presentation references Gasan AIDC within KT's data-center business."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_samsungsds_dongtan_press_2023",
+      "sourceClass": "PROJECT",
+      "publisher": "Samsung SDS",
+      "title": "Samsung SDS Dongtan data center media day",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "samsungsds.com",
+      "sourceUrl": "https://www.samsungsds.com/kr/news/230310-sdscloudmediaday.html",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2023-03-13T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "samsungsds_dongtan_press",
+        "revisionKey": "2023-03-13",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "facility-operation",
+          "text": "Samsung SDS presents the Dongtan data center as operating cloud infrastructure."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_nhn_gwangju_press_2023",
+      "sourceClass": "PROJECT",
+      "publisher": "NHN",
+      "title": "National AI Data Center in Gwangju service launch",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "inside.nhn.com",
+      "sourceUrl": "https://inside.nhn.com/news/524",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2023-11-06T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "nhn_gwangju_ai_press",
+        "revisionKey": "2023-11-06",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "service-launch",
+          "text": "NHN reports the Gwangju National AI Data Center service launch."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_equinix_sl2x_press_2022",
+      "sourceClass": "PROJECT",
+      "publisher": "Equinix",
+      "title": "Equinix and GIC Seoul xScale investment",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "investor.equinix.com",
+      "sourceUrl": "https://investor.equinix.com/news-events/press-releases/detail/13/equinix-and-gic-to-invest-us525-million-to-build",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2022-01-26T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "equinix_sl2x_press",
+        "revisionKey": "2022-01-26",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "investment-summary",
+          "text": "Equinix and GIC announce investment in Seoul xScale data centers."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_equinix_sl2x_specs",
+      "sourceClass": "PROJECT",
+      "publisher": "Equinix",
+      "title": "Seoul SL2x technical specifications",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "equinix.com",
+      "sourceUrl": "https://www.equinix.com/kr/ko/resources/data-sheets/seoul-sl2x-tech-specs",
+      "documentKind": "FACILITY_SPECIFICATION",
+      "publishedAt": null,
+      "publishedAtPrecision": "UNKNOWN",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "equinix_sl2x_specs",
+        "revisionKey": "retrieved-2026-07-25",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "facility-specification",
+          "text": "Equinix publishes current technical specifications for the Seoul SL2x facility."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_digitalrealty_icn10_press_2026",
+      "sourceClass": "PROJECT",
+      "publisher": "Digital Realty",
+      "title": "Digital Realty ICN10 colocation availability",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "investor.digitalrealty.com",
+      "sourceUrl": "https://investor.digitalrealty.com/news-releases/news-release-details/digital-realty-delivers-colocation-infrastructure-support",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2026-03-25T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "digitalrealty_icn10_press",
+        "revisionKey": "2026-03-25",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "availability-summary",
+          "text": "Digital Realty announces colocation infrastructure availability at ICN10."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_digitalrealty_icn10_facility",
+      "sourceClass": "PROJECT",
+      "publisher": "Digital Realty",
+      "title": "Digital Realty ICN10 facility page",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "digitalrealty.com",
+      "sourceUrl": "https://www.digitalrealty.com/de/data-centers/asia-pacific/seoul/icn10",
+      "documentKind": "FACILITY_PAGE",
+      "publishedAt": null,
+      "publishedAtPrecision": "UNKNOWN",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "digitalrealty_icn10_facility",
+        "revisionKey": "retrieved-2026-07-25",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "facility-summary",
+          "text": "Digital Realty lists ICN10 as a Seoul data-center facility."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_empyrion_kr1_press_2025",
+      "sourceClass": "PROJECT",
+      "publisher": "Empyrion Digital",
+      "title": "Empyrion Digital KR1 Gangnam grand opening",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "empyriondigital.com",
+      "sourceUrl": "https://empyriondigital.com/empyrion-digital-celebrates-grand-opening-of-kr1-gangnam-data-centre/",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2025-07-02T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "empyrion_kr1_press",
+        "revisionKey": "2025-07-02",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "grand-opening",
+          "text": "Empyrion Digital reports the grand opening of KR1 Gangnam."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_stt_seoul1_press_2026",
+      "sourceClass": "PROJECT",
+      "publisher": "ST Telemedia Global Data Centres",
+      "title": "STT Seoul 1 opening",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "sttelemediagdc.com",
+      "sourceUrl": "https://www.sttelemediagdc.com/newsroom/stt-gdc-opens-stt-seoul-1-extending-its-platform-into-south-korea",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2026-06-16T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "stt_seoul1_press",
+        "revisionKey": "2026-06-16",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "opening-summary",
+          "text": "STT GDC reports opening STT Seoul 1 in South Korea."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_stt_seoul1_facility_spec_2026",
+      "sourceClass": "PROJECT",
+      "publisher": "ST Telemedia Global Data Centres",
+      "title": "STT Seoul 1 Factsheet, July 2026",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "assets.sttelemediagdc.com",
+      "sourceUrl": "https://assets.sttelemediagdc.com/sttgdc/global_en/public/2026-07/STT_Seoul_1_Factsheet_vJuly2026_EN.pdf",
+      "documentKind": "FACILITY_SPECIFICATION",
+      "publishedAt": "2026-07-16T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-26T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": "2382b2d98b5fa562b0538b13a45a311389cd544cb3a8212db45c8beb710e8b45",
+      "revision": {
+        "seriesKey": "stt_seoul1_facility_specification",
+        "revisionKey": "2026-07",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "electrical-system-summary",
+          "text": "STT-Seoul-1: IT-load=30MW; utility=dual-22.9kV; UPS=distributed-redundant; generator-runtime=24h."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_skaws_ulsan_government_2025",
+      "sourceClass": "PROJECT",
+      "publisher": "Ulsan Metropolitan City",
+      "title": "Ulsan AI data center investment announcement",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "ulsan.go.kr",
+      "sourceUrl": "https://www.ulsan.go.kr/u/rep/bbs/view.do?bbsId=BBS_0000000000000027&dataId=172896",
+      "documentKind": "GOVERNMENT_NOTICE",
+      "publishedAt": "2025-06-22T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "skaws_ulsan_government_notice",
+        "revisionKey": "2025-06-22",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "investment-announcement",
+          "text": "Ulsan announces an AI data-center investment involving SK and AWS."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_skaws_ulsan_skt_2026",
+      "sourceClass": "PROJECT",
+      "publisher": "SK Telecom",
+      "title": "SK Telecom Ulsan AI data center construction update",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "news.sktelecom.com",
+      "sourceUrl": "https://news.sktelecom.com/227469",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2026-07-05T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-26T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "skaws_ulsan_skt_press",
+        "revisionKey": "2026-07-05",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "construction-update",
+          "text": "SK Telecom says Ulsan AI data-center construction is underway with AWS and targets operation in the second half of 2027."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_skaws_ulsan_skt_mep_2025",
+      "sourceClass": "PROJECT",
+      "publisher": "SK Telecom",
+      "title": "SK Telecom Ulsan AI data center integrated MEP purchase contract",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "news.sktelecom.com",
+      "sourceUrl": "https://news.sktelecom.com/214754",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2025-08-31T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-26T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "skaws_ulsan_skt_mep_contract",
+        "revisionKey": "2025-08-31",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "integrated-mep-purchase-contract",
+          "text": "SK Telecom identifies Schneider Electric as integrated MEP supplier for switchgear, UPS, transformers, automation, and another equipment area at Ulsan."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_digitaledge_sel2_press_2024",
+      "sourceClass": "PROJECT",
+      "publisher": "Digital Edge",
+      "title": "Digital Edge SEL2 availability announcement",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "digitaledgedc.com",
+      "sourceUrl": "https://www.digitaledgedc.com/resources/newsroom/digital-edge-announces-availability-of-36mw-data-center-in-south-korea/",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2024-10-16T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "digitaledge_sel2_press",
+        "revisionKey": "2024-10-16",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "availability-summary",
+          "text": "Digital Edge announces availability of the 36MW SEL2 data center."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_digitaledge_sel2_facility",
+      "sourceClass": "PROJECT",
+      "publisher": "Digital Edge",
+      "title": "Digital Edge SEL2 facility page",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "digitaledgedc.com",
+      "sourceUrl": "https://www.digitaledgedc.com/resources/data-center/sel2/",
+      "documentKind": "FACILITY_PAGE",
+      "publishedAt": null,
+      "publishedAtPrecision": "UNKNOWN",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "digitaledge_sel2_facility",
+        "revisionKey": "retrieved-2026-07-25",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "facility-summary",
+          "text": "Digital Edge lists SEL2 as its Incheon data-center facility."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_digitaledge_sel2_facility_spec_2024_11",
+      "sourceClass": "PROJECT",
+      "publisher": "Digital Edge",
+      "title": "Digital Edge SEL2 facility specification",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "digitaledgedc.com",
+      "sourceUrl": "https://www.digitaledgedc.com/wp-content/uploads/2024/11/SEL2.pdf",
+      "documentKind": "FACILITY_SPECIFICATION",
+      "publishedAt": "2024-11-01T00:00:00.000Z",
+      "publishedAtPrecision": "MONTH",
+      "retrievedAt": "2026-07-26T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": "abcc91621b9ab4242f519e3ffbf4fbe482724e49604e9c6354954dd2e3ee425f",
+      "revision": {
+        "seriesKey": "digitaledge_sel2_facility_specification",
+        "revisionKey": "2024-11",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "power-and-cooling-specification",
+          "text": "SEL2: capacity=36MW; utility=2x154kV; UPS=N+1-SUPS; generator=N+1-catcher; fuel=24h; design-PUE=1.28."
+        }
+      ]
+    },
+    {
+      "documentKey": "project_digitaledge_sel5_press_2026",
+      "sourceClass": "PROJECT",
+      "publisher": "Digital Edge",
+      "title": "Digital Edge SEL5 power secured announcement",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "digitaledgedc.com",
+      "sourceUrl": "https://www.digitaledgedc.com/resources/newsroom/digital-edge-secures-power-60mw-ansan-data-center/",
+      "documentKind": "PRESS_RELEASE",
+      "publishedAt": "2026-06-08T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "digitaledge_sel5_press",
+        "revisionKey": "2026-06-08",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "power-and-plan",
+          "text": "Digital Edge announces secured power for a planned 60MW Ansan data center."
+        }
+      ]
+    },
+    {
+      "documentKey": "capability_siemens_nxplus_c24_2024",
+      "sourceClass": "CAPABILITY",
+      "publisher": "Siemens",
+      "title": "NXPLUS C 24 medium-voltage switchgear technical data",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "cache.industry.siemens.com",
+      "sourceUrl": "https://cache.industry.siemens.com/dl/files/254/109972254/att_1289514/v1/HA_35_42_NXPlusC_24_EN.pdf",
+      "documentKind": "PRODUCT_DATASHEET_PDF",
+      "publishedAt": "2024-01-01T00:00:00.000Z",
+      "publishedAtPrecision": "YEAR",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": "30b44007087b87421baf4f2e1d9ef9adef8ea434e03d6f4d6efd8765e6b40450",
+      "revision": {
+        "seriesKey": "siemens_nxplus_c24_technical_data",
+        "revisionKey": "ha-35-42-2024",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "technical-data-table",
+          "text": "7.2/12/15/17.5/24kV; 50/60Hz; busbar≤2500A; feeder≤2000A; short-time=20/25kA@3s; IP65; IAC=A-FLR-25kA@1s; ambient=-5…55°C."
+        },
+        {
+          "locator": "technical-data-table-24kv-insulation-and-peak",
+          "text": "At-24kV: power-frequency-withstand=50kV; lightning-impulse-withstand=125kV; rated-peak-withstand=54/68kA."
+        }
+      ]
+    },
+    {
+      "documentKey": "capability_hdhyundai_mv_lv",
+      "sourceClass": "CAPABILITY",
+      "publisher": "HD Hyundai Electric",
+      "title": "Medium and low voltage switchgear product page",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "hyundai-electric.com",
+      "sourceUrl": "https://www.hyundai-electric.com/elect/en/product/product5.jsp",
+      "documentKind": "PRODUCT_PAGE",
+      "publishedAt": null,
+      "publishedAtPrecision": "UNKNOWN",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "hdhyundai_mv_lv_product_page",
+        "revisionKey": "retrieved-2026-07-25",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "hrs-llf-specification",
+          "text": "HRS-LLF: IEC62271-200; 12/24kV; 630A; breaking-capacity=21kA@3s."
+        }
+      ]
+    },
+    {
+      "documentKey": "capability_abb_unigear_zs3_2",
+      "sourceClass": "CAPABILITY",
+      "publisher": "ABB",
+      "title": "UniGear ZS3.2 product page",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "new.abb.com",
+      "sourceUrl": "https://new.abb.com/medium-voltage/switchgear/air-insulated/iec-and-other-standards/iec-air-insulated-primary-switchgear-unigear-zs3-2",
+      "documentKind": "PRODUCT_PAGE",
+      "publishedAt": null,
+      "publishedAtPrecision": "UNKNOWN",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "abb_unigear_zs3_2_product_page",
+        "revisionKey": "retrieved-2026-07-25",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "ratings-summary",
+          "text": "UniGear-ZS3.2: rated-voltage≤24kV; main-busbar≤4000A; short-time-current≤63kA; duration not stated in candidate excerpt."
+        }
+      ]
+    },
+    {
+      "documentKey": "capability_siemens_energy_geafol_neo_2021",
+      "sourceClass": "CAPABILITY",
+      "publisher": "Siemens Energy",
+      "title": "GEAFOL Neo dry-type transformer brochure",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "assets.siemens-energy.com",
+      "sourceUrl": "https://assets.siemens-energy.com/dam/c4c225ef-3c02-4f78-bbdd-b0580096990d/GEAFOLNeoBrochureEN-pdf_Original%20file.pdf",
+      "documentKind": "PRODUCT_BROCHURE_PDF",
+      "publishedAt": "2021-04-01T00:00:00.000Z",
+      "publishedAtPrecision": "MONTH",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": "20d1a80b6bf9ead2a6b6f713b4df02499751c9ce20504c0c198e3469472947e4",
+      "revision": {
+        "seriesKey": "siemens_energy_geafol_neo_brochure",
+        "revisionKey": "emtr-b10021-00-7600-2021-04",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "example-order-4gx6364-3ey",
+          "text": "Order-4GX6364-3EY: 2000kVA; 20/0.4kV; impedance=6%; no-load-loss=2340W; load-loss@120°C=16000W."
+        },
+        {
+          "locator": "family-features-page-6",
+          "text": "GEAFOL-Neo: IEC60076-11; classes=C3/E3/F1; power≤6.3MVA; MV≤40.5kV; other-classes-on-request."
+        }
+      ]
+    },
+    {
+      "documentKey": "capability_hdhyundai_distribution_transformer",
+      "sourceClass": "CAPABILITY",
+      "publisher": "HD Hyundai Electric",
+      "title": "Distribution transformer product page",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "hyundai-electric.com",
+      "sourceUrl": "https://www.hyundai-electric.com/elect/en/product/product6.jsp?anchor=loca11",
+      "documentKind": "PRODUCT_PAGE",
+      "publishedAt": null,
+      "publishedAtPrecision": "UNKNOWN",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "hdhyundai_distribution_transformer_page",
+        "revisionKey": "retrieved-2026-07-25",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "ratings-range",
+          "text": "Distribution-transformer family: 100–20,000kVA; rated-voltage=220–36,000V."
+        }
+      ]
+    },
+    {
+      "documentKey": "capability_hitachi_resibloc",
+      "sourceClass": "CAPABILITY",
+      "publisher": "Hitachi Energy",
+      "title": "RESIBLOC dry-type transformer product page",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "hitachienergy.com",
+      "sourceUrl": "https://www.hitachienergy.com/products-and-solutions/transformers/distribution-transformers/dry-type-transformers/resibloc-transformers",
+      "documentKind": "PRODUCT_PAGE",
+      "publishedAt": null,
+      "publishedAtPrecision": "UNKNOWN",
+      "retrievedAt": "2026-07-25T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "hitachi_resibloc_product_page",
+        "revisionKey": "retrieved-2026-07-25",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "ratings-summary",
+          "text": "RESIBLOC-family: high-voltage≤36kV; partial-discharge<10pC; model and test conditions require review."
+        }
+      ]
+    },
+    {
+      "documentKey": "reference_iec_62271_200_2011",
+      "sourceClass": "REFERENCE",
+      "publisher": "International Electrotechnical Commission",
+      "title": "IEC 62271-200:2011 Edition 2.0",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "webstore.iec.ch",
+      "sourceUrl": "https://webstore.iec.ch/en/publication/6716",
+      "documentKind": "STANDARD_CATALOG_PAGE",
+      "publishedAt": "2011-10-24T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-26T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "iec_62271_200_standard",
+        "revisionKey": "edition-2-2011",
+        "supersedesDocumentKey": null
+      },
+      "excerpts": [
+        {
+          "locator": "edition-and-lifecycle",
+          "text": "IEC 62271-200:2011 is Edition 2.0, published 2011-10-24 and withdrawn 2021-05-27."
+        }
+      ]
+    },
+    {
+      "documentKey": "reference_iec_62271_200_2021",
+      "sourceClass": "REFERENCE",
+      "publisher": "International Electrotechnical Commission",
+      "title": "IEC 62271-200:2021 Edition 3.0",
+      "authorityTypeCandidate": "OFFICIAL_PRIMARY_SOURCE_CANDIDATE",
+      "officialDomainCandidate": "webstore.iec.ch",
+      "sourceUrl": "https://webstore.iec.ch/en/publication/63466",
+      "documentKind": "STANDARD_CATALOG_PAGE",
+      "publishedAt": "2021-05-27T00:00:00.000Z",
+      "publishedAtPrecision": "DAY",
+      "retrievedAt": "2026-07-26T00:00:00.000Z",
+      "documentStored": false,
+      "remoteContentSha256Candidate": null,
+      "revision": {
+        "seriesKey": "iec_62271_200_standard",
+        "revisionKey": "edition-3-2021",
+        "supersedesDocumentKey": "reference_iec_62271_200_2011"
+      },
+      "excerpts": [
+        {
+          "locator": "supersession-statement",
+          "text": "IEC states that the third edition cancels and replaces the second edition published in 2011 and constitutes a technical revision."
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "projectKey": "naver_gak_chuncheon",
+      "name": "NAVER GAK Chuncheon",
+      "location": {
+        "countryCode": "KR",
+        "region": "Gangwon",
+        "locality": "Chuncheon"
+      },
+      "documentKeys": [
+        "project_naver_gak_chuncheon_press_2013",
+        "project_naver_gak_chuncheon_facility"
+      ],
+      "stageObservation": {
+        "stage": "OPERATION",
+        "observedAt": "2026-07-25T00:00:00.000Z",
+        "documentKey": "project_naver_gak_chuncheon_facility",
+        "forwardLooking": false
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "naver_gak_sejong",
+      "name": "NAVER GAK Sejong",
+      "location": {
+        "countryCode": "KR",
+        "region": "Sejong",
+        "locality": "Sejong"
+      },
+      "documentKeys": [
+        "project_naver_gak_sejong_ai_factory_2026_07",
+        "project_naver_gak_sejong_expansion_2026_06",
+        "project_naver_gak_sejong_press_2023",
+        "project_naver_gak_overview",
+        "project_naver_gak_sejong_facility"
+      ],
+      "stageObservation": {
+        "stage": "OPERATION",
+        "observedAt": "2026-07-25T00:00:00.000Z",
+        "documentKey": "project_naver_gak_sejong_facility",
+        "forwardLooking": false
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The OPERATION observation applies to the existing GAK Sejong facility; the 2026 expansion and AI Factory announcements are separate scope candidates.",
+        "The expansion sources do not establish equipment specifications, procurement status, supplier selection, or an open influence window."
+      ]
+    },
+    {
+      "projectKey": "kakao_data_center_ansan",
+      "name": "Kakao Data Center Ansan",
+      "location": {
+        "countryCode": "KR",
+        "region": "Gyeonggi",
+        "locality": "Ansan"
+      },
+      "documentKeys": [
+        "project_kakao_ansan_press_2024"
+      ],
+      "stageObservation": {
+        "stage": "OPERATION",
+        "observedAt": "2024-06-12T00:00:00.000Z",
+        "documentKey": "project_kakao_ansan_press_2024",
+        "forwardLooking": false
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "lguplus_pyeongchon2",
+      "name": "LG U+ Pyeongchon 2",
+      "location": {
+        "countryCode": "KR",
+        "region": "Gyeonggi",
+        "locality": "Anyang"
+      },
+      "documentKeys": [
+        "project_lguplus_pyeongchon2_press_2023"
+      ],
+      "stageObservation": {
+        "stage": "OPERATION",
+        "observedAt": "2023-10-26T00:00:00.000Z",
+        "documentKey": "project_lguplus_pyeongchon2_press_2023",
+        "forwardLooking": false
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "lguplus_paju_aidc",
+      "name": "LG U+ Paju AI Data Center",
+      "location": {
+        "countryCode": "KR",
+        "region": "Gyeonggi",
+        "locality": "Paju"
+      },
+      "documentKeys": [
+        "project_lguplus_paju_press_2026_02",
+        "project_lguplus_paju_press_2026_06"
+      ],
+      "stageObservation": {
+        "stage": "CONSTRUCTION",
+        "observedAt": "2026-06-29T00:00:00.000Z",
+        "documentKey": "project_lguplus_paju_press_2026_06",
+        "forwardLooking": true
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "ktcloud_gasan_aidc",
+      "name": "kt cloud Gasan AIDC",
+      "location": {
+        "countryCode": "KR",
+        "region": "Seoul",
+        "locality": "Geumcheon"
+      },
+      "documentKeys": [
+        "project_ktcloud_gasan_press_2025",
+        "project_kt_gasan_investor_2026"
+      ],
+      "stageObservation": {
+        "stage": "OPERATION",
+        "observedAt": "2025-11-06T00:00:00.000Z",
+        "documentKey": "project_ktcloud_gasan_press_2025",
+        "forwardLooking": false
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "samsungsds_dongtan",
+      "name": "Samsung SDS Dongtan Data Center",
+      "location": {
+        "countryCode": "KR",
+        "region": "Gyeonggi",
+        "locality": "Hwaseong"
+      },
+      "documentKeys": [
+        "project_samsungsds_dongtan_press_2023"
+      ],
+      "stageObservation": {
+        "stage": "OPERATION",
+        "observedAt": "2023-03-13T00:00:00.000Z",
+        "documentKey": "project_samsungsds_dongtan_press_2023",
+        "forwardLooking": false
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "nhn_gwangju_national_ai",
+      "name": "NHN Gwangju National AI Data Center",
+      "location": {
+        "countryCode": "KR",
+        "region": "Gwangju",
+        "locality": "Gwangju"
+      },
+      "documentKeys": [
+        "project_nhn_gwangju_press_2023"
+      ],
+      "stageObservation": {
+        "stage": "OPERATION",
+        "observedAt": "2023-11-06T00:00:00.000Z",
+        "documentKey": "project_nhn_gwangju_press_2023",
+        "forwardLooking": false
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "equinix_sl2x",
+      "name": "Equinix SL2x",
+      "location": {
+        "countryCode": "KR",
+        "region": "Gyeonggi",
+        "locality": "Goyang"
+      },
+      "documentKeys": [
+        "project_equinix_sl2x_press_2022",
+        "project_equinix_sl2x_specs"
+      ],
+      "stageObservation": {
+        "stage": "OPERATION",
+        "observedAt": "2026-07-25T00:00:00.000Z",
+        "documentKey": "project_equinix_sl2x_specs",
+        "forwardLooking": false
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "digitalrealty_icn10",
+      "name": "Digital Realty ICN10",
+      "location": {
+        "countryCode": "KR",
+        "region": "Seoul",
+        "locality": "Seoul"
+      },
+      "documentKeys": [
+        "project_digitalrealty_icn10_press_2026",
+        "project_digitalrealty_icn10_facility"
+      ],
+      "stageObservation": {
+        "stage": "OPERATION",
+        "observedAt": "2026-03-25T00:00:00.000Z",
+        "documentKey": "project_digitalrealty_icn10_press_2026",
+        "forwardLooking": false
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "empyrion_kr1_gangnam",
+      "name": "Empyrion Digital KR1 Gangnam",
+      "location": {
+        "countryCode": "KR",
+        "region": "Seoul",
+        "locality": "Gangnam"
+      },
+      "documentKeys": [
+        "project_empyrion_kr1_press_2025"
+      ],
+      "stageObservation": {
+        "stage": "OPERATION",
+        "observedAt": "2025-07-02T00:00:00.000Z",
+        "documentKey": "project_empyrion_kr1_press_2025",
+        "forwardLooking": false
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "stt_seoul1",
+      "name": "STT Seoul 1",
+      "location": {
+        "countryCode": "KR",
+        "region": "Seoul",
+        "locality": "Seoul"
+      },
+      "documentKeys": [
+        "project_stt_seoul1_facility_spec_2026",
+        "project_stt_seoul1_press_2026"
+      ],
+      "stageObservation": {
+        "stage": "OPERATION",
+        "observedAt": "2026-06-16T00:00:00.000Z",
+        "documentKey": "project_stt_seoul1_press_2026",
+        "forwardLooking": false
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "skaws_ulsan_aidc",
+      "name": "SK-AWS Ulsan AI Data Center",
+      "location": {
+        "countryCode": "KR",
+        "region": "Ulsan",
+        "locality": "Ulsan"
+      },
+      "documentKeys": [
+        "project_skaws_ulsan_government_2025",
+        "project_skaws_ulsan_skt_mep_2025",
+        "project_skaws_ulsan_skt_2026"
+      ],
+      "stageObservation": {
+        "stage": "CONSTRUCTION",
+        "observedAt": "2026-07-05T00:00:00.000Z",
+        "documentKey": "project_skaws_ulsan_skt_2026",
+        "forwardLooking": true
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "The integrated MEP contract is strong blocker evidence for initial-build switchgear and transformer scope, but no final pursuit decision is claimed."
+      ]
+    },
+    {
+      "projectKey": "digitaledge_sel2",
+      "name": "Digital Edge SEL2",
+      "location": {
+        "countryCode": "KR",
+        "region": "Incheon",
+        "locality": "Incheon"
+      },
+      "documentKeys": [
+        "project_digitaledge_sel2_press_2024",
+        "project_digitaledge_sel2_facility",
+        "project_digitaledge_sel2_facility_spec_2024_11"
+      ],
+      "stageObservation": {
+        "stage": "OPERATION",
+        "observedAt": "2024-10-16T00:00:00.000Z",
+        "documentKey": "project_digitaledge_sel2_press_2024",
+        "forwardLooking": false
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    },
+    {
+      "projectKey": "digitaledge_sel5",
+      "name": "Digital Edge SEL5",
+      "location": {
+        "countryCode": "KR",
+        "region": "Gyeonggi",
+        "locality": "Ansan"
+      },
+      "documentKeys": [
+        "project_digitaledge_sel5_press_2026"
+      ],
+      "stageObservation": {
+        "stage": "ANNOUNCED",
+        "observedAt": "2026-06-08T00:00:00.000Z",
+        "documentKey": "project_digitaledge_sel5_press_2026",
+        "forwardLooking": true
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Stage is an AI-assisted source observation, not a human-confirmed current stage.",
+        "No procurement window, product fit, award status, or supplier qualification is claimed."
+      ]
+    }
+  ],
+  "capabilityClaims": [
+    {
+      "claimKey": "mv_si_001_rated_voltage",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_siemens_nxplus_c24_2024",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "technical-data-table"
+      },
+      "field": "rated_voltage",
+      "operator": "IN",
+      "value": [
+        7.2,
+        12,
+        15,
+        17.5,
+        24
+      ],
+      "unit": "kV",
+      "conditions": {
+        "product": "NXPLUS C 24",
+        "configuration": "single_busbar"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Published product ratings do not establish Korean-project applicability or a simultaneously available configuration."
+      ]
+    },
+    {
+      "claimKey": "mv_si_002_rated_frequency",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_siemens_nxplus_c24_2024",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "technical-data-table"
+      },
+      "field": "rated_frequency",
+      "operator": "IN",
+      "value": [
+        50,
+        60
+      ],
+      "unit": "Hz",
+      "conditions": {
+        "product": "NXPLUS C 24"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Published product ratings do not establish Korean-project applicability."
+      ]
+    },
+    {
+      "claimKey": "mv_si_003_busbar_continuous_current",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_siemens_nxplus_c24_2024",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "technical-data-table"
+      },
+      "field": "busbar_continuous_current",
+      "operator": "LTE",
+      "value": 2500,
+      "unit": "A",
+      "conditions": {
+        "maximumAmbientC": 40,
+        "maximumAverageAmbientC": 35,
+        "ventilation": "natural"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The upper bound is conditional and does not establish a simultaneously available project configuration."
+      ]
+    },
+    {
+      "claimKey": "mv_si_004_feeder_continuous_current",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_siemens_nxplus_c24_2024",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "technical-data-table"
+      },
+      "field": "feeder_continuous_current",
+      "operator": "LTE",
+      "value": 2000,
+      "unit": "A",
+      "conditions": {
+        "panelType": "circuit_breaker_panel",
+        "maximumAmbientC": 40
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The upper bound is conditional and does not establish a simultaneously available project configuration."
+      ]
+    },
+    {
+      "claimKey": "mv_si_005_short_time_withstand_current",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_siemens_nxplus_c24_2024",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "technical-data-table"
+      },
+      "field": "short_time_withstand_current",
+      "operator": "IN",
+      "value": [
+        20,
+        25
+      ],
+      "unit": "kA",
+      "conditions": {
+        "durationSeconds": 3
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The rating is duration-specific and requires configuration and project review."
+      ]
+    },
+    {
+      "claimKey": "mv_si_006_ambient_temperature",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_siemens_nxplus_c24_2024",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "technical-data-table"
+      },
+      "field": "ambient_air_temperature",
+      "operator": "BETWEEN_INCLUSIVE",
+      "value": [
+        -5,
+        55
+      ],
+      "unit": "C",
+      "conditions": {
+        "rangeType": "published_standard_range"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The published range requires environmental and derating review for a specific project."
+      ]
+    },
+    {
+      "claimKey": "mv_si_007_primary_circuit_ip",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_siemens_nxplus_c24_2024",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "technical-data-table"
+      },
+      "field": "primary_circuit_ip_rating",
+      "operator": "EQ",
+      "value": "IP65",
+      "unit": null,
+      "conditions": {
+        "scope": "primary_circuits"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The enclosure scope must be checked against project requirements."
+      ]
+    },
+    {
+      "claimKey": "mv_si_008_internal_arc_classification",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_siemens_nxplus_c24_2024",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "technical-data-table"
+      },
+      "field": "internal_arc_classification",
+      "operator": "EQ",
+      "value": "IAC A FLR 25 kA 1 s",
+      "unit": null,
+      "conditions": {
+        "durationSeconds": 1
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Classification is configuration-specific and requires project-level review."
+      ]
+    },
+    {
+      "claimKey": "mv_hh_001_standard",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_hdhyundai_mv_lv",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "hrs-llf-specification"
+      },
+      "field": "standard",
+      "operator": "CONFORMS_TO",
+      "value": "IEC 62271-200",
+      "unit": null,
+      "conditions": {
+        "product": "HRS-LLF"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The live undated product page requires document-control review."
+      ]
+    },
+    {
+      "claimKey": "mv_hh_002_rated_voltage",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_hdhyundai_mv_lv",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "hrs-llf-specification"
+      },
+      "field": "rated_voltage",
+      "operator": "IN",
+      "value": [
+        12,
+        24
+      ],
+      "unit": "kV",
+      "conditions": {
+        "product": "HRS-LLF"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The live undated product page does not establish a project-specific available configuration."
+      ]
+    },
+    {
+      "claimKey": "mv_hh_003_rated_current",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_hdhyundai_mv_lv",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "hrs-llf-specification"
+      },
+      "field": "rated_current",
+      "operator": "EQ",
+      "value": 630,
+      "unit": "A",
+      "conditions": {
+        "product": "HRS-LLF"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The live undated product page does not establish a project-specific available configuration."
+      ]
+    },
+    {
+      "claimKey": "mv_hh_004_vendor_breaking_capacity",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_hdhyundai_mv_lv",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "hrs-llf-specification"
+      },
+      "field": "vendor_breaking_capacity",
+      "operator": "EQ",
+      "value": 21,
+      "unit": "kA",
+      "conditions": {
+        "product": "HRS-LLF",
+        "durationSeconds": 3,
+        "semanticMapping": "unresolved"
+      },
+      "sourceSupportState": "HOLD_MISSING_CONTEXT",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Vendor terminology must not be relabeled as short-circuit current without human semantic review."
+      ]
+    },
+    {
+      "claimKey": "mv_abb_001_rated_voltage",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_abb_unigear_zs3_2",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "ratings-summary"
+      },
+      "field": "rated_voltage",
+      "operator": "LTE",
+      "value": 24,
+      "unit": "kV",
+      "conditions": {
+        "product": "UniGear ZS3.2",
+        "valueType": "published_maximum"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "A family maximum does not establish every configuration or Korean-project applicability."
+      ]
+    },
+    {
+      "claimKey": "mv_abb_002_main_busbar_current",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_abb_unigear_zs3_2",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "ratings-summary"
+      },
+      "field": "main_busbar_current",
+      "operator": "LTE",
+      "value": 4000,
+      "unit": "A",
+      "conditions": {
+        "product": "UniGear ZS3.2",
+        "valueType": "published_maximum"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "A family maximum does not establish a simultaneously available project configuration."
+      ]
+    },
+    {
+      "claimKey": "mv_abb_003_short_time_current",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_abb_unigear_zs3_2",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "ratings-summary"
+      },
+      "field": "short_time_current",
+      "operator": "LTE",
+      "value": 63,
+      "unit": "kA",
+      "conditions": {
+        "product": "UniGear ZS3.2",
+        "durationSeconds": null
+      },
+      "sourceSupportState": "HOLD_MISSING_CONTEXT",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Duration is missing from the candidate excerpt and must be resolved before comparison."
+      ]
+    },
+    {
+      "claimKey": "tr_si_001_rated_power",
+      "productFamilyId": "transformer",
+      "documentKey": "capability_siemens_energy_geafol_neo_2021",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "example-order-4gx6364-3ey"
+      },
+      "field": "rated_power",
+      "operator": "EQ",
+      "value": 2000,
+      "unit": "kVA",
+      "conditions": {
+        "product": "GEAFOL Neo",
+        "order": "4GX6364-3EY"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "This is a 2021 example configuration, not a current Korean-project offer."
+      ]
+    },
+    {
+      "claimKey": "tr_si_002_primary_voltage",
+      "productFamilyId": "transformer",
+      "documentKey": "capability_siemens_energy_geafol_neo_2021",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "example-order-4gx6364-3ey"
+      },
+      "field": "primary_voltage",
+      "operator": "EQ",
+      "value": 20,
+      "unit": "kV",
+      "conditions": {
+        "product": "GEAFOL Neo",
+        "order": "4GX6364-3EY"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The 20kV example does not establish 22.9kV or Korean-project applicability."
+      ]
+    },
+    {
+      "claimKey": "tr_si_003_secondary_no_load_voltage",
+      "productFamilyId": "transformer",
+      "documentKey": "capability_siemens_energy_geafol_neo_2021",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "example-order-4gx6364-3ey"
+      },
+      "field": "secondary_no_load_voltage",
+      "operator": "EQ",
+      "value": 0.4,
+      "unit": "kV",
+      "conditions": {
+        "product": "GEAFOL Neo",
+        "order": "4GX6364-3EY"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "This is a 2021 example configuration, not a current Korean-project offer."
+      ]
+    },
+    {
+      "claimKey": "tr_si_004_impedance_voltage",
+      "productFamilyId": "transformer",
+      "documentKey": "capability_siemens_energy_geafol_neo_2021",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "example-order-4gx6364-3ey"
+      },
+      "field": "impedance_voltage",
+      "operator": "EQ",
+      "value": 6,
+      "unit": "percent",
+      "conditions": {
+        "product": "GEAFOL Neo",
+        "order": "4GX6364-3EY"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "This is a 2021 example configuration, not a current Korean-project offer."
+      ]
+    },
+    {
+      "claimKey": "tr_si_005_no_load_loss",
+      "productFamilyId": "transformer",
+      "documentKey": "capability_siemens_energy_geafol_neo_2021",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "example-order-4gx6364-3ey"
+      },
+      "field": "no_load_loss",
+      "operator": "EQ",
+      "value": 2340,
+      "unit": "W",
+      "conditions": {
+        "product": "GEAFOL Neo",
+        "order": "4GX6364-3EY"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "This loss value is configuration-specific and requires current document review."
+      ]
+    },
+    {
+      "claimKey": "tr_si_006_load_loss_120c",
+      "productFamilyId": "transformer",
+      "documentKey": "capability_siemens_energy_geafol_neo_2021",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "example-order-4gx6364-3ey"
+      },
+      "field": "load_loss",
+      "operator": "EQ",
+      "value": 16000,
+      "unit": "W",
+      "conditions": {
+        "product": "GEAFOL Neo",
+        "order": "4GX6364-3EY",
+        "referenceTemperatureC": 120
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "This loss value is configuration-specific and temperature-dependent."
+      ]
+    },
+    {
+      "claimKey": "tr_hh_001_rated_power_range",
+      "productFamilyId": "transformer",
+      "documentKey": "capability_hdhyundai_distribution_transformer",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "ratings-range"
+      },
+      "field": "rated_power",
+      "operator": "BETWEEN_INCLUSIVE",
+      "value": [
+        100,
+        20000
+      ],
+      "unit": "kVA",
+      "conditions": {
+        "scope": "distribution_transformer_family"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The undated family range does not guarantee any specific current configuration."
+      ]
+    },
+    {
+      "claimKey": "tr_hh_002_rated_voltage_range",
+      "productFamilyId": "transformer",
+      "documentKey": "capability_hdhyundai_distribution_transformer",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "ratings-range"
+      },
+      "field": "rated_voltage",
+      "operator": "BETWEEN_INCLUSIVE",
+      "value": [
+        220,
+        36000
+      ],
+      "unit": "V",
+      "conditions": {
+        "scope": "distribution_transformer_family",
+        "windingSide": "unspecified"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Winding side is unresolved and the family range is not project fit."
+      ]
+    },
+    {
+      "claimKey": "tr_he_001_high_voltage",
+      "productFamilyId": "transformer",
+      "documentKey": "capability_hitachi_resibloc",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "ratings-summary"
+      },
+      "field": "high_voltage",
+      "operator": "LTE",
+      "value": 36,
+      "unit": "kV",
+      "conditions": {
+        "productFamily": "RESIBLOC",
+        "valueType": "published_maximum"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The undated family maximum does not establish a specific model or Korean-project fit."
+      ]
+    },
+    {
+      "claimKey": "tr_he_002_partial_discharge",
+      "productFamilyId": "transformer",
+      "documentKey": "capability_hitachi_resibloc",
+      "sourceSpan": {
+        "excerptIndex": 0,
+        "locator": "ratings-summary"
+      },
+      "field": "partial_discharge",
+      "operator": "LT",
+      "value": 10,
+      "unit": "pC",
+      "conditions": {
+        "productFamily": "RESIBLOC",
+        "testConditions": "unresolved",
+        "model": "unresolved"
+      },
+      "sourceSupportState": "HOLD_MISSING_CONTEXT",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Model and test conditions must be confirmed before comparison."
+      ]
+    },
+    {
+      "claimKey": "mv_si_009_power_frequency_withstand_voltage",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_siemens_nxplus_c24_2024",
+      "sourceSpan": {
+        "excerptIndex": 1,
+        "locator": "technical-data-table-24kv-insulation-and-peak"
+      },
+      "field": "power_frequency_withstand_voltage",
+      "operator": "EQ",
+      "value": 50,
+      "unit": "kV",
+      "conditions": {
+        "product": "NXPLUS C 24",
+        "ratedVoltageKV": 24,
+        "measurement": "rms",
+        "path": "phase-to-phase_phase-to-earth_open-switching-device",
+        "configuration": "single_busbar"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The 50kV rating is path-specific at 24kV; the isolating distance is 60kV and project applicability remains unverified."
+      ]
+    },
+    {
+      "claimKey": "mv_si_010_lightning_impulse_withstand_voltage",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_siemens_nxplus_c24_2024",
+      "sourceSpan": {
+        "excerptIndex": 1,
+        "locator": "technical-data-table-24kv-insulation-and-peak"
+      },
+      "field": "lightning_impulse_withstand_voltage",
+      "operator": "EQ",
+      "value": 125,
+      "unit": "kV",
+      "conditions": {
+        "product": "NXPLUS C 24",
+        "ratedVoltageKV": 24,
+        "measurement": "peak",
+        "path": "phase-to-phase_phase-to-earth_open-switching-device",
+        "configuration": "single_busbar"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The 125kV rating is path-specific at 24kV; the isolating distance is 145kV and project applicability remains unverified."
+      ]
+    },
+    {
+      "claimKey": "mv_si_011_rated_peak_withstand_current",
+      "productFamilyId": "medium_voltage_switchgear",
+      "documentKey": "capability_siemens_nxplus_c24_2024",
+      "sourceSpan": {
+        "excerptIndex": 1,
+        "locator": "technical-data-table-24kv-insulation-and-peak"
+      },
+      "field": "rated_peak_withstand_current",
+      "operator": "IN",
+      "value": [
+        54,
+        68
+      ],
+      "unit": "kA",
+      "conditions": {
+        "product": "NXPLUS C 24",
+        "frequencyHz": [
+          50,
+          60
+        ],
+        "configuration": "single_busbar"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The 54kA and 68kA values are published alternatives and must not be treated as simultaneously available project ratings."
+      ]
+    },
+    {
+      "claimKey": "tr_si_007_climatic_class",
+      "productFamilyId": "transformer",
+      "documentKey": "capability_siemens_energy_geafol_neo_2021",
+      "sourceSpan": {
+        "excerptIndex": 1,
+        "locator": "family-features-page-6"
+      },
+      "field": "climatic_class",
+      "operator": "EQ",
+      "value": "C3",
+      "unit": null,
+      "conditions": {
+        "productFamily": "GEAFOL Neo",
+        "documentScope": "published_family"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "Other classes are on request; a specific configuration and Korean project environment have not been confirmed."
+      ]
+    },
+    {
+      "claimKey": "tr_si_008_fire_classification",
+      "productFamilyId": "transformer",
+      "documentKey": "capability_siemens_energy_geafol_neo_2021",
+      "sourceSpan": {
+        "excerptIndex": 1,
+        "locator": "family-features-page-6"
+      },
+      "field": "fire_classification",
+      "operator": "EQ",
+      "value": "F1",
+      "unit": null,
+      "conditions": {
+        "productFamily": "GEAFOL Neo",
+        "documentScope": "published_family"
+      },
+      "sourceSupportState": "SOURCE_SUPPORTED_CONDITIONAL",
+      "projectApplicability": "UNVERIFIED_FOR_KR_PROJECT",
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The family-level F1 classification does not establish a current offered configuration or Korean-project fit."
+      ]
+    }
+  ],
+  "requirementCapabilityPairs": [
+    {
+      "pairKey": "pair_stt_seoul1_mv_si_001_utility_voltage",
+      "projectKey": "stt_seoul1",
+      "capabilityClaimKey": "mv_si_001_rated_voltage",
+      "productFamilyId": "medium_voltage_switchgear",
+      "requirementEvidence": {
+        "documentKey": "project_stt_seoul1_facility_spec_2026",
+        "excerptIndex": 0,
+        "locator": "electrical-system-summary",
+        "field": "facility_utility_voltage",
+        "operator": "EQ",
+        "value": 22.9,
+        "unit": "kV",
+        "conditions": {
+          "feedConfiguration": "dual",
+          "scope": "facility_utility_interface"
+        }
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The facility utility-feed voltage is not a procurement specification for the compared product.",
+        "The single-line diagram, transformation boundary, and equipment package are unavailable; human applicability review is required."
+      ]
+    },
+    {
+      "pairKey": "pair_stt_seoul1_mv_hh_002_utility_voltage",
+      "projectKey": "stt_seoul1",
+      "capabilityClaimKey": "mv_hh_002_rated_voltage",
+      "productFamilyId": "medium_voltage_switchgear",
+      "requirementEvidence": {
+        "documentKey": "project_stt_seoul1_facility_spec_2026",
+        "excerptIndex": 0,
+        "locator": "electrical-system-summary",
+        "field": "facility_utility_voltage",
+        "operator": "EQ",
+        "value": 22.9,
+        "unit": "kV",
+        "conditions": {
+          "feedConfiguration": "dual",
+          "scope": "facility_utility_interface"
+        }
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The facility utility-feed voltage is not a procurement specification for the compared product.",
+        "The single-line diagram, transformation boundary, and equipment package are unavailable; human applicability review is required."
+      ]
+    },
+    {
+      "pairKey": "pair_stt_seoul1_mv_abb_001_utility_voltage",
+      "projectKey": "stt_seoul1",
+      "capabilityClaimKey": "mv_abb_001_rated_voltage",
+      "productFamilyId": "medium_voltage_switchgear",
+      "requirementEvidence": {
+        "documentKey": "project_stt_seoul1_facility_spec_2026",
+        "excerptIndex": 0,
+        "locator": "electrical-system-summary",
+        "field": "facility_utility_voltage",
+        "operator": "EQ",
+        "value": 22.9,
+        "unit": "kV",
+        "conditions": {
+          "feedConfiguration": "dual",
+          "scope": "facility_utility_interface"
+        }
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The facility utility-feed voltage is not a procurement specification for the compared product.",
+        "The single-line diagram, transformation boundary, and equipment package are unavailable; human applicability review is required."
+      ]
+    },
+    {
+      "pairKey": "pair_stt_seoul1_tr_hh_002_utility_voltage",
+      "projectKey": "stt_seoul1",
+      "capabilityClaimKey": "tr_hh_002_rated_voltage_range",
+      "productFamilyId": "transformer",
+      "requirementEvidence": {
+        "documentKey": "project_stt_seoul1_facility_spec_2026",
+        "excerptIndex": 0,
+        "locator": "electrical-system-summary",
+        "field": "facility_utility_voltage",
+        "operator": "EQ",
+        "value": 22900,
+        "unit": "V",
+        "conditions": {
+          "feedConfiguration": "dual",
+          "scope": "facility_utility_interface"
+        }
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The facility utility-feed voltage is not a procurement specification for the compared product.",
+        "The single-line diagram, transformation boundary, and equipment package are unavailable; human applicability review is required."
+      ]
+    },
+    {
+      "pairKey": "pair_stt_seoul1_tr_he_001_utility_voltage",
+      "projectKey": "stt_seoul1",
+      "capabilityClaimKey": "tr_he_001_high_voltage",
+      "productFamilyId": "transformer",
+      "requirementEvidence": {
+        "documentKey": "project_stt_seoul1_facility_spec_2026",
+        "excerptIndex": 0,
+        "locator": "electrical-system-summary",
+        "field": "facility_utility_voltage",
+        "operator": "EQ",
+        "value": 22.9,
+        "unit": "kV",
+        "conditions": {
+          "feedConfiguration": "dual",
+          "scope": "facility_utility_interface"
+        }
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The facility utility-feed voltage is not a procurement specification for the compared product.",
+        "The single-line diagram, transformation boundary, and equipment package are unavailable; human applicability review is required."
+      ]
+    },
+    {
+      "pairKey": "pair_stt_seoul1_tr_si_002_utility_voltage",
+      "projectKey": "stt_seoul1",
+      "capabilityClaimKey": "tr_si_002_primary_voltage",
+      "productFamilyId": "transformer",
+      "requirementEvidence": {
+        "documentKey": "project_stt_seoul1_facility_spec_2026",
+        "excerptIndex": 0,
+        "locator": "electrical-system-summary",
+        "field": "facility_utility_voltage",
+        "operator": "EQ",
+        "value": 22.9,
+        "unit": "kV",
+        "conditions": {
+          "feedConfiguration": "dual",
+          "scope": "facility_utility_interface"
+        }
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The facility utility-feed voltage is not a procurement specification for the compared product.",
+        "The single-line diagram, transformation boundary, and equipment package are unavailable; human applicability review is required."
+      ]
+    },
+    {
+      "pairKey": "pair_digitaledge_sel2_mv_si_001_utility_voltage",
+      "projectKey": "digitaledge_sel2",
+      "capabilityClaimKey": "mv_si_001_rated_voltage",
+      "productFamilyId": "medium_voltage_switchgear",
+      "requirementEvidence": {
+        "documentKey": "project_digitaledge_sel2_facility_spec_2024_11",
+        "excerptIndex": 0,
+        "locator": "power-and-cooling-specification",
+        "field": "facility_utility_voltage",
+        "operator": "EQ",
+        "value": 154,
+        "unit": "kV",
+        "conditions": {
+          "feedCount": 2,
+          "scope": "facility_utility_interface"
+        }
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The facility utility-feed voltage is not a procurement specification for the compared product.",
+        "The single-line diagram, transformation boundary, and equipment package are unavailable; human applicability review is required."
+      ]
+    },
+    {
+      "pairKey": "pair_digitaledge_sel2_mv_abb_001_utility_voltage",
+      "projectKey": "digitaledge_sel2",
+      "capabilityClaimKey": "mv_abb_001_rated_voltage",
+      "productFamilyId": "medium_voltage_switchgear",
+      "requirementEvidence": {
+        "documentKey": "project_digitaledge_sel2_facility_spec_2024_11",
+        "excerptIndex": 0,
+        "locator": "power-and-cooling-specification",
+        "field": "facility_utility_voltage",
+        "operator": "EQ",
+        "value": 154,
+        "unit": "kV",
+        "conditions": {
+          "feedCount": 2,
+          "scope": "facility_utility_interface"
+        }
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The facility utility-feed voltage is not a procurement specification for the compared product.",
+        "The single-line diagram, transformation boundary, and equipment package are unavailable; human applicability review is required."
+      ]
+    },
+    {
+      "pairKey": "pair_digitaledge_sel2_tr_hh_002_utility_voltage",
+      "projectKey": "digitaledge_sel2",
+      "capabilityClaimKey": "tr_hh_002_rated_voltage_range",
+      "productFamilyId": "transformer",
+      "requirementEvidence": {
+        "documentKey": "project_digitaledge_sel2_facility_spec_2024_11",
+        "excerptIndex": 0,
+        "locator": "power-and-cooling-specification",
+        "field": "facility_utility_voltage",
+        "operator": "EQ",
+        "value": 154000,
+        "unit": "V",
+        "conditions": {
+          "feedCount": 2,
+          "scope": "facility_utility_interface"
+        }
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The facility utility-feed voltage is not a procurement specification for the compared product.",
+        "The single-line diagram, transformation boundary, and equipment package are unavailable; human applicability review is required."
+      ]
+    },
+    {
+      "pairKey": "pair_digitaledge_sel2_tr_he_001_utility_voltage",
+      "projectKey": "digitaledge_sel2",
+      "capabilityClaimKey": "tr_he_001_high_voltage",
+      "productFamilyId": "transformer",
+      "requirementEvidence": {
+        "documentKey": "project_digitaledge_sel2_facility_spec_2024_11",
+        "excerptIndex": 0,
+        "locator": "power-and-cooling-specification",
+        "field": "facility_utility_voltage",
+        "operator": "EQ",
+        "value": 154,
+        "unit": "kV",
+        "conditions": {
+          "feedCount": 2,
+          "scope": "facility_utility_interface"
+        }
+      },
+      "annotationOrigin": "AI_ASSISTED",
+      "limitations": [
+        "The facility utility-feed voltage is not a procurement specification for the compared product.",
+        "The single-line diagram, transformation boundary, and equipment package are unavailable; human applicability review is required."
+      ]
+    }
+  ]
+}
