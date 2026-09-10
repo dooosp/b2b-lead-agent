@@ -23,8 +23,8 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
   });
   browser = await chromium.launch({ headless: true });
 
-  async function createPage({ authenticated = true } = {}) {
-    const context = await browser.newContext();
+  async function createPage({ authenticated = true, serviceWorkers = 'allow' } = {}) {
+    const context = await browser.newContext({ serviceWorkers });
     await context.route('**/*', (route) => {
       assert.equal(new URL(route.request().url()).origin, harness.origin);
       return route.continue();
@@ -84,6 +84,28 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     await page.locator('.lead-card[data-lead-id="local-lead-review"]').waitFor();
   });
 
+  await t.test('failed lead responses never appear as empty data or expose internal errors', async () => {
+    // Controlled HTTP fixtures must not be bypassed by service-worker-owned fetches.
+    const page = await createPage({ serviceWorkers: 'block' });
+    let status = 403;
+    await page.route('**/api/leads?profile=danfoss', (route) => route.fulfill({
+      status,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: false, message: 'SYNTHETIC_PRIVATE_ERROR_DETAIL' }),
+    }));
+    for (const code of [403, 500, 503]) {
+      status = code;
+      const response = page.waitForResponse((res) => new URL(res.url()).pathname === '/api/leads');
+      await page.goto(`${harness.origin}/leads?profile=danfoss`);
+      assert.equal((await response).status(), code);
+      await page.locator('#leadsList [role="alert"]').waitFor({ timeout: 3000 });
+      const text = await page.locator('#leadsList').innerText();
+      assert.doesNotMatch(text, /아직 생성된 리드|SYNTHETIC_PRIVATE_ERROR_DETAIL/);
+      assert.match(text, code === 403 ? /권한/ : code === 503 ? /준비 상태/ : /불러오지 못했습니다/);
+      assert.equal(await page.locator('#nextReviewStrip').innerText(), '');
+    }
+  });
+
   await t.test('detail reload restores an existing browser token without weakening server auth', async () => {
     const page = await createPage();
     await page.goto(`${harness.origin}/leads?profile=danfoss`);
@@ -125,7 +147,7 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
   });
 
   await t.test('a delayed feedback save does not erase edits typed while it is pending', async () => {
-    const page = await createPage();
+    const page = await createPage({ serviceWorkers: 'block' });
     await page.goto(`${harness.origin}/leads?profile=danfoss`);
     const card = page.locator('.lead-card[data-lead-id="local-lead-approved"]');
     await card.locator('.reviewer-feedback-section summary').click();
@@ -182,6 +204,27 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     await page.reload();
     await page.locator('#kanbanView .kanban-card').waitFor();
     assert.equal(await page.getByRole('combobox', { name: '검토 상태', exact: true }).inputValue(), 'NEEDS_REVIEW');
+  });
+
+  await t.test('mobile reviewers reach cards quickly while advanced controls remain available', async () => {
+    const page = await createPage();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${harness.origin}/leads?profile=danfoss`);
+    const first = page.locator('#leadsList .lead-card').first();
+    await first.waitFor();
+    const cardY = await first.evaluate((element) => element.getBoundingClientRect().top + scrollY);
+    assert.ok(cardY < 1100, `first lead starts at ${cardY}px`);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    assert.doesNotMatch(await page.locator('#nextReviewStrip').innerText(), /reviewStatus=|verificationStatus=|Priority /);
+    await first.focus();
+    await page.keyboard.press('j');
+    assert.equal(await page.locator('#reviewSessionStatus').isVisible(), true, 'action feedback remains visible with the overview collapsed');
+    assert.equal(await page.getByRole('combobox', { name: '생성 방식', exact: true }).isVisible(), false);
+    await page.locator('#advancedReviewFilters > summary').click();
+    await page.getByRole('combobox', { name: '생성 방식', exact: true }).selectOption('heuristic');
+    assert.equal(await page.locator('#leadsList .lead-card').count(), 1);
+    await page.getByRole('button', { name: '세션 보기', exact: true }).click();
+    assert.equal(await page.getByRole('button', { name: '다음 리드를 승인으로 변경' }).isVisible(), true);
   });
 });
 
