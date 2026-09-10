@@ -192,7 +192,12 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     .review-session-status.is-error { background:#211719; color:#ffc4c4; }
     .lead-card.review-session-focus { outline:2px solid #8fbfe8; outline-offset:3px; }
     .reviewer-action-queue:focus, .review-session-panel:focus, .view-tab:focus-visible, .next-review-strip-actions button:focus-visible, .review-session-actions button:focus-visible, .review-note-copy-actions button:focus-visible, .review-filter-actions button:focus-visible, .review-productivity-head button:focus-visible, .status-select:focus-visible, .notes-textarea:focus-visible { outline:2px solid #8fbfe8; outline-offset:3px; }
-    .review-filter-bar { background:#121a24; border:1px solid #26384c; border-radius:10px; display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); margin:0 0 14px; padding:12px; text-align:left; }
+    .review-filter-bar { background:#121a24; border:1px solid #26384c; border-radius:10px; display:grid; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr)); margin:0 0 14px; padding:12px; text-align:left; }
+    .review-disclosure { border:1px solid #26384c; border-radius:10px; padding:10px 12px; margin:0 0 12px; text-align:left; min-width:0; }
+    .review-disclosure > summary, .review-filter-advanced > summary { color:#cbd8e6; cursor:pointer; font-size:13px; padding:4px 0; }
+    .review-disclosure[open] > summary { margin-bottom:12px; }
+    .review-filter-advanced { grid-column:1 / -1; min-width:0; }
+    .review-filter-advanced-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); gap:10px; margin-top:10px; }
     .review-filter-bar label { color:#8fa4b8; display:grid; gap:5px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0; }
     .review-filter-bar select { background:#16213e; border:1px solid #36506c; border-radius:7px; color:#f4f7fb; font-size:12px; padding:7px 8px; width:100%; }
     .review-filter-actions { align-self:end; display:flex; gap:8px; justify-content:flex-end; }
@@ -308,6 +313,8 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       <button id="kanbanViewTab" class="view-tab" type="button" role="tab" aria-selected="false" aria-controls="kanbanView" tabindex="-1" data-view-target="kanban" onclick="switchView('kanban')">칸반 보드</button>
     </div>
 
+    <details class="review-disclosure" id="reviewTools">
+    <summary>분석·인쇄 도구</summary>
     <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;margin-bottom:12px;" onclick="window.print()">PDF 인쇄</button>
 
     <div class="batch-enrich-bar">
@@ -315,6 +322,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       <button class="btn-enrich" onclick="batchEnrich(this)">일괄 상세 분석</button>
     </div>
     <div id="batchStatus" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div>
+    </details>
 
     <section id="nextReviewStrip" class="next-review-strip" aria-label="다음 리뷰">
       <div class="next-review-strip-head">
@@ -345,6 +353,9 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           <option value="unverified">미검증</option>
         </select>
       </label>
+      <details id="advancedReviewFilters" class="review-filter-advanced">
+      <summary>상세 필터 <span id="advancedFilterCount"></span></summary>
+      <div class="review-filter-advanced-grid">
       <label>생성 방식
         <select data-filter-key="generationMode" onchange="setReviewQueueFilter(this)">
           <option value="all">전체</option>
@@ -433,8 +444,14 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       <div class="review-filter-actions">
         <button class="btn btn-secondary" type="button" onclick="resetReviewQueueFilters()">초기화</button>
       </div>
+      </div>
+      </details>
     </div>
+    <details id="reviewOverview" class="review-disclosure">
+    <summary>검토 현황·도움말</summary>
     <div id="leadsSummary"></div>
+    </details>
+    <div id="reviewSessionStatus" class="review-session-status is-idle" role="status" aria-live="polite" aria-atomic="true"></div>
     <div id="leadsList" role="tabpanel" aria-labelledby="listViewTab"><p style="color:#aaa;">로딩 중...</p></div>
     <div id="kanbanView" role="tabpanel" aria-labelledby="kanbanViewTab" style="display:none;" hidden></div>
   </main>
@@ -444,12 +461,22 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     ${getSafeUrlScript()}
     ${getStoredTokenScript()}
     const generatedReviewGuidanceEnabled = ${includeGeneratedReviewGuidance ? 'true' : 'false'};
+    function leadListReturnUrl(leadId) {
+      const url = new URL(window.location.href);
+      if (leadId) url.searchParams.set('focusLeadId', leadId);
+      return url.pathname + url.search;
+    }
+    function leadToolLink(path, leadId) {
+      return path + '?profile=' + encodeURIComponent(getProfile()) + '&leadId=' + encodeURIComponent(leadId || '')
+        + '&returnTo=' + encodeURIComponent(leadListReturnUrl(leadId));
+    }
     function detailLink(leadId) {
-      return '/leads/' + encodeURIComponent(leadId);
+      return '/leads/' + encodeURIComponent(leadId) + '?returnTo=' + encodeURIComponent(leadListReturnUrl(leadId));
     }
     async function openLeadDetail(leadId, event) {
       if (!leadId) return;
       if (event) event.preventDefault();
+      if (reviewerFeedbackDrafts.size && !window.confirm('저장 전 리뷰어 피드백이 있습니다. 초안을 버리고 이동할까요?')) return;
       try {
         const href = detailLink(leadId);
         const res = await fetch(href, { headers: authHeaders() });
@@ -524,6 +551,21 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       missingInfo: 'all',
       dataGaps: 'all'
     };
+    const reviewerFeedbackDrafts = new Map();
+    const reviewActionCopy = {
+      prepare_human_follow_up: ['후속 준비', '검토를 마친 리드입니다. 후속 준비에 필요한 근거와 제안 내용을 확인하세요.'],
+      decide_review_status: ['검토 결정', '현재 근거를 확인하고 승인 여부를 결정하세요.'],
+      verify_evidence: ['근거 확인', '원문 근거와 출처를 확인한 뒤 검토 결과를 정하세요.'],
+      resolve_data_gaps: ['데이터 공백 보강', '누락된 정보를 확인하고 판단에 필요한 내용을 보강하세요.'],
+      enrich_before_review: ['보강 후 검토', '판단에 필요한 정보가 부족합니다. 정보를 보강한 뒤 검토하세요.'],
+      refresh_signal: ['신호 갱신', '현재도 유효한 영업 기회인지 최신 근거를 확인하세요.'],
+      reconcile_review_conflict: ['리스크 조정', '승인 상태와 근거 사이의 불일치를 다시 확인하세요.'],
+      schedule_recheck: ['재검토 예약', '보류한 리드를 언제 다시 검토할지 확인하세요.'],
+      keep_out_of_queue: ['우선순위 제외', '반려한 리드입니다. 새로운 근거가 있을 때 재검토하세요.']
+    };
+    function reviewActionLabel(item) { return (reviewActionCopy[item.nextReviewAction] || ['검토 정보 확인'])[0]; }
+    function reviewActionExplanation(item) { return (reviewActionCopy[item.nextReviewAction] || ['', '리드의 근거와 누락 정보를 확인하세요.'])[1]; }
+    function reviewPriorityLabel(value) { return ({ high: '높음', medium: '중간', low: '낮음', hold: '보류', blocked: '차단' })[value] || '확인 필요'; }
 
     function leadAccessibleName(lead) {
       return esc((lead && (lead.company || lead.id)) || '리드');
@@ -761,11 +803,13 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           </div>
         \`;
       }
-      const feedback = normalizeReviewerFeedback(lead);
+      const draft = reviewerFeedbackDrafts.get(getLeadId(lead));
+      const feedback = { ...normalizeReviewerFeedback(lead), ...(draft ? draft.payload : {}) };
       return \`
-        <div class="reviewer-feedback-section">
+        <div class="reviewer-feedback-section" data-feedback-lead-id="\${esc(getLeadId(lead))}" oninput="rememberReviewerFeedbackDraft(this)">
           <details>
-            <summary>리뷰어 피드백 <span class="notes-summary-state" data-reviewer-feedback-summary-state>\${esc(getReviewerFeedbackStateLabel(lead))}</span></summary>
+            <summary>리뷰어 피드백 <span class="notes-summary-state" data-reviewer-feedback-summary-state>\${draft ? '저장 전' : esc(getReviewerFeedbackStateLabel(lead))}</span></summary>
+            <p data-feedback-draft-state role="status">\${draft ? '저장 전 · 초안은 이 페이지에서만 보관됩니다.' : ''}</p>
             \${renderReviewerFeedbackState(lead)}
             <p class="notes-privacy-warning" role="note"><strong>로컬/테스트 사람 판단:</strong> 이 피드백은 리뷰 품질 개선용 수동 입력입니다. 생성된 검토 메모 제안은 저장/전송/귀속/이력/내보내기 대상이 아닙니다.</p>
             <div class="reviewer-feedback-grid" data-reviewer-feedback-form>
@@ -810,6 +854,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
 
     function cacheManualReviewNotesAccess(access) {
       cachedManualReviewNotesAccess = access && typeof access === 'object' ? access : null;
+      if (cachedManualReviewNotesAccess && cachedManualReviewNotesAccess.manualNotesRead !== true) reviewerFeedbackDrafts.clear();
     }
 
     function canShowGeneratedReviewGuidance() {
@@ -1243,14 +1288,14 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       const action = getLeadQueueItem(lead);
       return \`
         <div class="lead-action-intelligence priority-\${esc(action.reviewPriority)}" aria-label="Lead Action Intelligence">
-          <span class="block-label">Lead Action Intelligence</span>
-          <strong>\${esc(action.nextReviewActionLabel)}</strong>
-          <p>\${esc(action.reasonSnippet)}</p>
+          <span class="block-label">다음 검토 행동</span>
+          <strong>\${esc(reviewActionLabel(action))}</strong>
+          <p>\${esc(reviewActionExplanation(action))}</p>
           <div class="lead-action-intel-meta">
-            <span>Priority \${esc(action.reviewPriority)}</span>
-            <span>Confidence \${esc(action.actionConfidence)}</span>
-            <span>Risk flags \${Number(action.riskCount) || 0}</span>
-            <span>Missing info \${Number(action.missingInfoCount) || 0}</span>
+            <span>검토 우선순위 \${esc(reviewPriorityLabel(action.reviewPriority))}</span>
+            <span>판단 신뢰도 \${esc(reviewPriorityLabel(action.actionConfidence))}</span>
+            <span>리스크 \${Number(action.riskCount) || 0}</span>
+            <span>누락 정보 \${Number(action.missingInfoCount) || 0}</span>
           </div>
         </div>
       \`;
@@ -1357,7 +1402,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
         ? [
           session.nextItem.company || session.nextLead.company || '리드',
           session.nextItem.queueLaneLabel || queueLaneLabels[session.nextItem.queueLane] || session.nextItem.queueLane,
-          session.nextItem.nextReviewActionLabel || 'Review lead',
+          reviewActionLabel(session.nextItem),
         ].filter(Boolean).join(' · ')
         : '현재 필터 결과에 다음 리뷰 후보 없음';
 
@@ -1448,7 +1493,9 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
         if (Object.prototype.hasOwnProperty.call(remainingByLane, item.queueLane)) remainingByLane[item.queueLane] += 1;
       });
 
-      const nextItem = queueItems[0] || null;
+      const nextItem = queueItems.find((item) => ['NEW', 'NEEDS_REVIEW'].includes(item.reviewStatus))
+        || queueItems.find((item) => item.reviewStatus === 'APPROVED' && item.riskCount > 0)
+        || null;
       const nextLead = nextItem
         ? list.find((lead) => getLeadId(lead) === nextItem.leadId) || null
         : null;
@@ -1470,8 +1517,8 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           <div class="next-review-strip-head">
             <div>
               <span>다음 리뷰</span>
-              <strong>현재 필터에서 다음 리뷰 리드가 없습니다.</strong>
-              <p>필터를 조정하거나 초기화하면 리뷰 후보가 다시 표시됩니다.</p>
+              <strong>\${session.total > 0 && !session.reviewStatusCounts.DEFERRED ? '현재 필터의 검토가 완료되었습니다.' : '현재 필터에서 다음 리뷰 리드가 없습니다.'}</strong>
+              <p>\${session.total > 0 ? '승인된 리드의 후속 준비와 보류된 리드의 재검토 일정은 목록에서 확인하세요.' : '필터를 조정하거나 초기화하면 리뷰 후보가 다시 표시됩니다.'}</p>
             </div>
             <div class="next-review-strip-actions">
               <button class="btn btn-secondary" type="button" data-session-action="focus-session">세션 보기</button>
@@ -1486,9 +1533,9 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       return \`
         <div class="next-review-strip-head">
           <div>
-            <span>다음 리뷰</span>
+            <span>\${currentReviewStatus === 'APPROVED' ? '리스크 재확인' : '다음 리뷰'}</span>
             <strong>\${esc(session.nextItem.company || session.nextLead.company || '리드')}</strong>
-            <p>\${esc(session.nextItem.nextReviewActionLabel || 'Review lead')} · \${esc(session.nextItem.reasonSnippet || '')}</p>
+            <p>\${esc(reviewActionExplanation(session.nextItem))}</p>
           </div>
           <div class="next-review-strip-actions">
             <button class="btn btn-secondary" type="button" data-session-action="focus-next" data-lead-id="\${esc(nextLeadId)}">다음 리드 보기</button>
@@ -1497,8 +1544,9 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
         </div>
         <div class="next-review-strip-meta">
           <span>\${esc(session.nextItem.queueLaneLabel || queueLaneLabels[session.nextItem.queueLane] || session.nextItem.queueLane)}</span>
-          <span>Priority \${esc(session.nextItem.reviewPriority)}</span>
-          <span>\${esc(session.nextItem.nextReviewActionLabel || 'Review lead')}</span>
+          <span>검토 우선순위 \${esc(reviewPriorityLabel(session.nextItem.reviewPriority))}</span>
+          <span>\${esc(reviewActionLabel(session.nextItem))}</span>
+          <span>미검토 \${session.reviewStatusCounts.NEW + session.reviewStatusCounts.NEEDS_REVIEW}건 · 승인 \${session.reviewStatusCounts.APPROVED}건</span>
           <span>\${esc(humanReviewStatusLabel(currentReviewStatus))}</span>
           <span>영업 \${esc(statusLabels[currentSalesStatus] || currentSalesStatus)}</span>
         </div>
@@ -1547,13 +1595,13 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       const nextBody = session.nextItem && session.nextLead
         ? \`
           <div class="review-session-next">
-            <strong>다음 검토 리드: \${esc(session.nextItem.company || session.nextLead.company || '리드')}</strong>
-            <p>\${esc(session.nextItem.nextReviewActionLabel || 'Review lead')} · \${esc(session.nextItem.reasonSnippet || '')}</p>
+            <strong>\${currentReviewStatus === 'APPROVED' ? '리스크 재확인 리드' : '다음 검토 리드'}: \${esc(session.nextItem.company || session.nextLead.company || '리드')}</strong>
+            <p>\${esc(reviewActionExplanation(session.nextItem))}</p>
             <div class="review-session-meta">
               <span>\${esc(session.nextItem.queueLaneLabel || queueLaneLabels[session.nextItem.queueLane] || session.nextItem.queueLane)}</span>
-              <span>Priority \${esc(session.nextItem.reviewPriority)}</span>
-              <span>Risk flags \${Number(session.nextItem.riskCount) || 0}</span>
-              <span>Missing info \${Number(session.nextItem.missingInfoCount) || 0}</span>
+              <span>검토 우선순위 \${esc(reviewPriorityLabel(session.nextItem.reviewPriority))}</span>
+              <span>리스크 \${Number(session.nextItem.riskCount) || 0}</span>
+              <span>누락 정보 \${Number(session.nextItem.missingInfoCount) || 0}</span>
               <span>\${esc(humanReviewStatusLabel(currentReviewStatus))}</span>
               <span>영업 \${esc(statusLabels[currentSalesStatus] || currentSalesStatus)}</span>
             </div>
@@ -1565,9 +1613,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
             </div>
           </div>
         \`
-        : '<div class="review-session-next"><strong>다음 검토 리드 없음</strong><p>현재 필터 결과에 검토할 리드가 없습니다.</p></div>';
-      const noticeTone = reviewSessionNotice.tone || 'idle';
-      const noticeMessage = reviewSessionNotice.message || '';
+        : '<div class="review-session-next"><strong>다음 검토 리드 없음</strong><p>미검토 리드가 없습니다. 승인된 리드의 후속 준비와 보류된 리드의 재검토 일정을 확인하세요.</p></div>';
 
       return \`
         <section id="leadReviewSession" class="review-session-panel" aria-label="Lead Review Session" tabindex="-1">
@@ -1586,7 +1632,6 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           </div>
           \${renderSessionActivitySummary()}
           \${nextBody}
-          <div id="reviewSessionStatus" class="review-session-status is-\${esc(noticeTone)}" role="status" aria-live="polite" aria-atomic="true">\${esc(noticeMessage)}</div>
         </section>
       \`;
     }
@@ -1600,8 +1645,8 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
         const shown = laneItems.slice(0, 3).map((item) => \`
           <li>
             <b>\${esc(item.company || item.leadId || '리드')}</b>
-            <em>\${esc(item.nextReviewActionLabel || '-')}</em>
-            <small>Risk flags \${Number(item.riskCount) || 0} · Missing info \${Number(item.missingInfoCount) || 0}</small>
+            <em>\${esc(reviewActionLabel(item))}</em>
+            <small>리스크 \${Number(item.riskCount) || 0} · 누락 정보 \${Number(item.missingInfoCount) || 0}</small>
           </li>
         \`).join('');
         const extra = laneItems.length > 3 ? \`<p class="reviewer-action-empty">외 \${laneItems.length - 3}건</p>\` : '';
@@ -1714,22 +1759,49 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       return applyReviewQueueFilters(cachedLeads);
     }
 
+    function syncListNavigationState() {
+      const url = new URL(window.location.href);
+      Object.entries(reviewQueueFilters).forEach(([key, value]) => {
+        if (value === 'all') url.searchParams.delete(key);
+        else url.searchParams.set(key, value);
+      });
+      if (currentView === 'kanban') url.searchParams.set('view', currentView);
+      else url.searchParams.delete('view');
+      window.history.replaceState(null, '', url.pathname + url.search);
+      const advancedCount = Object.entries(reviewQueueFilters).filter(([key, value]) => !['reviewStatus', 'verificationStatus'].includes(key) && value !== 'all').length;
+      document.getElementById('advancedFilterCount').textContent = advancedCount ? '(' + advancedCount + '개 적용)' : '';
+    }
+
+    function restoreListNavigationState() {
+      const params = new URLSearchParams(window.location.search);
+      document.querySelectorAll('#reviewQueueFilters [data-filter-key]').forEach((select) => {
+        const value = params.get(select.dataset.filterKey);
+        if (value && [...select.options].some((option) => option.value === value)) {
+          select.value = value;
+          reviewQueueFilters[select.dataset.filterKey] = value;
+        }
+      });
+      switchView(params.get('view'));
+      document.getElementById('advancedReviewFilters').open = [...document.querySelectorAll('#advancedReviewFilters select')].some((select) => select.value !== 'all');
+    }
+
     function setReviewQueueFilter(select) {
       const key = select && select.dataset ? select.dataset.filterKey : '';
       if (!Object.prototype.hasOwnProperty.call(reviewQueueFilters, key)) return;
       reviewQueueFilters[key] = select.value || 'all';
+      syncListNavigationState();
       renderCurrentLeads();
     }
 
     function resetReviewQueueFilters() {
       Object.keys(reviewQueueFilters).forEach((key) => { reviewQueueFilters[key] = 'all'; });
       document.querySelectorAll('#reviewQueueFilters [data-filter-key]').forEach((select) => { select.value = 'all'; });
+      syncListNavigationState();
       recordSessionActivity('filterReset', '필터를 초기화했습니다.');
       renderCurrentLeads();
     }
 
     function setReviewSessionStatus(message, tone = 'idle') {
-      reviewSessionNotice = { message: message || '', tone };
       const el = document.getElementById('reviewSessionStatus');
       if (!el) return;
       el.className = 'review-session-status is-' + tone;
@@ -1793,6 +1865,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     }
 
     function focusReviewerActionQueue() {
+      document.getElementById('reviewOverview').open = true;
       const queue = document.getElementById('reviewerActionQueue');
       if (!queue) {
         setReviewSessionStatus('Reviewer Action Queue를 찾지 못했습니다.', 'error');
@@ -1806,6 +1879,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     }
 
     function focusLeadReviewSession() {
+      document.getElementById('reviewOverview').open = true;
       const session = document.getElementById('leadReviewSession');
       if (!session) {
         setReviewSessionStatus('Lead Review Session을 찾지 못했습니다.', 'error');
@@ -1862,6 +1936,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     }
 
     async function copyReviewNote(source) {
+      document.getElementById('reviewOverview').open = true;
       const button = source && source.closest ? source.closest('[data-note-copy-action]') : null;
       const target = getReviewNoteTextElement(button || source) || getActiveReviewNoteTextElement();
       const text = target ? String(target.textContent || '').trim() : '';
@@ -1911,6 +1986,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     }
 
     function toggleShortcutHelp() {
+      document.getElementById('reviewOverview').open = true;
       shortcutHelpOpen = !shortcutHelpOpen;
       updateShortcutHelpVisibility();
       recordSessionActivity('shortcutHelp', shortcutHelpOpen ? '단축키 도움말을 열었습니다.' : '단축키 도움말을 닫았습니다.');
@@ -2139,10 +2215,24 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       return payload;
     }
 
+    function rememberReviewerFeedbackDraft(section) {
+      const leadId = section.dataset.feedbackLeadId;
+      const lead = findCachedLead(leadId);
+      if (!lead) return;
+      const payload = collectReviewerFeedbackPayload(section);
+      const saved = normalizeReviewerFeedback(lead);
+      const changed = Object.keys(payload).some((key) => payload[key] !== saved[key]);
+      if (changed) reviewerFeedbackDrafts.set(leadId, { payload });
+      else reviewerFeedbackDrafts.delete(leadId);
+      section.querySelector('[data-feedback-draft-state]').textContent = changed ? '저장 전 · 초안은 이 페이지에서만 보관됩니다.' : '';
+      section.querySelector('[data-reviewer-feedback-summary-state]').textContent = changed ? '저장 전' : getReviewerFeedbackStateLabel(lead);
+    }
+
     async function saveReviewerFeedback(leadId, button) {
       const section = button ? button.closest('.reviewer-feedback-section') : null;
       if (!section || !leadId) return;
       button.disabled = true;
+      const submittedDraft = reviewerFeedbackDrafts.get(leadId);
       const cachedLead = findCachedLead(leadId);
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
@@ -2161,6 +2251,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           return;
         }
         if (data.lead && lead) Object.assign(lead, data.lead);
+        if (reviewerFeedbackDrafts.get(leadId) === submittedDraft) reviewerFeedbackDrafts.delete(leadId);
         renderCurrentLeads();
       } catch(e) {
         alert('리뷰어 피드백 저장 실패: ' + e.message);
@@ -2174,6 +2265,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       const confirmed = window.confirm('저장된 리뷰어 피드백을 지울까요? 메타데이터 이력은 본문 없이 남습니다.');
       if (!confirmed) return;
       button.disabled = true;
+      const clearedDraft = reviewerFeedbackDrafts.get(leadId);
       const cachedLead = findCachedLead(leadId);
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
@@ -2192,6 +2284,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           return;
         }
         if (data.lead && lead) Object.assign(lead, data.lead);
+        if (reviewerFeedbackDrafts.get(leadId) === clearedDraft) reviewerFeedbackDrafts.delete(leadId);
         renderCurrentLeads();
       } catch(e) {
         alert('리뷰어 피드백 지우기 실패: ' + e.message);
@@ -2261,10 +2354,32 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       btn.textContent = '일괄 상세 분석';
     }
 
+    function renderLeadsLoadError(statusCode) {
+      cachedLeads = [];
+      setReviewSessionStatus('', 'idle');
+      if (statusCode === 401 || statusCode === 403) reviewerFeedbackDrafts.clear();
+      cacheReviewerActionQueue(null);
+      document.getElementById('leadsSummary').innerHTML = '';
+      document.getElementById('nextReviewStrip').innerHTML = '';
+      const needsAuth = statusCode === 401;
+      const message = needsAuth ? '인증이 필요합니다. 비밀번호를 입력한 뒤 다시 조회하세요.'
+        : statusCode === 403 ? '이 리드 목록에 접근할 권한이 없습니다. 관리자에게 문의하세요.'
+        : statusCode === 503 ? '서버 설정 또는 데이터 준비 상태를 확인해야 합니다. 잠시 후 다시 시도하세요.'
+        : '리드 데이터를 불러오지 못했습니다. 잠시 후 다시 시도하세요.';
+      const signIn = '/?returnTo=' + encodeURIComponent(window.location.pathname + window.location.search);
+      const content = '<div role="alert"><p>' + message + '</p>'
+        + (needsAuth ? '<a class="btn btn-secondary" href="' + esc(signIn) + '">인증하고 다시 보기</a>'
+          : '<button class="btn btn-secondary" type="button" onclick="loadLeads()">다시 시도</button>') + '</div>';
+      document.getElementById('leadsList').innerHTML = content;
+      document.getElementById('kanbanView').innerHTML = content;
+    }
+
     async function loadLeads(options = {}) {
       try {
         const res = await fetch('/api/leads?profile=' + getProfile(), {headers:authHeaders()});
+        if (!res.ok) { renderLeadsLoadError(res.status); return; }
         const data = await res.json();
+        if (!Array.isArray(data.leads)) { renderLeadsLoadError(500); return; }
         const container = document.getElementById('leadsList');
         const summaryContainer = document.getElementById('leadsSummary');
 
@@ -2286,7 +2401,9 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
         renderCurrentLeads();
         if (options.focusLeadId) {
           requestAnimationFrame(() => {
-            const card = findLeadCard(options.focusLeadId);
+            const card = currentView === 'kanban'
+              ? [...document.querySelectorAll('#kanbanView .kanban-card')].find((item) => item.dataset.leadId === options.focusLeadId)
+              : findLeadCard(options.focusLeadId);
             if (card) {
               card.classList.add('review-session-focus');
               card.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2294,7 +2411,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           });
         }
       } catch(e) {
-        document.getElementById('leadsList').innerHTML = '<p style="color:#e74c3c;">데이터 로드 실패: ' + esc(e.message) + '</p>';
+        renderLeadsLoadError(500);
       }
     }
     let currentView = 'list';
@@ -2302,7 +2419,6 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     let cachedReviewerQueue = { items: [], lanes: [] };
     let cachedQueueItemsByLeadId = {};
     let cachedManualReviewNotesAccess = null;
-    let reviewSessionNotice = { message: '', tone: 'idle' };
     let shortcutHelpOpen = false;
     let sessionActivity = {
       copiedNotes: 0,
@@ -2422,8 +2538,8 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
             </div>\` : ''}
             \${lead.id ? renderReviewerFeedbackControls(lead) : ''}
             <div class="lead-actions">
-              <a href="/ppt?profile=\${encodeURIComponent(getProfile())}&lead=\${i}" class="btn btn-secondary">PPT 생성</a>
-              <a href="/roleplay?profile=\${encodeURIComponent(getProfile())}&lead=\${i}" class="btn btn-secondary">영업 연습</a>
+              <a href="\${esc(leadToolLink('/ppt', lead.id))}" class="btn btn-secondary">PPT 생성</a>
+              <a href="\${esc(leadToolLink('/roleplay', lead.id))}" class="btn btn-secondary">영업 연습</a>
               \${lead.id && !lead.enriched ? \`<button class="btn-enrich" onclick="enrichLead('\${esc(lead.id)}', this)">상세 분석</button>\` : ''}
               \${lead.id && lead.enriched ? \`<button class="btn-enrich" style="opacity:0.6" onclick="enrichLead('\${esc(lead.id)}', this, true)" title="재분석">재분석</button>\` : ''}
             </div>
@@ -2457,6 +2573,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     function switchView(view) {
       const nextView = view === 'kanban' ? 'kanban' : 'list';
       currentView = nextView;
+      syncListNavigationState();
       document.querySelectorAll('.view-tab').forEach((t) => {
         const active = t.dataset.viewTarget === nextView;
         t.classList.toggle('active', active);
@@ -2551,7 +2668,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           const action = getLeadQueueItem(l);
           const fu = l.followUpDate || '';
           const isWarn = fu && fu <= today;
-          html += '<div class="kanban-card' + (isWarn ? ' followup-warn' : '') + '" onclick="openLeadDetail(\\'' + esc(l.id) + '\\', event)">';
+          html += '<div class="kanban-card' + (isWarn ? ' followup-warn' : '') + '" data-lead-id="' + esc(l.id) + '" onclick="openLeadDetail(\\'' + esc(l.id) + '\\', event)">';
           html += '<div class="k-company">' + esc(l.company) + '</div>';
           html += '<div class="k-product">' + esc(l.product || l.summary || '-') + '</div>';
           html += '<div class="k-meta">';
@@ -2563,7 +2680,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           }
           html += '<div class="k-review">' + esc(humanReviewStatusLabel(getReviewStatus(l))) + ' / ' + esc(verificationStatusLabels[getVerificationStatus(l)]) + '</div>';
           html += '<div class="k-gate gate-' + esc(gate.state) + '">' + esc(gate.label) + '</div>';
-          html += '<div class="k-action priority-' + esc(action.reviewPriority) + '">Action: ' + esc(action.nextReviewActionLabel) + '</div>';
+          html += '<div class="k-action priority-' + esc(action.reviewPriority) + '">다음 행동: ' + esc(reviewActionLabel(action)) + '</div>';
           html += '</div>';
         });
         if (cards.length === 0) html += '<p style="color:#555;font-size:11px;text-align:center;padding:20px 0;">없음</p>';
@@ -2634,6 +2751,11 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     const viewTabList = document.querySelector('[role="tablist"][aria-label="리드 보기 전환"]');
     if (viewTabList) viewTabList.addEventListener('keydown', handleViewTabRovingKeydown);
     document.addEventListener('keydown', handleReviewerShortcut);
+    window.addEventListener('beforeunload', (event) => {
+      if (!reviewerFeedbackDrafts.size) return;
+      event.preventDefault();
+      event.returnValue = '';
+    });
     window.setReviewQueueFilter = setReviewQueueFilter;
     window.resetReviewQueueFilters = resetReviewQueueFilters;
     window.scrollToNextReviewLead = scrollToNextReviewLead;
@@ -2641,7 +2763,8 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     window.handleReviewerShortcut = handleReviewerShortcut;
     window.handleViewTabRovingKeydown = handleViewTabRovingKeydown;
 
-    loadLeads();
+    restoreListNavigationState();
+    loadLeads({ focusLeadId: new URLSearchParams(window.location.search).get('focusLeadId') });
   </script>
 </body>
 </html>`;

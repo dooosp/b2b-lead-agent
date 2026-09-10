@@ -76,9 +76,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.equal(leadsPayload.leadReviewSession.needsReviewCount, 1);
   assert.equal(leadsPayload.leadReviewSession.remainingByLane.approval_candidates, 1);
   assert.equal(leadsPayload.leadReviewSession.remainingByLane.needs_evidence, 1);
-  assert.equal(leadsPayload.leadReviewSession.nextLead.leadId, 'local-lead-approved');
-  assert.equal(leadsPayload.leadReviewSession.nextLead.reviewNoteSuggestion.state, 'APPROVED');
-  assert.match(leadsPayload.leadReviewSession.nextLead.reviewNoteSuggestion.text, /Decision: APPROVED/);
+  assert.equal(leadsPayload.leadReviewSession.nextLead.leadId, 'local-lead-review');
+  assert.equal(leadsPayload.leadReviewSession.nextLead.reviewNoteSuggestion.state, 'DATA_GAP');
+  assert.match(leadsPayload.leadReviewSession.nextLead.reviewNoteSuggestion.text, /Follow-up check: DATA_GAP/);
   assert.equal(leadsPayload.reviewerActionQueue.items[0].reviewNoteSuggestion.state, 'APPROVED');
   assert.equal(leadsPayload.reviewerActionQueue.items[0].reviewNoteTemplates.length, 3);
   const approvedLead = leadsPayload.leads.find((lead) => lead.id === 'local-lead-approved');
@@ -171,6 +171,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     const el = document.querySelector('#leadsList');
     return !!el && !String(el.textContent || '').includes('로딩 중');
   });
+  await openReviewControls(page);
 
   await assertRenderedText(page, [
     '리드 리뷰 큐',
@@ -182,19 +183,19 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '목록 품질 게이트',
     '목록 게이트 통과',
     '목록 게이트 보강 필요',
-    'Lead Action Intelligence',
-    'Prepare reviewed follow-up',
-    'Enrich before review',
-    'Priority high',
-    'Risk flags 0',
-    'Missing info 0',
+    '다음 검토 행동',
+    '후속 준비',
+    '보강 후 검토',
+    '검토 우선순위 높음',
+    '리스크 0',
+    '누락 정보 0',
     'Reviewer Action Queue',
     '승인 후보 1건',
     '보강 필요 1건',
     '리스크 확인 0건',
     '낮은 우선순위 0건',
-    'Risk flags 5',
-    'Missing info 6',
+    '리스크 5',
+    '누락 정보 6',
     '다음 리뷰',
     'Local Factory Automation',
     '세션 보기',
@@ -205,13 +206,13 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '사람이 저장한 메모가 아닙니다',
     '복사 후 사람이 직접 검토해 사용하세요',
     '승인 노트',
-    'Decision: APPROVED',
+    'Follow-up check: DATA_GAP',
     '검토 필요 노트',
-    '리스크 확인 노트',
+    '데이터 공백 확인 노트',
     '현재 큐',
-    '다음 검토 리드: Local Factory Automation',
+    '다음 검토 리드: Local Data Center Cooling',
     '승인 / 검토 필요',
-    '영업 신규',
+    '영업 접촉 완료',
     '리뷰 요약',
     '현재 필터 기준',
     '큐 상태',
@@ -273,7 +274,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
       shortcutHelp: { role: 'region', label: '단축키 도움말', hidden: true },
       liveStatus: { role: 'status', live: 'polite', atomic: 'true' },
     },
-    copyControls: ['현재 노트 복사', '승인 노트 복사', '검토 필요 노트 복사', '리스크 확인 노트 복사'],
+    copyControls: ['현재 노트 복사', '승인 노트 복사', '검토 필요 노트 복사', '데이터 공백 확인 노트 복사'],
   });
 
   await page.getByRole('tab', { name: '리스트' }).focus();
@@ -433,6 +434,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     const el = document.querySelector('#leadsList');
     return !!el && !String(el.textContent || '').includes('로딩 중');
   });
+  await openReviewControls(page);
   await assertRenderedText(page, ['노트 복사 0건', '상태 변경 0건', '포커스 이동 0건']);
   await page.evaluate(() => {
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
@@ -449,7 +451,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
 
   await page.locator('[data-filter-key="gateStatus"]').selectOption('ready');
   assert.equal(await page.locator('#leadsList .lead-card').count(), 1);
-  await assertRenderedText(page, ['Local Factory Automation', '목록 게이트 통과', 'Prepare reviewed follow-up', '전체 2건 중 표시', '게이트 통과 1건', '보강 필요 0건', '승인 1건 / 검토 필요 0건 / 대기 0건', '준비 1건 / 보강 필요 0건']);
+  await assertRenderedText(page, ['Local Factory Automation', '목록 게이트 통과', '후속 준비', '전체 2건 중 표시', '게이트 통과 1건', '보강 필요 0건', '승인 1건 / 검토 필요 0건 / 대기 0건', '준비 1건 / 보강 필요 0건']);
   assert.equal(await page.getByRole('link', { name: 'Local Data Center Cooling' }).count(), 0);
 
   await page.getByRole('button', { name: '초기화' }).click();
@@ -461,7 +463,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   await page.getByRole('button', { name: '초기화' }).click();
   await page.locator('[data-filter-key="nextReviewAction"]').selectOption('enrich_before_review');
   assert.equal(await page.locator('#leadsList .lead-card').count(), 1);
-  await assertRenderedText(page, ['Local Data Center Cooling', 'Enrich before review', 'Risk flags 5', 'Missing info 6']);
+  await assertRenderedText(page, ['Local Data Center Cooling', '보강 후 검토', '리스크 5', '누락 정보 6']);
   assert.equal(await page.getByRole('link', { name: 'Local Factory Automation' }).count(), 0);
 
   await page.getByRole('button', { name: '초기화' }).click();
@@ -473,13 +475,13 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   await page.getByRole('button', { name: '초기화' }).click();
   await page.locator('[data-filter-key="missingInfo"]').selectOption('none');
   assert.equal(await page.locator('#leadsList .lead-card').count(), 1);
-  await assertRenderedText(page, ['Local Factory Automation', 'Missing info 0', '승인 후보 1건']);
+  await assertRenderedText(page, ['Local Factory Automation', '누락 정보 0', '승인 후보 1건']);
   assert.equal(await page.getByRole('link', { name: 'Local Data Center Cooling' }).count(), 0);
 
   await page.getByRole('button', { name: '초기화' }).click();
   await page.locator('[data-filter-key="gateStatus"]').selectOption('review');
   assert.equal(await page.locator('#leadsList .lead-card').count(), 1);
-  await assertRenderedText(page, ['Local Data Center Cooling', '목록 게이트 보강 필요', 'Enrich before review', '게이트 통과 0건', '보강 필요 1건']);
+  await assertRenderedText(page, ['Local Data Center Cooling', '목록 게이트 보강 필요', '보강 후 검토', '게이트 통과 0건', '보강 필요 1건']);
   assert.equal(await page.getByRole('link', { name: 'Local Factory Automation' }).count(), 0);
 
   await page.getByRole('button', { name: '초기화' }).click();
@@ -505,7 +507,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.equal(await page.locator('#kanbanView .kanban-card').count(), 2);
   assert.equal(await page.locator('#kanbanView .k-gate.gate-ready').count(), 1);
   assert.equal(await page.locator('#kanbanView .k-gate.gate-review').count(), 1);
-  await assertRenderedText(page, ['Local Factory Automation', '목록 게이트 통과', '목록 게이트 보강 필요', 'Action: Prepare reviewed follow-up', 'Action: Enrich before review']);
+  await assertRenderedText(page, ['Local Factory Automation', '목록 게이트 통과', '목록 게이트 보강 필요', '다음 행동: 후속 준비', '다음 행동: 보강 후 검토']);
 
   await page.locator('[data-filter-key="confidence"]').selectOption('LOW');
   assert.equal(await page.locator('#kanbanView .kanban-card').count(), 0);
@@ -535,9 +537,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     const card = cards.find((candidate) => String(candidate.textContent || '').includes('Local Data Center Cooling'));
     return !!card
       && String(card.textContent || '').includes('사람 검토: 승인')
-      && String(card.textContent || '').includes('Reconcile review conflict');
+      && String(card.textContent || '').includes('리스크 조정');
   });
-  await assertRenderedText(page, ['리스크 확인 1건', '보강 필요 0건', 'Risk flags', 'Missing info']);
+  await assertRenderedText(page, ['리스크 확인 1건', '보강 필요 0건', '리스크', '누락 정보']);
 
   const updatedLeadsResponse = await localFetch('/api/leads?profile=danfoss');
   const updatedLeadsPayload = await readJson(updatedLeadsResponse);
@@ -575,9 +577,10 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     const el = document.querySelector('#leadsList');
     return !!el && !String(el.textContent || '').includes('로딩 중');
   });
+  await openReviewControls(page);
   await page.getByRole('link', { name: 'Local Factory Automation' }).click();
   await page.waitForSelector('#detailContent .detail-section');
-  assert.match(page.url(), /\/leads\/local-lead-approved$/);
+  assert.equal(new URL(page.url()).pathname, '/leads/local-lead-approved');
   await assertRenderedText(page, [
     '사람 검토',
     '품질 게이트',
@@ -732,16 +735,24 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     const el = document.querySelector('#leadsList');
     return !!el && !String(el.textContent || '').includes('로딩 중');
   });
+  await openReviewControls(page);
   await page.locator('[data-filter-key="nextReviewAction"]').selectOption('enrich_before_review');
   await page.getByRole('button', { name: '승인' }).click();
   await page.waitForSelector('#reviewSessionStatus.is-error');
   const reviewFailureText = await page.locator('#reviewSessionStatus').textContent();
   assert.match(reviewFailureText || '', /검토 상태를 저장하지 못했습니다/);
   assert.doesNotMatch(reviewFailureText || '', /fake D1 forced failure/);
-  await assertRenderedText(page, ['Local Data Center Cooling', '검토 필요', 'Enrich before review']);
+  await assertRenderedText(page, ['Local Data Center Cooling', '검토 필요', '보강 후 검토']);
 
   assert.deepEqual(fetchGuard.blockedUrls, []);
 });
+
+async function openReviewControls(page) {
+  for (const id of ['advancedReviewFilters', 'reviewOverview']) {
+    const panel = page.locator('#' + id);
+    if (await panel.getAttribute('open') === null) await panel.locator(':scope > summary').click();
+  }
+}
 
 async function assertRenderedText(page, expectedTexts) {
   const bodyText = await page.locator('body').innerText();

@@ -20,3 +20,16 @@ function getToken() { const p=document.getElementById('${inputId}').value; if(p)
 export function getProfileScript(defaultProfile = 'danfoss') {
   return `function getProfile() { return new URLSearchParams(window.location.search).get('profile') || '${defaultProfile}'; }`;
 }
+
+export function getLeadListReturnScript() {
+  return `function getLeadListReturnUrl() {
+    const fallback = '/leads?profile=' + encodeURIComponent(getProfile());
+    const requested = new URLSearchParams(window.location.search).get('returnTo');
+    if (!requested) return fallback;
+    try {
+      const target = new URL(requested, window.location.origin);
+      return target.origin === window.location.origin && target.pathname === '/leads'
+        ? target.pathname + target.search : fallback;
+    } catch { return fallback; }
+  }`;
+}
