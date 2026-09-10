@@ -444,8 +444,17 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     ${getSafeUrlScript()}
     ${getStoredTokenScript()}
     const generatedReviewGuidanceEnabled = ${includeGeneratedReviewGuidance ? 'true' : 'false'};
+    function leadListReturnUrl(leadId) {
+      const url = new URL(window.location.href);
+      if (leadId) url.searchParams.set('focusLeadId', leadId);
+      return url.pathname + url.search;
+    }
+    function leadToolLink(path, leadId) {
+      return path + '?profile=' + encodeURIComponent(getProfile()) + '&leadId=' + encodeURIComponent(leadId || '')
+        + '&returnTo=' + encodeURIComponent(leadListReturnUrl(leadId));
+    }
     function detailLink(leadId) {
-      return '/leads/' + encodeURIComponent(leadId);
+      return '/leads/' + encodeURIComponent(leadId) + '?returnTo=' + encodeURIComponent(leadListReturnUrl(leadId));
     }
     async function openLeadDetail(leadId, event) {
       if (!leadId) return;
@@ -1721,16 +1730,41 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       return applyReviewQueueFilters(cachedLeads);
     }
 
+    function syncListNavigationState() {
+      const url = new URL(window.location.href);
+      Object.entries(reviewQueueFilters).forEach(([key, value]) => {
+        if (value === 'all') url.searchParams.delete(key);
+        else url.searchParams.set(key, value);
+      });
+      if (currentView === 'kanban') url.searchParams.set('view', currentView);
+      else url.searchParams.delete('view');
+      window.history.replaceState(null, '', url.pathname + url.search);
+    }
+
+    function restoreListNavigationState() {
+      const params = new URLSearchParams(window.location.search);
+      document.querySelectorAll('#reviewQueueFilters [data-filter-key]').forEach((select) => {
+        const value = params.get(select.dataset.filterKey);
+        if (value && [...select.options].some((option) => option.value === value)) {
+          select.value = value;
+          reviewQueueFilters[select.dataset.filterKey] = value;
+        }
+      });
+      switchView(params.get('view'));
+    }
+
     function setReviewQueueFilter(select) {
       const key = select && select.dataset ? select.dataset.filterKey : '';
       if (!Object.prototype.hasOwnProperty.call(reviewQueueFilters, key)) return;
       reviewQueueFilters[key] = select.value || 'all';
+      syncListNavigationState();
       renderCurrentLeads();
     }
 
     function resetReviewQueueFilters() {
       Object.keys(reviewQueueFilters).forEach((key) => { reviewQueueFilters[key] = 'all'; });
       document.querySelectorAll('#reviewQueueFilters [data-filter-key]').forEach((select) => { select.value = 'all'; });
+      syncListNavigationState();
       recordSessionActivity('filterReset', '필터를 초기화했습니다.');
       renderCurrentLeads();
     }
@@ -2331,7 +2365,9 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
         renderCurrentLeads();
         if (options.focusLeadId) {
           requestAnimationFrame(() => {
-            const card = findLeadCard(options.focusLeadId);
+            const card = currentView === 'kanban'
+              ? [...document.querySelectorAll('#kanbanView .kanban-card')].find((item) => item.dataset.leadId === options.focusLeadId)
+              : findLeadCard(options.focusLeadId);
             if (card) {
               card.classList.add('review-session-focus');
               card.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2467,8 +2503,8 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
             </div>\` : ''}
             \${lead.id ? renderReviewerFeedbackControls(lead) : ''}
             <div class="lead-actions">
-              <a href="/ppt?profile=\${encodeURIComponent(getProfile())}&leadId=\${encodeURIComponent(lead.id || '')}" class="btn btn-secondary">PPT 생성</a>
-              <a href="/roleplay?profile=\${encodeURIComponent(getProfile())}&leadId=\${encodeURIComponent(lead.id || '')}" class="btn btn-secondary">영업 연습</a>
+              <a href="\${esc(leadToolLink('/ppt', lead.id))}" class="btn btn-secondary">PPT 생성</a>
+              <a href="\${esc(leadToolLink('/roleplay', lead.id))}" class="btn btn-secondary">영업 연습</a>
               \${lead.id && !lead.enriched ? \`<button class="btn-enrich" onclick="enrichLead('\${esc(lead.id)}', this)">상세 분석</button>\` : ''}
               \${lead.id && lead.enriched ? \`<button class="btn-enrich" style="opacity:0.6" onclick="enrichLead('\${esc(lead.id)}', this, true)" title="재분석">재분석</button>\` : ''}
             </div>
@@ -2502,6 +2538,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     function switchView(view) {
       const nextView = view === 'kanban' ? 'kanban' : 'list';
       currentView = nextView;
+      syncListNavigationState();
       document.querySelectorAll('.view-tab').forEach((t) => {
         const active = t.dataset.viewTarget === nextView;
         t.classList.toggle('active', active);
@@ -2596,7 +2633,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           const action = getLeadQueueItem(l);
           const fu = l.followUpDate || '';
           const isWarn = fu && fu <= today;
-          html += '<div class="kanban-card' + (isWarn ? ' followup-warn' : '') + '" onclick="openLeadDetail(\\'' + esc(l.id) + '\\', event)">';
+          html += '<div class="kanban-card' + (isWarn ? ' followup-warn' : '') + '" data-lead-id="' + esc(l.id) + '" onclick="openLeadDetail(\\'' + esc(l.id) + '\\', event)">';
           html += '<div class="k-company">' + esc(l.company) + '</div>';
           html += '<div class="k-product">' + esc(l.product || l.summary || '-') + '</div>';
           html += '<div class="k-meta">';
@@ -2691,7 +2728,8 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     window.handleReviewerShortcut = handleReviewerShortcut;
     window.handleViewTabRovingKeydown = handleViewTabRovingKeydown;
 
-    loadLeads();
+    restoreListNavigationState();
+    loadLeads({ focusLeadId: new URLSearchParams(window.location.search).get('focusLeadId') });
   </script>
 </body>
 </html>`;

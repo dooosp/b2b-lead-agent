@@ -1,5 +1,5 @@
 import { getCommonStyles } from './common-styles.js';
-import { getEscScript, getPasswordTokenScript, getProfileScript } from './script-snippets.js';
+import { getEscScript, getLeadListReturnScript, getPasswordTokenScript, getProfileScript } from './script-snippets.js';
 
 export function getPPTPage() {
   return `<!DOCTYPE html>
@@ -33,7 +33,8 @@ export function getPPTPage() {
     ${getEscScript()}
     ${getPasswordTokenScript('password')}
     ${getProfileScript('danfoss')}
-    document.getElementById('leadsBackLink').href = '/leads?profile=' + encodeURIComponent(getProfile());
+    ${getLeadListReturnScript()}
+    document.getElementById('leadsBackLink').href = getLeadListReturnUrl();
     let leads = [];
 
     async function loadLeads() {

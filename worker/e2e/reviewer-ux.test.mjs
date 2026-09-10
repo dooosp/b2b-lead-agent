@@ -88,7 +88,7 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     const page = await createPage();
     await page.goto(`${harness.origin}/leads?profile=danfoss`);
     await page.getByRole('link', { name: 'Local Factory Automation', exact: true }).click();
-    await page.waitForURL('**/leads/local-lead-approved');
+    await page.waitForURL('**/leads/local-lead-approved?**');
     await page.reload();
     await page.waitForFunction(() => document.body.textContent.includes('Local Factory Automation'), null, { timeout: 1500 });
     assert.match(await page.locator('body').textContent(), /Local Factory Automation/);
@@ -159,6 +159,29 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     await page.getByRole('combobox', { name: '검토 상태', exact: true }).selectOption('APPROVED');
     assert.match(await page.locator('#nextReviewStrip').textContent(), /검토가 완료/);
     assert.equal(await page.locator('#nextReviewStrip [data-session-action="focus-next"]').count(), 0);
+  });
+
+  await t.test('returning from tools and detail restores filters and the selected view', async () => {
+    const page = await createPage();
+    await page.goto(`${harness.origin}/leads?profile=danfoss`);
+    const card = page.locator('.lead-card[data-lead-id="local-lead-review"]');
+    await card.waitFor();
+    await page.getByRole('combobox', { name: '검토 상태', exact: true }).selectOption('NEEDS_REVIEW');
+    await card.getByRole('link', { name: 'PPT 생성', exact: true }).click();
+    await page.getByRole('link', { name: '리드 목록' }).click();
+    await card.waitFor();
+    assert.equal(await page.getByRole('combobox', { name: '검토 상태', exact: true }).inputValue(), 'NEEDS_REVIEW');
+    assert.equal(await page.locator('#leadsList .lead-card').count(), 1);
+    await page.getByRole('tab', { name: '칸반 보드' }).click();
+    await page.locator('#kanbanView .kanban-card').filter({ hasText: 'Local Data Center Cooling' }).click();
+    await page.getByRole('link', { name: '리드 목록' }).click();
+    await page.locator('#kanbanView .kanban-card').waitFor();
+    assert.equal(await page.getByRole('combobox', { name: '검토 상태', exact: true }).inputValue(), 'NEEDS_REVIEW');
+    assert.equal(await page.getByRole('tab', { name: '칸반 보드' }).getAttribute('aria-selected'), 'true');
+    assert.equal(await page.locator('#kanbanView .kanban-card').count(), 1);
+    await page.reload();
+    await page.locator('#kanbanView .kanban-card').waitFor();
+    assert.equal(await page.getByRole('combobox', { name: '검토 상태', exact: true }).inputValue(), 'NEEDS_REVIEW');
   });
 });
 

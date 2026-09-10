@@ -577,7 +577,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   });
   await page.getByRole('link', { name: 'Local Factory Automation' }).click();
   await page.waitForSelector('#detailContent .detail-section');
-  assert.match(page.url(), /\/leads\/local-lead-approved$/);
+  assert.equal(new URL(page.url()).pathname, '/leads/local-lead-approved');
   await assertRenderedText(page, [
     '사람 검토',
     '품질 게이트',
