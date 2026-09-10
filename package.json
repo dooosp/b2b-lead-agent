@@ -43,7 +43,7 @@
     "axios": "^1.18.0",
     "cheerio": "^1.1.2",
     "dotenv": "^17.2.3",
-    "nodemailer": "^9.0.1",
+    "nodemailer": "^9.1.1",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
