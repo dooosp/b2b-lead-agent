@@ -2422,8 +2422,8 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
             </div>\` : ''}
             \${lead.id ? renderReviewerFeedbackControls(lead) : ''}
             <div class="lead-actions">
-              <a href="/ppt?profile=\${encodeURIComponent(getProfile())}&lead=\${i}" class="btn btn-secondary">PPT 생성</a>
-              <a href="/roleplay?profile=\${encodeURIComponent(getProfile())}&lead=\${i}" class="btn btn-secondary">영업 연습</a>
+              <a href="/ppt?profile=\${encodeURIComponent(getProfile())}&leadId=\${encodeURIComponent(lead.id || '')}" class="btn btn-secondary">PPT 생성</a>
+              <a href="/roleplay?profile=\${encodeURIComponent(getProfile())}&leadId=\${encodeURIComponent(lead.id || '')}" class="btn btn-secondary">영업 연습</a>
               \${lead.id && !lead.enriched ? \`<button class="btn-enrich" onclick="enrichLead('\${esc(lead.id)}', this)">상세 분석</button>\` : ''}
               \${lead.id && lead.enriched ? \`<button class="btn-enrich" style="opacity:0.6" onclick="enrichLead('\${esc(lead.id)}', this, true)" title="재분석">재분석</button>\` : ''}
             </div>

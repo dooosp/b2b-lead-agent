@@ -29,7 +29,7 @@
     "check:level1": "node --test worker/tests/local-test-auth-adapter.test.mjs worker/tests/auth-provider-session-scaffold.test.mjs worker/tests/level1-readiness-guards.test.mjs worker/tests/level1-local-proof-simulation.test.mjs worker/tests/level1-auth-route-audit.test.mjs worker/tests/manual-review-notes.test.mjs worker/tests/level1-proof-preflight.test.mjs worker/tests/level1-production-proof-approval.test.mjs worker/tests/level1-production-proof-change-control-manifest.test.mjs worker/tests/level1-operator-rehearsal.test.mjs worker/tests/level1-readiness-closure-dashboard.test.mjs worker/tests/level1-production-proof-approval-intake-gate.test.mjs worker/tests/level1-post-approval-decision-simulator.test.mjs && npm run test:evidence && npm run check:reviewer-workflow-boundary && npm run proof:level1:preflight && npm run proof:level1:approval-dry-run && npm run proof:level1:change-control-manifest && npm run proof:level1:operator-rehearsal && npm run proof:level1:approval-intake && npm run proof:level1:post-approval-simulator && npm run proof:level1:closure-dashboard",
     "eval:lead-quality": "node scripts/evaluate-lead-quality.js --fixtures",
     "e2e": "node e2e-test.mjs",
-    "test:e2e:local": "node --test worker/e2e/local-e2e.test.mjs",
+    "test:e2e:local": "node --test worker/e2e/*.test.mjs",
     "test:evidence": "node --test tests/release-evidence-redaction.test.js tests/release-evidence-packet.test.js",
     "test:root": "node --test tests/*.test.js",
     "test:runtime": "npm run test:root",
