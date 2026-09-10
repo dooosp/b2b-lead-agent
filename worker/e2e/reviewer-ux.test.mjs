@@ -83,4 +83,24 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     await page.getByRole('button', { name: '인증하고 돌아가기' }).click();
     await page.locator('[data-lead-id="local-lead-review"]').waitFor();
   });
+
+  await t.test('detail reload restores an existing browser token without weakening server auth', async () => {
+    const page = await createPage();
+    await page.goto(`${harness.origin}/leads?profile=danfoss`);
+    await page.getByRole('link', { name: 'Local Factory Automation', exact: true }).click();
+    await page.waitForURL('**/leads/local-lead-approved');
+    await page.reload();
+    await page.waitForFunction(() => document.body.textContent.includes('Local Factory Automation'), null, { timeout: 1500 });
+    assert.match(await page.locator('body').textContent(), /Local Factory Automation/);
+
+    const anonymous = await createPage({ authenticated: false });
+    const response = await anonymous.goto(`${harness.origin}/leads/local-lead-approved`);
+    assert.equal(response.status(), 401);
+    assert.doesNotMatch(await anonymous.locator('body').textContent(), /Local Factory Automation|Seeded local smoke note/);
+    await anonymous.getByRole('link', { name: '인증하고 다시 보기' }).click();
+    await anonymous.getByRole('textbox', { name: '비밀번호 입력', exact: true }).fill(LOCAL_E2E_TOKEN);
+    await anonymous.getByRole('button', { name: '인증하고 돌아가기' }).click();
+    await anonymous.waitForFunction(() => document.body.textContent.includes('Local Factory Automation'));
+    assert.match(await anonymous.locator('body').textContent(), /Local Factory Automation/);
+  });
 });
