@@ -103,4 +103,54 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     await anonymous.waitForFunction(() => document.body.textContent.includes('Local Factory Automation'));
     assert.match(await anonymous.locator('body').textContent(), /Local Factory Automation/);
   });
+
+  await t.test('unsaved feedback survives filter changes and saves only on explicit submission', async () => {
+    const page = await createPage();
+    await page.goto(`${harness.origin}/leads?profile=danfoss`);
+    const card = page.locator('[data-lead-id="local-lead-approved"]');
+    await card.locator('.reviewer-feedback-section summary').click();
+    await card.getByRole('textbox', { name: '피드백', exact: true }).fill('사용성 점검: 예산과 일정 확인');
+    await page.getByRole('combobox', { name: '검토 상태', exact: true }).selectOption('NEEDS_REVIEW');
+    await page.getByRole('combobox', { name: '검토 상태', exact: true }).selectOption('all');
+    await card.locator('.reviewer-feedback-section summary').click();
+    assert.equal(await card.getByRole('textbox', { name: '피드백', exact: true }).inputValue(), '사용성 점검: 예산과 일정 확인');
+    assert.match(await card.locator('.reviewer-feedback-section').textContent(), /저장 전/);
+    const beforeSave = await fetch(`${harness.origin}/api/leads?profile=danfoss`, { headers: authHeaders() }).then((res) => res.json());
+    assert.doesNotMatch(JSON.stringify(beforeSave), /사용성 점검: 예산과 일정 확인/);
+    await card.getByRole('button', { name: '피드백 저장', exact: true }).click();
+    await page.waitForFunction(() => document.querySelector('[data-lead-id="local-lead-approved"] .reviewer-feedback-section')?.textContent.includes('저장됨'));
+    await page.reload();
+    await card.locator('.reviewer-feedback-section summary').click();
+    assert.equal(await card.getByRole('textbox', { name: '피드백', exact: true }).inputValue(), '사용성 점검: 예산과 일정 확인');
+  });
+
+  await t.test('a delayed feedback save does not erase edits typed while it is pending', async () => {
+    const page = await createPage();
+    await page.goto(`${harness.origin}/leads?profile=danfoss`);
+    const card = page.locator('[data-lead-id="local-lead-approved"]');
+    await card.locator('.reviewer-feedback-section summary').click();
+    await card.getByRole('textbox', { name: '피드백', exact: true }).fill('첫 번째 저장');
+    let release;
+    let started;
+    const paused = new Promise((resolve) => { release = resolve; });
+    const requested = new Promise((resolve) => { started = resolve; });
+    await page.route('**/api/leads/local-lead-approved', async (route) => {
+      if (route.request().method() === 'PATCH') { started(); await paused; }
+      await route.continue();
+    });
+    await card.getByRole('button', { name: '피드백 저장', exact: true }).click();
+    await requested;
+    await card.getByRole('textbox', { name: '피드백', exact: true }).fill('저장 응답을 기다리며 추가한 문장');
+    const saved = page.waitForResponse((res) => res.request().method() === 'PATCH');
+    release();
+    await saved;
+    await card.locator('.reviewer-feedback-section details:not([open])').waitFor();
+    await card.locator('.reviewer-feedback-section summary').click();
+    assert.equal(await card.getByRole('textbox', { name: '피드백', exact: true }).inputValue(), '저장 응답을 기다리며 추가한 문장');
+    assert.match(await card.locator('[data-feedback-draft-state]').textContent(), /저장 전/);
+  });
 });
+
+function authHeaders() {
+  return { Authorization: `Bearer ${LOCAL_E2E_TOKEN}` };
+}

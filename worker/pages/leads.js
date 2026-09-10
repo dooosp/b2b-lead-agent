@@ -450,6 +450,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     async function openLeadDetail(leadId, event) {
       if (!leadId) return;
       if (event) event.preventDefault();
+      if (reviewerFeedbackDrafts.size && !window.confirm('저장 전 리뷰어 피드백이 있습니다. 초안을 버리고 이동할까요?')) return;
       try {
         const href = detailLink(leadId);
         const res = await fetch(href, { headers: authHeaders() });
@@ -524,6 +525,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       missingInfo: 'all',
       dataGaps: 'all'
     };
+    const reviewerFeedbackDrafts = new Map();
 
     function leadAccessibleName(lead) {
       return esc((lead && (lead.company || lead.id)) || '리드');
@@ -761,11 +763,13 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           </div>
         \`;
       }
-      const feedback = normalizeReviewerFeedback(lead);
+      const draft = reviewerFeedbackDrafts.get(getLeadId(lead));
+      const feedback = { ...normalizeReviewerFeedback(lead), ...(draft ? draft.payload : {}) };
       return \`
-        <div class="reviewer-feedback-section">
+        <div class="reviewer-feedback-section" data-feedback-lead-id="\${esc(getLeadId(lead))}" oninput="rememberReviewerFeedbackDraft(this)">
           <details>
-            <summary>리뷰어 피드백 <span class="notes-summary-state" data-reviewer-feedback-summary-state>\${esc(getReviewerFeedbackStateLabel(lead))}</span></summary>
+            <summary>리뷰어 피드백 <span class="notes-summary-state" data-reviewer-feedback-summary-state>\${draft ? '저장 전' : esc(getReviewerFeedbackStateLabel(lead))}</span></summary>
+            <p data-feedback-draft-state role="status">\${draft ? '저장 전 · 초안은 이 페이지에서만 보관됩니다.' : ''}</p>
             \${renderReviewerFeedbackState(lead)}
             <p class="notes-privacy-warning" role="note"><strong>로컬/테스트 사람 판단:</strong> 이 피드백은 리뷰 품질 개선용 수동 입력입니다. 생성된 검토 메모 제안은 저장/전송/귀속/이력/내보내기 대상이 아닙니다.</p>
             <div class="reviewer-feedback-grid" data-reviewer-feedback-form>
@@ -810,6 +814,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
 
     function cacheManualReviewNotesAccess(access) {
       cachedManualReviewNotesAccess = access && typeof access === 'object' ? access : null;
+      if (cachedManualReviewNotesAccess && cachedManualReviewNotesAccess.manualNotesRead !== true) reviewerFeedbackDrafts.clear();
     }
 
     function canShowGeneratedReviewGuidance() {
@@ -2139,10 +2144,24 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       return payload;
     }
 
+    function rememberReviewerFeedbackDraft(section) {
+      const leadId = section.dataset.feedbackLeadId;
+      const lead = findCachedLead(leadId);
+      if (!lead) return;
+      const payload = collectReviewerFeedbackPayload(section);
+      const saved = normalizeReviewerFeedback(lead);
+      const changed = Object.keys(payload).some((key) => payload[key] !== saved[key]);
+      if (changed) reviewerFeedbackDrafts.set(leadId, { payload });
+      else reviewerFeedbackDrafts.delete(leadId);
+      section.querySelector('[data-feedback-draft-state]').textContent = changed ? '저장 전 · 초안은 이 페이지에서만 보관됩니다.' : '';
+      section.querySelector('[data-reviewer-feedback-summary-state]').textContent = changed ? '저장 전' : getReviewerFeedbackStateLabel(lead);
+    }
+
     async function saveReviewerFeedback(leadId, button) {
       const section = button ? button.closest('.reviewer-feedback-section') : null;
       if (!section || !leadId) return;
       button.disabled = true;
+      const submittedDraft = reviewerFeedbackDrafts.get(leadId);
       const cachedLead = findCachedLead(leadId);
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
@@ -2161,6 +2180,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           return;
         }
         if (data.lead && lead) Object.assign(lead, data.lead);
+        if (reviewerFeedbackDrafts.get(leadId) === submittedDraft) reviewerFeedbackDrafts.delete(leadId);
         renderCurrentLeads();
       } catch(e) {
         alert('리뷰어 피드백 저장 실패: ' + e.message);
@@ -2174,6 +2194,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       const confirmed = window.confirm('저장된 리뷰어 피드백을 지울까요? 메타데이터 이력은 본문 없이 남습니다.');
       if (!confirmed) return;
       button.disabled = true;
+      const clearedDraft = reviewerFeedbackDrafts.get(leadId);
       const cachedLead = findCachedLead(leadId);
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
@@ -2192,6 +2213,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           return;
         }
         if (data.lead && lead) Object.assign(lead, data.lead);
+        if (reviewerFeedbackDrafts.get(leadId) === clearedDraft) reviewerFeedbackDrafts.delete(leadId);
         renderCurrentLeads();
       } catch(e) {
         alert('리뷰어 피드백 지우기 실패: ' + e.message);
@@ -2263,6 +2285,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
 
     function renderLeadsLoadError(statusCode) {
       cachedLeads = [];
+      if (statusCode === 401 || statusCode === 403) reviewerFeedbackDrafts.clear();
       cacheReviewerActionQueue(null);
       document.getElementById('leadsSummary').innerHTML = '';
       document.getElementById('nextReviewStrip').innerHTML = '';
@@ -2654,6 +2677,11 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
     const viewTabList = document.querySelector('[role="tablist"][aria-label="리드 보기 전환"]');
     if (viewTabList) viewTabList.addEventListener('keydown', handleViewTabRovingKeydown);
     document.addEventListener('keydown', handleReviewerShortcut);
+    window.addEventListener('beforeunload', (event) => {
+      if (!reviewerFeedbackDrafts.size) return;
+      event.preventDefault();
+      event.returnValue = '';
+    });
     window.setReviewQueueFilter = setReviewQueueFilter;
     window.resetReviewQueueFilters = resetReviewQueueFilters;
     window.scrollToNextReviewLead = scrollToNextReviewLead;
