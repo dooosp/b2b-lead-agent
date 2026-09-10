@@ -76,9 +76,9 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
   assert.equal(leadsPayload.leadReviewSession.needsReviewCount, 1);
   assert.equal(leadsPayload.leadReviewSession.remainingByLane.approval_candidates, 1);
   assert.equal(leadsPayload.leadReviewSession.remainingByLane.needs_evidence, 1);
-  assert.equal(leadsPayload.leadReviewSession.nextLead.leadId, 'local-lead-approved');
-  assert.equal(leadsPayload.leadReviewSession.nextLead.reviewNoteSuggestion.state, 'APPROVED');
-  assert.match(leadsPayload.leadReviewSession.nextLead.reviewNoteSuggestion.text, /Decision: APPROVED/);
+  assert.equal(leadsPayload.leadReviewSession.nextLead.leadId, 'local-lead-review');
+  assert.equal(leadsPayload.leadReviewSession.nextLead.reviewNoteSuggestion.state, 'DATA_GAP');
+  assert.match(leadsPayload.leadReviewSession.nextLead.reviewNoteSuggestion.text, /Follow-up check: DATA_GAP/);
   assert.equal(leadsPayload.reviewerActionQueue.items[0].reviewNoteSuggestion.state, 'APPROVED');
   assert.equal(leadsPayload.reviewerActionQueue.items[0].reviewNoteTemplates.length, 3);
   const approvedLead = leadsPayload.leads.find((lead) => lead.id === 'local-lead-approved');
@@ -205,13 +205,13 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
     '사람이 저장한 메모가 아닙니다',
     '복사 후 사람이 직접 검토해 사용하세요',
     '승인 노트',
-    'Decision: APPROVED',
+    'Follow-up check: DATA_GAP',
     '검토 필요 노트',
-    '리스크 확인 노트',
+    '데이터 공백 확인 노트',
     '현재 큐',
-    '다음 검토 리드: Local Factory Automation',
+    '다음 검토 리드: Local Data Center Cooling',
     '승인 / 검토 필요',
-    '영업 신규',
+    '영업 접촉 완료',
     '리뷰 요약',
     '현재 필터 기준',
     '큐 상태',
@@ -273,7 +273,7 @@ test('local-only fake D1 Worker smoke covers core lead routes and browser render
       shortcutHelp: { role: 'region', label: '단축키 도움말', hidden: true },
       liveStatus: { role: 'status', live: 'polite', atomic: 'true' },
     },
-    copyControls: ['현재 노트 복사', '승인 노트 복사', '검토 필요 노트 복사', '리스크 확인 노트 복사'],
+    copyControls: ['현재 노트 복사', '승인 노트 복사', '검토 필요 노트 복사', '데이터 공백 확인 노트 복사'],
   });
 
   await page.getByRole('tab', { name: '리스트' }).focus();

@@ -40,9 +40,9 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     await t.test(`filtered lead identity survives navigation to ${path}`, async () => {
       const page = await createPage();
       await page.goto(`${harness.origin}/leads?profile=danfoss`);
-      await page.locator('[data-lead-id="local-lead-review"]').waitFor();
+      await page.locator('.lead-card[data-lead-id="local-lead-review"]').waitFor();
       await page.getByRole('combobox', { name: '검토 상태', exact: true }).selectOption('NEEDS_REVIEW');
-      await page.locator('[data-lead-id="local-lead-review"]').getByRole('link', { name: label, exact: true }).click();
+      await page.locator('.lead-card[data-lead-id="local-lead-review"]').getByRole('link', { name: label, exact: true }).click();
       await page.waitForURL(`**${path}?**`);
       await page.waitForFunction(() => document.querySelector('#leadSelect option:checked')?.textContent.includes('Local'));
       assert.match(await page.locator('#leadSelect option:checked').textContent(), /Local Data Center Cooling/);
@@ -66,7 +66,7 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     const response = page.waitForResponse((res) => res.url().includes('/api/leads?'));
     await page.getByRole('link', { name: /리드 (상세 보기|리뷰 큐)/ }).click();
     assert.equal((await response).status(), 200);
-    await page.locator('[data-lead-id="local-lead-review"]').waitFor();
+    await page.locator('.lead-card[data-lead-id="local-lead-review"]').waitFor();
     assert.deepEqual(mutations, []);
   });
 
@@ -81,7 +81,7 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     await page.getByRole('link', { name: '인증하고 다시 보기' }).click();
     await page.getByRole('textbox', { name: '비밀번호 입력', exact: true }).fill(LOCAL_E2E_TOKEN);
     await page.getByRole('button', { name: '인증하고 돌아가기' }).click();
-    await page.locator('[data-lead-id="local-lead-review"]').waitFor();
+    await page.locator('.lead-card[data-lead-id="local-lead-review"]').waitFor();
   });
 
   await t.test('detail reload restores an existing browser token without weakening server auth', async () => {
@@ -107,7 +107,7 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
   await t.test('unsaved feedback survives filter changes and saves only on explicit submission', async () => {
     const page = await createPage();
     await page.goto(`${harness.origin}/leads?profile=danfoss`);
-    const card = page.locator('[data-lead-id="local-lead-approved"]');
+    const card = page.locator('.lead-card[data-lead-id="local-lead-approved"]');
     await card.locator('.reviewer-feedback-section summary').click();
     await card.getByRole('textbox', { name: '피드백', exact: true }).fill('사용성 점검: 예산과 일정 확인');
     await page.getByRole('combobox', { name: '검토 상태', exact: true }).selectOption('NEEDS_REVIEW');
@@ -127,7 +127,7 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
   await t.test('a delayed feedback save does not erase edits typed while it is pending', async () => {
     const page = await createPage();
     await page.goto(`${harness.origin}/leads?profile=danfoss`);
-    const card = page.locator('[data-lead-id="local-lead-approved"]');
+    const card = page.locator('.lead-card[data-lead-id="local-lead-approved"]');
     await card.locator('.reviewer-feedback-section summary').click();
     await card.getByRole('textbox', { name: '피드백', exact: true }).fill('첫 번째 저장');
     let release;
@@ -148,6 +148,17 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     await card.locator('.reviewer-feedback-section summary').click();
     assert.equal(await card.getByRole('textbox', { name: '피드백', exact: true }).inputValue(), '저장 응답을 기다리며 추가한 문장');
     assert.match(await card.locator('[data-feedback-draft-state]').textContent(), /저장 전/);
+  });
+
+  await t.test('next review prioritizes pending work and reports completion for an approved queue', async () => {
+    const page = await createPage();
+    await page.goto(`${harness.origin}/leads?profile=danfoss`);
+    await page.locator('.lead-card[data-lead-id="local-lead-review"]').waitFor();
+    assert.match(await page.locator('#nextReviewStrip').textContent(), /Local Data Center Cooling/);
+    assert.doesNotMatch(await page.locator('#nextReviewStrip').textContent(), /Local Factory Automation/);
+    await page.getByRole('combobox', { name: '검토 상태', exact: true }).selectOption('APPROVED');
+    assert.match(await page.locator('#nextReviewStrip').textContent(), /검토가 완료/);
+    assert.equal(await page.locator('#nextReviewStrip [data-session-action="focus-next"]').count(), 0);
   });
 });
 

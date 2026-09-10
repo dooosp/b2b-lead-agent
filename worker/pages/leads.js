@@ -1453,7 +1453,9 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
         if (Object.prototype.hasOwnProperty.call(remainingByLane, item.queueLane)) remainingByLane[item.queueLane] += 1;
       });
 
-      const nextItem = queueItems[0] || null;
+      const nextItem = queueItems.find((item) => ['NEW', 'NEEDS_REVIEW'].includes(item.reviewStatus))
+        || queueItems.find((item) => item.reviewStatus === 'APPROVED' && item.riskCount > 0)
+        || null;
       const nextLead = nextItem
         ? list.find((lead) => getLeadId(lead) === nextItem.leadId) || null
         : null;
@@ -1475,8 +1477,8 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
           <div class="next-review-strip-head">
             <div>
               <span>다음 리뷰</span>
-              <strong>현재 필터에서 다음 리뷰 리드가 없습니다.</strong>
-              <p>필터를 조정하거나 초기화하면 리뷰 후보가 다시 표시됩니다.</p>
+              <strong>\${session.total > 0 && !session.reviewStatusCounts.DEFERRED ? '현재 필터의 검토가 완료되었습니다.' : '현재 필터에서 다음 리뷰 리드가 없습니다.'}</strong>
+              <p>\${session.total > 0 ? '승인된 리드의 후속 준비와 보류된 리드의 재검토 일정은 목록에서 확인하세요.' : '필터를 조정하거나 초기화하면 리뷰 후보가 다시 표시됩니다.'}</p>
             </div>
             <div class="next-review-strip-actions">
               <button class="btn btn-secondary" type="button" data-session-action="focus-session">세션 보기</button>
@@ -1491,7 +1493,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       return \`
         <div class="next-review-strip-head">
           <div>
-            <span>다음 리뷰</span>
+            <span>\${currentReviewStatus === 'APPROVED' ? '리스크 재확인' : '다음 리뷰'}</span>
             <strong>\${esc(session.nextItem.company || session.nextLead.company || '리드')}</strong>
             <p>\${esc(session.nextItem.nextReviewActionLabel || 'Review lead')} · \${esc(session.nextItem.reasonSnippet || '')}</p>
           </div>
@@ -1552,7 +1554,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       const nextBody = session.nextItem && session.nextLead
         ? \`
           <div class="review-session-next">
-            <strong>다음 검토 리드: \${esc(session.nextItem.company || session.nextLead.company || '리드')}</strong>
+            <strong>\${currentReviewStatus === 'APPROVED' ? '리스크 재확인 리드' : '다음 검토 리드'}: \${esc(session.nextItem.company || session.nextLead.company || '리드')}</strong>
             <p>\${esc(session.nextItem.nextReviewActionLabel || 'Review lead')} · \${esc(session.nextItem.reasonSnippet || '')}</p>
             <div class="review-session-meta">
               <span>\${esc(session.nextItem.queueLaneLabel || queueLaneLabels[session.nextItem.queueLane] || session.nextItem.queueLane)}</span>
@@ -1570,7 +1572,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
             </div>
           </div>
         \`
-        : '<div class="review-session-next"><strong>다음 검토 리드 없음</strong><p>현재 필터 결과에 검토할 리드가 없습니다.</p></div>';
+        : '<div class="review-session-next"><strong>다음 검토 리드 없음</strong><p>미검토 리드가 없습니다. 승인된 리드의 후속 준비와 보류된 리드의 재검토 일정을 확인하세요.</p></div>';
       const noticeTone = reviewSessionNotice.tone || 'idle';
       const noticeMessage = reviewSessionNotice.message || '';
 
