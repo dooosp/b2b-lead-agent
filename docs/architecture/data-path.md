@@ -2,6 +2,24 @@
 
 This document maps how lead data moves through the root batch pipeline, Worker APIs, D1, and published report artifacts. It is intentionally conservative about production claims: local source and tests do not prove production D1 state.
 
+## Local-Only Pursuit Workbench Path
+
+```text
+checked-in synthetic claim/vertical/scenario fixtures
+  -> canonical spec-fit scenario materializer
+  -> specification-fit evaluation and pursuit dossier
+  -> deterministic project-signal timeline
+  -> immutable Workbench view model and disposition policy
+  -> loopback-only Node HTTP server and browser page
+  -> optional unsigned local JSON review packet in page memory/download
+```
+
+This is a separate, network-free evidence path rather than a Worker or D1 path. `pursuit-workbench/domain/scenarios.mjs` selects one of twelve fixed scenarios and delegates claim-registry, fit, dossier, and hash construction to the canonical materializer exported by `eval/spec-fit-evaluator.mjs`. The timeline builder references bounded claim and requirement ids, records evidence-derived events, and recomputes the dossier; it does not infer a historical state transition from a single snapshot. The view model independently checks the registry, opportunity, dossier, hashes, timeline, product-family map, byte limits, and non-production flags before rendering.
+
+`npm run demo:pursuit-workbench` accepts only exact loopback hosts and fixed GET/HEAD routes. Responses are `no-store`, use a restrictive same-origin CSP, and reject request bodies, foreign Host/Origin values, traversal-shaped paths, and mutation methods. The browser has no Worker/API mutation route, D1 binding, storage, telemetry, external resource, or service-worker path. Review selections remain in current-page memory. Copy/download creates only a bounded, canonical, unsigned `pursuit-review-packet-v0` with fixed reason/question ids, artifact hashes, no free text, no reviewer identity, and explicit `NOT_PRODUCTION_EVIDENCE`, `productionReady:false`, `productionReviewerWorkflowReady:false`, and Issue #165 `HOLD` markers.
+
+The Workbench is therefore a local technical-review aid, not persisted workflow state, production evidence, commercial approval, customer communication, CRM activity, or authority to run a production proof.
+
 ## Managed Lead Path
 
 ```text

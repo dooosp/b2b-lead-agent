@@ -2,6 +2,7 @@ node_modules/
 .env
 .dev.vars
 .wrangler/
+/tmp/pursuit-workbench-human-validation/
 reports/**/*.md
 !reports/*/latest-leads.json
 !reports/*/lead-history.json

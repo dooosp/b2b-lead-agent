@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "datacenter-pursuit-workbench-scenarios-v0",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "issue165Status": "HOLD",
+  "synthetic": true,
+  "evaluationAsOf": "2026-06-01T00:00:00.000Z",
+  "scenarioOrder": [
+    "strong_verified_cooling_fit",
+    "strong_verified_electrical_fit",
+    "multi_family_datacenter_opportunity",
+    "hard_voltage_mismatch",
+    "missing_incoming_voltage",
+    "unverified_product_capability",
+    "conflicting_capability_claims",
+    "specification_window_closing",
+    "specification_window_closed",
+    "retrofit_path_available",
+    "incompatible_unit",
+    "empty_project_no_evaluable_requirements"
+  ],
+  "scenarios": [
+    {
+      "id": "strong_verified_cooling_fit",
+      "title": "Verified cooling fit — open window",
+      "description": "A verified water-cooled architecture requirement matches a verified synthetic compressor capability.",
+      "requiredTimelineEventTypes": ["PROJECT_STAGE_EVIDENCE", "TECHNICAL_REQUIREMENT_IDENTIFIED", "PRODUCT_CAPABILITY_EVIDENCE", "SPECIFICATION_FIT_EVALUATED", "SPECIFICATION_WINDOW_EVALUATED", "DOSSIER_RECOMPUTED"]
+    },
+    {
+      "id": "strong_verified_electrical_fit",
+      "title": "Verified electrical fit — open window",
+      "description": "A verified incoming-voltage requirement matches a verified synthetic switchgear capability.",
+      "requiredTimelineEventTypes": ["PROJECT_STAGE_EVIDENCE", "TECHNICAL_REQUIREMENT_IDENTIFIED", "PRODUCT_CAPABILITY_EVIDENCE", "SPECIFICATION_FIT_EVALUATED", "SPECIFICATION_WINDOW_EVALUATED", "DOSSIER_RECOMPUTED"]
+    },
+    {
+      "id": "multi_family_datacenter_opportunity",
+      "title": "Multi-family project comparison",
+      "description": "Building-management and medium-voltage families are evaluated independently for one synthetic opportunity.",
+      "requiredTimelineEventTypes": ["PROJECT_STAGE_EVIDENCE", "TECHNICAL_REQUIREMENT_IDENTIFIED", "PRODUCT_CAPABILITY_EVIDENCE", "SPECIFICATION_FIT_EVALUATED", "SPECIFICATION_WINDOW_EVALUATED", "DOSSIER_RECOMPUTED"]
+    },
+    {
+      "id": "hard_voltage_mismatch",
+      "title": "Verified hard technical mismatch",
+      "description": "A verified 33 kV project requirement exceeds the verified synthetic switchgear capability.",
+      "requiredTimelineEventTypes": ["TECHNICAL_REQUIREMENT_IDENTIFIED", "PRODUCT_CAPABILITY_EVIDENCE", "SPECIFICATION_FIT_EVALUATED", "DOSSIER_RECOMPUTED"]
+    },
+    {
+      "id": "missing_incoming_voltage",
+      "title": "Missing project requirement",
+      "description": "The project incoming-voltage fact is unknown, so the product family cannot be evaluated as fit.",
+      "requiredTimelineEventTypes": ["PROJECT_STAGE_EVIDENCE", "SPECIFICATION_FIT_EVALUATED", "DOSSIER_RECOMPUTED"]
+    },
+    {
+      "id": "unverified_product_capability",
+      "title": "Unverified product capability",
+      "description": "The project requirement is verified but the synthetic product capability remains unverified.",
+      "requiredTimelineEventTypes": ["TECHNICAL_REQUIREMENT_IDENTIFIED", "SPECIFICATION_FIT_EVALUATED", "DOSSIER_RECOMPUTED"]
+    },
+    {
+      "id": "conflicting_capability_claims",
+      "title": "Conflicting capability evidence",
+      "description": "Two synthetic capability claims conflict and remain visible without selecting the favorable side.",
+      "requiredTimelineEventTypes": ["PRODUCT_CAPABILITY_EVIDENCE", "CLAIM_CONFLICT_RECOGNIZED", "SPECIFICATION_FIT_EVALUATED", "DOSSIER_RECOMPUTED"]
+    },
+    {
+      "id": "specification_window_closing",
+      "title": "Verified fit — closing window",
+      "description": "The technical fit is verified while the synthetic project has reached the closing tender stage.",
+      "requiredTimelineEventTypes": ["PROJECT_STAGE_EVIDENCE", "SPECIFICATION_FIT_EVALUATED", "SPECIFICATION_WINDOW_EVALUATED", "DOSSIER_RECOMPUTED"]
+    },
+    {
+      "id": "specification_window_closed",
+      "title": "Verified fit — closed window",
+      "description": "The technical fit remains visible but the synthetic specification window is closed after award.",
+      "requiredTimelineEventTypes": ["PROJECT_STAGE_EVIDENCE", "SPECIFICATION_FIT_EVALUATED", "SPECIFICATION_WINDOW_EVALUATED", "DOSSIER_RECOMPUTED"]
+    },
+    {
+      "id": "retrofit_path_available",
+      "title": "Retrofit opportunity",
+      "description": "A verified protocol fit is evaluated under the bounded retrofit-open window policy.",
+      "requiredTimelineEventTypes": ["PROJECT_STAGE_EVIDENCE", "SPECIFICATION_FIT_EVALUATED", "SPECIFICATION_WINDOW_EVALUATED", "DOSSIER_RECOMPUTED"]
+    },
+    {
+      "id": "incompatible_unit",
+      "title": "Incompatible technical unit",
+      "description": "The project fact uses an incompatible quantity dimension and requires domain review.",
+      "requiredTimelineEventTypes": ["TECHNICAL_REQUIREMENT_IDENTIFIED", "SPECIFICATION_FIT_EVALUATED", "DOSSIER_RECOMPUTED"]
+    },
+    {
+      "id": "empty_project_no_evaluable_requirements",
+      "title": "No evaluable technical requirements",
+      "description": "The synthetic opportunity has no candidate family or evaluable requirement and remains explicitly not evaluated.",
+      "requiredTimelineEventTypes": ["DOSSIER_RECOMPUTED"]
+    }
+  ]
+}

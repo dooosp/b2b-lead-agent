@@ -19,6 +19,7 @@ When runtime behavior changes, update this map from source files, tests, and wor
 | --- | --- | --- |
 | Root pipeline | `main.js`, `orchestrator/news-orchestrator.js`, `lead-qualifier.js`, `lead-report-publisher.js`, `pipeline-run-state.js`, `git-publication.js`, `notification-runner.js`, `profile-registry.js` | Batch news collection, lead qualification, typed local publication, verified Git publication, and post-publication notification |
 | Profiles | `profiles/*.js`, `profile-registry.js` | Managed seller profiles and search/product context |
+| Evidence domain and Pursuit Workbench | `knowledge/claim-registry/*`, `verticals/datacenter/*`, `pursuit-workbench/*`, `eval/spec-fit-evaluator.mjs`, `eval/pursuit-workbench-evaluator.mjs` | Synthetic claim trust, data-center specification-fit evaluation, deterministic pursuit dossiers/timelines, and a loopback-only technical-review screen |
 | Published artifacts | `reports/<profile>/publication-manifest.json`, `reports/<profile>/publications/<publicationId>/*`, and the established fixed report/latest/history paths | Immutable manifest-selected publication plus fixed-path Git compatibility artifacts used only when a legacy publication has no manifest |
 | Worker API | `worker/index.js`, `worker/routes/*.js`, `worker/api/*.js` | Route dispatch, route metadata, authenticated APIs, trigger/job ledger, internal report contract |
 | Worker D1 layer | `worker/db/*.js`, `worker/schema.sql` | Explicit schema migrations and readiness, typed published snapshots, lead/job/reference persistence, row transforms |
@@ -37,6 +38,10 @@ When runtime behavior changes, update this map from source files, tests, and wor
 | `check:schema` | `node scripts/check-d1-schema-consistency.js` | Local D1 drift guard for `worker/schema.sql` and `worker/db/migration-manifest.js` |
 | `evidence:packet` | `node scripts/generate-release-evidence-packet.js` | Local-only release evidence packet generator |
 | `eval:lead-quality` | `node scripts/evaluate-lead-quality.js --fixtures` | Synthetic-only lead quality evaluator for evidence, confidence, assumptions, gaps, verification, and review readiness |
+| `demo:pursuit-workbench` | `node pursuit-workbench/server.mjs` | Loopback-only, read-only Data Center Pursuit Workbench v0 over checked-in synthetic fixtures |
+| `test:pursuit-workbench` | `node --test tests/pursuit-workbench-*.test.js` | Workbench timeline, view-model, renderer, server, packet, failure, performance, and evaluator contracts |
+| `test:pursuit-workbench:e2e` | `node --test pursuit-workbench/e2e/pursuit-workbench.e2e.test.mjs` | Chromium keyboard, mobile, copy/download, failure, network, and no-persistence checks |
+| `eval:pursuit-workbench` | `node scripts/evaluate-pursuit-workbench.mjs --json --repeat 2` | Deterministic 12-scenario product-usefulness and safety evaluation |
 | `e2e` | `node e2e-test.mjs` | Browser/end-to-end smoke surface when explicitly needed |
 | `test:e2e:local` | `node --test worker/e2e/local-e2e.test.mjs` | Local-only Worker smoke harness using fake D1 and loopback browser rendering |
 | `test:evidence` | `node --test tests/release-evidence-redaction.test.js tests/release-evidence-packet.test.js` | Release evidence packet and redaction coverage |
@@ -84,6 +89,8 @@ Key bindings in `worker/wrangler.toml`:
 | Root trust and publishing | `tests/source-traceability.test.js`, `tests/company-name-accuracy.test.js`, `tests/root-identity-trust.test.js`, `tests/fallback-publication-guard.test.js`, `tests/leadbrief-publication-contract.test.js` | Source traceability, company-name hardening, stable identity, fallback/demo publication guards, LeadBrief artifact fields |
 | Internal report contract | `tests/internal-published-report-api.test.js` | `/api/internal/profiles/:profileId/latest-published` auth/readiness/frozen contract behavior and shared pre-parse artifact bound |
 | Lead quality evaluator | `tests/lead-quality-evaluator.test.js`, `eval/fixtures/synthetic-leads.js` | Synthetic fixture quality scoring, local-only input guards, and review-readiness outcomes |
+| Evidence claim and specification fit | `tests/claim-*.test.js`, `tests/spec-fit-*.test.js`, `tests/datacenter-*.test.js` | Claim provenance, registry bounds, deterministic specification fit, dossiers, and synthetic golden outputs |
+| Pursuit Workbench | `tests/pursuit-workbench-*.test.js`, `pursuit-workbench/e2e/pursuit-workbench.e2e.test.mjs` | Timeline/view-model integrity, structured dispositions, safe rendering/server behavior, performance bounds, evaluator repeatability, accessibility, and browser behavior |
 | Worker data contracts | `worker/tests/data-contract.test.mjs`, `worker/tests/leadbrief-v1-contract.test.mjs`, `worker/tests/lead-review-status.test.mjs`, `worker/tests/lead-patch-atomicity.test.mjs` | D1 row roundtrip, LeadBrief v1, review status, pipeline status, atomic PATCH behavior |
 | Worker trigger/job contracts | `worker/tests/job-trigger.test.mjs`, `worker/tests/trigger-handler.test.mjs`, `worker/tests/workflow-contract.test.mjs` | Intake-only trigger acceptance, job ledger transitions, workflow callback contract |
 | Worker security | `worker/tests/security-hardening.test.mjs` | Bearer-only surfaces, query-token rejection, self-service auth/rate limit defaults |
@@ -106,7 +113,7 @@ require separate human approval.
 
 ## Product Boundary
 
-The product is a B2B lead discovery, briefing, and human-review aid. The canonical unit is a LeadBrief-style lead with source/trust metadata and a separate human `reviewStatus`.
+The product is a B2B lead discovery, briefing, and human-review aid. The managed lead path's canonical unit is a LeadBrief-style lead with source/trust metadata and a separate human `reviewStatus`. The synthetic evidence path has a separate Project Opportunity unit: it relates project facts, product-capability claims, specification-fit results, a pursuit dossier, and a project-signal timeline without converting them into a LeadBrief or D1 record.
 
 Known non-goals:
 
@@ -115,6 +122,7 @@ Known non-goals:
 - Not a proposal generator as the source of truth. `/api/proposal`, `/api/ppt`, `/api/cpa`, and `/api/roleplay` are helper surfaces around lead context, not the canonical lead database or report contract.
 - Not a PPT-first product. PPT generation exists as an auxiliary action; the primary data path remains lead discovery, review, D1 persistence, and published report artifacts.
 - Not production proof by documentation. Architecture docs, local tests, and CI are supporting evidence only; production D1 readiness requires the approved observation workflow.
+- Not a persisted reviewer system. Pursuit Workbench v0 runs only on loopback, reads checked-in synthetic fixtures, keeps selections in page memory, and produces an unsigned local JSON packet; it does not identify a reviewer, save a disposition, or change Worker/D1 state.
 
 ## Maintenance Notes
 
