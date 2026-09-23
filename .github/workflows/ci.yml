@@ -40,6 +40,18 @@ jobs:
       - name: Run focused claim and specification-fit tests
         run: npm run test:claim-spec-fit
 
+      - name: Audit official-evidence document fixtures
+        run: npm run audit:evidence-documents
+
+      - name: Evaluate official-evidence claim Workbench
+        run: npm run eval:evidence-claim-workbench
+
+      - name: Run official-evidence claim Workbench tests
+        run: npm run test:evidence-claim-workbench
+
+      - name: Measure official-evidence claim Workbench limits
+        run: npm run measure:evidence-claim-workbench
+
       - name: Run lead pipeline fixture replay artifact contract
         run: npm run check:lead-pipeline-replay
 
@@ -60,3 +72,6 @@ jobs:
 
       - name: Run local-only Worker E2E smoke
         run: npm run test:e2e:local
+
+      - name: Run official-evidence claim Workbench E2E
+        run: npm run test:evidence-claim-workbench:e2e

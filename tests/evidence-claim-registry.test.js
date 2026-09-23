@@ -8,6 +8,11 @@ const importCore = () => import(path.resolve(__dirname, '../knowledge/claim-regi
 const clone = (value) => structuredClone(value);
 const AS_OF = rawFixture.evaluationAsOf;
 
+test('canonical serialization is ASCII-key ordered independent of insertion order', async () => {
+  const { canonicalStringify } = await importCore();
+  assert.equal(canonicalStringify({ z: 1, a: 2, m: { y: 1, b: 2 } }), '{"a":2,"m":{"b":2,"y":1},"z":1}');
+});
+
 test('claim taxonomy and every derived status are closed and system-owned', async () => {
   const { CLAIM_TYPES, CLAIM_STATUSES, CLAIM_VALUE_TYPES, createValidatedClaimRegistry } = await importCore();
   assert.deepEqual(CLAIM_VALUE_TYPES, ['BOOLEAN', 'ENUM', 'STRING', 'STRING_SET', 'QUANTITY', 'RANGE']);

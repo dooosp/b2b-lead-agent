@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "official-evidence-claim-workbench-preflight-v0",
+  "recordedAt": "2026-07-17T00:00:00.000Z",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "issue165Status": "HOLD",
+  "repository": "dooosp/b2b-lead-agent",
+  "repoRoot": ".",
+  "repoIdentityOk": true,
+  "identityEvidence": [
+    "package.json name is b2b-lead-agent",
+    "main.js exists",
+    "worker/index.js exists",
+    "AGENTS.md applies at repository root"
+  ],
+  "branch": "codex/official-evidence-claim-review-workbench-v0",
+  "startingMasterSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+  "pinnedBaseRef": "origin/master",
+  "pinnedBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+  "defaultBranch": "master",
+  "mergeBaseSha": "9d144fbe6309ce363f9dad8d50ffa713d24af683",
+  "worktreeCleanBeforeImplementation": true,
+  "nodeVersion": "v25.8.0",
+  "npmVersion": "11.11.0",
+  "ciNodeVersion": "20",
+  "dependencyInstall": {
+    "command": "npm ci",
+    "status": "PASS",
+    "packagesAdded": 57,
+    "vulnerabilities": 0
+  },
+  "sourceDrift": {
+    "localControlHeadBeforeFetch": "09aa3d7b991d4eb20bce822ce69e74044d66dfab",
+    "interveningCommitCount": 9,
+    "interveningSubjects": [
+      "Harden D1 snapshot and migration contracts (#197)",
+      "docs: sync source of truth after PR197 (#198)",
+      "Harden Worker enrichment outbound HTTP (#199)",
+      "Harden protected Reviewer PWA caching (#200)",
+      "Enforce Lead PATCH CAS and monotonic job callbacks (#201)",
+      "Make lead publication atomic and notification-safe (#202)",
+      "fix: harden atomic publication recovery and consumers (#203)",
+      "docs: sync source of truth after PR203 (#204)",
+      "feat: add evidence claim registry and data center spec-fit foundation (#205)"
+    ],
+    "integrationDecision": "Use exact current origin/master; preserve all newer behavior."
+  },
+  "pr206": {
+    "number": 206,
+    "state": "OPEN",
+    "draft": true,
+    "mergeable": "MERGEABLE",
+    "headSha": "8098f66c6fb7e64464297c0ee70d25f49756135d",
+    "checks": "PASS",
+    "modifiedByThisGoal": false
+  },
+  "humanValidationPacket": {
+    "branch": "codex/pr206-human-validation-sprint",
+    "preservationCommit": "1f84cc044e0aac1147a841568b40a5241c5659bc",
+    "pushed": true,
+    "fileCount": 3,
+    "runtimeFiles": 0,
+    "sessionRecords": 0,
+    "decision": "INCOMPLETE",
+    "fabricatedResults": false
+  },
+  "baseline": {
+    "testClaimSpecFit": { "pass": 37, "fail": 0, "skip": 0, "todo": 0 },
+    "claimAudit": { "totalCandidates": 179, "verified": 13, "customerUseBlocked": 166, "violations": 0 },
+    "specFitEvaluation": { "scenarios": 30, "pass": 30, "fail": 0, "repeatHashEqualityBasisPoints": 10000 },
+    "rootTests": { "pass": 220, "fail": 0, "skip": 0, "todo": 0 },
+    "workerUnitTests": { "pass": 416, "fail": 0, "skip": 0, "todo": 0 },
+    "workerContractTests": { "pass": 28, "fail": 0, "skip": 0, "todo": 0 },
+    "workerLocalE2e": { "pass": 1, "fail": 0, "skip": 0, "todo": 0 },
+    "leadPipelineReplay": { "pass": 6, "fail": 0, "liveNetworkCalls": 0 },
+    "releaseEvidenceTests": { "pass": 7, "fail": 0, "skip": 0, "todo": 0 },
+    "leadQualityFixtures": { "total": 6, "ship": 1, "followUp": 1, "hold": 4 },
+    "naming": "PASS",
+    "schema": "PASS",
+    "gitDiffCheck": "PASS"
+  },
+  "requiredCommandsAvailable": [
+    "npm run test:claim-spec-fit",
+    "npm run audit:claims",
+    "npm run eval:spec-fit",
+    "npm test",
+    "npm run check:naming",
+    "npm run check:schema",
+    "npm run test:e2e:local",
+    "npm run eval:lead-quality",
+    "npm run check:lead-pipeline-replay",
+    "npm run test:evidence"
+  ],
+  "canProceed": true,
+  "stopReasons": []
+}
