@@ -27,7 +27,7 @@ export function renderPortfolioPage(demo) {
   <section aria-label="프로젝트와 적용 범위"><div class="context"><div><span class="eyebrow">01 / 프로젝트</span><strong>Synthetic DC Alpha</strong></div><div><span class="eyebrow">적용 국가 · 단계</span><strong>국내 KR · 기본설계</strong></div><div><span class="eyebrow">후보 제품군</span><strong>가상 중전압 수배전반</strong></div><div><span class="eyebrow">판정 범위</span><strong>수전전압 1개 필수 조건</strong></div></div><p class="muted">모든 출처·제품·개정 내용은 합성 데이터입니다. 판정 기준시각은 ${esc(demo.evaluationAsOf.slice(0,10))}로 고정되어 있습니다.</p></section>
   <nav class="step-nav" aria-label="개정본 비교">${demo.revisions.map((r,i)=>`<button type="button" data-revision="${r.id}" aria-controls="panel-${r.id}" aria-pressed="${!i}">${r.id} · ${labels[r.fit.result]}</button>`).join('')}</nav><p id="revision-status" class="visually-readable muted" role="status" aria-live="polite">현재 R1 · 조건 충족</p>${panels}
   <section class="record" aria-labelledby="record-heading"><span class="eyebrow">04 / 직접 확인하고 내 판단 남기기</span><h2 id="record-heading">내가 확인한 것, 아직 확인할 것.</h2><p>세 개정본을 비교한 뒤 직접 적으세요. 기록을 내려받아 본인 재현 또는 1인 체험 자료로 보관할 수 있습니다.</p><p class="print-note">입력은 현재 페이지 메모리에만 남습니다. 내려받기 전 창을 닫으면 사라집니다. 개인정보·고객자료를 입력하지 마세요. 정식 5인 실험 집계에는 반영되지 않습니다.</p>
-  <label for="record-kind">기록 구분</label><select id="record-kind"><option value="">직접 선택</option><option value="OWNER_REPRODUCTION">본인 직접 재현</option><option value="OTHER_USER_TRIAL">다른 사용자 1인 체험</option></select>
+  <label for="record-kind">기록 구분</label><select id="record-kind"><option value="">직접 선택</option><option value="OWNER_REPRODUCTION">본인 직접 재현</option><option value="OTHER_USER_TRIAL">다른 사용자 1인 체험</option><option value="AGENT_SIMULATION">에이전트 사용성 시뮬레이션</option></select>
   <label for="checked">확인한 근거와 적용 조건</label><textarea id="checked" maxlength="1600" placeholder="어느 개정본의 어떤 근거를 확인했나요?"></textarea>
   <label for="judgment">내 판단과 이유</label><textarea id="judgment" maxlength="1600" placeholder="각 개정본의 검토를 진행할지, 보류할지와 그 이유를 적으세요."></textarea>
   <label for="remaining">아직 확인할 것 · 사용 중 막힌 점</label><textarea id="remaining" maxlength="1600" placeholder="필요한 추가 근거와 찾기 어려웠던 내용을 적으세요."></textarea>
@@ -40,7 +40,15 @@ export function renderPortfolioPage(demo) {
   const fields = ['record-kind', 'checked', 'judgment', 'remaining'].map(id => document.getElementById(id));
   const download = document.getElementById('download-record');
   function hasDraft() { return fields.some(field => field.value.trim()); }
-  function updateDraft() { downloaded = false; download.disabled = fields.some(field => !field.value.trim()); document.getElementById('record-status').textContent = hasDraft() ? '작성 중 · 내려받기 전에는 파일로 저장되지 않습니다.' : '사람의 재현·판단 기록은 아직 작성되지 않았습니다.'; }
+  function isAgentSimulation() { return fields[0].value === 'AGENT_SIMULATION'; }
+  function updateDraft() {
+    downloaded = false;
+    download.disabled = fields.some(field => !field.value.trim());
+    download.textContent = isAgentSimulation() ? '시뮬레이션 기록 내려받기' : '내 판단 기록 내려받기';
+    document.getElementById('record-status').textContent = isAgentSimulation()
+      ? '에이전트 시뮬레이션 작성 중 · 실제 사람의 참여 기록으로 집계하지 않습니다.'
+      : hasDraft() ? '작성 중 · 내려받기 전에는 파일로 저장되지 않습니다.' : '사람의 재현·판단 기록은 아직 작성되지 않았습니다.';
+  }
   fields.forEach(field => { field.addEventListener('input', updateDraft); field.addEventListener('change', updateDraft); });
   document.querySelectorAll('[data-revision]').forEach(button => button.addEventListener('click', () => {
     activeRevision = button.dataset.revision;
@@ -51,10 +59,13 @@ export function renderPortfolioPage(demo) {
   download.addEventListener('click', () => {
     if (fields.some(field => !field.value.trim())) return;
     const record = { ...metadata, recordedAt: new Date().toISOString(), recordKind: fields[0].value,
+      ...(isAgentSimulation() ? { authorship: 'AI_AGENT_SIMULATION', humanParticipant: false } : {}),
       viewedRevisionAtExport: activeRevision, checkedEvidenceAndScope: fields[1].value.trim(),
       judgmentAndReason: fields[2].value.trim(), remainingQuestionsAndFriction: fields[3].value.trim() };
     const url = URL.createObjectURL(new Blob([JSON.stringify(record, null, 2) + '\\n'], { type: 'application/json' }));
-    const link = document.createElement('a'); link.href = url; link.download = 'b2b-portfolio-personal-record.json'; link.click();
+    const link = document.createElement('a'); link.href = url;
+    link.download = isAgentSimulation() ? 'b2b-portfolio-agent-simulation.json' : 'b2b-portfolio-personal-record.json';
+    link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000); downloaded = true;
     document.getElementById('record-status').textContent = '내려받기를 요청했습니다. 다운로드 폴더에서 JSON 파일을 확인하세요. 정식 실험 집계는 변경되지 않습니다.';
   });

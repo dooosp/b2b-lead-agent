@@ -4,7 +4,7 @@
   "evidenceBoundary": "NOT_PRODUCTION_EVIDENCE",
   "productionReady": false,
   "issue165Status": "HOLD",
-  "verifiedAt": "2026-09-26T01:15:40.564Z",
+  "verifiedAt": "2026-09-26T01:31:07.620Z",
   "repository": "dooosp/b2b-lead-agent",
   "defaultBranch": "master",
   "masterAtReview": "62007116cba3e3425ae6e73a15f8f2dad413160d",
@@ -25,7 +25,7 @@
     {
       "command": "npm run test:e2e:local",
       "exitCode": 0,
-      "passed": 15
+      "passed": 16
     },
     {
       "command": "npm run test:portfolio",
@@ -46,11 +46,13 @@
       "exitCode": 0
     }
   ],
-  "distinctTestsPassed": 701,
+  "distinctTestsPassed": 702,
   "independentReview": {
     "verdict": "PASS",
     "scope": "Portfolio additions and twin integration; no actionable defect confirmed",
-    "mergeApproval": false
+    "mergeApproval": false,
+    "followUpAgainst": "c3eb9c78634afeaffdbc2bc39c0c106415f3f9ed",
+    "followUpScope": "Agent record kind, export attribution, human-path preservation, and downloaded synthetic artifact"
   },
   "offline": {
     "standaloneHtml": true,
@@ -83,7 +85,7 @@
     },
     {
       "path": "scripts/lib/portfolio-v1-page.mjs",
-      "sha256": "7f7cc6b256e69847b58dc5ec3451d60f05a7b73751e7347f70c1ef6b5aba69ca"
+      "sha256": "51cf278e4b0b3905145e6adbb6a1ee22f8aeaf78a71b2868f8f9413db3a9f07b"
     },
     {
       "path": "scripts/portfolio-v1.mjs",
@@ -103,7 +105,16 @@
     },
     {
       "path": "worker/e2e/portfolio-v1.test.mjs",
-      "sha256": "49b08cd22641196bb32d2a823a28dc018f754d1361228abad98f2ce38452d704"
+      "sha256": "f421c2469539fc344253aafc98543b2c485be5d84e4b776bbd77ca5780e8b158"
     }
-  ]
+  ],
+  "agentSimulation": {
+    "status": "COMPLETED",
+    "method": "BROWSER_DRIVEN_AGENT_ROLEPLAY_WITH_PRIOR_IMPLEMENTATION_KNOWLEDGE",
+    "recordSource": "ACTUAL_BROWSER_DOWNLOAD",
+    "recordPath": "docs/portfolio/b2b-portfolio-v1-agent-simulation.json",
+    "recordSha256": "fe432c8d2ed71cfefc0b72d98f6e5d2af028183d31af4f245661b5f04e22515a",
+    "humanParticipant": false,
+    "formalPilotContribution": false
+  }
 }

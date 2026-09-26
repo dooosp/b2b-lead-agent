@@ -110,3 +110,33 @@ test('standalone portfolio HTML works offline without a server or external resou
   assert.deepEqual(errors, []);
   assert.deepEqual(externalRequests, []);
 });
+
+test('agent walkthrough records cannot be mistaken for a human participant', async t => {
+  const demo = buildPortfolioDemo();
+  const server = createPortfolioPreview(renderPortfolioPage(demo), JSON.stringify(demo));
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const browser = await chromium.launch({ headless: true });
+  t.after(() => browser.close());
+  const page = await browser.newPage();
+  await page.goto('http://127.0.0.1:' + server.address().port);
+  assert.equal(await page.getByRole('option', { name: '에이전트 사용성 시뮬레이션', exact: true }).count(), 1);
+  await page.getByLabel('기록 구분').selectOption('AGENT_SIMULATION');
+  await page.getByLabel('확인한 근거와 적용 조건').fill('합성 R1/R2/R3와 KR 적용 범위를 확인한 에이전트 테스트');
+  await page.getByLabel('내 판단과 이유').fill('R1 전압 조건 충족, R2 확인 보류, R3 현재 후보 제외');
+  await page.getByLabel('아직 확인할 것 · 사용 중 막힌 점').fill('실제 사람의 평가와 실제품 사양 확인은 미수행');
+  const event = page.waitForEvent('download');
+  await page.getByRole('button', { name: '시뮬레이션 기록 내려받기', exact: true }).click();
+  const downloaded = await event;
+  assert.equal(downloaded.suggestedFilename(), 'b2b-portfolio-agent-simulation.json');
+  const dir = await mkdtemp(join(tmpdir(), 'portfolio-agent-test-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await downloaded.saveAs(join(dir, 'record.json'));
+  const record = JSON.parse(await readFile(join(dir, 'record.json'), 'utf8'));
+  assert.equal(record.recordKind, 'AGENT_SIMULATION');
+  assert.equal(record.authorship, 'AI_AGENT_SIMULATION');
+  assert.equal(record.humanParticipant, false);
+  assert.equal(record.formalPilotContribution, false);
+  assert.equal(record.productionReady, false);
+  assert.equal(record.judgmentAndReason, 'R1 전압 조건 충족, R2 확인 보류, R3 현재 후보 제외');
+});

@@ -71,6 +71,8 @@ R1→R2와 R2→R3 모두 입력·근거 변경으로 이전 평가가 무효화
 
 페이지의 빈 입력란은 본인 재현 또는 다른 사용자 체험 기록을 파일로 내려받는 용도다. 외부 전송, 서버 저장, 자동 실험 집계를 하지 않는다.
 레코드에는 사례 해시, 현재 개정본, 직접 입력한 내용과 기록 시각을 담고 `SELF_REPORTED_NOT_VERIFIED`, `formalPilotContribution:false`를 명시한다.
+에이전트가 대리로 사용하는 경우에는 `에이전트 사용성 시뮬레이션`을 선택한다. 이 기록은 `AGENT_SIMULATION`, `AI_AGENT_SIMULATION`, `humanParticipant:false`를 담고 별도의 파일명으로 내려받는다.
+실제로 화면을 조작해 작성한 [에이전트 시뮬레이션 기록](b2b-portfolio-v1-agent-simulation.md)과 [브라우저 다운로드 원본](b2b-portfolio-v1-agent-simulation.json)이 있다. 실제 사람의 재현이나 정식 실험 결과로 집계하지 않는다.
 테스트에서 생성하는 `SYNTHETIC_BROWSER_TEST` 기록은 검증용 임시 파일로 제거하며 사람의 피드백으로 집계하지 않는다.
 
 면접 시연 준비 후 다른 사용자 한 명에게는 대본을 보여주기 전에 아래 세 질문만 준다.
