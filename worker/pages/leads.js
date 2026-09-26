@@ -552,6 +552,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       dataGaps: 'all'
     };
     const reviewerFeedbackDrafts = new Map();
+    const reviewerFeedbackPendingWrites = new Map();
     const reviewActionCopy = {
       prepare_human_follow_up: ['후속 준비', '검토를 마친 리드입니다. 후속 준비에 필요한 근거와 제안 내용을 확인하세요.'],
       decide_review_status: ['검토 결정', '현재 근거를 확인하고 승인 여부를 결정하세요.'],
@@ -2215,13 +2216,22 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       return payload;
     }
 
+    function trackReviewerFeedbackWrite(leadId, change) {
+      const pending = (reviewerFeedbackPendingWrites.get(leadId) || 0) + change;
+      if (pending > 0) reviewerFeedbackPendingWrites.set(leadId, pending);
+      else reviewerFeedbackPendingWrites.delete(leadId);
+    }
+
     function rememberReviewerFeedbackDraft(section) {
       const leadId = section.dataset.feedbackLeadId;
       const lead = findCachedLead(leadId);
       if (!lead) return;
       const payload = collectReviewerFeedbackPayload(section);
       const saved = normalizeReviewerFeedback(lead);
-      const changed = Object.keys(payload).some((key) => payload[key] !== saved[key]);
+      // The current saved value may change when an earlier request finishes.
+      // Keep every edit during a pending write, including a return to that value.
+      const changed = reviewerFeedbackPendingWrites.has(leadId)
+        || Object.keys(payload).some((key) => payload[key] !== saved[key]);
       if (changed) reviewerFeedbackDrafts.set(leadId, { payload });
       else reviewerFeedbackDrafts.delete(leadId);
       section.querySelector('[data-feedback-draft-state]').textContent = changed ? '저장 전 · 초안은 이 페이지에서만 보관됩니다.' : '';
@@ -2234,6 +2244,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       button.disabled = true;
       const submittedDraft = reviewerFeedbackDrafts.get(leadId);
       const cachedLead = findCachedLead(leadId);
+      trackReviewerFeedbackWrite(leadId, 1);
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
           method: 'PATCH',
@@ -2256,6 +2267,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       } catch(e) {
         alert('리뷰어 피드백 저장 실패: ' + e.message);
       } finally {
+        trackReviewerFeedbackWrite(leadId, -1);
         button.disabled = false;
       }
     }
@@ -2267,6 +2279,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       button.disabled = true;
       const clearedDraft = reviewerFeedbackDrafts.get(leadId);
       const cachedLead = findCachedLead(leadId);
+      trackReviewerFeedbackWrite(leadId, 1);
       try {
         const res = await fetch('/api/leads/' + encodeURIComponent(leadId), {
           method: 'PATCH',
@@ -2289,6 +2302,7 @@ export function getLeadsPage({ includeGeneratedReviewGuidance = true } = {}) {
       } catch(e) {
         alert('리뷰어 피드백 지우기 실패: ' + e.message);
       } finally {
+        trackReviewerFeedbackWrite(leadId, -1);
         button.disabled = false;
       }
     }

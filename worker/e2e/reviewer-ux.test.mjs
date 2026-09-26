@@ -172,6 +172,70 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     assert.match(await card.locator('[data-feedback-draft-state]').textContent(), /저장 전/);
   });
 
+  await t.test('reverting feedback to its saved value while a save is pending retains the latest edit', async () => {
+    const page = await createPage({ serviceWorkers: 'block' });
+    await page.goto(`${harness.origin}/leads?profile=danfoss`);
+    const card = page.locator('.lead-card[data-lead-id="local-lead-review"]');
+    await card.locator('.reviewer-feedback-section summary').click();
+    const feedback = card.getByRole('textbox', { name: '피드백', exact: true });
+    const original = await feedback.inputValue();
+    await feedback.fill('지연 저장될 합성 피드백');
+    let release;
+    let started;
+    const paused = new Promise(resolve => { release = resolve; });
+    const requested = new Promise(resolve => { started = resolve; });
+    await page.route('**/api/leads/local-lead-review', async route => {
+      if (route.request().method() === 'PATCH') { started(); await paused; }
+      await route.continue();
+    });
+    await card.getByRole('button', { name: '피드백 저장', exact: true }).click();
+    await requested;
+    await feedback.fill(original);
+    const saved = page.waitForResponse(res => res.request().method() === 'PATCH');
+    release();
+    await saved;
+    await card.locator('.reviewer-feedback-section details:not([open])').waitFor();
+    await card.locator('.reviewer-feedback-section summary').click();
+    assert.equal(await feedback.inputValue(), original, 'newest edit must survive an earlier save response');
+    assert.match(await card.locator('[data-feedback-draft-state]').textContent(), /저장 전/);
+  });
+
+  await t.test('reverting feedback while a clear is pending retains the latest edit', async () => {
+    const page = await createPage({ serviceWorkers: 'block' });
+    await page.goto(`${harness.origin}/leads?profile=danfoss`);
+    const card = page.locator('.lead-card[data-lead-id="local-lead-review"]');
+    await card.locator('.reviewer-feedback-section summary').click();
+    const feedback = card.getByRole('textbox', { name: '피드백', exact: true });
+    await feedback.fill('삭제 전 저장된 합성 피드백');
+    const seeded = page.waitForResponse(res => res.request().method() === 'PATCH');
+    await card.getByRole('button', { name: '피드백 저장', exact: true }).click();
+    await seeded;
+    await card.locator('.reviewer-feedback-section details:not([open])').waitFor();
+    await card.locator('.reviewer-feedback-section summary').click();
+    const original = await feedback.inputValue();
+    assert.equal(original, '삭제 전 저장된 합성 피드백');
+    let release;
+    let started;
+    const paused = new Promise(resolve => { release = resolve; });
+    const requested = new Promise(resolve => { started = resolve; });
+    await page.route('**/api/leads/local-lead-review', async route => {
+      if (route.request().method() === 'PATCH') { started(); await paused; }
+      await route.continue();
+    });
+    page.once('dialog', dialog => dialog.accept());
+    await card.getByRole('button', { name: '피드백 지우기', exact: true }).click();
+    await requested;
+    await feedback.fill('삭제 응답 대기 중 편집');
+    await feedback.fill(original);
+    const cleared = page.waitForResponse(res => res.request().method() === 'PATCH');
+    release();
+    await cleared;
+    await card.locator('.reviewer-feedback-section details:not([open])').waitFor();
+    await card.locator('.reviewer-feedback-section summary').click();
+    assert.equal(await feedback.inputValue(), original);
+    assert.match(await card.locator('[data-feedback-draft-state]').textContent(), /저장 전/);
+  });
+
   await t.test('next review prioritizes pending work and reports completion for an approved queue', async () => {
     const page = await createPage();
     await page.goto(`${harness.origin}/leads?profile=danfoss`);
