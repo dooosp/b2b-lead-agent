@@ -1,5 +1,7 @@
 # 다음 세션 프롬프트
 
+> 현재 포트폴리오 진입점은 [README](README.md)와 [3분 시연 안내](docs/portfolio/b2b-portfolio-v1.md)입니다. 에이전트 사용 기록은 실제 사람의 실험으로 집계하지 않습니다. 아래 hardening 기준 SHA와 작업 흐름은 해당 시점의 이력이며, 최신 병합 상태는 git/PR에서 확인하세요.
+
 ## 현재 기준 상태
 
 - 기준 브랜치: `master`

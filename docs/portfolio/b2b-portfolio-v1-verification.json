@@ -4,12 +4,12 @@
   "evidenceBoundary": "NOT_PRODUCTION_EVIDENCE",
   "productionReady": false,
   "issue165Status": "HOLD",
-  "verifiedAt": "2026-09-26T01:31:07.620Z",
+  "verifiedAt": "2026-09-26T03:08:30.246776Z",
   "repository": "dooosp/b2b-lead-agent",
   "defaultBranch": "master",
-  "masterAtReview": "62007116cba3e3425ae6e73a15f8f2dad413160d",
-  "reviewedBase": "db35ed7999c7415c495e6e6b780c872ffe1cc01d",
-  "comparisonBaseBranch": "codex/reviewer-ux-fixes",
+  "masterAtReview": "b329edcb665b98a62ad9eb678abe2cb4bde0cab4",
+  "reviewedBase": "b329edcb665b98a62ad9eb678abe2cb4bde0cab4",
+  "comparisonBaseBranch": "master",
   "runtime": {
     "node": "v25.8.0",
     "platform": "darwin"
@@ -25,7 +25,7 @@
     {
       "command": "npm run test:e2e:local",
       "exitCode": 0,
-      "passed": 16
+      "passed": 18
     },
     {
       "command": "npm run test:portfolio",
@@ -46,13 +46,14 @@
       "exitCode": 0
     }
   ],
-  "distinctTestsPassed": 702,
+  "distinctTestsPassed": 704,
   "independentReview": {
     "verdict": "PASS",
     "scope": "Portfolio additions and twin integration; no actionable defect confirmed",
     "mergeApproval": false,
     "followUpAgainst": "c3eb9c78634afeaffdbc2bc39c0c106415f3f9ed",
-    "followUpScope": "Agent record kind, export attribution, human-path preservation, and downloaded synthetic artifact"
+    "followUpScope": "Agent record kind, export attribution, human-path preservation, and downloaded synthetic artifact",
+    "integrationVerdict": "PASS"
   },
   "offline": {
     "standaloneHtml": true,
@@ -106,6 +107,14 @@
     {
       "path": "worker/e2e/portfolio-v1.test.mjs",
       "sha256": "f421c2469539fc344253aafc98543b2c485be5d84e4b776bbd77ca5780e8b158"
+    },
+    {
+      "path": "worker/pages/leads.js",
+      "sha256": "96e092590cdb5e9581bf6c54cdafb1e2811da21d8da0c161584b06fd80bddd14"
+    },
+    {
+      "path": "worker/e2e/reviewer-ux.test.mjs",
+      "sha256": "f0bc6ae069acd5be92300004f358d27bef150b338d944a9184338b7b267bd23c"
     }
   ],
   "agentSimulation": {
@@ -116,5 +125,19 @@
     "recordSha256": "fe432c8d2ed71cfefc0b72d98f6e5d2af028183d31af4f245661b5f04e22515a",
     "humanParticipant": false,
     "formalPilotContribution": false
+  },
+  "integration": {
+    "previousPortfolioHead": "86d9a480c7e6781002d3dad101264df2a8f82908",
+    "reviewedPr214Head": "c5051c816550e73e2bcce41c498823d3d6dcf584",
+    "pr214MergeTreeMatchesReviewedHead": true,
+    "mergeParentsVerified": true,
+    "agentRecordStillMatchesDemo": true,
+    "relativeDocumentLinksVerified": 24,
+    "linkDocuments": [
+      "README.md",
+      "docs/portfolio/b2b-portfolio-v1.md",
+      "docs/portfolio/b2b-portfolio-v1-reproduction.md",
+      "docs/portfolio/b2b-portfolio-v1-agent-simulation.md"
+    ]
   }
 }
