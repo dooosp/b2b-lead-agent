@@ -13,7 +13,7 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-function createHarness() {
+function createHarness(pageUrl = 'http://localhost/') {
   const html = getMainPage({});
   const scriptMatch = html.match(/<script>([\s\S]*)<\/script>/);
   assert.ok(scriptMatch, 'home page should include an executable client script');
@@ -60,6 +60,7 @@ function createHarness() {
     Date,
     Math,
     URL: HarnessURL,
+    location: new URL(pageUrl),
     clearInterval() {},
     setInterval() { return 1; },
     setTimeout(fn) { fn(); },
@@ -100,6 +101,20 @@ function createHarness() {
 
   return { context, captured, getElement };
 }
+
+test('sign-in recovery only returns to approved same-origin page paths', () => {
+  for (const [target, expected] of [
+    ['/leads?profile=danfoss&reviewStatus=NEEDS_REVIEW', '/leads?profile=danfoss&reviewStatus=NEEDS_REVIEW'],
+    ['/leads/local-lead-review', '/leads/local-lead-review'],
+    ['https://external.example/leads', '/leads'],
+    ['//external.example/leads', '/leads'],
+    ['javascript:alert(1)', '/leads'],
+    ['/api/leads', '/leads'],
+  ]) {
+    const { context } = createHarness(`http://localhost/?returnTo=${encodeURIComponent(target)}`);
+    assert.equal(context.getManagedReturnTarget(), expected);
+  }
+});
 
 function createHeuristicLead() {
   return {

@@ -1,6 +1,6 @@
 import { getCommonStyles } from './common-styles.js';
 import { buildOpportunityWorkbenchModel, getOpportunityWorkbenchStyles, renderOpportunityWorkbench } from './opportunity-workbench.js';
-import { getEscScript, getSafeUrlScript, getStoredTokenScript } from './script-snippets.js';
+import { getEscScript, getLeadListReturnScript, getSafeUrlScript, getStoredTokenScript } from './script-snippets.js';
 
 export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuidance = true } = {}) {
   const statusLabelsJS = JSON.stringify({ NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' });
@@ -167,6 +167,7 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     ${getEscScript()}
     ${getSafeUrlScript()}
     ${getStoredTokenScript()}
+    ${getLeadListReturnScript()}
     function getProfile() { return lead.profileId || 'danfoss'; }
     const detailActivityDefaults = {
       copiedNotes: 0,
@@ -437,7 +438,7 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     }
 
     // Back link에 프로필 쿼리 추가
-    document.getElementById('backLink').href = '/leads?profile=' + encodeURIComponent(getProfile());
+    document.getElementById('backLink').href = getLeadListReturnUrl();
     document.getElementById('leadCompany').textContent = lead.company || '리드 상세';
     document.getElementById('leadSummary').textContent = lead.summary || '';
 

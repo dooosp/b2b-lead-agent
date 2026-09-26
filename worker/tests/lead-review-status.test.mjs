@@ -694,8 +694,8 @@ test('lead list page exposes grouped reviewer action queue lanes', () => {
   assert.match(listHtml, /보강 필요/);
   assert.match(listHtml, /리스크 확인/);
   assert.match(listHtml, /낮은 우선순위/);
-  assert.match(listHtml, /Risk flags/);
-  assert.match(listHtml, /Missing info/);
+  assert.match(listHtml, /리스크/);
+  assert.match(listHtml, /누락 정보/);
 });
 
 test('lead list page exposes lead review session progress and quick actions', () => {
@@ -836,7 +836,7 @@ test('lead list kanban cards expose deterministic review gate labels', () => {
   assert.match(listHtml, /const action = getLeadQueueItem\(l\)/);
   assert.match(listHtml, /k-gate gate-/);
   assert.match(listHtml, /esc\(gate\.label\)/);
-  assert.match(listHtml, /esc\(action\.nextReviewActionLabel/);
+  assert.match(listHtml, /esc\(reviewActionLabel\(action\)\)/);
   assert.match(listHtml, /kanban-empty-state/);
   assert.match(listHtml, /function renderFilterEmptyState\(extraClass\)/);
   assert.match(listHtml, /resetReviewQueueFilters\(\)/);

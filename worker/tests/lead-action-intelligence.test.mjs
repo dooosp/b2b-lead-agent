@@ -451,11 +451,23 @@ test('lead review session summarizes queue progress and next lead candidate', ()
   assert.equal(session.needsReviewCount, 2);
   assert.equal(session.reviewStatusCounts.REJECTED, 1);
   assert.deepEqual(session.filterContext, {});
-  assert.equal(session.nextLead.leadId, 'approved-ready');
-  assert.equal(session.nextLead.nextReviewAction, 'prepare_human_follow_up');
+  assert.equal(session.nextLead.leadId, 'review-ready');
+  assert.equal(session.nextLead.nextReviewAction, 'decide_review_status');
   assert.equal(session.nextLead.queueLane, 'approval_candidates');
-  assert.equal(session.nextLead.reviewNoteSuggestion.state, 'APPROVED');
-  assert.match(session.nextLead.reviewNoteSuggestion.text, /Decision: APPROVED/);
+  assert.equal(session.nextLead.reviewNoteSuggestion.state, 'NEEDS_REVIEW');
+  assert.match(session.nextLead.reviewNoteSuggestion.text, /Decision: NEEDS_REVIEW/);
+});
+
+test('completed reviews leave the next-review slot empty while approved risks remain actionable', () => {
+  const ready = strongLead({ id: 'done' });
+  const complete = buildLeadReviewSession([ready], { now: evaluationNow });
+  assert.equal(complete.nextLead, null);
+  const risk = strongLead({ id: 'risk', verificationStatus: 'needs_review' });
+  const recheck = buildLeadReviewSession([ready, risk], { now: evaluationNow });
+  assert.equal(recheck.nextLead.leadId, 'risk');
+  const deferred = strongLead({ id: 'later', reviewStatus: 'DEFERRED' });
+  const rejected = strongLead({ id: 'closed', reviewStatus: 'REJECTED' });
+  assert.equal(buildLeadReviewSession([ready, deferred, rejected], { now: evaluationNow }).nextLead, null);
 });
 
 test('lead review session applies filters and keeps snake_case review statuses in counts', () => {

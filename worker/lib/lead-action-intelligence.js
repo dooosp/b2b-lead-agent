@@ -876,6 +876,8 @@ export function buildLeadReviewSession(leads = [], options = {}) {
   }));
   const visibleItems = Array.isArray(queue.items) ? queue.items : [];
   const reviewStatusCounts = buildReviewStatusCounts(visibleItems.map((item) => ({ reviewStatus: item.reviewStatus })));
+  const nextItem = visibleItems.find((item) => ['NEW', 'NEEDS_REVIEW'].includes(item.reviewStatus))
+    || visibleItems.find((item) => item.reviewStatus === 'APPROVED' && item.riskCount > 0);
 
   return {
     totalLeads: sourceLeads.length,
@@ -887,7 +889,7 @@ export function buildLeadReviewSession(leads = [], options = {}) {
     reviewStatusCounts,
     approvedCount: reviewStatusCounts.APPROVED,
     needsReviewCount: reviewStatusCounts.NEEDS_REVIEW,
-    nextLead: summarizeNextLead(visibleItems[0]),
+    nextLead: summarizeNextLead(nextItem),
   };
 }
 

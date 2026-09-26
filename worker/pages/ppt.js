@@ -1,5 +1,5 @@
 import { getCommonStyles } from './common-styles.js';
-import { getEscScript, getPasswordTokenScript, getProfileScript } from './script-snippets.js';
+import { getEscScript, getLeadListReturnScript, getPasswordTokenScript, getProfileScript } from './script-snippets.js';
 
 export function getPPTPage() {
   return `<!DOCTYPE html>
@@ -33,7 +33,8 @@ export function getPPTPage() {
     ${getEscScript()}
     ${getPasswordTokenScript('password')}
     ${getProfileScript('danfoss')}
-    document.getElementById('leadsBackLink').href = '/leads?profile=' + encodeURIComponent(getProfile());
+    ${getLeadListReturnScript()}
+    document.getElementById('leadsBackLink').href = getLeadListReturnUrl();
     let leads = [];
 
     async function loadLeads() {
@@ -48,11 +49,16 @@ export function getPPTPage() {
       }
 
       const params = new URLSearchParams(window.location.search);
-      const preselect = params.get('lead');
+      const leadId = params.get('leadId');
+      const preselect = leadId ? leads.findIndex((lead) => String(lead.id) === leadId) : -1;
 
-      select.innerHTML = leads.map((l, i) =>
+      select.innerHTML = '<option value="">리드를 선택하세요</option>' + leads.map((l, i) =>
         \`<option value="\${i}" \${preselect == i ? 'selected' : ''}>\${esc(l.grade)} | \${esc(l.company)} - \${esc(l.product)} (\${parseInt(l.score)||0}점)</option>\`
       ).join('');
+      if (preselect < 0 && (leadId || params.has('lead'))) {
+        document.getElementById('status').className = 'status error';
+        document.getElementById('status').textContent = '선택한 리드를 확인할 수 없습니다. 목록에서 다시 선택하세요.';
+      }
     }
 
     async function generatePPT() {

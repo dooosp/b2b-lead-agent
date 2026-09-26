@@ -98,10 +98,11 @@ export function getMainPage(env) {
         ${profileOptions}
       </select>
       <input type="password" id="password" placeholder="비밀번호 입력" aria-label="비밀번호 입력" class="input-field">
+      <button class="btn btn-primary" id="returnAfterAuth" style="display:none;" onclick="enterManagedPage(managedReturnTarget)">인증하고 돌아가기</button>
       <button class="btn btn-primary" id="generateBtn" onclick="generate()">보고서 생성</button>
       <div class="status" id="status"></div>
       <nav class="nav-buttons top-nav" aria-label="주요 페이지 이동">
-        <a href="/leads" class="btn btn-secondary">리드 상세 보기</a>
+        <a href="/leads" class="btn btn-secondary">리드 리뷰 큐</a>
         <a href="/dashboard" class="btn btn-secondary">대시보드</a>
         <a href="/ppt" class="btn btn-secondary">PPT 제안서</a>
         <a href="/proposal" class="btn btn-secondary">기술제안서</a>
@@ -426,6 +427,31 @@ export function getMainPage(env) {
 
     // ===== 관리 프로필 =====
     ${getPasswordTokenScript('password')}
+    function getManagedReturnTarget() {
+      const requested = new URL(window.location.href).searchParams.get('returnTo');
+      if (!requested) return null;
+      try {
+        const target = new URL(requested, window.location.origin);
+        const allowed = ['/leads', '/dashboard', '/history', '/ppt', '/proposal', '/cpa', '/roleplay'];
+        if (target.origin !== window.location.origin || (!allowed.includes(target.pathname) && !/^\\/leads\\/[^/]+$/.test(target.pathname))) return '/leads';
+        return target.pathname + target.search;
+      } catch { return '/leads'; }
+    }
+    const managedReturnTarget = getManagedReturnTarget();
+    if (managedReturnTarget) {
+      switchTab('managed');
+      document.getElementById('returnAfterAuth').style.display = 'inline-block';
+    }
+    function enterManagedPage(target) {
+      if (!getToken()) {
+        const status = document.getElementById('status');
+        status.className = 'status error';
+        status.textContent = '조회하려면 비밀번호를 입력하세요.';
+        document.getElementById('password').focus();
+        return;
+      }
+      window.location.href = target;
+    }
     async function generate() {
       const btn = document.getElementById('generateBtn');
       const status = document.getElementById('status');
@@ -465,7 +491,7 @@ export function getMainPage(env) {
       a.addEventListener('click', function (e) {
         const profile = document.getElementById('profileSelect').value || 'danfoss';
         e.preventDefault();
-        window.location.href = this.getAttribute('href') + '?profile=' + encodeURIComponent(profile);
+        enterManagedPage(this.getAttribute('href') + '?profile=' + encodeURIComponent(profile));
       });
     });
     if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
