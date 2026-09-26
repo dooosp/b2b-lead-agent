@@ -2,6 +2,7 @@ node_modules/
 .env
 .dev.vars
 .wrangler/
+/tmp/codex/portfolio-v1/
 reports/**/*.md
 !reports/*/latest-leads.json
 !reports/*/lead-history.json

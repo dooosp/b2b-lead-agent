@@ -1,0 +1,226 @@
+{
+  "schemaVersion": "evidence-claim-registry-v1",
+  "boundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "evaluationAsOf": "2026-06-01T00:00:00.000Z",
+  "claims": [
+    {
+      "schemaVersion": "evidence-claim-v1",
+      "claimKey": "stage_basic_design",
+      "claimType": "PROJECT_STAGE",
+      "synthetic": true,
+      "subject": {
+        "type": "PROJECT",
+        "id": "synthetic_dc_alpha",
+        "displayName": "Synthetic DC Alpha"
+      },
+      "statement": "Synthetic DC Alpha is in basic design.",
+      "value": {
+        "type": "ENUM",
+        "key": "project_stage",
+        "value": "BASIC_DESIGN"
+      },
+      "applicability": {
+        "verticalId": "datacenter_infrastructure",
+        "productFamilyIds": [],
+        "projectStages": [
+          "BASIC_DESIGN"
+        ],
+        "jurisdictions": [
+          "KR"
+        ],
+        "conditions": []
+      },
+      "evidence": [
+        {
+          "sourceTitle": "Synthetic Project Stage Record",
+          "sourceUrl": "https://synthetic.example/projects/alpha-stage",
+          "directQuote": "The project has entered basic design.",
+          "publishedAt": "2026-01-02T00:00:00.000Z",
+          "retrievedAt": "2026-02-01T00:00:00.000Z"
+        }
+      ],
+      "verification": {
+        "reviewed": true,
+        "verifiedAt": "2026-03-01T00:00:00.000Z",
+        "validUntil": "2027-01-01T00:00:00.000Z",
+        "conflictClaimKeys": [],
+        "retracted": false
+      },
+      "provenance": {
+        "origin": "REPOSITORY_REVIEWED_SYNTHETIC",
+        "profileId": "",
+        "sourcePath": "eval/fixtures/portfolio-v1/claims.json",
+        "sourceField": "claims.stage_basic_design"
+      }
+    },
+    {
+      "schemaVersion": "evidence-claim-v1",
+      "claimKey": "req_voltage_22_9kv",
+      "claimType": "TECHNICAL_REQUIREMENT",
+      "synthetic": true,
+      "subject": {
+        "type": "PROJECT",
+        "id": "synthetic_dc_alpha",
+        "displayName": "Synthetic DC Alpha"
+      },
+      "statement": "The synthetic incoming voltage is 22.9 kV.",
+      "value": {
+        "type": "QUANTITY",
+        "key": "incoming_voltage",
+        "value": 22.9,
+        "unit": "kV",
+        "quantityKind": "voltage"
+      },
+      "applicability": {
+        "verticalId": "datacenter_infrastructure",
+        "productFamilyIds": [
+          "medium_voltage_switchgear"
+        ],
+        "projectStages": [
+          "BASIC_DESIGN",
+          "TENDER",
+          "AWARD",
+          "RETROFIT"
+        ],
+        "jurisdictions": [
+          "KR"
+        ],
+        "conditions": []
+      },
+      "evidence": [
+        {
+          "sourceTitle": "Synthetic Electrical Single-line",
+          "sourceUrl": "https://synthetic.example/projects/alpha-single-line",
+          "directQuote": "Incoming service voltage is 22.9 kV.",
+          "publishedAt": "2026-01-03T00:00:00.000Z",
+          "retrievedAt": "2026-02-01T00:00:00.000Z"
+        }
+      ],
+      "verification": {
+        "reviewed": true,
+        "verifiedAt": "2026-03-01T00:00:00.000Z",
+        "validUntil": "2027-01-01T00:00:00.000Z",
+        "conflictClaimKeys": [],
+        "retracted": false
+      },
+      "provenance": {
+        "origin": "REPOSITORY_REVIEWED_SYNTHETIC",
+        "profileId": "",
+        "sourcePath": "eval/fixtures/portfolio-v1/claims.json",
+        "sourceField": "claims.req_voltage_22_9kv"
+      }
+    },
+    {
+      "schemaVersion": "evidence-claim-v1",
+      "claimKey": "req_voltage_33kv",
+      "claimType": "TECHNICAL_REQUIREMENT",
+      "synthetic": true,
+      "subject": {
+        "type": "PROJECT",
+        "id": "synthetic_dc_alpha",
+        "displayName": "Synthetic DC Alpha"
+      },
+      "statement": "Synthetic DC Alpha revision R3 requires 33 kV incoming service.",
+      "value": {
+        "type": "QUANTITY",
+        "key": "incoming_voltage",
+        "value": 33,
+        "unit": "kV",
+        "quantityKind": "voltage"
+      },
+      "applicability": {
+        "verticalId": "datacenter_infrastructure",
+        "productFamilyIds": [
+          "medium_voltage_switchgear"
+        ],
+        "projectStages": [
+          "BASIC_DESIGN"
+        ],
+        "jurisdictions": [
+          "KR"
+        ],
+        "conditions": []
+      },
+      "evidence": [
+        {
+          "sourceTitle": "Synthetic Alpha Single-line R3",
+          "sourceUrl": "https://synthetic.example/projects/alpha-single-line-r3",
+          "directQuote": "Revision R3: Incoming service voltage is 33 kV.",
+          "publishedAt": "2026-01-03T00:00:00.000Z",
+          "retrievedAt": "2026-02-01T00:00:00.000Z"
+        }
+      ],
+      "verification": {
+        "reviewed": true,
+        "verifiedAt": "2026-03-01T00:00:00.000Z",
+        "validUntil": "2027-01-01T00:00:00.000Z",
+        "conflictClaimKeys": [],
+        "retracted": false
+      },
+      "provenance": {
+        "origin": "REPOSITORY_REVIEWED_SYNTHETIC",
+        "profileId": "",
+        "sourcePath": "eval/fixtures/portfolio-v1/claims.json",
+        "sourceField": "claims.req_voltage_33kv"
+      }
+    },
+    {
+      "schemaVersion": "evidence-claim-v1",
+      "claimKey": "cap_switchgear_24kv",
+      "claimType": "PRODUCT_CAPABILITY",
+      "synthetic": true,
+      "subject": {
+        "type": "PRODUCT_FAMILY",
+        "id": "medium_voltage_switchgear",
+        "displayName": "Synthetic MV Switchgear"
+      },
+      "statement": "The synthetic switchgear family supports up to 24 kV.",
+      "value": {
+        "type": "QUANTITY",
+        "key": "incoming_voltage",
+        "value": 24,
+        "unit": "kV",
+        "quantityKind": "voltage"
+      },
+      "applicability": {
+        "verticalId": "datacenter_infrastructure",
+        "productFamilyIds": [
+          "medium_voltage_switchgear"
+        ],
+        "projectStages": [
+          "BASIC_DESIGN",
+          "TENDER",
+          "AWARD",
+          "RETROFIT"
+        ],
+        "jurisdictions": [
+          "KR"
+        ],
+        "conditions": []
+      },
+      "evidence": [
+        {
+          "sourceTitle": "Synthetic Switchgear Datasheet",
+          "sourceUrl": "https://synthetic.example/products/switchgear-24kv",
+          "directQuote": "Rated voltage is 24 kV.",
+          "publishedAt": "2026-01-04T00:00:00.000Z",
+          "retrievedAt": "2026-02-01T00:00:00.000Z"
+        }
+      ],
+      "verification": {
+        "reviewed": true,
+        "verifiedAt": "2026-03-01T00:00:00.000Z",
+        "validUntil": "2027-01-01T00:00:00.000Z",
+        "conflictClaimKeys": [],
+        "retracted": false
+      },
+      "provenance": {
+        "origin": "REPOSITORY_REVIEWED_SYNTHETIC",
+        "profileId": "",
+        "sourcePath": "eval/fixtures/portfolio-v1/claims.json",
+        "sourceField": "claims.cap_switchgear_24kv"
+      }
+    }
+  ]
+}
