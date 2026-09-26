@@ -1,0 +1,143 @@
+{
+  "schemaVersion": "b2b-portfolio-source-verification-v1",
+  "performedBy": "CODEX_AGENT",
+  "evidenceBoundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "issue165Status": "HOLD",
+  "verifiedAt": "2026-09-26T03:08:30.246776Z",
+  "repository": "dooosp/b2b-lead-agent",
+  "defaultBranch": "master",
+  "masterAtReview": "b329edcb665b98a62ad9eb678abe2cb4bde0cab4",
+  "reviewedBase": "b329edcb665b98a62ad9eb678abe2cb4bde0cab4",
+  "comparisonBaseBranch": "master",
+  "runtime": {
+    "node": "v25.8.0",
+    "platform": "darwin"
+  },
+  "checks": [
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "rootPassed": 239,
+      "workerUnitPassed": 419,
+      "workerContractPassed": 28
+    },
+    {
+      "command": "npm run test:e2e:local",
+      "exitCode": 0,
+      "passed": 18
+    },
+    {
+      "command": "npm run test:portfolio",
+      "exitCode": 0,
+      "passed": 13,
+      "alreadyIncludedInRoot": true
+    },
+    {
+      "command": "npm run check:naming",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:schema",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "distinctTestsPassed": 704,
+  "independentReview": {
+    "verdict": "PASS",
+    "scope": "Portfolio additions and twin integration; no actionable defect confirmed",
+    "mergeApproval": false,
+    "followUpAgainst": "c3eb9c78634afeaffdbc2bc39c0c106415f3f9ed",
+    "followUpScope": "Agent record kind, export attribution, human-path preservation, and downloaded synthetic artifact",
+    "integrationVerdict": "PASS"
+  },
+  "offline": {
+    "standaloneHtml": true,
+    "browserNetworkDisabled": true,
+    "externalHttpRequests": 0,
+    "recordDownloadPassed": true
+  },
+  "humanEvidence": {
+    "ownerRehearsal": "NOT_RECORDED",
+    "otherUserTrial": "NOT_RECORDED",
+    "formalPilot": "SEPARATE_NOT_UPDATED"
+  },
+  "copiedFromPr212": {
+    "head": "e6fbc373878701a77d8cce530d857e43cd74e1d7",
+    "moduleBlob": "2cf6b44b2b9be08c2acb6a70b8b1dcd98f77210a",
+    "testBlob": "ec8d725e003cef04de1aababa5c030ad737af229"
+  },
+  "sourceFiles": [
+    {
+      "path": "package.json",
+      "sha256": "ab1ad60e91f8a20db832680309e1be78ff2eaff9093359cb82883e75316ae6c8"
+    },
+    {
+      "path": "eval/fixtures/portfolio-v1/claims.json",
+      "sha256": "34abd4abb1a47525fed3901800f9d4993c95c35d9fc63b085c175195f96976e7"
+    },
+    {
+      "path": "scripts/lib/portfolio-v1.mjs",
+      "sha256": "7dfc304074ad7ce4b6109db51632b363bd0452bfccc4100fd2056913122488a3"
+    },
+    {
+      "path": "scripts/lib/portfolio-v1-page.mjs",
+      "sha256": "51cf278e4b0b3905145e6adbb6a1ee22f8aeaf78a71b2868f8f9413db3a9f07b"
+    },
+    {
+      "path": "scripts/portfolio-v1.mjs",
+      "sha256": "43f9863ed10f37cb18d798f39354fd137fb28be6cf3bf7fff5604614b477afe0"
+    },
+    {
+      "path": "verticals/datacenter/pursuit-twin-v0.mjs",
+      "sha256": "f0f84f763beda993536866209644546d42e7c0daee1047f8faf77e860ee26a67"
+    },
+    {
+      "path": "tests/portfolio-v1.test.js",
+      "sha256": "ea8e0f9cb5c1dba8030b4a010536316b5fba678899f29ebfaf1353d5b344af1b"
+    },
+    {
+      "path": "tests/pursuit-twin-v0.test.js",
+      "sha256": "e1a23209a897e5ea27c2b52da23cc34ef40e10a0835175e956621d43d48ce44f"
+    },
+    {
+      "path": "worker/e2e/portfolio-v1.test.mjs",
+      "sha256": "f421c2469539fc344253aafc98543b2c485be5d84e4b776bbd77ca5780e8b158"
+    },
+    {
+      "path": "worker/pages/leads.js",
+      "sha256": "96e092590cdb5e9581bf6c54cdafb1e2811da21d8da0c161584b06fd80bddd14"
+    },
+    {
+      "path": "worker/e2e/reviewer-ux.test.mjs",
+      "sha256": "f0bc6ae069acd5be92300004f358d27bef150b338d944a9184338b7b267bd23c"
+    }
+  ],
+  "agentSimulation": {
+    "status": "COMPLETED",
+    "method": "BROWSER_DRIVEN_AGENT_ROLEPLAY_WITH_PRIOR_IMPLEMENTATION_KNOWLEDGE",
+    "recordSource": "ACTUAL_BROWSER_DOWNLOAD",
+    "recordPath": "docs/portfolio/b2b-portfolio-v1-agent-simulation.json",
+    "recordSha256": "fe432c8d2ed71cfefc0b72d98f6e5d2af028183d31af4f245661b5f04e22515a",
+    "humanParticipant": false,
+    "formalPilotContribution": false
+  },
+  "integration": {
+    "previousPortfolioHead": "86d9a480c7e6781002d3dad101264df2a8f82908",
+    "reviewedPr214Head": "c5051c816550e73e2bcce41c498823d3d6dcf584",
+    "pr214MergeTreeMatchesReviewedHead": true,
+    "mergeParentsVerified": true,
+    "agentRecordStillMatchesDemo": true,
+    "relativeDocumentLinksVerified": 24,
+    "linkDocuments": [
+      "README.md",
+      "docs/portfolio/b2b-portfolio-v1.md",
+      "docs/portfolio/b2b-portfolio-v1-reproduction.md",
+      "docs/portfolio/b2b-portfolio-v1-agent-simulation.md"
+    ]
+  }
+}

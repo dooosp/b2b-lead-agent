@@ -36,7 +36,10 @@
     "test:unit": "find worker/tests -maxdepth 1 -name '*.test.mjs' ! -name 'job-trigger.test.mjs' ! -name 'trigger-handler.test.mjs' ! -name 'workflow-contract.test.mjs' -print0 | xargs -0 node --test",
     "test:contract": "node --test worker/tests/job-trigger.test.mjs worker/tests/trigger-handler.test.mjs worker/tests/workflow-contract.test.mjs",
     "test:worker": "npm run test:unit && npm run test:contract",
-    "test": "npm run test:root && npm run test:worker"
+    "test": "npm run test:root && npm run test:worker",
+    "demo:portfolio": "node scripts/portfolio-v1.mjs",
+    "demo:portfolio:serve": "node scripts/portfolio-v1.mjs --serve",
+    "test:portfolio": "node --test tests/portfolio-v1.test.js tests/pursuit-twin-v0.test.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

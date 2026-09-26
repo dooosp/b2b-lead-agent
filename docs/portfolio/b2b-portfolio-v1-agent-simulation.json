@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "b2b-portfolio-personal-record-v1",
+  "demoSha256": "121e688d98bf86eec032ac7e59d3677f33d92cb5c2ed8fc49598d6d6fa8f7754",
+  "inputSha256": "0a515d1e7e7440d05f13573e0a50fc1250dc28db021e3ffe3818333a9041009c",
+  "synthetic": true,
+  "evidenceBoundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "formalPilotContribution": false,
+  "authorship": "AI_AGENT_SIMULATION",
+  "recordedAt": "2026-09-26T01:28:22.191Z",
+  "recordKind": "AGENT_SIMULATION",
+  "humanParticipant": false,
+  "viewedRevisionAtExport": "R3",
+  "checkedEvidenceAndScope": "AI 에이전트 사용성 시뮬레이션. R1의 합성 단선결선도에서 22.9kV, 후보 합성 데이터시트에서 24kV를 확인했다. 적용 범위는 국내 KR·기본설계·중전압 수배전반이며 수전전압 한 조건에 한정한다. R2에는 현재 요구 근거가 없고, R3 합성 개정본에는 33kV가 명시되어 있다.",
+  "judgmentAndReason": "R1: 합성 전압 조건의 기술 검토 진행은 가능하지만 최종 제품 선정은 하지 않는다. R2: 과거 22.9kV를 이월하지 않고 승인된 최신 단선결선도 확인 전까지 판단을 보류한다. R3: 33kV 요구를 24kV 후보가 충족하지 못하므로 현재 후보를 적합 추천 대상에서 제외한다. 근거를 사용할 수 있다는 ALLOWED와 제품이 조건에 맞는 FIT는 서로 다른 판단이다.",
+  "remainingQuestionsAndFriction": "실제품의 정격·절연·차단성능·적용 표준과 최신 제조사 자료는 검증하지 않았다. 실제 사람의 이해도·업무시간 절감도 측정하지 않았다. 기록 구분에 사람 항목만 있던 점은 에이전트 시뮬레이션 구분을 추가해 해결했다. 영문 코드 ALLOWED는 근거 사용 허용이라는 뜻을 설명해야 하며 실제 초심자가 이해하는지는 별도 확인이 필요하다."
+}

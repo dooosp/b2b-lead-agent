@@ -1,0 +1,75 @@
+const esc = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+const labels = { FIT: '조건 충족', INSUFFICIENT_EVIDENCE: '근거 부족', NOT_FIT: '조건 불충족' };
+const copy = {
+  R1: { title: '근거와 조건이 맞을 때', why: '확인된 요구 22.9kV를 후보의 24kV 사양이 충족합니다. 국내·기본설계·해당 제품군이라는 적용 범위도 일치합니다.', next: '이 전압 조건의 기술 검토를 진행할 수 있습니다. 실제 제품 선정에는 나머지 필수 사양과 제조사 근거를 별도로 검토해야 합니다.' },
+  R2: { title: '요구사항의 근거가 빠졌을 때', why: '이전 값 22.9kV가 남아 있어도 현 개정본의 수전전압 근거가 없습니다. 과거의 적합 판정을 그대로 이어갈 수 없습니다.', next: '전기 설계 담당자에게 승인된 최신 단선결선도와 수전전압 등급을 확인합니다. 근거가 채워지면 다시 평가합니다.' },
+  R3: { title: '요구사항이 바뀌었을 때', why: '새 개정본이 요구하는 33kV를 후보의 24kV 사양이 충족하지 못합니다. 근거는 있지만 필수 조건에 맞지 않습니다.', next: '현재 후보를 적합으로 추천하지 않습니다. 33kV 요구에 맞는 다른 후보와 그 후보의 적용 가능한 근거를 검토해야 합니다.' },
+};
+
+export function renderPortfolioPage(demo) {
+  const source = claim => `<details class="source"><summary>${esc(claim.evidence[0].sourceTitle)} · 합성 근거</summary><blockquote>${esc(claim.evidence[0].directQuote)}</blockquote><p class="muted">${esc(claim.evidence[0].sourceUrl)}</p><p>검증 기준: ${esc(claim.verification.verifiedAt.slice(0, 10))} · 국가: ${esc(claim.applicability.jurisdictions.join(', '))}</p><code>${esc(claim.claimId)}</code></details>`;
+  const capability = demo.claims.find(claim => claim.claimId === demo.candidate.claimId);
+  const panels = demo.revisions.map((revision, index) => {
+    const projectClaim = demo.claims.find(claim => claim.claimId === revision.fit.projectClaimIds[0]);
+    const delta = demo.deltas[index - 1];
+    return `<section id="panel-${revision.id}" class="revision" aria-labelledby="heading-${revision.id}" ${index ? 'hidden' : ''}>
+      <div class="section-head"><span class="eyebrow">02 / 비교와 판정</span><h2 id="heading-${revision.id}" tabindex="-1">${copy[revision.id].title}</h2></div>
+      <div class="comparison"><article><span class="eyebrow">프로젝트 요구</span><h3>${revision.requirement.valueState === 'UNKNOWN' ? '확인되지 않음' : esc(revision.requirement.value.value) + ' kV 이상'}</h3><p>수전전압 · 필수 조건</p><p class="muted">${revision.requirement.valueState === 'UNKNOWN' ? '이전 22.9kV 값은 판단 근거로 사용할 수 없습니다.' : '현재 개정본의 요구 근거가 연결되어 있습니다.'}</p>${projectClaim ? source(projectClaim) : '<div class="gap">부족한 근거: 승인된 최신 단선결선도</div>'}</article>
+      <article><span class="eyebrow">후보 제품군의 사양</span><h3>${esc(demo.candidate.voltage)} kV</h3><p>가상 중전압 수배전반 · 사양 상한</p><p class="muted">근거 상태: ${esc(demo.candidate.status)} · 이 합성 적용 범위: ${esc(demo.candidate.customerUse.state)}</p>${source(capability)}</article></div>
+      <article class="decision ${esc(revision.fit.result)}"><div><span class="eyebrow">엔진의 기술 판정</span><h3>${labels[revision.fit.result]} <small>${esc(revision.fit.result)}</small></h3></div><p>${copy[revision.id].why}</p><p><strong>다음 확인 · </strong>${copy[revision.id].next}</p><details><summary>판정 근거 코드와 추적 정보</summary><p>${revision.fit.reasons.map(r => esc(r.code)).join(' · ')}</p><p>사양 검토 시점: ${esc(revision.fit.window.state)} (기본설계)</p><code>${esc(revision.snapshot.canonicalSha256)}</code></details></article>
+      <article class="change"><span class="eyebrow">03 / 변경 후 다시 검토할 이유</span><h3>${delta ? `${esc(delta.documentRevisionChange.previousRevisionId)} → ${esc(revision.id)} · 기존 평가 재검토` : 'R1 · 비교 기준 고정'}</h3><p>${delta ? (revision.id === 'R2' ? '요구 값의 상태가 KNOWN → UNKNOWN으로 바뀌고 연결 근거가 빠졌습니다.' : '미확인 요구가 33kV로 확인되고 새 근거가 연결되었습니다. 근거 보강 후에도 후보가 불충족일 수 있습니다.') : '국가, 제품군, 프로젝트 단계, 요구 값과 근거를 함께 고정합니다. 출처가 있다는 사실만으로 제품을 추천하지 않습니다.'}</p>${delta ? `<p>평가 무효화: ${delta.evaluationInvalidated ? '예' : '아니요'} · 자동 사람 판단 변경: 없음</p>` : ''}<p class="muted">이 사례에 기록된 실제 사람의 이전 판단은 없습니다. 기술 판정은 최종 제품 선정이나 영업 진행 승인이 아닙니다.</p></article>
+    </section>`;
+  }).join('');
+  const downloadData = JSON.stringify({ schemaVersion: 'b2b-portfolio-personal-record-v1', demoSha256: demo.canonicalSha256, inputSha256: demo.inputSha256, synthetic: true, evidenceBoundary: demo.evidenceBoundary, productionReady: false, formalPilotContribution: false, authorship: 'SELF_REPORTED_NOT_VERIFIED' }).replace(/</g, '\\u003c');
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'"><title>B2B 포트폴리오 v1 · 근거에서 판단까지</title><style>
+  :root{color-scheme:light;--ink:#172c36;--muted:#556974;--line:#d7e0e1;--paper:#f5f7f4;--accent:#1d625c}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1080px;margin:auto;padding:28px 28px 70px}header{padding:38px 0 28px;border-bottom:1px solid var(--line)}.brand{font-size:12px;letter-spacing:.12em;color:var(--accent);font-weight:750}.boundary{display:inline-block;border:1px solid #b7cbc6;border-radius:20px;padding:3px 12px;font-size:12px;margin-top:12px}h1{font-size:clamp(30px,5vw,50px);line-height:1.25;letter-spacing:-.04em;margin:16px 0}h2{font-size:25px;margin:5px 0 20px;letter-spacing:-.025em}h3{font-size:23px;line-height:1.4;margin:10px 0}p{margin:9px 0}header p{max-width:780px}.muted{color:var(--muted);font-size:14px}.eyebrow{font-size:12px;font-weight:750;letter-spacing:.045em;color:var(--muted)}.context{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding:22px 0}.context strong{display:block}.step-nav{display:flex;gap:8px;margin:8px 0 32px;flex-wrap:wrap}button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);padding:12px 17px;border-radius:7px}button[aria-pressed="true"],.primary{background:var(--ink);color:white;border-color:var(--ink)}button:focus-visible,summary:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #478e85;outline-offset:4px}button:disabled{opacity:.45;cursor:not-allowed}.comparison{display:grid;grid-template-columns:1fr 1fr;gap:16px}.comparison article,.change,.record{background:#fff;padding:23px;border:1px solid var(--line);border-radius:10px;min-width:0}.comparison h3{font-size:35px;margin:7px 0}.source{margin-top:18px;border-top:1px solid var(--line);padding-top:12px;font-size:13px}summary{cursor:pointer;font-weight:650}blockquote{margin:15px 0;border-left:3px solid var(--line);padding:0 15px}.source p,code{overflow-wrap:anywhere}code{font-size:11px}.decision{border-left:5px solid var(--accent);background:#e8f1eb;border-radius:7px;padding:23px;margin:18px 0}.decision h3{font-size:27px}.decision small{display:inline-block;font-size:12px;font-weight:500;vertical-align:middle}.INSUFFICIENT_EVIDENCE{border-color:#a37622;background:#fff3dc}.NOT_FIT{border-color:#a75648;background:#faece6}.gap{padding:12px;background:#fff3dc;margin-top:18px;border-radius:5px;font-size:14px}.change{margin-bottom:24px}.record{margin-top:32px}.record label{display:block;font-size:14px;font-weight:650;margin:16px 0 5px}textarea,select{width:100%;font:inherit;background:#fbfcfa;color:var(--ink);border:1px solid #a8b9bd;border-radius:6px;padding:12px}textarea{min-height:105px;resize:vertical}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.record-status{min-height:28px;color:var(--accent)}footer{border-top:1px solid var(--line);padding-top:22px;margin-top:30px;font-size:12px;color:var(--muted)}[hidden]{display:none!important}.print-note{font-size:13px;color:var(--muted)}@media(max-width:640px){main{padding:20px 18px 45px}header{padding:20px 0}.context{grid-template-columns:1fr 1fr;gap:12px}.comparison{grid-template-columns:1fr}.step-nav button{flex:1 1 100%;text-align:left}.comparison article,.decision,.change,.record{padding:19px}.decision small{display:block;margin-top:5px}}@media print{body{background:white}main{padding:0}.step-nav,.actions{display:none}.revision[hidden]{display:block!important}.revision{break-before:page}.comparison{grid-template-columns:1fr 1fr}.record{break-before:page}details{display:block}}
+  </style></head><body><main><div class="brand">B2B LEAD AGENT / PORTFOLIO 01</div><header><span class="boundary">합성 사례 · 로컬 시연 · 실제 제품 성능 검증 아님</span><h1>근거에서 판단까지.</h1><p>한 데이터센터의 요구사항과 후보 제품군을 비교합니다.<br>어떤 조건에서 검토를 진행할 수 있고, 무엇이 바뀌면 다시 판단해야 하는지 확인하세요.</p></header>
+  <section aria-label="프로젝트와 적용 범위"><div class="context"><div><span class="eyebrow">01 / 프로젝트</span><strong>Synthetic DC Alpha</strong></div><div><span class="eyebrow">적용 국가 · 단계</span><strong>국내 KR · 기본설계</strong></div><div><span class="eyebrow">후보 제품군</span><strong>가상 중전압 수배전반</strong></div><div><span class="eyebrow">판정 범위</span><strong>수전전압 1개 필수 조건</strong></div></div><p class="muted">모든 출처·제품·개정 내용은 합성 데이터입니다. 판정 기준시각은 ${esc(demo.evaluationAsOf.slice(0,10))}로 고정되어 있습니다.</p></section>
+  <nav class="step-nav" aria-label="개정본 비교">${demo.revisions.map((r,i)=>`<button type="button" data-revision="${r.id}" aria-controls="panel-${r.id}" aria-pressed="${!i}">${r.id} · ${labels[r.fit.result]}</button>`).join('')}</nav><p id="revision-status" class="visually-readable muted" role="status" aria-live="polite">현재 R1 · 조건 충족</p>${panels}
+  <section class="record" aria-labelledby="record-heading"><span class="eyebrow">04 / 직접 확인하고 내 판단 남기기</span><h2 id="record-heading">내가 확인한 것, 아직 확인할 것.</h2><p>세 개정본을 비교한 뒤 직접 적으세요. 기록을 내려받아 본인 재현 또는 1인 체험 자료로 보관할 수 있습니다.</p><p class="print-note">입력은 현재 페이지 메모리에만 남습니다. 내려받기 전 창을 닫으면 사라집니다. 개인정보·고객자료를 입력하지 마세요. 정식 5인 실험 집계에는 반영되지 않습니다.</p>
+  <label for="record-kind">기록 구분</label><select id="record-kind"><option value="">직접 선택</option><option value="OWNER_REPRODUCTION">본인 직접 재현</option><option value="OTHER_USER_TRIAL">다른 사용자 1인 체험</option><option value="AGENT_SIMULATION">에이전트 사용성 시뮬레이션</option></select>
+  <label for="checked">확인한 근거와 적용 조건</label><textarea id="checked" maxlength="1600" placeholder="어느 개정본의 어떤 근거를 확인했나요?"></textarea>
+  <label for="judgment">내 판단과 이유</label><textarea id="judgment" maxlength="1600" placeholder="각 개정본의 검토를 진행할지, 보류할지와 그 이유를 적으세요."></textarea>
+  <label for="remaining">아직 확인할 것 · 사용 중 막힌 점</label><textarea id="remaining" maxlength="1600" placeholder="필요한 추가 근거와 찾기 어려웠던 내용을 적으세요."></textarea>
+  <div class="actions"><button id="download-record" class="primary" type="button" disabled>내 판단 기록 내려받기</button><button id="print-demo" type="button">사례 인쇄</button></div><p id="record-status" class="record-status" role="status" aria-live="polite">사람의 재현·판단 기록은 아직 작성되지 않았습니다.</p></section>
+  <footer><strong>이 시연이 보여주는 것</strong><p>근거의 검증 상태와 적용 가능성 구분 · 필수 사양 비교 · 개정 후 평가 재검토 · 부족한 근거 안내</p><p>실제 제품 적합성, 고객 대응 정확도 향상, 업무시간 단축은 아직 입증하지 않았습니다. NOT_PRODUCTION_EVIDENCE · productionReady:false · Issue #165 HOLD</p><p>사례 지문 <code>${esc(demo.canonicalSha256)}</code></p></footer></main>
+  <script>
+  const metadata = ${downloadData};
+  let activeRevision = 'R1';
+  let downloaded = false;
+  const fields = ['record-kind', 'checked', 'judgment', 'remaining'].map(id => document.getElementById(id));
+  const download = document.getElementById('download-record');
+  function hasDraft() { return fields.some(field => field.value.trim()); }
+  function isAgentSimulation() { return fields[0].value === 'AGENT_SIMULATION'; }
+  function updateDraft() {
+    downloaded = false;
+    download.disabled = fields.some(field => !field.value.trim());
+    download.textContent = isAgentSimulation() ? '시뮬레이션 기록 내려받기' : '내 판단 기록 내려받기';
+    document.getElementById('record-status').textContent = isAgentSimulation()
+      ? '에이전트 시뮬레이션 작성 중 · 실제 사람의 참여 기록으로 집계하지 않습니다.'
+      : hasDraft() ? '작성 중 · 내려받기 전에는 파일로 저장되지 않습니다.' : '사람의 재현·판단 기록은 아직 작성되지 않았습니다.';
+  }
+  fields.forEach(field => { field.addEventListener('input', updateDraft); field.addEventListener('change', updateDraft); });
+  document.querySelectorAll('[data-revision]').forEach(button => button.addEventListener('click', () => {
+    activeRevision = button.dataset.revision;
+    document.querySelectorAll('.revision').forEach(panel => { panel.hidden = panel.id !== 'panel-' + activeRevision; });
+    document.querySelectorAll('[data-revision]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    document.getElementById('revision-status').textContent = '현재 ' + button.textContent;
+  }));
+  download.addEventListener('click', () => {
+    if (fields.some(field => !field.value.trim())) return;
+    const record = { ...metadata, recordedAt: new Date().toISOString(), recordKind: fields[0].value,
+      ...(isAgentSimulation() ? { authorship: 'AI_AGENT_SIMULATION', humanParticipant: false } : {}),
+      viewedRevisionAtExport: activeRevision, checkedEvidenceAndScope: fields[1].value.trim(),
+      judgmentAndReason: fields[2].value.trim(), remainingQuestionsAndFriction: fields[3].value.trim() };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(record, null, 2) + '\\n'], { type: 'application/json' }));
+    const link = document.createElement('a'); link.href = url;
+    link.download = isAgentSimulation() ? 'b2b-portfolio-agent-simulation.json' : 'b2b-portfolio-personal-record.json';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000); downloaded = true;
+    document.getElementById('record-status').textContent = '내려받기를 요청했습니다. 다운로드 폴더에서 JSON 파일을 확인하세요. 정식 실험 집계는 변경되지 않습니다.';
+  });
+  document.getElementById('print-demo').addEventListener('click', () => window.print());
+  window.addEventListener('beforeunload', event => { if (hasDraft() && !downloaded) { event.preventDefault(); event.returnValue = ''; } });
+  </script></body></html>`;
+}
