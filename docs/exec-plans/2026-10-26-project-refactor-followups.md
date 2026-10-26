@@ -145,6 +145,13 @@ live provider calls, customer data or outreach.
 The PR/check records provide the subsequent commit SHAs, CI outcome and merge
 state. This document does not predict those results.
 
+The first hosted CI run on PR #216 passed application tests and the workerd
+gate, then failed Chromium installation: the selected Ubuntu 26.04 image is
+unsupported by locked Playwright 1.58.2. The browser CI job now explicitly
+uses `ubuntu-24.04`, with a workflow contract regression to prevent floating
+image drift. Other jobs, application dependencies and production triggers are
+unchanged. The PR's subsequent exact-head checks determine the final outcome.
+
 Runtime references used during setup:
 [Node release metadata](https://nodejs.org/dist/index.json) and
 [Cloudflare Miniflare documentation](https://developers.cloudflare.com/workers/testing/miniflare/get-started/).

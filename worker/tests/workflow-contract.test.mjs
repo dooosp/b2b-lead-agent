@@ -14,6 +14,13 @@ const currentSecurityAuditWorkflowPath = path.resolve(
 );
 const validateNamingWorkflowPath = path.resolve(__dirname, '../../.github/workflows/validate-naming.yml');
 
+test('browser CI pins the Ubuntu image supported by the locked Playwright version', async () => {
+  const workflow = await readFile(ciWorkflowPath, 'utf8');
+  assert.match(workflow, /runs-on:\s+ubuntu-24\.04/);
+  assert.doesNotMatch(workflow, /runs-on:\s+ubuntu-latest/);
+  assert.match(workflow, /run:\s+npx playwright install --with-deps chromium/);
+});
+
 test('local and CI runtime versions share one pin and CI exercises local workerd', async () => {
   const version = (await readFile(path.resolve(__dirname, '../../.nvmrc'), 'utf8')).trim();
   const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
