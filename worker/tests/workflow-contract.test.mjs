@@ -14,6 +14,24 @@ const currentSecurityAuditWorkflowPath = path.resolve(
 );
 const validateNamingWorkflowPath = path.resolve(__dirname, '../../.github/workflows/validate-naming.yml');
 
+test('local and CI runtime versions share one pin and CI exercises local workerd', async () => {
+  const version = (await readFile(path.resolve(__dirname, '../../.nvmrc'), 'utf8')).trim();
+  const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+  assert.match(version, /^24\.\d+\.\d+$/);
+  assert.equal(packageJson.engines.node, version);
+  for (const filename of [
+    workflowPath, ciWorkflowPath, validateNamingWorkflowPath, currentSecurityAuditWorkflowPath,
+  ]) {
+    const workflow = await readFile(filename, 'utf8');
+    assert.match(workflow, /node-version-file:\s*['"]?\.nvmrc['"]?/);
+    assert.doesNotMatch(workflow, /node-version:/);
+  }
+  const ci = await readFile(ciWorkflowPath, 'utf8');
+  assert.match(ci, /run:\s+npm run test:worker:runtime/);
+  assert.equal(packageJson.scripts['test:worker:runtime'], 'node --test worker/runtime/*.test.mjs');
+  assert.match(packageJson.devDependencies.miniflare, /^\d+\.\d+\.\d+$/);
+});
+
 test('generate-report workflow keeps requestId callback contract fields', async () => {
   const workflow = await readFile(workflowPath, 'utf8');
   const jobEnv = workflow.slice(

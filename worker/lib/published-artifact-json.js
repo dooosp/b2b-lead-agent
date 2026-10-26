@@ -1,3 +1,8 @@
+import {
+  cancelPublishedArtifactStream,
+  createPublishedArtifactDeadline,
+} from './published-artifact-deadline.js';
+
 export const PUBLISHED_ARTIFACT_REMOTE_MAX_BYTES = 10_000_000;
 export const PUBLISHED_ARTIFACT_REMOTE_MAX_STRUCTURAL_TOKENS = 100_000;
 export const PUBLISHED_ARTIFACT_REMOTE_MAX_NESTING_DEPTH = 32;
@@ -177,54 +182,74 @@ export function assertPublishedArtifactJsonComplexity(text, {
 
 export async function readBoundedResponseBytes(response, {
   maxBytes = PUBLISHED_ARTIFACT_REMOTE_MAX_BYTES,
+  deadline: sharedDeadline,
+  timeoutMs,
 } = {}) {
   assertScannerLimit('maxBytes', maxBytes, { allowZero: false });
-  const contentLengthHeader = response.headers?.get?.('content-length');
-  const contentLength = contentLengthHeader === null || contentLengthHeader === undefined
-    ? null
-    : Number(contentLengthHeader);
-  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
-    throw remoteArtifactError(
-      'Published artifact response exceeds the remote byte limit',
-      PUBLISHED_ARTIFACT_REMOTE_BYTES_CODE
-    );
-  }
-  if (!response.body || typeof response.body.getReader !== 'function') {
-    throw remoteArtifactError('Published artifact response body is not stream-readable');
-  }
-
-  const reader = response.body.getReader();
-  const initialCapacity = Number.isFinite(contentLength) && contentLength >= 0
-    ? Math.min(contentLength, maxBytes)
-    : Math.min(64 * 1024, maxBytes);
-  let bytes = new Uint8Array(initialCapacity);
-  let totalBytes = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = value instanceof Uint8Array ? value : new Uint8Array(value);
-    const nextTotalBytes = totalBytes + chunk.byteLength;
-    if (nextTotalBytes > maxBytes) {
-      await Promise.resolve(reader.cancel()).catch(() => {});
+  const deadline = sharedDeadline || createPublishedArtifactDeadline(timeoutMs);
+  let reader;
+  let cancelled = false;
+  const cancel = () => {
+    if (cancelled) return;
+    cancelled = true;
+    cancelPublishedArtifactStream(reader || response.body, deadline.signal.reason);
+  };
+  try {
+    deadline.assertActive();
+    const contentLengthHeader = response.headers?.get?.('content-length');
+    const contentLength = contentLengthHeader === null || contentLengthHeader === undefined
+      ? null
+      : Number(contentLengthHeader);
+    if (Number.isFinite(contentLength) && contentLength > maxBytes) {
       throw remoteArtifactError(
         'Published artifact response exceeds the remote byte limit',
         PUBLISHED_ARTIFACT_REMOTE_BYTES_CODE
       );
     }
-    if (nextTotalBytes > bytes.byteLength) {
-      let nextCapacity = Math.max(bytes.byteLength || 1, 64 * 1024);
-      while (nextCapacity < nextTotalBytes) {
-        nextCapacity = Math.min(nextCapacity * 2, maxBytes);
-      }
-      const grown = new Uint8Array(nextCapacity);
-      grown.set(bytes.subarray(0, totalBytes));
-      bytes = grown;
+    if (!response.body || typeof response.body.getReader !== 'function') {
+      throw remoteArtifactError('Published artifact response body is not stream-readable');
     }
-    bytes.set(chunk, totalBytes);
-    totalBytes = nextTotalBytes;
-  }
 
-  return bytes.subarray(0, totalBytes);
+    reader = response.body.getReader();
+    deadline.signal.addEventListener('abort', cancel, { once: true });
+    const initialCapacity = Number.isFinite(contentLength) && contentLength >= 0
+      ? Math.min(contentLength, maxBytes)
+      : Math.min(64 * 1024, maxBytes);
+    let bytes = new Uint8Array(initialCapacity);
+    let totalBytes = 0;
+    while (true) {
+      const { done, value } = await deadline.run(() => reader.read());
+      if (done) break;
+      const chunk = value instanceof Uint8Array ? value : new Uint8Array(value);
+      const nextTotalBytes = totalBytes + chunk.byteLength;
+      if (nextTotalBytes > maxBytes) {
+        throw remoteArtifactError(
+          'Published artifact response exceeds the remote byte limit',
+          PUBLISHED_ARTIFACT_REMOTE_BYTES_CODE
+        );
+      }
+      if (nextTotalBytes > bytes.byteLength) {
+        let nextCapacity = Math.max(bytes.byteLength || 1, 64 * 1024);
+        while (nextCapacity < nextTotalBytes) {
+          nextCapacity = Math.min(nextCapacity * 2, maxBytes);
+        }
+        const grown = new Uint8Array(nextCapacity);
+        grown.set(bytes.subarray(0, totalBytes));
+        bytes = grown;
+      }
+      bytes.set(chunk, totalBytes);
+      totalBytes = nextTotalBytes;
+    }
+
+    return bytes.subarray(0, totalBytes);
+  } catch (error) {
+    cancel();
+    throw error;
+  } finally {
+    deadline.signal.removeEventListener('abort', cancel);
+    try { reader?.releaseLock(); } catch { /* A failed stream may already be released. */ }
+    if (!sharedDeadline) deadline.dispose();
+  }
 }
 
 export function parseBoundedPublishedArtifactJson(bytes, {
@@ -244,6 +269,9 @@ export function parseBoundedPublishedArtifactJson(bytes, {
 }
 
 export async function readBoundedPublishedArtifactJson(response, options = {}) {
-  const bytes = await readBoundedResponseBytes(response);
+  const bytes = await readBoundedResponseBytes(response, {
+    deadline: options.deadline,
+    timeoutMs: options.timeoutMs,
+  });
   return parseBoundedPublishedArtifactJson(bytes, options);
 }

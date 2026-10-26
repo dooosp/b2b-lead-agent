@@ -124,9 +124,6 @@ test('explicit D1 manifest preserves conservative lead, review, and snapshot con
   assert.equal(CANONICAL_D1_CRITICAL_COLUMN_SPECS.published_snapshot_entries.ordinal.pk, 4);
 
   const introspectionSql = buildD1SchemaIntrospectionQuery();
-  assert.equal((introspectionSql.match(/FROM pragma_table_info\('/g) || []).length, 12);
-  assert.equal((introspectionSql.match(/ UNION ALL /g) || []).length, 11);
-  assert.match(introspectionSql, /table_name, cid, name, type/);
   assert.match(introspectionSql, /LIMIT \d+$/);
   assert.doesNotMatch(introspectionSql, /CREATE|ALTER|INSERT|UPDATE|DELETE/i);
 
@@ -142,6 +139,15 @@ test('explicit D1 manifest preserves conservative lead, review, and snapshot con
     CANONICAL_D1_INDEX_SPECS.find(({ name }) => name === 'idx_job_runs_active_profile').normalizedSql,
     /WHERE state IN\('accepted','running'\)$/i
   );
+});
+
+test('schema introspection refuses non-canonical and SQL-shaped table names', () => {
+  for (const tableName of ['unknown', 'constructor', "leads'); DROP TABLE leads; --"]) {
+    assert.throws(
+      () => buildD1SchemaIntrospectionQuery(['leads', tableName]),
+      /Unknown canonical D1 table/
+    );
+  }
 });
 
 test('request-path D1 readiness check is read-only and fails closed by exact version', async () => {

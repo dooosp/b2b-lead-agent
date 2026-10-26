@@ -77,7 +77,10 @@ class FakeInternalReportDb {
       return mode === 'all' ? rows : rows[0] || null;
     }
 
-    if (normalized.startsWith("SELECT 'd1_schema_migrations' AS table_name") && normalized.includes('pragma_table_info')) {
+    if (
+      normalized.startsWith('WITH requested_tables (table_name, table_order) AS (VALUES ')
+      && normalized.includes('CROSS JOIN pragma_table_info(requested_tables.table_name)')
+    ) {
       const {
         CANONICAL_D1_CRITICAL_COLUMN_SPECS,
         CANONICAL_D1_TABLE_COLUMN_NAMES,

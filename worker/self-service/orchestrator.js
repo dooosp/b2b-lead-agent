@@ -2,7 +2,7 @@ import { jsonResponse } from '../lib/utils.js';
 import { fetchAllNewsWorker } from './news.js';
 import { generateProfileFromGemini, generateHeuristicProfile } from './profile-gen.js';
 import { analyzeLeadsWorker, createSelfServiceSchemaPayloadWorker, filterArticlesForTargetCompany, generateQuickLeadsWorker } from './analyze.js';
-import { fetchArticleBodyWorker } from '../api/enrichment.js';
+import { fetchArticleBodyWorker } from '../lib/lead-enrichment.js';
 import { saveLeadsBatch, logAnalyticsRun } from '../db/leads.js';
 import { isValidSelfServiceResponseSchema } from './lead-utils.js';
 import { createWorkerOutboundHttpContext } from '../lib/outbound-http.js';
