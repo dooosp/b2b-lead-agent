@@ -9,10 +9,35 @@ export function optionValue(flag, argv = process.argv) {
   return argv[index + 1] || '';
 }
 
+export function optionValues(flag, argv = process.argv) {
+  const values = [];
+  for (let index = 0; index < argv.length; index += 1) {
+    if (argv[index] === flag) values.push(argv[index + 1] || '');
+  }
+  return values.filter((value) => String(value).trim());
+}
+
+export function hasFlag(flag, argv = process.argv) {
+  return argv.includes(flag);
+}
+
+export function readJsonArtifact(inputPath) {
+  return JSON.parse(readFileSync(inputPath, 'utf8'));
+}
+
 export function writeJsonArtifact(outputPath, value) {
   if (!outputPath) return;
+  writeRequiredJsonArtifact(outputPath, value);
+}
+
+export function writeRequiredJsonArtifact(outputPath, value) {
   mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+export function writeTextArtifact(outputPath, value) {
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, value.endsWith('\n') ? value : `${value}\n`);
 }
 
 function withoutIgnoredTopLevelKeys(value, ignoredTopLevelKeys) {

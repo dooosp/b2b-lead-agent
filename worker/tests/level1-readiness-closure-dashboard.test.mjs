@@ -12,6 +12,7 @@ import {
   buildLevel1ReadinessClosureDashboard,
   renderLevel1ReadinessClosureMarkdown,
   validateLevel1ReadinessClosureDashboard,
+  writeLevel1ReadinessClosureDashboardArtifacts,
 } from '../../scripts/level1-readiness-closure-dashboard.mjs';
 
 const EXPECTED_MERGED_PRS = Object.freeze([
@@ -236,6 +237,21 @@ test('Level 1 closure dashboard CLI writes JSON and Markdown artifacts', () => {
     assert.equal(dashboard.productionReady, false);
     assert.match(markdown, /Level 1 Readiness Closure Dashboard/);
     assertNoForbiddenMarkers(dashboard);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('Level 1 closure dashboard artifact writer requires a JSON output path', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'level1-closure-dashboard-required-path-'));
+  const markdownPath = join(dir, 'dashboard.md');
+
+  try {
+    assert.throws(() => writeLevel1ReadinessClosureDashboardArtifacts({
+      jsonOutput: '',
+      markdownOutput: markdownPath,
+    }), { code: 'ENOENT' });
+    assert.throws(() => readFileSync(markdownPath), { code: 'ENOENT' });
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import {
+  optionValue,
+  writeJsonArtifact,
+} from './lib/cli-utils.mjs';
 import { pathToFileURL } from 'node:url';
 
 import {
@@ -206,12 +208,6 @@ export function findLevel1ProofPreflightBlockers({ env = {}, urls = [] } = {}) {
   return blockers;
 }
 
-function optionValue(flag, argv = process.argv) {
-  const index = argv.indexOf(flag);
-  if (index < 0) return '';
-  return argv[index + 1] || '';
-}
-
 export function buildLevel1RedactedFixtureEvidence() {
   return redactLevel1EvidenceRecord({
     fixtureId: 'synthetic-level1-local-proof-preflight',
@@ -296,10 +292,7 @@ function runCli() {
       `refusals: ${result.blockers.length}`,
     ].join('\n');
   const outputPath = optionValue('--output');
-  if (outputPath) {
-    mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, `${JSON.stringify(result.evidence, null, 2)}\n`);
-  }
+  writeJsonArtifact(outputPath, result.evidence);
   console.log(output);
   if (!result.ok) process.exitCode = 1;
 }

@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { acquireOwnedDirectoryLock, releaseOwnedDirectoryLock } = require('./lib/owned-directory-lock');
 const {
   completePipelineRun,
   failPipelineRun,
@@ -22,29 +23,6 @@ const {
   verifyCommitReachableAtRemote,
 } = require('./git-publication');
 
-const NOTIFICATION_LOCK_STALE_MS = 15 * 60 * 1000;
-
-function notificationLockCanRecover(lockPath) {
-  try {
-    const owner = JSON.parse(fs.readFileSync(path.join(lockPath, 'owner.json'), 'utf8'));
-    if (Number.isSafeInteger(owner.pid) && owner.pid > 0) {
-      try {
-        process.kill(owner.pid, 0);
-        return false;
-      } catch (error) {
-        return Boolean(error && error.code === 'ESRCH');
-      }
-    }
-  } catch {
-    // A malformed owner is recoverable only after the stale-time bound.
-  }
-  try {
-    return Date.now() - fs.statSync(lockPath).mtimeMs >= NOTIFICATION_LOCK_STALE_MS;
-  } catch {
-    return false;
-  }
-}
-
 function createNotificationLockedError() {
   return Object.assign(new Error('Another notification attempt holds the result lock.'), {
     code: 'ERR_NOTIFICATION_LOCKED',
@@ -52,105 +30,11 @@ function createNotificationLockedError() {
   });
 }
 
-function notificationRecoveryClaimCanRecover(claimPath) {
-  try {
-    const claim = JSON.parse(fs.readFileSync(claimPath, 'utf8'));
-    if (Number.isSafeInteger(claim.pid) && claim.pid > 0) {
-      try {
-        process.kill(claim.pid, 0);
-        return false;
-      } catch (error) {
-        return Boolean(error && error.code === 'ESRCH');
-      }
-    }
-  } catch {
-    // A malformed claim is recoverable only after the stale-time bound.
-  }
-  try {
-    return Date.now() - fs.statSync(claimPath).mtimeMs >= NOTIFICATION_LOCK_STALE_MS;
-  } catch {
-    return false;
-  }
-}
-
-function createNotificationRecoveryClaim(claimPath, ownerId) {
-  const payload = JSON.stringify({
-    pid: process.pid,
-    ownerId,
-    createdAt: new Date().toISOString(),
-  });
-  try {
-    fs.writeFileSync(claimPath, payload, { flag: 'wx', mode: 0o600 });
-    return;
-  } catch (error) {
-    if (!error || error.code !== 'EEXIST' || !notificationRecoveryClaimCanRecover(claimPath)) {
-      throw createNotificationLockedError();
-    }
-  }
-  try {
-    fs.rmSync(claimPath);
-    fs.writeFileSync(claimPath, payload, { flag: 'wx', mode: 0o600 });
-  } catch {
-    throw createNotificationLockedError();
-  }
-}
-
-function acquireNotificationLock(resultFile, {
-  lockPath: explicitLockPath,
-  recoveryAttempted = false,
-} = {}) {
+function acquireNotificationLock(resultFile, { lockPath: explicitLockPath } = {}) {
   const lockPath = explicitLockPath
     ? path.resolve(explicitLockPath)
     : `${path.resolve(resultFile)}.notification-lock`;
-  const ownerId = crypto.randomBytes(16).toString('hex');
-  let created = false;
-  try {
-    fs.mkdirSync(lockPath);
-    created = true;
-    fs.writeFileSync(path.join(lockPath, 'owner.json'), JSON.stringify({
-      pid: process.pid,
-      ownerId,
-      createdAt: new Date().toISOString(),
-    }), { mode: 0o600 });
-  } catch (error) {
-    if (error && error.code === 'EEXIST') {
-      if (recoveryAttempted || !notificationLockCanRecover(lockPath)) {
-        throw createNotificationLockedError();
-      }
-      const claimPath = path.join(lockPath, '.recovery-claim');
-      try {
-        createNotificationRecoveryClaim(claimPath, ownerId);
-      } catch {
-        throw createNotificationLockedError();
-      }
-      try {
-        if (!notificationLockCanRecover(lockPath)) throw createNotificationLockedError();
-        const quarantinePath = `${lockPath}.stale-${process.pid}-${ownerId}`;
-        fs.renameSync(lockPath, quarantinePath);
-        fs.rmSync(quarantinePath, { recursive: true, force: true });
-      } catch (recoveryError) {
-        try {
-          fs.rmSync(claimPath, { force: true });
-        } catch {
-          // Preserve the lock recovery result.
-        }
-        throw recoveryError;
-      }
-      return acquireNotificationLock(resultFile, {
-        lockPath,
-        recoveryAttempted: true,
-      });
-    }
-    if (created) {
-      try {
-        fs.rmSync(lockPath, { recursive: true, force: true });
-      } catch {
-        // Preserve the lock-owner persistence error.
-      }
-    }
-    throw error;
-  }
-  return { lockPath, ownerId };
+  return acquireOwnedDirectoryLock(lockPath, { createLockedError: createNotificationLockedError });
 }
 
 function resolveNotificationIdentityRoot(cwd) {
@@ -246,17 +130,6 @@ function writeNotificationAcceptanceMarker(paths) {
     fs.renameSync(temporaryPath, paths.acceptedPath);
   } finally {
     fs.rmSync(temporaryPath, { force: true });
-  }
-}
-
-function releaseNotificationLock(lockHandle) {
-  if (!lockHandle) return;
-  try {
-    const owner = JSON.parse(fs.readFileSync(path.join(lockHandle.lockPath, 'owner.json'), 'utf8'));
-    if (owner.ownerId !== lockHandle.ownerId) return;
-    fs.rmSync(lockHandle.lockPath, { recursive: true, force: true });
-  } catch {
-    // The persisted notification result is authoritative over lock cleanup.
   }
 }
 
@@ -560,8 +433,8 @@ async function notifyPublishedPipelineRun(options = {}) {
     }
     return outcome;
   } finally {
-    releaseNotificationLock(pathLock);
-    releaseNotificationLock(identityLock);
+    releaseOwnedDirectoryLock(pathLock);
+    releaseOwnedDirectoryLock(identityLock);
   }
 }
 

@@ -64,27 +64,41 @@ if (fs.existsSync(workerApiDir)) {
 
 const artifactPublisherPath = path.join(repoRoot, 'lead-report-publisher.js');
 if (fs.existsSync(artifactPublisherPath)) {
-  const publisherSource = fs.readFileSync(artifactPublisherPath, 'utf8');
-  const requiredMarkers = [
-    'latest-leads.json',
-    'lead-history.json',
-    'lead-report-',
+  const publicationDir = path.join(repoRoot, 'lib', 'publication');
+  const publicationPaths = [
+    artifactPublisherPath,
+    ...(fs.existsSync(publicationDir)
+      ? fs.readdirSync(publicationDir).filter((name) => name.endsWith('.js'))
+        .map((name) => path.join(publicationDir, name))
+      : []),
   ];
+  const publisherSource = publicationPaths.map((filename) => fs.readFileSync(filename, 'utf8')).join('\n');
   const forbiddenMarkers = [
     'latest_leads.json',
     'lead_history.json',
     'lead_report_',
   ];
 
-  for (const marker of requiredMarkers) {
-    if (!publisherSource.includes(marker)) {
-      fail(`lead-report-publisher.js is missing canonical marker ${marker}`);
+  try {
+    const { ARTIFACT_NAMES } = require(artifactPublisherPath);
+    const expectedNames = {
+      latestCanonical: 'latest-leads.json',
+      historyCanonical: 'lead-history.json',
+      manifestCanonical: 'publication-manifest.json',
+    };
+    for (const [key, value] of Object.entries(expectedNames)) {
+      if (ARTIFACT_NAMES?.[key] !== value) fail(`publication contract must use ${value}`);
     }
+    if (ARTIFACT_NAMES?.markdownCanonical?.('2000-01-02') !== 'lead-report-2000-01-02.md') {
+      fail('publication contract must use lead-report-YYYY-MM-DD.md');
+    }
+  } catch {
+    fail('publication artifact naming contract could not be loaded');
   }
 
   for (const marker of forbiddenMarkers) {
     if (publisherSource.includes(marker)) {
-      fail(`lead-report-publisher.js still includes legacy marker ${marker}`);
+      fail(`publication modules still include legacy marker ${marker}`);
     }
   }
 }

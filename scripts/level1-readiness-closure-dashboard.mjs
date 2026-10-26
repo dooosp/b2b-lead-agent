@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import {
+  optionValue,
+  hasFlag,
+  writeRequiredJsonArtifact,
+  writeTextArtifact,
+} from './lib/cli-utils.mjs';
 
 import {
   LEVEL1_APPROVAL_INTAKE_GATE_JSON_PATH,
@@ -167,26 +171,6 @@ function addBlocker(blockers, reason, path, detail = '') {
 
 function hasProductionReadyClaim(value) {
   return value === true || String(value || '').toUpperCase() === 'PRODUCTION_READY';
-}
-
-function optionValue(flag, argv = process.argv) {
-  const index = argv.indexOf(flag);
-  if (index < 0) return '';
-  return argv[index + 1] || '';
-}
-
-function hasFlag(flag, argv = process.argv) {
-  return argv.includes(flag);
-}
-
-function writeJsonArtifact(path, value) {
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
-}
-
-function writeTextArtifact(path, value) {
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, value.endsWith('\n') ? value : `${value}\n`);
 }
 
 function buildGateInventory() {
@@ -788,7 +772,7 @@ export function writeLevel1ReadinessClosureDashboardArtifacts({
     throw error;
   }
 
-  writeJsonArtifact(jsonOutput, dashboard);
+  writeRequiredJsonArtifact(jsonOutput, dashboard);
   writeTextArtifact(markdownOutput, renderLevel1ReadinessClosureMarkdown(dashboard));
 
   return {
@@ -812,7 +796,7 @@ async function main() {
   }
 
   if (hasFlag('--json') || hasFlag('--output')) {
-    writeJsonArtifact(jsonOutput, dashboard);
+    writeRequiredJsonArtifact(jsonOutput, dashboard);
   }
   if (hasFlag('--markdown') || hasFlag('--markdown-output') || !hasFlag('--json')) {
     writeTextArtifact(markdownOutput, renderLevel1ReadinessClosureMarkdown(dashboard));
