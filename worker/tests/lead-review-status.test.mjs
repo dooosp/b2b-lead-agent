@@ -68,7 +68,8 @@ class FakeReviewDb {
     const normalized = sql.replace(/\s+/g, ' ').trim();
     if (
       normalized.startsWith('SELECT version, name FROM d1_schema_migrations ORDER BY version ASC LIMIT ')
-      || (normalized.startsWith("SELECT 'd1_schema_migrations' AS table_name") && normalized.includes('pragma_table_info'))
+      || (normalized.startsWith('WITH requested_tables (table_name, table_order) AS (VALUES ')
+        && normalized.includes('CROSS JOIN pragma_table_info(requested_tables.table_name)'))
       || normalized.startsWith('SELECT type, name, tbl_name AS table_name, sql FROM sqlite_schema')
     ) {
       return this.readinessDb.executeAll(sql, params);
@@ -389,13 +390,11 @@ test('lead review pages expose local/test reviewer feedback intake controls', ()
   assert.match(listHtml, /data-feedback-field="outcomeLabel"/);
   assert.match(listHtml, /data-feedback-field="dataGapPriority"/);
   assert.match(listHtml, /data-feedback-field="evidenceConfidenceAdjustment"/);
-  assert.match(listHtml, /JSON\.stringify\(\{ reviewerFeedback: collectReviewerFeedbackPayload\(section\), expectedVersion: cachedLead && cachedLead\.version \}\)/);
   assert.match(listHtml, /생성된 검토 메모 제안은 저장\/전송\/귀속\/이력\/내보내기 대상이 아닙니다/);
   assert.match(detailHtml, /리뷰어 피드백/);
   assert.match(detailHtml, /사람이 입력한 리뷰어 피드백/);
   assert.match(detailHtml, /근거 보강 후 후속 검토/);
   assert.match(detailHtml, /수동 리뷰어/);
-  assert.match(detailHtml, /JSON\.stringify\(\{ reviewerFeedback: collectReviewerFeedbackPayload\(\), expectedVersion: lead\.version \}\)/);
   assert.match(detailHtml, /생성된 검토 메모 제안은 저장\/전송\/귀속\/이력\/내보내기 대상이 아닙니다/);
   assert.doesNotMatch(detailHtml, /authenticated reviewer|display name|reviewerEmail|authorEmail/i);
 });

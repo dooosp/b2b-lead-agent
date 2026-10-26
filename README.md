@@ -15,6 +15,9 @@
 
 저장소를 내려받은 뒤 루트에서 실행합니다.
 
+Node.js 버전은 `.nvmrc`의 **24.22.1**로 고정하며 CI도 같은 파일을 읽습니다.
+nvm을 사용한다면 먼저 `nvm install && nvm use`를 실행합니다.
+
 ```sh
 npm ci --ignore-scripts --no-audit --no-fund
 npm run demo:portfolio:serve
@@ -55,16 +58,19 @@ npm run demo:portfolio:serve
 
 ## 검증과 한계
 
-고정 입력과 고정 평가 시각으로 재현합니다. 로컬 검증은 루트 239 + Worker 단위 419 + Worker 계약 28 + 브라우저 18 = **704개 통과**이며 [검증 요약](docs/portfolio/b2b-portfolio-v1-verification.json)에 소스 지문과 범위를 기록했습니다.
+고정 입력과 고정 평가 시각으로 재현합니다. 포트폴리오 v1 기록 시점의 검증은 루트 239 + Worker 단위 419 + Worker 계약 28 + 브라우저 18 = **704개 통과**이며 [검증 요약](docs/portfolio/b2b-portfolio-v1-verification.json)에 소스 지문과 범위를 기록했습니다.
 
 ```sh
 npm run test:portfolio
 npm run check:naming
 npm run check:schema
 npm test
+npm run test:worker:runtime
 npx playwright install chromium
 npm run test:e2e:local
 ```
+
+`test:worker:runtime`은 실제 Worker 진입점을 로컬 workerd와 임시 D1/KV에서 실행합니다. 외부 요청을 차단하며 계정·API 키·원격 DB를 사용하지 않습니다. 최근 리팩터링 검증은 [추가 개선 기록](docs/exec-plans/2026-10-26-project-refactor-followups.md)에서 확인할 수 있습니다.
 
 브라우저 테스트는 합성 데이터·fake D1·루프백 및 오프라인 파일을 사용합니다. 실제 UI에서 작성한 [에이전트 시뮬레이션 JSON](docs/portfolio/b2b-portfolio-v1-agent-simulation.json)은 `AI_AGENT_SIMULATION`, `humanParticipant:false`로 구분합니다.
 

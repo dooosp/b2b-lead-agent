@@ -283,7 +283,7 @@ test('request-path readiness is read-only, cached per DB, and rejects future sch
     1
   );
   assert.equal(
-    database.queryStatements.filter((sql) => /FROM pragma_table_info\('leads'\)/i.test(sql)).length,
+    database.queryStatements.filter((sql) => /CROSS JOIN pragma_table_info\(requested_tables\.table_name\)/i.test(sql)).length,
     1
   );
   assert.equal(
@@ -620,7 +620,11 @@ test('Worker runtime does not import the local/test migration helper', () => {
       const absolutePath = path.join(directory, entry.name);
       if (entry.isDirectory()) {
         visit(absolutePath);
-      } else if (/\.(?:js|mjs)$/.test(entry.name) && entry.name !== 'migrations.js') {
+      } else if (
+        /\.(?:js|mjs)$/.test(entry.name)
+        && !entry.name.endsWith('.test.mjs')
+        && entry.name !== 'migrations.js'
+      ) {
         runtimeSources.push(absolutePath);
       }
     }

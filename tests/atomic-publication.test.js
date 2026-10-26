@@ -273,6 +273,99 @@ test('a lock owned by a dead process is recovered before retry publication', (t)
   assert.equal(fs.existsSync(lockPath), false);
 });
 
+test('a live publication owner is not recovered even when its directory is old', (t) => {
+  const root = makeRoot(t);
+  const profile = createRootProfile();
+  seedA(root, profile);
+  const reportsRoot = path.join(root, 'reports');
+  const lockPath = path.join(reportsRoot, profile.id, '.publication-lock');
+  const owner = { pid: process.pid, ownerId: 'live-owner' };
+  fs.mkdirSync(lockPath);
+  fs.writeFileSync(path.join(lockPath, 'owner.json'), JSON.stringify(owner));
+  const staleTime = new Date(Date.now() - 16 * 60 * 1000);
+  fs.utimesSync(lockPath, staleTime, staleTime);
+
+  assert.throws(
+    () => publisher.commitLeadPublication(prepare(root, profile, lead('B'), NOW_B), profile, { reportsRoot }),
+    (error) => error.code === 'ERR_PUBLICATION_LOCKED' && error.retryable === true,
+  );
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(lockPath, 'owner.json'), 'utf8')), owner);
+  assert.equal(fs.existsSync(path.join(lockPath, '.recovery-claim')), false);
+});
+
+test('a live recovery claimant prevents reclaiming a dead publication owner', (t) => {
+  const root = makeRoot(t);
+  const profile = createRootProfile();
+  seedA(root, profile);
+  const reportsRoot = path.join(root, 'reports');
+  const lockPath = path.join(reportsRoot, profile.id, '.publication-lock');
+  const claimPath = path.join(lockPath, '.recovery-claim');
+  const claim = { pid: process.pid, ownerId: 'live-claimant' };
+  fs.mkdirSync(lockPath);
+  fs.writeFileSync(path.join(lockPath, 'owner.json'), JSON.stringify({ pid: 2147483647, ownerId: 'dead-owner' }));
+  fs.writeFileSync(claimPath, JSON.stringify(claim));
+
+  assert.throws(
+    () => publisher.commitLeadPublication(prepare(root, profile, lead('B'), NOW_B), profile, { reportsRoot }),
+    (error) => error.code === 'ERR_PUBLICATION_LOCKED' && error.retryable === true,
+  );
+  assert.deepEqual(JSON.parse(fs.readFileSync(claimPath, 'utf8')), claim);
+});
+
+for (const { label, ageMinutes, recoverable } of [
+  { label: 'fresh', ageMinutes: 14, recoverable: false },
+  { label: 'stale', ageMinutes: 16, recoverable: true },
+]) {
+  test(`a ${label} malformed recovery claim respects the stale-time bound`, (t) => {
+    const root = makeRoot(t);
+    const profile = createRootProfile();
+    seedA(root, profile);
+    const reportsRoot = path.join(root, 'reports');
+    const lockPath = path.join(reportsRoot, profile.id, '.publication-lock');
+    const claimPath = path.join(lockPath, '.recovery-claim');
+    fs.mkdirSync(lockPath);
+    fs.writeFileSync(path.join(lockPath, 'owner.json'), JSON.stringify({ pid: 2147483647, ownerId: 'dead-owner' }));
+    fs.writeFileSync(claimPath, '{malformed');
+    const claimTime = new Date(Date.now() - ageMinutes * 60 * 1000);
+    fs.utimesSync(claimPath, claimTime, claimTime);
+    const commit = () => publisher.commitLeadPublication(
+      prepare(root, profile, lead('B'), NOW_B), profile, { reportsRoot },
+    );
+
+    if (recoverable) {
+      assert.equal(commit().localCommitted, true);
+      assert.equal(fs.existsSync(lockPath), false);
+    } else {
+      assert.throws(commit, (error) => error.code === 'ERR_PUBLICATION_LOCKED' && error.retryable === true);
+      assert.equal(fs.readFileSync(claimPath, 'utf8'), '{malformed');
+    }
+  });
+}
+
+test('publication cleanup leaves a replacement lock owner intact', (t) => {
+  const root = makeRoot(t);
+  const profile = createRootProfile();
+  seedA(root, profile);
+  const reportsRoot = path.join(root, 'reports');
+  const lockPath = path.join(reportsRoot, profile.id, '.publication-lock');
+  const replacementOwner = { pid: process.pid, ownerId: 'replacement-owner' };
+  const fault = new Error('Stop after replacing the owner');
+
+  assert.throws(
+    () => publisher.commitLeadPublication(prepare(root, profile, lead('B'), NOW_B), profile, {
+      reportsRoot,
+      faultInjector(operation) {
+        if (operation === 'lock:acquired') {
+          fs.writeFileSync(path.join(lockPath, 'owner.json'), JSON.stringify(replacementOwner));
+          throw fault;
+        }
+      },
+    }),
+    (error) => error === fault,
+  );
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(lockPath, 'owner.json'), 'utf8')), replacementOwner);
+});
+
 test('compatibility repair and publication commit serialize on the same profile lock', (t) => {
   const root = makeRoot(t);
   const profile = createRootProfile();

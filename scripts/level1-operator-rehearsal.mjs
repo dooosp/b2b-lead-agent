@@ -20,7 +20,11 @@ import {
   redactLevel1EvidenceRecord,
   validateLevel1FutureProductionProofEvidenceArtifact,
 } from '../worker/lib/level1-readiness-guards.js';
-import { writeJsonArtifactIfMateriallyChanged } from './lib/cli-utils.mjs';
+import {
+  optionValue,
+  optionValues,
+  writeJsonArtifactIfMateriallyChanged,
+} from './lib/cli-utils.mjs';
 
 export const LEVEL1_OPERATOR_REHEARSAL_OUTPUT_PATH =
   'tmp/codex/level1-operator-rehearsal-non-production-runbook.json';
@@ -41,20 +45,6 @@ const DEFAULT_RAW_PROOF_INPUT = Object.freeze({
     safeLabel: 'redacted local fixture placeholder',
   },
 });
-
-function optionValue(flag, argv = process.argv) {
-  const index = argv.indexOf(flag);
-  if (index < 0) return '';
-  return argv[index + 1] || '';
-}
-
-function optionValues(flag, argv = process.argv) {
-  const values = [];
-  for (let index = 0; index < argv.length; index += 1) {
-    if (argv[index] === flag) values.push(argv[index + 1] || '');
-  }
-  return values.filter((value) => String(value).trim());
-}
 
 function statusFromOk(ok) {
   return ok ? 'PASS' : 'HOLD';

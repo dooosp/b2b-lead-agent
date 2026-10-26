@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import {
+  optionValue,
+  hasFlag,
+  readJsonArtifact,
+  writeRequiredJsonArtifact,
+  writeTextArtifact,
+} from './lib/cli-utils.mjs';
 import { pathToFileURL } from 'node:url';
 
 import { validateLevel1ApprovalIntakeRequest } from './level1-production-proof-approval-intake-gate.mjs';
@@ -111,16 +116,6 @@ const CUSTOMER_DATA_PATTERN =
 const PROHIBITION_CONTEXT_PATTERN =
   /\b(?:no|not|never|forbid|forbidden|refuse|refused|reject|rejected|redact|redacted|stop|abort|disallow|without)\b/i;
 
-function optionValue(flag, argv = process.argv) {
-  const index = argv.indexOf(flag);
-  if (index < 0) return '';
-  return argv[index + 1] || '';
-}
-
-function hasFlag(flag, argv = process.argv) {
-  return argv.includes(flag);
-}
-
 function hasOwn(object, key) {
   return Object.prototype.hasOwnProperty.call(object || {}, key);
 }
@@ -185,22 +180,8 @@ function addBlocker(blockers, reason, path, detail = '', status = null) {
   });
 }
 
-function readJson(path) {
-  return JSON.parse(readFileSync(path, 'utf8'));
-}
-
-function writeJsonArtifact(path, value) {
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
-}
-
-function writeTextArtifact(path, value) {
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, value.endsWith('\n') ? value : `${value}\n`);
-}
-
 function loadSyntheticPackets(path = LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_PACKET_PATH) {
-  const fixture = readJson(path);
+  const fixture = readJsonArtifact(path);
   if (Array.isArray(fixture)) return fixture;
   return fixture.packets || [];
 }
@@ -524,7 +505,7 @@ function runCli() {
   const markdownOutputPath = optionValue('--markdown-output') || LEVEL1_POST_APPROVAL_DECISION_SIMULATOR_MD_PATH;
 
   if (hasFlag('--json') || hasFlag('--output')) {
-    writeJsonArtifact(outputPath, artifact);
+    writeRequiredJsonArtifact(outputPath, artifact);
   }
   if (hasFlag('--markdown') || hasFlag('--markdown-output') || !hasFlag('--json')) {
     writeTextArtifact(markdownOutputPath, renderLevel1PostApprovalDecisionMarkdown(artifact));

@@ -1342,9 +1342,8 @@ export class FakeD1Database {
     }
 
     if (
-      normalized.startsWith("select 'd1_schema_migrations' as table_name")
-      && normalized.includes('pragma_table_info')
-      && normalized.includes(' union all ')
+      normalized.startsWith('with requested_tables (table_name, table_order) as (values ')
+      && normalized.includes('cross join pragma_table_info(requested_tables.table_name)')
     ) {
       return this.schemaIntrospectionRows.map(clone);
     }

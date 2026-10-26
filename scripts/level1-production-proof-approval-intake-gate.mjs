@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import {
+  optionValue,
+  hasFlag,
+  readJsonArtifact,
+  writeRequiredJsonArtifact,
+  writeTextArtifact,
+} from './lib/cli-utils.mjs';
 import { pathToFileURL } from 'node:url';
 
 import { redactLevel1EvidenceRecord } from '../worker/lib/level1-readiness-guards.js';
@@ -97,16 +102,6 @@ const CUSTOMER_DATA_PATTERN =
 const PROHIBITION_CONTEXT_PATTERN =
   /\b(?:no|not|never|forbid|forbidden|refuse|refused|reject|rejected|redact|redacted|stop|abort|disallow|without)\b/i;
 
-function optionValue(flag, argv = process.argv) {
-  const index = argv.indexOf(flag);
-  if (index < 0) return '';
-  return argv[index + 1] || '';
-}
-
-function hasFlag(flag, argv = process.argv) {
-  return argv.includes(flag);
-}
-
 function hasOwn(object, key) {
   return Object.prototype.hasOwnProperty.call(object || {}, key);
 }
@@ -186,20 +181,6 @@ function redactedRequest(request = {}) {
 
 function isProhibitionText(value) {
   return PROHIBITION_CONTEXT_PATTERN.test(String(value || ''));
-}
-
-function readJson(path) {
-  return JSON.parse(readFileSync(path, 'utf8'));
-}
-
-function writeJsonArtifact(path, value) {
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
-}
-
-function writeTextArtifact(path, value) {
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, value.endsWith('\n') ? value : `${value}\n`);
 }
 
 export function buildLevel1ApprovalIntakeRequestTemplate({
@@ -571,17 +552,17 @@ function runCli() {
   const generatedAt = optionValue('--generated-at') || LEVEL1_APPROVAL_INTAKE_GATE_TIMESTAMP;
   const nowValue = optionValue('--now') || generatedAt;
   const now = new Date(nowValue);
-  const request = requestPath ? readJson(requestPath) : null;
+  const request = requestPath ? readJsonArtifact(requestPath) : null;
   const artifact = buildLevel1ApprovalIntakeGateArtifact({ generatedAt, request, now });
   const outputPath = optionValue('--output') || LEVEL1_APPROVAL_INTAKE_GATE_JSON_PATH;
   const templateOutputPath = optionValue('--template-output');
   const markdownOutputPath = optionValue('--markdown-output') || LEVEL1_APPROVAL_INTAKE_GATE_MD_PATH;
 
   if (hasFlag('--json') || hasFlag('--output')) {
-    writeJsonArtifact(outputPath, artifact);
+    writeRequiredJsonArtifact(outputPath, artifact);
   }
   if (templateOutputPath) {
-    writeJsonArtifact(templateOutputPath, artifact.template);
+    writeRequiredJsonArtifact(templateOutputPath, artifact.template);
   }
   if (hasFlag('--markdown') || hasFlag('--markdown-output') || !hasFlag('--json')) {
     writeTextArtifact(markdownOutputPath, renderLevel1ApprovalIntakeMarkdown(artifact));

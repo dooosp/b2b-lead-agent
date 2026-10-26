@@ -1,0 +1,116 @@
+{
+  "description": "Synthetic compatibility vector captured before the publication responsibility split. Fixed hashes bind rendering, field projection, history merge, manifest and path ordering.",
+  "input": {
+    "profile": {
+      "id": "fixture-profile",
+      "name": "Fixture [Corp] <safe>"
+    },
+    "now": "2026-07-10T12:00:00.000Z",
+    "runId": "golden-publication-v1",
+    "history": [
+      {
+        "id": "retained-lead",
+        "company": "Retained Fixture",
+        "score": 75,
+        "grade": "B",
+        "status": "CONTACTED",
+        "createdAt": "2026-07-01T00:00:00.000Z",
+        "updatedAt": "2026-07-02T00:00:00.000Z",
+        "privateNote": "Excluded retained text"
+      }
+    ],
+    "leads": [
+      {
+        "company": "Beta Fixture",
+        "summary": "Synthetic B signal",
+        "product": "Fixture B",
+        "score": 72,
+        "grade": "B",
+        "salesPitch": "Manual review first",
+        "generationMode": "heuristic",
+        "verificationStatus": "verified",
+        "confidence": "LOW",
+        "sources": [],
+        "id": "model-supplied-id",
+        "status": "WON"
+      },
+      {
+        "company": "Alpha Fixture",
+        "summary": "Synthetic [A] <signal>\nnext",
+        "product": "Fixture A",
+        "score": 91,
+        "grade": "A",
+        "salesPitch": "Review *quoted* evidence",
+        "globalContext": "Synthetic & local",
+        "generationMode": "llm",
+        "verificationStatus": "verified",
+        "confidence": "HIGH",
+        "sources": [
+          {
+            "sourceId": "A1",
+            "title": "Synthetic source",
+            "url": "https://example.test/source#fragment",
+            "publishedAt": "2026-07-09T12:00:00.000Z",
+            "resolution": "direct",
+            "contentAvailable": true
+          }
+        ],
+        "evidence": [
+          {
+            "field": "summary",
+            "quote": "Synthetic supporting quote",
+            "sourceUrl": "https://example.test/source"
+          }
+        ],
+        "manualReviewNotes": "Excluded private input"
+      }
+    ]
+  },
+  "expected": {
+    "hashes": {
+      "report": "162923ac5fdcbe96dc88efd9af24d26b9b826630feefd85e73a77d2a2cca23cb",
+      "latest": "f95e21f26fc170d8a7c4390c683731d9a09e27311af1e5c7f8d4b1ee9b502c20",
+      "history": "e97a2a7027d84dba47a9668af95cc5abd049e0ad777194ac615b37fbfdf65979",
+      "manifest": "6fff2a8e77c56643245d8760c72b04b0d88f5588ead297acd8cf42840720546e"
+    },
+    "publicationId": "pub-120ff02e9074f488692b45eae3617a01",
+    "inputDigest": "3f0b0de852b74e1eb1c6373b1771a2f0ae0000c1dcc3c6a4f829245659788378",
+    "artifactPaths": [
+      "reports/fixture-profile/publication-manifest.json",
+      "reports/fixture-profile/publications/pub-120ff02e9074f488692b45eae3617a01/publication-manifest.json",
+      "reports/fixture-profile/publications/pub-120ff02e9074f488692b45eae3617a01/lead-report-2026-07-10.md",
+      "reports/fixture-profile/publications/pub-120ff02e9074f488692b45eae3617a01/latest-leads.json",
+      "reports/fixture-profile/publications/pub-120ff02e9074f488692b45eae3617a01/lead-history.json",
+      "reports/fixture-profile/lead-report-2026-07-10.md",
+      "reports/fixture-profile/latest-leads.json",
+      "reports/fixture-profile/lead-history.json"
+    ],
+    "exportKeys": [
+      "ARTIFACT_NAMES",
+      "PUBLICATION_ENTRY_MAX_BYTES",
+      "PUBLICATION_HISTORY_MAX_RECORDS",
+      "PUBLICATION_JSON_MAX_BYTES",
+      "PUBLICATION_LATEST_MAX_RECORDS",
+      "PUBLICATION_RENDER_VERSION",
+      "PUBLICATION_SCHEMA_VERSION",
+      "assertPublicationManifest",
+      "commitLeadPublication",
+      "composeLeadReport",
+      "escapeMarkdownText",
+      "generateReport",
+      "mergeLeadHistory",
+      "mergePreparedLeadHistory",
+      "normalizePublicationSources",
+      "prepareLeadPublication",
+      "prepareLeadSnapshotRecords",
+      "prepareValidatedLeadRecords",
+      "publishLeadReport",
+      "readCommittedPublication",
+      "repairPublicationCompatibilityMirrors",
+      "saveLeadReport",
+      "saveLeadSnapshot",
+      "saveLeadsJson",
+      "saveReport"
+    ]
+  }
+}

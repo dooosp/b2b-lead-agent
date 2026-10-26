@@ -31,6 +31,10 @@ Key details:
 - `lead-report-publisher.js` writes immutable generations selected by
   `publication-manifest.json`, preserves the established fixed artifact names
   as compatibility paths, and refuses demo leads as published latest leads.
+- Schema readiness introspection uses one read-only VALUES table joined to
+  `pragma_table_info`, retaining explicit table/column order and the canonical
+  column-count-plus-one drift bound without exceeding workerd's compound
+  SELECT limit. This query change does not alter versioned migration payloads.
 - `.github/workflows/generate-report.yml` is the automated managed-run workflow.
   It receives `repository_dispatch`, runs the root CLI, commits the exact
   manifest-derived artifact set, verifies the remote commit, and only then
@@ -53,7 +57,13 @@ Key details:
   enforces the 90/500 kind-specific top-level count, and caps structure at
   100,000 JSON punctuation tokens and 32 nesting levels. The managed profile
   id must already be an exact, non-dot ASCII-safe report segment and is then
-  URL-encoded. Network,
+  URL-encoded. One 10-second deadline covers manifest headers/body plus the
+  selected or legacy artifact headers/body and checksum verification.
+  `PUBLISHED_ARTIFACT_TIMEOUT_MS` may shorten that budget to a positive integer
+  from 1 through 10000; invalid configuration fails closed. Expiry aborts the
+  fetch and cancels its stream without waiting for cancellation to settle.
+  Timeouts retain the existing bounded stale-snapshot eligibility; present
+  invalid manifests still cannot fall back to legacy fixed paths. Network,
   malformed-artifact, and upstream 5xx
   failures can fall back only to the same artifact kind's snapshot when it is
   no more than 24 hours old. A 404, a future timestamp, or an older snapshot
@@ -114,6 +124,8 @@ Key details:
 - Missing LLM keys produce an explicit unavailable response rather than silent fake leads.
 - Timeout or model failure can return heuristic leads, but the response and persisted rows remain `needs_review` with trust/data-gap metadata.
 - Self-service profile ids use `self-service:<company>`.
+- Article retrieval uses `worker/lib/lead-enrichment.js` directly, with the
+  same outbound HTTP boundary used by the enrichment API.
 
 ## Human Review And Lead Update Path
 
@@ -143,7 +155,7 @@ Patchable concepts:
 ```text
 POST /api/leads/:id/enrich or POST /api/leads/batch-enrich
   -> worker/api/enrichment.js
-  -> article body fetch and LLM enrichment
+  -> worker/lib/lead-enrichment.js (article body fetch and LLM enrichment)
   -> updateLeadEnrichment()
   -> leads enrichment fields
 ```

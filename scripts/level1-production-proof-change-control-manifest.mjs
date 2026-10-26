@@ -4,7 +4,10 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 import { redactLevel1EvidenceRecord } from '../worker/lib/level1-readiness-guards.js';
-import { writeJsonArtifactIfMateriallyChanged } from './lib/cli-utils.mjs';
+import {
+  optionValue,
+  writeJsonArtifactIfMateriallyChanged,
+} from './lib/cli-utils.mjs';
 
 export const LEVEL1_CHANGE_CONTROL_MANIFEST_PATH =
   'docs/roadmap/b2b-lead-agent-level-1-production-proof-change-control-manifest-non-production.json';
@@ -179,12 +182,6 @@ const BROAD_ENDPOINT_PATTERN = /^(?:\*|\/\*|\/|all|any|\/api\/\*)$/i;
 
 const DESTRUCTIVE_SQL_PATTERN =
   /\b(?:drop\s+table|drop\s+index|delete\s+from|truncate\s+table|update\s+[\w".]+\s+set|insert\s+into|replace\s+into|merge\s+into|alter\s+table|create\s+(?:table|index|trigger))\b/i;
-
-function optionValue(flag, argv = process.argv) {
-  const index = argv.indexOf(flag);
-  if (index < 0) return '';
-  return argv[index + 1] || '';
-}
 
 function hasOwn(object, key) {
   return Object.prototype.hasOwnProperty.call(object || {}, key);

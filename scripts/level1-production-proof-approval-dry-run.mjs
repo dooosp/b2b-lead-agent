@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import {
+  optionValue,
+  optionValues,
+  writeJsonArtifact,
+} from './lib/cli-utils.mjs';
+import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 import { findLevel1ProofPreflightBlockers } from './level1-proof-preflight.mjs';
@@ -69,20 +73,6 @@ const FORBIDDEN_PACKET_FIELD_PATTERNS = Object.freeze([
   ['rollbackExecutionApproved', /\brollbackExecutionApproved\s*:\s*true\b/i],
   ['destructiveSql', /\b(?:drop\s+table|delete\s+from|truncate\s+table|drop\s+index)\b/i],
 ]);
-
-function optionValue(flag, argv = process.argv) {
-  const index = argv.indexOf(flag);
-  if (index < 0) return '';
-  return argv[index + 1] || '';
-}
-
-function optionValues(flag, argv = process.argv) {
-  const values = [];
-  for (let index = 0; index < argv.length; index += 1) {
-    if (argv[index] === flag) values.push(argv[index + 1] || '');
-  }
-  return values.filter((value) => String(value).trim());
-}
 
 function statusFromOk(ok) {
   return ok ? 'PASS' : 'HOLD';
@@ -185,10 +175,7 @@ function runCli() {
       `refusals: ${result.blockers.length}`,
     ].join('\n');
   const outputPath = optionValue('--output');
-  if (outputPath) {
-    mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, `${JSON.stringify(result.evidence, null, 2)}\n`);
-  }
+  writeJsonArtifact(outputPath, result.evidence);
   console.log(output);
   if (!result.ok) process.exitCode = 1;
 }

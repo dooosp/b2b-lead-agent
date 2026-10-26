@@ -3,6 +3,11 @@ import {
   readBoundedPublishedArtifactJson,
   readBoundedResponseBytes,
 } from './published-artifact-json.js';
+import {
+  PUBLISHED_ARTIFACT_TIMEOUT_CODE,
+  cancelPublishedArtifactStream,
+  createPublishedArtifactDeadline,
+} from './published-artifact-deadline.js';
 
 const PUBLICATION_MANIFEST_MAX_BYTES = 64 * 1024;
 const PUBLICATION_DESCRIPTOR_MAX_BYTES = 20 * 1024 * 1024;
@@ -143,15 +148,36 @@ async function sha256Hex(bytes) {
     .join('');
 }
 
-async function readManifest(response, profileId) {
+async function readManifest(response, profileId, deadline) {
   let bytes;
   try {
-    bytes = await readBoundedResponseBytes(response, { maxBytes: PUBLICATION_MANIFEST_MAX_BYTES });
+    bytes = await readBoundedResponseBytes(response, { maxBytes: PUBLICATION_MANIFEST_MAX_BYTES, deadline });
     const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
     return assertPublishedManifest(JSON.parse(text), profileId);
   } catch (error) {
-    if (error?.code === 'ERR_PUBLISHED_MANIFEST_INVALID') throw error;
+    if (error?.code === 'ERR_PUBLISHED_MANIFEST_INVALID' || error?.code === PUBLISHED_ARTIFACT_TIMEOUT_CODE) throw error;
     throw manifestError('Published manifest body is invalid');
+  }
+}
+
+async function fetchWithinDeadline(url, deadline) {
+  let response;
+  let cancelled = false;
+  const cancel = () => {
+    if (!response || cancelled) return;
+    cancelled = true;
+    cancelPublishedArtifactStream(response.body, deadline.signal.reason);
+  };
+  try {
+    return await deadline.run(async () => {
+      response = await fetch(url, { ...FETCH_OPTIONS, signal: deadline.signal });
+      // Some injected transports may ignore AbortSignal and resolve after expiry.
+      if (deadline.signal.aborted) cancel();
+      return response;
+    });
+  } catch (error) {
+    cancel();
+    throw error;
   }
 }
 
@@ -160,56 +186,68 @@ export async function fetchManifestSelectedArtifactJson(
   profileId,
   artifactKind,
   canonicalFilename,
-  { maxTopLevelEntries } = {},
+  { maxTopLevelEntries, timeoutMs = env.PUBLISHED_ARTIFACT_TIMEOUT_MS } = {},
 ) {
-  const manifestResponse = await fetch(
-    publicationUrl(env, profileId, 'publication-manifest.json'),
-    FETCH_OPTIONS,
-  );
-  if (manifestResponse.status === 404) {
-    const legacyResponse = await fetch(
-      publicationUrl(env, profileId, canonicalFilename),
-      FETCH_OPTIONS,
+  const deadline = createPublishedArtifactDeadline(timeoutMs);
+  try {
+    const manifestResponse = await fetchWithinDeadline(
+      publicationUrl(env, profileId, 'publication-manifest.json'),
+      deadline,
     );
-    return {
-      response: legacyResponse,
-      payload: legacyResponse.ok
-        ? await readBoundedPublishedArtifactJson(legacyResponse, { maxTopLevelEntries })
-        : null,
-      manifest: null,
-    };
-  }
-  if (!manifestResponse.ok) {
-    throw upstreamStatusError(
-      `Published manifest fetch failed with status ${manifestResponse.status}`,
-      manifestResponse.status,
-    );
-  }
+    if (manifestResponse.status === 404) {
+      cancelPublishedArtifactStream(manifestResponse.body);
+      const legacyResponse = await fetchWithinDeadline(
+        publicationUrl(env, profileId, canonicalFilename),
+        deadline,
+      );
+      if (!legacyResponse.ok) cancelPublishedArtifactStream(legacyResponse.body);
+      const payload = legacyResponse.ok
+        ? await readBoundedPublishedArtifactJson(legacyResponse, { maxTopLevelEntries, deadline })
+        : null;
+      deadline.assertActive();
+      return {
+        response: legacyResponse,
+        payload,
+        manifest: null,
+      };
+    }
+    if (!manifestResponse.ok) {
+      cancelPublishedArtifactStream(manifestResponse.body);
+      throw upstreamStatusError(
+        `Published manifest fetch failed with status ${manifestResponse.status}`,
+        manifestResponse.status,
+      );
+    }
 
-  const manifest = await readManifest(manifestResponse, profileId);
-  const descriptor = manifest.artifacts[artifactKind];
-  if (!descriptor || descriptor.canonicalPath !== canonicalFilename) {
-    throw manifestError('Published manifest does not select the requested artifact');
-  }
-  const artifactResponse = await fetch(
-    publicationUrl(env, profileId, descriptor.path),
-    FETCH_OPTIONS,
-  );
-  if (!artifactResponse.ok) {
-    throw upstreamStatusError(
-      `Published manifest-selected artifact fetch failed with status ${artifactResponse.status}`,
-      artifactResponse.status,
+    const manifest = await readManifest(manifestResponse, profileId, deadline);
+    const descriptor = manifest.artifacts[artifactKind];
+    if (!descriptor || descriptor.canonicalPath !== canonicalFilename) {
+      throw manifestError('Published manifest does not select the requested artifact');
+    }
+    const artifactResponse = await fetchWithinDeadline(
+      publicationUrl(env, profileId, descriptor.path),
+      deadline,
     );
+    if (!artifactResponse.ok) {
+      cancelPublishedArtifactStream(artifactResponse.body);
+      throw upstreamStatusError(
+        `Published manifest-selected artifact fetch failed with status ${artifactResponse.status}`,
+        artifactResponse.status,
+      );
+    }
+    const bytes = await readBoundedResponseBytes(artifactResponse, { deadline });
+    if (bytes.byteLength !== descriptor.bytes || await deadline.run(() => sha256Hex(bytes)) !== descriptor.sha256) {
+      throw manifestError('Published manifest-selected artifact checksum failed');
+    }
+    const payload = parseBoundedPublishedArtifactJson(bytes, { maxTopLevelEntries });
+    if (artifactKind !== 'report' && payload.length !== descriptor.records) {
+      throw manifestError('Published manifest-selected artifact cardinality failed');
+    }
+    deadline.assertActive();
+    return { response: artifactResponse, payload, manifest };
+  } finally {
+    deadline.dispose();
   }
-  const bytes = await readBoundedResponseBytes(artifactResponse);
-  if (bytes.byteLength !== descriptor.bytes || await sha256Hex(bytes) !== descriptor.sha256) {
-    throw manifestError('Published manifest-selected artifact checksum failed');
-  }
-  const payload = parseBoundedPublishedArtifactJson(bytes, { maxTopLevelEntries });
-  if (artifactKind !== 'report' && payload.length !== descriptor.records) {
-    throw manifestError('Published manifest-selected artifact cardinality failed');
-  }
-  return { response: artifactResponse, payload, manifest };
 }
 
 export { assertPublishedManifest };

@@ -652,14 +652,19 @@ export function buildD1SchemaIntrospectionQuery(tableNames = Object.keys(CANONIC
     (total, tableName) => total + (CANONICAL_D1_TABLE_COLUMN_NAMES[tableName]?.length || 0),
     0
   ) + 1;
-  const query = tableNames.map((tableName) => {
+  const requestedTables = tableNames.map((tableName, tableOrder) => {
     if (!Object.hasOwn(CANONICAL_D1_TABLE_COLUMN_NAMES, tableName)) {
       throw new Error(`Unknown canonical D1 table: ${tableName}`);
     }
-    return `SELECT '${tableName}' AS table_name, cid, name, type, "notnull" AS not_null, `
-      + `dflt_value, pk FROM pragma_table_info('${tableName}')`;
-  }).join(' UNION ALL ');
-  return `${query} LIMIT ${rowLimit}`;
+    return `('${tableName.replaceAll("'", "''")}', ${tableOrder})`;
+  }).join(', ');
+  // VALUES avoids workerd's compound-SELECT limit while keeping one global
+  // drift-detection bound and the caller's table order before column ordinals.
+  return `WITH requested_tables (table_name, table_order) AS (VALUES ${requestedTables}) `
+    + 'SELECT requested_tables.table_name, table_columns.cid, table_columns.name, table_columns.type, '
+    + 'table_columns."notnull" AS not_null, table_columns.dflt_value, table_columns.pk '
+    + 'FROM requested_tables CROSS JOIN pragma_table_info(requested_tables.table_name) AS table_columns '
+    + `ORDER BY requested_tables.table_order, table_columns.cid LIMIT ${rowLimit}`;
 }
 
 function normalizedDefault(value) {

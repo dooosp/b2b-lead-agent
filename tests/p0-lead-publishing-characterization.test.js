@@ -223,8 +223,14 @@ function loadIsolatedPublisher(t) {
   const isolatedRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'b2b-lead-publisher-contract-'));
   t.after(() => fs.rmSync(isolatedRoot, { recursive: true, force: true }));
 
-  for (const filename of ['lead-report-publisher.js', 'lead-identity.js']) {
-    fs.copyFileSync(path.join(repoRoot, filename), path.join(isolatedRoot, filename));
+  for (const filename of [
+    'lead-report-publisher.js', 'lead-identity.js', 'lib/owned-directory-lock.js',
+    'lib/publication/contract.js', 'lib/publication/lead-records.js', 'lib/publication/report.js',
+    'lib/publication/manifest.js', 'lib/publication/artifacts.js', 'lib/publication/store.js',
+  ]) {
+    const destination = path.join(isolatedRoot, filename);
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+    fs.copyFileSync(path.join(repoRoot, filename), destination);
   }
 
   return {
@@ -368,4 +374,42 @@ test('desired contract: missing history remains a valid first-publication bootst
   assert.ok(fs.existsSync(path.join(reportsDir, publisher.ARTIFACT_NAMES.latestCanonical)));
   const history = JSON.parse(fs.readFileSync(path.join(reportsDir, publisher.ARTIFACT_NAMES.historyCanonical), 'utf8'));
   assert.equal(history.length, 1);
+});
+
+
+test('publisher extraction preserves public API, default paths and baseline artifact bytes', (t) => {
+  const { createHash } = require('node:crypto');
+  const { input, expected } = require('./fixtures/publication-compatibility.json');
+  const { isolatedRoot, publisher } = loadIsolatedPublisher(t);
+  assert.deepEqual(Object.keys(publisher).sort(), expected.exportKeys);
+  assert.equal(publisher.generateReport, publisher.composeLeadReport);
+  assert.equal(publisher.saveReport, publisher.saveLeadReport);
+  assert.equal(publisher.saveLeadsJson, publisher.saveLeadSnapshot);
+
+  const reportsDir = path.join(isolatedRoot, 'reports', input.profile.id);
+  fs.mkdirSync(reportsDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(reportsDir, publisher.ARTIFACT_NAMES.historyCanonical),
+    JSON.stringify(input.history),
+  );
+  const options = { now: input.now, runId: input.runId };
+  const prepared = publisher.prepareLeadPublication(input.leads, input.profile, options);
+  const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+  assert.equal(fs.realpathSync(prepared.reportsDir), fs.realpathSync(reportsDir));
+  assert.equal(prepared.publicationId, expected.publicationId);
+  assert.equal(prepared.inputDigest, expected.inputDigest);
+  assert.deepEqual(prepared.artifactPaths, expected.artifactPaths);
+  assert.deepEqual({
+    report: sha256(prepared.payloads.report),
+    latest: sha256(prepared.payloads.latest),
+    history: sha256(prepared.payloads.history),
+    manifest: sha256(prepared.manifestPayload),
+  }, expected.hashes);
+
+  publisher.commitLeadPublication(prepared, input.profile);
+  const committed = publisher.readCommittedPublication(input.profile);
+  assert.equal(committed.compatibilityIntact, true);
+  assert.deepEqual(committed.buffers, prepared.payloads);
+  assert.deepEqual(fs.readFileSync(committed.manifestPath), prepared.manifestPayload);
+  assert.equal(publisher.prepareLeadPublication(input.leads, input.profile, options).noChange, true);
 });

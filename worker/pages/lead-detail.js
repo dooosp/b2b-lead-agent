@@ -1,3 +1,4 @@
+import { getReviewerFeedbackControllerScript } from './reviewer-feedback-controller.js';
 import { getCommonStyles } from './common-styles.js';
 import { buildOpportunityWorkbenchModel, getOpportunityWorkbenchStyles, renderOpportunityWorkbench } from './opportunity-workbench.js';
 import { getEscScript, getLeadListReturnScript, getSafeUrlScript, getStoredTokenScript } from './script-snippets.js';
@@ -164,6 +165,11 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
       evidenceConfidenceAdjustment: { increase: '상향', decrease: '하향', unchanged: '유지', unknown: '알 수 없음' }
     };
 
+    ${getReviewerFeedbackControllerScript({
+      findLead: '() => lead',
+      onSaved: '() => { showSaved(); renderDetail(); }',
+      onConflict: 'refreshDetailPage'
+    })}
     ${getEscScript()}
     ${getSafeUrlScript()}
     ${getStoredTokenScript()}
@@ -360,9 +366,11 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     }
 
     function renderReviewerFeedbackForm() {
-      const feedback = normalizeReviewerFeedback(lead);
-      return '<div class="detail-section">' +
+      const draft = reviewerFeedbackDrafts.get(lead.id);
+      const feedback = { ...normalizeReviewerFeedback(lead), ...(draft ? draft.payload : {}) };
+      return '<div class="detail-section reviewer-feedback-section" data-feedback-lead-id="' + esc(lead.id) + '" oninput="rememberReviewerFeedbackDraft(this)">' +
         '<h3>리뷰어 피드백</h3>' +
+        '<p data-feedback-draft-state role="status">' + (draft ? '저장 전 · 초안은 이 페이지에서만 보관됩니다.' : '') + '</p>' +
         renderReviewerFeedbackState(lead) +
         '<p class="notes-privacy-warning" role="note"><strong>로컬/테스트 사람 판단:</strong> ' + esc(reviewerFeedbackBoundaryText) + '</p>' +
         '<div class="reviewer-feedback-grid" data-reviewer-feedback-form>' +
@@ -374,8 +382,8 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
         '<label class="reviewer-feedback-full">피드백<textarea class="reviewer-feedback-textarea" data-feedback-field="feedbackText" maxlength="2000">' + esc(feedback.feedbackText) + '</textarea></label>' +
         '</div>' +
         '<div class="reviewer-feedback-actions">' +
-        '<button type="button" class="btn btn-secondary" onclick="saveReviewerFeedback()">피드백 저장</button>' +
-        '<button type="button" class="notes-clear-btn" onclick="clearReviewerFeedback()" ' + (feedback.hasFeedback ? '' : 'disabled') + '>피드백 지우기</button>' +
+        '<button type="button" class="btn btn-secondary" onclick="saveReviewerFeedback(this)">피드백 저장</button>' +
+        '<button type="button" class="notes-clear-btn" onclick="clearReviewerFeedback(this)" ' + (feedback.hasFeedback ? '' : 'disabled') + '>피드백 지우기</button>' +
         '</div>' +
         '</div>';
     }
@@ -1000,62 +1008,12 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
       }
     }
 
-    function collectReviewerFeedbackPayload() {
-      const payload = {};
-      document.querySelectorAll('[data-reviewer-feedback-form] [data-feedback-field]').forEach((field) => {
-        payload[field.dataset.feedbackField] = field.value || '';
-      });
-      return payload;
+    function saveReviewerFeedback(button) {
+      return reviewerFeedbackController.save(lead.id, button && button.closest('.reviewer-feedback-section'), button);
     }
 
-    async function saveReviewerFeedback() {
-      try {
-        const res = await fetch('/api/leads/' + encodeURIComponent(lead.id), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ reviewerFeedback: collectReviewerFeedbackPayload(), expectedVersion: lead.version })
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.success) {
-          if (data.code === 'LEAD_VERSION_CONFLICT') {
-            await refreshDetailPage();
-            return;
-          }
-          alert(data.message || '리뷰어 피드백 저장 실패');
-          return;
-        }
-        if (data.lead) Object.assign(lead, data.lead);
-        showSaved();
-        renderDetail();
-      } catch(e) {
-        alert('리뷰어 피드백 저장 실패: ' + e.message);
-      }
-    }
-
-    async function clearReviewerFeedback() {
-      const confirmed = window.confirm('저장된 리뷰어 피드백을 지울까요? 메타데이터 이력은 본문 없이 남습니다.');
-      if (!confirmed) return;
-      try {
-        const res = await fetch('/api/leads/' + encodeURIComponent(lead.id), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ reviewerFeedback: { clear: true }, expectedVersion: lead.version })
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.success) {
-          if (data.code === 'LEAD_VERSION_CONFLICT') {
-            await refreshDetailPage();
-            return;
-          }
-          alert(data.message || '리뷰어 피드백 지우기 실패');
-          return;
-        }
-        if (data.lead) Object.assign(lead, data.lead);
-        showSaved();
-        renderDetail();
-      } catch(e) {
-        alert('리뷰어 피드백 지우기 실패: ' + e.message);
-      }
+    function clearReviewerFeedback(button) {
+      return reviewerFeedbackController.clear(lead.id, button);
     }
 
     function showSaved() {
@@ -1065,6 +1023,9 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
       });
     }
 
+    window.rememberReviewerFeedbackDraft = rememberReviewerFeedbackDraft;
+    window.saveReviewerFeedback = saveReviewerFeedback;
+    window.clearReviewerFeedback = clearReviewerFeedback;
     window.updateField = updateField;
     window.scheduleNoteSave = scheduleNoteSave;
     window.clearManualReviewNotes = clearManualReviewNotes;

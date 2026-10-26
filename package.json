@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "B2B 리드 발굴 에이전트 - 프로필 기반 멀티 고객사",
   "main": "main.js",
+  "engines": {
+    "node": "24.22.1"
+  },
   "scripts": {
     "start": "node main.js --profile danfoss",
     "email": "node scripts/notify-lead-publication.mjs",
@@ -36,6 +39,7 @@
     "test:unit": "find worker/tests -maxdepth 1 -name '*.test.mjs' ! -name 'job-trigger.test.mjs' ! -name 'trigger-handler.test.mjs' ! -name 'workflow-contract.test.mjs' -print0 | xargs -0 node --test",
     "test:contract": "node --test worker/tests/job-trigger.test.mjs worker/tests/trigger-handler.test.mjs worker/tests/workflow-contract.test.mjs",
     "test:worker": "npm run test:unit && npm run test:contract",
+    "test:worker:runtime": "node --test worker/runtime/*.test.mjs",
     "test": "npm run test:root && npm run test:worker",
     "demo:portfolio": "node scripts/portfolio-v1.mjs",
     "demo:portfolio:serve": "node scripts/portfolio-v1.mjs --serve",
@@ -50,6 +54,8 @@
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
+    "esbuild": "0.27.3",
+    "miniflare": "4.20260730.0",
     "playwright": "^1.58.2"
   }
 }

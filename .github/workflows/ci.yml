@@ -9,14 +9,15 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Keep the browser host compatible with the lockfile's Playwright release.
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
@@ -54,6 +55,9 @@ jobs:
 
       - name: Run unit and contract tests
         run: npm test
+
+      - name: Run offline Worker runtime smoke
+        run: npm run test:worker:runtime
 
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium

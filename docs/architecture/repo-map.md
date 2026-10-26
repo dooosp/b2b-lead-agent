@@ -1,6 +1,6 @@
 # Repository Architecture Map
 
-This map describes the source tree on `master` as inspected for the architecture docs refresh. It is documentation only: it does not prove production deployment, D1 migration, endpoint behavior, or release readiness by itself.
+This map describes the current source tree. It is documentation only: it does not prove production deployment, D1 migration, endpoint behavior, or release readiness by itself.
 
 ## Source Of Truth
 
@@ -51,7 +51,7 @@ When runtime behavior changes, update this map from source files, tests, and wor
 
 1. `main.js` parses `--profile <profileId>`, optional stable `--run-id`, typed-result, and notification-intent flags, loads a managed profile from `profile-registry.js`, and creates an observation run with `lib/obs.js`. Legacy `--email` is rejected.
 2. `orchestrator/news-orchestrator.js` fetches Google News plus Korean RSS sources, deduplicates articles, and enriches article bodies.
-3. `lead-qualifier.js` builds traceable source evidence, calls the LLM qualification path, normalizes lead trust metadata, and fails closed when configured LLM execution is unavailable unless explicit demo mode is enabled.
+3. `lead-qualifier.js` builds traceable source evidence, calls the LLM qualification path, normalizes lead trust metadata, and fails closed when configured LLM execution is unavailable unless explicit demo mode is enabled. Company-name extraction, rejection, and correction rules live in `normalizer/lead-company-normalizer.js`; the qualifier preserves its existing helper exports.
 4. `lead-report-publisher.js` validates public fields before rendering, writes an immutable generation, and atomically selects it with `publication-manifest.json`; established fixed names remain Git compatibility artifacts.
 5. `git-publication.js` stages the exact manifest-derived path set, normally pushes without force, and verifies the publication commit at the selected remote ref.
 6. `notification-runner.js` loads checksum-verified public artifacts directly
@@ -60,9 +60,45 @@ When runtime behavior changes, update this map from source files, tests, and wor
    recipient-set drift is refused, and provider acceptance is not delivery or
    exactly-once proof.
 
+Publication and notification share the owned-directory lock mechanics in
+`lib/owned-directory-lock.js`. Each caller still owns its lock location, error
+contract, and surrounding transaction; the helper handles ownership, stale-lock
+recovery, and release.
+
+`lead-report-publisher.js` coordinates preparation and publication while
+`lib/publication/` owns the separated contracts: `lead-records.js` for pure
+projection/trust/history, `report.js` for Markdown, `manifest.js` for manifest
+validation, `artifacts.js` for immutable payload assembly, and `store.js` for
+filesystem reads, atomic writes and recovery. `contract.js` holds shared limits
+and errors. The canonical entrypoint preserves its public exports.
+
+Level 1 command-line scripts share argument parsing and optional artifact I/O
+through `scripts/lib/cli-utils.mjs`. Approval decisions, input redaction,
+required-output validation, and artifact schemas remain in their owning scripts.
+
 ## Worker Shape
 
 `worker/index.js` is a small fetch delegate. Route matching and boundary behavior live in `worker/routes/dispatcher.js`, `worker/routes/api.js`, `worker/routes/static.js`, `worker/routes/pages.js`, `worker/routes/responses.js`, and `worker/routes/metadata.js`. Those route modules import handlers from `worker/api/*`, D1 helpers from `worker/db/*`, self-service orchestration from `worker/self-service/*`, and HTML page renderers from `worker/pages/*`. Shared managed/internal GitHub artifact stream, UTF-8, cardinality, and pre-parse complexity bounds live in `worker/lib/published-artifact-json.js`; pointer selection and checksum enforcement live in `worker/lib/manifest-published-artifact.js`.
+
+Article retrieval, enrichment prompts, model calls, and result normalization
+live in `worker/lib/lead-enrichment.js`. Both `worker/api/enrichment.js` and
+`worker/self-service/orchestrator.js` depend on that service. API handlers keep
+access checks, D1 operations, and HTTP responses; the API module retains its
+existing helper exports for compatibility.
+
+`worker/pages/leads.js` composes styles, view markup and browser fragments.
+The `leads-*` modules separate guidance, review models/panels, rendering,
+navigation and mutations. Guidance is selected before serialization, without
+post-render JavaScript removal. List and detail pages share
+`reviewer-feedback-controller.js` to keep in-flight writes separate from newer
+drafts; saves and clears remain explicit human actions.
+
+Local Node and all CI workflows use the exact `.nvmrc` version. The
+`test:worker:runtime` gate bundles the actual Worker entrypoint with retained
+function names and loads it in Miniflare's local workerd with ephemeral D1/KV.
+Browser regressions also execute emitted pages from that bundle. Its explicit synthetic bindings, disabled
+Cloudflare metadata fetch, and rejecting outbound service keep it offline.
+This complements the Node/fake-D1 browser harness; it is not deployment proof.
 
 Key bindings in `worker/wrangler.toml`:
 
