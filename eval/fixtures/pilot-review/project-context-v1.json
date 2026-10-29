@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "synthetic-pilot-project-context-v1",
+  "evidenceBoundary": "NOT_PRODUCTION_EVIDENCE",
+  "synthetic": true,
+  "productionReady": false,
+  "description": "Seven independent synthetic alternatives for Alpha, not source revisions or real project observations. This fixture binds the existing evaluator opportunities to Alpha and replaces only the broad evaluator's other-project 33 kV and AWARD claims. Technical values, applicability, dates, review state and fit rules are unchanged. No real evidence is relabeled.",
+  "opportunityId": "synthetic_dc_alpha",
+  "identity": {
+    "accountDisplayName": "Synthetic Metro Compute",
+    "projectDisplayName": "Synthetic DC Alpha",
+    "facilityDisplayName": "Alpha DC"
+  },
+  "claimReplacements": [
+    {
+      "schemaVersion": "evidence-claim-v1",
+      "claimKey": "req_voltage_33kv",
+      "claimType": "TECHNICAL_REQUIREMENT",
+      "synthetic": true,
+      "subject": { "type": "PROJECT", "id": "synthetic_dc_alpha", "displayName": "Synthetic DC Alpha" },
+      "statement": "Synthetic DC Alpha requires 33 kV in this independent synthetic mismatch scenario.",
+      "value": { "type": "QUANTITY", "key": "incoming_voltage", "value": 33, "unit": "kV", "quantityKind": "voltage" },
+      "applicability": { "verticalId": "datacenter_infrastructure", "productFamilyIds": ["medium_voltage_switchgear"], "projectStages": ["BASIC_DESIGN"], "jurisdictions": ["KR"], "conditions": [] },
+      "evidence": [{ "sourceTitle": "Synthetic Alpha 33 kV Single-line", "sourceUrl": "https://synthetic.example/projects/alpha-single-line-33kv", "directQuote": "In this synthetic Alpha scenario, incoming service voltage is 33 kV.", "publishedAt": "2026-01-03T00:00:00.000Z", "retrievedAt": "2026-02-01T00:00:00.000Z" }],
+      "verification": { "reviewed": true, "verifiedAt": "2026-03-01T00:00:00.000Z", "validUntil": "2027-01-01T00:00:00.000Z", "conflictClaimKeys": [], "retracted": false },
+      "provenance": { "origin": "REPOSITORY_REVIEWED_SYNTHETIC", "profileId": "", "sourcePath": "eval/fixtures/pilot-review/project-context-v1.json", "sourceField": "claimReplacements.req_voltage_33kv" }
+    },
+    {
+      "schemaVersion": "evidence-claim-v1",
+      "claimKey": "stage_award",
+      "claimType": "PROJECT_STAGE",
+      "synthetic": true,
+      "subject": { "type": "PROJECT", "id": "synthetic_dc_alpha", "displayName": "Synthetic DC Alpha" },
+      "statement": "Synthetic DC Alpha has reached award in this independent synthetic closed-window scenario.",
+      "value": { "type": "ENUM", "key": "project_stage", "value": "AWARD" },
+      "applicability": { "verticalId": "datacenter_infrastructure", "productFamilyIds": [], "projectStages": ["AWARD"], "jurisdictions": ["KR"], "conditions": [] },
+      "evidence": [{ "sourceTitle": "Synthetic Alpha Award Record", "sourceUrl": "https://synthetic.example/projects/alpha-award-stage", "directQuote": "In this synthetic Alpha scenario, the package award is complete.", "publishedAt": "2026-01-02T00:00:00.000Z", "retrievedAt": "2026-02-01T00:00:00.000Z" }],
+      "verification": { "reviewed": true, "verifiedAt": "2026-03-01T00:00:00.000Z", "validUntil": "2027-01-01T00:00:00.000Z", "conflictClaimKeys": [], "retracted": false },
+      "provenance": { "origin": "REPOSITORY_REVIEWED_SYNTHETIC", "profileId": "", "sourcePath": "eval/fixtures/pilot-review/project-context-v1.json", "sourceField": "claimReplacements.stage_award" }
+    }
+  ]
+}

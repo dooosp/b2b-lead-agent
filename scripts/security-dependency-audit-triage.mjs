@@ -8,7 +8,7 @@ import { writeJsonArtifactIfMateriallyChanged } from './lib/cli-utils.mjs';
 export const SECURITY_DEPENDENCY_AUDIT_TRIAGE_OUTPUT_PATH =
   'tmp/codex/security-dependency-audit-triage-non-production.json';
 
-export const AXIOS_PATCHED_MINIMUM_VERSION = '1.18.0';
+export const AXIOS_PATCHED_MINIMUM_VERSION = '1.20.0';
 
 const AXIOS_ADVISORIES = Object.freeze([
   {
@@ -80,6 +80,91 @@ const AXIOS_ADVISORIES = Object.freeze([
     severity: 'moderate',
     range: '>=1.13.0 <1.18.0',
     title: 'Axios: HTTP/2 streamed uploads bypass maxBodyLength',
+  },
+  // Registry audit snapshot: 2026-10-29. Offline CI does not fetch advisories.
+  {
+    "source": 1240600,
+    "url": "https://github.com/advisories/GHSA-vh66-26gq-q6x8",
+    "severity": "moderate",
+    "range": ">=1.7.0 <1.20.0",
+    "title": "Axios: Prototype pollution gadget in fetch adapter can alter outbound requests"
+  },
+  {
+    "source": 1240601,
+    "url": "https://github.com/advisories/GHSA-9fr6-4gfg-395g",
+    "severity": "moderate",
+    "range": ">=1.0.0 <1.20.0",
+    "title": "Axios: Prototype-Pollution Gadget in the Default Instance Allows Inherited Object.prototype.method to Override HTTP Method"
+  },
+  {
+    "source": 1240603,
+    "url": "https://github.com/advisories/GHSA-c29m-xwm3-cm6r",
+    "severity": "high",
+    "range": ">=1.16.1 <1.20.0",
+    "title": "Axios: ReDoS in fromDataURI data: URL parser freezes the Node event loop (DoS)"
+  },
+  {
+    "source": 1240604,
+    "url": "https://github.com/advisories/GHSA-mghh-pgcx-3jjj",
+    "severity": "high",
+    "range": ">=1.15.0 <1.20.0",
+    "title": "Axios: ReDoS (O(N²)) in shouldBypassProxy host normalization, reachable via untrusted redirect Location"
+  },
+  {
+    "source": 1240605,
+    "url": "https://github.com/advisories/GHSA-x97p-jq2g-jp4f",
+    "severity": "high",
+    "range": ">=1.15.1 <1.20.0",
+    "title": "Axios: Prototype Pollution Gadget in axios toFormData Options"
+  },
+  {
+    "source": 1240607,
+    "url": "https://github.com/advisories/GHSA-3pq3-5fj3-cg6v",
+    "severity": "high",
+    "range": ">=1.13.0 <1.20.0",
+    "title": "Axios: HTTP/2 adapter bypasses configured DNS lookup and proxy controls"
+  },
+  {
+    "source": 1240608,
+    "url": "https://github.com/advisories/GHSA-542g-h47m-68v8",
+    "severity": "high",
+    "range": ">=1.13.0 <1.20.0",
+    "title": "Axios: Denial of Service via Unhandled 'error' Event in HTTP/2 ClientHttp2Session Initialization"
+  },
+  {
+    "source": 1240626,
+    "url": "https://github.com/advisories/GHSA-j8rh-479h-cp32",
+    "severity": "moderate",
+    "range": ">=1.0.0 <1.20.0",
+    "title": "Axios: Header Injection via Inherited headers After Minimal Interceptor"
+  },
+  {
+    "source": 1240627,
+    "url": "https://github.com/advisories/GHSA-4hqw-qxg8-jxx2",
+    "severity": "moderate",
+    "range": ">=1.12.0 <1.20.0",
+    "title": "Axios: Fetch Adapter Header Injection via Inherited FormData getHeaders"
+  },
+  {
+    "source": 1240628,
+    "url": "https://github.com/advisories/GHSA-m8m8-qj5v-23w3",
+    "severity": "high",
+    "range": ">=1.15.2 <1.20.0",
+    "title": "Axios: Node HTTP adapter prototype-pollution gadget allows request socket hijack via inherited createConnection"
+  },
+  {
+    "source": 1240629,
+    "url": "https://github.com/advisories/GHSA-44g4-m2mj-wpvx",
+    "severity": "moderate",
+    "range": ">=1.15.0 <1.20.0",
+    "title": "Axios: CIDR-form NO_PROXY entries are ignored, causing proxy exclusion bypass for internal IP ranges"
+  },
+  {
+    "source": 1240634,
+    "url": "https://github.com/advisories/GHSA-r4gj-5m52-g5wh",
+    "severity": "high",
+    "range": ">=1.17.0 <1.20.0",
+    "title": "Axios: maxRedirects: 0 is not enforced by the fetch adapter, allowing redirect-based SSRF"
   },
 ]);
 
@@ -218,7 +303,7 @@ export function evaluateSecurityDependencyAuditTriage(input = {}) {
     decision: {
       status,
       action: status === 'PASS_LOCAL_PATCHED'
-        ? 'PATCHED_WITH_SCOPED_AXIOS_1_18_0_UPDATE'
+        ? 'PATCHED_WITH_SCOPED_AXIOS_1_20_0_UPDATE'
         : 'HOLD_UNTIL_AXIOS_PATCHED_MINIMUM_RESTORED',
       riskOwner: '@dooosp / Taeho Jang',
       followUp:

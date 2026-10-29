@@ -10,6 +10,9 @@
 - [3분 시연 대본과 실행 안내](docs/portfolio/b2b-portfolio-v1.md)
 - [실제 화면 조작과 에이전트 판단 기록](docs/portfolio/b2b-portfolio-v1-agent-simulation.md)
 - [검증 결과와 근거](docs/portfolio/b2b-portfolio-v1-reproduction.md) · [기계 검증 요약](docs/portfolio/b2b-portfolio-v1-verification.json)
+- [2026-10-29 화면·초안 보존 개선과 검증](docs/portfolio/review-experience-2026-10-29.md)
+- [7개 사례를 직접 검토하는 파일럿 작업 공간](docs/portfolio/pilot-review-workspace.md)
+- [경쟁 가격 비교와 유료 파일럿 제안](docs/portfolio/commercial-pricing-and-pilot.md)
 
 ## 직접 실행
 
@@ -27,6 +30,10 @@ npm run demo:portfolio:serve
 로그인·API 키·외부 서비스 설정 없이 합성 사례를 실행합니다.
 
 서버 없이 사용할 파일만 만들려면 `npm run demo:portfolio`를 실행하고 `tmp/codex/portfolio-v1/index.html`을 브라우저로 엽니다. 이 HTML은 단독으로 복사해서 인터넷 연결 없이도 사용할 수 있습니다.
+
+7개 합성 사례를 직접 검토하고 판단·다음 과제·선택적 시간을 기록하려면
+`npm run demo:pilot:serve`를 실행합니다. JSON으로 초안을 다시 열거나 Markdown 검토 패킷을
+내보낼 수 있습니다. 이 작업 공간도 실제 고객자료나 운영 서비스를 사용하지 않습니다.
 
 ## 대표 사용 흐름
 
@@ -71,6 +78,10 @@ npm run test:e2e:local
 ```
 
 `test:worker:runtime`은 실제 Worker 진입점을 로컬 workerd와 임시 D1/KV에서 실행합니다. 외부 요청을 차단하며 계정·API 키·원격 DB를 사용하지 않습니다. 최근 리팩터링 검증은 [추가 개선 기록](docs/exec-plans/2026-10-26-project-refactor-followups.md)에서 확인할 수 있습니다.
+
+2026-10-29 로컬 파일럿 작업 공간 추가 후에는 전체 **809개 테스트**를 통과했습니다.
+[파일럿 검증 기록](docs/portfolio/pilot-review-workspace.md#2026-10-29-구현-검증)은 당시 로컬 구현 검증의 근거이며,
+실제 고객 효과나 운영 준비도를 입증하는 수치는 아닙니다.
 
 브라우저 테스트는 합성 데이터·fake D1·루프백 및 오프라인 파일을 사용합니다. 실제 UI에서 작성한 [에이전트 시뮬레이션 JSON](docs/portfolio/b2b-portfolio-v1-agent-simulation.json)은 `AI_AGENT_SIMULATION`, `humanParticipant:false`로 구분합니다.
 

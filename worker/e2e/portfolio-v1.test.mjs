@@ -140,3 +140,67 @@ test('agent walkthrough records cannot be mistaken for a human participant', asy
   assert.equal(record.productionReady, false);
   assert.equal(record.judgmentAndReason, 'R1 전압 조건 충족, R2 확인 보류, R3 현재 후보 제외');
 });
+
+test('record completion names missing fields and treats whitespace as incomplete', async t => {
+  const browser = await chromium.launch({ headless: true });
+  t.after(() => browser.close());
+  const page = await browser.newPage();
+  await page.setContent(renderPortfolioPage(buildPortfolioDemo()));
+  assert.equal(await page.locator('[required]').count(), 4);
+  assert.match(await page.locator('#record-progress').innerText(), /0\/4/);
+  assert.match(await page.locator('#record-missing').innerText(), /기록 구분.*확인한 근거와 적용 조건.*내 판단과 이유.*아직 확인할 것/);
+  await page.getByLabel('기록 구분').selectOption('OWNER_REPRODUCTION');
+  await page.getByLabel('확인한 근거와 적용 조건').fill('  \n ');
+  await page.getByLabel('내 판단과 이유').fill('SYNTHETIC_BROWSER_TEST: entered judgment');
+  await page.getByLabel('아직 확인할 것 · 사용 중 막힌 점').fill('SYNTHETIC_BROWSER_TEST: remaining');
+  assert.match(await page.locator('#record-progress').innerText(), /3\/4/);
+  assert.match(await page.locator('#record-missing').innerText(), /확인한 근거와 적용 조건/);
+  assert.doesNotMatch(await page.locator('#record-missing').innerText(), /기록 구분|내 판단과 이유|아직 확인할 것/);
+  assert.equal(await page.locator('#download-record').isDisabled(), true);
+  await page.getByLabel('확인한 근거와 적용 조건').fill('SYNTHETIC_BROWSER_TEST: checked scope');
+  assert.match(await page.locator('#record-progress').innerText(), /4\/4/);
+  assert.match(await page.locator('#record-missing').innerText(), /모든 필수 항목/);
+  assert.equal(await page.locator('#download-record').isEnabled(), true);
+  await page.getByLabel('기록 구분').selectOption('');
+  assert.match(await page.locator('#record-progress').innerText(), /3\/4/);
+  assert.match(await page.locator('#record-missing').innerText(), /기록 구분/);
+  assert.equal(await page.locator('#download-record').isDisabled(), true);
+});
+
+test('menu and button printing expand every disclosure then restore exact draft and view state', async t => {
+  const browser = await chromium.launch({ headless: true });
+  t.after(() => browser.close());
+  const page = await browser.newPage();
+  await page.setContent(renderPortfolioPage(buildPortfolioDemo()));
+  await page.getByRole('button', { name: 'R2 · 근거 부족', exact: true }).click();
+  await page.getByLabel('내 판단과 이유').fill('SYNTHETIC_BROWSER_TEST: unsaved print draft');
+  const before = await page.evaluate(() => {
+    const details = [...document.querySelectorAll('details')];
+    details[0].open = true;
+    details[3].open = true;
+    return details.map(item => item.open);
+  });
+  // Browser-menu events, including repeated beforeprint, must share one snapshot.
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('beforeprint'));
+    window.dispatchEvent(new Event('beforeprint'));
+  });
+  assert.equal(await page.evaluate(() => [...document.querySelectorAll('details')].every(item => item.open)), true);
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+  assert.deepEqual(await page.locator('details').evaluateAll(items => items.map(item => item.open)), before);
+  assert.equal(await page.locator('#panel-R2').isVisible(), true);
+  assert.equal(await page.getByLabel('내 판단과 이유').inputValue(), 'SYNTHETIC_BROWSER_TEST: unsaved print draft');
+  // A cancelled print request returns normally; a second request must remain safe.
+  await page.evaluate(() => {
+    window.print = () => {
+      window.dispatchEvent(new Event('beforeprint'));
+      if (![...document.querySelectorAll('details')].every(item => item.open)) throw new Error('closed print disclosure');
+      window.dispatchEvent(new Event('afterprint'));
+    };
+  });
+  await page.getByRole('button', { name: '사례 인쇄', exact: true }).click();
+  await page.getByRole('button', { name: '사례 인쇄', exact: true }).click();
+  assert.deepEqual(await page.locator('details').evaluateAll(items => items.map(item => item.open)), before);
+  assert.equal(await page.locator('[data-revision="R2"]').getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.getByLabel('내 판단과 이유').inputValue(), 'SYNTHETIC_BROWSER_TEST: unsaved print draft');
+});

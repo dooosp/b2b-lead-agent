@@ -1,0 +1,235 @@
+{
+  "schemaVersion": "b2b-review-experience-verification-v1",
+  "performedBy": "CODEX_AGENT",
+  "verifiedAt": "2026-10-29T12:34:56.374044+00:00",
+  "repository": "dooosp/b2b-lead-agent",
+  "repoRoot": ".",
+  "branch": "codex/portfolio-review-ux",
+  "defaultBranch": "master",
+  "baseCommit": "aef67fbea174a5db0b01d480a30f923a6b35d075",
+  "headCommit": "aef67fbea174a5db0b01d480a30f923a6b35d075",
+  "remoteMasterAtFinalCheck": "aef67fbea174a5db0b01d480a30f923a6b35d075",
+  "implementationState": "UNCOMMITTED_AT_RECORDED_CHECKPOINT",
+  "runtime": {
+    "node": "v24.22.1",
+    "platform": "darwin"
+  },
+  "checks": [
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "passed": 725,
+      "suiteCounts": [
+        252,
+        443,
+        30
+      ],
+      "failed": 0,
+      "skipped": 0,
+      "todo": 0,
+      "log": "tmp/codex/portfolio-v1/verification/npm-test.log"
+    },
+    {
+      "command": "npm run test:e2e:local",
+      "exitCode": 0,
+      "passed": 51,
+      "suiteCounts": [
+        51
+      ],
+      "failed": 0,
+      "skipped": 0,
+      "todo": 0,
+      "log": "tmp/codex/portfolio-v1/verification/browser-e2e.log"
+    },
+    {
+      "command": "npm run test:worker:runtime",
+      "exitCode": 0,
+      "passed": 11,
+      "suiteCounts": [
+        11
+      ],
+      "failed": 0,
+      "skipped": 0,
+      "todo": 0,
+      "log": "tmp/codex/portfolio-v1/verification/worker-runtime.log"
+    },
+    {
+      "command": "npm run check:naming",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:schema",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run security:audit-triage",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:enrichment-boundary",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:enrichment-replay",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run audit:claims",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run eval:spec-fit",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:claim-spec-fit",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:lead-pipeline-replay",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run eval:lead-quality",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:level1",
+      "exitCode": 0,
+      "log": "tmp/codex/portfolio-v1/verification/level1-final.log"
+    }
+  ],
+  "distinctTestsPassed": 787,
+  "independentReview": {
+    "verdict": "PASS",
+    "initialFindings": 2,
+    "resolvedFindings": 2,
+    "targetedRegressionsIndependentlyPassed": 4,
+    "report": "tmp/codex/final-review.md",
+    "reportSha256": "873cdeb8de472b60b48c6c5908fef15e61d337e9a04aebcd4c4cf7a841da940d",
+    "mergeApproval": false
+  },
+  "sourceFiles": [
+    {
+      "path": "eval/fixtures/portfolio-v1/claims.json",
+      "sha256": "34abd4abb1a47525fed3901800f9d4993c95c35d9fc63b085c175195f96976e7"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "d59b2382b8702417631e4600f461a3dbf9ad2d92bc64c93304d70ee8063c57ae"
+    },
+    {
+      "path": "package.json",
+      "sha256": "ed457bb005af6f8b02dd4d34ff244a659bc2bdc21938ecd26d7cb9f688b17ab5"
+    },
+    {
+      "path": "scripts/lib/portfolio-v1-browser.mjs",
+      "sha256": "d90146c3a9132248880349e7155e860d4b17243eeda4039af7a1369d5ceb805a"
+    },
+    {
+      "path": "scripts/lib/portfolio-v1-page.mjs",
+      "sha256": "329ea9ede1bc156a45214ff542aa59a1ff3e9485f7900dd2d19d0edf5a7e7534"
+    },
+    {
+      "path": "scripts/lib/portfolio-v1-styles.mjs",
+      "sha256": "ac12954c40094f64be2b24bc98f4f2c9cb1b07bd286b4f0eaa8276fe533fa32e"
+    },
+    {
+      "path": "scripts/lib/portfolio-v1.mjs",
+      "sha256": "7dfc304074ad7ce4b6109db51632b363bd0452bfccc4100fd2056913122488a3"
+    },
+    {
+      "path": "tests/portfolio-v1.test.js",
+      "sha256": "ecd499b6cccaeb5bc465f7fa57ef867e28a170fec5620c8be85aad67f166706e"
+    },
+    {
+      "path": "worker/e2e/feedback-detail.test.mjs",
+      "sha256": "39711a799ba39e88811fd7e5fa20d34a7a21485aa752080763bb6c9e0d6f4fc1"
+    },
+    {
+      "path": "worker/e2e/manual-note-drafts.test.mjs",
+      "sha256": "b40ed524a8264caff18bfecc80d520f58e41e8589d9e81080b7a545193beac96"
+    },
+    {
+      "path": "worker/e2e/portfolio-v1.test.mjs",
+      "sha256": "123bd8cd5cdb7ff6db8334f876b23839e04ab93d408c0e3b9c20fc1915b7a114"
+    },
+    {
+      "path": "worker/e2e/reviewer-ux.test.mjs",
+      "sha256": "faef63307250097c4010b89730239f123898407bbae30e61e284c0a84ce5380c"
+    },
+    {
+      "path": "worker/pages/lead-detail.js",
+      "sha256": "6a9ffe81555a2777c14bf324c7d0dcf13b1a3547972d1ea00e8351c840ee864f"
+    },
+    {
+      "path": "worker/pages/leads-browser.js",
+      "sha256": "439fba5d177a3950b56bfdaf573bbe62840000e00fd7bef2668087e7ae19a292"
+    },
+    {
+      "path": "worker/pages/leads-feedback-view.js",
+      "sha256": "d12bb3780eb5a9d16de69c64d47c7a565ea9f42262e5287f782f8e7391d84794"
+    },
+    {
+      "path": "worker/pages/leads-mutation-controller.js",
+      "sha256": "798602ca01fb4fdeae845f63b781f165bd4a5a4c639c7bdb1ca09d01dad8f43e"
+    },
+    {
+      "path": "worker/pages/leads-renderer.js",
+      "sha256": "3e12cfee2e735600197305a228db3dbf2b3c4c282b8d2678f9ffc4a2d6c01cd2"
+    },
+    {
+      "path": "worker/pages/leads-review-model.js",
+      "sha256": "f55421e1b743382fca2edc2796477909bac460d3ed7acb55113ed196ca47b28e"
+    },
+    {
+      "path": "worker/pages/manual-note-controller.js",
+      "sha256": "b0da1c8e5f74c995c8d4b9dc8a7b662cc4aae8a21d6af8598cc41746aa2fb3b3"
+    },
+    {
+      "path": "worker/pages/reviewer-feedback-controller.js",
+      "sha256": "af10b1af8046a8319755feafbfb23b6f0e737cc9862ee6a9f0166fb960bf70ab"
+    },
+    {
+      "path": "worker/tests/lead-review-status.test.mjs",
+      "sha256": "506f000bf8b73949538c46461dcd0f551dfc1e4f0f82ca10fe7d2e54b6029886"
+    },
+    {
+      "path": "worker/tests/manual-note-controller.test.mjs",
+      "sha256": "5e15102089da9f5a8975c6c7b5f683864ae77a4e7e34b02c0ecf760a9858d238"
+    }
+  ],
+  "frozenDemoSha256": "121e688d98bf86eec032ac7e59d3677f33d92cb5c2ed8fc49598d6d6fa8f7754",
+  "frozenInputSha256": "0a515d1e7e7440d05f13573e0a50fc1250dc28db021e3ffe3818333a9041009c",
+  "visualChecks": {
+    "desktopViewport": [
+      1265,
+      712
+    ],
+    "mobileWidths": [
+      390,
+      320
+    ],
+    "desktopScreenshot": "output/playwright/portfolio-desktop.png",
+    "sourceScreenshot": "output/playwright/portfolio-source-scope.png",
+    "mobileScreenshot": "output/playwright/portfolio-320.png",
+    "chromiumPrintPdf": "output/playwright/portfolio-print.pdf",
+    "nativePrintDialogManuallyTested": false,
+    "screenReaderManuallyTested": false
+  },
+  "evidenceBoundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "productionReviewerWorkflowReady": false,
+  "issue165Status": "HOLD",
+  "humanParticipantEvidenceAdded": false,
+  "formalPilotContribution": false,
+  "githubMutationsPerformed": false,
+  "deploymentPerformed": false,
+  "recordScope": "LOCAL_VERIFICATION_BEFORE_GITHUB_INTEGRATION",
+  "localArtifactReferences": "Untracked local evidence paths; not included in a fresh checkout. See tracked summaries and PR CI for portable evidence.",
+  "machineSpecificPathsOmitted": true
+}

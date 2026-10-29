@@ -1,0 +1,260 @@
+{
+  "schemaVersion": "b2b-commercial-pilot-verification-v1",
+  "performedBy": "CODEX_AGENT",
+  "verifiedAt": "2026-10-29T13:28:38.924445+00:00",
+  "repository": "dooosp/b2b-lead-agent",
+  "repoRoot": ".",
+  "branch": "codex/portfolio-review-ux",
+  "baseCommit": "aef67fbea174a5db0b01d480a30f923a6b35d075",
+  "remoteMasterAtFinalCheck": "aef67fbea174a5db0b01d480a30f923a6b35d075",
+  "implementationState": "UNCOMMITTED_AT_RECORDED_CHECKPOINT",
+  "runtime": {
+    "node": "24.22.1",
+    "platform": "darwin"
+  },
+  "checks": [
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "suiteCounts": [
+        269,
+        443,
+        30
+      ],
+      "passed": 742,
+      "failed": 0,
+      "skipped": 0,
+      "todo": 0,
+      "log": "tmp/codex/commercial-pilot/npm-test.log"
+    },
+    {
+      "command": "npm run test:e2e:local",
+      "exitCode": 0,
+      "suiteCounts": [
+        56
+      ],
+      "passed": 56,
+      "failed": 0,
+      "skipped": 0,
+      "todo": 0,
+      "log": "tmp/codex/commercial-pilot/e2e.log"
+    },
+    {
+      "command": "npm run test:worker:runtime",
+      "exitCode": 0,
+      "suiteCounts": [
+        11
+      ],
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0,
+      "todo": 0,
+      "log": "tmp/codex/commercial-pilot/runtime.log"
+    },
+    {
+      "command": "npm run audit:claims",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run eval:spec-fit",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:claim-spec-fit",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:level1",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:naming",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:schema",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run demo:pilot",
+      "exitCode": 0
+    }
+  ],
+  "distinctTestsPassed": 809,
+  "cleanInstall": {
+    "root": "temporary clean installation directory (machine-specific path omitted)",
+    "node": "24.22.1",
+    "checks": [
+      {
+        "command": "npm ci --ignore-scripts --no-audit --no-fund",
+        "exitCode": 0
+      },
+      {
+        "command": "npm run demo:pilot",
+        "exitCode": 0
+      }
+    ],
+    "artifactsExist": true
+  },
+  "independentReview": {
+    "verdict": "PASS",
+    "initialFindings": 1,
+    "resolvedFindings": 1,
+    "report": "tmp/codex/commercial-pilot/final-review.md",
+    "reportSha256": "c59e63adbf346bcab71d99e69240e15eba9d74eb5f519198fcc64f9335481fa5",
+    "mergeApproval": false
+  },
+  "sourceFiles": [
+    {
+      "path": ".gitignore",
+      "sha256": "dada7709a686afaae9e1025f73382e131bd931e20bbbc6424947b326b87e02d4"
+    },
+    {
+      "path": ".nvmrc",
+      "sha256": "d9f318747a126ce2247661af67852b185def7789492eabfad7bba322be087c33"
+    },
+    {
+      "path": "eval/fixtures/pilot-review/project-context-v1.json",
+      "sha256": "1f585291905f9a4a4b4b126762c0cc2627d5c41637f1bc55cba07ce5b3220aff"
+    },
+    {
+      "path": "eval/spec-fit-evaluator.mjs",
+      "sha256": "ab66921bfc2ab170ce7e7542186e22d9e61f29e3d62a6bbef4bbc38360cf6e4e"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "d59b2382b8702417631e4600f461a3dbf9ad2d92bc64c93304d70ee8063c57ae"
+    },
+    {
+      "path": "package.json",
+      "sha256": "49202d28090621b83235389c393494992fbfbc77b1de0ffc83b1501640bb8049"
+    },
+    {
+      "path": "scripts/lib/pilot-review-browser.mjs",
+      "sha256": "360f2851335c37d7d882f7fa6ebd91defceb63dc3a3f8d78534a2defe9dfe5a1"
+    },
+    {
+      "path": "scripts/lib/pilot-review-page.mjs",
+      "sha256": "88eeb3ea56160e9a2a31f7849b0bbb331c26f16062b0919fd50882ebc39fb431"
+    },
+    {
+      "path": "scripts/lib/pilot-review-record.mjs",
+      "sha256": "26a63a0abbee65a1242454644bf9827a009bf21f64a34d1288e581d82375f37a"
+    },
+    {
+      "path": "scripts/lib/pilot-review-styles.mjs",
+      "sha256": "de040260bf579149d0f91f69edd049c00aff88ec10c40c5b721861a40d8987fb"
+    },
+    {
+      "path": "scripts/lib/pilot-review-workspace.mjs",
+      "sha256": "3d4e25ee546ab6a51d2536658f2ffd5f3b656fc466db24ab21fc2312037d7b46"
+    },
+    {
+      "path": "scripts/pilot-review-workspace.mjs",
+      "sha256": "a1dc93c7f5208dbe011ab798462ff453119b8594f6491aaad861d7efd3bffb2f"
+    },
+    {
+      "path": "tests/pilot-review-cli.test.js",
+      "sha256": "a470c99f863167242c6d1090af355712e781ab2d69ecc74618400a6c0f30066e"
+    },
+    {
+      "path": "tests/pilot-review-record.test.js",
+      "sha256": "5aed5c65626e3fe80f15edaf87b9fbc2a6352b0fc98b45c11978b5f35cb9f298"
+    },
+    {
+      "path": "tests/pilot-review-workspace.test.js",
+      "sha256": "e700c6a0b8e6bd9d1d1be9616a08924ab2768087020dd36787e53912de18f774"
+    },
+    {
+      "path": "worker/e2e/pilot-review.test.mjs",
+      "sha256": "1b97b3e71d4ff58089da5cc81db093aab68d12b1e348deedbe5959c81e80bdfb"
+    }
+  ],
+  "priorUxSourcePreservation": {
+    "sourceFilesChecked": 22,
+    "changed": [
+      "package.json"
+    ],
+    "explanation": "Only three additive pilot npm scripts; previous UX source/test fingerprints unchanged."
+  },
+  "workspaceSha256": "88233f617b1d73143fddfecd50c354091965ec9a3bc87add481ad29352e4c2c3",
+  "caseOutcomes": [
+    {
+      "id": "ELECTRICAL",
+      "caseSha256": "cd1b435c363b4a8ef02355ffa94aad85f27c421ed1c93c513d6f1560d81701e8",
+      "fit": "FIT",
+      "window": "OPEN"
+    },
+    {
+      "id": "MISSING_VOLTAGE",
+      "caseSha256": "c82430631e05375a6a7eef216030b661371833af45e7c67b658931e0fba26add",
+      "fit": "INSUFFICIENT_EVIDENCE",
+      "window": "OPEN"
+    },
+    {
+      "id": "HARD_MISMATCH",
+      "caseSha256": "2ab94c712dd1fc7a2229d1a5a5b49ad33eae7536066dc80c5bc642bc51b638e6",
+      "fit": "NOT_FIT",
+      "window": "OPEN"
+    },
+    {
+      "id": "UNVERIFIED_CAPABILITY",
+      "caseSha256": "2401ddb2d5c5458e00fdae31216f00c1e40d81b41e4a4f2180b9f2e50ebe1a74",
+      "fit": "CONDITIONAL_FIT",
+      "window": "OPEN"
+    },
+    {
+      "id": "EXPIRED_CAPABILITY",
+      "caseSha256": "4508053fa6d904f7f484159a67b86b70e5caf2292defdd19129c0b153ad99104",
+      "fit": "CONDITIONAL_FIT",
+      "window": "OPEN"
+    },
+    {
+      "id": "WRONG_JURISDICTION",
+      "caseSha256": "4414c955b7c84d8ba032a5fd0361e3833c600b76eee0ac5eca5fa2c43dece815",
+      "fit": "INSUFFICIENT_EVIDENCE",
+      "window": "UNKNOWN"
+    },
+    {
+      "id": "WINDOW_CLOSED",
+      "caseSha256": "edcf7ec6664320686d0e7800e0535dc7221084bb6539cc990a4e4c1f786cc4ce",
+      "fit": "FIT",
+      "window": "CLOSED"
+    }
+  ],
+  "pricing": {
+    "status": "HYPOTHESIS_NOT_VALIDATED_WILLINGNESS_TO_PAY",
+    "currency": "KRW",
+    "scopedTwoWeekServicePilot": 1500000,
+    "conditionalMonthlyTeamSubscription": 290000,
+    "observedCompetitorSources": [
+      "https://www.clay.com/pricing",
+      "https://business.linkedin.com/sell/sales-navigator/compare-plans",
+      "https://autorfp.ai/pricing",
+      "https://loopio.com/pricing/"
+    ],
+    "calculationRecord": "tmp/codex/commercial-pilot/pricing-calculations.json"
+  },
+  "evidenceBoundary": "NOT_PRODUCTION_EVIDENCE",
+  "productionReady": false,
+  "issue165Status": "HOLD",
+  "formalPilotContribution": false,
+  "humanValueVerified": false,
+  "paidPilotConducted": false,
+  "paymentCollected": false,
+  "githubMutationsPerformed": false,
+  "deploymentPerformed": false,
+  "visualChecks": {
+    "productDesktopAndMobile": true,
+    "offlineBrowserPassed": true,
+    "screenshot": "output/playwright/commercial-pilot/pilot-final.png",
+    "pricingCalculator": "isolated JavaScript DOM-stub checks passed; browser file preview blocked by URL policy and not bypassed"
+  },
+  "recordScope": "LOCAL_VERIFICATION_BEFORE_GITHUB_INTEGRATION",
+  "localArtifactReferences": "Untracked local evidence paths; not included in a fresh checkout. See tracked summaries and PR CI for portable evidence.",
+  "machineSpecificPathsOmitted": true
+}

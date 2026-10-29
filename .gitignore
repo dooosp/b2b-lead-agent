@@ -3,6 +3,7 @@ node_modules/
 .dev.vars
 .wrangler/
 /tmp/codex/portfolio-v1/
+/tmp/codex/pilot-review/
 reports/**/*.md
 !reports/*/latest-leads.json
 !reports/*/lead-history.json

@@ -24,15 +24,19 @@ test('security dependency audit triage reports patched axios boundary as non-pro
   assert.equal(result.finding.directDependency, true);
   assert.equal(result.finding.prodScope, true);
   assert.equal(result.finding.devOnly, false);
-  assert.equal(result.finding.manifestMinimum, '1.18.0');
-  assert.equal(result.finding.patchedMinimum, '1.18.0');
+  assert.equal(result.finding.manifestMinimum, '1.20.0');
+  assert.equal(result.finding.patchedMinimum, '1.20.0');
   assert.ok(compareVersions(result.finding.lockedVersion, result.finding.patchedMinimum) >= 0);
   assert.ok(result.finding.advisories.some((advisory) =>
     advisory.url === 'https://github.com/advisories/GHSA-gcfj-64vw-6mp9'
       && advisory.severity === 'high'
       && advisory.range === '>=1.15.2 <1.18.0'));
+  assert.ok(result.finding.advisories.some((advisory) =>
+    advisory.url === 'https://github.com/advisories/GHSA-r4gj-5m52-g5wh'
+      && advisory.severity === 'high'
+      && advisory.range === '>=1.17.0 <1.20.0'));
   assert.equal(result.decision.status, 'PASS_LOCAL_PATCHED');
-  assert.equal(result.decision.action, 'PATCHED_WITH_SCOPED_AXIOS_1_18_0_UPDATE');
+  assert.equal(result.decision.action, 'PATCHED_WITH_SCOPED_AXIOS_1_20_0_UPDATE');
   assert.match(result.decision.followUp, /check:enrichment-boundary/);
   assert.deepEqual(result.blockers, []);
   assert.ok(result.reachability.affectedFiles.includes('enricher/outbound-http-boundary.js'));
@@ -40,24 +44,24 @@ test('security dependency audit triage reports patched axios boundary as non-pro
   assert.ok(result.reachability.affectedFiles.includes('enricher/article-url-resolver.js'));
 });
 
-test('security dependency audit triage accepts the patched axios 1.18 floor', async () => {
+test('security dependency audit triage accepts the patched axios 1.20 floor', async () => {
   const { evaluateSecurityDependencyAuditTriage } = await loadModule();
   const result = evaluateSecurityDependencyAuditTriage({
     generatedAt: '2026-06-02T00:00:00.000Z',
     packageJson: {
       dependencies: {
-        axios: '^1.18.0',
+        axios: '^1.20.0',
       },
     },
     packageLock: {
       packages: {
         '': {
           dependencies: {
-            axios: '^1.18.0',
+            axios: '^1.20.0',
           },
         },
         'node_modules/axios': {
-          version: '1.18.0',
+          version: '1.20.0',
           dependencies: {
             'follow-redirects': '^1.16.0',
             'form-data': '^4.0.5',
@@ -70,9 +74,9 @@ test('security dependency audit triage accepts the patched axios 1.18 floor', as
   });
 
   assert.equal(result.ok, true);
-  assert.equal(result.finding.manifestMinimum, '1.18.0');
-  assert.equal(result.finding.lockedVersion, '1.18.0');
-  assert.equal(result.finding.patchedMinimum, '1.18.0');
+  assert.equal(result.finding.manifestMinimum, '1.20.0');
+  assert.equal(result.finding.lockedVersion, '1.20.0');
+  assert.equal(result.finding.patchedMinimum, '1.20.0');
   assert.deepEqual(result.blockers, []);
 });
 
@@ -109,7 +113,7 @@ test('security dependency audit triage blocks the previously accepted vulnerable
   assert.equal(result.decision.status, 'HOLD_REQUIRES_TRIAGE');
   assert.equal(result.finding.manifestMinimum, '1.16.0');
   assert.equal(result.finding.lockedVersion, '1.16.0');
-  assert.equal(result.finding.patchedMinimum, '1.18.0');
+  assert.equal(result.finding.patchedMinimum, '1.20.0');
   assert.ok(reasons.includes('axios_manifest_floor_below_patched_minimum'));
   assert.ok(reasons.includes('axios_lock_below_patched_minimum'));
 });
@@ -120,18 +124,18 @@ test('security dependency audit triage rejects prerelease or build-qualified axi
     generatedAt: '2026-06-02T00:00:00.000Z',
     packageJson: {
       dependencies: {
-        axios: '^1.18.0-rc.1',
+        axios: '^1.20.0-rc.1',
       },
     },
     packageLock: {
       packages: {
         '': {
           dependencies: {
-            axios: '^1.18.0-rc.1',
+            axios: '^1.20.0-rc.1',
           },
         },
         'node_modules/axios': {
-          version: '1.18.0-rc.1',
+          version: '1.20.0-rc.1',
         },
       },
     },
@@ -140,18 +144,18 @@ test('security dependency audit triage rejects prerelease or build-qualified axi
     generatedAt: '2026-06-02T00:00:00.000Z',
     packageJson: {
       dependencies: {
-        axios: '^1.18.0',
+        axios: '^1.20.0',
       },
     },
     packageLock: {
       packages: {
         '': {
           dependencies: {
-            axios: '^1.18.0',
+            axios: '^1.20.0',
           },
         },
         'node_modules/axios': {
-          version: '1.18.0+local',
+          version: '1.20.0+local',
         },
       },
     },
@@ -166,8 +170,8 @@ test('security dependency audit triage rejects prerelease or build-qualified axi
   assert.equal(buildQualified.ok, false);
   assert.ok(buildQualified.blockers.some((blocker) =>
     blocker.reason === 'axios_lock_below_patched_minimum'));
-  assert.equal(Number.isNaN(compareVersions('1.18.0-rc.1', '1.18.0')), true);
-  assert.equal(Number.isNaN(compareVersions('1.18.0+local', '1.18.0')), true);
+  assert.equal(Number.isNaN(compareVersions('1.20.0-rc.1', '1.20.0')), true);
+  assert.equal(Number.isNaN(compareVersions('1.20.0+local', '1.20.0')), true);
 });
 
 test('security dependency audit triage CLI writes the scoped JSON artifact', async () => {
@@ -192,8 +196,8 @@ test('security dependency audit triage CLI writes the scoped JSON artifact', asy
     const artifact = JSON.parse(readFileSync(outputPath, 'utf8'));
     assert.equal(artifact.boundary, 'NOT_PRODUCTION_EVIDENCE');
     assert.equal(artifact.productionReady, false);
-    assert.equal(artifact.finding.manifestSpec, '^1.18.0');
-    assert.equal(artifact.finding.patchedMinimum, '1.18.0');
+    assert.equal(artifact.finding.manifestSpec, '^1.20.0');
+    assert.equal(artifact.finding.patchedMinimum, '1.20.0');
     assert.ok(compareVersions(
       artifact.finding.lockedVersion,
       artifact.finding.patchedMinimum,
@@ -218,3 +222,51 @@ test('security dependency audit triage CLI writes the scoped JSON artifact', asy
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// Reinstalling an older manifest/lock must fail offline, even without registry access.
+test('security dependency audit triage rejects every former axios floor below 1.20', async () => {
+  const { evaluateSecurityDependencyAuditTriage } = await loadModule();
+  for (const version of ['1.18.0', '1.18.1', '1.19.0', '1.19.99']) {
+    const result = evaluateSecurityDependencyAuditTriage({
+      packageJson: { dependencies: { axios: `^${version}` } },
+      packageLock: { packages: { 'node_modules/axios': { version } } },
+    });
+    assert.equal(result.ok, false, version);
+    assert.ok(result.blockers.some(({ reason }) => reason === 'axios_manifest_floor_below_patched_minimum'));
+    assert.ok(result.blockers.some(({ reason }) => reason === 'axios_lock_below_patched_minimum'));
+  }
+});
+
+test('production dependency lock refuses the four known vulnerable dependency floors offline', async () => {
+  const { compareVersions, extractMinimumVersion } = await loadModule();
+  const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
+  const lock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
+  const floors = { axios: '1.20.0', 'follow-redirects': '1.16.1', nodemailer: '10.1.4', undici: '7.30.1' };
+  for (const [name, minimum] of Object.entries(floors)) {
+    const entries = Object.entries(lock.packages).filter(([key, value]) =>
+      key.endsWith(`/node_modules/${name}`) || key === `node_modules/${name}`)
+      .filter(([, value]) => !value.dev);
+    assert.ok(entries.length > 0, `${name} must remain inventoried`);
+    for (const [key, value] of entries) {
+      assert.ok(compareVersions(value.version, minimum) >= 0, `${key}@${value.version} < ${minimum}`);
+    }
+    if (manifest.dependencies[name]) {
+      assert.ok(compareVersions(extractMinimumVersion(manifest.dependencies[name]), minimum) >= 0, name);
+    }
+  }
+});
+
+for (const [manifestVersion, lockedVersion, reason] of [
+  ['1.19.0', '1.20.0', 'axios_manifest_floor_below_patched_minimum'],
+  ['1.20.0', '1.19.0', 'axios_lock_below_patched_minimum'],
+]) {
+  test(`security dependency audit triage independently blocks ${reason}`, async () => {
+    const { evaluateSecurityDependencyAuditTriage } = await loadModule();
+    const result = evaluateSecurityDependencyAuditTriage({
+      packageJson: { dependencies: { axios: `^${manifestVersion}` } },
+      packageLock: { packages: { 'node_modules/axios': { version: lockedVersion } } },
+    });
+    assert.equal(result.ok, false);
+    assert.deepEqual(result.blockers.map(({ reason }) => reason), [reason]);
+  });
+}

@@ -33,7 +33,9 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
       await context.addInitScript((token) => sessionStorage.setItem('b2b_token', token), LOCAL_E2E_TOKEN);
     }
     t.after(() => context.close());
-    return context.newPage();
+    const page = await context.newPage();
+    page.setDefaultTimeout(5000);
+    return page;
   }
 
   for (const [label, path] of [['PPT 생성', '/ppt'], ['영업 연습', '/roleplay']]) {
@@ -130,11 +132,11 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     const page = await createPage();
     await page.goto(`${harness.origin}/leads?profile=danfoss`);
     const card = page.locator('.lead-card[data-lead-id="local-lead-approved"]');
-    await card.locator('.reviewer-feedback-section summary').click();
+    await openFeedback(card);
     await card.getByRole('textbox', { name: '피드백', exact: true }).fill('사용성 점검: 예산과 일정 확인');
     await page.getByRole('combobox', { name: '검토 상태', exact: true }).selectOption('NEEDS_REVIEW');
     await page.getByRole('combobox', { name: '검토 상태', exact: true }).selectOption('all');
-    await card.locator('.reviewer-feedback-section summary').click();
+    await openFeedback(card);
     assert.equal(await card.getByRole('textbox', { name: '피드백', exact: true }).inputValue(), '사용성 점검: 예산과 일정 확인');
     assert.match(await card.locator('.reviewer-feedback-section').textContent(), /저장 전/);
     const beforeSave = await fetch(`${harness.origin}/api/leads?profile=danfoss`, { headers: authHeaders() }).then((res) => res.json());
@@ -142,7 +144,7 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     await card.getByRole('button', { name: '피드백 저장', exact: true }).click();
     await page.waitForFunction(() => document.querySelector('[data-lead-id="local-lead-approved"] .reviewer-feedback-section')?.textContent.includes('저장됨'));
     await page.reload();
-    await card.locator('.reviewer-feedback-section summary').click();
+    await openFeedback(card);
     assert.equal(await card.getByRole('textbox', { name: '피드백', exact: true }).inputValue(), '사용성 점검: 예산과 일정 확인');
   });
 
@@ -150,7 +152,7 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     const page = await createPage({ serviceWorkers: 'block' });
     await page.goto(`${harness.origin}/leads?profile=danfoss`);
     const card = page.locator('.lead-card[data-lead-id="local-lead-approved"]');
-    await card.locator('.reviewer-feedback-section summary').click();
+    await openFeedback(card);
     await card.getByRole('textbox', { name: '피드백', exact: true }).fill('첫 번째 저장');
     let release;
     let started;
@@ -164,10 +166,11 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     await requested;
     await card.getByRole('textbox', { name: '피드백', exact: true }).fill('저장 응답을 기다리며 추가한 문장');
     const saved = page.waitForResponse((res) => res.request().method() === 'PATCH');
+    const previousField = await card.getByRole('textbox', { name: '피드백', exact: true }).elementHandle();
     release();
     await saved;
-    await card.locator('.reviewer-feedback-section details:not([open])').waitFor();
-    await card.locator('.reviewer-feedback-section summary').click();
+    await page.waitForFunction(field => !field.isConnected, previousField);
+    await openFeedback(card);
     assert.equal(await card.getByRole('textbox', { name: '피드백', exact: true }).inputValue(), '저장 응답을 기다리며 추가한 문장');
     assert.match(await card.locator('[data-feedback-draft-state]').textContent(), /저장 전/);
   });
@@ -176,7 +179,7 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     const page = await createPage({ serviceWorkers: 'block' });
     await page.goto(`${harness.origin}/leads?profile=danfoss`);
     const card = page.locator('.lead-card[data-lead-id="local-lead-review"]');
-    await card.locator('.reviewer-feedback-section summary').click();
+    await openFeedback(card);
     const feedback = card.getByRole('textbox', { name: '피드백', exact: true });
     const original = await feedback.inputValue();
     await feedback.fill('지연 저장될 합성 피드백');
@@ -192,10 +195,11 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     await requested;
     await feedback.fill(original);
     const saved = page.waitForResponse(res => res.request().method() === 'PATCH');
+    const previousField = await feedback.elementHandle();
     release();
     await saved;
-    await card.locator('.reviewer-feedback-section details:not([open])').waitFor();
-    await card.locator('.reviewer-feedback-section summary').click();
+    await page.waitForFunction(field => !field.isConnected, previousField);
+    await openFeedback(card);
     assert.equal(await feedback.inputValue(), original, 'newest edit must survive an earlier save response');
     assert.match(await card.locator('[data-feedback-draft-state]').textContent(), /저장 전/);
   });
@@ -204,14 +208,14 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     const page = await createPage({ serviceWorkers: 'block' });
     await page.goto(`${harness.origin}/leads?profile=danfoss`);
     const card = page.locator('.lead-card[data-lead-id="local-lead-review"]');
-    await card.locator('.reviewer-feedback-section summary').click();
+    await openFeedback(card);
     const feedback = card.getByRole('textbox', { name: '피드백', exact: true });
     await feedback.fill('삭제 전 저장된 합성 피드백');
     const seeded = page.waitForResponse(res => res.request().method() === 'PATCH');
     await card.getByRole('button', { name: '피드백 저장', exact: true }).click();
     await seeded;
     await card.locator('.reviewer-feedback-section details:not([open])').waitFor();
-    await card.locator('.reviewer-feedback-section summary').click();
+    await openFeedback(card);
     const original = await feedback.inputValue();
     assert.equal(original, '삭제 전 저장된 합성 피드백');
     let release;
@@ -228,10 +232,11 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
     await feedback.fill('삭제 응답 대기 중 편집');
     await feedback.fill(original);
     const cleared = page.waitForResponse(res => res.request().method() === 'PATCH');
+    const previousField = await feedback.elementHandle();
     release();
     await cleared;
-    await card.locator('.reviewer-feedback-section details:not([open])').waitFor();
-    await card.locator('.reviewer-feedback-section summary').click();
+    await page.waitForFunction(field => !field.isConnected, previousField);
+    await openFeedback(card);
     assert.equal(await feedback.inputValue(), original);
     assert.match(await card.locator('[data-feedback-draft-state]').textContent(), /저장 전/);
   });
@@ -294,4 +299,10 @@ test('reviewer UX regressions use local synthetic leads only', async (t) => {
 
 function authHeaders() {
   return { Authorization: `Bearer ${LOCAL_E2E_TOKEN}` };
+}
+
+
+async function openFeedback(card) {
+  const details = card.locator('.reviewer-feedback-section details');
+  if (await details.getAttribute('open') === null) await card.locator('.reviewer-feedback-section summary').click();
 }

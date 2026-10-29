@@ -136,7 +136,7 @@ function mutateClaim(rawRegistry, claimKey, mutation) {
   return next;
 }
 
-function runFitVariant(variant, rawRegistry, verticalPack) {
+export function runFitVariant(variant, rawRegistry, verticalPack) {
   let registrySource = rawRegistry;
   let input;
   let aggregate = false;

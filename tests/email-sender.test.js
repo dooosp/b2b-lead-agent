@@ -171,3 +171,39 @@ test('legacy direct send refuses to bypass the published-manifest boundary', asy
     (error) => error.code === 'ERR_NOTIFICATION_REQUIRES_PUBLISHED_MANIFEST',
   );
 });
+
+for (const recipients of [['reviewer@example.com'], ['one@example.com', 'two@example.com']]) {
+  test(`installed Nodemailer composes the publication envelope for ${recipients.length} recipients without claiming delivery`, async (t) => {
+    const nodemailer = require('nodemailer');
+    const fixture = committedPublication(t, createRootLead({
+      company: 'Fixture <script>alert(1)</script>',
+      summary: 'Local compatibility fixture',
+      generationMode: 'llm',
+      verificationStatus: 'needs_review',
+      confidence: 'LOW',
+    }));
+    const streamTransport = nodemailer.createTransport({ streamTransport: true, buffer: true, newline: 'unix' });
+    t.after(() => streamTransport.close());
+    let composed;
+    // Delegate the real API; stream output has no provider acceptance receipt.
+    const transporter = { async sendMail(message) {
+      composed = await streamTransport.sendMail(message);
+      return composed;
+    } };
+    await assert.rejects(() => emailSender.sendPublicationNotification({
+      ...fixture, transporter,
+      config: { user: 'sender@example.com', recipients },
+    }), (error) => error.code === 'ERR_NOTIFICATION_ACCEPTANCE_UNKNOWN'
+      && error.acceptance === 'UNKNOWN' && error.retryable === null);
+    assert.equal(composed.envelope.from, 'sender@example.com');
+    assert.deepEqual(composed.envelope.to, recipients.length === 1
+      ? recipients : ['sender@example.com', ...recipients]);
+    assert.match(composed.messageId, /^<lead-report-[a-f0-9]{40}@b2b-lead-agent\.local>$/);
+    assert.ok(Buffer.isBuffer(composed.message));
+    const mime = composed.message.toString('utf8');
+    assert.match(mime, /Content-Type: multipart\/alternative;/);
+    assert.match(mime, /Content-Type: text\/plain; charset=utf-8/);
+    assert.match(mime, /Content-Type: text\/html; charset=utf-8/);
+    assert.match(mime, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+  });
+}
