@@ -75,7 +75,7 @@ export function getLeadsReviewModelScript(includeGeneratedReviewGuidance) {
 
     function cacheManualReviewNotesAccess(access) {
       cachedManualReviewNotesAccess = access && typeof access === 'object' ? access : null;
-      if (cachedManualReviewNotesAccess && cachedManualReviewNotesAccess.manualNotesRead !== true) reviewerFeedbackDrafts.clear();
+      if (cachedManualReviewNotesAccess && cachedManualReviewNotesAccess.manualNotesRead !== true) { leadsAccessEpoch++; reviewerFeedbackController.reset(); manualNoteController.reset(); }
     }
 
     function canShowGeneratedReviewGuidance() {

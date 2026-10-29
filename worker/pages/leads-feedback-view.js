@@ -164,9 +164,9 @@ export function getLeadsFeedbackViewScript(includeGeneratedReviewGuidance) {
       const feedback = { ...normalizeReviewerFeedback(lead), ...(draft ? draft.payload : {}) };
       return \`
         <div class="reviewer-feedback-section" data-feedback-lead-id="\${esc(getLeadId(lead))}" oninput="rememberReviewerFeedbackDraft(this)">
-          <details>
+          <details \${draft ? 'open' : ''}>
             <summary>리뷰어 피드백 <span class="notes-summary-state" data-reviewer-feedback-summary-state>\${draft ? '저장 전' : esc(getReviewerFeedbackStateLabel(lead))}</span></summary>
-            <p data-feedback-draft-state role="status">\${draft ? '저장 전 · 초안은 이 페이지에서만 보관됩니다.' : ''}</p>
+            <p data-feedback-draft-state role="status">\${esc(reviewerFeedbackController.notice(getLeadId(lead)))}</p>
             \${renderReviewerFeedbackState(lead)}
             <p class="notes-privacy-warning" role="note"><strong>로컬/테스트 사람 판단:</strong> 이 피드백은 리뷰 품질 개선용 수동 입력입니다. ${generatedNoteLabel}은 저장/전송/귀속/이력/내보내기 대상이 아닙니다.</p>
             <div class="reviewer-feedback-grid" data-reviewer-feedback-form>

@@ -339,17 +339,17 @@ test('lead review pages save explicit human-entered manual review notes only', (
 
   assert.match(listHtml, /수동 리뷰 메모/);
   assert.match(listHtml, /aria-label="수동 리뷰 메모 입력"/);
-  assert.match(listHtml, /JSON\.stringify\(\{ manualReviewNotes: value, expectedVersion: cachedLead && cachedLead\.version \}\)/);
-  assert.match(listHtml, /function enqueueNoteMutation\(leadId, mutation\)/);
-  assert.match(listHtml, /const next = previous\.then\(mutation\)/);
-  assert.match(listHtml, /throw Object\.assign\(new Error\('manual note version conflict'\)/);
+  assert.match(listHtml, /JSON\.stringify\(\{ manualReviewNotes: text, expectedVersion: lead\.version \}\)/);
+  assert.match(listHtml, /const next = previous\.then\(async \(\) =>/);
+  assert.match(listHtml, /data\.code === 'LEAD_VERSION_CONFLICT'/);
+  assert.match(listHtml, /aria-label="수동 리뷰 메모 저장"/);
   assert.doesNotMatch(listHtml, /JSON\.stringify\(\{ notes: textarea\.value \}\)/);
   assert.match(detailHtml, /수동 리뷰 메모/);
   assert.match(detailHtml, /최근 수동 변경/);
   assert.match(detailHtml, /수동 리뷰어/);
   assert.match(detailHtml, /로컬\/테스트 일반 라벨/);
-  assert.match(detailHtml, /enqueueNoteMutation\(val\)/);
-  assert.match(detailHtml, /const outcome = await updateField\('manualReviewNotes', value\)/);
+  assert.match(detailHtml, /JSON\.stringify\(\{ manualReviewNotes: text, expectedVersion: lead\.version \}\)/);
+  assert.match(detailHtml, /aria-label="수동 리뷰 메모 저장"/);
   assert.match(detailHtml, /사람이 입력한 검토 메모/);
   assert.doesNotMatch(detailHtml, /인증된 리뷰어|authenticated reviewer|display name|manualReviewNotesAuthorEmail/i);
 });
@@ -419,14 +419,16 @@ test('lead review pages expose explicit clear controls for saved manual review n
     grade: 'A'
   }, []);
 
-  assert.match(listHtml, /function clearManualReviewNotes\(leadId, button\)/);
+  assert.match(listHtml, /function clearManualReviewNotes\(leadId\)/);
   assert.match(listHtml, /aria-label="저장된 수동 리뷰 메모 지우기"/);
   assert.match(listHtml, /저장된 수동 리뷰 메모를 지울까요/);
-  assert.match(listHtml, /JSON\.stringify\(\{ manualReviewNotes: '', expectedVersion: cachedLead && cachedLead\.version \}\)/);
+  assert.match(listHtml, /remember\(id, ''\)/);
+  assert.match(listHtml, /JSON\.stringify\(\{ manualReviewNotes: text, expectedVersion: lead\.version \}\)/);
   assert.match(detailHtml, /function clearManualReviewNotes\(\)/);
   assert.match(detailHtml, /aria-label="저장된 수동 리뷰 메모 지우기"/);
   assert.match(detailHtml, /저장된 수동 리뷰 메모를 지울까요/);
-  assert.match(detailHtml, /enqueueNoteMutation\(''\)/);
+  assert.match(detailHtml, /remember\(id, ''\)/);
+  assert.match(detailHtml, /JSON\.stringify\(\{ manualReviewNotes: text, expectedVersion: lead\.version \}\)/);
 });
 
 test('lead review pages render local test privacy warning for manual review notes', () => {

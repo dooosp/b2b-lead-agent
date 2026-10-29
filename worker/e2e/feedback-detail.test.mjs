@@ -117,3 +117,46 @@ test('denied-role guidance stays absent while list and detail browser controls e
   assert.equal(await page.locator('[data-workbench-note-copy-action], [data-reviewer-feedback-form]').count(), 0);
   assert.deepEqual(errors, []);
 });
+
+
+test('detail retains feedback across status refresh and conflicts without retrying writes', async (t) => {
+  const guard = installLocalOnlyFetchGuard();
+  const harness = await createLocalE2EHarness({ env: createLocalSmokeEnv() });
+  const browser = await chromium.launch({ headless: true });
+  t.after(async () => { await browser.close(); await harness.close(); guard.restore(); assert.deepEqual(guard.blockedUrls, []); });
+  const headers = { Authorization: `Bearer ${LOCAL_E2E_TOKEN}`, 'Content-Type': 'application/json' };
+  for (const scenario of ['status-success', 'feedback-conflict']) await t.test(scenario, async () => {
+    const context = await browser.newContext({ serviceWorkers: 'block', extraHTTPHeaders: headers });
+    t.after(() => context.close());
+    await context.addInitScript(token => sessionStorage.setItem('b2b_token', token), LOCAL_E2E_TOKEN);
+    const page = await context.newPage();
+    await context.route('**/*', route => { assert.equal(new URL(route.request().url()).origin, harness.origin); return route.continue(); });
+    await page.goto(`${harness.origin}/leads/local-lead-review`);
+    const feedback = page.getByRole('textbox', { name: '피드백', exact: true });
+    await feedback.fill('내부 새로고침에도 남을 합성 초안');
+    let patchCount = 0;
+    page.on('request', request => { if (request.method() === 'PATCH') patchCount++; });
+    if (scenario === 'feedback-conflict') {
+      const data = await fetch(`${harness.origin}/api/leads?profile=danfoss`, { headers }).then(res => res.json());
+      const lead = data.leads.find(item => item.id === 'local-lead-review');
+      const accepted = await fetch(`${harness.origin}/api/leads/${lead.id}`, { method: 'PATCH', headers, body: JSON.stringify({ expectedVersion: lead.version, reviewStatus: 'DEFERRED' }) }).then(res => res.json());
+      assert.equal(accepted.success, true);
+    }
+    const previous = await feedback.elementHandle();
+    if (scenario === 'status-success') await page.getByRole('combobox', { name: '사람 검토 상태 변경' }).selectOption('APPROVED');
+    else await page.getByRole('button', { name: '피드백 저장', exact: true }).click();
+    await page.waitForFunction(field => !field.isConnected, previous);
+    assert.equal(await feedback.inputValue(), '내부 새로고침에도 남을 합성 초안');
+    assert.match(await page.locator('[data-feedback-draft-state]').textContent(), /저장 전/);
+    assert.equal(await page.getByRole('combobox', { name: '사람 검토 상태 변경' }).inputValue(), scenario === 'status-success' ? 'APPROVED' : 'DEFERRED');
+    if (scenario === 'feedback-conflict') {
+      assert.match(await page.locator('[data-feedback-draft-state]').textContent(), /충돌.*다시/);
+      assert.equal(patchCount, 1);
+      const sent = page.waitForRequest(request => request.method() === 'PATCH');
+      const done = page.waitForResponse(response => response.request().method() === 'PATCH');
+      await page.getByRole('button', { name: '피드백 저장', exact: true }).click();
+      assert.equal((await sent).postDataJSON().expectedVersion, 3);
+      assert.equal((await (await done).json()).success, true);
+    }
+  });
+});

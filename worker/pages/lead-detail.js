@@ -1,3 +1,4 @@
+import { getManualNoteControllerScript } from './manual-note-controller.js';
 import { getReviewerFeedbackControllerScript } from './reviewer-feedback-controller.js';
 import { getCommonStyles } from './common-styles.js';
 import { buildOpportunityWorkbenchModel, getOpportunityWorkbenchStyles, renderOpportunityWorkbench } from './opportunity-workbench.js';
@@ -142,6 +143,7 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     <div id="detailContent"><p style="color:#aaa;">로딩 중...</p></div>
   </main>
 
+  <script type="application/json" id="detailRefreshState">${JSON.stringify({ lead, statusLogs: statusLogs || [], includeGeneratedReviewGuidance, opportunityWorkbenchHtml, emptyManualReviewNoteStateText, reviewerFeedbackBoundaryText }).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026')}</script>
   <script>
     (() => {
     const lead = ${leadJSON};
@@ -151,10 +153,11 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     const transitions = ${transitionsJS};
     const reviewStatusLabels = ${reviewStatusLabelsJS};
     const reviewStatuses = Object.keys(reviewStatusLabels);
-    const reviewerFeedbackEnabled = ${includeGeneratedReviewGuidance ? 'true' : 'false'};
-    const opportunityWorkbenchHtml = ${opportunityWorkbenchHtmlJS};
-    const emptyManualReviewNoteStateText = ${emptyManualReviewNoteStateTextJS};
-    const reviewerFeedbackBoundaryText = ${reviewerFeedbackBoundaryTextJS};
+    let detailAccessEpoch = 0;
+    let reviewerFeedbackEnabled = ${includeGeneratedReviewGuidance ? 'true' : 'false'};
+    let opportunityWorkbenchHtml = ${opportunityWorkbenchHtmlJS};
+    let emptyManualReviewNoteStateText = ${emptyManualReviewNoteStateTextJS};
+    let reviewerFeedbackBoundaryText = ${reviewerFeedbackBoundaryTextJS};
     const verificationStatusLabels = { verified: '검증됨', needs_review: '검증 필요', draft: '초안', unverified: '미검증' };
     const generationModeLabels = { llm: 'LLM 생성', heuristic: '휴리스틱 생성', demo: '데모', unavailable: '생성 불가' };
     const confidenceLabels = { HIGH: '신뢰도 HIGH', MEDIUM: '신뢰도 MEDIUM', LOW: '신뢰도 LOW' };
@@ -166,9 +169,14 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     };
 
     ${getReviewerFeedbackControllerScript({
-      findLead: '() => lead',
+      findLead: '(id) => id === lead.id ? lead : null',
       onSaved: '() => { showSaved(); renderDetail(); }',
-      onConflict: 'refreshDetailPage'
+      onConflict: 'refreshDetailPage',
+      onDenied: 'denyDetailAccess'
+    })}
+    ${getManualNoteControllerScript({
+      findLead: '(id) => id === lead.id ? lead : null', onChange: 'syncManualNoteControls',
+      onConflict: 'refreshDetailPage', onDenied: 'denyDetailAccess'
     })}
     ${getEscScript()}
     ${getSafeUrlScript()}
@@ -370,7 +378,7 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
       const feedback = { ...normalizeReviewerFeedback(lead), ...(draft ? draft.payload : {}) };
       return '<div class="detail-section reviewer-feedback-section" data-feedback-lead-id="' + esc(lead.id) + '" oninput="rememberReviewerFeedbackDraft(this)">' +
         '<h3>리뷰어 피드백</h3>' +
-        '<p data-feedback-draft-state role="status">' + (draft ? '저장 전 · 초안은 이 페이지에서만 보관됩니다.' : '') + '</p>' +
+        '<p data-feedback-draft-state role="status">' + esc(reviewerFeedbackController.notice(lead.id)) + '</p>' +
         renderReviewerFeedbackState(lead) +
         '<p class="notes-privacy-warning" role="note"><strong>로컬/테스트 사람 판단:</strong> ' + esc(reviewerFeedbackBoundaryText) + '</p>' +
         '<div class="reviewer-feedback-grid" data-reviewer-feedback-form>' +
@@ -851,16 +859,19 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
       }
 
       // 메모 섹션
-      html += '<div class="detail-section">';
-      html += '<h3>수동 리뷰 메모</h3>';
-      html += renderManualReviewNoteState(lead);
-      html += renderManualReviewNotePrivacyWarning();
-      html += '<textarea class="notes-area" id="notesArea" aria-label="수동 리뷰 메모 입력" placeholder="수동 리뷰 메모를 입력하세요..." oninput="scheduleNoteSave()">' + esc(lead.manualReviewNotes || lead.notes || '') + '</textarea>';
-      html += '<div class="notes-actions">';
-      html += '<span class="save-indicator" id="manualNoteSaveIndicator">저장됨</span>';
-      html += '<button type="button" class="notes-clear-btn" id="clearManualReviewNotesButton" aria-label="저장된 수동 리뷰 메모 지우기" onclick="clearManualReviewNotes()" ' + ((lead.manualReviewNotes || lead.notes) ? '' : 'disabled') + '>지우기</button>';
-      html += '</div>';
-      html += '</div>';
+      if (reviewerFeedbackEnabled) {
+        html += '<div class="detail-section">';
+        html += '<h3>수동 리뷰 메모</h3>';
+        html += renderManualReviewNoteState(lead);
+        html += renderManualReviewNotePrivacyWarning();
+        html += '<textarea class="notes-area" id="notesArea" aria-label="수동 리뷰 메모 입력" placeholder="수동 리뷰 메모를 입력하세요..." oninput="scheduleNoteSave()">' + esc(manualNoteController.value(lead)) + '</textarea>';
+        html += '<p data-manual-note-notice role="status">' + esc(manualNoteController.notice(lead.id)) + '</p>';
+        html += '<div class="notes-actions">';
+        html += '<button type="button" class="btn btn-secondary" aria-label="수동 리뷰 메모 저장" onclick="saveManualReviewNotes()">저장</button>';
+        html += '<button type="button" class="notes-clear-btn" id="clearManualReviewNotesButton" aria-label="저장된 수동 리뷰 메모 지우기" onclick="clearManualReviewNotes()" ' + ((lead.manualReviewNotes || lead.notes) ? '' : 'disabled') + '>지우기</button>';
+        html += '</div>';
+        html += '</div>';
+      }
 
       // 타임라인 섹션
       html += '<div class="detail-section">';
@@ -886,6 +897,7 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     }
 
     async function updateField(field, value) {
+      const epoch = detailAccessEpoch;
       try {
         const body = { expectedVersion: lead.version };
         body[field] = value;
@@ -896,8 +908,11 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
           body: JSON.stringify(body)
         });
         const data = await res.json();
+        if (epoch !== detailAccessEpoch) return;
+        if (res.status === 401 || res.status === 403) { denyDetailAccess(); return; }
         if (!data.success) {
           if (data.code === 'LEAD_VERSION_CONFLICT') {
+            setDetailProductivityStatus('충돌: 다른 변경이 먼저 저장되었습니다. 최신 상태를 확인하고 다시 시도하세요. 초안은 유지됩니다.', 'error');
             await refreshDetailPage();
             return 'LEAD_VERSION_CONFLICT';
           }
@@ -909,16 +924,10 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
             return;
           }
           alert(data.message);
-          if (field === 'manualReviewNotes') renderDetail();
-          if (field === 'status') renderDetail();
           return;
         }
         // 로컬 lead 객체 업데이트
         if (data.lead) Object.assign(lead, data.lead);
-        if (field === 'manualReviewNotes') {
-          syncManualNoteControls();
-          showManualNoteIndicator(String(value || '').trim() ? '저장됨' : '지워짐');
-        }
         showSaved();
         if (field === 'status' || field === 'reviewStatus') {
           const label = field === 'reviewStatus' ? '검토 상태' : '영업 상태';
@@ -930,6 +939,7 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
           await refreshDetailPage();
         }
       } catch(e) {
+        if (epoch !== detailAccessEpoch) return;
         if (field === 'reviewStatus' || field === 'status') {
           const label = field === 'reviewStatus' ? '검토 상태' : '영업 상태';
           recordDetailActivity('statusUpdateFailed', label + ' 업데이트 실패');
@@ -937,76 +947,71 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
           renderDetail();
           return;
         }
-        if (field === 'manualReviewNotes') {
-          alert('업데이트 실패: ' + e.message);
-          renderDetail();
-          return;
-        }
         alert('업데이트 실패: ' + e.message);
       }
     }
 
-    async function refreshDetailPage() {
-      const res = await fetch(window.location.pathname + window.location.search, { headers: authHeaders() });
-      const html = await res.text();
-      document.open();
-      document.write(html);
-      document.close();
+    function denyDetailAccess() {
+      detailAccessEpoch++;
+      manualNoteController.reset();
+      reviewerFeedbackController.reset();
+      reviewerFeedbackEnabled = false;
+      Object.keys(lead).forEach(key => { delete lead[key]; });
+      document.getElementById('detailRefreshState').textContent = '';
+      document.getElementById('detailContent').innerHTML = '<p role="alert">접근 권한을 확인할 수 없어 보호된 입력과 초안을 지웠습니다. 인증 후 다시 조회하세요.</p>';
     }
 
-    let noteTimer;
-    let noteMutationQueue = Promise.resolve();
-    function enqueueNoteMutation(value) {
-      noteMutationQueue = noteMutationQueue
-        .then(async () => {
-          const outcome = await updateField('manualReviewNotes', value);
-          if (outcome === 'LEAD_VERSION_CONFLICT') {
-            throw Object.assign(new Error('manual note version conflict'), { code: outcome });
-          }
-        });
-      noteMutationQueue.catch(() => {});
-      return noteMutationQueue;
+    async function refreshDetailPage(_leadId, retried = false) {
+      const epoch = detailAccessEpoch;
+      const res = await fetch(window.location.pathname + window.location.search, { headers: authHeaders() });
+      if (epoch !== detailAccessEpoch) return;
+      if (res.status === 401 || res.status === 403) { denyDetailAccess(); return; }
+      if (!res.ok) throw new Error('detail refresh failed');
+      const html = await res.text();
+      if (epoch !== detailAccessEpoch) return;
+      const parsed = new DOMParser().parseFromString(html, 'text/html');
+      const state = JSON.parse(parsed.getElementById('detailRefreshState')?.textContent || 'null');
+      if (!state || !state.lead || state.lead.id !== lead.id) {
+        denyDetailAccess();
+        return;
+      }
+      if (Number(state.lead.version) < Number(lead.version)) {
+        if (!retried) return refreshDetailPage(lead.id, true);
+        throw new Error('stale detail refresh');
+      }
+      if (!state.includeGeneratedReviewGuidance) {
+        detailAccessEpoch++;
+        manualNoteController.reset();
+        reviewerFeedbackController.reset();
+      }
+      Object.keys(lead).forEach(key => { delete lead[key]; });
+      Object.assign(lead, state.lead);
+      statusLogs.splice(0, statusLogs.length, ...state.statusLogs);
+      reviewerFeedbackEnabled = state.includeGeneratedReviewGuidance === true;
+      opportunityWorkbenchHtml = state.opportunityWorkbenchHtml;
+      emptyManualReviewNoteStateText = state.emptyManualReviewNoteStateText;
+      reviewerFeedbackBoundaryText = state.reviewerFeedbackBoundaryText;
+      document.getElementById('detailRefreshState').textContent = JSON.stringify(state);
+      renderDetail();
     }
 
     function scheduleNoteSave() {
-      syncManualNoteControls();
-      clearTimeout(noteTimer);
-      noteTimer = setTimeout(async () => {
-        const val = document.getElementById('notesArea').value;
-        await enqueueNoteMutation(val);
-      }, 800);
+      const textarea = document.getElementById('notesArea');
+      if (textarea) manualNoteController.input(lead.id, textarea.value);
     }
 
     function syncManualNoteControls() {
       const textarea = document.getElementById('notesArea');
       const clearButton = document.getElementById('clearManualReviewNotesButton');
+      if (textarea) textarea.value = manualNoteController.value(lead);
       if (textarea && clearButton) clearButton.disabled = !String(textarea.value || '').trim();
+      const notice = document.querySelector('[data-manual-note-notice]');
+      if (notice) notice.textContent = manualNoteController.notice(lead.id);
       updateManualReviewNoteState();
     }
 
-    function showManualNoteIndicator(message) {
-      const el = document.getElementById('manualNoteSaveIndicator');
-      if (!el) return;
-      el.textContent = message || '저장됨';
-      el.classList.add('show');
-      clearTimeout(el._hideTimer);
-      el._hideTimer = setTimeout(() => el.classList.remove('show'), 2000);
-    }
-
-    async function clearManualReviewNotes() {
-      const textarea = document.getElementById('notesArea');
-      if (!textarea || !String(textarea.value || '').trim()) return;
-      const confirmed = window.confirm('저장된 수동 리뷰 메모를 지울까요? 생성된 리뷰 노트 제안은 그대로 유지됩니다.');
-      if (!confirmed) return;
-      clearTimeout(noteTimer);
-      textarea.value = '';
-      syncManualNoteControls();
-      try {
-        await enqueueNoteMutation('');
-      } catch (error) {
-        if (!error || error.code !== 'LEAD_VERSION_CONFLICT') throw error;
-      }
-    }
+    function saveManualReviewNotes() { return manualNoteController.save(lead.id, true); }
+    function clearManualReviewNotes() { return manualNoteController.clear(lead.id); }
 
     function saveReviewerFeedback(button) {
       return reviewerFeedbackController.save(lead.id, button && button.closest('.reviewer-feedback-section'), button);
@@ -1028,6 +1033,7 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
     window.clearReviewerFeedback = clearReviewerFeedback;
     window.updateField = updateField;
     window.scheduleNoteSave = scheduleNoteSave;
+    window.saveManualReviewNotes = saveManualReviewNotes;
     window.clearManualReviewNotes = clearManualReviewNotes;
     window.copyWorkbenchReviewNote = copyWorkbenchReviewNote;
     window.handleDetailShortcut = handleDetailShortcut;
@@ -1047,7 +1053,13 @@ export function getLeadDetailPage(lead, statusLogs, { includeGeneratedReviewGuid
       }
     });
     document.addEventListener('keydown', handleDetailShortcut);
+    window.addEventListener('beforeunload', (event) => {
+      if (!reviewerFeedbackController.hasUnsaved() && !manualNoteController.hasUnsaved()) return;
+      event.preventDefault(); event.returnValue = '';
+    });
     renderDetail();
+    // The live closures keep current state; remove the obsolete protected bootstrap snapshot.
+    document.currentScript.textContent = '';
     })();
   </script>
 </body>

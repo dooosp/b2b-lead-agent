@@ -4,11 +4,21 @@
  * Worker-only helpers (for example esbuild's keepNames __name) into the page.
  * Adapters are trusted page code, never lead/user data. Drafts remain in memory.
  */
-export function getReviewerFeedbackControllerScript({ findLead, onSaved, onConflict }) {
+export function getReviewerFeedbackControllerScript({ findLead, onSaved, onConflict, onDenied }) {
   return `
-function createReviewerFeedbackController({ findLead, normalizeFeedback, authHeaders, onSaved, onConflict }) {
+function createReviewerFeedbackController({ findLead, normalizeFeedback, authHeaders, onSaved, onConflict, onDenied }) {
   const drafts = new Map();
   const pendingWrites = new Map();
+  const notices = new Map();
+  let accessEpoch = 0;
+  function setNotice(leadId, message) {
+    notices.set(leadId, message);
+    document.querySelectorAll('[data-feedback-lead-id]').forEach(section => {
+      if (section.dataset.feedbackLeadId !== leadId) return;
+      const el = section.querySelector('[data-feedback-draft-state]');
+      if (el) el.textContent = message;
+    });
+  }
   const draftNotice = '저장 전 · 초안은 이 페이지에서만 보관됩니다.';
 
   function collect(section) {
@@ -33,6 +43,7 @@ function createReviewerFeedbackController({ findLead, normalizeFeedback, authHea
     else drafts.delete(leadId);
     const notice = section.querySelector('[data-feedback-draft-state]');
     const summary = section.querySelector('[data-reviewer-feedback-summary-state]');
+    notices.delete(leadId);
     if (notice) notice.textContent = changed ? draftNotice : '';
     if (summary) summary.textContent = changed ? '저장 전' : saved.hasFeedback ? '저장됨' : '비어 있음';
   }
@@ -45,6 +56,7 @@ function createReviewerFeedbackController({ findLead, normalizeFeedback, authHea
 
   async function mutate(leadId, payload, button, operation) {
     if (!leadId) return;
+    const epoch = accessEpoch;
     const submittedDraft = drafts.get(leadId);
     const current = findLead(leadId);
     if (button) button.disabled = true;
@@ -56,28 +68,37 @@ function createReviewerFeedbackController({ findLead, normalizeFeedback, authHea
         body: JSON.stringify({ reviewerFeedback: payload, expectedVersion: current && current.version })
       });
       const data = await res.json().catch(() => ({}));
+      if (epoch !== accessEpoch) return;
+      if (res.status === 401 || res.status === 403 || data.manualReviewNotesAccess && data.manualReviewNotesAccess.manualNotesRead !== true) {
+        reset(); await onDenied(); return;
+      }
       if (!res.ok || !data.success) {
         if (data.code === 'LEAD_VERSION_CONFLICT') {
+          setNotice(leadId, '저장 전 · 충돌: 최신 리드를 확인하고 저장 버튼으로 다시 시도하세요. 자동 재시도하지 않습니다.');
           await onConflict(leadId);
           return;
         }
-        alert(data.message || '리뷰어 피드백 ' + operation + ' 실패');
+        setNotice(leadId, '저장 전 · 피드백 ' + operation + ' 실패. 입력은 유지됩니다. 다시 시도하세요.');
         return;
       }
       const lead = findLead(leadId);
       if (data.lead && lead) Object.assign(lead, data.lead);
       if (drafts.get(leadId) === submittedDraft) drafts.delete(leadId);
+      notices.delete(leadId);
       onSaved(leadId);
     } catch (error) {
-      alert('리뷰어 피드백 ' + operation + ' 실패: ' + error.message);
+      if (epoch === accessEpoch) setNotice(leadId, '저장 전 · 피드백 ' + operation + ' 또는 새로고침 실패. 입력은 유지됩니다. 다시 시도하세요.');
     } finally {
-      trackWrite(leadId, -1);
+      if (epoch === accessEpoch) trackWrite(leadId, -1);
       if (button) button.disabled = false;
     }
   }
 
+  function reset() { accessEpoch++; drafts.clear(); notices.clear(); pendingWrites.clear(); }
   return {
-    drafts,
+    drafts, reset,
+    hasUnsaved: () => drafts.size > 0 || pendingWrites.size > 0,
+    notice: leadId => notices.get(leadId) || (drafts.has(leadId) ? draftNotice : ''),
     remember,
     save(leadId, section, button) {
       if (!section || !leadId) return;
@@ -92,7 +113,7 @@ function createReviewerFeedbackController({ findLead, normalizeFeedback, authHea
 
     const reviewerFeedbackController = createReviewerFeedbackController({
       findLead: ${findLead}, normalizeFeedback: normalizeReviewerFeedback, authHeaders,
-      onSaved: ${onSaved}, onConflict: ${onConflict}
+      onSaved: ${onSaved}, onConflict: ${onConflict}, onDenied: ${onDenied || '() => {}'}
     });
     const reviewerFeedbackDrafts = reviewerFeedbackController.drafts;
     function rememberReviewerFeedbackDraft(section) { reviewerFeedbackController.remember(section); }

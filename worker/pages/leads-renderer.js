@@ -167,16 +167,18 @@ export function getLeadsRendererScript() {
                 </ul>
               </details>
             </div>\` : ''}
-            \${lead.id ? \`
+            \${lead.id && (!cachedManualReviewNotesAccess || cachedManualReviewNotesAccess.manualNotesRead === true) ? \`
             <div class="notes-section">
-              <details>
-                <summary>수동 리뷰 메모 <span class="notes-summary-state" data-manual-note-summary-state>\${esc(getManualReviewNoteStateLabel(lead))}</span><span class="notes-saved">저장됨</span></summary>
+              <details \${manualNoteController.drafts.has(lead.id) ? 'open' : ''}>
+                <summary>수동 리뷰 메모 <span class="notes-summary-state" data-manual-note-summary-state>\${manualNoteController.drafts.has(lead.id) ? '저장 전' : esc(getManualReviewNoteStateLabel(lead))}</span><span class="notes-saved">저장됨</span></summary>
                 \${renderManualReviewNoteState(lead)}
                 \${renderManualReviewNotePrivacyWarning()}
                 <textarea class="notes-textarea" aria-label="수동 리뷰 메모 입력" placeholder="수동 리뷰 메모를 입력하세요..."
                   oninput="scheduleNoteSave('\${esc(lead.id)}', this)"
-                  onblur="saveNotes('\${esc(lead.id)}', this)">\${esc(lead.manualReviewNotes || lead.notes || '')}</textarea>
+                  onblur="saveNotes('\${esc(lead.id)}', this)">\${esc(manualNoteController.value(lead))}</textarea>
+                <p data-manual-note-notice role="status">\${esc(manualNoteController.notice(lead.id))}</p>
                 <div class="notes-actions">
+                  <button type="button" class="btn btn-secondary" aria-label="수동 리뷰 메모 저장" onclick="saveNotes('\${esc(lead.id)}', this.closest('.notes-section').querySelector('.notes-textarea'), { explicit: true })">저장</button>
                   <button type="button" class="notes-clear-btn" aria-label="저장된 수동 리뷰 메모 지우기"
                     onclick="clearManualReviewNotes('\${esc(lead.id)}', this)" \${(lead.manualReviewNotes || lead.notes) ? '' : 'disabled'}>지우기</button>
                 </div>

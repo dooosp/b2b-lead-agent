@@ -1,3 +1,4 @@
+import { getManualNoteControllerScript } from './manual-note-controller.js';
 import { getEscScript, getProfileScript, getSafeUrlScript, getStoredTokenScript } from './script-snippets.js';
 import { getReviewerFeedbackControllerScript } from './reviewer-feedback-controller.js';
 import { getLeadsReviewModelScript } from './leads-review-model.js';
@@ -15,6 +16,7 @@ export function getLeadsBrowserScript(includeGeneratedReviewGuidance) {
     ${getSafeUrlScript()}
     ${getStoredTokenScript()}
     ${getProfileScript('danfoss')}
+    let leadsAccessEpoch = 0;
     const generatedReviewGuidanceEnabled = ${includeGeneratedReviewGuidance ? 'true' : 'false'};
     const statusLabels = { NEW: '신규', CONTACTED: '접촉 완료', MEETING: '미팅진행', PROPOSAL: '제안제출', NEGOTIATION: '협상중', WON: '수주성공', LOST: '보류' };
     const statusColors = { NEW: '#3498db', CONTACTED: '#9b59b6', MEETING: '#e67e22', PROPOSAL: '#1abc9c', NEGOTIATION: '#2980b9', WON: '#27ae60', LOST: '#7f8c8d' };
@@ -82,7 +84,12 @@ export function getLeadsBrowserScript(includeGeneratedReviewGuidance) {
     ${getReviewerFeedbackControllerScript({
       findLead: 'findCachedLead',
       onSaved: 'renderCurrentLeads',
-      onConflict: '(leadId) => loadLeads({ focusLeadId: leadId })'
+      onConflict: '(leadId) => loadLeads({ focusLeadId: leadId })',
+      onDenied: '() => renderLeadsLoadError(403)'
+    })}
+    ${getManualNoteControllerScript({
+      findLead: 'findCachedLead', onChange: 'syncManualNoteLead',
+      onConflict: '(leadId) => loadLeads({ focusLeadId: leadId })', onDenied: '() => renderLeadsLoadError(403)'
     })}
     const reviewActionCopy = {
       prepare_human_follow_up: ['후속 준비', '검토를 마친 리드입니다. 후속 준비에 필요한 근거와 제안 내용을 확인하세요.'],
@@ -110,7 +117,7 @@ export function getLeadsBrowserScript(includeGeneratedReviewGuidance) {
     function renderLeadsLoadError(statusCode) {
       cachedLeads = [];
       setReviewSessionStatus('', 'idle');
-      if (statusCode === 401 || statusCode === 403) reviewerFeedbackDrafts.clear();
+      if (statusCode === 401 || statusCode === 403) { leadsAccessEpoch++; reviewerFeedbackController.reset(); manualNoteController.reset(); }
       cacheReviewerActionQueue(null);
       document.getElementById('leadsSummary').innerHTML = '';
       document.getElementById('nextReviewStrip').innerHTML = '';
@@ -128,10 +135,13 @@ export function getLeadsBrowserScript(includeGeneratedReviewGuidance) {
     }
 
     async function loadLeads(options = {}) {
+      const epoch = leadsAccessEpoch;
       try {
         const res = await fetch('/api/leads?profile=' + getProfile(), {headers:authHeaders()});
+        if (epoch !== leadsAccessEpoch) return;
         if (!res.ok) { renderLeadsLoadError(res.status); return; }
         const data = await res.json();
+        if (epoch !== leadsAccessEpoch) return;
         if (!Array.isArray(data.leads)) { renderLeadsLoadError(500); return; }
         const container = document.getElementById('leadsList');
         const summaryContainer = document.getElementById('leadsSummary');
@@ -164,6 +174,7 @@ export function getLeadsBrowserScript(includeGeneratedReviewGuidance) {
           });
         }
       } catch(e) {
+        if (epoch !== leadsAccessEpoch) return;
         renderLeadsLoadError(500);
       }
     }
@@ -222,7 +233,7 @@ export function getLeadsBrowserScript(includeGeneratedReviewGuidance) {
     if (viewTabList) viewTabList.addEventListener('keydown', handleViewTabRovingKeydown);
     document.addEventListener('keydown', handleReviewerShortcut);
     window.addEventListener('beforeunload', (event) => {
-      if (!reviewerFeedbackDrafts.size) return;
+      if (!reviewerFeedbackController.hasUnsaved() && !manualNoteController.hasUnsaved()) return;
       event.preventDefault();
       event.returnValue = '';
     });

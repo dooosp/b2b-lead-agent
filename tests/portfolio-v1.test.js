@@ -33,3 +33,20 @@ test('demo is deterministic and fixture evidence belongs to this project', async
   assert.equal(first.revisions[0].requirement.value.value, 22.9);
   assert.equal(first.revisions[2].requirement.value.value, 33);
 });
+
+test('portfolio presentation compares all revisions and renders applicability from each claim', async () => {
+  const { buildPortfolioDemo } = await import('../scripts/lib/portfolio-v1.mjs');
+  const { renderPortfolioPage } = await import('../scripts/lib/portfolio-v1-page.mjs');
+  const demo = structuredClone(buildPortfolioDemo());
+  const capability = demo.claims.find(claim => claim.claimId === demo.candidate.claimId);
+  capability.applicability = { ...capability.applicability, jurisdictions: ['TEST_COUNTRY'], productFamilyIds: ['test_family'], projectStages: ['TEST_STAGE'], conditions: [{ id: 'requiredCooling', value: 'TEST_CONDITION' }] };
+  const html = renderPortfolioPage(demo);
+  assert.match(html, /aria-label="세 개정본 한눈에 비교"/);
+  assert.match(html, /VERIFIED[\s\S]*ALLOWED[\s\S]*FIT/);
+  assert.match(html, /TEST_COUNTRY/);
+  assert.match(html, /test_family/);
+  assert.match(html, /TEST_STAGE/);
+  assert.match(html, /requiredCooling[\s\S]*TEST_CONDITION/);
+  assert.match(html, /connect-src 'none'/);
+  assert.doesNotMatch(html, /<script[^>]+src=|<link[^>]+href=/);
+});
